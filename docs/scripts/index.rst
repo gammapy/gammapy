@@ -57,7 +57,6 @@ Image
 - ``gammapy-image-cwt`` calls `gammapy.scripts.image_cwt`
 - ``gammapy-image-derived`` calls `gammapy.scripts.image_derived`
 - ``gammapy-image-fit`` calls `gammapy.scripts.image_fit`
-- ``gammapy-image-lookup`` calls `gammapy.scripts.image_lookup`
 - ``gammapy-image-model`` calls `gammapy.scripts.image_model`
 - ``gammapy-image-model-sherpa`` calls `gammapy.scripts.image_model_sherpa`
 - ``gammapy-image-pipe`` uses `gammapy.scripts.ImageAnalysis`

@@ -45,27 +45,26 @@ def test_image_pipe(tmpdir):
     fn = outdir + '/hdu-index.fits.gz'
     hdu_index_table.write(fn, overwrite=True)
 
-    tmpdir = str(tmpdir)
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
     offset_band = Angle([0, 2.49], 'deg')
     data_store = DataStore.from_dir(tmpdir)
 
-    # TODO: fix `binarize` implementation
-    # exclusion_mask = exclusion_mask.binarize()
-    image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
-                           yref=center.b.deg, proj='TAN', coordsys='GAL')
+    ref_image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+                               yref=center.b.deg, proj='TAN', coordsys='GAL')
 
-    refheader = image.to_image_hdu().header
     exclusion_mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-    exclusion_mask = exclusion_mask.reproject(reference=refheader)
+    exclusion_mask = exclusion_mask.reproject(reference=ref_image)
+
     # Pb with the load psftable for one of the run that is not implemented yet...
     data_store.hdu_table.remove_row(14)
-    mosaic = MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+
+    mosaic = MosaicImage(ref_image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                          obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
     mosaic.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
-    assert_allclose(mosaic.maps['counts'].data.sum(), 2334.0, atol=3)
-    assert_allclose(mosaic.maps['bkg'].data.sum(), 1987.1513636663785, atol=3)
-    assert_allclose(mosaic.maps['exposure'].data.sum(), 54190569251987.68, atol=3)
-    assert_allclose(mosaic.maps['significance'].lookup(center), 33.707901541600634, atol=3)
-    assert_allclose(mosaic.maps['excess'].data.sum(), 346.8486363336217, atol=3)
+
+    assert_allclose(mosaic.images['counts'].data.sum(), 2334.0, atol=3)
+    assert_allclose(mosaic.images['bkg'].data.sum(), 1987.1513636663785, atol=3)
+    assert_allclose(mosaic.images['exposure'].data.sum(), 54190569251987.68, atol=3)
+    assert_allclose(mosaic.images['significance'].lookup(center), 33.707901541600634, atol=3)
+    assert_allclose(mosaic.images['excess'].data.sum(), 346.8486363336217, atol=3)

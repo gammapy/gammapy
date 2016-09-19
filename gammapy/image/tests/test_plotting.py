@@ -10,7 +10,7 @@ from ...image import (
 
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
-    """Helper function to check RGB values of color maps"""
+    """Helper function to check RGB values of color images"""
     from matplotlib.colors import Normalize
     from matplotlib.cm import ScalarMappable
     norm = Normalize(vmin, vmax)

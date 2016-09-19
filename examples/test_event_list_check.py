@@ -1,9 +1,8 @@
 """Eventlist coordinate check.
 """
 from gammapy.data import EventListDataset
-from gammapy.datasets import gammapy_extra
 
-filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
+filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
 event_list = EventListDataset.read(filename)
 print(event_list.info)
 event_list.check()

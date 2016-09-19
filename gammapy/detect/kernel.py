@@ -39,12 +39,14 @@ class KernelBackgroundEstimatorData(object):
         self.background = convolve(self.counts, kernel)
         return self
 
-    def compute_correlated_maps(self, kernel):
+    def compute_correlated_images(self, kernel):
         """Compute significance image for a given kernel.
         """
         from scipy.ndimage import convolve
+
         if self.background is None:
             self.initial_background(kernel)
+
         self.counts_corr = convolve(self.counts, kernel)
         self.background_corr = convolve(self.background, kernel)
         self.significance = np.nan_to_num(significance(self.counts_corr,
@@ -101,7 +103,7 @@ class KernelBackgroundEstimator(object):
         self.delete_intermediate_results = delete_intermediate_results
         self.save_intermediate_results = save_intermediate_results
         # Calculate initial significance image
-        self._data[-1].compute_correlated_maps(self.source_kernel)
+        self._data[-1].compute_correlated_images(self.source_kernel)
 
     def run(self, base_dir=None, max_iterations=10):
         """Run iterations until mask does not change (stopping condition).
@@ -191,7 +193,7 @@ class KernelBackgroundEstimator(object):
         mask = mask.astype(int)
 
         images = KernelBackgroundEstimatorData(counts, background, mask)
-        images.compute_correlated_maps(self.source_kernel)
+        images.compute_correlated_images(self.source_kernel)
         self._data.append(images)
 
     def save_files(self, base_dir, index):

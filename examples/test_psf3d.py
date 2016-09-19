@@ -10,7 +10,7 @@ def load_psf():
     print('Reading {}'.format(filename))
 
     return PSF3D.read(filename)
-    
+
 
 if __name__ == '__main__':
     """Produce some debugging plots"""

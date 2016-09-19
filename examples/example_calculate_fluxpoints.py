@@ -8,14 +8,12 @@ from gammapy.spectrum import (
     SpectrumObservation,
     SpectrumFit,
     DifferentialFluxPoints,
-    SpectrumFitResult,
     SpectrumResult
 )
 import astropy.units as u
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-
 
 plt.style.use('ggplot')
 obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
@@ -38,12 +36,12 @@ diff_flux_err = list()
 e_err_hi = list()
 e_err_lo = list()
 energy = list()
-for ii in range(len(binning)-1):
-    energ= np.sqrt(binning[ii] * binning[ii+1])
+for ii in range(len(binning) - 1):
+    energ = np.sqrt(binning[ii] * binning[ii + 1])
     energy.append(energ)
-    e_err_hi.append(binning[ii+1] - energ)
+    e_err_hi.append(binning[ii + 1] - energ)
     e_err_lo.append(energ - binning[ii])
-    fit.fit_range = binning[[ii,ii+1]]
+    fit.fit_range = binning[[ii, ii + 1]]
     fit.run()
     res = fit.result[0].fit
     diff_flux.append(res.model(energ).to('cm-2 s-1 TeV-1'))
@@ -53,8 +51,8 @@ for ii in range(len(binning)-1):
 points = DifferentialFluxPoints.from_arrays(energy=energy, diff_flux=diff_flux,
                                             diff_flux_err_hi=diff_flux_err,
                                             diff_flux_err_lo=diff_flux_err,
-                                            energy_err_hi = e_err_hi,
-                                            energy_err_lo = e_err_lo)
+                                            energy_err_hi=e_err_hi,
+                                            energy_err_lo=e_err_lo)
 result = SpectrumResult(fit=best_fit, points=points)
 result.plot_spectrum()
 plt.savefig('fluxpoints.png')

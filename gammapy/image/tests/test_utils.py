@@ -3,24 +3,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
-from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.units import Quantity
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
-from ...utils.energy import EnergyBounds
 from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
     make_header,
-    images_to_cube,
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
     SkyImage,
-    SkyImageList)
+)
 
 
 def test_binary_disk():
@@ -70,7 +66,7 @@ def test_process_image_pixels():
 
 
 @requires_dependency('skimage')
-class TestBlockReduceHDU():
+class TestBlockReduceHDU:
     def setup_class(self):
         # Arbitrarily choose CAR projection as independent from tests
         projection = 'CAR'
@@ -80,12 +76,7 @@ class TestBlockReduceHDU():
         self.image.data = np.ones(self.image.data.shape)
         self.image_hdu = self.image.to_image_hdu()
 
-        # Create test cube
-        self.indices = np.arange(4)
-        self.cube_images = [self.image for _ in self.indices]
-        self.cube = SkyImageList(images=self.cube_images, wcs=self.image.wcs).to_cube()
-
-    @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
+    @pytest.mark.parametrize('operation', list([np.sum, np.mean]))
     def test_image(self, operation):
         image_1 = block_reduce_hdu(self.image_hdu, (2, 4), func=operation)
         if operation == np.sum:
@@ -93,19 +84,6 @@ class TestBlockReduceHDU():
         if operation == np.mean:
             ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
         assert_allclose(image_1.data, ref1)
-
-    @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
-    def test_cube(self, operation):
-        for index in self.indices:
-            image = self.cube.sky_image(index)
-            layer = self.cube.data[index]
-            layer_hdu = fits.ImageHDU(data=layer, header=image.wcs.to_header())
-            image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
-            if operation == np.sum:
-                ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
-            if operation == np.mean:
-                ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
-            assert_allclose(image_1.data, ref1)
 
 
 @requires_dependency('skimage')
@@ -170,5 +148,3 @@ def test_bin_events_in_cube():
                            coordsys='CEL')
     counts.fill(events)
     assert counts.data.sum().value == 1233
-
-

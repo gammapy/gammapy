@@ -14,15 +14,13 @@ from astropy.units import Quantity, Unit
 from astropy.nddata.utils import Cutout2D
 from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
-from astropy.wcs.utils import (pixel_to_skycoord, skycoord_to_pixel,
-                               proj_plane_pixel_scales)
-from ..extern.bunch import Bunch
+from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header, _bin_events_in_cube
 from ..data import EventList
 
-__all__ = ['SkyImage', 'SkyImageCollection']
+__all__ = ['SkyImage']
 
 log = logging.getLogger(__name__)
 
@@ -243,8 +241,8 @@ class SkyImage(object):
         Parameters
         ----------
         value : float or `~gammapy.data.EventList`
-             Value to fill in the map. If an event list is given, events will be
-             binned in the map.
+             Value to fill in the image.
+             If an event list is given, events will be binned in the image.
         """
         if isinstance(value, EventList):
             counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
@@ -258,12 +256,12 @@ class SkyImage(object):
 
     def write(self, filename, *args, **kwargs):
         """
-        Write image to Fits file.
+        Write image to FITS file.
 
         Parameters
         ----------
         filename : str
-            Name of the Fits file.
+            Name of the FITS file.
         *args : list
             Arguments passed to `~astropy.fits.ImageHDU.writeto`.
         **kwargs : dict
@@ -397,7 +395,7 @@ class SkyImage(object):
         if wcs_check:
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
                 raise WcsError('World coordinate systems not aligned. Try to call'
-                               ' .reproject() on one of the maps first.')
+                               ' .reproject() on one of the images first.')
 
         return xlo, xhi, ylo, yhi
 
@@ -406,7 +404,7 @@ class SkyImage(object):
         Paste smaller image into image.
 
         WCS specifications of both images must be aligned. If not call
-        `SkyImage.reproject()` on one of the maps first. See :ref:`image-cutpaste`
+        `SkyImage.reproject()` on one of the images first. See :ref:`image-cutpaste`
         more for information how to cut and paste sky images.
 
         Parameters
@@ -467,10 +465,13 @@ class SkyImage(object):
         cutout : `~gammapy.image.SkyImage`
             Cut out image.
         """
-        cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
-                          copy=True)
-        image = self.__class__(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
-        return image
+        cutout = Cutout2D(
+            self.data, position=position, wcs=self.wcs, size=size, copy=True,
+        )
+        return self.__class__(
+            name=self.name, data=cutout.data,
+            wcs=cutout.wcs, unit=self.unit,
+        )
 
     def pad(self, pad_width, mode='reflect', **kwargs):
         """
@@ -514,20 +515,20 @@ class SkyImage(object):
         wcs = self.wcs.deepcopy()
         wcs.wcs.crpix += np.array([xlo, ylo])
 
-        return SkyImage(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def crop(self, crop_width):
         """
         Crop sky image at the edges with given crop width.
 
-        Analogous method to :meth:`SkyMap.pad()` to crop the sky image at the edges.
-        Adapts the wcs specification accordingly.
+        Analogous method to :meth:`SkyImage.pad()` to crop the sky image at the edges.
+        Adapts the WCS specification accordingly.
 
         Parameters
         ----------
         crop_width : {sequence, array_like, int}
-            Number of values cropped from the edges of each axis. Defined
-            analogously to `pad_with` from `~numpy.pad`.
+            Number of values cropped from the edges of each axis.
+            Defined analogously to `pad_with` from `~numpy.pad`.
 
         Returns
         -------
@@ -540,9 +541,13 @@ class SkyImage(object):
 
         data = self.data[ylo:-yhi, xlo:-xhi]
 
-        wcs = self.wcs.deepcopy()
-        wcs.wcs.crpix -= np.array([xlo, ylo])
-        return SkyImage(data=data, wcs=wcs)
+        if self.wcs is not None:
+            wcs = self.wcs.deepcopy()
+            wcs.wcs.crpix -= np.array([xlo, ylo])
+        else:
+            wcs = None
+
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def downsample(self, factor, method=np.nansum):
         """
@@ -575,9 +580,12 @@ class SkyImage(object):
 
         data = block_reduce(self.data, (factor, factor), method)
 
-        # Adjust WCS
-        wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
-        return SkyImage(data=data, wcs=wcs)
+        if self.wcs is not None:
+            wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
+        else:
+            wcs = None
+
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def upsample(self, factor, **kwargs):
         """
@@ -590,7 +598,7 @@ class SkyImage(object):
         factor : int
             Up sampling factor.
         order : int
-            Order of the interpolation usef for upsampling.
+            Order of the interpolation used for upsampling.
 
         Returns
         -------
@@ -601,9 +609,12 @@ class SkyImage(object):
 
         data = zoom(self.data, factor, **kwargs)
 
-        # Adjust WCS
-        wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
-        return SkyImage(data=data, wcs=wcs)
+        if self.wcs is not None:
+            wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
+        else:
+            wcs = None
+
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def lookup_max(self, region=None):
         """
@@ -726,6 +737,7 @@ class SkyImage(object):
         if self.name is not None:
             header['EXTNAME'] = self.name
             header['HDUNAME'] = self.name
+
         return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
@@ -735,7 +747,7 @@ class SkyImage(object):
         Parameters
         ----------
         reference : `~astropy.io.fits.Header`, or `~gammapy.image.SkyImage`
-            Reference map specification to reproject the data on.
+            Reference image specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
         *args : list
@@ -748,7 +760,7 @@ class SkyImage(object):
         Returns
         -------
         image : `~gammapy.image.SkyImage`
-            Skymap reprojected onto ``reference``.
+            Image reprojected onto ``reference``.
         """
 
         from reproject import reproject_interp, reproject_exact
@@ -760,7 +772,7 @@ class SkyImage(object):
             wcs_reference = WCS(reference)
             shape_out = (reference['NAXIS2'], reference['NAXIS1'])
         else:
-            raise TypeError("Invalid reference map must be either instance"
+            raise TypeError("Invalid reference image. Must be either instance"
                             "of `Header`, `WCS` or `SkyImage`.")
 
         if mode == 'interp':
@@ -772,8 +784,10 @@ class SkyImage(object):
         else:
             raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-        return SkyImage(name=self.name, data=out[0], wcs=wcs_reference,
-                        unit=self.unit, meta=self.meta)
+        return self.__class__(
+            name=self.name, data=out[0], wcs=wcs_reference,
+            unit=self.unit, meta=self.meta,
+        )
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
@@ -865,13 +879,16 @@ class SkyImage(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
+
         if self.data is not None:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
+
         if self.wcs is not None:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
+
         return info
 
     def __array__(self):
@@ -882,7 +899,7 @@ class SkyImage(object):
 
     def threshold(self, threshold):
         """
-        Threshold sykmap data to create a `~gammapy.image.SkyMask`.
+        Threshold this image to create a `~gammapy.image.SkyMask`.
 
         Parameters
         ----------
@@ -1032,114 +1049,3 @@ class SkyImage(object):
         data = region.contains(coords)
 
         return SkyMask(data=data, wcs=self.wcs)
-
-
-class SkyImageCollection(Bunch):
-    """
-    Container for a collection of images.
-
-    This class bundles as set of SkyMaps in single data container and provides
-    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like
-    handling of the data members.
-
-    Here's an example how to use it:
-
-    .. code-block:: python
-
-        from gammapy.image import SkyImageCollection
-        images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
-
-    Then try tab completion on the ``images`` object.
-    """
-    # Real class attributes have to be defined here
-    _map_names = []
-    name = None
-    meta = None
-    wcs = None
-
-    def __init__(self, name=None, wcs=None, meta=None, **kwargs):
-        # Set real class attributes
-        self.name = name
-        self.wcs = wcs
-        self.meta = meta
-
-        # Everything else is stored as dict entries
-        for key in kwargs:
-            self[key] = kwargs[key]
-
-    def __setitem__(self, key, item):
-        """
-        Overwrite __setitem__ operator to remember order the images are added
-        to the collection, by storing it in the _map_names list.
-        """
-        if isinstance(item, np.ndarray):
-            item = SkyImage(name=key, data=item, wcs=self.wcs)
-        if isinstance(item, SkyImage):
-            self._map_names.append(key)
-        super(SkyImageCollection, self).__setitem__(key, item)
-
-    @classmethod
-    def read(cls, filename):
-        """
-        Create collection of images from Fits file.
-
-        Parameters
-        ----------
-        filename : str
-            Fits file name.
-        """
-        hdulist = fits.open(str(make_path(filename)))
-        kwargs = {}
-        _map_names = []  # list of map names to save order in fits file
-
-        for hdu in hdulist:
-            image = SkyImage.from_image_hdu(hdu)
-
-            # This forces lower case map names, but only on the collection object
-            # When writing to fits again the image.name attribute is used.
-            name = image.name.lower()
-            kwargs[name] = image
-            _map_names.append(name)
-        _ = cls(**kwargs)
-        _._map_names = _map_names
-        return _
-
-    def write(self, filename=None, header=None, **kwargs):
-        """
-        Write Bunch of maps to Fits file.
-
-        Parameters
-        ----------
-        filename : str
-            Fits file name.
-        header : `~astropy.io.fits.Header`
-            Reference header to be used for all maps.
-        """
-        hdulist = fits.HDUList()
-        for name in self.get('_map_names', sorted(self)):
-            if isinstance(self[name], SkyImage):
-                hdu = self[name].to_image_hdu()
-
-                # For now add common collection meta info to the single map headers
-                hdu.header.update(self.meta)
-                hdu.name = name
-                hdulist.append(hdu)
-            else:
-                log.warn("Can't save {} to file, not a image.".format(name))
-        hdulist.writeto(filename, **kwargs)
-
-    def info(self):
-        """
-        Print summary info about the image collection.
-        """
-        print(str(self))
-
-    def __str__(self):
-        """
-        String representation of the image collection.
-        """
-        info = ''
-        for name in self.get('_map_names', sorted(self)):
-            info += self[name].__str__()
-            info += '\n'
-        return info

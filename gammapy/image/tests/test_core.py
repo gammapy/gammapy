@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.extern.six import string_types
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.units import Quantity
@@ -101,11 +100,7 @@ def test_image(request):
 
 
 @requires_data('gammapy-extra')
-class TestSkyMapPoisson:
-    """
-    Test image class.
-    """
-
+class TestSkyImagePoisson:
     def setup(self):
         f = load_poisson_stats_image(return_filenames=True)
         self.image = SkyImage.read(f)
@@ -160,7 +155,7 @@ class TestSkyMapPoisson:
         refstring = ""
         refstring += "Name: None\n"
         refstring += "Data shape: (200, 200)\n"
-        refstring += "Data type: >i2\n"
+        refstring += "Data type: >i4\n"
         refstring += "Data unit: None\n"
         refstring += "Data mean: 1.022e+00\n"
         refstring += "WCS type: ['GLON-CAR', 'GLAT-CAR']\n"

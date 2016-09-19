@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Functions to compute TS maps.
+Functions to compute TS images.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from time import time
 import warnings
+from collections import OrderedDict
 from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
@@ -17,14 +19,13 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _x_best_leastsq)
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
-from ..extern.bunch import Bunch
-from ..image import (measure_containment_radius, SkyImageCollection)
+from ..image import measure_containment_radius, SkyImageList, SkyImage
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = [
-    'compute_ts_map',
-    'compute_ts_map_multiscale',
-    'compute_maximum_ts_map',
+    'compute_ts_image',
+    'compute_ts_image_multiscale',
+    'compute_maximum_ts_image',
 ]
 
 log = logging.getLogger(__name__)
@@ -68,28 +69,28 @@ def f_cash(x, counts, background, model):
     x : float
         Model amplitude.
     counts : `~numpy.ndarray`
-        Count map slice, where model is defined.
+        Count image slice, where model is defined.
     background : `~numpy.ndarray`
-        Background map slice, where model is defined.
+        Background image slice, where model is defined.
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample='auto',
-                              residual=False, morphology='Gaussian2D', width=None,
-                              *args, **kwargs):
+def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='auto',
+                                residual=False, morphology='Gaussian2D', width=None,
+                                *args, **kwargs):
     """
-    Compute multiscale TS maps using compute_ts_map.
+    Compute multi-scale TS images using ``compute_ts_image``.
 
-    High level TS map computation using a multi gauss PSF kernel and assuming
+    High level TS image computation using a multi-Gauss PSF kernel and assuming
     a given source morphology. To optimize the performance the input data
-    can be sampled down when computing TS maps on larger scales.
+    can be sampled down when computing TS images on larger scales.
 
     Parameters
     ----------
-    skyimages : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Image collection containing the data. Must contain the following:
             * 'counts', Counts image
             * 'background', Background image
@@ -98,27 +99,27 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
         Dict defining the multi gauss PSF parameters.
         See `~gammapy.irf.multi_gauss_psf` for details.
     scales : list ([0])
-        List of scales to use for TS map computation.
+        List of scales to use for TS image computation.
     downsample : int ('auto')
         Down sampling factor. Can be set to 'auto' if the down sampling
         factor should be chosen automatically.
     residual : bool (False)
-        Compute a TS residual map.
+        Compute a TS residual image.
     morphology : str ('Gaussian2D')
         Source morphology assumption. Either 'Gaussian2D' or 'Shell2D'.
 
     Returns
     -------
     multiscale_result : list
-        List of `~gammapy.image.SkyImageCollection` objects.
+        List of `~gammapy.image.SkyImageList` objects.
     """
-    BINSZ = abs(skyimages.counts.wcs.wcs.cdelt[0])
-    shape = skyimages.counts.data.shape
+    BINSZ = abs(images['counts'].wcs.wcs.cdelt[0])
+    shape = images['counts'].data.shape
 
     multiscale_result = []
 
     for scale in scales:
-        log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
+        log.info('Computing {0}TS image for scale {1:.3f} deg and {2}'
                  ' morphology.'.format('residual ' if residual else '',
                                        scale,
                                        morphology))  # Sample down and require that scale parameters is at least 5 pix
@@ -128,6 +129,7 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
                                    [1, 2, 4, 4], 8))
         else:
             factor = int(downsample)
+
         if factor == 1:
             log.info('No down sampling used.')
             downsampled = False
@@ -139,14 +141,14 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
 
-        skyimages_ = SkyImageCollection()
-        for name, func in zip(skyimages._map_names, funcs):
+        images2 = SkyImageList()
+        for name, func in zip(images.names, funcs):
             if downsampled:
                 pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))
-                skyimages_[name] = skyimages[name].pad(pad_width)
-                skyimages_[name] = skyimages_[name].downsample(factor, func)
+                images2[name] = images[name].pad(pad_width)
+                images2[name] = images2[name].downsample(factor, func)
             else:
-                skyimages_[name] = skyimages[name]
+                images2[name] = images[name]
 
         # Set up PSF and source kernel
         kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
@@ -169,12 +171,14 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
             kernel.normalize()
 
         if residual:
-           skyimages_['background'].data += skyimages__['model'].data
+            images2['background'].data += images2['model'].data
 
-        # Compute TS map
-        ts_results = compute_ts_map(skyimages_.counts, skyimages_.background,
-                                    skyimages_.exposure, kernel, *args, **kwargs)
-        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
+        # Compute TS image
+        ts_results = compute_ts_image(
+            images2['counts'], images2['background'], images2['exposure'],
+            kernel, *args, **kwargs
+        )
+        log.info('TS image computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
         ts_results.meta['MORPH'] = (morphology, 'Source morphology assumption')
         ts_results.meta['SCALE'] = (scale, 'Source morphology size scale in deg')
 
@@ -188,26 +192,26 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
     return multiscale_result
 
 
-def compute_maximum_ts_map(ts_map_results):
+def compute_maximum_ts_image(ts_image_results):
     """
-    Compute maximum TS map across a list of given ts maps.
+    Compute maximum TS image across a list of given TS images.
 
     Parameters
     ----------
-    ts_map_results : list
-        List of `~gammapy.image.SkyImageCollection` objects.
+    ts_image_results : list
+        List of `~gammapy.image.SkyImageList` objects.
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Images (ts, niter, amplitude)
     """
 
     # Get data
-    ts = np.dstack([result.ts for result in ts_map_results])
-    niter = np.dstack([result.niter for result in ts_map_results])
-    amplitude = np.dstack([result.amplitude for result in ts_map_results])
-    scales = [result.scale for result in ts_map_results]
+    ts = np.dstack([result.ts for result in ts_image_results])
+    niter = np.dstack([result.niter for result in ts_image_results])
+    amplitude = np.dstack([result.amplitude for result in ts_image_results])
+    scales = [result.scale for result in ts_image_results]
 
     # Set up max arrays
     ts_max = np.max(ts, axis=2)
@@ -221,16 +225,19 @@ def compute_maximum_ts_map(ts_map_results):
         niter_max[index] = niter[:, :, i][index]
         amplitude_max[index] = amplitude[:, :, i][index]
 
-    meta = {'MORPH': (ts_map_results[0].morphology, 'Source morphology assumption')}
-    return SkyImageCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
-                              meta=meta)
+    meta = {'MORPH': (ts_image_results[0].morphology, 'Source morphology assumption')}
+
+    return SkyImageList([
+        SkyImage(name='ts', data=ts_max.astype('float32')),
+        SkyImage(name='niter', data=niter_max.astype('int16')),
+        SkyImage(name='amplitude', data=amplitude_max.astype('float32')),
+    ], meta=meta)
 
 
-def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
-                   method='root brentq', optimizer='Brent', parallel=True,
-                   threshold=None):
+def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
+                     method='root brentq', parallel=True, threshold=None):
     """
-    Compute TS map using different optimization methods.
+    Compute TS image using different optimization methods.
 
     Parameters
     ----------
@@ -243,19 +250,17 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
     flux : float (None)
-        Flux map used as a starting value for the amplitude fit.
+        Flux image used as a starting value for the amplitude fit.
     method : str ('root')
         The following options are available:
-            * ``'root'`` (default)
-                Fit amplitude finding roots of the the derivative of
-                the fit statistics. Described in Appendix A in Stewart (2009).
-            * ``'fit scipy'``
-                Use `scipy.optimize.minimize_scalar` for fitting.
-            * ``'fit minuit'``
-                Use minuit for fitting.
-    optimizer : str ('Brent')
-        Which optimizing algorithm to use from scipy. See
-        `scipy.optimize.minimize_scalar` for options.
+
+        * ``'root brentq'`` (default)
+            Fit amplitude finding roots of the the derivative of
+            the fit statistics. Described in Appendix A in Stewart (2009).
+        * ``'root newton'``
+            TODO: document
+        * ``'leastsq iter'``
+            TODO: document
     parallel : bool (True)
         Whether to use multiple cores for parallel processing.
     threshold : float (None)
@@ -264,9 +269,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Images (ts, niter, amplitude)
-
 
     Notes
     -----
@@ -287,7 +291,6 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     ----------
     [Stewart2009]_
     """
-    from time import time
     t_0 = time()
 
     log.info("Using method '{}'".format(method))
@@ -301,7 +304,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
 
-    # in some maps there are pixels, which have exposure, but zero
+    # in some image there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation
     # to fail, this is a temporary fix
     mask_ = np.logical_and(background == 0, exposure > 0)
@@ -319,8 +322,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         flux[~np.isfinite(flux)] = 0
         flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
 
-    # Compute null statistics for the whole map
-    C_0_map = _cash_cython(counts, background)
+    # Compute null statistics for the whole image
+    c_0_image = _cash_cython(counts, background)
 
     x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
     y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
@@ -332,11 +335,11 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
     wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
-                   C_0_map=C_0_map, kernel=kernel, flux=flux, method=method,
+                   c_0_image=c_0_image, kernel=kernel, flux=flux, method=method,
                    threshold=threshold)
 
     if parallel:
-        log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
+        log.info('Using {0} cores to compute TS image.'.format(cpu_count()))
         pool = Pool()
         results = pool.map(wrap, positions)
         pool.close()
@@ -360,10 +363,17 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
-    return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes, wcs=wcs,
-                              niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
+    runtime = np.round(time() - t_0, 2)
+    meta = OrderedDict(runtime=runtime)
+    return SkyImageList([
+        SkyImage(name='ts', data=ts.astype('float32'), wcs=wcs),
+        SkyImage(name='sqrt_ts', data=sqrt_ts.astype('float32'), wcs=wcs),
+        SkyImage(name='amplitude', data=amplitudes.astype('float32'), wcs=wcs),
+        SkyImage(name='niter', data=niter.astype('int16'), wcs=wcs),
+    ], meta=meta)
 
-def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
+
+def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
               method, threshold):
     """
     Compute TS value at a given pixel position i, j using the approach described
@@ -374,15 +384,15 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     position : tuple (i, j)
         Pixel position.
     counts : `~numpy.ndarray`
-        Count map.
+        Counts image
     background : `~numpy.ndarray`
-        Background map.
+        Background image
     exposure : `~numpy.ndarray`
-        Exposure map.
+        Exposure image
     kernel : `astropy.convolution.Kernel2D`
-        Source model kernel.
+        Source model kernel
     flux : `~numpy.ndarray`
-        Flux map. The flux value at the given pixel position is used as
+        Flux image. The flux value at the given pixel position is used as
         starting value for the minimization.
 
     Returns
@@ -394,41 +404,32 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     counts_ = _extract_array(counts, kernel.shape, position)
     background_ = _extract_array(background, kernel.shape, position)
     exposure_ = _extract_array(exposure, kernel.shape, position)
-    C_0_ = _extract_array(C_0_map, kernel.shape, position)
+    c_0_ = _extract_array(c_0_image, kernel.shape, position)
     model = (exposure_ * kernel._array)
 
-    C_0 = C_0_.sum()
+    c_0 = c_0_.sum()
 
     if threshold is not None:
         with np.errstate(invalid='ignore', divide='ignore'):
-            C_1 = f_cash(flux[position], counts_, background_, model)
+            c_1 = f_cash(flux[position], counts_, background_, model)
         # Don't fit if pixel significance is low
-        if C_0 - C_1 < threshold:
-            return C_0 - C_1, flux[position] * FLUX_FACTOR, 0
+        if c_0 - c_1 < threshold:
+            return c_0 - c_1, flux[position] * FLUX_FACTOR, 0
 
     if method == 'root brentq':
         amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
-
-    elif method == 'fit minuit':
-        amplitude, niter = _fit_amplitude_minuit(counts_, background_, model,
-                                                 flux[position])
-    elif method == 'fit scipy':
-        amplitude, niter = _fit_amplitude_scipy(counts_, background_, model)
-
     elif method == 'root newton':
-        amplitude, niter = _root_amplitude(counts_, background_, model,
-                                           flux[position])
+        amplitude, niter = _root_amplitude(counts_, background_, model, flux[position])
     elif method == 'leastsq iter':
         amplitude, niter = _leastsq_iter_amplitude(counts_, background_, model)
-
     else:
-        raise ValueError('Invalid fitting method.')
+        raise ValueError('Invalid method: {}'.format(method))
 
     with np.errstate(invalid='ignore', divide='ignore'):
-        C_1 = f_cash(amplitude, counts_, background_, model)
+        c_1 = f_cash(amplitude, counts_, background_, model)
 
     # Compute and return TS value
-    return (C_0 - C_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
+    return (c_0 - c_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
 
 
 def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.001):
@@ -437,9 +438,9 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Slice of count map.
+        Slice of counts image
     background : `~numpy.ndarray`
-        Slice of background map.
+        Slice of background image
     model : `~numpy.ndarray`
         Model template to fit.
     maxiter : int
@@ -464,7 +465,7 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
 
     x_old = 0
     for i in range(maxiter):
-        x =_x_best_leastsq(counts, background, model, weights)
+        x = _x_best_leastsq(counts, background, model, weights)
         if abs((x - x_old) / x) < rtol:
             return max(x / FLUX_FACTOR, amplitude_min_total), i + 1
         else:
@@ -481,9 +482,9 @@ def _root_amplitude(counts, background, model, flux):
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Slice of count map.
+        Slice of count image
     background : `~numpy.ndarray`
-        Slice of background map.
+        Slice of background image
     model : `~numpy.ndarray`
         Model template to fit.
     flux : float
@@ -516,9 +517,9 @@ def _root_amplitude_brentq(counts, background, model):
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Slice of count map.
+        Slice of count image
     background : `~numpy.ndarray`
-        Slice of background map.
+        Slice of background image
     model : `~numpy.ndarray`
         Model template to fit.
 
@@ -543,7 +544,7 @@ def _root_amplitude_brentq(counts, background, model):
         warnings.simplefilter("ignore")
         try:
             result = brentq(_f_cash_root_cython, amplitude_min, amplitude_max, args=args,
-                        maxiter=MAX_NITER, full_output=True, rtol=1E-3)
+                            maxiter=MAX_NITER, full_output=True, rtol=1E-3)
             return max(result[0], amplitude_min_total), result[1].iterations
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude

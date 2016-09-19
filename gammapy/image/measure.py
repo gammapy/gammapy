@@ -146,8 +146,6 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
     """
     Measure containment radius of a source.
 
-
-
     Uses `scipy.optimize.brentq`.
 
     Parameters

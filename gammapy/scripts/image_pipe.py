@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from astropy.units import Quantity
@@ -8,7 +7,7 @@ from astropy.table import QTable
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
-from ..image import SkyImage, SkyImageCollection, disk_correlate
+from ..image import SkyImage, SkyImageList, disk_correlate
 from ..stats import significance
 
 __all__ = ['ObsImage',
@@ -20,7 +19,7 @@ log = logging.getLogger(__name__)
 class ObsImage(object):
     """Gammapy 2D image based analysis for one observation.
 
-    The computed images are stored in a ``maps`` attribute of type `~gammapy.image.SkyImageCollection`
+    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
     with the following keys:
 
     * counts : counts for one obs
@@ -55,11 +54,12 @@ class ObsImage(object):
         events = events.select_energy(self.energy_band)
         self.events = events.select_offset(self.offset_band)
 
-        self.maps = SkyImageCollection()
+        self.images = SkyImageList()
         self.empty_image = empty_image
         self.header = self.empty_image.to_image_hdu().header
         if exclusion_mask:
-            self.maps['exclusion'] = exclusion_mask
+            exclusion_mask.name = 'exclusion'
+            self.images['exclusion'] = exclusion_mask
 
         self.ncounts_min = ncounts_min
         self.aeff = obs.aeff
@@ -69,38 +69,38 @@ class ObsImage(object):
         self.obs_center = obs.pointing_radec
         self.livetime = obs.observation_live_time_duration
 
-    def counts_map(self):
+    def counts_image(self):
         """Fill the counts image for the events of one observation."""
-        counts_map = SkyImage.empty_like(self.empty_image)
+        self.images['counts'] = SkyImage.empty_like(self.empty_image, name='counts')
+
         if len(self.events) > self.ncounts_min:
-            counts_map.fill(value=self.events)
+            self.images['counts'].fill(value=self.events)
         else:
             log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
                      format(len(self.events), self.ncounts_min))
-        self.maps["counts"] = counts_map
 
-    def bkg_map(self, bkg_norm=True):
+    def bkg_image(self, bkg_norm=True):
         """
-        Make the background map for one observation from a bkg model.
+        Make the background image for one observation from a bkg model.
 
         Parameters
         ----------
         bkg_norm : bool
             If true, apply the scaling factor from the number of counts
-            outside the exclusion region to the bkg map
+            outside the exclusion region to the bkg image
         """
-        bkg_map = SkyImage.empty_like(self.empty_image)
+        bkg_image = SkyImage.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = self.obs_center.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
-        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
-        bkg_map.data = bkg_map.data.decompose()
-        bkg_map.data = bkg_map.data.value
+        bkg_image.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_image.solid_angle() * self.livetime
+        bkg_image.data = bkg_image.data.decompose()
+        bkg_image.data = bkg_image.data.value
         if bkg_norm:
-            scale = self.background_norm_factor(self.maps["counts"], bkg_map)
-            bkg_map.data = scale * bkg_map.data
+            scale = self.background_norm_factor(self.images["counts"], bkg_image)
+            bkg_image.data = scale * bkg_image.data
 
-        self.maps["bkg"] = bkg_map
+        self.images["bkg"] = bkg_image
 
     def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
         """Compute the 1D exposure table for one observation for an offset table
@@ -138,8 +138,8 @@ class ObsImage(object):
 
         return table
 
-    def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
-        r"""Compute the exposure map for one observation.
+    def exposure_image(self, spectral_index=2.3, for_integral_flux=False):
+        r"""Compute the exposure image for one observation.
 
         Excess/exposure will give the differential flux at the energy Eref at the middle of the ``self.energy_band``
 
@@ -179,12 +179,12 @@ class ObsImage(object):
         f = interp1d(table["theta"], table["npred"], bounds_error=False, fill_value=0)
         exposure.data = f(offset)
         exposure.data[offset >= self.offset_band[1]] = 0
-        self.maps["exposure"] = exposure
+        self.images["exposure"] = exposure
 
     def background_norm_factor(self, counts, bkg):
-        """Determine the scaling factor to apply to the background map.
+        """Determine the scaling factor to apply to the background image.
 
-        Compares the events in the counts maps and the bkg map outside the exclusion maps.
+        Compares the events in the counts images and the bkg image outside the exclusion images.
 
         Parameters
         ----------
@@ -196,10 +196,10 @@ class ObsImage(object):
         Returns
         -------
         scale : float
-            scaling factor between the counts and the bkg maps outside the exclusion region.
+            scaling factor between the counts and the bkg images outside the exclusion region.
         """
-        counts_sum = np.sum(counts.data * self.maps['exclusion'].data)
-        bkg_sum = np.sum(bkg.data * self.maps['exclusion'].data)
+        counts_sum = np.sum(counts.data * self.images['exclusion'].data)
+        bkg_sum = np.sum(bkg.data * self.images['exclusion'].data)
         scale = counts_sum / bkg_sum
 
         return scale
@@ -212,25 +212,24 @@ class ObsImage(object):
         radius : float
             Disk radius in pixels.
         """
-        s_map = SkyImage.empty_like(self.empty_image)
-        counts = disk_correlate(self.maps["counts"].data, radius)
-        bkg = disk_correlate(self.maps["bkg"].data, radius)
-        s = significance(counts, bkg)
-        s_map.data = s
+        image = SkyImage.empty_like(self.empty_image)
+        counts = disk_correlate(self.images["counts"].data, radius)
+        bkg = disk_correlate(self.images["bkg"].data, radius)
+        image.data = significance(counts, bkg)
 
-        self.maps["significance"] = s_map
+        self.images["significance"] = image
 
     def excess_image(self):
-        """Compute excess between counts and bkg map."""
+        """Compute excess between counts and bkg image."""
         total_excess = SkyImage.empty_like(self.empty_image)
-        total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
-        self.maps["excess"] = total_excess
+        total_excess.data = self.images["counts"].data - self.images["bkg"].data
+        self.images["excess"] = total_excess
 
 
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
 
-    The computed images are stored in a ``maps`` attribute of type `~gammapy.image.SkyImageCollection`
+    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
     with the following keys:
 
     * counts : counts for the set of obs
@@ -261,7 +260,7 @@ class MosaicImage(object):
                  energy_band=None, offset_band=None,
                  data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
 
-        self.maps = SkyImageCollection()
+        self.images = SkyImageList()
 
         self.data_store = data_store
         self.obs_table = obs_table
@@ -272,7 +271,8 @@ class MosaicImage(object):
         self.header = self.empty_image.to_image_hdu().header
         self.exclusion_mask = exclusion_mask
         if exclusion_mask:
-            self.maps['exclusion'] = exclusion_mask
+            exclusion_mask.name = 'exclusion'
+            self.images['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
         self.psfmeantab = None
         self.thetapsf = None
@@ -284,21 +284,22 @@ class MosaicImage(object):
         Parameters
         ----------
         make_background_image : bool
-            True if you want to compute the background and exposure maps
+            True if you want to compute the background and exposure images
         bkg_norm : bool
-            If true, apply the scaling factor to the bkg map
+            If true, apply the scaling factor to the bkg image
         spectral_index : float
             Assumed power-law spectral index
         for_integral_flux : bool
             True if you want that the total excess / exposure gives the integrated flux
         radius : float
-            Disk radius in pixels for the significance map.
+            Disk radius in pixels for the significance image
         """
 
-        total_counts = SkyImage.empty_like(self.empty_image)
+        total_counts = SkyImage.empty_like(self.empty_image, name='counts')
         if make_background_image:
-            total_bkg = SkyImage.empty_like(self.empty_image)
-            total_exposure = SkyImage.empty_like(self.empty_image)
+            total_bkg = SkyImage.empty_like(self.empty_image, name='bkg')
+            total_exposure = SkyImage.empty_like(self.empty_image, name='exposure')
+
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -306,17 +307,19 @@ class MosaicImage(object):
             if len(obs_image.events) <= self.ncounts_min:
                 continue
             else:
-                obs_image.counts_map()
-                total_counts.data += obs_image.maps["counts"].data
+                obs_image.counts_image()
+                total_counts.data += obs_image.images['counts'].data
                 if make_background_image:
-                    obs_image.bkg_map(bkg_norm)
-                    obs_image.exposure_map(spectral_index, for_integral_flux)
-                    total_bkg.data += obs_image.maps["bkg"].data
-                    total_exposure.data += obs_image.maps["exposure"].data
-        self.maps["counts"] = total_counts
+                    obs_image.bkg_image(bkg_norm)
+                    obs_image.exposure_image(spectral_index, for_integral_flux)
+                    total_bkg.data += obs_image.images['bkg'].data
+                    total_exposure.data += obs_image.images['exposure'].data
+
+        self.images['counts'] = total_counts
+
         if make_background_image:
-            self.maps["bkg"] = total_bkg
-            self.maps["exposure"] = total_exposure
+            self.images['bkg'] = total_bkg
+            self.images['exposure'] = total_exposure
             self.significance_image(radius)
             self.excess_image()
 
@@ -328,16 +331,15 @@ class MosaicImage(object):
         radius : float
             Disk radius in pixels.
         """
-        s_map = SkyImage.empty_like(self.empty_image)
-        counts = disk_correlate(self.maps["counts"].data, radius)
-        bkg = disk_correlate(self.maps["bkg"].data, radius)
-        s = significance(counts, bkg)
-        s_map.data = s
+        image = SkyImage.empty_like(self.empty_image, name='significance')
+        counts = disk_correlate(self.images['counts'].data, radius)
+        bkg = disk_correlate(self.images['bkg'].data, radius)
+        image.data = significance(counts, bkg)
 
-        self.maps["significance"] = s_map
+        self.images['significance'] = image
 
     def excess_image(self):
-        """Compute excess between counts and bkg map."""
-        total_excess = SkyImage.empty_like(self.empty_image)
-        total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
-        self.maps["excess"] = total_excess
+        """Compute excess between counts and bkg image."""
+        total_excess = SkyImage.empty_like(self.empty_image, name='excess')
+        total_excess.data = self.images['counts'].data - self.images['bkg'].data
+        self.images['excess'] = total_excess

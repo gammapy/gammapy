@@ -2,41 +2,36 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from copy import deepcopy
 import logging
-
 import numpy as np
-from astropy.convolution import Tophat2DKernel
-
-from ..image import SkyImageCollection
+from ..image import SkyImage, SkyImageList
 from ..stats import significance, significance_on_off
 
-__all__ = ['compute_lima_map', 'compute_lima_on_off_map']
+__all__ = ['compute_lima_image', 'compute_lima_on_off_image']
 
 log = logging.getLogger(__name__)
 
 
-
-def compute_lima_map(counts, background, kernel, exposure=None):
+def compute_lima_image(counts, background, kernel, exposure=None):
     """
-    Compute Li&Ma significance and flux maps for known background.
+    Compute Li&Ma significance and flux images for known background.
 
-    If exposure is given the corresponding flux map is computed and returned.
+    If exposure is given the corresponding flux image is computed and returned.
 
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Count map
+        Counts image
     background : `~numpy.ndarray`
-        Background map
+        Background image
     kernel : `astropy.convolution.Kernel2D`
-        convolution kernel.
+        Convolution kernel
     exposure : `~numpy.ndarray`
-        Exposure map
+        Exposure image
 
     Returns
     -------
-    SkyImageCollection : `~gammapy.image.SkyImageCollection`
-        Bunch of result maps.
-
+    images : `~gammapy.image.SkyImageList`
+        Results images container
 
     See Also
     --------
@@ -51,53 +46,55 @@ def compute_lima_map(counts, background, kernel, exposure=None):
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    counts_ = convolve(counts, kernel.array, mode='constant', cval=np.nan)
-    background_ = convolve(background, kernel.array, mode='constant', cval=np.nan)
+    conv_opt = dict(mode='constant', cval=np.nan)
 
-    significance_lima = significance(counts_, background_, method='lima')
+    counts_conv = convolve(counts, kernel.array, **conv_opt)
+    background_conv = convolve(background, kernel.array, **conv_opt)
+    excess_conv = counts_conv - background_conv
+    significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    result = SkyImageCollection(significance=significance_lima,
-                                counts=counts_,
-                                background=background_,
-                                excess= counts_ - background_)
+    images = SkyImageList([
+        SkyImage(name='significance', data=significance_conv),
+        SkyImage(name='counts', data=counts_conv),
+        SkyImage(name='background', data=background_conv),
+        SkyImage(name='excess', data=excess_conv),
+    ])
 
-    if not exposure is None:
-        kernel.normalize('integral')
-        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
-        flux = (counts_ - background_) / exposure_
-        result.flux = flux
+    # TODO: should we be doing this here?
+    # Wouldn't it be better to let users decide if they want this,
+    # and have it easily accessible as an attribute or method?
+    _add_other_images(images, exposure, kernel, conv_opt)
 
-    return result
+    return images
 
 
-def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
+def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     """
-    Compute Li&Ma significance and flux maps for on-off observations.
+    Compute Li&Ma significance and flux images for on-off observations.
 
     Parameters
     ----------
     n_on : `~numpy.ndarray`
-        Counts map.
+        Counts image
     n_off : `~numpy.ndarray`
-        Off counts map.
+        Off counts image
     a_on : `~numpy.ndarray`
         Relative background efficiency in the on region
     a_off : `~numpy.ndarray`
         Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
-        convolution kernel.
+        Convolution kernel
     exposure : `~numpy.ndarray`
-        Exposure map.
+        Exposure image
 
     Returns
     -------
-    SkyImageCollection : `~gammapy.image.SkyImageCollection`
-        Bunch of result maps.
+    images : `~gammapy.image.SkyImageList`
+        Results images container
 
     See also
     --------
     gammapy.stats.significance_on_off
-
     """
     from scipy.ndimage import convolve
 
@@ -108,23 +105,37 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    n_on_ = convolve(n_on, kernel.array, mode='constant', cval=np.nan)
-    a_ = convolve(a_on, kernel.array, mode='constant', cval=np.nan)
-    alpha = a_ / a_off
-    background = alpha * n_off
+    conv_opt = dict(mode='constant', cval=np.nan)
 
-    significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
+    n_on_conv = convolve(n_on, kernel.array, **conv_opt)
+    a_on_conv = convolve(a_on, kernel.array, **conv_opt)
+    alpha_conv = a_on_conv / a_off
+    background_conv = alpha_conv * n_off
+    excess_conv = n_on_conv - background_conv
+    significance_conv = significance_on_off(n_on_conv, n_off, alpha_conv, method='lima')
 
-    result = SkyImageCollection(significance=significance_lima,
-                                n_on=n_on_,
-                                background=background,
-                                excess=n_on_ - background,
-                                alpha=alpha)
+    images = SkyImageList([
+        SkyImage(name='significance', data=significance_conv),
+        SkyImage(name='n_on', data=n_on_conv),
+        SkyImage(name='background', data=background_conv),
+        SkyImage(name='excess', data=excess_conv),
+        SkyImage(name='alpha', data=alpha_conv),
+    ])
 
-    if not exposure is None:
-        kernel.normalize('integral')
-        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
-        flux = (n_on_ - background_) / exposure_
-        result.flux = flux
+    # TODO: should we be doing this here?
+    # Wouldn't it be better to let users decide if they want this,
+    # and have it easily accessible as an attribute or method?
+    _add_other_images(images, exposure, kernel, conv_opt)
 
-    return result
+    return images
+
+
+def _add_other_images(images, exposure, kernel, conv_opt):
+    if not exposure:
+        return
+
+    from scipy.ndimage import convolve
+    kernel.normalize('integral')
+    exposure_conv = convolve(exposure, kernel.array, **conv_opt)
+    flux = images['excess'] / exposure_conv
+    images['flux'] = SkyImage(name='flux', data=flux, wcs=images['excess'].wcs)

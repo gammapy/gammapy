@@ -550,12 +550,12 @@ class SkyCube(object):
 
         return hdu_list
 
-    def to_image_list(self):
-        """Convert sky cube to a `gammapy.image.SkyImageList`.
+    def to_images(self):
+        """Convert sky cube to a `gammapy.image.SkyCubeImages`.
         """
-        from ..image.lists import SkyImageList
+        from .images import SkyCubeImages
         images = [self.sky_image(idx) for idx in range(len(self.data))]
-        return SkyImageList(self.name, images, self.wcs, self.energy)
+        return SkyCubeImages(self.name, images, self.wcs, self.energy)
 
     def writeto(self, filename, **kwargs):
         """Writes SkyCube to FITS file.

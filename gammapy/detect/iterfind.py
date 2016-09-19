@@ -2,34 +2,34 @@
 """An iterative multi-scale source detection method.
 
 This is a prototype implementation of the following algorithm:
-1. Input is: count, background and exposure map and list of scales
-2. Compute significance maps on multiple scales (disk-correlate)
+1. Input is: count, background and exposure image and list of scales
+2. Compute significance images on multiple scales (disk-correlate)
 3. Largest peak on any scale gives a seed position / extension (the scale)
 4. Fit a 2D Gauss-model source using the seed parameters
 5. Add the source to a list of detected sources and the background model
 6. Restart at 2, but this time with detected sources added to the background
-   model, i.e. significance maps will be "residual significance" maps.
+   model, i.e. significance images will be "residual significance" images.
 
 TODO: tons of things, e.g.
 * Use Sherpa catalog pipeline for `fit_source_parameters step.
   This will automatically take care of these points:
     * Keep parameters of previously found sources free when adding a new source
-    * Write more debug maps (e.g. excess)
+    * Write more debug images (e.g. excess)
       and info (e.g. sources_guess positions).
     * Add PSF convolution
-* Use TS maps with Gauss source morphology instead of disk.
+* Use TS images with Gauss source morphology instead of disk.
 * Make it more modular and more abstract; put in gammapy.detect
-  - user should be able to plug-in their significance map computation?
+  - user should be able to plug-in their significance image computation?
   - support different source models?
-  - Separate Iterator, SignificanceMapCalculator, Guesser, Fitter ...
+  - Separate Iterator, SignificanceImageCalculator, Guesser, Fitter ...
     and implement different methods as sub-classes or via callbacks?
   - e.g. list of peaks should be replaced with some abstract class that
     allows different characteristics / methods to be implemented.
 * Introduce parameters that allow us to vary the procedure
-* Check if Python garbage collection for iter_maps sets in OK
+* Check if Python garbage collection for iter_images sets in OK
   or if explicit garbage collection is needed.
 * Use photutils aperture photometry for estimate_flux?
-* Introduce FLUX_SCALE = 1e-10 parameter to avoid roundoff error problems?
+* Introduce FLUX_SCALE = 1e-10 parameter to avoid round-off error problems?
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
@@ -75,15 +75,15 @@ class IterativeSourceDetector(object):
         Use empty string for no debug output.
     """
 
-    def __init__(self, maps, scales, max_sources=10, significance_threshold=5,
+    def __init__(self, images, scales, max_sources=10, significance_threshold=5,
                  max_ncall=300, debug_output_folder='', overwrite=False):
-        self.maps = maps
+        self.images = images
         # Note: FITS convention is to start counting pixels at 1
-        y, x = np.indices(maps['counts'].shape, dtype=np.int32) + 1
-        self.maps['x'], self.maps['y'] = x, y
+        y, x = np.indices(images['counts'].shape, dtype=np.int32) + 1
+        self.images['x'], self.images['y'] = x, y
 
-        # Temp maps that change in each iteration
-        self.iter_maps = dict()
+        # Temp images that change in each iteration
+        self.iter_images = dict()
         self.find_peaks = []
 
         self.scales = np.asanyarray(scales)
@@ -110,20 +110,20 @@ class IterativeSourceDetector(object):
                 Path(debug_folder).mkdir()
                 log.info('mkdir {0}'.format(debug_folder))
 
-            self.compute_iter_maps()
+            self.compute_iter_images()
             if self.debug_output_folder:
-                # Save per iteration maps
+                # Save per iteration images
                 for name in ['background']:
                     filename = '{0}/{1}.fits'.format(debug_folder, name)
                     log.info('Writing {0}'.format(filename))
-                    fits.writeto(filename, self.iter_maps[name], clobber=self.overwrite)
+                    fits.writeto(filename, self.iter_images[name], clobber=self.overwrite)
 
-                # Save per iteration and scale maps
+                # Save per iteration and scale images
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
                         log.info('Writing {0}'.format(filename))
-                        fits.writeto(filename, self.iter_maps[name][scale], clobber=self.overwrite)
+                        fits.writeto(filename, self.iter_images[name][scale], clobber=self.overwrite)
 
             self.find_peaks()
             # TODO: debug output to JSON here and for later steps
@@ -142,30 +142,30 @@ class IterativeSourceDetector(object):
                 log.warning('Fit failed. Full stop.')
                 break
 
-    def compute_iter_maps(self):
-        """Compute maps for this iteration."""
-        log.debug('Computing maps for this iteration.')
-        self.iter_maps = dict()
+    def compute_iter_images(self):
+        """Compute images for this iteration."""
+        log.debug('Computing images for this iteration.')
+        self.iter_images = dict()
 
-        background = self.maps['background']
+        background = self.images['background']
         background += self.model_excess(self.sources)
-        self.iter_maps['background'] = background
+        self.iter_images['background'] = background
 
-        self.iter_maps['significance'] = dict()
+        self.iter_images['significance'] = dict()
         for scale in self.scales:
-            counts = disk_correlate(self.maps['counts'], scale)
-            background = disk_correlate(self.iter_maps['background'], scale)
+            counts = disk_correlate(self.images['counts'], scale)
+            background = disk_correlate(self.iter_images['background'], scale)
             significance = stats.significance(counts, background)
-            self.iter_maps['significance'][scale] = significance
+            self.iter_images['significance'][scale] = significance
 
     def model_excess(self, sources):
         """Compute model excess image."""
-        x, y = self.maps['x'], self.maps['y']
+        x, y = self.images['x'], self.images['y']
         flux = np.zeros_like(x, dtype=np.float64)
         for source in sources:
             source_flux = gauss2d(x, y, **source)
             flux += source_flux
-        excess = flux * self.maps['exposure']
+        excess = flux * self.images['exposure']
         return excess
 
     def find_peaks(self):
@@ -173,7 +173,7 @@ class IterativeSourceDetector(object):
         log.debug('Finding peaks.')
         self.peaks = []
         for scale in self.scales:
-            image = self.iter_maps['significance'][scale]
+            image = self.iter_images['significance'][scale]
             # Note: significance images sometimes contain Inf or NaN values.
             # We set them here to a value so that they will be ignored
             mask = np.invert(np.isfinite(image))
@@ -236,10 +236,10 @@ class IterativeSourceDetector(object):
 
         def fit_stat(xpos, ypos, sigma, flux):
             """Define CASH fit statistic for Gauss model"""
-            data = self.maps['counts']
+            data = self.images['counts']
             # Note: No need to re-compute excess model for all previous source,
-            # that is already contained in the background in iter_maps.
-            background = self.iter_maps['background']
+            # that is already contained in the background in iter_images.
+            background = self.iter_images['background']
             sources = [dict(xpos=xpos, ypos=ypos, sigma=sigma, flux=flux)]
             model = background + self.model_excess(sources)
             cash = stats.cash(data, model).sum()
@@ -286,28 +286,28 @@ class IterativeSourceDetector(object):
         log.debug('Estimating flux')
         SOURCE_RADIUS_FACTOR = 2
         radius = SOURCE_RADIUS_FACTOR * source['sigma']
-        r2 = ((self.maps['x'] - source['xpos']) ** 2 +
-              (self.maps['y'] - source['ypos']) ** 2)
+        r2 = ((self.images['x'] - source['xpos']) ** 2 +
+              (self.images['y'] - source['ypos']) ** 2)
         mask = (r2 < radius ** 2)
         npix = mask.sum()
         if method == 'sum_and_divide':
-            counts = self.maps['counts'][mask].sum()
-            background = self.iter_maps['background'][mask].sum()
+            counts = self.images['counts'][mask].sum()
+            background = self.iter_images['background'][mask].sum()
             # Note: exposure is not per pixel.
             # It has units m^2 s TeV
-            exposure = self.maps['exposure'][mask].mean()
+            exposure = self.images['exposure'][mask].mean()
             excess = counts - background
             # TODO: check if true:
             # Flux is differential flux at 1 TeV in units m^-2 s^-1 TeV^-1
             # Or is it integral flux above 1 TeV in units of m^-2 s^-1?
             flux = excess / exposure
         elif method == 'divide_and_sum':
-            counts = self.maps['counts'][mask].sum()
-            background = self.iter_maps['background'][mask].sum()
-            exposure = self.maps['exposure'][mask].mean()
-            excess_image = self.maps['counts'] - self.iter_maps['background']
+            counts = self.images['counts'][mask].sum()
+            background = self.iter_images['background'][mask].sum()
+            exposure = self.images['exposure'][mask].mean()
+            excess_image = self.images['counts'] - self.iter_images['background']
             excess = excess_image[mask].sum()
-            flux_image = (self.maps['counts'] - self.iter_maps['background']) / self.maps['exposure']
+            flux_image = (self.images['counts'] - self.iter_images['background']) / self.images['exposure']
             flux = flux_image[mask].sum()
         log.debug('Flux estimation for source region radius: {0}'.format(radius))
         log.debug('npix: {0}'.format(npix))

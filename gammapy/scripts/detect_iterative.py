@@ -64,7 +64,7 @@ def detect_iterative(scales,
     log.info('Scales in pix: {0}'.format(scales_pix))
 
     # Run the iterative source detection
-    detector = IterativeSourceDetector(maps=maps,
+    detector = IterativeSourceDetector(images=maps,
                                        scales=scales_pix,
                                        debug_output_folder=debug_output_folder,
                                        overwrite=overwrite)

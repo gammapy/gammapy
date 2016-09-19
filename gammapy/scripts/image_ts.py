@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 import logging
 from ..extern.pathlib import Path
-from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..utils.scripts import get_parser, set_up_logging_from_args, make_path
+from ..image import SkyImage, SkyImageList
+from ..detect import compute_ts_image_multiscale
 
 __all__ = ['image_ts']
 
@@ -25,7 +27,7 @@ def image_ts_main(args=None):
                         help="Width of the shell, measured as fraction of the"
                              " inner radius.")
     parser.add_argument('--scales', type=float, default=[0], nargs='+',
-                        help='List of scales to compute TS maps for in deg.')
+                        help='List of scales to compute TS images for in deg.')
     parser.add_argument('--downsample', type=str, default='auto',
                         help="Downsample factor of the data to obtain optimal"
                              " performance."
@@ -61,23 +63,20 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     * 'background' -- Background image
     * 'exposure' -- Exposure image
     """
-    # Execute script
-    from astropy.io import fits
-    from gammapy.detect import compute_ts_map_multiscale
-    from gammapy.image import SkyImageCollection
-
     # Read data
     log.info('Reading {}'.format(input_file))
-    skyimages = SkyImageCollection.read(input_file)
+    images = SkyImageList.read(input_file)
     log.info('Reading {}'.format(psf))
-    psf_parameters = json.load(open(psf))
+
+    with make_path(psf).open() as fh:
+        psf_parameters = json.load(fh)
 
     if residual:
         log.info('Reading {}'.format(model))
-        skyimages['model'] = SkyImage.read(model)
+        images['model'] = SkyImage.read(model)
 
-    results = compute_ts_map_multiscale(skyimages, psf_parameters, scales, downsample,
-                                        residual, morphology, width, threshold)
+    results = compute_ts_image_multiscale(images, psf_parameters, scales, downsample,
+                                          residual, morphology, width, threshold)
 
     filename = Path(output_file).name
     folder = Path(output_file).parent
@@ -89,7 +88,7 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
         for scale, result in zip(scales, results):
             # TODO: this is unnecessarily complex
             # Simplify, e.g. by letting the user specify a `base_dir`.
-            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
+            filename_ = filename.replace('.fits', '_{:.3f}.fits'.format(scale))
             fn = Path(folder) / filename_
 
             log.info('Writing {}'.format(fn))

@@ -15,7 +15,7 @@ def image_coordinates_main(args=None):
     parser.add_argument('outfile', type=str,
                         help='Output FITS file name')
     parser.add_argument('--make_coordinate_maps', action='store_true',
-                        help='Create coordinate maps')
+                        help='Create coordinate images')
     parser.add_argument('--make_distance_map', action='store_true',
                         help='Create distance to mask map')
     parser.add_argument('--overwrite', action='store_true',
@@ -29,7 +29,7 @@ def image_coordinates(infile,
                       make_coordinate_maps,
                       make_distance_map,
                       overwrite):
-    """Make maps that can be used to create profiles.
+    """Make images that can be used to create profiles.
 
     The following images can be created:
     * LON -- Longitude coordinate
@@ -48,7 +48,7 @@ def image_coordinates(infile,
 
     if make_coordinate_maps:
         image = SkyImage.empty_like(hdu)
-        log.info('Computing LON and LAT maps')
+        log.info('Computing LON and LAT images')
         lon, lat = image.coordinates()
         out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))
         out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
