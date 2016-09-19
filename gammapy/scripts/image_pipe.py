@@ -58,6 +58,7 @@ class ObsImage(object):
         self.empty_image = empty_image
         self.header = self.empty_image.to_image_hdu().header
         if exclusion_mask:
+            exclusion_mask.name = 'exclusion'
             self.images['exclusion'] = exclusion_mask
 
         self.ncounts_min = ncounts_min
@@ -70,13 +71,13 @@ class ObsImage(object):
 
     def counts_image(self):
         """Fill the counts image for the events of one observation."""
-        counts_image = SkyImage.empty_like(self.empty_image)
+        self.images['counts'] = SkyImage.empty_like(self.empty_image, name='counts')
+
         if len(self.events) > self.ncounts_min:
-            counts_image.fill(value=self.events)
+            self.images['counts'].fill(value=self.events)
         else:
             log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
                      format(len(self.events), self.ncounts_min))
-        self.images["counts"] = counts_image
 
     def bkg_image(self, bkg_norm=True):
         """
@@ -270,6 +271,7 @@ class MosaicImage(object):
         self.header = self.empty_image.to_image_hdu().header
         self.exclusion_mask = exclusion_mask
         if exclusion_mask:
+            exclusion_mask.name = 'exclusion'
             self.images['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
         self.psfmeantab = None
@@ -293,10 +295,11 @@ class MosaicImage(object):
             Disk radius in pixels for the significance image
         """
 
-        total_counts = SkyImage.empty_like(self.empty_image)
+        total_counts = SkyImage.empty_like(self.empty_image, name='counts')
         if make_background_image:
-            total_bkg = SkyImage.empty_like(self.empty_image)
-            total_exposure = SkyImage.empty_like(self.empty_image)
+            total_bkg = SkyImage.empty_like(self.empty_image, name='bkg')
+            total_exposure = SkyImage.empty_like(self.empty_image, name='exposure')
+
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -305,16 +308,18 @@ class MosaicImage(object):
                 continue
             else:
                 obs_image.counts_image()
-                total_counts.data += obs_image.images["counts"].data
+                total_counts.data += obs_image.images['counts'].data
                 if make_background_image:
                     obs_image.bkg_image(bkg_norm)
                     obs_image.exposure_image(spectral_index, for_integral_flux)
-                    total_bkg.data += obs_image.images["bkg"].data
-                    total_exposure.data += obs_image.images["exposure"].data
-        self.images["counts"] = total_counts
+                    total_bkg.data += obs_image.images['bkg'].data
+                    total_exposure.data += obs_image.images['exposure'].data
+
+        self.images['counts'] = total_counts
+
         if make_background_image:
-            self.images["bkg"] = total_bkg
-            self.images["exposure"] = total_exposure
+            self.images['bkg'] = total_bkg
+            self.images['exposure'] = total_exposure
             self.significance_image(radius)
             self.excess_image()
 
@@ -326,15 +331,15 @@ class MosaicImage(object):
         radius : float
             Disk radius in pixels.
         """
-        image = SkyImage.empty_like(self.empty_image)
-        counts = disk_correlate(self.images["counts"].data, radius)
-        bkg = disk_correlate(self.images["bkg"].data, radius)
+        image = SkyImage.empty_like(self.empty_image, name='significance')
+        counts = disk_correlate(self.images['counts'].data, radius)
+        bkg = disk_correlate(self.images['bkg'].data, radius)
         image.data = significance(counts, bkg)
 
-        self.images["significance"] = image
+        self.images['significance'] = image
 
     def excess_image(self):
         """Compute excess between counts and bkg image."""
-        total_excess = SkyImage.empty_like(self.empty_image)
-        total_excess.data = self.images["counts"].data - self.images["bkg"].data
-        self.images["excess"] = total_excess
+        total_excess = SkyImage.empty_like(self.empty_image, name='excess')
+        total_excess.data = self.images['counts'].data - self.images['bkg'].data
+        self.images['excess'] = total_excess

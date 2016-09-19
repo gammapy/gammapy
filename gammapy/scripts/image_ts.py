@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 import logging
 from ..extern.pathlib import Path
-from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..utils.scripts import get_parser, set_up_logging_from_args, make_path
 from ..image import SkyImage, SkyImageCollection
 from ..detect import compute_ts_image_multiscale
 
@@ -65,15 +65,17 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     """
     # Read data
     log.info('Reading {}'.format(input_file))
-    skyimages = SkyImageCollection.read(input_file)
+    images = SkyImageCollection.read(input_file)
     log.info('Reading {}'.format(psf))
-    psf_parameters = json.load(open(psf))
+
+    with make_path(psf).open() as fh:
+        psf_parameters = json.load(fh)
 
     if residual:
         log.info('Reading {}'.format(model))
-        skyimages['model'] = SkyImage.read(model)
+        images['model'] = SkyImage.read(model)
 
-    results = compute_ts_image_multiscale(skyimages, psf_parameters, scales, downsample,
+    results = compute_ts_image_multiscale(images, psf_parameters, scales, downsample,
                                           residual, morphology, width, threshold)
 
     filename = Path(output_file).name
