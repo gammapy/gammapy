@@ -15,8 +15,6 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 
 
 __all__ = [
-    'atrous_hdu',
-    'atrous_image',
     'bin_events_in_image',
     'binary_disk',
     'binary_ring',
@@ -158,60 +156,6 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
-
-
-def atrous_image(image, n_levels):
-    """Compute a trous transform for a given image.
-
-    Parameters
-    ----------
-    image : 2D array
-        Input image
-    n_levels : integer
-        Number of wavelet scales.
-
-    Returns
-    -------
-    images : list of 2D arrays
-        Wavelet transformed images.
-    """
-    # https://code.google.com/p/image-funcut/
-    from imfun import atrous
-    return atrous.decompose2d(image, level=n_levels)
-
-
-def atrous_hdu(hdu, n_levels):
-    """Compute a trous transform for a given FITS HDU.
-
-    Parameters
-    ----------
-    hdu : 2D image HDU
-        Input image
-    n_levels : integer
-        Number of wavelet scales.
-
-    Returns
-    -------
-    images : HDUList
-        Wavelet transformed images.
-    """
-    image = hdu.data
-    log.info('Computing a trous transform for {0} levels ...'.format(n_levels))
-    images = atrous_image(image, n_levels)
-    hdus = fits.HDUList()
-
-    for level, image in enumerate(images):
-        if level < len(images) - 1:
-            name = 'level_{0}'.format(level)
-        else:
-            name = 'residual'
-        scale_pix = 2 ** level
-        scale_deg = hdu.header['CDELT2'] * scale_pix
-        log.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
-                 ''.format(name, scale_pix, scale_deg))
-        hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
-
-    return hdus
 
 
 def process_image_pixels(images, kernel, out, pixel_function):
