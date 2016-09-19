@@ -16,7 +16,7 @@ class TestSpectrumObservation:
         self.obs2 = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits')
 
         # Change threshold to make stuff more interesting
-        self.obs.on_vector.lo_threshold = 1.2 * u.TeV
+        self.obs.lo_threshold = 1.2 * u.TeV
 
         self.obs_stack = SpectrumObservation.stack([self.obs, self.obs2])
 

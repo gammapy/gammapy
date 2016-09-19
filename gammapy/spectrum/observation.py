@@ -108,10 +108,20 @@ class SpectrumObservation(object):
         """Low energy threshold"""
         return self.on_vector.lo_threshold
 
+    @lo_threshold.setter
+    def lo_threshold(self, threshold):
+        self.on_vector.lo_threshold = threshold
+        self.off_vector.lo_threshold = threshold
+
     @property
     def hi_threshold(self):
         """High energy threshold"""
         return self.on_vector.hi_threshold
+
+    @hi_threshold.setter
+    def hi_threshold(self, threshold):
+        self.on_vector.hi_threshold = threshold
+        self.off_vector.hi_threshold = threshold
 
     @property
     def background_vector(self):
