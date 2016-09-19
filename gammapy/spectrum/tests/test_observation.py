@@ -43,6 +43,10 @@ class TestSpectrumObservation:
         assert table['n_on'].sum() == 172
         assert_quantity_allclose(table['livetime'].max(), 1581.73681640625 * u.second)
 
+    def test_total_stats(self):
+        excess = self.obs.total_stats.excess
+        assert_allclose(excess, 166.428, atol=1e-3)
+
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.obs.peek()

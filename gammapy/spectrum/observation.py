@@ -100,8 +100,13 @@ class SpectrumObservation(object):
 
     @property
     def ebounds(self):
-        """Energy bounds array."""
+        """Reconstruced energy bounds array."""
         return self.on_vector.energy.data.to('TeV')
+    
+    @property
+    def nbins(self):
+        """Number of reconstruced energy bins"""
+        return self.on_vector.energy.nbins
 
     @property
     def lo_threshold(self):
@@ -139,20 +144,16 @@ class SpectrumObservation(object):
 
     @property
     def total_stats(self):
-        """Return `~gammapy.spectrum.SpectrumStats`
-
-        ``a_on`` and ``a_off`` are averaged over all energies.
+        """Return total `~gammapy.spectrum.SpectrumStats`
         """
-        return SpectrumStats(
-            energy_min=self.ebounds[:-1],
-            energy_max=self.ebounds[1:],
-            n_on=int(self.on_vector.total_counts.value),
-            n_off=int(self.off_vector.total_counts.value),
-            a_on=np.mean(self.on_vector.backscal),
-            a_off=np.mean(self.off_vector.backscal),
-            obs_id=self.obs_id,
-            livetime=self.livetime,
-        )
+        stats_list = [self.stats(ii) for ii in range(self.nbins)]
+        return SpectrumStats.stack(stats_list)
+
+    @property
+    def total_stats_safe_range(self):
+        """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
+        """
+        raise NotImplementedError()
 
     def stats(self, idx):
         """Compute stats for one energy bin.
