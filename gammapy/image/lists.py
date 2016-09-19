@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import logging
-import numpy as np
+from astropy.extern import six
 from astropy.io import fits
+from astropy.io.fits import HDUList
 from astropy.units import Quantity
-from ..extern.bunch import Bunch
 from ..image import SkyImage
 from ..utils.scripts import make_path
 
@@ -14,124 +14,139 @@ __all__ = ['SkyImageCollection', 'SkyImageList']
 log = logging.getLogger(__name__)
 
 
-class SkyImageCollection(Bunch):
-    """
-    Container for a collection of `~gammapy.image.SkyImage` objects.
+class SkyImageCollection(list):
+    """List of `~gammapy.image.SkyImage` objects.
 
-    This class bundles as set of `SkyImage` objects in single data container and provides
-    convenience methods for FITS I/O and `~gammapy.extern.bunch.Bunch` like
-    handling of the data members.
+    This is a simple class that provides
 
-    TODO: maybe `SkyImageList` should be a sub-class of `SkyImageCollection`?
-    `SkyImageList` is a special case, for a collection of images in energy bands.
-
-    Parameters
-    ----------
-    name : str
-        Name of the collection
-    meta : `~collections.OrderedDict`
-        Dictionary to store meta data for the collection.
+    * FITS I/O
+    * Dict-like access by string image name keys
+      in addition to list-like access by integer index.
 
     Examples
     --------
+
     Load the image collection from a FITS file:
 
-    >>> from gammapy.image import SkyImageCollection
+    >>> from gammapy.image import SkyImage, SkyImageCollection
     >>> images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
-    Then try tab completion on the ``images`` object to access the images.
-    E.g. to show the counts image::
+    Which images are available?
 
-    >>> images.counts.show('ds9')
+    >>> images.names
+
+    Access one image by list index or image name string key:
+
+    >>> images[0]
+    >>> images['counts']
+    >>> images['counts'].show('ds9')
+
+    Print some summary info about the images:
+
+    >>> print(images)
+
+    Remove and append an image:
+
+    >>> del images['background']
+    >>> images.
+
     """
 
-    def __init__(self, name=None, meta=None, **kwargs):
-        # Set real class attributes
-        self._image_names = []
-        self.name = name
-        if meta:
-            self.meta = meta
+    # TODO: implement delitem by name
+    # TODO: implement copy?
+    # TODO: implement convenience constructors for many images with the same WCS?
+
+    def __init__(self, images=None, meta=None):
+        if images is None:
+            images = []
+        super(SkyImageCollection, self).__init__(images)
+
+        if meta is not None:
+            self.meta = OrderedDict(meta)
         else:
             self.meta = OrderedDict()
 
-        # Everything else is stored as dict entries
-        for key in kwargs:
-            self[key] = kwargs[key]
+    @property
+    def names(self):
+        """List of image names."""
+        return [_.name for _ in self]
 
-    def __setitem__(self, key, item):
+    def __getitem__(self, key):
+        """Add dict-like access by string image name as key.
         """
-        Overwrite __setitem__ operator to remember order the images are added
-        to the collection, by storing it in the _image_names list.
-        """
-        if isinstance(item, np.ndarray):
-            item = SkyImage(name=key, data=item)
-        if isinstance(item, SkyImage):
-            self._image_names.append(key)
+        # Special lookup by image name for string key
+        if isinstance(key, six.string_types):
+            if key in self.names:
+                idx = self.names.index(key)
+                return self[idx]
+            else:
+                fmt = 'No image with name: {}.\nAvailable image names: {}'
+                raise KeyError(fmt.format(key, self.names))
 
-        super(SkyImageCollection, self).__setitem__(key, item)
+        # Normal list lookup (for int key)
+        return super(SkyImageCollection, self).__getitem__(key)
+
+    def __setitem__(self, key, image):
+        if isinstance(key, six.string_types):
+            if image.name and image.name != key:
+                fmt = "SkyImage(name='{}') doesn't match assigned key='{}'"
+                raise KeyError(fmt.format(image.name, key))
+
+            if key in self.names:
+                idx = self.names.index(key)
+                super(SkyImageCollection, self).__setitem__(idx, image)
+            else:
+                if image.name is None:
+                    image.name = key
+                self.append(image)
+        else:
+            super(SkyImageCollection, self).__setitem__(key, image)
 
     @classmethod
-    def read(cls, filename):
+    def from_hdu_list(cls, hdu_list):
+        """Construct from `~astropy.io.fits.HDUList`.
         """
-        Create collection of images from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            FITS file name.
-        """
-        hdulist = fits.open(str(make_path(filename)))
-        kwargs = {}
-        _image_names = []  # list of image names to save order in FITS file
-
-        for hdu in hdulist:
+        images = []
+        for hdu in hdu_list:
             image = SkyImage.from_image_hdu(hdu)
+            images.append(image)
+        return cls(images)
 
-            # This forces lower case image names, but only on the collection object
-            # When writing to FITS again the image.name attribute is used.
-            name = image.name.lower()
-            kwargs[name] = image
-            _image_names.append(name)
-        _ = cls(**kwargs)
-        _._map_names = _image_names
-        return _
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Write to FITS file.
 
-    def write(self, filename=None, **kwargs):
+        ``kwargs`` are passed to `astropy.io.fits.open`.
         """
-        Write images to FITS file.
+        filename = make_path(filename)
+        hdu_list = fits.open(str(filename), **kwargs)
+        return cls.from_hdu_list(hdu_list)
 
-        Parameters
-        ----------
-        filename : str
-            FITS file name.
+    def to_hdu_list(self):
+        """Convert to `~astropy.io.fits.HDUList`.
         """
-        hdulist = fits.HDUList()
+        hdu_list = HDUList()
+        for image in self:
+            hdu = image.to_image_hdu()
+            hdu_list.append(hdu)
+        return hdu_list
 
-        for name in self.get('_image_names', sorted(self)):
-            if isinstance(self[name], SkyImage):
-                hdu = self[name].to_image_hdu()
+    def write(self, filename, **kwargs):
+        """Write to FITS file.
 
-                # For now add common collection meta info to the single image headers
-                hdu.header.update(self.meta)
-                hdu.name = name
-                hdulist.append(hdu)
-            else:
-                log.warn("Can't save {} to file, not a image.".format(name))
-
-        hdulist.writeto(filename, **kwargs)
-
-    def info(self):
+        ``kwargs`` are passed to `astropy.io.fits.HDUList.writeto`.
         """
-        Print summary info about the image collection.
-        """
-        print(str(self))
+        filename = make_path(filename)
+        hdu_list = self.to_hdu_list()
+        hdu_list.writeto(str(filename), **kwargs)
 
     def __str__(self):
-        info = ''
-        for name in self.get('_image_names', sorted(self)):
-            info += self[name].__str__()
-            info += '\n'
-        return info
+        s = 'SkyImageCollection:\n'
+        s += 'Number of images: {}\n'.format(len(self))
+        for idx, image in enumerate(self):
+            s += 'Image(index={}, name={}) properties:'.format(idx, image.name)
+            s += str(image)
+        return s
 
 
 class SkyImageList(object):
