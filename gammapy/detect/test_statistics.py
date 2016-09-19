@@ -19,7 +19,7 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _x_best_leastsq)
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
-from ..image import (measure_containment_radius, SkyImageCollection)
+from ..image import measure_containment_radius, SkyImageCollection, SkyImage
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = [
@@ -113,8 +113,8 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
     multiscale_result : list
         List of `~gammapy.image.SkyImageCollection` objects.
     """
-    BINSZ = abs(images.counts.wcs.wcs.cdelt[0])
-    shape = images.counts.data.shape
+    BINSZ = abs(images['counts'].wcs.wcs.cdelt[0])
+    shape = images['counts'].data.shape
 
     multiscale_result = []
 
@@ -141,14 +141,14 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
 
-        skyimages_ = SkyImageCollection()
-        for name, func in zip(images._image_names, funcs):
+        images2 = SkyImageCollection()
+        for name, func in zip(images.names, funcs):
             if downsampled:
                 pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))
-                skyimages_[name] = images[name].pad(pad_width)
-                skyimages_[name] = skyimages_[name].downsample(factor, func)
+                images2[name] = images[name].pad(pad_width)
+                images2[name] = images2[name].downsample(factor, func)
             else:
-                skyimages_[name] = images[name]
+                images2[name] = images[name]
 
         # Set up PSF and source kernel
         kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
@@ -171,11 +171,13 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
             kernel.normalize()
 
         if residual:
-            skyimages_['background'].data += skyimages_['model'].data
+            images2['background'].data += images2['model'].data
 
         # Compute TS image
-        ts_results = compute_ts_image(skyimages_.counts, skyimages_.background,
-                                      skyimages_.exposure, kernel, *args, **kwargs)
+        ts_results = compute_ts_image(
+            images2['counts'], images2['background'], images2['exposure'],
+            kernel, *args, **kwargs
+        )
         log.info('TS image computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
         ts_results.meta['MORPH'] = (morphology, 'Source morphology assumption')
         ts_results.meta['SCALE'] = (scale, 'Source morphology size scale in deg')
@@ -224,8 +226,12 @@ def compute_maximum_ts_image(ts_image_results):
         amplitude_max[index] = amplitude[:, :, i][index]
 
     meta = {'MORPH': (ts_image_results[0].morphology, 'Source morphology assumption')}
-    return SkyImageCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
-                              meta=meta)
+
+    return SkyImageCollection([
+        SkyImage(name='ts', data=ts_max.astype('float32')),
+        SkyImage(name='niter', data=niter_max.astype('int16')),
+        SkyImage(name='amplitude', data=amplitude_max.astype('float32')),
+    ], meta=meta)
 
 
 def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
@@ -359,8 +365,12 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
 
     runtime = np.round(time() - t_0, 2)
     meta = OrderedDict(runtime=runtime)
-    return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes, wcs=wcs,
-                              niter=niter, meta=meta)
+    return SkyImageCollection([
+        SkyImage(name='ts', data=ts.astype('float32'), wcs=wcs),
+        SkyImage(name='sqrt_ts', data=sqrt_ts.astype('float32'), wcs=wcs),
+        SkyImage(name='amplitude', data=amplitudes.astype('float32'), wcs=wcs),
+        SkyImage(name='niter', data=niter.astype('int16'), wcs=wcs),
+    ], meta=meta)
 
 
 def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
