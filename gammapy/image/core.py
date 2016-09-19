@@ -17,8 +17,7 @@ from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
-from ..image.utils import make_header, _bin_events_in_cube
-from ..data import EventList
+from ..image.utils import make_header
 
 __all__ = ['SkyImage']
 
@@ -234,25 +233,33 @@ class SkyImage(object):
 
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
-    def fill(self, value):
-        """
-        Fill image with events.
+    def fill_events(self, events):
+        """Fill events (modifies ``data`` attribute).
+
+        Calls `numpy.histogramdd`
 
         Parameters
         ----------
-        value : float or `~gammapy.data.EventList`
-             Value to fill in the image.
-             If an event list is given, events will be binned in the image.
+        events : `~gammapy.data.EventList`
+            Event list
+
+        Examples
+        --------
+        Show example how to make an empty image and fill it.
         """
-        if isinstance(value, EventList):
-            counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
-                                         origin=_DEFAULT_WCS_ORIGIN).sum(axis=0)
-            self.data = counts.value
-            self.unit = 'ct'
-        elif np.isscalar(value):
-            self.data.fill(value)
-        else:
-            raise TypeError("Can't fill value of type {}".format(type(value)))
+        xx, yy = self._events_xy(events)
+        bins = self._bins_pix
+        data = np.histogramdd([yy, xx], bins)[0]
+        self.data = self.data + data
+
+    def _events_xy(self, events):
+        return self.wcs_skycoord_to_pixel(events.radec)
+
+    @property
+    def _bins_pix(self):
+        bins0 = np.arange(self.data.shape[0] + 1) - 0.5
+        bins1 = np.arange(self.data.shape[1] + 1) - 0.5
+        return bins0, bins1
 
     def write(self, filename, *args, **kwargs):
         """

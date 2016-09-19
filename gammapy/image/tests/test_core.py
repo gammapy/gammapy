@@ -175,12 +175,6 @@ class TestSkyImagePoisson:
         empty = SkyImage.empty()
         assert empty.data.shape == (200, 200)
 
-    def test_fill_float(self):
-        image = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
-                               coordsys='CEL')
-        image.fill(42)
-        assert_equal(image.data, np.full((200, 200), 42))
-
     @requires_data('gammapy-extra')
     def test_fill_events(self):
         dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
@@ -191,16 +185,15 @@ class TestSkyImagePoisson:
         counts = SkyImage.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
                                 yref=events.meta['DEC_OBJ'], dtype='int',
                                 coordsys='CEL')
-        counts.fill(events)
+        counts.fill_events(events)
         assert counts.data.sum() == 1233
         assert counts.data.shape == (200, 200)
 
     @requires_dependency('reproject')
     def test_reproject(self):
         image_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
-        image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
-                                 coordsys='CEL')
-        image_1.fill(1)
+        image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04, coordsys='CEL')
+        image_1.data.fill(1)
         image_1_repr = image_1.reproject(image_2)
         assert_allclose(image_1_repr.data, np.full((100, 100), 1))
 

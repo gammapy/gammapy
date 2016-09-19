@@ -10,7 +10,7 @@ from ..radial_profile import radial_profile, radial_profile_label_image
 @requires_dependency('scipy')
 def test_radial_profile():
     image = SkyImage.empty()
-    image.fill(value=1)
+    image.data.fill(1)
     center = image.center
     radius = Angle([0.1, 0.2, 0.4, 0.5, 1.0], 'deg')
 

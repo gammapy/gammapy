@@ -3,18 +3,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
-from astropy.wcs import WCS
-from ..utils.wcs import get_wcs_ctype
-from ..utils.energy import EnergyBounds
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
 
 __all__ = [
-    'bin_events_in_image',
     'binary_disk',
     'binary_ring',
     'block_reduce_hdu',
@@ -25,7 +20,6 @@ __all__ = [
     'make_header',
     'process_image_pixels',
     'ring_correlate',
-    'wcs_histogram2d',
 ]
 
 log = logging.getLogger(__name__)
@@ -283,112 +277,6 @@ def image_groupby(images, labels):
     return groups
     # out = groups.aggregate(function)
     # return out
-
-
-def wcs_histogram2d(header, lon, lat, weights=None):
-    """Histogram in world coordinates.
-
-    Parameters
-    ----------
-    header : `~astropy.io.fits.Header`
-        FITS Header
-    lon, lat : `~numpy.ndarray`
-        World coordinates
-    weights : `~numpy.ndarray`, optional
-        Weights
-
-    Returns
-    -------
-    histogram : `~astropy.io.fits.ImageHDU`
-        Histogram
-
-    See also
-    --------
-    numpy.histogramdd
-    """
-    if weights is None:
-        weights = np.ones_like(lon)
-
-    # Get pixel coordinates
-    wcs = WCS(header)
-    origin = 0  # convention for gammapy
-    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-    # Histogram pixel coordinates with appropriate binning.
-    # This was checked against the `ctskymap` ctool
-    # http://cta.irap.omp.eu/ctools/
-    shape = header['NAXIS2'], header['NAXIS1']
-    bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
-    data = np.histogramdd([yy, xx], bins, weights=weights)[0]
-
-    # return fits.ImageHDU(data, header, name='COUNTS')
-    return fits.PrimaryHDU(data, header)
-
-
-def bin_events_in_image(events, reference_image):
-    """Bin events into an image.
-
-    Parameters
-    ----------
-    events : `~gammapy.events.data.EventList`
-        Event list table
-    reference_image : `~astropy.io.fits.ImageHDU`
-        An image defining the spatial bins.
-
-    Returns
-    -------
-    count_image : `~astropy.io.fits.ImageHDU`
-        Count image
-    """
-    if 'GLON' in reference_image.header['CTYPE1']:
-        pos = events.galactic
-    else:
-        pos = events.radec
-
-    return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
-
-
-def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
-    """Bin events in LON-LAT-Energy cube.
-    Parameters
-    ----------
-    events : `~astropy.data.EventList`
-        Event list table
-    wcs : `~astropy.wcs.WCS`
-        WCS instance defining celestial coordinates.
-    shape : tuple
-        Tuple defining the spatial shape.
-    energies : `~gammapy.utils.energy.EnergyBounds`
-        Energy bounds defining the binning. If None only one energy bin defined
-        by the minimum and maximum event energy is used.
-    origin : {0, 1}
-        Pixel coordinate origin.
-
-    Returns
-    -------
-    data : `~numpy.ndarray`
-        Counts cube.
-    """
-    if get_wcs_ctype(wcs) == 'galactic':
-        galactic = events.galactic
-        lon, lat = galactic.l.deg, galactic.b.deg
-    else:
-        lon, lat = events['RA'], events['DEC']
-
-    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-    event_energies = events['ENERGY']
-
-    if energies is None:
-        emin = np.min(event_energies)
-        emax = np.max(event_energies)
-        energies = EnergyBounds.equal_log_spacing(emin, emax, nbins=1, unit='TeV')
-        shape = (2,) + shape
-
-    zz = np.searchsorted(energies.value, event_energies.data)
-    # Histogram pixel coordinates with appropriate binning.
-    # This was checked against the `ctskymap` ctool
-    # http://cta.irap.omp.eu/ctools/
-    bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
-    return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
