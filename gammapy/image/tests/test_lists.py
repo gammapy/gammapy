@@ -168,17 +168,3 @@ class TestSkyImageCollection:
         images = SkyImageCollection(meta=dict(a=42))
         assert images.meta['a'] == 42
 
-
-@requires_data("gammapy-extra")
-class TestSkyImageList:
-    def test_to_cube(self):
-        sky_cube_original = FermiGalacticCenter.diffuse_model()
-        image_list = sky_cube_original.to_image_list()
-        sky_cube_restored = image_list.to_cube()
-
-        assert_array_equal(image_list.images[0].data, sky_cube_original.data[0])
-
-        assert_array_equal(sky_cube_restored.data, sky_cube_original.data)
-        assert_array_equal(sky_cube_restored.energy, sky_cube_original.energy)
-        assert sky_cube_restored.name == sky_cube_original.name
-        assert sky_cube_restored.wcs == sky_cube_original.wcs

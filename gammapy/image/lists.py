@@ -5,11 +5,10 @@ import logging
 from astropy.extern import six
 from astropy.io import fits
 from astropy.io.fits import HDUList
-from astropy.units import Quantity
-from ..image import SkyImage
 from ..utils.scripts import make_path
+from ..image import SkyImage
 
-__all__ = ['SkyImageCollection', 'SkyImageList']
+__all__ = ['SkyImageCollection']
 
 log = logging.getLogger(__name__)
 
@@ -147,43 +146,3 @@ class SkyImageCollection(list):
             s += 'Image(index={}, name={}) properties:'.format(idx, image.name)
             s += str(image)
         return s
-
-
-class SkyImageList(object):
-    """
-    Class to represent connection between `~gammapy.image.SkyImage` and `~gammapy.cube.SkyCube`.
-
-    Keeps list of images and has methods to convert between them and SkyCube.
-
-    Parameters
-    ----------
-    name : str
-        Name of the sky image list.
-    images : list of `~gammapy.image.SkyImage`
-        Data array as list of images.
-    wcs : `~astropy.wcs.WCS`
-        Word coordinate system transformation
-    energy : `~astropy.units.Quantity`
-        Energy array
-    meta : dict
-        Dictionary to store meta data.
-    """
-
-    def __init__(self, name=None, images=None, wcs=None, energy=None, meta=None):
-        self.name = name
-        self.images = images
-        self.wcs = wcs
-        self.energy = energy
-        self.meta = meta
-
-    def to_cube(self):
-        """Convert this list of images to a `~gammapy.cube.SkyCube`.
-        """
-        from ..cube import SkyCube
-        if hasattr(self.images[0].data, 'unit'):
-            unit = self.images[0].data.unit
-        else:
-            unit = None
-        data = Quantity([image.data for image in self.images],
-                        unit)
-        return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy, meta=self.meta)
