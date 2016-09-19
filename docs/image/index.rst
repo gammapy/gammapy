@@ -35,7 +35,7 @@ This loads a prepared Fermi 2FHL FITS image of the Vela region, creates a
 `SkyImage` and shows it on the the screen by calling `SkyImage.show()`.
 
 To explore further the SkyImage class try tab completion on the ``image`` object
-in an interactive python environment or see the :doc:`skymaps` page.
+in an interactive python environment or see the :doc:`sky_image` page.
 
 
 Using `gammapy.image`

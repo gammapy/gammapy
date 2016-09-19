@@ -1,5 +1,7 @@
-Sky Maps
-========
+.. _sky_image:
+
+Sky image
+=========
 
 Introduction and Concept
 ------------------------
