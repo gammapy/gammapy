@@ -21,7 +21,6 @@ __all__ = [
     'binary_disk',
     'binary_ring',
     'block_reduce_hdu',
-    'dict_to_hdulist',
     'disk_correlate',
     'image_groupby',
     'images_to_cube',
@@ -213,29 +212,6 @@ def atrous_hdu(hdu, n_levels):
         hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
 
     return hdus
-
-
-def dict_to_hdulist(image_dict, header):
-    """
-    Take a dictionary of image data and a header to create a HDUList.
-
-    Parameters
-    ----------
-    image_dict : dict
-        Dictionary of input data. The keys are used as FITS extension names.
-        Image data are the corresponding values.
-    header : `astropy.io.fits.Header`
-        Header to be used for all images.
-
-    Returns
-    -------
-    hdu_list : `astropy.io.fits.HDUList`
-        HDU list of input dictionary.
-    """
-    hdu_list = fits.HDUList()
-    for name, image in image_dict.items():
-        hdu_list.append(fits.ImageHDU(image, header, name.upper()))
-    return hdu_list
 
 
 def process_image_pixels(images, kernel, out, pixel_function):
