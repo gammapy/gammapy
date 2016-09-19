@@ -15,13 +15,12 @@ from astropy.nddata.utils import Cutout2D
 from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
-from ..extern.bunch import Bunch
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header, _bin_events_in_cube
 from ..data import EventList
 
-__all__ = ['SkyImage', 'SkyImageCollection']
+__all__ = ['SkyImage']
 
 log = logging.getLogger(__name__)
 
@@ -539,7 +538,7 @@ class SkyImage(object):
 
         data = self.data[ylo:-yhi, xlo:-xhi]
 
-        if self.wcs:
+        if self.wcs is not None:
             wcs = self.wcs.deepcopy()
             wcs.wcs.crpix -= np.array([xlo, ylo])
         else:
@@ -578,7 +577,7 @@ class SkyImage(object):
 
         data = block_reduce(self.data, (factor, factor), method)
 
-        if self.wcs:
+        if self.wcs is not None:
             wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
         else:
             wcs = None
@@ -607,7 +606,7 @@ class SkyImage(object):
 
         data = zoom(self.data, factor, **kwargs)
 
-        if self.wcs:
+        if self.wcs is not None:
             wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
         else:
             wcs = None
@@ -723,7 +722,7 @@ class SkyImage(object):
         hdu : `~astropy.io.fits.PrimaryHDU`
             Primary image hdu object.
         """
-        if self.wcs:
+        if self.wcs is not None:
             header = self.wcs.to_header()
         else:
             header = fits.Header()
@@ -876,13 +875,13 @@ class SkyImage(object):
         """
         info = "Name: {}\n".format(self.name)
 
-        if self.data:
+        if self.data is not None:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
 
-        if self.wcs:
+        if self.wcs is not None:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
 
         return info
@@ -1045,123 +1044,3 @@ class SkyImage(object):
         data = region.contains(coords)
 
         return SkyMask(data=data, wcs=self.wcs)
-
-
-class SkyImageCollection(Bunch):
-    """
-    Container for a collection of `~gammapy.image.SkyImage` objects.
-
-    This class bundles as set of `SkyImage` objects in single data container and provides
-    convenience methods for FITS I/O and `~gammapy.extern.bunch.Bunch` like
-    handling of the data members.
-
-    Parameters
-    ----------
-    name : str
-        Name of the collection
-    meta : `~collections.OrderedDict`
-        Dictionary to store meta data for the collection.
-
-    Examples
-    --------
-    Load the image collection from a FITS file:
-
-    >>> from gammapy.image import SkyImageCollection
-    >>> images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
-
-    Then try tab completion on the ``images`` object to access the images.
-    E.g. to show the counts image::
-
-    >>> images.counts.show('ds9')
-    """
-
-    def __init__(self, name=None, meta=None, **kwargs):
-        # Set real class attributes
-        self._image_names = []
-        self.name = name
-        if meta:
-            self.meta = meta
-        else:
-            self.meta = OrderedDict()
-
-        # Everything else is stored as dict entries
-        for key in kwargs:
-            self[key] = kwargs[key]
-
-    def __setitem__(self, key, item):
-        """
-        Overwrite __setitem__ operator to remember order the images are added
-        to the collection, by storing it in the _image_names list.
-        """
-        if isinstance(item, np.ndarray):
-            item = SkyImage(name=key, data=item)
-        if isinstance(item, SkyImage):
-            self._image_names.append(key)
-
-        super(SkyImageCollection, self).__setitem__(key, item)
-
-    @classmethod
-    def read(cls, filename):
-        """
-        Create collection of images from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            FITS file name.
-        """
-        hdulist = fits.open(str(make_path(filename)))
-        kwargs = {}
-        _image_names = []  # list of image names to save order in FITS file
-
-        for hdu in hdulist:
-            image = SkyImage.from_image_hdu(hdu)
-
-            # This forces lower case image names, but only on the collection object
-            # When writing to FITS again the image.name attribute is used.
-            name = image.name.lower()
-            kwargs[name] = image
-            _image_names.append(name)
-        _ = cls(**kwargs)
-        _._map_names = _image_names
-        return _
-
-    def write(self, filename=None, **kwargs):
-        """
-        Write images to FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            FITS file name.
-        """
-        hdulist = fits.HDUList()
-
-        for name in self.get('_image_names', sorted(self)):
-            if isinstance(self[name], SkyImage):
-                hdu = self[name].to_image_hdu()
-
-                # For now add common collection meta info to the single image headers
-                hdu.header.update(self.meta)
-                hdu.name = name
-                hdulist.append(hdu)
-            else:
-                log.warn("Can't save {} to file, not a image.".format(name))
-
-        hdulist.writeto(filename, **kwargs)
-
-    def info(self):
-        """
-        Print summary info about the image collection.
-        """
-        print(str(self))
-
-    def __str__(self):
-        """
-        String representation of the image collection.
-        """
-        info = ''
-        for name in self.get('_image_names', sorted(self)):
-            info += self[name].__str__()
-            info += '\n'
-        return info
