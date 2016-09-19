@@ -465,10 +465,13 @@ class SkyImage(object):
         cutout : `~gammapy.image.SkyImage`
             Cut out image.
         """
-        cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
-                          copy=True)
-        image = self.__class__(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
-        return image
+        cutout = Cutout2D(
+            self.data, position=position, wcs=self.wcs, size=size, copy=True,
+        )
+        return self.__class__(
+            name=self.name, data=cutout.data,
+            wcs=cutout.wcs, unit=self.unit,
+        )
 
     def pad(self, pad_width, mode='reflect', **kwargs):
         """
@@ -512,7 +515,7 @@ class SkyImage(object):
         wcs = self.wcs.deepcopy()
         wcs.wcs.crpix += np.array([xlo, ylo])
 
-        return SkyImage(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def crop(self, crop_width):
         """
@@ -544,7 +547,7 @@ class SkyImage(object):
         else:
             wcs = None
 
-        return SkyImage(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def downsample(self, factor, method=np.nansum):
         """
@@ -582,7 +585,7 @@ class SkyImage(object):
         else:
             wcs = None
 
-        return SkyImage(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def upsample(self, factor, **kwargs):
         """
@@ -611,7 +614,7 @@ class SkyImage(object):
         else:
             wcs = None
 
-        return SkyImage(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs, unit=self.unit)
 
     def lookup_max(self, region=None):
         """
@@ -781,8 +784,10 @@ class SkyImage(object):
         else:
             raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-        return SkyImage(name=self.name, data=out[0], wcs=wcs_reference,
-                        unit=self.unit, meta=self.meta)
+        return self.__class__(
+            name=self.name, data=out[0], wcs=wcs_reference,
+            unit=self.unit, meta=self.meta,
+        )
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
