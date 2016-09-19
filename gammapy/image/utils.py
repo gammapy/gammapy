@@ -27,7 +27,6 @@ __all__ = [
     'make_header',
     'process_image_pixels',
     'ring_correlate',
-    'threshold',
     'wcs_histogram2d',
 ]
 
@@ -422,34 +421,6 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     # http://cta.irap.omp.eu/ctools/
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
     return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
-
-
-def threshold(array, threshold=5):
-    """Set all pixels below threshold to zero.
-
-    Parameters
-    ----------
-    array : `~numpy.ndarray`
-        Input array
-    threshold : float, optional
-        Minimum threshold
-
-    Returns
-    -------
-    data : `~numpy.ndarray`
-        Copy of input array with pixels below threshold set to zero.
-    """
-    # TODO: np.clip is simpler, no?
-    from scipy import stats
-    # NaNs are set to 1 by thresholding, which is not
-    # what we want for detection, so we replace them with 0 here.
-    data = np.nan_to_num(array)
-
-    data = stats.threshold(data, threshold, None, 0)
-    # Note that scipy.stats.threshold doesn't binarize,
-    # it only sets values below the threshold to 0,
-    # which is not what we want here.
-    return data.astype(np.bool).astype(np.uint8)
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
