@@ -9,18 +9,20 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.io import fits
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-from gammapy.utils.scripts import make_path
 
+from ..utils.scripts import make_path
+from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
-from ..image.utils import _bin_events_in_cube
 from ..spectrum import LogEnergyAxis
 from ..spectrum.powerlaw import power_law_I_from_points
 
@@ -172,18 +174,31 @@ class SkyCube(object):
 
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
-    def fill(self, events, origin=0):
+    def fill_events(self, events):
         """
-        Fill sky cube with events.
+        Fill events (modifies ``data`` attribute).
 
         Parameters
         ----------
-        events : `~astropy.table.Table`
-            Event list table
-        origin : {0, 1}
-            Pixel coordinate origin.
+        events : `~gammapy.data.EventList`
+            Event list
         """
-        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy, origin=origin)
+        image = self.sky_image()
+        xx, yy = image._events_xy(events)
+        zz = self._energy_to_zz(events.energy)
+
+        bins = self._bins_energy, *image._bins_pix
+        data = np.histogramdd([zz, yy, xx], bins)[0]
+
+        self.data = self.data + data
+
+    @property
+    def _bins_energy(self):
+        return np.arange(self.data.shape[0])
+
+    def _energy_to_zz(self, energy):
+        zz = np.searchsorted(self.energy.value, energy.to(self.energy.unit).value)
+        return zz
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
@@ -204,10 +219,10 @@ class SkyCube(object):
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
         """
-        refmap = SkyImage.empty(**kwargs)
+        image = SkyImage.empty(**kwargs)
         energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
-        data = refmap.data * np.ones(len(energy)).reshape((-1, 1, 1))
-        return cls(data=data, wcs=refmap.wcs, energy=energy)
+        data = image.data * np.ones(len(energy)).reshape((-1, 1, 1))
+        return cls(data=data, wcs=image.wcs, energy=energy)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
@@ -560,14 +575,15 @@ class SkyCube(object):
         images = [self.sky_image(idx) for idx in range(len(self.data))]
         return SkyCubeImages(self.name, images, self.wcs, self.energy)
 
-    def writeto(self, filename, **kwargs):
-        """Writes SkyCube to FITS file.
+    def write(self, filename, **kwargs):
+        """Write to FITS file.
 
         Parameters
         ----------
         filename : str
             Filename
         """
+        filename = make_path(filename)
         self.to_fits().writeto(filename, **kwargs)
 
     def __repr__(self):
@@ -592,3 +608,9 @@ class SkyCube(object):
         Print summary info about the cube.
         """
         print(repr(self))
+
+    @staticmethod
+    def assert_allclose(cube1, cube2):
+        assert cube1.name == cube2.name
+        assert_allclose(cube1.data, cube2.data)
+        assert_wcs_allclose(cube1.wcs, cube2.wcs)
