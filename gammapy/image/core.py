@@ -1092,24 +1092,58 @@ class SkyImage(object):
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
 
-    def convolve(self, kernels, fft=True, parallel=True):
+    def convolve(self, kernel, fft=False, mode='reflect', **kwargs):
         """
-        Convolve image with kernel or list of kernels.
+        Convolve sky image with kernel.
 
         Parameters
         ----------
-
+        kernel : `~astropy.convolution.Kernel`
+            Convolution kernel.
+        fft : bool
+            Use fast FFT convolution.
+        mode : str ('reflect')
+            Boundary mode passed to `~numpy.pad`
+        **kwargs : dict
+            Further keyword arguments passed to `~numpy.pad`.
         """
-        from scipy.ndimage import convolve, fftconvolve
-        if parallel:
-            convolved = pool.map()
+        from scipy.signal import fftconvolve
+        from scipy.ndimage import convolve
+
+        width = kernel.array.shape[0] / 2
+        padded = self.pad(pad_width=(width, width))
+
+        if fft:
+            data = fftconvolve(padded.data, kernel.array, mode='same')
         else:
-            convolved = map()
+            data = convolve(padded.data, kernel.array, mode='constant')
 
-        return SkyImageList(convolved)
+        convolved = self.__class__(data=data, wcs=self.wcs.copy())
+        return convolved.crop(crop_width=(width, width))
 
+    def __mul__(self, image):
+        """
+        Multiply sky image data.
+        """
+        # TODO: check if wcs are compatible, if not raise error
+        if self.wcs:
+            wcs = self.wcs.copy()
+        else:
+            wcs = None
+        data = self.data * image.data
+        return self.__class__(data=data, wcs=wcs)
 
-
+    def __truediv__(self, image):
+        """
+        Divide sky image data.
+        """
+        # TODO: check if wcs are compatible, if not raise error
+        if self.wcs:
+            wcs = self.wcs.copy()
+        else:
+            wcs = None
+        data = self.data / image.data
+        return self.__class__(data=data, wcs=wcs)
 
 
 class _SkyImageValidation(object):

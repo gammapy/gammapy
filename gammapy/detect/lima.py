@@ -137,5 +137,4 @@ def _add_other_images(images, exposure, kernel, conv_opt):
     from scipy.ndimage import convolve
     kernel.normalize('integral')
     exposure_conv = convolve(exposure, kernel.array, **conv_opt)
-    flux = images['excess'] / exposure_conv
-    images['flux'] = SkyImage(name='flux', data=flux, wcs=images['excess'].wcs)
+    images['flux'] = images['excess'] / exposure_conv
