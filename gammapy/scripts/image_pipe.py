@@ -74,7 +74,7 @@ class ObsImage(object):
         self.images['counts'] = SkyImage.empty_like(self.empty_image, name='counts')
 
         if len(self.events) > self.ncounts_min:
-            self.images['counts'].fill(value=self.events)
+            self.images['counts'].fill_events(self.events)
         else:
             log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
                      format(len(self.events), self.ncounts_min))
