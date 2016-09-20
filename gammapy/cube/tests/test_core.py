@@ -338,4 +338,4 @@ def test_bin_events_in_cube():
 
     counts.fill_events(events)
 
-    assert counts.data.sum().value == 1233
+    assert counts.data.sum() == 1233

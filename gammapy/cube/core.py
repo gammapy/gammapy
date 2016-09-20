@@ -194,7 +194,7 @@ class SkyCube(object):
 
     @property
     def _bins_energy(self):
-        return np.arange(self.data.shape[0])
+        return np.arange(self.data.shape[0] + 1)
 
     def _energy_to_zz(self, energy):
         zz = np.searchsorted(self.energy.value, energy.to(self.energy.unit).value)
