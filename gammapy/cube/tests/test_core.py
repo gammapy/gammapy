@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import textwrap
 
 import numpy as np
 from numpy.testing import assert_allclose
@@ -174,7 +175,12 @@ class TestSkyCube(object):
 
     def test_repr(self):
         actual = repr(self.sky_cube)
-        expected = 'Sky cube {} with shape={}'
+        expected = textwrap.dedent("""\
+        Sky cube None with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
+         n_lon:       61  type_lon:    GLON-CAR         unit_lon:    deg
+         n_lat:       21  type_lat:    GLAT-CAR         unit_lat:    deg
+         n_energy:    30  unit_energy: MeV
+        """)
         assert actual == expected
 
 

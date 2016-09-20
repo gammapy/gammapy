@@ -183,7 +183,7 @@ class SkyCube(object):
         events : `~gammapy.data.EventList`
             Event list
         """
-        image = self.sky_image()
+        image = self.ref_sky_image
         xx, yy = image._events_xy(events)
         zz = self._energy_to_zz(events.energy)
 
@@ -309,9 +309,7 @@ class SkyCube(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        image = self.sky_image(0)
-        coordinates = image.coordinates(mode)
-        return coordinates
+        return self.ref_sky_image.coordinates(mode)
 
     def to_sherpa_data3d(self):
         """
@@ -339,12 +337,6 @@ class SkyCube(object):
                       dec_cube.ravel(), self.data.value.ravel(),
                       self.data.value.shape)
 
-    @property
-    def solid_angle(self):
-        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        image = self.sky_image(idx_energy=0)
-        return image.solid_angle()
-
     def sky_image(self, idx_energy, copy=True):
         """Slice a 2-dim `~gammapy.image.SkyImage` from the cube.
 
@@ -361,9 +353,22 @@ class SkyCube(object):
             2-dim sky image
         """
         # TODO: should we pass something in SkyImage (we speak about meta)?
-        data = Quantity(self.data[idx_energy], self.data.unit)
+        data = self.data[idx_energy]
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
+
+    @property
+    def ref_sky_image(self):
+        """Reference `~gammapy.image.SkyImage` that matches the cube.
+        """
+        image = self.sky_image(idx_energy=0, copy=True)
+        image.data = 0 * image.data
+        return image
+
+    @property
+    def solid_angle(self):
+        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
+        return self.ref_sky_image.solid_angle()
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -583,7 +588,7 @@ class SkyCube(object):
         filename : str
             Filename
         """
-        filename = make_path(filename)
+        filename = str(make_path(filename))
         self.to_fits().writeto(filename, **kwargs)
 
     def __repr__(self):
@@ -598,7 +603,7 @@ class SkyCube(object):
             self.data.shape[2], self.wcs.wcs.ctype[0], self.wcs.wcs.cunit[0])
         ss += " n_lat:    {:5d}  type_lat:    {:15s}  unit_lat:    {}\n".format(
             self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
-        ss += " n_energy: {:5d}  unit_energy: {}".format(
+        ss += " n_energy: {:5d}  unit_energy: {}\n".format(
             len(self.energy), self.energy.unit)
 
         return ss
