@@ -174,7 +174,7 @@ class SkyCube(object):
 
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
-    def fill_events(self, events):
+    def fill_events(self, events, weights=None):
         """
         Fill events (modifies ``data`` attribute).
 
@@ -182,13 +182,18 @@ class SkyCube(object):
         ----------
         events : `~gammapy.data.EventList`
             Event list
+        weights : str, optional
+            Column to use as weights (none by default)
         """
+        if weights is not None:
+            weights = events[weights]
+
         image = self.ref_sky_image
         xx, yy = image._events_xy(events)
         zz = self._energy_to_zz(events.energy)
 
-        bins = self._bins_energy, *image._bins_pix
-        data = np.histogramdd([zz, yy, xx], bins)[0]
+        bins = self._bins_energy, image._bins_pix[0], image._bins_pix[1]
+        data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
 
