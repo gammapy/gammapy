@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
@@ -488,7 +489,7 @@ class SpectrumObservation(object):
                    aeff=aeff)
 
 
-class SpectrumObservationList(list):
+class SpectrumObservationList(UserList):
     """
     List of `~gammapy.spectrum.SpectrumObservation`.
     """

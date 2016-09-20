@@ -7,7 +7,6 @@ from astropy.units import Quantity
 from .core import SkyImage
 
 __all__ = [
-    'compute_binning',
     'FluxProfile',
     'image_profile',
 ]

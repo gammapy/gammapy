@@ -1,12 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import textwrap
+
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
+
 from ...utils.testing import requires_dependency, requires_data
+from ...data import EventList
 from ...datasets import FermiGalacticCenter
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
@@ -32,7 +36,7 @@ class TestSkyCube(object):
 
     def test_read_write(self, tmpdir):
         filename = str(tmpdir / 'sky_cube.fits')
-        self.sky_cube.writeto(filename)
+        self.sky_cube.write(filename)
 
         sky_cube = SkyCube.read(filename)
         assert sky_cube.data.shape == (30, 21, 61)
@@ -163,6 +167,21 @@ class TestSkyCube(object):
 
         assert_allclose(lon[-1, -1], Angle("14d45m00s"))
         assert_allclose(lat[-1, -1], Angle("4d45m00s"))
+
+    def test_to_images(self):
+        images = self.sky_cube.to_images()
+        cube = images.to_cube()
+        SkyCube.assert_allclose(self.sky_cube, cube)
+
+    def test_repr(self):
+        actual = repr(self.sky_cube)
+        expected = textwrap.dedent("""\
+        Sky cube None with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
+         n_lon:       61  type_lon:    GLON-CAR         unit_lon:    deg
+         n_lat:       21  type_lat:    GLAT-CAR         unit_lat:    deg
+         n_energy:    30  unit_energy: MeV
+        """)
+        assert actual == expected
 
 
 @pytest.mark.xfail
@@ -306,3 +325,17 @@ def test_reproject_cube():
     actual = reprojected_cube.sum()
 
     assert_quantity_allclose(actual, expected, rtol=1e-2)
+
+
+@requires_data('gammapy-extra')
+def test_bin_events_in_cube():
+    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_events_023523.fits.gz'
+    events = EventList.read(filename)
+    counts = SkyCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
+                           nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                           yref=events.meta['DEC_OBJ'], dtype='int',
+                           coordsys='CEL')
+
+    counts.fill_events(events)
+
+    assert counts.data.sum() == 1233

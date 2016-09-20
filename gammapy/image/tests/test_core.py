@@ -10,7 +10,7 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...data import DataStore
+from ...data import DataStore, EventList
 from ...datasets import load_poisson_stats_image
 from ..core import SkyImage
 
@@ -175,12 +175,6 @@ class TestSkyImagePoisson:
         empty = SkyImage.empty()
         assert empty.data.shape == (200, 200)
 
-    def test_fill_float(self):
-        image = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
-                               coordsys='CEL')
-        image.fill(42)
-        assert_equal(image.data, np.full((200, 200), 42))
-
     @requires_data('gammapy-extra')
     def test_fill_events(self):
         dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
@@ -191,16 +185,15 @@ class TestSkyImagePoisson:
         counts = SkyImage.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
                                 yref=events.meta['DEC_OBJ'], dtype='int',
                                 coordsys='CEL')
-        counts.fill(events)
+        counts.fill_events(events)
         assert counts.data.sum() == 1233
         assert counts.data.shape == (200, 200)
 
     @requires_dependency('reproject')
     def test_reproject(self):
         image_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
-        image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
-                                 coordsys='CEL')
-        image_1.fill(1)
+        image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04, coordsys='CEL')
+        image_1.data.fill(1)
         image_1_repr = image_1.reproject(image_2)
         assert_allclose(image_1_repr.data, np.full((100, 100), 1))
 
@@ -397,3 +390,35 @@ def test_fits_header_comment_io(tmpdir):
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
     image = SkyImage.read(filename)
     image.write(tmpdir / 'temp.fits')
+
+
+def test_image_fill_events():
+    """A simple test case that can by checked by hand"""
+
+    image = SkyImage.empty(
+        nxpix=2, nypix=1, binsz=10,
+        xref=0, yref=0, proj='CAR',
+    )
+
+    # GLON pixel edges: (+10, 0, -10)
+    # GLAT pixel edges: (-5, +5)
+
+    EPS = 0.1
+    data = [
+        (5, 5, 1),  # in image[0, 0]
+        (0, 0 + EPS, 2),  # in image[1, 0]
+        (5, -5 + EPS, 3),  # in image[0, 0]
+        (5, 5 + EPS, 99),  # outside image
+        (10 + EPS, 0, 99),  # outside image
+    ]
+    lon, lat, weights = np.array(data).T
+    events = EventList()
+    coord = SkyCoord(lon, lat, unit='deg', frame='galactic').icrs
+    events['RA'] = coord.ra.deg
+    events['DEC'] = coord.dec.deg
+    events['WEIGHT'] = weights
+
+    image.fill_events(events, weights='WEIGHT')
+
+    assert image.data[0, 0] == 1 + 3
+    assert image.data[0, 1] == 2

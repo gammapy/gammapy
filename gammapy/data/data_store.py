@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from collections import OrderedDict
 import subprocess
+from astropy.extern.six.moves import UserList
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
@@ -647,7 +648,7 @@ class DataStoreObservation(object):
         return psf
 
 
-class ObservationList(list):
+class ObservationList(UserList):
     """List of `~gammapy.data.DataStoreObservation`
 
     Could be extended to hold a more generic class of observations

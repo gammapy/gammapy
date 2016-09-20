@@ -2,12 +2,12 @@
 """
 from astropy.coordinates import SkyCoord, Angle
 from numpy.testing import assert_allclose
-from gammapy.utils.energy import Energy
-from gammapy.data import DataStore
-from gammapy.image import SkyImage, SkyMask
-from gammapy.background import OffDataBackgroundMaker
-from gammapy.scripts import MosaicImage
 from ...utils.testing import requires_data, requires_dependency
+from ...utils.energy import Energy
+from ...data import DataStore
+from ...image import SkyImage, SkyMask
+from ...background import OffDataBackgroundMaker
+from ...scripts import MosaicImage
 
 
 @requires_dependency('reproject')

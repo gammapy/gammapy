@@ -1,56 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ...image import SkyImageList, SkyImage
-
-
-def assert_sky_image_collection_isclose(images1, images2, check_wcs=True):
-    """Assert that two sky image collections are almost the same.
-    """
-    assert len(images1) == len(images2)
-    for image1, image2 in zip(images1, images2):
-        assert_sky_image_isclose(image1, image2, check_wcs=check_wcs)
-
-
-def assert_sky_image_isclose(image1, image2, check_wcs=True):
-    """Assert that two sky images are almost the same.
-
-    TODO: move this to `test_core.py` and use there also.
-    """
-    assert image1.name == image2.name
-
-    if (image1.data is None) and (image2.data is None):
-        pass
-    elif (image1.data is not None) and (image2.data is not None):
-        assert_allclose(image1.data, image2.data)
-    else:
-        raise ValueError('One image has `data==None` and the other does not.')
-
-    if check_wcs is False:
-        pass
-    elif (image1.wcs is None) and (image2.wcs is None):
-        pass
-    elif (image1.wcs is not None) and (image2.wcs is not None):
-        assert_wcs_isclose(image1.wcs, image2.wcs)
-    else:
-        raise ValueError('One image has `wcs==None` and the other does not.')
-
-
-def assert_wcs_isclose(wcs1, wcs2):
-    """Assert that two WCS objects are almost the same.
-
-    TODO: move this to `test_core.py` and use there also.
-    """
-    # TODO: implement properly
-    assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
 
 
 class TestSkyImageList:
     @staticmethod
     def assert_hdu_list_roundtrips(images, check_wcs=True):
         images2 = SkyImageList.from_hdu_list(images.to_hdu_list())
-        assert_sky_image_collection_isclose(images, images2, check_wcs=check_wcs)
+        SkyImageList.assert_allclose(images, images2, check_wcs=check_wcs)
         return images2
 
     @staticmethod
@@ -60,7 +18,7 @@ class TestSkyImageList:
         # Before there was a bug where this appended and duplicated HDUs
         images.write(filename, clobber=True)
         images2 = SkyImageList.read(filename)
-        assert_sky_image_collection_isclose(images, images2, check_wcs=check_wcs)
+        SkyImageList.assert_allclose(images, images2, check_wcs=check_wcs)
         return images2
 
     @staticmethod

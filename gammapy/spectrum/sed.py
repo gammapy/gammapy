@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
+from astropy.extern.six.moves import UserList
 from astropy.table import Table
 from astropy.units import Unit, Quantity
 from ..spectrum import compute_differential_flux_points
@@ -78,7 +79,7 @@ class SEDComponent(object):
         pass
 
 
-class SED(list):
+class SED(UserList):
     """Class to plot GeV -- TeV SEDs
 
     Internally the same units as in the Fermi catalog are used:

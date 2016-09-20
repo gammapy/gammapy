@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 from collections import OrderedDict
-
-import astropy.units as u
 import numpy as np
-from ..stats import Stats
-from ..stats import significance_on_off
+from astropy.extern.six.moves import UserList
+import astropy.units as u
+from ..stats import Stats, significance_on_off
 
 __all__ = [
     'ObservationStats',
@@ -31,7 +29,7 @@ class ObservationStats(Stats):
     a_off : float
         Relative background exposure of the off region
     obs_id : int
-        Id of the obervation
+        ID of the observation
     livetime : float
         Livetime of the observation
     alpha : float
@@ -233,6 +231,7 @@ class ObservationStats(Stats):
         return ss
 
 
-class ObservationStatsList(list):
+# TODO: implement something or remove!
+class ObservationStatsList(UserList):
     """List of `~gammapy.data.ObservationStats`
     """

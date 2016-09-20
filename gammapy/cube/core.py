@@ -9,16 +9,20 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.io import fits
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+
+from ..utils.scripts import make_path
+from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
-from ..image.utils import _bin_events_in_cube
 from ..spectrum import LogEnergyAxis
 from ..spectrum.powerlaw import power_law_I_from_points
 
@@ -64,7 +68,7 @@ class SkyCube(object):
         Energy array
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
-    meta : '~collections.OrderedDict'
+    meta : `~collections.OrderedDict`
         Dictionary to store meta data.
 
 
@@ -151,6 +155,7 @@ class SkyCube(object):
         sky_cube : `SkyCube`
             Sky cube
         """
+        filename = str(make_path(filename))
         data = fits.getdata(filename)
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for LON, LAT and do ENERGY ourselves
@@ -166,20 +171,39 @@ class SkyCube(object):
             data = Quantity(data, 'count')
         else:
             raise ValueError('Not a valid cube fits format')
+
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
-    def fill(self, events, origin=0):
+    def fill_events(self, events, weights=None):
         """
-        Fill sky cube with events.
+        Fill events (modifies ``data`` attribute).
 
         Parameters
         ----------
-        events : `~astropy.table.Table`
-            Event list table
-        origin : {0, 1}
-            Pixel coordinate origin.
+        events : `~gammapy.data.EventList`
+            Event list
+        weights : str, optional
+            Column to use as weights (none by default)
         """
-        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy, origin=origin)
+        if weights is not None:
+            weights = events[weights]
+
+        image = self.ref_sky_image
+        xx, yy = image._events_xy(events)
+        zz = self._energy_to_zz(events.energy)
+
+        bins = self._bins_energy, image._bins_pix[0], image._bins_pix[1]
+        data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
+
+        self.data = self.data + data
+
+    @property
+    def _bins_energy(self):
+        return np.arange(self.data.shape[0] + 1)
+
+    def _energy_to_zz(self, energy):
+        zz = np.searchsorted(self.energy.value, energy.to(self.energy.unit).value)
+        return zz
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
@@ -200,10 +224,10 @@ class SkyCube(object):
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
         """
-        refmap = SkyImage.empty(**kwargs)
+        image = SkyImage.empty(**kwargs)
         energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
-        data = refmap.data * np.ones(len(energy)).reshape((-1, 1, 1))
-        return cls(data=data, wcs=refmap.wcs, energy=energy)
+        data = image.data * np.ones(len(energy)).reshape((-1, 1, 1))
+        return cls(data=data, wcs=image.wcs, energy=energy)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
@@ -290,9 +314,7 @@ class SkyCube(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        image = self.sky_image(0)
-        coordinates = image.coordinates(mode)
-        return coordinates
+        return self.ref_sky_image.coordinates(mode)
 
     def to_sherpa_data3d(self):
         """
@@ -320,12 +342,6 @@ class SkyCube(object):
                       dec_cube.ravel(), self.data.value.ravel(),
                       self.data.value.shape)
 
-    @property
-    def solid_angle(self):
-        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        image = self.sky_image(idx_energy=0)
-        return image.solid_angle()
-
     def sky_image(self, idx_energy, copy=True):
         """Slice a 2-dim `~gammapy.image.SkyImage` from the cube.
 
@@ -342,9 +358,22 @@ class SkyCube(object):
             2-dim sky image
         """
         # TODO: should we pass something in SkyImage (we speak about meta)?
-        data = Quantity(self.data[idx_energy], self.data.unit)
+        data = self.data[idx_energy]
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
+
+    @property
+    def ref_sky_image(self):
+        """Reference `~gammapy.image.SkyImage` that matches the cube.
+        """
+        image = self.sky_image(idx_energy=0, copy=True)
+        image.data = 0 * image.data
+        return image
+
+    @property
+    def solid_angle(self):
+        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
+        return self.ref_sky_image.solid_angle()
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -471,9 +500,8 @@ class SkyCube(object):
         ----------
         reference_cube : `SkyCube`
             Reference cube with the desired spatial projection.
-        projection_type : {'nearest-neighbor', 'bilinear',
-            'biquadratic', 'bicubic', 'flux-conserving'}
-            Specify method of reprojection. Default: 'bilinear'.
+        projection_type : {'nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic', 'flux-conserving'}
+            Specify method of reprojection.
 
         Returns
         -------
@@ -516,7 +544,7 @@ class SkyCube(object):
             header_out['CDELT3'] = header_in['CDELT3']
             header_out['CTYPE3'] = header_in['CTYPE3']
             header_out['CRVAL3'] = header_in['CRVAL3']
-        except:
+        except KeyError:
             pass
 
         wcs_out = WCS(header_out).celestial
@@ -551,20 +579,21 @@ class SkyCube(object):
         return hdu_list
 
     def to_images(self):
-        """Convert sky cube to a `gammapy.image.SkyCubeImages`.
+        """Convert to `~gammapy.cube.SkyCubeImages`.
         """
         from .images import SkyCubeImages
         images = [self.sky_image(idx) for idx in range(len(self.data))]
         return SkyCubeImages(self.name, images, self.wcs, self.energy)
 
-    def writeto(self, filename, **kwargs):
-        """Writes SkyCube to FITS file.
+    def write(self, filename, **kwargs):
+        """Write to FITS file.
 
         Parameters
         ----------
         filename : str
             Filename
         """
+        filename = str(make_path(filename))
         self.to_fits().writeto(filename, **kwargs)
 
     def __repr__(self):
@@ -579,7 +608,7 @@ class SkyCube(object):
             self.data.shape[2], self.wcs.wcs.ctype[0], self.wcs.wcs.cunit[0])
         ss += " n_lat:    {:5d}  type_lat:    {:15s}  unit_lat:    {}\n".format(
             self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
-        ss += " n_energy: {:5d}  unit_energy: {}".format(
+        ss += " n_energy: {:5d}  unit_energy: {}\n".format(
             len(self.energy), self.energy.unit)
 
         return ss
@@ -589,3 +618,9 @@ class SkyCube(object):
         Print summary info about the cube.
         """
         print(repr(self))
+
+    @staticmethod
+    def assert_allclose(cube1, cube2):
+        assert cube1.name == cube2.name
+        assert_allclose(cube1.data, cube2.data)
+        assert_wcs_allclose(cube1.wcs, cube2.wcs)

@@ -26,7 +26,6 @@
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _CIAO: http://cxc.cfa.harvard.edu/ciao/
 .. _Chandra X-ray observatory (CXC): http://cxc.harvard.edu/
-.. _imfun: http://code.google.com/p/image-funcut/
 .. _aplpy: http://aplpy.github.io
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org

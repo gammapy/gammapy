@@ -4,11 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
-from ...image import (
-    SkyImage,
-    compute_binning,
-    image_profile,
-)
+from ...image import SkyImage
+from ..profile import compute_binning, image_profile
 
 
 @requires_dependency('pandas')

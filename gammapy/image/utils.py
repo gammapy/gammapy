@@ -3,35 +3,23 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
-from astropy.wcs import WCS
-from ..utils.wcs import get_wcs_ctype
-from ..utils.energy import EnergyBounds
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
 
-
 __all__ = [
-    'atrous_hdu',
-    'atrous_image',
-    'bin_events_in_image',
     'binary_disk',
     'binary_ring',
     'block_reduce_hdu',
-    'dict_to_hdulist',
     'disk_correlate',
     'image_groupby',
-    'images_to_cube',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
     'make_header',
     'process_image_pixels',
     'ring_correlate',
-    'threshold',
-    'wcs_histogram2d',
 ]
 
 log = logging.getLogger(__name__)
@@ -161,83 +149,6 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     return convolve(image, structure, mode=mode)
 
 
-def atrous_image(image, n_levels):
-    """Compute a trous transform for a given image.
-
-    Parameters
-    ----------
-    image : 2D array
-        Input image
-    n_levels : integer
-        Number of wavelet scales.
-
-    Returns
-    -------
-    images : list of 2D arrays
-        Wavelet transformed images.
-    """
-    # https://code.google.com/p/image-funcut/
-    from imfun import atrous
-    return atrous.decompose2d(image, level=n_levels)
-
-
-def atrous_hdu(hdu, n_levels):
-    """Compute a trous transform for a given FITS HDU.
-
-    Parameters
-    ----------
-    hdu : 2D image HDU
-        Input image
-    n_levels : integer
-        Number of wavelet scales.
-
-    Returns
-    -------
-    images : HDUList
-        Wavelet transformed images.
-    """
-    image = hdu.data
-    log.info('Computing a trous transform for {0} levels ...'.format(n_levels))
-    images = atrous_image(image, n_levels)
-    hdus = fits.HDUList()
-
-    for level, image in enumerate(images):
-        if level < len(images) - 1:
-            name = 'level_{0}'.format(level)
-        else:
-            name = 'residual'
-        scale_pix = 2 ** level
-        scale_deg = hdu.header['CDELT2'] * scale_pix
-        log.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
-                 ''.format(name, scale_pix, scale_deg))
-        hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
-
-    return hdus
-
-
-def dict_to_hdulist(image_dict, header):
-    """
-    Take a dictionary of image data and a header to create a HDUList.
-
-    Parameters
-    ----------
-    image_dict : dict
-        Dictionary of input data. The keys are used as FITS extension names.
-        Image data are the corresponding values.
-    header : `astropy.io.fits.Header`
-        Header to be used for all images.
-
-    Returns
-    -------
-    hdu_list : `astropy.io.fits.HDUList`
-        HDU list of input dictionary.
-    """
-    hdu_list = fits.HDUList()
-    for name, image in image_dict.items():
-        hdu_list.append(fits.ImageHDU(image, header, name.upper()))
-    return hdu_list
-
-
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
 
@@ -311,14 +222,14 @@ def process_image_pixels(images, kernel, out, pixel_function):
             for name, image in images.items():
                 # hi + 1 because with Python slicing the hi edge is not included
                 part = image[i0 - i0_lo: i0 + i0_hi + 1,
-                             i1 - i1_lo: i1 + i1_hi + 1]
+                       i1 - i1_lo: i1 + i1_hi + 1]
                 image_parts[name] = part
 
             # Cut out relevant part of the kernel array
             # This only applies when close to the edge
             # hi + 1 because with Python slicing the hi edge is not included
             kernel_part = kernel[k0 - i0_lo: k0 + i0_hi + 1,
-                                 k1 - i1_lo: k1 + i1_hi + 1]
+                          k1 - i1_lo: k1 + i1_hi + 1]
 
             # Call pixel_function for this one part
             out_part = pixel_function(image_parts, kernel_part)
@@ -366,170 +277,6 @@ def image_groupby(images, labels):
     return groups
     # out = groups.aggregate(function)
     # return out
-
-
-def images_to_cube(hdu_list):
-    """Convert a list of image HDUs into one cube.
-
-    Parameters
-    ----------
-    hdu_list : `~astropy.io.fits.HDUList`
-        List of 2-dimensional image HDUs
-
-    Returns
-    -------
-    cube : `~astropy.io.fits.ImageHDU`
-        3-dimensional cube HDU
-    """
-    shape = list(hdu_list[0].data.shape)
-    shape.insert(0, len(hdu_list))
-    data = np.empty(shape=shape, dtype=hdu_list[0].data.dtype)
-    for ii, hdu in enumerate(hdu_list):
-        data[ii] = hdu.data
-    header = hdu_list[0].header
-    header['NAXIS'] = 3
-    header['NAXIS3'] = len(hdu_list)
-    # header['CRVAL3']
-    # header['CDELT3']
-    # header['CTYPE3']
-    # header['CRPIX3']
-    # header['CUNIT3']
-    return fits.ImageHDU(data=data, header=header)
-
-
-def wcs_histogram2d(header, lon, lat, weights=None):
-    """Histogram in world coordinates.
-
-    Parameters
-    ----------
-    header : `~astropy.io.fits.Header`
-        FITS Header
-    lon, lat : `~numpy.ndarray`
-        World coordinates
-    weights : `~numpy.ndarray`, optional
-        Weights
-
-    Returns
-    -------
-    histogram : `~astropy.io.fits.ImageHDU`
-        Histogram
-
-    See also
-    --------
-    numpy.histogramdd
-    """
-    if weights is None:
-        weights = np.ones_like(lon)
-
-    # Get pixel coordinates
-    wcs = WCS(header)
-    origin = 0  # convention for gammapy
-    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-    # Histogram pixel coordinates with appropriate binning.
-    # This was checked against the `ctskymap` ctool
-    # http://cta.irap.omp.eu/ctools/
-    shape = header['NAXIS2'], header['NAXIS1']
-    bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
-    data = np.histogramdd([yy, xx], bins, weights=weights)[0]
-
-    # return fits.ImageHDU(data, header, name='COUNTS')
-    return fits.PrimaryHDU(data, header)
-
-
-def bin_events_in_image(events, reference_image):
-    """Bin events into an image.
-
-    Parameters
-    ----------
-    events : `~gammapy.events.data.EventList`
-        Event list table
-    reference_image : `~astropy.io.fits.ImageHDU`
-        An image defining the spatial bins.
-
-    Returns
-    -------
-    count_image : `~astropy.io.fits.ImageHDU`
-        Count image
-    """
-    if 'GLON' in reference_image.header['CTYPE1']:
-        pos = events.galactic
-    else:
-        pos = events.radec
-
-    return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
-
-
-
-def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
-    """Bin events in LON-LAT-Energy cube.
-    Parameters
-    ----------
-    events : `~astropy.data.EventList`
-        Event list table
-    wcs : `~astropy.wcs.WCS`
-        WCS instance defining celestial coordinates.
-    shape : tuple
-        Tuple defining the spatial shape.
-    energies : `~gammapy.utils.energy.EnergyBounds`
-        Energy bounds defining the binning. If None only one energy bin defined
-        by the minimum and maximum event energy is used.
-    origin : {0, 1}
-        Pixel coordinate origin.
-
-    Returns
-    -------
-    data : `~numpy.ndarray`
-        Counts cube.
-    """
-    if get_wcs_ctype(wcs) == 'galactic':
-        galactic = events.galactic
-        lon, lat = galactic.l.deg, galactic.b.deg
-    else:
-        lon, lat = events['RA'], events['DEC']
-
-    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-    event_energies = events['ENERGY']
-
-    if energies is None:
-        emin = np.min(event_energies)
-        emax = np.max(event_energies)
-        energies = EnergyBounds.equal_log_spacing(emin, emax, nbins=1, unit='TeV')
-        shape = (2, ) + shape
-
-    zz = np.searchsorted(energies.value, event_energies.data)
-    # Histogram pixel coordinates with appropriate binning.
-    # This was checked against the `ctskymap` ctool
-    # http://cta.irap.omp.eu/ctools/
-    bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
-    return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
-
-
-def threshold(array, threshold=5):
-    """Set all pixels below threshold to zero.
-
-    Parameters
-    ----------
-    array : `~numpy.ndarray`
-        Input array
-    threshold : float, optional
-        Minimum threshold
-
-    Returns
-    -------
-    data : `~numpy.ndarray`
-        Copy of input array with pixels below threshold set to zero.
-    """
-    # TODO: np.clip is simpler, no?
-    from scipy import stats
-    # NaNs are set to 1 by thresholding, which is not
-    # what we want for detection, so we replace them with 0 here.
-    data = np.nan_to_num(array)
-
-    data = stats.threshold(data, threshold, None, 0)
-    # Note that scipy.stats.threshold doesn't binarize,
-    # it only sets values below the threshold to 0,
-    # which is not what we want here.
-    return data.astype(np.bool).astype(np.uint8)
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,

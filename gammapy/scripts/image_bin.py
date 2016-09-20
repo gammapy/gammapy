@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from astropy.io import fits
-from gammapy.data import EventList
-from gammapy.image import bin_events_in_image
+import numpy as np
 from ..utils.scripts import get_parser
+from ..data import EventList
+from ..image import SkyImage
 
 __all__ = ['image_bin']
 
@@ -34,8 +34,11 @@ def image_bin(event_file,
     log.info('Reading {}'.format(event_file))
     events = EventList.read(event_file)
 
-    reference_image = fits.open(reference_file)[0]
-    out_image = bin_events_in_image(events, reference_image)
+    log.info('Reading {}'.format(reference_file))
+    image = SkyImage.read(reference_file)
+
+    image.data = np.zeros_like(image.data, dtype='int32')
+    image.fill_events(events)
 
     log.info('Writing {}'.format(out_file))
-    out_image.writeto(out_file, clobber=overwrite)
+    image.write(out_file, clobber=overwrite)
