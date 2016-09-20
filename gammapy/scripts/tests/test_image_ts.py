@@ -30,8 +30,9 @@ def test_command_line_gammapy_image_ts(tmpdir, scale):
     actual = SkyImageList.read(actual_filename)
     expected = SkyImageList.read(expected_filename)
 
-    opts = dict(rtol=1e-2, atol=1e-7, equal_nan=True)
+    opts = dict(rtol=1e-2, atol=1e-5, equal_nan=True)
     assert_allclose(actual['ts'].data, expected['ts'].data, **opts)
     assert_allclose(actual['sqrt_ts'].data, expected['sqrt_ts'].data, **opts)
     assert_allclose(actual['amplitude'].data, expected['amplitude'].data, **opts)
-    assert_allclose(actual['niter'].data, expected['niter'].data, **opts)
+
+    assert 'niter' in actual.names

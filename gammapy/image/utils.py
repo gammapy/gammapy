@@ -18,8 +18,6 @@ __all__ = [
     'lon_lat_circle_mask',
     'make_header',
     'process_image_pixels',
-    'threshold',
-    'wcs_histogram2d',
 ]
 
 log = logging.getLogger(__name__)
@@ -95,32 +93,6 @@ def disk_correlate(image, radius, mode='constant'):
     return convolve(image, structure, mode=mode)
 
 
-<<<<<<< HEAD
-def ring_correlate(image, r_in, r_out, mode='constant'):
-    """Correlate image with binary ring kernel.
-
-    Parameters
-    ----------
-    image : `~numpy.ndarray`
-        Image to be correlated.
-    r_in : float
-        Ring inner radius in pixels.
-    r_out : float
-        Ring outer radius in pixels.
-    mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
-        the mode parameter determines how the array borders are handled.
-        For 'constant' mode, values beyond borders are set to be cval.
-        Default is 'constant'.
-
-    Returns
-    -------
-    convolve : `~numpy.ndarray`
-        The result of convolution of image with ring of given inner and outer radii.
-    """
-    from scipy.ndimage import convolve
-    structure = binary_ring(r_in, r_out)
-    return convolve(image, structure, mode=mode)
-=======
 def atrous_image(image, n_levels):
     """Compute a trous transform for a given image.
 
@@ -196,7 +168,6 @@ def dict_to_hdulist(image_dict, header):
     for name, image in image_dict.items():
         hdu_list.append(fits.ImageHDU(image, header, name.upper()))
     return hdu_list
->>>>>>> Remove ring_correlate utility function
 
 
 def process_image_pixels(images, kernel, out, pixel_function):
