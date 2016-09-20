@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import logging
 from astropy.extern import six
+from astropy.extern.six.moves import UserList
 from astropy.io import fits
 from astropy.io.fits import HDUList
 from ..utils.scripts import make_path
@@ -13,7 +14,7 @@ __all__ = ['SkyImageList']
 log = logging.getLogger(__name__)
 
 
-class SkyImageList(list):
+class SkyImageList(UserList):
     """List of `~gammapy.image.SkyImage` objects.
 
     This is a simple class that provides

@@ -20,6 +20,7 @@ import json
 import sys
 from collections import OrderedDict
 import numpy as np
+from astropy.extern.six.moves import UserList
 from astropy.table import Table
 from ..extern.bunch import Bunch
 
@@ -265,7 +266,7 @@ class SpectralModelExponentialCutoffPowerLaw(SpectralModel):
         return f0 * (energy / e0) ** (-g) * np.exp(-(energy / e_cut))
 
 
-class SpectralModels(list):
+class SpectralModels(UserList):
     """List of spectral models.
 
     Has some convenience methods to compare the different models.
