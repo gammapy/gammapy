@@ -19,11 +19,11 @@ and [LiMa1983]_.
 Computation of TS images
 ========================
 
-.. figure:: fermi_ts_image.png
-   :scale: 100 %
-   
-   Test statistics image computed using `~gammapy.detect.compute_ts_image` for an
-   example Fermi dataset.
+.. image:: fermi_ts_image.png
+    :scale: 100%
+
+Test statistics image computed using `~gammapy.detect.compute_ts_image` for an
+example Fermi dataset.
 
 The `gammapy.detect` module includes a high performance `~gammapy.detect.compute_ts_image` function to
 compute test statistics (TS) images for gamma-ray survey data. The implementation is based on the method

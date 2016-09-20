@@ -168,6 +168,29 @@ htmlhelp_basename = project + 'doc'
 
 # Static files to copy after template files
 html_static_path = ['_static']
+
+
+def copy_gp_extra_file(source, target):
+    """Copy file from `gammapy-extra` to `gammapy/docs` folder."""
+    cmd = 'cp $GAMMAPY_EXTRA/{} {}'.format(source, target)
+    print('Executing command: {}'.format(cmd))
+    os.system(cmd)
+
+try:
+    gammapy_extra_path = os.environ['GAMMAPY_EXTRA'] + '/figures'
+    print('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
+    print('*** Nice!')
+    html_static_path.append(gammapy_extra_path)
+
+    copy_gp_extra_file('figures/detect/fermi_ts_image.png', 'detect')
+
+except KeyError:
+    print('*** gammapy-extra *not* found.')
+    print('*** Set the GAMMAPY_EXTRA environment variable!')
+    print('*** Docs build will be incomplete.')
+
+# print(html_static_path); 1/0
+
 html_style = 'gammapy.css'
 
 # -- Options for LaTeX output --------------------------------------------------
