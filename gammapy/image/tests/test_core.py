@@ -390,3 +390,26 @@ def test_fits_header_comment_io(tmpdir):
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
     image = SkyImage.read(filename)
     image.write(tmpdir / 'temp.fits')
+
+
+def test_wcs_histogram2d():
+    # A simple test case that can by checked by hand:
+    header = make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
+    # GLON pixel edges: (+10, 0, -10)
+    # GLAT pixel edges: (-5, +5)
+
+    EPS = 0.1
+    data = [
+        (5, 5, 1),  # in image[0, 0]
+        (0, 0 + EPS, 2),  # in image[1, 0]
+        (5, -5 + EPS, 3),  # in image[0, 0]
+        (5, 5 + EPS, 99),  # outside image
+        (10 + EPS, 0, 99),  # outside image
+    ]
+    lon, lat, weights = np.array(data).T
+    image = wcs_histogram2d(header, lon, lat, weights)
+
+    print(type(image))
+
+    assert image.data[0, 0] == 1 + 3
+    assert image.data[0, 1] == 2

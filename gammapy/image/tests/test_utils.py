@@ -6,14 +6,10 @@ from astropy.tests.helper import pytest
 from astropy.wcs import WCS
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
-from ...data import DataStore
-from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
-    make_header,
     block_reduce_hdu,
-    wcs_histogram2d,
     lon_lat_rectangle_mask,
     SkyImage,
 )
@@ -96,29 +92,6 @@ def test_ref_pixel():
     assert_allclose(footprint[0], footprint_1[0])
 
 
-def test_wcs_histogram2d():
-    # A simple test case that can by checked by hand:
-    header = make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
-    # GLON pixel edges: (+10, 0, -10)
-    # GLAT pixel edges: (-5, +5)
-
-    EPS = 0.1
-    data = [
-        (5, 5, 1),  # in image[0, 0]
-        (0, 0 + EPS, 2),  # in image[1, 0]
-        (5, -5 + EPS, 3),  # in image[0, 0]
-        (5, 5 + EPS, 99),  # outside image
-        (10 + EPS, 0, 99),  # outside image
-    ]
-    lon, lat, weights = np.array(data).T
-    image = wcs_histogram2d(header, lon, lat, weights)
-
-    print(type(image))
-
-    assert image.data[0, 0] == 1 + 3
-    assert image.data[0, 1] == 2
-
-
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
     counts = SkyImage.from_image_hdu(FermiGalacticCenter.counts())
@@ -133,18 +106,3 @@ def test_lon_lat_rectangle_mask():
                                   lon_max=None, lat_min=None,
                                   lat_max=None)
     assert_allclose(mask.sum(), 80601)
-
-
-@requires_data('gammapy-extra')
-def test_bin_events_in_cube():
-    dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
-    data_store = DataStore.from_dir(dirname)
-
-    events = data_store.obs(obs_id=23523).events
-
-    counts = SkyCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
-                           nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                           yref=events.meta['DEC_OBJ'], dtype='int',
-                           coordsys='CEL')
-    counts.fill(events)
-    assert counts.data.sum().value == 1233
