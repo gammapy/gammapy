@@ -2,15 +2,21 @@
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
+
+from astropy.coordinates import Angle
 from astropy.tests.helper import pytest
 from astropy.utils import minversion
+from numpy.testing import assert_array_less, assert_allclose
+
 from ..data import DataManager
 from ..datasets import gammapy_extra
 
 __all__ = [
     'requires_dependency',
     'requires_data',
-    'SHERPA_LT_4_8'
+    'SHERPA_LT_4_8',
+    'assert_wcs_allclose',
+    'assert_skycoord_allclose',
 ]
 
 SHERPA_LT_4_8 = not minversion('sherpa', '4.8')
@@ -118,3 +124,22 @@ def data_manager():
     test_register = gammapy_extra.filename('datasets/data-register.yaml')
     dm = DataManager.from_yaml(test_register)
     return dm
+
+
+def assert_wcs_allclose(wcs1, wcs2):
+    """Assert all-close for `~astropy.wcs.WCS`
+
+    """
+    # TODO: implement properly
+    assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
+
+
+def assert_skycoord_allclose(skycoord1, skycoord2, atol='1 arcsec'):
+    """Assert all-close for `~astropy.coordinates.SkyCoord`.
+
+    - Checks if separation on the sky is within ``atol``.
+    - Frames can be different, aren't checked at the moment.
+    """
+    atol = Angle(atol)
+    sep = skycoord1.separation(skycoord2).deg
+    assert_array_less(sep.deg, atol.deg)
