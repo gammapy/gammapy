@@ -8,7 +8,6 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
     binary_disk,
-    make_header,
     block_reduce_hdu,
     lon_lat_rectangle_mask,
     SkyImage,
