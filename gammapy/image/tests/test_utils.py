@@ -8,7 +8,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
     binary_disk,
-    binary_ring,
+    make_header,
     block_reduce_hdu,
     lon_lat_rectangle_mask,
     SkyImage,
@@ -20,16 +20,6 @@ def test_binary_disk():
     desired = np.array([[False, True, False],
                         [True, True, True],
                         [False, True, False]])
-    assert_equal(actual, desired)
-
-
-def test_binary_ring():
-    actual = binary_ring(1, 2)
-    desired = np.array([[False, False, True, False, False],
-                        [False, True, True, True, False],
-                        [True, True, False, True, True],
-                        [False, True, True, True, False],
-                        [False, False, True, False, False]])
     assert_equal(actual, desired)
 
 

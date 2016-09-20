@@ -11,7 +11,6 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 
 __all__ = [
     'binary_disk',
-    'binary_ring',
     'block_reduce_hdu',
     'disk_correlate',
     'image_groupby',
@@ -19,7 +18,8 @@ __all__ = [
     'lon_lat_circle_mask',
     'make_header',
     'process_image_pixels',
-    'ring_correlate',
+    'threshold',
+    'wcs_histogram2d',
 ]
 
 log = logging.getLogger(__name__)
@@ -70,34 +70,6 @@ def binary_disk(radius):
     return structure
 
 
-def binary_ring(r_in, r_out):
-    """Generate a binary ring mask.
-
-    Value 1 inside and 0 outside.
-
-    Useful as a structure element for morphological transformations.
-
-    Note that the returned structure always has an odd number
-    of pixels so that shifts during correlation are avoided.
-
-    Parameters
-    ----------
-    r_in : float
-        Ring inner radius in pixels
-    r_out : float
-        Ring outer radius in pixels
-
-    Returns
-    -------
-    structure : `numpy.array`
-        Structure element (bool array)
-    """
-    x, y = _get_structure_indices(r_out)
-    mask1 = r_in ** 2 <= x ** 2 + y ** 2
-    mask2 = x ** 2 + y ** 2 <= r_out ** 2
-    return mask1 & mask2
-
-
 def disk_correlate(image, radius, mode='constant'):
     """Correlate image with binary disk kernel.
 
@@ -123,6 +95,7 @@ def disk_correlate(image, radius, mode='constant'):
     return convolve(image, structure, mode=mode)
 
 
+<<<<<<< HEAD
 def ring_correlate(image, r_in, r_out, mode='constant'):
     """Correlate image with binary ring kernel.
 
@@ -147,6 +120,83 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
+=======
+def atrous_image(image, n_levels):
+    """Compute a trous transform for a given image.
+
+    Parameters
+    ----------
+    image : 2D array
+        Input image
+    n_levels : integer
+        Number of wavelet scales.
+
+    Returns
+    -------
+    images : list of 2D arrays
+        Wavelet transformed images.
+    """
+    # https://code.google.com/p/image-funcut/
+    from imfun import atrous
+    return atrous.decompose2d(image, level=n_levels)
+
+
+def atrous_hdu(hdu, n_levels):
+    """Compute a trous transform for a given FITS HDU.
+
+    Parameters
+    ----------
+    hdu : 2D image HDU
+        Input image
+    n_levels : integer
+        Number of wavelet scales.
+
+    Returns
+    -------
+    images : HDUList
+        Wavelet transformed images.
+    """
+    image = hdu.data
+    log.info('Computing a trous transform for {0} levels ...'.format(n_levels))
+    images = atrous_image(image, n_levels)
+    hdus = fits.HDUList()
+
+    for level, image in enumerate(images):
+        if level < len(images) - 1:
+            name = 'level_{0}'.format(level)
+        else:
+            name = 'residual'
+        scale_pix = 2 ** level
+        scale_deg = hdu.header['CDELT2'] * scale_pix
+        log.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
+                 ''.format(name, scale_pix, scale_deg))
+        hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
+
+    return hdus
+
+
+def dict_to_hdulist(image_dict, header):
+    """
+    Take a dictionary of image data and a header to create a HDUList.
+
+    Parameters
+    ----------
+    image_dict : dict
+        Dictionary of input data. The keys are used as FITS extension names.
+        Image data are the corresponding values.
+    header : `astropy.io.fits.Header`
+        Header to be used for all images.
+
+    Returns
+    -------
+    hdu_list : `astropy.io.fits.HDUList`
+        HDU list of input dictionary.
+    """
+    hdu_list = fits.HDUList()
+    for name, image in image_dict.items():
+        hdu_list.append(fits.ImageHDU(image, header, name.upper()))
+    return hdu_list
+>>>>>>> Remove ring_correlate utility function
 
 
 def process_image_pixels(images, kernel, out, pixel_function):
