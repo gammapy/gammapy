@@ -142,10 +142,11 @@ class SkyImageList(UserList):
 
     def __str__(self):
         s = 'SkyImageList:\n'
-        s += 'Number of images: {}\n'.format(len(self))
+        s += 'Number of images: {}\n\n'.format(len(self))
         for idx, image in enumerate(self):
-            s += 'Image(index={}, name={}) properties:'.format(idx, image.name)
+            s += 'Image(index={}, name={}) properties: \n'.format(idx, image.name)
             s += str(image)
+            s += '\n'
         return s
 
     @staticmethod
