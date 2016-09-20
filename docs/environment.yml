@@ -13,5 +13,5 @@ dependencies:
   - astropy
   - regions
   - reproject
-  - wcsaces
+  - wcsaxes
   - aplpy
