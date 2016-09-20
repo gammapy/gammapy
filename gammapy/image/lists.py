@@ -146,3 +146,14 @@ class SkyImageList(list):
             s += 'Image(index={}, name={}) properties:'.format(idx, image.name)
             s += str(image)
         return s
+
+    @staticmethod
+    def assert_allclose(images1, images2, check_wcs=True):
+        """Assert all-close for `SkyImageList`.
+
+        A useful helper function to implement tests.
+        """
+        assert len(images1) == len(images2)
+
+        for image1, image2 in zip(images1, images2):
+            SkyImage.assert_allclose(image1, image2, check_wcs=check_wcs)
