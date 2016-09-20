@@ -3,17 +3,19 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..image import ring_correlate
+from astropy.convolution import Ring2DKernel
+from ..image import SkyImageList, required_skyimages
+
 
 __all__ = [
-    'RingBackground',
+    'RingBackgroundEstimator',
     'ring_r_out',
     'ring_area_factor',
     'ring_alpha',
 ]
 
 
-class RingBackground(object):
+class RingBackgroundEstimator(object):
     """
     Ring background method for cartesian coordinates.
 
@@ -27,16 +29,32 @@ class RingBackground(object):
     ----------
     r_in : `~astropy.units.Quantity`
         Inner ring radius
-    r_out : `~astropy.units.Quantity`
-        Outer ring radius
+    width : `~astropy.units.Quantity`
+        Ring width.
     """
+    def __init__(self, r_in, width):
+        self.parameters = dict(r_in=r_in, width=width)
 
-    def __init__(self, r_in, r_out):
-        if not r_in < r_out:
-            raise ValueError('r_in must be smaller than r_out')
-        self.parameters = dict(r_in=r_in, r_out=r_out)
+    def ring_convolve(self, image, **kwargs):
+        """
+        Convolve sky image with ring kernel.
 
-    @required_skyimages('counts', 'onexposure', 'exclusion')
+        Parameters
+        ----------
+        image : `SkyImage`
+            Image
+        """
+        p = self.parameters
+
+        scale = image.wcs_pixel_scale()[0]
+        r_in = p['r_in'].to('deg') / scale
+        width = p['width'].to('deg') / scale
+
+        ring = Ring2DKernel(r_in.value, width.value)
+        ring.normalize('peak')
+        return image.convolve(ring, fft=True)
+
+    @required_skyimages('counts', 'exposure_on', 'exclusion')
     def run(self, images):
         """
         Run ring background algorithm.
@@ -45,28 +63,43 @@ class RingBackground(object):
 
         Parameters
         ----------
-        images : `SkyImageCollection`
+        images : `SkyImageList`
             Input sky images.
 
         Returns
         -------
-        result : `SkyImageCollection`
+        result : `SkyImageList`
             Result sky images
         """
         p = self.parameters
-        self._images = images
-        wcs = images.counts.wcs.copy()
 
-        counts = images['counts'].data
-        exposure_on = images['onexposure'].data
-        exclusion = images['exclusion'].data
+        counts = images['counts']
+        exclusion = images['exclusion']
+        exposure_on = images['exposure_on']
 
-        off = ring_correlate(counts * exclusion, p.r_in, p.r_out)
-        exposure_off = ring_correlate(exposure_on * exclusion, p.r_in, p.r_out)
-        alpha = exposure_on / exposure_off
-        background = alpha * off
-        return SkyImageCollection(off=off, exposure_off=exposure_off,
-                                  alpha=alpha, background=background, wcs=wcs)
+        result = SkyImageList()
+
+        result['off'] = self.ring_convolve(counts * exclusion)
+        result['exposure_off'] = self.ring_convolve(exposure_on * exclusion)
+        result['alpha'] = exposure_on / result['exposure_off']
+        result['background'] = result['alpha'] * result['off']
+        return result
+
+    def info(self):
+        """
+        Print summary info about the parameters.
+        """
+        print(str(self))
+
+    def __str__(self):
+        """
+        String representation of the class.
+        """
+        info = "RingBackground parameters: \n"
+        info += 'r_in : {}\n'.format(self.parameters['r_in'])
+        info += 'width: {}\n'.format(self.parameters['width'])
+        return info
+
 
 
 def ring_r_out(theta, r_in, area_factor):
