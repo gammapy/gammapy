@@ -10,7 +10,7 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...data import DataStore
+from ...data import DataStore, EventList
 from ...datasets import load_poisson_stats_image
 from ..core import SkyImage
 
@@ -392,9 +392,14 @@ def test_fits_header_comment_io(tmpdir):
     image.write(tmpdir / 'temp.fits')
 
 
-def test_wcs_histogram2d():
-    # A simple test case that can by checked by hand:
-    header = make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
+def test_image_fill_events():
+    """A simple test case that can by checked by hand"""
+
+    image = SkyImage.empty(
+        nxpix=2, nypix=1, binsz=10,
+        xref=0, yref=0, proj='CAR',
+    )
+
     # GLON pixel edges: (+10, 0, -10)
     # GLAT pixel edges: (-5, +5)
 
@@ -407,9 +412,13 @@ def test_wcs_histogram2d():
         (10 + EPS, 0, 99),  # outside image
     ]
     lon, lat, weights = np.array(data).T
-    image = wcs_histogram2d(header, lon, lat, weights)
+    events = EventList()
+    coord = SkyCoord(lon, lat, unit='deg', frame='galactic').icrs
+    events['RA'] = coord.ra.deg
+    events['DEC'] = coord.dec.deg
+    events['WEIGHT'] = weights
 
-    print(type(image))
+    image.fill_events(events, weights='WEIGHT')
 
     assert image.data[0, 0] == 1 + 3
     assert image.data[0, 1] == 2

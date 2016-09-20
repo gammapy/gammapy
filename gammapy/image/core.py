@@ -233,7 +233,7 @@ class SkyImage(object):
 
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
-    def fill_events(self, events):
+    def fill_events(self, events, weights=None):
         """Fill events (modifies ``data`` attribute).
 
         Calls `numpy.histogramdd`
@@ -242,14 +242,19 @@ class SkyImage(object):
         ----------
         events : `~gammapy.data.EventList`
             Event list
+        weights : str, optional
+            Column to use as weights (none by default)
 
         Examples
         --------
         Show example how to make an empty image and fill it.
         """
+        if weights is not None:
+            weights = events[weights]
+
         xx, yy = self._events_xy(events)
         bins = self._bins_pix
-        data = np.histogramdd([yy, xx], bins)[0]
+        data = np.histogramdd([yy, xx], bins, weights=weights)[0]
         self.data = self.data + data
 
     def _events_xy(self, events):
