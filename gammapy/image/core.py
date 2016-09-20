@@ -1056,3 +1056,30 @@ class SkyImage(object):
         data = region.contains(coords)
 
         return SkyMask(data=data, wcs=self.wcs)
+
+    @staticmethod
+    def assert_allclose(image1, image2, check_wcs=True):
+        """Assert all-close for `SkyImage`.
+
+        A useful helper function to implement tests.
+        """
+        from numpy.testing import assert_allclose
+        from gammapy.utils.testing import assert_wcs_allclose
+
+        assert image1.name == image2.name
+
+        if (image1.data is None) and (image2.data is None):
+            pass
+        elif (image1.data is not None) and (image2.data is not None):
+            assert_allclose(image1.data, image2.data)
+        else:
+            raise ValueError('One image has `data==None` and the other does not.')
+
+        if check_wcs is False:
+            pass
+        elif (image1.wcs is None) and (image2.wcs is None):
+            pass
+        elif (image1.wcs is not None) and (image2.wcs is not None):
+            assert_wcs_allclose(image1.wcs, image2.wcs)
+        else:
+            raise ValueError('One image has `wcs==None` and the other does not.')
