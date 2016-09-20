@@ -5,6 +5,7 @@ from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
+from functools import wraps
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
 from astropy.io import fits
@@ -19,7 +20,7 @@ from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header
 
-__all__ = ['SkyImage']
+__all__ = ['SkyImage', 'required_skyimages']
 
 log = logging.getLogger(__name__)
 
@@ -1006,6 +1007,7 @@ class SkyImage(object):
         >>> image.wcs_pixel_scale()
         <Angle [ 0.02, 0.02] deg>
         """
+        import astropy.units as u
         if method == 'cdelt':
             scales = np.abs(self.wcs.wcs.cdelt)
         elif method == 'proj_plane':
@@ -1014,6 +1016,7 @@ class SkyImage(object):
             raise ValueError('Invalid method: {}'.format(method))
 
         return Angle(scales, unit='deg')
+
 
     def region_mask(self, region):
         """Create a boolean mask for a region.
@@ -1088,3 +1091,28 @@ class SkyImage(object):
             assert_wcs_allclose(image1.wcs, image2.wcs)
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
+
+class _SkyImageValidation(object):
+    """
+    Validate required input sky images for an algorithm.
+    """
+    def __init__(self, *args):
+        self.required_skyimages = args
+
+    @classmethod
+    def required(cls, *args):
+        return cls(*args)
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapped_f(*args):
+            for _ in self.required_skyimages:
+                if not _ in args[1].names:
+                    name = args[0].__class__.__name__
+                    raise ValueError("{} algorithm requires '{}' sky image"
+                                     " to run.".format(name, _))
+            return f(*args)
+        wrapped_f.__doc__ = f.__doc__.format(required=self.required_skyimages)
+        return wrapped_f
+
+required_skyimages = _SkyImageValidation.required
