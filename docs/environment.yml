@@ -1,0 +1,17 @@
+name: astropy
+
+channels:
+  - astropy
+
+dependencies:
+  - cython
+  - numpy
+  - scipy
+  - scikit-image
+  - matplotlib
+  - astropy-helpers
+  - astropy
+  - regions
+  - reproject
+  - wcsaces
+  - aplpy
