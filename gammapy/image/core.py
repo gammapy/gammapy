@@ -1092,6 +1092,26 @@ class SkyImage(object):
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
 
+    def convolve(self, kernels, fft=True, parallel=True):
+        """
+        Convolve image with kernel or list of kernels.
+
+        Parameters
+        ----------
+
+        """
+        from scipy.ndimage import convolve, fftconvolve
+        if parallel:
+            convolved = pool.map()
+        else:
+            convolved = map()
+
+        return SkyImageList(convolved)
+
+
+
+
+
 class _SkyImageValidation(object):
     """
     Validate required input sky images for an algorithm.
