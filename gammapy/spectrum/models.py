@@ -4,9 +4,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from . import integrate_spectrum
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
+from .utils import integrate_spectrum
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799

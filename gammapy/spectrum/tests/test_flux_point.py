@@ -2,14 +2,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
 import numpy as np
+from astropy.units import Quantity
+from gammapy.spectrum import SpectrumObservation, SpectrumEnergyGroupMaker
+from gammapy.spectrum.models import PowerLaw
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.table import Table
+import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law, DifferentialFluxPoints,
-                          IntegralFluxPoints)
+                          IntegralFluxPoints, FluxPointEstimator)
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 x_methods = ['table', 'lafferty', 'log_center']
@@ -111,7 +115,7 @@ def test_array_broadcasting(index, x_method, y_method):
                                              energy_max=energy_max,
                                              int_flux=int_flux,
                                              int_flux_err_hi=int_flux_err,
-                                             int_flux_err_lo=int_flux_err,)
+                                             int_flux_err_lo=int_flux_err, )
     # Check output sized
     energy = table['ENERGY']
     actual = len(energy)
@@ -227,3 +231,52 @@ def test_3fgl_flux_points():
     method1 = diff_points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
     method2 = diff2['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
     assert_allclose(method1, method2, rtol=1e-2)
+
+
+class TestFluxEstimator:
+    def setup(self):
+        self.model = PowerLaw(
+            index=Quantity(2, ''),
+            amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
+            reference=Quantity(1, 'TeV'),
+        )
+
+        # TODO: simulate known spectrum instead of using this example:
+        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        self.obs = SpectrumObservation.read(filename)
+        self.seg = SpectrumEnergyGroupMaker(obs=self.obs)
+        ebounds = [0.3, 1, 3, 10, 30] * u.TeV
+        self.seg.compute_range_safe()
+        self.seg.compute_groups_fixed(ebounds=ebounds)
+
+        self.groups = self.seg.groups
+
+    def test_with_power_law(self):
+
+        # import logging
+        # logging.basicConfig(level=logging.DEBUG)
+
+        fpe = FluxPointEstimator(
+            obs=self.obs,
+            groups=self.groups,
+            model=self.model,
+        )
+
+        assert 'FluxPointEstimator' in str(fpe)
+
+        fpe.compute_points()
+        flux_points = fpe.flux_points
+        flux_points.pprint()
+        flux_points.info()
+
+        actual = flux_points['diff_flux'][2]
+        desired = Quantity(6.081776402387885e-09, 'm-2 s-1 TeV-1')
+        assert_quantity_allclose(actual, desired, rtol=1e-3)
+
+        actual = flux_points['diff_flux_err_hi'][2]
+        desired = Quantity(9.532100376178353e-10, 'm-2 s-1 TeV-1')
+        assert_quantity_allclose(actual, desired, rtol=1e-3)
+
+    def test_with_ecpl(self):
+        # TODO: implement
+        assert True

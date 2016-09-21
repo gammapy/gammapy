@@ -92,21 +92,6 @@ def test_spectral_fit(tmpdir):
 
     assert_quantity_allclose(actual, desired)
 
-    # Test fluxpoints computation
-    binning = np.logspace(0, 1, 5) * u.TeV
-    result = fit.compute_fluxpoints(binning=binning)
-    result.plot(energy_range=binning[[0, -1]])
-    actual = result.points['DIFF_FLUX'].quantity[2]
-    desired = 1.118e-12 * u.Unit('cm-2 s-1 TeV-1')
-    assert_quantity_allclose(actual, desired, rtol=1e-3)
-
-    actual = result.points['DIFF_FLUX_ERR_HI'].quantity[2]
-    desired = 1.842e-13 * u.Unit('cm-2 s-1 TeV-1')
-    assert_quantity_allclose(actual, desired, rtol=1e-3) 
-
-    residuals = result.flux_point_residuals
-    assert_allclose(residuals[2].s, 0.1905, rtol=1e-3) 
-
     # Test ECPL
     ecpl = models.ExponentialCutoffPowerLaw(
         index=2 * u.Unit(''),
