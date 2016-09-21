@@ -3,6 +3,7 @@
 Morphological models for astrophysical gamma-ray sources.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
