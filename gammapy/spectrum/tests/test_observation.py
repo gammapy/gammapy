@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumObservation, models
 
@@ -34,9 +34,9 @@ class TestSpectrumObservation:
         npred1.data[np.nonzero(self.obs.on_vector.quality)] = 0
         npred2.data[np.nonzero(self.obs2.on_vector.quality)] = 0
 
-        npred_summed = npred1 + npred2
+        npred_summed = npred1.data + npred2.data
 
-        assert_allclose(npred_stacked.data, npred_summed.data)
+        assert_allclose(npred_stacked.data, npred_summed)
 
     def test_stats_table(self):
         table = self.obs.stats_table()
