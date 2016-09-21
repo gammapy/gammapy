@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Tools to load and analyse source catalogs and objects.
+"""
+Source catalogs and objects.
 """
 from .analysis import *
 from .core import *

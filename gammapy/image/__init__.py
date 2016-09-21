@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Image processing and analysis tools."""
+"""
+Sky images (2-dimensional: lon, lat).
+"""
 from .utils import *
 from .measure import *
 from .profile import *

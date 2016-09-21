@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Spectrum estimation and modeling methods.
+Spectrum estimation and modeling methods (1-dimensional, with an energy axis).
 """
 from .core import *
 from .butterfly import *
