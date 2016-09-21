@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.time import Time, TimeDelta
-from .utils import TIME_REF_FERMI
+from ..utils.time import TIME_REF_FERMI
 
 __all__ = [
     'plot_fermi_3fgl_light_curve',

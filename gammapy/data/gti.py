@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from astropy.units import Quantity
 from astropy.table import Table
-from ..time import time_ref_from_dict
+from ..utils.time import time_ref_from_dict
 from ..utils.scripts import make_path
 
 __all__ = [

@@ -8,7 +8,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
-from ..time import time_relative_to_ref
+from ..utils.time import time_relative_to_ref
 
 __all__ = [
     'ObservationTable',
