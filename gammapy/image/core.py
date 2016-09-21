@@ -1098,12 +1098,12 @@ class SkyImage(object):
 
         Parameters
         ----------
-        kernel : `~astropy.convolution.Kernel`
+        kernel : `~numpy.ndarray`
             Convolution kernel.
         **kwargs : dict
             Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """
         from scipy.ndimage import convolve
-        data = convolve(self.data, kernel.array, **kwargs)
+        data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(data=data, wcs=wcs)

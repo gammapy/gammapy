@@ -37,16 +37,16 @@ class RingBackgroundEstimator(object):
     --------
     Here's an example how to use the `RingBackgroundEstimator`:
 
-        >>> from astropy import units as u
-        >>> from gammapy.background import RingBackgroundEstimator
-        >>> from gammapy.image import SkyImageList
-        >>>
-        >>> images = SkyImageList.read('$GAMMAPY_EXTRA/test_datasets/unbundled/'
-                                       'poisson_stats_image/input_all.fits.gz')
-        >>> images['exposure'].name = 'exposure_on'
-        >>> ring_bkg = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
-        >>> result = ring_bkg.run(images)
-        >>> result['background'].show()
+        from astropy import units as u
+        from gammapy.background import RingBackgroundEstimator
+        from gammapy.image import SkyImageList
+
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+        images = SkyImageList.read(filename)
+        images['exposure'].name = 'exposure_on'
+        ring_bkg = RingBackgroundEstimator(r_in=0.35 * u.deg, width=0.3 * u.deg)
+        results = ring_bkg.run(images)
+        results['background'].show()
 
 
     See Also
@@ -75,7 +75,7 @@ class RingBackgroundEstimator(object):
 
         ring = Ring2DKernel(r_in.value, width.value)
         ring.normalize('peak')
-        return image.convolve(ring, **kwargs)
+        return image.convolve(ring.array, **kwargs)
 
     def run(self, images):
         """
@@ -127,7 +127,6 @@ class RingBackgroundEstimator(object):
         info += 'r_in : {}\n'.format(self.parameters['r_in'])
         info += 'width: {}\n'.format(self.parameters['width'])
         return info
-
 
 
 def ring_r_out(theta, r_in, area_factor):
