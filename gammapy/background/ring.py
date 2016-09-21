@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.convolution import Ring2DKernel
-from ..image import SkyImageList, required_skyimages
+from ..image import SkyImageList, SkyImage
 
 
 __all__ = [
@@ -41,8 +41,10 @@ class RingBackgroundEstimator(object):
 
         Parameters
         ----------
-        image : `SkyImage`
+        image : `gammapy.image.SkyImage`
             Image
+        **kwargs : dict
+            Keyword arguments passed to `gammapy.image.SkyImage.convolve`
         """
         p = self.parameters
 
@@ -52,9 +54,8 @@ class RingBackgroundEstimator(object):
 
         ring = Ring2DKernel(r_in.value, width.value)
         ring.normalize('peak')
-        return image.convolve(ring, fft=True)
+        return image.convolve(ring, **kwargs)
 
-    @required_skyimages('counts', 'exposure_on', 'exclusion')
     def run(self, images):
         """
         Run ring background algorithm.
@@ -71,18 +72,24 @@ class RingBackgroundEstimator(object):
         result : `SkyImageList`
             Result sky images
         """
+        images.check_required(['counts', 'exposure_on', 'exclusion'])
         p = self.parameters
 
         counts = images['counts']
         exclusion = images['exclusion']
         exposure_on = images['exposure_on']
+        wcs = counts.wcs.copy()
 
         result = SkyImageList()
 
-        result['off'] = self.ring_convolve(counts * exclusion)
-        result['exposure_off'] = self.ring_convolve(exposure_on * exclusion)
-        result['alpha'] = exposure_on / result['exposure_off']
-        result['background'] = result['alpha'] * result['off']
+        counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
+        result['off'] = self.ring_convolve(counts_excluded)
+
+        exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
+        result['exposure_off'] = self.ring_convolve(exposure_on_excluded)
+
+        result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
+        result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
         return result
 
     def info(self):

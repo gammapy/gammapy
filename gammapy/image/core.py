@@ -20,7 +20,7 @@ from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header
 
-__all__ = ['SkyImage', 'required_skyimages']
+__all__ = ['SkyImage']
 
 log = logging.getLogger(__name__)
 
@@ -554,7 +554,7 @@ class SkyImage(object):
 
         data = self.data[ylo:-yhi, xlo:-xhi]
 
-        if self.wcs is not None:
+        if self.wcs:
             wcs = self.wcs.deepcopy()
             wcs.wcs.crpix -= np.array([xlo, ylo])
         else:
@@ -1092,7 +1092,7 @@ class SkyImage(object):
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
 
-    def convolve(self, kernel, fft=False, mode='reflect', **kwargs):
+    def convolve(self, kernel, **kwargs):
         """
         Convolve sky image with kernel.
 
@@ -1100,73 +1100,10 @@ class SkyImage(object):
         ----------
         kernel : `~astropy.convolution.Kernel`
             Convolution kernel.
-        fft : bool
-            Use fast FFT convolution.
-        mode : str ('reflect')
-            Boundary mode passed to `~numpy.pad`
         **kwargs : dict
-            Further keyword arguments passed to `~numpy.pad`.
+            Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """
-        from scipy.signal import fftconvolve
         from scipy.ndimage import convolve
-
-        width = kernel.array.shape[0] / 2
-        padded = self.pad(pad_width=(width, width))
-
-        if fft:
-            data = fftconvolve(padded.data, kernel.array, mode='same')
-        else:
-            data = convolve(padded.data, kernel.array, mode='constant')
-
-        convolved = self.__class__(data=data, wcs=self.wcs.copy())
-        return convolved.crop(crop_width=(width, width))
-
-    def __mul__(self, image):
-        """
-        Multiply sky image data.
-        """
-        # TODO: check if wcs are compatible, if not raise error
-        if self.wcs:
-            wcs = self.wcs.copy()
-        else:
-            wcs = None
-        data = self.data * image.data
+        data = convolve(self.data, kernel.array, **kwargs)
+        wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(data=data, wcs=wcs)
-
-    def __truediv__(self, image):
-        """
-        Divide sky image data.
-        """
-        # TODO: check if wcs are compatible, if not raise error
-        if self.wcs:
-            wcs = self.wcs.copy()
-        else:
-            wcs = None
-        data = self.data / image.data
-        return self.__class__(data=data, wcs=wcs)
-
-
-class _SkyImageValidation(object):
-    """
-    Validate required input sky images for an algorithm.
-    """
-    def __init__(self, *args):
-        self.required_skyimages = args
-
-    @classmethod
-    def required(cls, *args):
-        return cls(*args)
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapped_f(*args):
-            for _ in self.required_skyimages:
-                if not _ in args[1].names:
-                    name = args[0].__class__.__name__
-                    raise ValueError("{} algorithm requires '{}' sky image"
-                                     " to run.".format(name, _))
-            return f(*args)
-        wrapped_f.__doc__ = f.__doc__.format(required=self.required_skyimages)
-        return wrapped_f
-
-required_skyimages = _SkyImageValidation.required

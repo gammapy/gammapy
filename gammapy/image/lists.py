@@ -80,7 +80,7 @@ class SkyImageList(UserList):
                 idx = self.names.index(key)
                 return self[idx]
             else:
-                fmt = 'No image with name: {}.\nAvailable image names: {}'
+                fmt = "No image with name: '{}'. Available image names: {}"
                 raise KeyError(fmt.format(key, self.names))
 
         # Normal list lookup (for int key)
@@ -159,3 +159,15 @@ class SkyImageList(UserList):
 
         for image1, image2 in zip(images1, images2):
             SkyImage.assert_allclose(image1, image2, check_wcs=check_wcs)
+
+    def check_required(self, required_images):
+        """Check if required images are present in the skyimage list.
+
+        Parameters
+        ----------
+        required : list
+            List of names of required skyimages.
+        """
+        for image in required_images:
+            if not image in self.names:
+                raise ValueError("Algorithm requires '{}' image to run.".format(image))

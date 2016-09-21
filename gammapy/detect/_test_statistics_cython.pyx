@@ -147,7 +147,7 @@ def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
             if model[j, i] > 0:
                 cash[j, i] = 2 * (model[j, i] - counts[j, i] * log(model[j, i]))
             else:
-                cash[j, i] = 0 
+                cash[j, i] = 0
     return cash
 
 @cython.cdivision(True)
