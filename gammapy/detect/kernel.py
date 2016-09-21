@@ -80,6 +80,11 @@ class KernelBackgroundEstimator(object):
         Default False.
     base_dir : str (optional)
         Base of filenames if save_intermediate_results = True. Default 'temp'.
+
+
+    See Also
+    --------
+    RingBackgroundEstimator
     """
 
     def __init__(self, images, source_kernel, background_kernel,

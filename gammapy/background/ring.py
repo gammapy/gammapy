@@ -31,6 +31,27 @@ class RingBackgroundEstimator(object):
         Inner ring radius
     width : `~astropy.units.Quantity`
         Ring width.
+
+
+    Examples
+    --------
+    Here's an example how to use the `RingBackgroundEstimator`:
+
+        >>> from astropy import units as u
+        >>> from gammapy.background import RingBackgroundEstimator
+        >>> from gammapy.image import SkyImageList
+        >>>
+        >>> images = SkyImageList.read('$GAMMAPY_EXTRA/test_datasets/unbundled/'
+                                       'poisson_stats_image/input_all.fits.gz')
+        >>> images['exposure'].name = 'exposure_on'
+        >>> ring_bkg = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
+        >>> result = ring_bkg.run(images)
+        >>> result['background'].show()
+
+
+    See Also
+    --------
+    KernelBackgroundEstimator
     """
     def __init__(self, r_in, width):
         self.parameters = dict(r_in=r_in, width=width)
