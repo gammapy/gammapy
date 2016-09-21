@@ -48,6 +48,7 @@ If you'd like to learn more about using `gammapy.image`, read the following sub-
 
    sky_image
    plotting
+   models
 
 
 Reference/API
@@ -55,3 +56,7 @@ Reference/API
 
 .. automodapi:: gammapy.image
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.image.models
+    :no-inheritance-diagram:
+
