@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Instrument response functions (IRFs)
+"""
+Instrument response functions (IRFs).
 """
 from .effective_area import *
 from .psf_core import *

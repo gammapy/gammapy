@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Morphology and PSF methods.
-
-Some parts of this package use Sherpa.
+"""
+Morphology models.
 """
 from .gauss import *
 from .model import *

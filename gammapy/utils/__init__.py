@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Utility functions and classes that are used in many places
-or didn't fit anywhere else.
+Utility functions and classes used throughout Gammapy.
 
 You have to import sub-modules like `gammapy.utils.root` or
 `gammapy.utils.random` or `gammapy.utils.wcs`.

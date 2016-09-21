@@ -19,18 +19,18 @@ The ``gammapy.astro`` namespace is empty ... use these import statements:
    from gammapy.astro import source
    from gammapy.astro import population
 
+
+Getting Started
+===============
+
+TODO: Add example Galactic gamma-ray source population model (catalog distributions, flux image, significance images)
+
+Sub-packages
+============
+
 .. toctree::
   :maxdepth: 1
 
   source/index
   population/index
 
-Getting Started
-===============
-
-
-
-Example
-=======
-
-TODO: Galactic gamma-ray source population model (catalog distributions, flux image, significance images)

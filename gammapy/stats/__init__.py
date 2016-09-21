@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Statistics utility functions and classes
+Statistics utility functions and classes.
 """
 from .significance import *
 from .data import *
