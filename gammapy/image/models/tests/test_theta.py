@@ -3,18 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_almost_equal
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_dependency
-from ...morphology import (Gauss2DPDF,
-                           MultiGauss2D,
-                           ThetaCalculator,
-                           ThetaCalculatorScipy,
-                           )
+from ....utils.testing import requires_dependency
+from ...models import Gauss2DPDF, MultiGauss2D, ThetaCalculator, ThetaCalculatorScipy
 
 
 @requires_dependency('scipy')
 class TestThetaCalculator:
     """We use a Gaussian, because it has known analytical
     solutions for theta and containment."""
+
     def setup(self):
         # Single Gauss
         self.g = Gauss2DPDF(sigma=1)

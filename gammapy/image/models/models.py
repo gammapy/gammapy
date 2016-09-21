@@ -79,11 +79,10 @@ class Shell2D(Fittable2DModel):
         :include-source:
 
         import numpy as np
-        from gammapy.morphology import Shell2D
         import matplotlib.pyplot as plt
+        from gammapy.image.models import Shell2D
 
-        shell = Shell2D(amplitude=100., x_0=25., y_0=25.,
-                        r_in=10., width=5.)
+        shell = Shell2D(amplitude=100, x_0=25, y_0=25, r_in=10, width=5)
         y, x = np.mgrid[0:50, 0:50]
         plt.imshow(shell(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')
@@ -204,11 +203,10 @@ class Sphere2D(Fittable2DModel):
         :include-source:
 
         import numpy as np
-        from gammapy.morphology import Sphere2D
         import matplotlib.pyplot as plt
+        from gammapy.image.models import Sphere2D
 
-        sphere = Sphere2D(amplitude=100., x_0=25., y_0=25.,
-                        r_0=20.)
+        sphere = Sphere2D(amplitude=100, x_0=25, y_0=25, r_0=20)
         y, x = np.mgrid[0:50, 0:50]
         plt.imshow(sphere(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')
@@ -287,8 +285,8 @@ class Delta2D(Fittable2DModel):
                     \\end{array}
                 \\right.
 
-    The pixel positions x_0 and y_0 are rounded to integers. Subpixel
-    information is lost.
+    The pixel positions ``x_0`` and ``y_0`` are rounded to integers.
+    Sub-pixel information is lost.
     """
 
     amplitude = Parameter('amplitude')
@@ -309,8 +307,10 @@ class Delta2D(Fittable2DModel):
         return np.select([np.logical_and(x_mask, y_mask)], [amplitude])
 
 
-# Available morphology types
-morph_types = {'delta2d': Delta2D,
-               'gauss2d': Gaussian2D,
-               'shell2d': Shell2D,
-               'sphere2d': Sphere2D}
+morph_types = OrderedDict(
+    delta2d=Delta2D,
+    gauss2d=Gaussian2D,
+    shell2d=Shell2D,
+    sphere2d=Sphere2D,
+)
+"""Available morphology types."""

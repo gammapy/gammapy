@@ -21,8 +21,8 @@ from astropy.extern import six
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
-from ..morphology import read_json
-from ..morphology import Gauss2DPDF, MultiGauss2D
+from ..image.models import read_json
+from ..image.models import Gauss2DPDF, MultiGauss2D
 
 __all__ = [
     'GaussPSF',
@@ -92,7 +92,7 @@ class SherpaMultiGaussPSF(object):
     def set(self):
         """Set the PSF for Sherpa."""
         import sherpa.astro.ui as sau
-        # from morphology.utils import read_json
+        # from gammapy.image.models.utils import read_json
         read_json(self.pars, sau.set_model)
         sau.load_psf('psf', sau.get_model())
         self.center_psf()

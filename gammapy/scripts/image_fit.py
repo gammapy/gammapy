@@ -46,7 +46,7 @@ def image_fit(counts,
     """
 
     import sherpa.astro.ui
-    from ..morphology.utils import read_json, write_all
+    from ..image.models.utils import read_json, write_all
     from ..irf import SherpaMultiGaussPSF
 
     # ---------------------------------------------------------

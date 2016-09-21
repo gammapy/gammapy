@@ -121,7 +121,7 @@ class Gauss2DPDF(object):
 
         Returns
         -------
-        gauss_convolve : `~gammapy.morphology.Gauss2DPDF`
+        gauss_convolve : `~gammapy.image.models.Gauss2DPDF`
             Convolution of both Gaussians.
         """
         sigma = np.asarray(sigma, dtype=np.float64)
@@ -248,7 +248,7 @@ class MultiGauss2D(object):
 
         Returns
         -------
-        norm_multigauss : `~gammapy.morphology.MultiGauss2D`
+        norm_multigauss : `~gammapy.image.models.MultiGauss2D`
            normalized function
         """
         self.norms /= self.integral
@@ -350,7 +350,7 @@ class MultiGauss2D(object):
 
         Returns
         -------
-        new_multi_gauss_2d : `~gammapy.morphology.MultiGauss2D`
+        new_multi_gauss_2d : `~gammapy.image.models.MultiGauss2D`
             Convolution as new MultiGauss2D
         """
         sigma = np.asarray(sigma, dtype=np.float64)
@@ -406,7 +406,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     with zero covariance matrix:
 
     >>> import numpy as np
-    >>> from gammapy.morphology.gauss import gaussian_sum_moments
+    >>> from gammapy.image.models.gauss import gaussian_sum_moments
     >>> cov_matrix = np.zeros((12, 12))
     >>> F = [100, 200, 300]
     >>> sigma = [15, 10, 5]

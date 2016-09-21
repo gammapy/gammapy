@@ -4,4 +4,4 @@
 def get_package_data():
     formats = 'fits root xml json conf txt csv'.split()
     files = ['data/*.{0}'.format(_) for _ in formats]
-    return {'gammapy.morphology.tests': files}
+    return {'gammapy.image.models.tests': files}

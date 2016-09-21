@@ -14,13 +14,13 @@ import numpy as np
 from astropy.convolution import Model2DKernel, Gaussian2DKernel
 from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.io import fits
+from ..utils.array import shape_2N, symmetric_crop_pad_width
+from ..irf import multi_gauss_psf_kernel
+from ..image import measure_containment_radius, SkyImageList, SkyImage
+from ..image.models import Shell2D
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython,
                                       _x_best_leastsq)
-from ..irf import multi_gauss_psf_kernel
-from ..morphology import Shell2D
-from ..image import measure_containment_radius, SkyImageList, SkyImage
-from ..utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = [
     'compute_ts_image',

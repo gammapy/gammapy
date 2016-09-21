@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.tests.helper import pytest
 from astropy.modeling.tests.test_models import Fittable2DModelTester
-from ...morphology import Sphere2D, Shell2D, Delta2D
+from ..models import Sphere2D, Shell2D, Delta2D
 
 models_2D = {
 

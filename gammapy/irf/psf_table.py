@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution.utils import discretize_oversample_2D
-from ..morphology import Gauss2DPDF
+from ..image.models import Gauss2DPDF
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 

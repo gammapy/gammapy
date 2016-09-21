@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
-from ..utils.random import get_random_state
+from ...utils.random import get_random_state
 
 __all__ = [
     'GaussCatalog',
@@ -46,7 +46,7 @@ class MorphModelImageCreator(object):
     --------
     Here is an example how to use `MorphModelImageCreator`:
 
-    >>> from gammapy.morphology import MorphModelImageCreator
+    >>> from gammapy.image.models import MorphModelImageCreator
     >>> model_image_creator = MorphModelImageCreator(cfg_file='input_sherpa.cfg',
     ...                                              exposure='exposure.fits',
     ...                                              psf_file='psf.json')
@@ -216,7 +216,7 @@ def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30,
         Passed to `~gammapy.utils.random.get_random_state`.
     """
     from sherpa.astro.ui import set_source
-    from morphology.utils import _set, _name
+    from gammapy.image.models.utils import _set, _name
 
     # initialise random number generator
     random_state = get_random_state(random_state)
@@ -232,4 +232,5 @@ def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30,
 
 def read_json(filename):
     from sherpa.astro.ui import set_source
-    morphology.utils.read_json(filename, set_source)
+    from gammapy.image.models.utils import read_json
+    read_json(filename, set_source)

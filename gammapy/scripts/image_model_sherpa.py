@@ -43,9 +43,9 @@ def image_model_sherpa(exposure,
     * Source model flux image (FITS file)
     * Source model excess image (FITS file)
     """
-    import sherpa.astro.ui as sau  # @UnresolvedImport
-    from ..morphology.psf import Sherpa
-    from ..morphology.utils import read_json
+    import sherpa.astro.ui as sau
+    from ..image.models.psf import Sherpa
+    from ..image.models.utils import read_json
 
     log.info('Reading exposure: {0}'.format(exposure))
     # Note: We don't really need the exposure as data,
