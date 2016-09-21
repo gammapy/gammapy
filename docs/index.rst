@@ -85,7 +85,6 @@ The Gammapy toolbox
   detect/index
   image/index
   irf/index
-  morphology/index
   spectrum/index
   stats/index
   time/index

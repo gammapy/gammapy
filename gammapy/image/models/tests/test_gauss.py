@@ -2,16 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
-from astropy.io import fits
-from astropy.wcs import WCS
-from ...utils.testing import requires_dependency
-from ...image import measure_image_moments, SkyImage
-from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
+from ....utils.testing import requires_dependency
+from ....image import measure_image_moments, SkyImage
+from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 BINSZ = 0.02
+
 
 @requires_dependency('scipy')
 class TestGauss2DPDF:
@@ -134,21 +132,21 @@ def test_gaussian_sum_moments():
     F_1_image = discretize_model(f_1, (0, 201), (0, 201))
     F_2_image = discretize_model(f_2, (0, 201), (0, 201))
     F_3_image = discretize_model(f_3, (0, 201), (0, 201))
-    
+
     image = SkyImage.empty(nxpix=201, nypix=201)
     image.data = F_1_image + F_2_image + F_3_image
     moments_num = measure_image_moments(image)
 
     # Right now the flux doesn't have a unit
-    moments_num = [moments_num[0]] + [_.value for _ in moments_num[1:]]    
-    
+    moments_num = [moments_num[0]] + [_.value for _ in moments_num[1:]]
+
     # Compute analytical values
     cov_matrix = np.zeros((12, 12))
     F = [F_1, F_2, F_3]
     sigma = np.array([sigma_1, sigma_2, sigma_3]) * BINSZ
     x, y = image.wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
     x = np.where(x > 180, x - 360, x)
-    
+
     moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0)
     assert_allclose(moments_ana, moments_num, 1e-6)
     assert_allclose(uncertainties, 0)
