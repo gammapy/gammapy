@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_almost_equal
 from astropy.time import TimeDelta
-from ..utils import time_ref_from_dict, time_relative_to_ref, absolute_time
+from ..time import time_ref_from_dict, time_relative_to_ref, absolute_time
 
 
 def test_time_ref_from_dict():

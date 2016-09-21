@@ -13,9 +13,9 @@ from astropy.table import Table
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
-from ..time import time_ref_from_dict
-from .gti import GTI
+from ..utils.time import time_ref_from_dict
 from .utils import _earth_location_from_dict
+from .gti import GTI
 from . import InvalidDataError
 
 __all__ = [

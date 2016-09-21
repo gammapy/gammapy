@@ -5,7 +5,7 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz
 from ..utils.scripts import make_path
-from ..time.utils import time_ref_from_dict
+from ..utils.time import time_ref_from_dict
 from .utils import _earth_location_from_dict
 
 __all__ = [

@@ -20,7 +20,6 @@ def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
     * ``return_delta=False`` - Return absolute times, relative to zero (default)
     * ``return_delta=True`` - Return time differences between consecutive events.
 
-
     Parameters
     ----------
     size : int

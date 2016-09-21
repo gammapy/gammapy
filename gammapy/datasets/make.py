@@ -10,6 +10,7 @@ from astropy.coordinates import SkyCoord, AltAz, Angle
 from astropy.table import Table
 from ..extern.pathlib import Path
 from ..utils.random import sample_sphere, sample_powerlaw, get_random_state
+from ..utils.time import time_ref_from_dict, time_relative_to_ref
 from ..utils.fits import table_to_fits_table
 
 __all__ = [
@@ -133,7 +134,6 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table : `~gammapy.data.ObservationTable`
         Observation table.
     """
-    from ..time import time_ref_from_dict, time_relative_to_ref
     from ..data import ObservationTable, observatory_locations
     random_state = get_random_state(random_state)
 
