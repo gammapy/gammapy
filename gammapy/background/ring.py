@@ -3,19 +3,21 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..image import ring_correlate
+from astropy.convolution import Ring2DKernel
+from ..image import SkyImageList, SkyImage
+
 
 __all__ = [
-    'ring_correlate_off_maps',
-    'RingBgMaker',
+    'RingBackgroundEstimator',
     'ring_r_out',
     'ring_area_factor',
     'ring_alpha',
 ]
 
 
-class RingBgMaker(object):
-    """Ring background method for cartesian coordinates.
+class RingBackgroundEstimator(object):
+    """
+    Ring background method for cartesian coordinates.
 
     Step 1: apply exclusion mask
     Step 2: ring-correlate
@@ -25,70 +27,106 @@ class RingBgMaker(object):
 
     Parameters
     ----------
-    r_in : float
-        Inner ring radius (deg)
-    r_out : float
-        Outer ring radius (deg)
-    pixscale : float
-        degrees per pixel
+    r_in : `~astropy.units.Quantity`
+        Inner ring radius
+    width : `~astropy.units.Quantity`
+        Ring width.
+
+
+    Examples
+    --------
+    Here's an example how to use the `RingBackgroundEstimator`:
+
+        from astropy import units as u
+        from gammapy.background import RingBackgroundEstimator
+        from gammapy.image import SkyImageList
+
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+        images = SkyImageList.read(filename)
+        images['exposure'].name = 'exposure_on'
+        ring_bkg = RingBackgroundEstimator(r_in=0.35 * u.deg, width=0.3 * u.deg)
+        results = ring_bkg.run(images)
+        results['background'].show()
+
+
+    See Also
+    --------
+    KernelBackgroundEstimator
     """
+    def __init__(self, r_in, width):
+        self.parameters = dict(r_in=r_in, width=width)
 
-    def __init__(self, r_in, r_out, pixscale=0.01):
-        self.pixscale = float(pixscale)
-        # Note: internally all computations are in pixels,
-        # so convert deg to pix here:
-        self.r_in = r_in / self.pixscale
-        self.r_out = r_out / self.pixscale
-
-    def info(self):
-        """Print some basic parameter info."""
-        print('RingBgMaker parameters:')
-        fmt = 'r_in: {0} pix = {1} deg'
-        print(fmt.format(self.r_in, self.r_in * self.pixscale))
-        fmt = 'r_out: {0} pix = {1} deg'
-        print(fmt.format(self.r_out, self.r_out * self.pixscale))
-        print('pixscale: {0} deg/pix'.format(self.pixscale))
-        print()
-
-    def correlate(self, image):
-        """Ring-correlate a given image."""
-        return ring_correlate(image, self.r_in, self.r_out)
-
-    def correlate_maps(self, maps):
-        """Compute off maps as ring-correlated versions of the on maps.
-
-        The exclusion map is taken into account.
+    def ring_convolve(self, image, **kwargs):
+        """
+        Convolve sky image with ring kernel.
 
         Parameters
         ----------
-        maps : gammapy.data.maps.MapsBunch
-            Input maps (is modified in-place)
+        image : `gammapy.image.SkyImage`
+            Image
+        **kwargs : dict
+            Keyword arguments passed to `gammapy.image.SkyImage.convolve`
         """
-        # Note: maps['on'] returns a copy of the HDU,
-        # so assigning to on would be pointless.
-        n_on = maps['n_on']
-        a_on = maps['a_on']
-        exclusion = maps['exclusion']
-        maps['n_off'] = self.correlate(n_on.data * exclusion.data)
-        maps['a_off'] = self.correlate(a_on.data * exclusion.data)
-        maps.is_off_correlated = True
+        p = self.parameters
 
+        scale = image.wcs_pixel_scale()[0]
+        r_in = p['r_in'].to('deg') / scale
+        width = p['width'].to('deg') / scale
 
-def ring_correlate_off_maps(maps, r_in, r_out):
-    """Ring-correlate the basic off maps.
+        ring = Ring2DKernel(r_in.value, width.value)
+        ring.normalize('peak')
+        return image.convolve(ring.array, **kwargs)
 
-    Parameters
-    ----------
-    maps : gammapy.data.maps.MapsBunch
-        Maps container
-    r_in : float
-        Inner ring radius (deg)
-    r_out : float
-        Outer ring radius (deg)
-    """
-    pixscale = maps['n_on'].header['CDELT2']
-    ring_bg_maker = RingBgMaker(r_in, r_out, pixscale)
-    return ring_bg_maker.correlate_maps(maps)
+    def run(self, images):
+        """
+        Run ring background algorithm.
+
+        Required sky images: {required}
+
+        Parameters
+        ----------
+        images : `SkyImageList`
+            Input sky images.
+
+        Returns
+        -------
+        result : `SkyImageList`
+            Result sky images
+        """
+        images.check_required(['counts', 'exposure_on', 'exclusion'])
+        p = self.parameters
+
+        counts = images['counts']
+        exclusion = images['exclusion']
+        exposure_on = images['exposure_on']
+        wcs = counts.wcs.copy()
+
+        result = SkyImageList()
+
+        counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
+        result['off'] = self.ring_convolve(counts_excluded)
+
+        exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
+        result['exposure_off'] = self.ring_convolve(exposure_on_excluded)
+
+        result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
+        result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
+        return result
+
+    def info(self):
+        """
+        Print summary info about the parameters.
+        """
+        print(str(self))
+
+    def __str__(self):
+        """
+        String representation of the class.
+        """
+        info = "RingBackground parameters: \n"
+        info += 'r_in : {}\n'.format(self.parameters['r_in'])
+        info += 'width: {}\n'.format(self.parameters['width'])
+        return info
 
 
 def ring_r_out(theta, r_in, area_factor):

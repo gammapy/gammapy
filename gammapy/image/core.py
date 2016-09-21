@@ -5,6 +5,7 @@ from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
+from functools import wraps
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
 from astropy.io import fits
@@ -553,7 +554,7 @@ class SkyImage(object):
 
         data = self.data[ylo:-yhi, xlo:-xhi]
 
-        if self.wcs is not None:
+        if self.wcs:
             wcs = self.wcs.deepcopy()
             wcs.wcs.crpix -= np.array([xlo, ylo])
         else:
@@ -1006,6 +1007,7 @@ class SkyImage(object):
         >>> image.wcs_pixel_scale()
         <Angle [ 0.02, 0.02] deg>
         """
+        import astropy.units as u
         if method == 'cdelt':
             scales = np.abs(self.wcs.wcs.cdelt)
         elif method == 'proj_plane':
@@ -1014,6 +1016,7 @@ class SkyImage(object):
             raise ValueError('Invalid method: {}'.format(method))
 
         return Angle(scales, unit='deg')
+
 
     def region_mask(self, region):
         """Create a boolean mask for a region.
@@ -1088,3 +1091,19 @@ class SkyImage(object):
             assert_wcs_allclose(image1.wcs, image2.wcs)
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
+
+    def convolve(self, kernel, **kwargs):
+        """
+        Convolve sky image with kernel.
+
+        Parameters
+        ----------
+        kernel : `~numpy.ndarray`
+            Convolution kernel.
+        **kwargs : dict
+            Further keyword arguments passed to `~scipy.ndimage.convolve`.
+        """
+        from scipy.ndimage import convolve
+        data = convolve(self.data, kernel, **kwargs)
+        wcs = self.wcs.deepcopy() if self.wcs else None
+        return self.__class__(data=data, wcs=wcs)

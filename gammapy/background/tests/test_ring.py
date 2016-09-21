@@ -2,37 +2,37 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from ...background import RingBgMaker, ring_r_out
+from astropy import units as u
+from ...background import RingBackgroundEstimator, ring_r_out
 from ...image import SkyImageList, SkyImage
 from ...utils.testing import requires_dependency
 
 
 @requires_dependency('scipy')
-class TestRingBgMaker:
-    def test_construction(self):
-        r = RingBgMaker(0.3, 0.5)
-        r.info()
+class TestRingBackgroundEstimator:
+    def setup(self):
+        self.ring = RingBackgroundEstimator(0.1 * u.deg, 0.1 * u.deg)
+        self.images = SkyImageList()
 
-    def test_correlate(self):
-        image = np.zeros((10, 10))
-        image[5, 5] = 1
-        r = RingBgMaker(3, 6, 1)
-        image = r.correlate(image)
-        # TODO: add assert
+        self.images['counts'] = SkyImage.empty(nxpix=101, nypix=101, fill=1)
+        self.images['exposure_on'] = SkyImage.empty(nxpix=101, nypix=101, fill=1E10)
+        exclusion = SkyImage.empty(nxpix=101, nypix=101, fill=1)
+        exclusion.data[40:60, 40:60] = 0
+        self.images['exclusion'] = exclusion
 
-    # TODO: add back test
-    def _test_correlate_maps(self):
-        n_on = np.ones((200, 200))
-        exclusion = np.ones((200, 200))
-        exclusion[100:110, 100:110] = 0
 
-        images = SkyImageList()
-        images['n_on'] = SkyImage(data=n_on)
-        images['a_on'] = SkyImage(data=n_on)
-        images['exclusion'] = SkyImage(data=exclusion)
+    def test_run(self):
+        result = self.ring.run(self.images)
+        assert_allclose(result['background'].data[50, 50], 1)
+        assert_allclose(result['alpha'].data[50, 50], 0.5)
+        assert_allclose(result['exposure_off'].data[50, 50], 20000000000.0)
+        assert_allclose(result['off'].data[50, 50], 2)
 
-        r = RingBgMaker(10, 13, 1)
-        r.correlate_maps(images)
+        assert_allclose(result['background'].data[0, 0], 1)
+        assert_allclose(result['alpha'].data[0, 0], 0.004032258064516129)
+        assert_allclose(result['exposure_off'].data[0, 0], 2480000000000.0)
+        assert_allclose(result['off'].data[0, 0], 248.0)
+
 
 
 def test_ring_r_out():

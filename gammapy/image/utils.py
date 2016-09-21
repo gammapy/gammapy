@@ -11,7 +11,6 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 
 __all__ = [
     'binary_disk',
-    'binary_ring',
     'block_reduce_hdu',
     'disk_correlate',
     'image_groupby',
@@ -19,7 +18,6 @@ __all__ = [
     'lon_lat_circle_mask',
     'make_header',
     'process_image_pixels',
-    'ring_correlate',
 ]
 
 log = logging.getLogger(__name__)
@@ -70,34 +68,6 @@ def binary_disk(radius):
     return structure
 
 
-def binary_ring(r_in, r_out):
-    """Generate a binary ring mask.
-
-    Value 1 inside and 0 outside.
-
-    Useful as a structure element for morphological transformations.
-
-    Note that the returned structure always has an odd number
-    of pixels so that shifts during correlation are avoided.
-
-    Parameters
-    ----------
-    r_in : float
-        Ring inner radius in pixels
-    r_out : float
-        Ring outer radius in pixels
-
-    Returns
-    -------
-    structure : `numpy.array`
-        Structure element (bool array)
-    """
-    x, y = _get_structure_indices(r_out)
-    mask1 = r_in ** 2 <= x ** 2 + y ** 2
-    mask2 = x ** 2 + y ** 2 <= r_out ** 2
-    return mask1 & mask2
-
-
 def disk_correlate(image, radius, mode='constant'):
     """Correlate image with binary disk kernel.
 
@@ -120,32 +90,6 @@ def disk_correlate(image, radius, mode='constant'):
     """
     from scipy.ndimage import convolve
     structure = binary_disk(radius)
-    return convolve(image, structure, mode=mode)
-
-
-def ring_correlate(image, r_in, r_out, mode='constant'):
-    """Correlate image with binary ring kernel.
-
-    Parameters
-    ----------
-    image : `~numpy.ndarray`
-        Image to be correlated.
-    r_in : float
-        Ring inner radius in pixels.
-    r_out : float
-        Ring outer radius in pixels.
-    mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
-        the mode parameter determines how the array borders are handled.
-        For 'constant' mode, values beyond borders are set to be cval.
-        Default is 'constant'.
-
-    Returns
-    -------
-    convolve : `~numpy.ndarray`
-        The result of convolution of image with ring of given inner and outer radii.
-    """
-    from scipy.ndimage import convolve
-    structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
 
 
