@@ -2,6 +2,10 @@
 """Image utility functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+
+from multiprocessing import Pool
+from functools import wrap
+
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.io import fits
@@ -21,6 +25,37 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
+
+
+
+def _fftconvolve_wrap(kernel, data):
+    return fftconvolve(data, kernel.array, mode='same')
+
+
+def scale_cube_fft(data, kernels, parallel=True):
+    """
+    Compute scale cube by convolving the data with a set of kernels
+    and stack the resulting images along the third axis.
+
+    Parameters
+    ----------
+    data : `~numpy.ndarray`
+        Input data.
+    kernels: list of `~astropy.convolution.Kernel`
+        List of convolution kernels.
+    parallel : bool
+        Whether to use multiprocessing.
+    """
+    wrap = partial(_fftconvolve_wrap, data=data)
+
+    if parallel:
+        pool = Pool()
+        result = pool.map(wrap, kernels)
+        pool.close()
+        pool.join()
+    else:
+        result = map(wrap, kernels)
+    return np.dstack(result)
 
 
 def _get_structure_indices(radius):
