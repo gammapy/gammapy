@@ -4,7 +4,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from itertools import product
 import numpy as np
-from astropy.convolution import Ring2DKernel
+from astropy.convolution import Ring2DKernel, Tophat2DKernel
+import astropy.units as u
 from ..image import SkyImageList, SkyImage
 from ..image.utils import scale_cube_fft
 
@@ -30,26 +31,51 @@ class AdaptiveRingBackgroundEstimator(object):
 
     Parameters
     ----------
-    r_in : float
+    r_in : `~astropy.units.Quantity`
         Inner radius of the ring.
-    r_out_max : float
+    r_out_max : `~astropy.units.Quantity`
         Maximal outer radius of the ring.
-    width : float
+    width : `~astropy.units.Quantity`
         Width of the ring.
-    stepsize : float
+    stepsize : `~astropy.units.Quantity` (0.02 deg)
         Stepsize used for increasing the radius.
-    threshold : float
+    threshold : float (0.1)
         Threshold above which the adaptive ring takes action.
+    theta : `~astropy.units.Quantity` (0.22 deg)
+        Integration radius used for alpha computation.
     method : {'const. width', 'const. r_in'}
         Adaptive ring method.
-    theta : float
-        Integration radius used for alpha computation.
+
+    Examples
+    --------
+    Here's an example how to use the `AdaptiveRingBackgroundEstimator`:
+
+    .. code::
+
+        from astropy import units as u
+        from gammapy.background import AdaptiveRingBackgroundEstimator
+        from gammapy.image import SkyImageList
+
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+        images = SkyImageList.read(filename)
+        images['exposure'].name = 'exposure_on'
+        adaptive_ring_bkg = RingBackgroundEstimator(r_in=0.22 * u.deg,
+                                                    r_out_max=0.8 * u.deg,
+                                                    width=0.1 * u.deg)
+        results = adaptive_ring_bkg.run(images)
+        results['background'].show()
+
+    See Also
+    --------
+    RingBackgroundEstimator, KernelBackgroundEstimator
+
     """
-    def __init__(self, r_in=None, r_out_max=None, width=None, stepsize=None,
-                 threshold=None, method='const. width', theta=0.22):
+    def __init__(self, r_in, r_out_max, width, stepsize=None,
+                 threshold=0.1, theta=None, method='const. width'):
 
         # default values
-        stepsize = stepsize if stepsize else 0.02
+        stepsize = stepsize if stepsize else 0.02 * u.deg
+        theta = theta if theta else 0.22 * u.deg
 
         # input validation
         if method not in ['const. width', 'const. r_in']:
@@ -59,10 +85,9 @@ class AdaptiveRingBackgroundEstimator(object):
                                stepsize=stepsize, threshold=threshold,
                                method=method, theta=theta)
 
-
-    def ring_kernels(self, image):
+    def kernels(self, image):
         """
-        Ring kernel according to the specified method.
+        Ring kernels according to the specified method.
 
         Parameters
         ----------
@@ -72,21 +97,24 @@ class AdaptiveRingBackgroundEstimator(object):
         Returns
         -------
         kernels : list
-            List of `~astropy.convolution.Kernel`
+            List of `~astropy.convolution.Ring2DKernel`
         """
         p = self.parameters
-        r_ins, r_out_max = p['r_in'], p['r_out_max']
-        widths, stepsize = p['width'], p['stepsize']
+
+        scale = image.wcs_pixel_scale()[0]
+        r_in = p['r_in'].to('deg') / scale
+        r_out_max = p['r_out_max'].to('deg') / scale
+        width = p['width'].to('deg') / scale
+        stepsize = p['stepsize'].to('deg') / scale
 
         kernels = []
 
-        scale = image.wcs_pixel_scale()[0]
-
         if p['method'] == 'const. width':
-            r_ins = np.arange(r_in, r_out_max - width, stepsize) / scale
-
+            r_ins = np.arange(r_in.value, (r_out_max - width).value, stepsize.value)
+            widths = [width.value]
         elif p['method'] == 'const. r_in':
-            width = np.arange(width, r_out_max - r_in, stepsize) / scale
+            widths = np.arange(width.value, (r_out_max - r_in).value, stepsize.value)
+            r_ins = [r_in.value]
 
         for r_in, width in product(r_ins, widths):
             kernel = Ring2DKernel(r_in, width)
@@ -94,60 +122,63 @@ class AdaptiveRingBackgroundEstimator(object):
             kernels.append(kernel)
         return kernels
 
-    def _compute_alpha_approx_cube(self):
+    def _alpha_approx_cube(self, cubes):
         """
         Compute alpha as on_exposure / off_exposure. Where off_exposure < 0,
         alpha is set to infinity.
         """
-        exposure_on = self._cubes['exposure_on']
-        exposure_off = self._cubes['exposure_off']
+        exposure_on = cubes['exposure_on']
+        exposure_off = cubes['exposure_off']
 
         alpha_approx = np.where(exposure_off > 0, exposure_on / exposure_off, np.inf)
-        self._cubes['alpha_approx'] = alpha_approx
+        return alpha_approx
 
-    def _compute_exposure_off_cube(self, kernels):
+    def _exposure_off_cube(self, images, kernels):
         """
         Compute off exposure cube by convolving the on exposure with different
         ring kernels and stacking the data along the third dimension.
         """
-        exposure  = self._images['onexposure'].data
-        exclusion = self._images['exclusion'].data
-        exposure_off_cube = scale_cube_fft(exposure * exclusion, kernels)
-        self._cubes['exposure_off'] = exposure_off_cube
+        exposure  = images['exposure_on'].data
+        exclusion = images['exclusion'].data
+        return scale_cube_fft(exposure * exclusion, kernels)
 
-    def _compute_exposure_on_cube(self, kernels, theta):
+    def _exposure_on_cube(self, images, kernels):
         """
         Compute on exposure cube, by convolving the on exposure with a tophat
         of radius theta, and stacking all images along the third dimension.
         """
         from scipy.ndimage import convolve
-        exposure  = self._images['onexposure'].data
 
-        tophat = Tophat2DKernel(theta)
+        exposure_on = images['exposure_on']
+        scale = exposure_on.wcs_pixel_scale()[0]
+        theta = self.parameters['theta'] * scale
+
+        tophat = Tophat2DKernel(theta.value)
         tophat.normalize('peak')
-        exposure_on = convolve(exposure, tophat.array)
+        exposure_on = convolve(exposure_on, tophat.array)
         exposure_on_cube = np.repeat(exposure_on[:, :, np.newaxis], len(kernels), axis=2)
-        self._cubes['exposure_on'] = exposure_on_cube
+        return exposure_on_cube
 
-    def _compute_off_cube(self, kernels):
+    def _off_cube(self, images, kernels):
         """
         Compute off cube by convolving the raw counts with different ring kernels
         and stacking the data along the third dimension.
         """
-        counts = self._images['counts'].data
-        exclusion = self._images['exclusion'].data
-        off = scale_cube_fft(counts * exclusion, kernels)
-        self._cubes['off'] = off
+        counts = images['counts'].data
+        exclusion = images['exclusion'].data
+        return scale_cube_fft(counts * exclusion, kernels)
 
-    def _reduce_cubes(self, threshold):
+    def _reduce_cubes(self, cubes):
         """
         Compute off and off exposure map, by reducing the cubes. The data is
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
-        alpha_approx_cube = self._cubes['alpha_approx']
-        off_cube = self._cubes['off']
-        exposure_off_cube = self._cubes['exposure_off']
+        threshold = self.parameters['threshold']
+
+        alpha_approx_cube = cubes['alpha_approx']
+        off_cube = cubes['off']
+        exposure_off_cube = cubes['exposure_off']
 
         shape = alpha_approx_cube.shape[:2]
         off = np.tile(np.nan, shape)
@@ -157,14 +188,12 @@ class AdaptiveRingBackgroundEstimator(object):
             mask = (alpha_approx_cube[:, :, idx] <= threshold) & np.isnan(off)
             off[mask] = off_cube[:, :, idx][mask]
             exposure_off[mask] = exposure_off_cube[:, :, idx][mask]
-        self._images['off'] = off
-        self._images['off_exposure'] = exposure_off
+
+        return exposure_off, off
 
     def run(self, images):
         """
         Run adaptive ring background algorithm.
-
-        Required sky images: {required}
 
         Parameters
         ----------
@@ -176,31 +205,30 @@ class AdaptiveRingBackgroundEstimator(object):
         result : `SkyImageList`
             Result sky images.
         """
-        images.check_required(['counts', 'exposure_on', 'exclusion'])
-
-        p = self.parameters
-        self._images = images
-        self._cubes = {}
+        required = ['counts', 'exposure_on', 'exclusion']
+        images.check_required(required)
         wcs = images['counts'].wcs.copy()
 
+        cubes = {}
+
+        kernels = self.kernels(images['counts'])
+
+        cubes['exposure_on'] = self._exposure_on_cube(images, kernels)
+        cubes['exposure_off'] = self._exposure_off_cube(images, kernels)
+        cubes['off'] = self._off_cube(images, kernels)
+        cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
+
+        exposure_off, off = self._reduce_cubes(cubes)
+        alpha = images['exposure_on'].data / exposure_off
+        background = alpha * off
+
         result = SkyImageList()
+        result['exposure_off'] = SkyImage(data=exposure_off, wcs=wcs)
+        result['off'] = SkyImage(data=off, wcs=wcs)
+        result['alpha'] = SkyImage(data=alpha, wcs=wcs)
+        result['background'] = SkyImage(data=background, wcs=wcs)
+        return result
 
-        kernels = self.ring_kernels(wcs)
-
-        self._compute_exposure_on_cube(kernels, p['theta'])
-        self._compute_exposure_off_cube(kernels)
-        self._compute_off_cube(kernels)
-        self._compute_alpha_approx_cube()
-        self._reduce_cubes(p['threshold'])
-
-        exposure_on = images['onexposure'].data
-        exposure_off = self._images['off_exposure'].data
-        off = self._images['off'].data
-        alpha = exposure_on / exposure_off
-        background =  alpha * off
-        return SkyImageList(off=off, alpha=alpha, background=background,
-                                  exposure_off=exposure_off, exposure_on=exposure_on,
-                                  wcs=wcs)
 
 class RingBackgroundEstimator(object):
     """Ring background method for cartesian coordinates.
@@ -223,6 +251,8 @@ class RingBackgroundEstimator(object):
     --------
     Here's an example how to use the `RingBackgroundEstimator`:
 
+    .. code::
+
         from astropy import units as u
         from gammapy.background import RingBackgroundEstimator
         from gammapy.image import SkyImageList
@@ -237,21 +267,25 @@ class RingBackgroundEstimator(object):
 
     See Also
     --------
-    KernelBackgroundEstimator
+    KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
+
     """
     def __init__(self, r_in, width):
         self.parameters = dict(r_in=r_in, width=width)
 
-    def ring_convolve(self, image, **kwargs):
+    def kernel(self, image):
         """
-        Convolve sky image with ring kernel.
+        Ring kernel.
 
         Parameters
         ----------
         image : `gammapy.image.SkyImage`
             Image
-        **kwargs : dict
-            Keyword arguments passed to `gammapy.image.SkyImage.convolve`
+
+        Returns
+        -------
+        ring : `~astropy.convolution.Ring2DKernel`
+            Ring kernel.
         """
         p = self.parameters
 
@@ -261,7 +295,7 @@ class RingBackgroundEstimator(object):
 
         ring = Ring2DKernel(r_in.value, width.value)
         ring.normalize('peak')
-        return image.convolve(ring.array, **kwargs)
+        return ring
 
     def run(self, images):
         """
@@ -279,21 +313,19 @@ class RingBackgroundEstimator(object):
         result : `SkyImageList`
             Result sky images
         """
-        images.check_required(['counts', 'exposure_on', 'exclusion'])
-        p = self.parameters
-
-        counts = images['counts']
-        exclusion = images['exclusion']
-        exposure_on = images['exposure_on']
+        required = ['counts', 'exposure_on', 'exclusion']
+        images.check_required(required)
+        counts, exposure_on, exclusion = [images[_] for _ in required]
         wcs = counts.wcs.copy()
 
         result = SkyImageList()
+        ring = self.kernel(counts)
 
         counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
-        result['off'] = self.ring_convolve(counts_excluded)
+        result['off'] = counts_excluded.convolve(ring.array)
 
         exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
-        result['exposure_off'] = self.ring_convolve(exposure_on_excluded)
+        result['exposure_off'] = exposure_on_excluded.convolve(ring.array)
 
         result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
         result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)

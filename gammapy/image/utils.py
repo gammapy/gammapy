@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from multiprocessing import Pool
-from functools import wrap
+from functools import partial
 
 import numpy as np
 from astropy.coordinates import Angle
@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 
 
 def _fftconvolve_wrap(kernel, data):
+    from scipy.signal import fftconvolve
     return fftconvolve(data, kernel.array, mode='same')
 
 
