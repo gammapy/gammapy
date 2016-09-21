@@ -102,16 +102,17 @@ Example how to make a dataset (from scratch, no file is loaded):
    >>> from gammapy.datasets import make_test_psf
    >>> psf = make_test_psf(energy_bins=20)
 
+Using `gammapy.datasets`
+========================
+
+.. toctree::
+   :maxdepth: 1
+
+   make_datasets
+
 Reference/API
 =============
 
 .. automodapi:: gammapy.datasets
     :no-inheritance-diagram:
 
-Sub-pages
----------
-
-.. toctree::
-   :maxdepth: 1
-
-   make_datasets

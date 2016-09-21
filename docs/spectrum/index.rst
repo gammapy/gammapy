@@ -27,6 +27,8 @@ A standard reference for the unfolding method is [Albert2007]_.
 Content
 =======
 .. toctree::
+   :maxdepth: 1
+
    fitting
    flux_points
    energy_group
