@@ -507,6 +507,28 @@ We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
 
+Sphinx docs build
+-----------------
+
+Generating the HTML docs for Gammapy is straight-forward::
+
+    python setup.py build_docs
+    open docs/_build/html/index.html
+
+Generating the PDF docs is more complex.
+This should work::
+
+    python setup.py build_docs -b latex
+    cd docs/_build/latex
+    makeindex -s python.ist gammapy.idx
+    pdflatex -interaction=nonstopmode gammapy.tex
+    open gammapy.pdf
+
+You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
+
+The PDF is also generated on Read the Docs and available online here:
+https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
+
 Documentation guidelines
 ------------------------
 
@@ -529,6 +551,7 @@ or Gammapy code a bit (either locally with your editor or online on Github or vi
 or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
 pull request you're working on on Github, or send an email to the Gammapy mailing list.
+
 
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
