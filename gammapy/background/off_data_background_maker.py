@@ -6,7 +6,7 @@ from astropy.table import Table, vstack
 import astropy.units as u
 from astropy.table import join as table_join
 from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
-from .models import CubeBackgroundModel
+from .models import FOVCubeBackgroundModel
 from .models import EnergyOffsetBackgroundModel
 from ..utils.energy import EnergyBounds
 from ..utils.axis import sqrt_space
@@ -23,7 +23,7 @@ class OffDataBackgroundMaker(object):
 
     Class that will select an OFF list run from a Data list and then group this runlist in group. Then for each
     group, it will compute the background rate model in 3D *(X, Y, energy)* or 2D *(energy, offset)* via the class
-    `~gammapy.background.CubeBackgroundModel` (3D) or `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
+    `~gammapy.background.FOVCubeBackgroundModel` (3D) or `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
 
     Parameters
     ----------
@@ -139,7 +139,7 @@ class OffDataBackgroundMaker(object):
     def make_model(self, modeltype, ebounds=None, offset=None):
         """Make background models.
 
-        Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
+        Create the list of background model (`~gammapy.background.FOVCubeBackgroundModel` (3D) or
         `~gammapy.background.EnergyOffsetBackgroundModel` (2D)) for each group
 
         Parameters
@@ -163,7 +163,7 @@ class OffDataBackgroundMaker(object):
 
             # Build the model
             if modeltype == "3D":
-                model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
+                model = FOVCubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
                 model.fill_obs(obs_table_group, self.data_store)
                 model.smooth()
                 model.compute_rate()

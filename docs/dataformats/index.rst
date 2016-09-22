@@ -44,7 +44,7 @@ Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`       
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`                           `GCTACubeExposure`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
-Background        BACKGROUND_3D        `~gammapy.background.CubeBackgroundModel`         `GCTABackground3D`_
+Background        BACKGROUND_3D        `~gammapy.background.FOVCubeBackgroundModel`      `GCTABackground3D`_
 Background        BACKGROUND_2D        `~gammapy.background.EnergyOffsetBackgroundModel` N/A
 Background        no spec available    N/A                                               `GCTAModelRadialAcceptance`_
 Background        no spec available    N/A                                               `GCTACubeBackground`_

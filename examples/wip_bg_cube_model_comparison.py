@@ -11,7 +11,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.io import ascii
-from gammapy.background import CubeBackgroundModel
+from gammapy.background import FOVCubeBackgroundModel
 from gammapy.data import ObservationGroups, ObservationGroupAxis
 
 NORMALIZE = 0  # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
@@ -226,10 +226,10 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
                             '_table.fits.gz'
             print('filename1', filename1)
             print('filename2', filename2)
-            bg_cube_model1 = CubeBackgroundModel.read(filename1,
-                                                      format='table').background_cube
-            bg_cube_model2 = CubeBackgroundModel.read(filename2,
-                                                      format='table').background_cube
+            bg_cube_model1 = FOVCubeBackgroundModel.read(filename1,
+                                                         format='table').background_cube
+            bg_cube_model2 = FOVCubeBackgroundModel.read(filename2,
+                                                         format='table').background_cube
 
             # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
             if NORMALIZE == 1:

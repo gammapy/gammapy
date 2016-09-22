@@ -14,7 +14,7 @@ from .fov_cube import _make_bin_edges_array, FOVCube
 
 __all__ = [
     'GaussianBand2D',
-    'CubeBackgroundModel',
+    'FOVCubeBackgroundModel',
     'EnergyOffsetBackgroundModel',
 ]
 
@@ -210,8 +210,8 @@ class GaussianBand2D(object):
         return self._evaluate_y(y, parvals)
 
 
-class CubeBackgroundModel(object):
-    """FOVCube background model.
+class FOVCubeBackgroundModel(object):
+    """Field of view (FOV) cube background model.
 
     Container class for cube background model *(X, Y, energy)*.
     *(X, Y)* are detector coordinates (a.k.a. nominal system coordinates).
@@ -269,7 +269,7 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
             FOVCube background model object.
         """
         hdu = fits.open(filename)
@@ -352,7 +352,7 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
             FOVCube background model object.
         """
         empty_cube_data = np.zeros((len(energy_edges) - 1,
@@ -405,7 +405,7 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
             FOVCube background model object.
         """
         # define cube binning shape

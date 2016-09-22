@@ -84,7 +84,7 @@ def make_true_model():
     print('Writing {}'.format(outfile, overwrite=overwrite))
     obs_groups.write(outfile)
 
-    # use binning from CubeBackgroundModel.define_cube_binning
+    # use binning from FOVCubeBackgroundModel.define_cube_binning
     det_range = (Angle(-0.07, 'radian').to('degree'),
                  Angle(0.07, 'radian').to('degree'))
     ndet_bins = 60

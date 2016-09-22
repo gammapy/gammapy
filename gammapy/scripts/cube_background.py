@@ -60,7 +60,7 @@ def make_bg_cube_models(indir, outdir, overwrite=False, test=False, method='defa
         * using `~gammapy.data.ObservationGroups`
     4. create a bg cube model for each group using:
         * the `~gammapy.background.make_bg_cube_model` method
-        * and `~gammapy.background.CubeBackgroundModel` objects as containers
+        * and `~gammapy.background.FOVCubeBackgroundModel` objects as containers
 
     The models are stored into FITS files.
 
