@@ -61,7 +61,7 @@ class TestAdaptiveRingBackgroundEstimator:
         assert_allclose(result['off'].data[0, 0], 112)
 
     def test_run_const_r_in(self):
-        self.ring.parameters['method'] = 'const. r_in'
+        self.ring.parameters['method'] = 'fixed_r_in'
         result = self.ring.run(self.images)
         assert_allclose(result['background'].data[50, 50], 1)
         assert_allclose(result['alpha'].data[50, 50], 0.002638522427440632)

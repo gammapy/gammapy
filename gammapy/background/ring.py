@@ -38,7 +38,7 @@ class AdaptiveRingBackgroundEstimator(object):
         Width of the ring.
     stepsize : `~astropy.units.Quantity`
         Stepsize used for increasing the radius.
-    alpha_threshold : float
+    threshold_alpha : float
         Threshold on alpha above which the adaptive ring takes action.
     theta : `~astropy.units.Quantity`
         Integration radius used for alpha computation.
@@ -70,14 +70,14 @@ class AdaptiveRingBackgroundEstimator(object):
 
     """
     def __init__(self, r_in, r_out_max, width, stepsize=0.02 * u.deg,
-                 threshold=0.1, theta=0.22 * u.deg, method='fixed_width'):
+                 threshold_alpha=0.1, theta=0.22 * u.deg, method='fixed_width'):
 
         # input validation
         if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
 
         self.parameters = OrderedDict(r_in=r_in, r_out_max=r_out_max, width=width,
-                                      stepsize=stepsize, threshold=threshold,
+                                      stepsize=stepsize, threshold_alpha=threshold_alpha,
                                       method=method, theta=theta)
 
     def kernels(self, image):
@@ -169,7 +169,7 @@ class AdaptiveRingBackgroundEstimator(object):
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
-        threshold = self.parameters['alpha_threshold']
+        threshold = self.parameters['threshold_alpha']
 
         alpha_approx_cube = cubes['alpha_approx']
         off_cube = cubes['off']
