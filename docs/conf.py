@@ -183,6 +183,7 @@ try:
     html_static_path.append(gammapy_extra_path)
 
     copy_gp_extra_file('figures/detect/fermi_ts_image.png', 'detect')
+    copy_gp_extra_file('figures/background/adaptive_ring_bkg.png', 'background')
 
 except KeyError:
     print('*** gammapy-extra *not* found.')

@@ -28,8 +28,6 @@ class AdaptiveRingBackgroundEstimator(object):
     size of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
     where the area to estimate the background from is limited.
 
-    Here is an illustration of the method:
-
     Parameters
     ----------
     r_in : `~astropy.units.Quantity`

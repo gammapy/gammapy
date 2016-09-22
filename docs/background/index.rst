@@ -9,7 +9,8 @@ Background estimation and modeling  (`gammapy.background`)
 Introduction
 ============
 
-`gammapy.background` contains methods to estimate and model background.
+`gammapy.background` contains methods to estimate and model background for specral,
+image based and cube analyses.
 
 Most of the methods implemented are described in [Berge2007]_.
 Section 7.3 "Background subtraction"
@@ -37,7 +38,7 @@ If you'd like to learn more about using `gammapy.background`, read the following
    make_models
    energy_offset_array
    reflected
-   
+
 Reference/API
 =============
 
