@@ -101,25 +101,6 @@ class CountsSpectrum(NDDataArray):
         """
         return self.data.sum()
 
-    def __add__(self, other):
-        """Add two counts spectra and returns new instance
-
-        The two spectra need to have the same binning
-        """
-        if (self.energy.data != other.energy.data).all():
-            raise ValueError("Cannot add counts spectra with different binning")
-        counts = self.data + other.data
-        return CountsSpectrum(data=counts, energy=self.energy)
-
-    def __mul__(self, other):
-        """Scale counts by a factor"""
-        temp = self.data * other
-        return CountsSpectrum(data=temp, energy=self.energy)
-
-    def __sub__(self, other):
-        """Subtract two CountsSpectra"""
-        return self.__add__(other.__mul__(-1))
-
     def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
              show_energy=None, **kwargs):
         """Plot as datapoint
