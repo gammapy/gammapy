@@ -6,8 +6,7 @@ from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
-from .cube import _make_bin_edges_array
-from .cube import FOVCube
+from .fov_cube import _make_bin_edges_array, FOVCube
 
 __all__ = [
     'EnergyOffsetArray',

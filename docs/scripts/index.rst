@@ -64,7 +64,7 @@ Image
 - ``gammapy-image-significance`` calls `gammapy.scripts.image_significance`
 - ``gammapy-image-ts`` calls `gammapy.scripts.image_ts`
 
-FOVCube
+Cube
 ----
 
 - ``gammapy-cube-background`` calls `gammapy.scripts.cube_background`

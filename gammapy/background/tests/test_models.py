@@ -10,11 +10,10 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...background import GaussianBand2D, FOVCubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
-from ...data import ObservationTable
-from ...data import DataStore, EventList
+from ...data import ObservationTable, DataStore, EventList
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
+from ...background import GaussianBand2D, FOVCubeBackgroundModel, EnergyOffsetBackgroundModel
 
 
 @requires_dependency('scipy')
