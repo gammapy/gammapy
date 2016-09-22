@@ -14,6 +14,7 @@ from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected
                           compute_differential_flux_points,
                           _energy_lafferty_power_law, DifferentialFluxPoints,
                           IntegralFluxPoints, FluxPointEstimator)
+from ..flux_point import SEDLikelihoodProfile
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 x_methods = ['table', 'lafferty', 'log_center']
@@ -233,6 +234,9 @@ def test_3fgl_flux_points():
     assert_allclose(method1, method2, rtol=1e-2)
 
 
+@requires_data('gammapy-extra')
+@requires_dependency('sherpa')
+@requires_dependency('scipy')
 class TestFluxEstimator:
     def setup(self):
         self.model = PowerLaw(
@@ -252,7 +256,6 @@ class TestFluxEstimator:
         self.groups = self.seg.groups
 
     def test_with_power_law(self):
-
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
 
@@ -280,3 +283,17 @@ class TestFluxEstimator:
     def test_with_ecpl(self):
         # TODO: implement
         assert True
+
+
+@requires_data('gammapy-extra')
+class TestSEDLikelihoodProfile:
+    def setup(self):
+        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/sed_hights.fits')
+
+    def test_basics(self):
+        # print(self.sed)
+        assert 'SEDLikelihoodProfile' in str(self.sed)
+
+    @requires_dependency('matplotlib')
+    def test_plot(self):
+        ax = self.sed.plot()

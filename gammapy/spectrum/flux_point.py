@@ -6,6 +6,8 @@ from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity, Unit
+from gammapy.utils.scripts import make_path
+
 from ..utils.fits import table_from_row_data
 from ..utils.energy import Energy, EnergyBounds
 from ..spectrum.powerlaw import power_law_flux
@@ -16,6 +18,7 @@ __all__ = [
     'IntegralFluxPoints',
     'compute_differential_flux_points',
     'FluxPointEstimator',
+    'SEDLikelihoodProfile',
 ]
 
 log = logging.getLogger(__name__)
@@ -556,3 +559,35 @@ class FluxPointEstimator(object):
             diff_flux_err_hi=diff_flux_err,
             diff_flux_err_lo=diff_flux_err,
         )
+
+
+class SEDLikelihoodProfile(object):
+    """SED likelihood profile.
+
+    See :ref:`gadf:likelihood_sed`.
+
+    TODO: merge this class with the classes in ``fermipy/castro.py``,
+    which are much more advanced / feature complete.
+    This is just a temp solution because we don't have time for that.
+    """
+
+    def __init__(self, table):
+        self.table = table
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        filename = make_path(filename)
+        table = Table.read(str(filename), **kwargs)
+        return cls(table=table)
+
+    def __str__(self):
+        s = self.__class__.__name__ + '\n'
+        s += str(self.table)
+        return s
+
+    def plot(self, ax=None):
+        import matplotlib.pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+
+        # TODO
