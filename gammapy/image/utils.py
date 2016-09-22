@@ -27,7 +27,6 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-
 def _fftconvolve_wrap(kernel, data):
     from scipy.signal import fftconvolve
     return fftconvolve(data, kernel.array, mode='same')
@@ -35,8 +34,10 @@ def _fftconvolve_wrap(kernel, data):
 
 def scale_cube_fft(data, kernels, parallel=True):
     """
-    Compute scale cube by convolving the data with a set of kernels
-    and stack the resulting images along the third axis.
+    Compute scale space cube.
+
+    Compute scale space cube by convolving the data with a set of kernels and
+    stack the resulting images along the third axis.
 
     Parameters
     ----------
@@ -46,6 +47,11 @@ def scale_cube_fft(data, kernels, parallel=True):
         List of convolution kernels.
     parallel : bool
         Whether to use multiprocessing.
+
+    Returns
+    -------
+    cube : `~numpy.ndarray`
+        Array of the shape (len(kernels), data.shape)
     """
     wrap = partial(_fftconvolve_wrap, data=data)
 

@@ -2,6 +2,7 @@
 """Ring background estimation.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
@@ -37,13 +38,13 @@ class AdaptiveRingBackgroundEstimator(object):
         Maximal outer radius of the ring.
     width : `~astropy.units.Quantity`
         Width of the ring.
-    stepsize : `~astropy.units.Quantity` (0.02 deg)
+    stepsize : `~astropy.units.Quantity`
         Stepsize used for increasing the radius.
-    threshold : float (0.1)
-        Threshold above which the adaptive ring takes action.
-    theta : `~astropy.units.Quantity` (0.22 deg)
+    alpha_threshold : float
+        Threshold on alpha above which the adaptive ring takes action.
+    theta : `~astropy.units.Quantity`
         Integration radius used for alpha computation.
-    method : {'const. width', 'const. r_in'}
+    method : {'fixed_width', 'fixed_r_in'}
         Adaptive ring method.
 
     Examples
@@ -67,23 +68,19 @@ class AdaptiveRingBackgroundEstimator(object):
 
     See Also
     --------
-    RingBackgroundEstimator, KernelBackgroundEstimator
+    RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
 
     """
-    def __init__(self, r_in, r_out_max, width, stepsize=None,
-                 threshold=0.1, theta=None, method='const. width'):
-
-        # default values
-        stepsize = stepsize if stepsize else 0.02 * u.deg
-        theta = theta if theta else 0.22 * u.deg
+    def __init__(self, r_in, r_out_max, width, stepsize=0.02 * u.deg,
+                 threshold=0.1, theta=0.22 * u.deg, method='fixed_width'):
 
         # input validation
-        if method not in ['const. width', 'const. r_in']:
+        if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
 
-        self.parameters = dict(r_in=r_in, r_out_max=r_out_max, width=width,
-                               stepsize=stepsize, threshold=threshold,
-                               method=method, theta=theta)
+        self.parameters = OrderedDict(r_in=r_in, r_out_max=r_out_max, width=width,
+                                      stepsize=stepsize, threshold=threshold,
+                                      method=method, theta=theta)
 
     def kernels(self, image):
         """
@@ -109,10 +106,10 @@ class AdaptiveRingBackgroundEstimator(object):
 
         kernels = []
 
-        if p['method'] == 'const. width':
+        if p['method'] == 'fixed_width':
             r_ins = np.arange(r_in.value, (r_out_max - width).value, stepsize.value)
             widths = [width.value]
-        elif p['method'] == 'const. r_in':
+        elif p['method'] == 'fixed_r_in':
             widths = np.arange(width.value, (r_out_max - r_in).value, stepsize.value)
             r_ins = [r_in.value]
 
@@ -174,7 +171,7 @@ class AdaptiveRingBackgroundEstimator(object):
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
-        threshold = self.parameters['threshold']
+        threshold = self.parameters['alpha_threshold']
 
         alpha_approx_cube = cubes['alpha_approx']
         off_cube = cubes['off']
@@ -267,7 +264,7 @@ class RingBackgroundEstimator(object):
 
     See Also
     --------
-    KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
+    gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
 
     """
     def __init__(self, r_in, width):
