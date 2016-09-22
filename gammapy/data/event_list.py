@@ -380,7 +380,7 @@ class EventList(Table):
 
         TODO: fix the histogramming ... this example shows that it's currently incorrect:
         gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the Cube class for this with one energy bin.
+        Maybe we can use the FOVCube class for this with one energy bin.
         Or add a separate FOVImage class.
         """
         import matplotlib.pyplot as plt

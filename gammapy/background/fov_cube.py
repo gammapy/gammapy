@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Cube container.
+"""FOVCube container.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
@@ -15,7 +15,7 @@ from ..utils.fits import table_to_fits_table
 from ..utils.energy import Energy, EnergyBounds
 
 __all__ = [
-    'Cube',
+    'FOVCube',
 ]
 
 
@@ -61,8 +61,8 @@ def _parse_data_units(data_unit):
     return data_unit
 
 
-class Cube(object):
-    """Cube container class.
+class FOVCube(object):
+    """FOVCube container class.
 
     Container class for cubes *(X, Y, energy)*.
     The class has methods for reading a cube from a fits file,
@@ -78,7 +78,7 @@ class Cube(object):
     the corresponding specifications.
 
     This is taken care of by the
-    `~gammapy.background.Cube.define_scheme` method.
+    `~gammapy.background.FOVCube.define_scheme` method.
     The user only has to specify the correct **scheme** parameter.
 
     Currently accepted schemes are:
@@ -93,7 +93,7 @@ class Cube(object):
 
     If no scheme is specified, a generic one is applied.
     New ones can be defined in
-    `~gammapy.background.Cube.define_scheme`.
+    `~gammapy.background.FOVCube.define_scheme`.
     The method also defines useful parameter names for the plots
     axis/title labels specific to each scheme.
 
@@ -222,8 +222,8 @@ class Cube(object):
 
         Returns
         -------
-        cube : `~gammapy.background.Cube`
-            Cube object.
+        cube : `~gammapy.background.FOVCube`
+            FOVCube object.
         """
 
         header = hdu.header
@@ -297,7 +297,7 @@ class Cube(object):
         Parameters
         ----------
         image_hdu : `~astropy.io.fits.PrimaryHDU`
-            Cube image HDU.
+            FOVCube image HDU.
         energy_hdu : `~astropy.io.fits.BinTableHDU`
             Energy binning table.
         scheme : str, optional
@@ -305,8 +305,8 @@ class Cube(object):
 
         Returns
         -------
-        cube : `~gammapy.background.Cube`
-            Cube object.
+        cube : `~gammapy.background.FOVCube`
+            FOVCube object.
         """
         image_header = image_hdu.header
         energy_header = energy_hdu.header
@@ -377,8 +377,8 @@ class Cube(object):
 
         Returns
         -------
-        cube : `~gammapy.background.Cube`
-            Cube object.
+        cube : `~gammapy.background.FOVCube`
+            FOVCube object.
         """
         filename = make_path(filename)
         scheme_dict = cls.define_scheme(scheme)

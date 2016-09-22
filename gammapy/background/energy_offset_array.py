@@ -7,7 +7,7 @@ from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from .cube import _make_bin_edges_array
-from .cube import Cube
+from .cube import FOVCube
 
 __all__ = [
     'EnergyOffsetArray',
@@ -311,7 +311,7 @@ class EnergyOffsetArray(object):
         return table
 
     def to_cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
-        """Transform the `EnergyOffsetArray` into a `Cube`.
+        """Transform the `EnergyOffsetArray` into a `FOVCube`.
 
         Parameters
         ----------
@@ -326,8 +326,8 @@ class EnergyOffsetArray(object):
 
         Returns
         -------
-        cube : `~gammapy.background.Cube`
-            Cube
+        cube : `~gammapy.background.FOVCube`
+            FOVCube
         """
         if coordx_edges is None:
             offmax = self.offset.max() / 2.
@@ -355,4 +355,4 @@ class EnergyOffsetArray(object):
                                  len(coordx_edges) - 1))
         for i in range(len(energy_edges.log_centers)):
             data_reshape[i, :, :] = np.reshape(data[i, :], shape)
-        return Cube(coordx_edges, coordy_edges, energy_edges, data_reshape)
+        return FOVCube(coordx_edges, coordy_edges, energy_edges, data_reshape)

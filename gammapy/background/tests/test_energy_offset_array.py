@@ -11,7 +11,7 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
-from ..cube import Cube
+from ..cube import FOVCube
 from ...data import EventList
 
 
@@ -45,7 +45,7 @@ def make_empty_cube():
     coordx_edges = Angle(np.linspace(offmax.value, offmin.value, bins), "deg")
     coordy_edges = Angle(np.linspace(offmax.value, offmin.value, bins), "deg")
     energy_edges = array.energy
-    empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
+    empty_cube = FOVCube(coordx_edges, coordy_edges, energy_edges)
     return empty_cube
 
 
@@ -157,9 +157,9 @@ def test_acceptance_curve_in_energy_band():
 @requires_dependency('scipy')
 def test_to_cube():
     """
-    There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy
+    There are three events in the energyoffsetarray at three offset and energies. I define a FOVCube with the same energy
     bin as the energyoffsetarray.energy. For the event in the offset bin 23 (=0.6 degre) and in the energy bin 2
-    (0.12 Tev), I check if after calling the to_cube() method, all the x and y of the new Cube matching with an offset
+    (0.12 Tev), I check if after calling the to_cube() method, all the x and y of the new FOVCube matching with an offset
     equal to 0.6+/-0.1 are filled with 1.
     """
     array, offset, energy = make_test_array(True)

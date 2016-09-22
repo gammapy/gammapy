@@ -6,7 +6,7 @@ from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
-from ...background import Cube
+from ...background import FOVCube
 from ...datasets import gammapy_extra, make_test_bg_cube_model
 from ...data import DataStore
 
@@ -15,7 +15,7 @@ def read_cube():
     """Read example cube"""
     filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test1.fits'
     scheme = 'bg_cube'
-    cube = Cube.read(filename, format='table', scheme=scheme, hdu='BACKGROUND')
+    cube = FOVCube.read(filename, format='table', scheme=scheme, hdu='BACKGROUND')
     return cube
 
 
@@ -76,7 +76,7 @@ class TestCube:
         cube1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
-        cube2 = Cube.read(outfile, format='table', scheme='bg_cube')
+        cube2 = FOVCube.read(outfile, format='table', scheme='bg_cube')
         assert_quantity_allclose(cube2.data,
                                  cube1.data)
         assert_quantity_allclose(cube2.coordx_edges,
@@ -94,7 +94,7 @@ class TestCube:
         cube1.write(outfile, format='image')
 
         # test if values are correct in the saved file: compare both files
-        cube2 = Cube.read(outfile, format='image', scheme='bg_cube')
+        cube2 = FOVCube.read(outfile, format='image', scheme='bg_cube')
         assert_quantity_allclose(cube2.data,
                                  cube1.data)
         assert_quantity_allclose(cube2.coordx_edges,

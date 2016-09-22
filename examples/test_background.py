@@ -1,12 +1,12 @@
 import numpy as np
 from astropy.units import Quantity
 from gammapy.data import DataStore
-from gammapy.background import Cube
+from gammapy.background import FOVCube
 
 
 def test_fill_cube():
     filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test1.fits'
-    array = Cube.read(filename, format='table', scheme='bg_cube')
+    array = FOVCube.read(filename, format='table', scheme='bg_cube')
     array.data = Quantity(np.zeros_like(array.data.value), 'u')
     print(type(array.data))
 
