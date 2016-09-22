@@ -8,10 +8,9 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity
-from ..background import FOVCube
-from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
-from .cube import _make_bin_edges_array
+from .energy_offset_array import EnergyOffsetArray
+from .fov_cube import _make_bin_edges_array, FOVCube
 
 __all__ = [
     'GaussianBand2D',

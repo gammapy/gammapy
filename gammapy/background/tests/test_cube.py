@@ -6,9 +6,9 @@ from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
-from ...background import FOVCube
-from ...datasets import gammapy_extra, make_test_bg_cube_model
+from ...datasets import make_test_bg_cube_model
 from ...data import DataStore
+from ..fov_cube import FOVCube
 
 
 def read_cube():
@@ -107,7 +107,7 @@ class TestCube:
 
 @pytest.fixture
 def event_lists():
-    dir = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2')
+    dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     event_lists = data_store.load_all('events')
     return event_lists

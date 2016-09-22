@@ -6,13 +6,11 @@ import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 from astropy.coordinates import Angle
-from ...data import DataStore
-from ...datasets import gammapy_extra
+from ...data import DataStore, EventList
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
-from ..cube import FOVCube
-from ...data import EventList
+from ..fov_cube import FOVCube
 
 
 def make_test_array(dummy_data=False):
@@ -51,7 +49,7 @@ def make_empty_cube():
 
 @requires_data('gammapy-extra')
 def test_energy_offset_array_fill():
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     ev_list = data_store.load_all('events')
 

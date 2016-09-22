@@ -10,7 +10,6 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
@@ -55,7 +54,7 @@ class TestCubeBackgroundModel:
     def test_read(self):
 
         # test shape and scheme of cubes when reading a file
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
         cubes = [bg_cube_model.counts_cube,
                  bg_cube_model.livetime_cube,
@@ -70,7 +69,7 @@ class TestCubeBackgroundModel:
 
     def test_write(self, tmpdir):
 
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
         bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
 
         outfile = str(tmpdir / 'cubebackground_table_test.fits')
@@ -103,7 +102,7 @@ class TestCubeBackgroundModel:
     @requires_dependency('scipy')
     def test_smooth(self):
 
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
         bg_cube_model1 = CubeBackgroundModel.read(filename, format='table')
 
         bg_cube_model2 = bg_cube_model1

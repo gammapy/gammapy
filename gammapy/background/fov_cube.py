@@ -49,8 +49,8 @@ def _parse_data_units(data_unit):
     # if it fails, try to parse them as fits units
     except ValueError:
         try:
-            u.Unit(data_unit, format='fits')
-        # if it fails, try to parse them as ogip units (old fits standard)
+            u.Unit(data_unit, format='FITS')
+        # if it fails, try to parse them as ogip units (old FITS standard)
         except ValueError:
             try:
                 u.Unit(data_unit, format='ogip')
@@ -62,11 +62,12 @@ def _parse_data_units(data_unit):
 
 
 class FOVCube(object):
-    """FOVCube container class.
+    """Field of view cube.
 
     Container class for cubes *(X, Y, energy)*.
-    The class has methods for reading a cube from a fits file,
-    write a cube to a fits file and plot the cubes among others.
+
+    The class has methods for reading a cube from a FITS file,
+    write a cube to a FITS file and plot the cubes among others.
 
     The order of the axes in the cube is **(E, y, x)**,
     so in order to access the data correctly, the call is
@@ -211,7 +212,7 @@ class FOVCube(object):
 
     @classmethod
     def from_fits_table(cls, hdu, scheme=None):
-        """Read cube from a fits binary table.
+        """Read cube from a FITS binary table.
 
         Parameters
         ----------
@@ -292,7 +293,7 @@ class FOVCube(object):
 
     @classmethod
     def from_fits_image(cls, image_hdu, energy_hdu, scheme=None):
-        """Read cube from a fits image.
+        """Read cube from a FITS image.
 
         Parameters
         ----------
@@ -356,7 +357,7 @@ class FOVCube(object):
 
     @classmethod
     def read(cls, filename, format='table', scheme=None, hdu='bkg_3d'):
-        """Read cube from fits file.
+        """Read cube from FITS file.
 
         Several input formats are accepted, depending on the value
         of the **format** parameter:
@@ -427,7 +428,7 @@ class FOVCube(object):
         return table
 
     def to_fits_table(self):
-        """Convert cube to binary table fits format.
+        """Convert cube to binary table FITS format.
 
         Returns
         -------
@@ -437,7 +438,7 @@ class FOVCube(object):
         return table_to_fits_table(self.to_table())
 
     def to_fits_image(self):
-        """Convert cube to image fits format.
+        """Convert cube to image FITS format.
 
         Returns
         -------
