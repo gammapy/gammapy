@@ -19,10 +19,13 @@ Gammapy is a community-developed, open-source Python package for gamma-ray astro
 
 Where to start?
 
-* Try Gammapy in the browser using the `Gammapy binder`_.
-  Clicking that link will start a Docker image on some cloud server,
-  which usually takes about 30 seconds.
-  See :ref:`binder` for details how this works.
+* Check out the "Getting started with Gammapy" Jupyter notebooks.
+    * Read the static HTML version on
+      `nbviewer <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/Index.ipynb>`__.
+    * Try an executable version at `Gammapy binder`_.
+      Clicking that link will start a Docker image on some cloud server,
+      which usually takes about 30 seconds.
+      See :ref:`binder` for details how this works.
 * To learn more about Gammapy, have a look at the :ref:`about` page.
 * To install Gammapy, see the instructions on the :ref:`install` page.
 * The :ref:`getting-started` tutorial.
@@ -67,7 +70,7 @@ General documentation
   development/index
   changelog
 
-.. gammapy_toolbox:
+.. _gammapy_toolbox:
 
 The Gammapy toolbox
 -------------------
