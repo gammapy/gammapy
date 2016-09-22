@@ -4,10 +4,12 @@ import numpy as np
 from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion
 from ..image import SkyMask
+from .background_estimate import BackgroundEstimate
 import logging
 
 __all__ = [
     'find_reflected_regions',
+    'ReflectedRegionsBackgroundEstimator',
 ]
 
 
@@ -114,3 +116,73 @@ def _is_inside_exclusion(pixreg, exclusion):
     excl_dist = image.data
     val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
     return val < pixreg.radius
+
+
+class ReflectedRegionsBackgroundEstimator(object):
+    """Reflected Regions background estimator
+    
+    Parameters
+    ----------
+    on_region : `~regions.CircleSkyRegion`
+        Target region
+    obs_list : `~gammapy.data.ObservationList`
+        List of observations to process
+    exclusion : `~gammapy.image.SkyMask`
+        Exclusion mask
+    config : dict
+        Config dict to be passed to :func:`gammapy.background.find_reflected_regions`
+    """
+    def __init__(self, on_region, obs_list, exclusion, config=dict()):
+        self.on_region = on_region
+        self.obs_list = obs_list
+        self.exclusion = exclusion
+        self.result = None
+        self.config = config
+
+    def __str__(self):
+        s = self.__class__.__name__ + '\n'
+        s += str(self.on_region)
+        s += '\n'.format(self.config)
+        return s
+
+    @staticmethod
+    def process(on_region, obs, exclusion, **kwargs):
+        """Estimate background for one observation
+
+        kwargs are forwaded to :func:`gammapy.background.find_reflected_regions`
+
+        Parameters
+        ----------
+        on_region : `~regions.CircleSkyRegion`
+            Target region 
+        obs : `~gammapy.data.DataStoreObservation`
+            Observation
+        exclusion : `~gammapy.image.ExclusionMask`
+            ExclusionMask
+
+        Returns
+        -------
+        background : `~gammapy.background.BackgroundEstimate`
+            Reflected regions background estimate
+        """
+        off_region = find_reflected_regions(region = on_region,
+                                            center = obs.pointing_radec,
+                                            exclusion_mask=exclusion,
+                                            **kwargs)
+        # TODO: Properly use regions package
+        off_events = obs.events.select_circular_region(off_region)
+        a_on = 1
+        a_off = len(off_region)
+        return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='reflected')
+
+    def run(self):
+        """Process all observations"""
+        result = []
+        for obs in self.obs_list:
+            temp = self.process(on_region = self.on_region,
+                                obs = obs,
+                                exclusion = self.exclusion,
+                                **self.config)
+            result.append(temp)
+
+        self.result = result

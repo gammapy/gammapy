@@ -2,12 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .ring import ring_area_factor
-from .reflected import find_reflected_regions
 
 __all__ = [
     'BackgroundEstimate',
     'ring_background_estimate',
-    'reflected_regions_background_estimate'
 ]
 
 
@@ -68,26 +66,3 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
 
 
-def reflected_regions_background_estimate(on_region, pointing, exclusion,
-                                          events, **kwargs):
-    """Reflected regions background estimate
-
-    kwargs are forwaded to :func:`gammapy.background.find_reflected_regions`
-
-    Parameters
-    ----------
-    on_region : `~regions.CircleSkyRegion`
-        On region
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing position
-    exclusion : `~gammapy.image.SkyImage`
-        Exclusion mask
-    events : `gammapy.data.EventList`
-        Events
-    """
-    off_region = find_reflected_regions(on_region, pointing, exclusion, **kwargs)
-    off_events = events.select_circular_region(off_region)
-    a_on = 1
-    a_off = len(off_region)
-
-    return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='reflected')
