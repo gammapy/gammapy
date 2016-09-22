@@ -6,42 +6,41 @@ from astropy.units import Quantity
 from astropy.table import QTable
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
+from ..stats import significance
 from ..background import fill_acceptance_image
 from ..image import SkyImage, SkyImageList, disk_correlate
-from ..stats import significance
 
-__all__ = ['ObsImage',
-           'MosaicImage']
+__all__ = ['SingleObsImageMaker', 'StackedObsImageMaker']
 
 log = logging.getLogger(__name__)
 
 
-class ObsImage(object):
-    """Gammapy 2D image based analysis for one observation.
+class SingleObsImageMaker(object):
+    """Compute images for one observation.
 
-    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
-    with the following keys:
+    The computed images are stored in a ``images`` attribute of
+    type `~gammapy.image.SkyImageList` with the following keys:
 
-    * counts : counts for one obs
-    * bkg : bkg model for one obs
-    * exposure : exposure for one obs
-    * excess : excess for one obs
-    * significance : significance for one obs
+    * ``counts`` : Counts
+    * ``bkg`` : Background model
+    * ``exposure`` : Exposure
+    * ``excess`` : Excess
+    * ``significance`` : Significance
 
     Parameters
     ----------
     obs : `~gammapy.data.DataStoreObservation`
-        `DataStoreObservation` for the observation
+        Observation data
     empty_image : `~gammapy.image.SkyImage`
-            ref to an empty image
+        Reference image
     energy_band : `~gammapy.utils.energy.Energy`
-        Energy band for which we want to compute the image
+        Energy band selection
     offset_band : `astropy.coordinates.Angle`
-        Offset Band where you compute the image
+        Offset band selection
     exclusion_mask : `~gammapy.image.SkyMask`
-            Exclusion regions
+        Exclusion mask
     ncounts_min : int
-            Minimum counts required for the observation
+        Minimum counts required for the observation (TODO: used how?)
     """
 
     def __init__(self, obs, empty_image,
@@ -103,7 +102,7 @@ class ObsImage(object):
         self.images["bkg"] = bkg_image
 
     def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
-        """Compute the 1D exposure table for one observation for an offset table
+        """Compute the 1D exposure table for one observation for an offset table.
 
         Parameters
         ----------
@@ -226,38 +225,37 @@ class ObsImage(object):
         self.images["excess"] = total_excess
 
 
-class MosaicImage(object):
-    """Gammapy 2D image based analysis for a set of observations.
+class StackedObsImageMaker(object):
+    """Compute stacked images for many observations.
 
-    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
-    with the following keys:
+    The computed images are stored in a ``images`` attribute of
+    type `~gammapy.image.SkyImageList` with the following keys:
 
-    * counts : counts for the set of obs
-    * bkg : bkg model for the set of obs
-    * exposure : exposure for the set of obs
-    * excess : excess for the set of obs
-    * significance : significance for the set of obs
+    * ``counts`` : Counts
+    * ``bkg`` : Background model
+    * ``exposure`` : Exposure
+    * ``excess`` : Excess
+    * ``significance`` : Significance
 
     Parameters
     ----------
     empty_image : `~gammapy.image.SkyImage`
-            ref to an empty image
+        Reference image
     energy_band : `~gammapy.utils.energy.Energy`
-        Energy band for which we want to compute the image
+        Energy band selection
     offset_band : `astropy.coordinates.Angle`
-        Offset Band where you compute the image
+        Offset band selection
     data_store : `~gammapy.data.DataStore`
-        `DataStore` where are situated the events
+        Data store
     obs_table : `~astropy.table.Table`
-            Required columns: OBS_ID
+        Required columns: OBS_ID
     exclusion_mask : `~gammapy.image.SkyMask`
-            Exclusion regions
+        Exclusion mask
     ncounts_min : int
-            Minimum counts required for the observation
+        Minimum counts required for the observation
     """
 
-    def __init__(self, empty_image=None,
-                 energy_band=None, offset_band=None,
+    def __init__(self, empty_image=None, energy_band=None, offset_band=None,
                  data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
 
         self.images = SkyImageList()
@@ -277,8 +275,8 @@ class MosaicImage(object):
         self.psfmeantab = None
         self.thetapsf = None
 
-    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
-                    radius=10):
+    def make_images(self, make_background_image=False, bkg_norm=True,
+                    spectral_index=2.3, for_integral_flux=False, radius=10):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -302,8 +300,8 @@ class MosaicImage(object):
 
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
-            obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
-                                 self.exclusion_mask, self.ncounts_min)
+            obs_image = SingleObsImageMaker(obs, self.empty_image, self.energy_band, self.offset_band,
+                                            self.exclusion_mask, self.ncounts_min)
             if len(obs_image.events) <= self.ncounts_min:
                 continue
             else:
