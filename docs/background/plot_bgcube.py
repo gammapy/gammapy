@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from gammapy.background import Cube
+from gammapy.background import FOVCube
 from gammapy.datasets import gammapy_extra
 
 filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test1.fits')
-bg_cube_model = Cube.read(filename, format='table', scheme='bg_cube', hdu='BACKGROUND')
+bg_cube_model = FOVCube.read(filename, format='table', scheme='bg_cube', hdu='BACKGROUND')
 
 fig, axes = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(16, 5., forward=True)

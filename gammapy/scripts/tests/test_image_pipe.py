@@ -7,7 +7,7 @@ from ...utils.energy import Energy
 from ...data import DataStore
 from ...image import SkyImage, SkyMask
 from ...background import OffDataBackgroundMaker
-from ...scripts import MosaicImage
+from ...scripts import StackedObsImageMaker
 
 
 @requires_dependency('reproject')
@@ -59,12 +59,15 @@ def test_image_pipe(tmpdir):
     # Pb with the load psftable for one of the run that is not implemented yet...
     data_store.hdu_table.remove_row(14)
 
-    mosaic = MosaicImage(ref_image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
-                         obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
-    mosaic.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
+    image_maker = StackedObsImageMaker(
+        empty_image=ref_image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+        obs_table=data_store.obs_table, exclusion_mask=exclusion_mask,
+    )
+    image_maker.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
+    images = image_maker.images
 
-    assert_allclose(mosaic.images['counts'].data.sum(), 2334.0, atol=3)
-    assert_allclose(mosaic.images['bkg'].data.sum(), 1987.1513636663785, atol=3)
-    assert_allclose(mosaic.images['exposure'].data.sum(), 54190569251987.68, atol=3)
-    assert_allclose(mosaic.images['significance'].lookup(center), 33.707901541600634, atol=3)
-    assert_allclose(mosaic.images['excess'].data.sum(), 346.8486363336217, atol=3)
+    assert_allclose(images['counts'].data.sum(), 2334.0, atol=3)
+    assert_allclose(images['bkg'].data.sum(), 1987.1513636663785, atol=3)
+    assert_allclose(images['exposure'].data.sum(), 54190569251987.68, atol=3)
+    assert_allclose(images['significance'].lookup(center), 33.707901541600634, atol=3)
+    assert_allclose(images['excess'].data.sum(), 346.8486363336217, atol=3)

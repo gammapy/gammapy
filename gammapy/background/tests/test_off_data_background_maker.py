@@ -26,7 +26,7 @@ def test_background_model(tmpdir):
     # TODO: Fix 3D code
     # bgmaker.make_model("3D")
     # bgmaker.save_models("3D")
-    # model = CubeBackgroundModel.read(str(tmpdir / 'background_3D_group_001_table.fits.gz'))
+    # model = FOVCubeBackgroundModel.read(str(tmpdir / 'background_3D_group_001_table.fits.gz'))
     # assert model.counts_cube.data.sum() == 1527
 
     bgmaker.make_model("2D")

@@ -11,9 +11,6 @@ Introduction
 
 `gammapy.background` contains methods to estimate and model background.
 
-The central data structure is the `~gammapy.background.Maps` container.
-TODO: describe
-
 Most of the methods implemented are described in [Berge2007]_.
 Section 7.3 "Background subtraction"
 and Section 7.4 "Acceptance determination and predicted background"
@@ -25,9 +22,8 @@ The background models implemented in Gammapy are documented in :ref:`bg_models`.
 Getting Started
 ===============
 
-TODO
 
-Hello World.
+* TODO: example how to read and use a 2D and A 3D background model
 
 Using `gammapy.background`
 --------------------------

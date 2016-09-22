@@ -10,12 +10,10 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...datasets import gammapy_extra
-from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
-from ...data import ObservationTable
-from ...data import DataStore, EventList
+from ...data import ObservationTable, DataStore, EventList
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
+from ...background import GaussianBand2D, FOVCubeBackgroundModel, EnergyOffsetBackgroundModel
 
 
 @requires_dependency('scipy')
@@ -55,8 +53,8 @@ class TestCubeBackgroundModel:
     def test_read(self):
 
         # test shape and scheme of cubes when reading a file
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
-        bg_cube_model = CubeBackgroundModel.read(filename, format='table')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
+        bg_cube_model = FOVCubeBackgroundModel.read(filename, format='table')
         cubes = [bg_cube_model.counts_cube,
                  bg_cube_model.livetime_cube,
                  bg_cube_model.background_cube]
@@ -70,14 +68,14 @@ class TestCubeBackgroundModel:
 
     def test_write(self, tmpdir):
 
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
-        bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
+        bg_cube_model_1 = FOVCubeBackgroundModel.read(filename, format='table')
 
         outfile = str(tmpdir / 'cubebackground_table_test.fits')
         bg_cube_model_1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
-        bg_cube_model_2 = CubeBackgroundModel.read(outfile, format='table')
+        bg_cube_model_2 = FOVCubeBackgroundModel.read(outfile, format='table')
         cubes1 = [bg_cube_model_1.counts_cube,
                   bg_cube_model_1.livetime_cube,
                   bg_cube_model_1.background_cube]
@@ -94,7 +92,7 @@ class TestCubeBackgroundModel:
 
         obs_table = ObservationTable()
         obs_table['OBS_ID'] = np.arange(100)
-        bg_cube_model = CubeBackgroundModel.define_cube_binning(
+        bg_cube_model = FOVCubeBackgroundModel.define_cube_binning(
             observation_table=obs_table, method='default',
         )
 
@@ -103,8 +101,8 @@ class TestCubeBackgroundModel:
     @requires_dependency('scipy')
     def test_smooth(self):
 
-        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
-        bg_cube_model1 = CubeBackgroundModel.read(filename, format='table')
+        filename = '$GAMMAPY_EXTRA/test_datasets/background/bg_cube_model_test2.fits.gz'
+        bg_cube_model1 = FOVCubeBackgroundModel.read(filename, format='table')
 
         bg_cube_model2 = bg_cube_model1
 

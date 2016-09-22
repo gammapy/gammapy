@@ -8,14 +8,13 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity
-from ..background import Cube
-from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
-from .cube import _make_bin_edges_array
+from .energy_offset_array import EnergyOffsetArray
+from .fov_cube import _make_bin_edges_array, FOVCube
 
 __all__ = [
     'GaussianBand2D',
-    'CubeBackgroundModel',
+    'FOVCubeBackgroundModel',
     'EnergyOffsetBackgroundModel',
 ]
 
@@ -211,12 +210,12 @@ class GaussianBand2D(object):
         return self._evaluate_y(y, parvals)
 
 
-class CubeBackgroundModel(object):
-    """Cube background model.
+class FOVCubeBackgroundModel(object):
+    """Field of view (FOV) cube background model.
 
     Container class for cube background model *(X, Y, energy)*.
     *(X, Y)* are detector coordinates (a.k.a. nominal system coordinates).
-    This class defines 3 cubes of type `~gammapy.background.Cube`:
+    This class defines 3 cubes of type `~gammapy.background.FOVCube`:
 
     - **counts_cube**: to store the counts (a.k.a. events) that
       participate in the model creation.
@@ -230,12 +229,12 @@ class CubeBackgroundModel(object):
 
     Parameters
     ----------
-    counts_cube : `~gammapy.background.Cube`, optional
-        Cube to store counts.
-    livetime_cube : `~gammapy.background.Cube`, optional
-        Cube to store livetime correction.
-    background_cube : `~gammapy.background.Cube`, optional
-        Cube to store background model.
+    counts_cube : `~gammapy.background.FOVCube`, optional
+        FOVCube to store counts.
+    livetime_cube : `~gammapy.background.FOVCube`, optional
+        FOVCube to store livetime correction.
+    background_cube : `~gammapy.background.FOVCube`, optional
+        FOVCube to store background model.
     """
 
     def __init__(self, counts_cube=None, livetime_cube=None, background_cube=None):
@@ -258,7 +257,7 @@ class CubeBackgroundModel(object):
 
         The counts and livetime cubes are optional.
 
-        This method calls `~gammapy.background.Cube.read`,
+        This method calls `~gammapy.background.FOVCube.read`,
         forwarding all arguments.
 
         Parameters
@@ -270,23 +269,23 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
-            Cube background model object.
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
+            FOVCube background model object.
         """
         hdu = fits.open(filename)
-        counts_scheme_dict = Cube.define_scheme('bg_counts_cube')
-        livetime_scheme_dict = Cube.define_scheme('bg_livetime_cube')
-        background_scheme_dict = Cube.define_scheme('bg_cube')
+        counts_scheme_dict = FOVCube.define_scheme('bg_counts_cube')
+        livetime_scheme_dict = FOVCube.define_scheme('bg_livetime_cube')
+        background_scheme_dict = FOVCube.define_scheme('bg_cube')
 
         try:
-            counts_cube = Cube.read(filename, format, scheme='bg_counts_cube')
-            livetime_cube = Cube.read(filename, format, scheme='bg_livetime_cube')
+            counts_cube = FOVCube.read(filename, format, scheme='bg_counts_cube')
+            livetime_cube = FOVCube.read(filename, format, scheme='bg_livetime_cube')
         except:
             # no counts/livetime cube found: read only bg cube
-            counts_cube = Cube()
-            livetime_cube = Cube()
+            counts_cube = FOVCube()
+            livetime_cube = FOVCube()
 
-        background_cube = Cube.read(filename, format, scheme='bg_cube')
+        background_cube = FOVCube.read(filename, format, scheme='bg_cube')
 
         return cls(counts_cube=counts_cube,
                    livetime_cube=livetime_cube,
@@ -353,30 +352,30 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
-            Cube background model object.
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
+            FOVCube background model object.
         """
         empty_cube_data = np.zeros((len(energy_edges) - 1,
                                     len(dety_edges) - 1,
                                     len(detx_edges) - 1))
 
-        counts_cube = Cube(coordx_edges=detx_edges,
-                           coordy_edges=dety_edges,
-                           energy_edges=energy_edges,
-                           data=Quantity(empty_cube_data, ''),  # counts
+        counts_cube = FOVCube(coordx_edges=detx_edges,
+                              coordy_edges=dety_edges,
+                              energy_edges=energy_edges,
+                              data=Quantity(empty_cube_data, ''),  # counts
                            scheme='bg_counts_cube')
 
-        livetime_cube = Cube(coordx_edges=detx_edges,
-                             coordy_edges=dety_edges,
-                             energy_edges=energy_edges,
-                             data=Quantity(empty_cube_data, 'second'),
-                             scheme='bg_livetime_cube')
+        livetime_cube = FOVCube(coordx_edges=detx_edges,
+                                coordy_edges=dety_edges,
+                                energy_edges=energy_edges,
+                                data=Quantity(empty_cube_data, 'second'),
+                                scheme='bg_livetime_cube')
 
-        background_cube = Cube(coordx_edges=detx_edges,
-                               coordy_edges=dety_edges,
-                               energy_edges=energy_edges,
-                               data=Quantity(empty_cube_data, '1 / (s TeV sr)'),
-                               scheme='bg_cube')
+        background_cube = FOVCube(coordx_edges=detx_edges,
+                                  coordy_edges=dety_edges,
+                                  energy_edges=energy_edges,
+                                  data=Quantity(empty_cube_data, '1 / (s TeV sr)'),
+                                  scheme='bg_cube')
 
         return cls(counts_cube=counts_cube,
                    livetime_cube=livetime_cube,
@@ -406,8 +405,8 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
-            Cube background model object.
+        bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
+            FOVCube background model object.
         """
         # define cube binning shape
         n_ebins = 20

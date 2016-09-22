@@ -38,16 +38,11 @@ Type              Format Name          Gammapy                                  
 ================= ==================== ================================================= ============================
 Events            EVENTS               `~gammapy.data.EventList`                         GEventList_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
-Counts            3D                   `~gammapy.cube.SkyCube`                           `GCTAEventCube`_
-Counts            Image                `~gammapy.image.SkyImage`                         `GSkyMap`_
-Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`                `GPha`_
+Effective area    AEFF_2D              `~gammapy.irf.EffectiveAreaTable2D`               `GCTAAeff2D`_
+Effective area    ARF                  `~gammapy.irf.EffectiveAreaTable`                 `GCTAAeffArf`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
-Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`                           `GCTACubeExposure`_
------------------ -------------------- ------------------------------------------------- ----------------------------
-Background        BACKGROUND_3D        `~gammapy.background.CubeBackgroundModel`         `GCTABackground3D`_
-Background        BACKGROUND_2D        `~gammapy.background.EnergyOffsetBackgroundModel` N/A
-Background        no spec available    N/A                                               `GCTAModelRadialAcceptance`_
-Background        no spec available    N/A                                               `GCTACubeBackground`_
+Energy dispersion EDISP_2D             `~gammapy.irf.EnergyDispersion2D`                 `GCTAEdisp2D`_
+Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`                   `GCTAEdispRMF`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF`       `GCTAPsf2D`_
 PSF               PSF_2D_KING          `~gammapy.irf.PSFKing`                            `GCTAPsfKing`_
@@ -56,11 +51,16 @@ PSF               gtpsf_ output        `~gammapy.irf.EnergyDependentTablePSF`   
 PSF               psf_table            `~gammapy.irf.PSF3D`                              `GCTAPsfTable`_
 PSF               no spec available    N/A                                               `GCTACubePsf`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
-Effective area    AEFF_2D              `~gammapy.irf.EffectiveAreaTable2D`               `GCTAAeff2D`_
-Effective area    ARF                  `~gammapy.irf.EffectiveAreaTable`                 `GCTAAeffArf`_
+Background        BACKGROUND_3D        `~gammapy.background.FOVCubeBackgroundModel`      `GCTABackground3D`_
+Background        BACKGROUND_2D        `~gammapy.background.EnergyOffsetBackgroundModel` N/A
+Background        no spec available    N/A                                               `GCTAModelRadialAcceptance`_
+Background        no spec available    N/A                                               `GCTACubeBackground`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
-Energy dispersion EDISP_2D             `~gammapy.irf.EnergyDispersion2D`                 `GCTAEdisp2D`_
-Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`                   `GCTAEdispRMF`_
+Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`                           `GCTACubeExposure`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Counts            3D                   `~gammapy.cube.SkyCube`                           `GCTAEventCube`_
+Counts            Image                `~gammapy.image.SkyImage`                         `GSkyMap`_
+Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`                `GPha`_
 ================= ==================== ================================================= ============================
 
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html

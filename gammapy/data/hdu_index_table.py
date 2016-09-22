@@ -99,8 +99,8 @@ class HDULocation(object):
             from ..background import EnergyOffsetArray
             return EnergyOffsetArray.read(filename, hdu=hdu_name, data_name='bkg')
         elif hdu_class == 'bkg_3d':
-            from ..background import Cube
-            return Cube.read(filename, hdu=hdu_name)
+            from ..background import FOVCube
+            return FOVCube.read(filename, hdu=hdu_name)
         else:
             raise ValueError('Invalid hdu_class: {}'.format(hdu_class))
 

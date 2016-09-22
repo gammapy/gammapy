@@ -22,14 +22,14 @@ during observations.
 
 Two classes are used as container for this model:
 
-* The `~gammapy.background.Cube` class is used as base container for
+* The `~gammapy.background.FOVCube` class is used as base container for
   cubes. It has generic methods to I/O (read/write) and operate the
   3D cubes. It also has visualization methods to plot slices/bins of
   the cubes.
 
-* The `~gammapy.background.CubeBackgroundModel` class is used to
+* The `~gammapy.background.FOVCubeBackgroundModel` class is used to
   contain and handle cube background models.
-  It contains 3 cubes of type `~gammapy.background.Cube`:
+  It contains 3 cubes of type `~gammapy.background.FOVCube`:
 
     * ``counts_cube`` - counts (a.k.a. events) used to fill the model.
     * ``livetime_cube``- livetime correction used for the model.
@@ -41,12 +41,12 @@ Two classes are used as container for this model:
 Two test files are located in the ``gammapy-extra`` repository as
 examples and test benches of these classes:
 
-* `bg_cube_model_test1.fits`_ is a `~gammapy.background.Cube` produced with an older version of
+* `bg_cube_model_test1.fits`_ is a `~gammapy.background.FOVCube` produced with an older version of
   `~gammapy.datasets.make_test_bg_cube_model`, using a simplified
   background model. The current version of the mehod produces a
-  `~gammapy.background.CubeBackgroundModel` object.
+  `~gammapy.background.FOVCubeBackgroundModel` object.
 
-* `bg_cube_model_test2.fits.gz`_ is a `~gammapy.background.CubeBackgroundModel` produced with
+* `bg_cube_model_test2.fits.gz`_ is a `~gammapy.background.FOVCubeBackgroundModel` produced with
   `~gammapy.background.make_bg_cube_model`, using dummy data produced
   with `~gammapy.datasets.make_test_dataset`.
 

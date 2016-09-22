@@ -336,10 +336,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
 
     Returns
     -------
-    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+    bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
         Bacground cube model.
     """
-    from ..background import CubeBackgroundModel
+    from ..background import FOVCubeBackgroundModel
 
     # spatial bins (linear)
     delta_x = (detx_range[1] - detx_range[0]) / ndetx_bins
@@ -360,9 +360,9 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
 
     # define empty bg cube model and set bins
 
-    bg_cube_model = CubeBackgroundModel.set_cube_binning(detx_edges=detx_bin_edges,
-                                                         dety_edges=dety_bin_edges,
-                                                         energy_edges=energy_bin_edges)
+    bg_cube_model = FOVCubeBackgroundModel.set_cube_binning(detx_edges=detx_bin_edges,
+                                                            dety_edges=dety_bin_edges,
+                                                            energy_edges=energy_bin_edges)
 
     # counts
 

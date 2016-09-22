@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.io import fits
 from ..utils.scripts import make_path
 from ..irf import EffectiveAreaTable2D
-from ..background import Cube
+from ..background import FOVCube
 from ..irf import EnergyDispersion2D
 from ..irf import EnergyDependentMultiGaussPSF
 
@@ -39,7 +39,7 @@ class CTAIrf(object):
         Energy dispersion
     psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
         Point spread function
-    bkg : `~gammapy.background.Cube`
+    bkg : `~gammapy.background.FOVCube`
         Background rate
     """
 
@@ -65,11 +65,11 @@ class CTAIrf(object):
         # aeff = EffectiveAreaTable2D.from_table(table)
         aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
-        # TODO: fix `Cube.read`, then use it directly here.
+        # TODO: fix `FOVCube.read`, then use it directly here.
         table = fits.open(filename)['BACKGROUND']
         table.columns.change_name(str('BGD'), str('Bgd'))
         table.header['TUNIT7'] = '1 / (MeV s sr)'
-        bkg = Cube.from_fits_table(table, scheme='bg_cube')
+        bkg = FOVCube.from_fits_table(table, scheme='bg_cube')
 
         # Dealing energy dispersion matrix
         # table_hdu_disp = get_hdu(filename + '[ENERGY DISPERSION]')

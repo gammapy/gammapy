@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from gammapy.background import CubeBackgroundModel
+from gammapy.background import FOVCubeBackgroundModel
 from gammapy.spectrum import power_law_evaluate, power_law_integral_flux
 from gammapy.datasets import gammapy_extra
 
@@ -74,10 +74,10 @@ def plot_bg_cube_model_comparison(input_file1, name1,
     # get cubes
     filename1 = input_file1
     filename2 = input_file2
-    bg_cube_model1 = CubeBackgroundModel.read(filename1,
-                                              format='table').background_cube
-    bg_cube_model2 = CubeBackgroundModel.read(filename2,
-                                              format='table').background_cube
+    bg_cube_model1 = FOVCubeBackgroundModel.read(filename1,
+                                                 format='table').background_cube
+    bg_cube_model2 = FOVCubeBackgroundModel.read(filename2,
+                                                 format='table').background_cube
 
     # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
     # normalize w.r.t. cube integral
