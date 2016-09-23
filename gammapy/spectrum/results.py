@@ -327,7 +327,7 @@ class SpectrumFitResult(object):
                                         energy_unit='TeV')
 
         mu_on = self.expected_source_counts.copy()
-        mu_on.data = self.expected_source_counts + self.obs.background_vector.data
+        mu_on.data = self.expected_source_counts.data + self.obs.background_vector.data
         mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
 
         self.obs.on_vector.plot(ax=ax0,
