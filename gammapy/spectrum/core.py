@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from copy import deepcopy
 import numpy as np
 from astropy.table import Table
 import astropy.units as u
@@ -182,6 +183,11 @@ class CountsSpectrum(NDDataArray):
         fig, ax = plt.subplots(1, 1, figsize=figsize)
         self.plot_hist(ax=ax)
         return ax
+
+    def copy(self):
+        """A deep copy of self.
+        """
+        return deepcopy(self)
 
 
 class PHACountsSpectrum(CountsSpectrum):
