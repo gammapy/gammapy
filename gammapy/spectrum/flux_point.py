@@ -1,20 +1,28 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Differential and integral flux point computations."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
+from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity, Unit
+from gammapy.utils.scripts import make_path
+
+from ..utils.fits import table_from_row_data
 from ..utils.energy import Energy, EnergyBounds
 from ..spectrum.powerlaw import power_law_flux
-import logging
+from ..spectrum.models import PowerLaw
 
 __all__ = [
     'DifferentialFluxPoints',
     'IntegralFluxPoints',
     'compute_differential_flux_points',
+    'FluxPointEstimator',
+    'SEDLikelihoodProfile',
 ]
 
 log = logging.getLogger(__name__)
+
 
 class DifferentialFluxPoints(Table):
     """Differential flux points table
@@ -27,93 +35,6 @@ class DifferentialFluxPoints(Table):
     Upper limits are stored as in the Fermi catalogs. I.e. the lower error is set
     to `NaN`, while the upper error represents the 1 sigma upper limit.
     """
-    @classmethod
-    def compute(cls, model, obs_list, binning):
-        """Compute differential fluxpoints
-
-        The norm of the global model is fit to the
-        `~gammapy.spectrum.SpectrumObservationList` in the provided energy
-        binning and the differential flux is evaluated at the log bin center.
-
-        TODO : Add upper limit calculation
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Global model
-        obs_list : `~gammapy.spectrum.SpectrumObservationList`
-            Observations
-        binning : `~astropy.units.Quantity`
-            Energy binning, see
-            :func:`~gammapy.spectrum.utils.calculate_flux_point_binning` for a
-            method to get flux points with a minimum significance.
-        """
-        from gammapy.spectrum import SpectrumFit
-
-        binning = EnergyBounds(binning)
-        low_bins = binning.lower_bounds
-        high_bins = binning.upper_bounds
-
-        diff_flux = list()
-        diff_flux_err = list()
-        e_err_hi = list()
-        e_err_lo = list()
-        energy = list()
-
-        from ..spectrum import models, powerlaw
-        from sherpa.models import PowLaw1D
-
-        if isinstance(model, models.PowerLaw):
-            temp = model.to_sherpa()
-            temp.gamma.freeze()
-            sherpa_models = [temp] * binning.nbins
-        else:
-            sherpa_models = [None] * binning.nbins
-
-        for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
-            log.info('Computing flux points in bin [{}, {}]'.format(low, high))
-
-            # Make PowerLaw approximation for higher order models
-            if sherpa_model is None:
-                flux_low = model(low)
-                flux_high = model(high)
-                index = powerlaw.power_law_g_from_points(e1=low, e2=high,
-                                                         f1=flux_low,
-                                                         f2=flux_high)
-
-                log.debug('Approximated power law index: {}'.format(index))
-                sherpa_model = PowLaw1D('powlaw1d.default')
-                sherpa_model.gamma = index
-                sherpa_model.gamma.freeze()
-                sherpa_model.ref = model.parameters.reference.to('keV')
-                sherpa_model.ampl = 1e-20
-
-            fit = SpectrumFit(obs_list, sherpa_model)
-
-            # If 'low' or 'high' fall onto a bin edge of the
-            # SpectrumObservation binning, numerical fluctuations can lead to
-            # the inclusion of unwanted bins
-            correction = 1e-5
-            fit.fit_range = ((1 + correction) * low, (1 - correction) * high)
-            fit.fit()
-            res = fit.global_result
-
-            log.debug('{}'.format(res))
-            bin_center = np.sqrt(low * high)
-            energy.append(bin_center)
-            e_err_hi.append(high - bin_center)
-            e_err_lo.append(bin_center - low)
-            diff_flux.append(res.model(bin_center).to('m-2 s-1 TeV-1'))
-            err = res.model_with_uncertainties(bin_center.to('TeV').value)
-            diff_flux_err.append(err.s * Unit('m-2 s-1 TeV-1'))
-            log.debug('\n------------------------\n')
-
-        return cls.from_arrays(energy=energy,
-                               diff_flux=diff_flux,
-                               diff_flux_err_hi=diff_flux_err,
-                               diff_flux_err_lo=diff_flux_err,
-                               energy_err_hi=e_err_hi,
-                               energy_err_lo=e_err_lo)
 
     @classmethod
     def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
@@ -502,3 +423,171 @@ def _energy_lafferty_power_law(energy_min, energy_max, spectral_index):
     term2 = 1. / term0
     flux_lw = term2 / term1 * (energy_max ** term0 - energy_min ** term0)
     return np.exp(-np.log(flux_lw) / np.abs(spectral_index))
+
+
+class FluxPointEstimator(object):
+    """
+    Flux point estimator.
+
+    Parameters
+    ----------
+    obs : `~gammapy.spectrum.SpectrumObservation`
+        Spectrum observation
+    groups : `~gammapy.spectrum.SpectrumEnergyGroups`
+        Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupsMaker`)
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    """
+
+    def __init__(self, obs, groups, model):
+        self.obs = obs
+        self.groups = groups
+        self.model = model
+
+        self.flux_points = None
+
+    def __str__(self):
+        s = 'FluxPointEstimator:\n'
+        s += str(self.obs) + '\n'
+        s += str(self.groups) + '\n'
+        s += str(self.model) + '\n'
+        return s
+
+    def compute_points(self):
+        meta = OrderedDict(
+            method='TODO',
+        )
+        rows = []
+        for group in self.groups:
+            if group.bin_type != 'normal':
+                log.debug('Skipping energy group:\n{}'.format(group))
+                continue
+
+            row = self.compute_flux_point(group)
+            rows.append(row)
+
+        self.flux_points = table_from_row_data(rows=rows, meta=meta)
+
+    def compute_flux_point(self, energy_group):
+        log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
+        model = self.compute_approx_model(
+            global_model=self.model,
+            energy_range=energy_group.energy_range,
+        )
+
+        energy_ref = self.compute_energy_ref(energy_group)
+
+        return self.fit_point(
+            model=model, energy_group=energy_group, energy_ref=energy_ref,
+        )
+
+    def compute_energy_ref(self, energy_group):
+        return energy_group.energy_range.log_center
+
+    @staticmethod
+    def compute_approx_model(global_model, energy_range):
+        """
+        Compute approximate model, to be used in the energy bin.
+        """
+        # binning = EnergyBounds(binning)
+        # low_bins = binning.lower_bounds
+        # high_bins = binning.upper_bounds
+        #
+        # from sherpa.models import PowLaw1D
+        #
+        # if isinstance(model, models.PowerLaw):
+        #     temp = model.to_sherpa()
+        #     temp.gamma.freeze()
+        #     sherpa_models = [temp] * binning.nbins
+        # else:
+        #     sherpa_models = [None] * binning.nbins
+        #
+        # for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
+        #     log.info('Computing flux points in bin [{}, {}]'.format(low, high))
+        #
+        #     # Make PowerLaw approximation for higher order models
+        #     if sherpa_model is None:
+        #         flux_low = model(low)
+        #         flux_high = model(high)
+        #         index = powerlaw.power_law_g_from_points(e1=low, e2=high,
+        #                                                  f1=flux_low,
+        #                                                  f2=flux_high)
+        #
+        #         log.debug('Approximated power law index: {}'.format(index))
+        #         sherpa_model = PowLaw1D('powlaw1d.default')
+        #         sherpa_model.gamma = index
+        #         sherpa_model.gamma.freeze()
+        #         sherpa_model.ref = model.parameters.reference.to('keV')
+        #         sherpa_model.ampl = 1e-20
+        return PowerLaw(
+            index=Quantity(2, ''),
+            amplitude=Quantity(1, 'm-2 s-1 TeV-1'),
+            reference=Quantity(1, 'TeV'),
+        )
+
+    def fit_point(self, model, energy_group, energy_ref):
+        from gammapy.spectrum import SpectrumFit
+
+        sherpa_model = model.to_sherpa()
+        sherpa_model.gamma.freeze()
+
+        fit = SpectrumFit(self.obs, sherpa_model)
+
+        erange = energy_group.energy_range
+        fit.fit_range = erange.min, erange.max
+
+        log.debug(
+            'Calling Sherpa fit for flux point '
+            ' in energy range:\n{}'.format(fit)
+        )
+
+        fit.fit()
+
+        res = fit.global_result
+
+        energy_err_hi = energy_group.energy_range.max - energy_ref
+        energy_err_lo = energy_ref - energy_group.energy_range.min
+        diff_flux = res.model(energy_ref).to('m-2 s-1 TeV-1')
+        err = res.model_with_uncertainties(energy_ref.to('TeV').value)
+        diff_flux_err = err.s * Unit('m-2 s-1 TeV-1')
+
+        return OrderedDict(
+            energy=energy_ref,
+            energy_err_hi=energy_err_hi,
+            energy_err_lo=energy_err_lo,
+            diff_flux=diff_flux,
+            diff_flux_err_hi=diff_flux_err,
+            diff_flux_err_lo=diff_flux_err,
+        )
+
+
+class SEDLikelihoodProfile(object):
+    """SED likelihood profile.
+
+    See :ref:`gadf:likelihood_sed`.
+
+    TODO: merge this class with the classes in ``fermipy/castro.py``,
+    which are much more advanced / feature complete.
+    This is just a temp solution because we don't have time for that.
+    """
+
+    def __init__(self, table):
+        self.table = table
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        filename = make_path(filename)
+        table = Table.read(str(filename), **kwargs)
+        return cls(table=table)
+
+    def __str__(self):
+        s = self.__class__.__name__ + '\n'
+        s += str(self.table)
+        return s
+
+    def plot(self, ax=None):
+        import matplotlib.pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+
+        # TODO
