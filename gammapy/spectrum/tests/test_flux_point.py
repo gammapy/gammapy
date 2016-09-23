@@ -288,7 +288,7 @@ class TestFluxEstimator:
 @requires_data('gammapy-extra')
 class TestSEDLikelihoodProfile:
     def setup(self):
-        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/sed_hights.fits')
+        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits')
 
     def test_basics(self):
         # print(self.sed)
