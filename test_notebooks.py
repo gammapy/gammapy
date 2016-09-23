@@ -1,40 +1,59 @@
 #!/usr/bin/env python
 """
-Auto-test IPython notebooks.
-(this runs on travis-ci)
+Test if IPython notebooks work.
 """
 import os
 import sys
 import subprocess
+import logging
+from pprint import pprint
+import yaml
 
-notebooks_for_py2 = [
-    'hess_spectrum_analysis.ipynb',
-]
+logging.basicConfig(level=logging.INFO)
 
-notebooks_for_py3 = [
+status_codes = dict(
+    success=0,
+    error_nb_failed=1,
+    error_no_gammapy_extra=2,
+)
 
-]
 
-notebooks_for_py23 = [
-    'hess_image_analysis.ipynb',
-    'fermi_ts_image.ipynb',
-    'fermi_2fhl.ipynb',
-]
+if 'GAMMAPY_EXTRA' not in os.environ:
+    logging.info('GAMMAPY_EXTRA environment variable not set.')
+    logging.info('Running notebook tests requires gammapy-extra.')
+    logging.info('Exiting now.')
+    sys.exit(status_codes['error_no_gammapy_extra'])
 
-print('*** Python executable: {}'.format(sys.executable))
-print('*** Python version: {}'.format(sys.version))
+status_code = status_codes['success']
 
-if sys.version_info.major == 2:
-    print('*** This is Python 2')
-    notebooks = notebooks_for_py23 + notebooks_for_py2
-else:
-    notebooks = notebooks_for_py23 + notebooks_for_py3
 
-print('*** Testing IPython notebooks ...')
+def get_notebooks():
+    filename = os.environ['GAMMAPY_EXTRA'] + '/notebooks/notebooks.yaml'
+    logging.info('')
+    with open(filename) as fh:
+        notebooks = yaml.safe_load(fh)
+    return notebooks
 
-status_code = 0  # mean no errors so far.
+notebooks = get_notebooks()
+pprint(notebooks)
+
+logging.info('Python executable: {}'.format(sys.executable))
+logging.info('Python version: {}'.format(sys.version))
+logging.info('Testing IPython notebooks ...')
 
 for notebook in notebooks:
+
+    if not notebook['test']:
+        logging.info('Skipping notebook {} because test=false.'.format(notebook['name']))
+
+    if notebook['requires']:
+        for package in notebook['requires'].split():
+            try:
+                __import__(package)
+            except ImportError:
+                logging.warning('Skipping notebook {} because dependency {} is missing.'
+                                ''.format(notebook['name'], package))
+
     # For testing how `subprocess.Popen` works:
     # cmd = 'pwd && echo "hi" && asdf'
 
@@ -43,8 +62,8 @@ for notebook in notebooks:
     cmd += 'pwd; '
     # cmd += 'export GAMMAPY_EXTRA={}; '.format(os.environ['GAMMAPY_EXTRA'])
     # cmd += 'cd $GAMMAPY_EXTRA/notebooks; '
-    cmd += 'runipy {}'.format(notebook)
-    print('*** Executing: {}'.format(cmd))
+    cmd += 'runipy {}.ipynb'.format(notebook['name'])
+    logging.info('Executing: {}'.format(cmd))
     proc = subprocess.Popen(
         cmd,
         shell=True,
@@ -55,13 +74,13 @@ for notebook in notebooks:
         cwd=os.environ['GAMMAPY_EXTRA'] + '/notebooks',
     )
     stdout, stderr = proc.communicate()
-    print('*** Exit status code: {}'.format(proc.returncode))
-    print('*** stdout:\n{}'.format(stdout.decode('utf8')))
-    print('*** stderr:\n{}'.format(stderr.decode('utf8')))
+    logging.info('Exit status code: {}'.format(proc.returncode))
+    logging.info('stdout:\n{}'.format(stdout.decode('utf8')))
+    logging.info('stderr:\n{}'.format(stderr.decode('utf8')))
 
-    if proc.returncode != 0:
-        status_code = 1  # If one test fails, return fail as total exit status.
+    if proc.returncode != status_codes['success']:
+        status_code = status_codes['error_nb_failed']
 
-print('*** ... finished testing IPython notebooks.')
-print('*** Total exit status code of test_notebook.py is: {}'.format(status_code))
+logging.info('... finished testing IPython notebooks.')
+logging.info('Total exit status code of test_notebook.py is: {}'.format(status_code))
 sys.exit(status_code)
