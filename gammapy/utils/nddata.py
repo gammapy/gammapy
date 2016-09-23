@@ -180,7 +180,7 @@ class NDDataArray(object):
         ss += array_stats_str(self.data, 'Data')
         return ss
 
-    def evaluate(self, method='linear', **kwargs):
+    def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
 
         This function provides a uniform interface to several interpolators.
@@ -191,7 +191,7 @@ class NDDataArray(object):
 
         Parameters
         ----------
-        method : str {'linear', 'nearest'}
+        method : str {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
             Keys are the axis names, Values the evaluation points
@@ -211,7 +211,10 @@ class NDDataArray(object):
             # Transform to match interpolation behaviour of axis
             values.append(np.atleast_1d(axis._interp_values(temp)))
 
-        if method == 'linear':
+        if method is None:
+            return self._eval_regular_grid_interp(
+                values) * self.data.unit
+        elif method == 'linear':
             return self._eval_regular_grid_interp(
                 values, method='linear') * self.data.unit
         elif method == 'nearest':
@@ -220,7 +223,7 @@ class NDDataArray(object):
         else:
             raise ValueError('Interpolator {} not available'.format(method))
 
-    def _eval_regular_grid_interp(self, values, method='linear'):
+    def _eval_regular_grid_interp(self, values, **kwargs):
         """Evaluate linear interpolator
 
         Input: list of values to evaluate, in correct units and correct order.
@@ -236,7 +239,7 @@ class NDDataArray(object):
         # Flatten in order to support 2D array input
         values = [_.flatten() for _ in values]
         points = list(itertools.product(*values))
-        res = self._regular_grid_interp(points, method=method)
+        res = self._regular_grid_interp(points, **kwargs)
         res = np.reshape(res, shapes).squeeze()
 
         return res
