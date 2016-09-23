@@ -21,9 +21,9 @@ Where to start?
 
 * Check out the "Getting started with Gammapy" Jupyter notebooks.
     * Read the static HTML version on
-      `nbviewer <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/Index.ipynb>`__.
+      `nbviewer <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb>`__.
     * Try an executable version at `Gammapy binder`_.
-      Clicking that link will start a Docker image on some cloud server,
+    * Clicking that link will start a Docker image on some cloud server,
       which usually takes about 30 seconds.
       See :ref:`binder` for details how this works.
 * To learn more about Gammapy, have a look at the :ref:`about` page.
