@@ -78,11 +78,6 @@ class SpectrumObservation(object):
         self.aeff = aeff
         self.off_vector = off_vector
         self.edisp = edisp
-        # TODO: Handle this in PHACountsSpectrum __init__ method
-        if edisp is None:
-            self.on_vector.rmffile = None
-        if off_vector is None:
-            self.on_vector.bkgfile = None
 
     @property
     def obs_id(self):
@@ -174,8 +169,8 @@ class SpectrumObservation(object):
             energy_max=self.ebounds[idx + 1],
             n_on=int(self.on_vector.data.value[idx]),
             n_off=int(self.off_vector.data.value[idx]),
-            a_on=self.on_vector.backscal[idx],
-            a_off=self.off_vector.backscal[idx],
+            a_on=self.on_vector._backscal_array[idx],
+            a_off=self.off_vector._backscal_array[idx],
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
@@ -403,6 +398,8 @@ class SpectrumObservation(object):
         group_id : int, optional
             ID for stacked observations
         """
+        # TODO: Refactor into StackObservation class
+
         group_id = group_id or obs_list[0].obs_id
 
         # np.sum does not work with Quantities
@@ -412,17 +409,14 @@ class SpectrumObservation(object):
         stacked_livetime = Quantity(0, 's')
         stacked_on_counts = np.zeros(e_reco.nbins)
         stacked_off_counts = np.zeros(e_reco.nbins)
+        stacked_quality = np.zeros(e_reco.nbins)
         aefft = Quantity(np.zeros(e_true.nbins), 'cm2 s')
         aefftedisp = Quantity(np.zeros(shape=(e_reco.nbins, e_true.nbins)), 'cm2 s')
         backscal_on = np.zeros(e_reco.nbins)
         backscal_off = np.zeros(e_reco.nbins)
-        lo_thresholds = list()
-        hi_thresholds = list()
 
         for o in obs_list:
             stacked_livetime += o.livetime
-            lo_thresholds.append(o.lo_threshold)
-            hi_thresholds.append(o.hi_threshold)
 
             # Counts within safe range
             on_data = o.on_vector.data.copy()
@@ -431,6 +425,10 @@ class SpectrumObservation(object):
             off_data = o.off_vector.data.copy()
             off_data[np.nonzero(o.off_vector.quality)] = 0
             stacked_off_counts += off_data
+
+            # Qualitiy
+            stacked_quality = np.logical_or(stacked_quality,
+                                            o.on_vector.quality)
 
             # Alpha
             backscal_on_data = o.on_vector.backscal.copy()
@@ -468,11 +466,10 @@ class SpectrumObservation(object):
                                  data=stacked_edisp.transpose())
 
         counts_kwargs = dict(
-            lo_threshold=min(lo_thresholds),
-            hi_threshold=max(hi_thresholds),
             livetime=stacked_livetime,
             obs_id=group_id,
             energy=e_reco,
+            quality=stacked_quality,
         )
 
         on_vector = PHACountsSpectrum(backscal=stacked_backscal_on,

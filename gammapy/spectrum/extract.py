@@ -170,9 +170,7 @@ class SpectrumExtraction(object):
 
             counts_kwargs = dict(energy=self.e_reco,
                                  livetime=obs.observation_live_time_duration,
-                                 obs_id=obs.obs_id,
-                                 hi_threshold=obs.aeff.high_threshold,
-                                 lo_threshold=obs.aeff.low_threshold)
+                                 obs_id=obs.obs_id)
 
             # We now add a number of optional keywords for the DataStoreObservation
             # We first check that the entry exists in the table
@@ -228,6 +226,9 @@ class SpectrumExtraction(object):
                                        aeff=arf,
                                        off_vector=off_vec,
                                        edisp=rmf)
+
+            temp.hi_threshold=obs.aeff.high_threshold
+            temp.lo_threshold=obs.aeff.low_threshold
 
             spectrum_observations.append(temp)
 
