@@ -225,34 +225,40 @@ class PHACountsSpectrum(CountsSpectrum):
 
     def __init__(self, **kwargs):
         kwargs.setdefault('is_bkg', False)
-        default_quality = np.zeros(len(kwargs['data']), dtype=int)
-        kwargs.setdefault('quality', default_quality)
+        kwargs.setdefault('quality', None)
         super(CountsSpectrum, self).__init__(**kwargs)
-        
+        if self.quality is None:
+            self.quality = np.zeros(self.energy.nbins, dtype=int)
 
     @property
     def phafile(self):
+        """PHA file associated with the observations"""
         return 'pha_obs{}.fits'.format(self.obs_id)
 
     @property
     def arffile(self):
+        """ARF associated with the observations"""
         return self.phafile.replace('pha', 'arf')
 
     @property
     def rmffile(self):
+        """RMF associated with the observations"""
         return self.phafile.replace('pha', 'rmf')
 
     @property
     def bkgfile(self):
+        """Background PHA files associated with the observations"""
         return self.phafile.replace('pha', 'bkg')
 
     @property
     def bins_in_safe_range(self):
+        """Indices of bins within the energy thresholds"""
         idx = np.where(np.array(self.quality) == 0)[0]
         return idx
 
     @property
     def lo_threshold(self):
+        """Low energy threshold of the observation (lower bin edge)"""
         idx = self.bins_in_safe_range[0]
         return self.energy.data[idx]
 
@@ -263,23 +269,29 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def hi_threshold(self):
+        """High energy threshold of the observation (upper bin edge)"""
         idx = self.bins_in_safe_range[-1]
-        return self.energy.data[idx+1]
+        return self.energy.data[idx + 1]
 
     @hi_threshold.setter
     def hi_threshold(self, thres):
         idx = np.where(self.energy.data[:-1] > thres)[0]
         self.quality[idx] = 1
 
+    @property
+    def _backscal_array(self):
+        """Helper function to always return backscal as an array"""
+        if np.isscalar(self.backscal):
+            return np.ones(self.energy.nbins) * self.backscal
+        else:
+            return self.backscal
+
     def to_table(self):
         """Write"""
         table = super(PHACountsSpectrum, self).to_table()
 
-        if np.isscalar(self.backscal):
-            backscal = np.ones(self.energy.nbins) * self.backscal
-
         table['QUALITY'] = self.quality
-        table['BACKSCAL'] = backscal
+        table['BACKSCAL'] = self._backscal_array
 
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
@@ -333,10 +345,10 @@ class PHACountsSpectrum(CountsSpectrum):
         """Read"""
         counts_table = fits_table_to_table(hdulist[1])
         kwargs = dict(
-            data = counts_table['COUNTS'] * u.ct,
-            energy = ebounds_to_energy_axis(hdulist[2]),
-            backscal = counts_table['BACKSCAL'].data,
-            quality = counts_table['QUALITY'].data,
+            data=counts_table['COUNTS'] * u.ct,
+            energy=ebounds_to_energy_axis(hdulist[2]),
+            backscal=counts_table['BACKSCAL'].data,
+            quality=counts_table['QUALITY'].data,
             obs_id=hdulist[1].header['OBS_ID'],
             livetime=hdulist[1].header['EXPOSURE'] * u.s,
         )

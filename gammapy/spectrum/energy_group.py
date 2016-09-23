@@ -111,8 +111,9 @@ class SpectrumEnergyGroupMaker(object):
     def compute_range_safe(self):
         """Apply safe energy range to ``groups``.
         """
-        emin = self.obs.lo_threshold
-        emax = self.obs.hi_threshold
+        # TODO: This method should work with obs.on_vector.quality
+        emin = self.obs.lo_threshold * 0.9999
+        emax = self.obs.hi_threshold * 1.0001
         self.set_energy_range(emin=emin, emax=emax)
 
     def set_energy_range(self, emin=None, emax=None):
@@ -122,15 +123,12 @@ class SpectrumEnergyGroupMaker(object):
             self.groups.apply_energy_min(emin)
         if emax:
             self.groups.apply_energy_max(emax)
-
     # Methods to compute groupings
 
     def compute_groups_fixed(self, ebounds):
         """Compute grouping for a given fixed energy binning.
         """
         self.groups.apply_energy_min(energy=ebounds[0])
-        # print(self.groups)
-        # import IPython; IPython.embed()
         self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
 
@@ -421,6 +419,8 @@ class EnergyRange(object):
 
     This is just a little helper class.
     We could have used length-2 tuple or Quantity for this.
+    
+    TODO: Merge with `~gammapy.utils.energy.EnergyBounds`
     """
 
     def __init__(self, min, max):

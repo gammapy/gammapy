@@ -43,34 +43,20 @@ class SpectrumSimulation(object):
                                            model=self.model)
         return npred
 
-    def simulate_obs(self, obs_id=1, seed='random-seed', lo_threshold=None,
-                     hi_threshold=None):
+    def simulate_obs(self, seed='random-seed'):
         """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
         Parameters
         ----------
-        obs_id : int
-            Observation id for simulated obs
         seed : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             see :func:~`gammapy.utils.random.get_random_state`
-        lo_threshold : `~astropy.units.Quantity`, optional
-            Low energy threshold, default: 10% of the maximum effective area
-        hi_threshold : `~astropy.units.Quantity`, optional
-            High energy threshold, default: 50 TeV
         """
-        lo_threshold = lo_threshold or self.aeff.find_energy(
-            0.1 * self.aeff.max_area)
-        hi_threshold = hi_threshold or 50 * u.TeV
-
         rand = get_random_state(seed)
         on_counts = rand.poisson(self.npred.data)
 
         counts_kwargs = dict(energy=self.npred.energy,
                              livetime=self.livetime,
-                             obs_id=obs_id,
-                             creator=self.__class__.__name__,
-                             lo_threshold=lo_threshold,
-                             hi_threshold=hi_threshold)
+                             creator=self.__class__.__name__)
 
         on_vector = PHACountsSpectrum(data=on_counts,
                                       backscal=1,

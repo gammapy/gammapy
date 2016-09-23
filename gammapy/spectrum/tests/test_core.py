@@ -44,23 +44,37 @@ class TestPHACountsSpectrum:
 
     def setup(self):
         counts = [1, 2, 5, 6, 1, 7, 23]
-        binning = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
+        self.binning = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
+        quality = [1, 1, 1, 0, 0, 1, 1]
         self.spec = PHACountsSpectrum(data=counts,
-                                      energy=binning)
+                                      energy=self.binning,
+                                      quality=quality)
+        self.spec.backscal = 0.3
+        self.spec.obs_id = 42
+        self.spec.livetime = 3 * u.h
+
+    def test_basic(self):
+        assert 'PHACountsSpectrum' in str(self.spec)
+        assert_quantity_allclose(self.spec.lo_threshold,
+                                 self.binning[3])
+        assert_quantity_allclose(self.spec.hi_threshold,
+                                 self.binning[5])
 
     def test_thresholds(self):
-        print(self.spec.energy.data)
+        self.spec.quality = np.zeros(self.spec.energy.nbins, dtype=int)
         self.spec.lo_threshold = 1.5 * u.TeV
         self.spec.hi_threshold = 4.5 * u.TeV
         assert (self.spec.quality == [1, 0, 0, 0, 0, 1, 1]).all()
         assert_quantity_allclose(self.spec.lo_threshold, 1.3894955 * u.TeV)
         assert_quantity_allclose(self.spec.hi_threshold, 5.1794747 * u.TeV)
-        
+
     def test_io(self, tmpdir):
-        self.spec.backscal = 0.3
-        self.spec.obs_id = 42
-        self.spec.livetime = 3 * u.h
         filename = tmpdir / 'test2.fits'
         self.spec.write(filename)
         spec2 = PHACountsSpectrum.read(filename)
         assert_quantity_allclose(spec2.energy.data, self.spec.energy.data)
+
+    def test_backscal_array(self, tmpdir):
+        self.spec.backscal = np.arange(self.spec.energy.nbins)
+        table = self.spec.to_table()
+        assert table['BACKSCAL'][2] == 2
