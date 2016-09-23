@@ -84,7 +84,8 @@ class KernelBackgroundEstimator(object):
 
     See Also
     --------
-    RingBackgroundEstimator
+    gammapy.background.RingBackgroundEstimator,
+    gammapy.background.AdaptiveRingBackgroundEstimator
     """
 
     def __init__(self, images, source_kernel, background_kernel,
