@@ -45,6 +45,7 @@ for notebook in notebooks:
 
     if not notebook['test']:
         logging.info('Skipping notebook {} because test=false.'.format(notebook['name']))
+        continue
 
     if notebook['requires']:
         for package in notebook['requires'].split():
