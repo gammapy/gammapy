@@ -125,7 +125,7 @@ and are wonderful tools to learn and explore (both programming and the data),
 and finally to share results with your colleagues.
 
 So now is a good time to have a look at the
-`Gammapy Jupyter notebooks <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/Index.ipynb>`__.
+`Gammapy Jupyter notebooks <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/Index.ipynb>`__.
 Try executing the cells locally on your machine as you read through the text and code.
 
 

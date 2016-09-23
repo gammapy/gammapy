@@ -2,7 +2,6 @@
 
 PROJECT = gammapy
 CYTHON ?= cython
-PYTHON_VERSION=`python -c 'import sys; print("%i" % (sys.hexversion<0x03000000))'`
 
 help:
 	@echo ''
@@ -19,6 +18,7 @@ help:
 	@echo '     code-analysis    Run code analysis (flake8 and pylint)'
 	@echo '     flake8           Run code analysis (flake8)'
 	@echo '     pylint           Run code analysis (pylint)'
+	@echo '     test-notebooks   Run IPython notebook tests (via runipy)'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -78,16 +78,7 @@ pylint:
 doc-show:
 	open docs/_build/html/index.html
 
-test-notebooks: SHELL:=/bin/bash 
 test-notebooks:
-	python setup.py build
-	@echo "notebooks tested with python 2 and 3"
-	runipy ${GAMMAPY_EXTRA}/index.ipynb 
-
-	@if test ${PYTHON_VERSION} -eq 0 ; then\
-	    echo "notebooks tested only with python 3";\
-    	else \
-	    echo "notebooks tested only with python 2";\
-	    runipy ${GAMMAPY_EXTRA}/notebooks/hess_spectrum_analysis.ipynb;\
-	fi
-
+	which python
+	python setup.py install --user
+	python test_notebooks.py
