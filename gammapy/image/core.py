@@ -833,7 +833,7 @@ class SkyImage(object):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, ax=None, fig=None, **kwargs):
+    def plot(self, ax=None, fig=None, add_cbar=False, **kwargs):
         """
         Plot image on matplotlib WCS axes.
 
@@ -846,15 +846,19 @@ class SkyImage(object):
 
         Returns
         -------
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
-            WCS axis object
         fig : `~matplotlib.figure.Figure`, optional
             Figure
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
+            WCS axis object
+        cbar : ?
+            Colorbar object (if ``add_cbar=True`` was set)
         """
         import matplotlib.pyplot as plt
 
-        if fig is None and ax is None:
+        if fig is None:
             fig = plt.gcf()
+
+        if ax is None:
             ax = fig.add_subplot(1, 1, 1, projection=self.wcs)
 
         kwargs['origin'] = kwargs.get('origin', 'lower')
@@ -869,7 +873,12 @@ class SkyImage(object):
             quantity = 'Unknown'
         else:
             quantity = Unit(unit).physical_type
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
+
+        if add_cbar:
+            cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
+        else:
+            cbar = None
+
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -879,7 +888,7 @@ class SkyImage(object):
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
 
-        return fig, ax
+        return fig, ax, cbar
 
     def plot_norm(self, stretch='linear', power=1.0, asinh_a=0.1, min_cut=None,
                   max_cut=None, min_percent=None, max_percent=None,
