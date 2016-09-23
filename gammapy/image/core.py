@@ -1017,7 +1017,6 @@ class SkyImage(object):
 
         return Angle(scales, unit='deg')
 
-
     def region_mask(self, region):
         """Create a boolean mask for a region.
 
@@ -1107,3 +1106,36 @@ class SkyImage(object):
         data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(data=data, wcs=wcs)
+
+    def smooth(self, kernel='gauss', width=3):
+        """Smooth the image (works on and returns a copy).
+
+        TODO: this is very preliminary and incomplete.
+        No tests yet, no control of boundary handling, ...
+        See https://github.com/gammapy/gammapy/issues/694
+
+        Parameters
+        ----------
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        width : float
+            Width in pixels
+
+        Returns
+        -------
+        image : `SkyImage`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        image = self.copy()
+
+        if kernel == 'gauss':
+            from scipy.ndimage import gaussian_filter
+            image.data = gaussian_filter(self.data, width)
+        elif kernel == 'disk':
+            raise NotImplementedError
+        elif kernel == 'box':
+            raise NotImplementedError
+        else:
+            raise ValueError('Invalid option kernel = {}'.format(kernel))
+
+        return image
