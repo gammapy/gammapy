@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+import numpy as np
 import astropy.units as u
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
-from .. import CountsSpectrum
+from .. import CountsSpectrum, PHACountsSpectrum
 
 
 @requires_dependency('scipy')
-@requires_data('gammapy-extra')
 class TestCountsSpectrum:
 
     def setup(self):
@@ -37,3 +37,30 @@ class TestCountsSpectrum:
         self.spec.write(filename)
         spec2 = CountsSpectrum.read(filename)
         assert_quantity_allclose(spec2.energy.data, self.bins)
+
+
+@requires_dependency('scipy')
+class TestPHACountsSpectrum:
+
+    def setup(self):
+        counts = [1, 2, 5, 6, 1, 7, 23]
+        binning = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
+        self.spec = PHACountsSpectrum(data=counts,
+                                      energy=binning)
+
+    def test_thresholds(self):
+        print(self.spec.energy.data)
+        self.spec.lo_threshold = 1.5 * u.TeV
+        self.spec.hi_threshold = 4.5 * u.TeV
+        assert (self.spec.quality == [1, 0, 0, 0, 0, 1, 1]).all()
+        assert_quantity_allclose(self.spec.lo_threshold, 1.3894955 * u.TeV)
+        assert_quantity_allclose(self.spec.hi_threshold, 5.1794747 * u.TeV)
+        
+    def test_io(self, tmpdir):
+        self.spec.backscal = 0.3
+        self.spec.obs_id = 42
+        self.spec.livetime = 3 * u.h
+        filename = tmpdir / 'test2.fits'
+        self.spec.write(filename)
+        spec2 = PHACountsSpectrum.read(filename)
+        assert_quantity_allclose(spec2.energy.data, self.spec.energy.data)
