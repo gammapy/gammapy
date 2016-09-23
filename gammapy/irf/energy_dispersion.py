@@ -694,12 +694,87 @@ class EnergyDispersion2D(object):
             center = e_reco.log_centers
             migra = center / e_true
 
+        #Lintegral sur edisp doit etre egale a un si on intgre sur dlog(Ereco/Etrue) donc faut prendre bin en migra en log
+        #Par contre l interpolateur dans gammapy il est en migra pas en log(migra)
+        #migra_bin=np.log10(self.migra_hi) - np.log10(self.migra_lo)
+        if(self.migra_lo[0]==0):
+            migra_bin=np.log(self.migra_hi[1:]) - np.log(self.migra_lo[1:])
+            log_migra_bin=self.migra_hi[1:] - self.migra_lo[1:]
+            if(migra_bin[0]==migra_bin[1]):
+                migra_mean=1/2.*(self.migra_hi[1:]+self.migra_lo[1:])
+            else:
+                migra_mean=np.sqrt(self.migra_hi[1:]*self.migra_lo[1:])
+        else:
+            migra_bin=np.log(self.migra_hi) - np.log(self.migra_lo)
+            log_migra_bin=self.migra_hi - self.migra_lo
+            if(migra_bin[0]==migra_bin[1]):
+                migra_mean=1/2.*(self.migra_hi+self.migra_lo)
+            else:
+                migra_mean=np.sqrt(self.migra_hi*self.migra_lo)
+        val2 = self.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
+        norm=np.sum(val2*migra_bin)
+        #if(e_true>Energy(4.45,"TeV")):
+        #    import IPython; IPython.embed()
+
+        migra_e_reco=e_reco/e_true
+
+        #import IPython; IPython.embed()
+        #import IPython; IPython.embed()
+        integral=np.zeros(len(e_reco)-1)
+        integral2=np.zeros(len(e_reco)-1)
+        if norm!=0:
+            for i,migra_int in enumerate(migra_e_reco[:-1]):
+                print("E_reco_min: "+str(e_reco[i])+", E_reco_max: "+str(e_reco[i+1]))
+                #if((e_true>e_reco[i]*np.exp(-1.5)) & (e_true<e_reco[i+1]*np.exp(1.5))):
+                if((len(np.where(migra_mean>migra_e_reco[i])[0])!=0) &  (len(np.where(migra_mean<migra_e_reco[i+1])[0])!=0)):
+                    i_min=np.where(migra_mean>migra_e_reco[i])[0][0]
+                    i_max=np.where(migra_mean<migra_e_reco[i+1])[0][-1]
+                    #print("i_min: ",i_min,"imax: ",i_max)
+                    index=np.arange(i_min,i_max+1,1)
+                    migra_int=np.linspace(migra_mean[i_min],migra_mean[i_max],100)
+                    #migra_bin_int=np.log10(migra_int[1:])-np.log10(migra_int[0:-1])
+                    migra_bin_int=np.log(migra_int[1:])-np.log(migra_int[0:-1])
+                    migra_mean_int=1./2.*(migra_int[1:]+migra_int[0:-1])
+                    val3 = self.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
+                    val4 = self.evaluate(offset=offset, e_true=e_true, migra=migra_mean_int)
+                    integral[i]=np.sum(val3*migra_bin[index])/norm
+                    integral2[i]=np.sum(val4*migra_bin_int)/norm
+                    print("integral: "+str(integral[i]))
+                    print("integral2: "+str(integral2[i]))
+
+        """
+        if norm!=0:
+            for i_reco,erec in enumerate(e_reco[:-1]):
+                if((e_true>e_reco[i_reco]*np.exp(-1.5)) & (e_true<e_reco[i_reco+1]*np.exp(-1.5))):
+                    e_tot=EnergyBounds(Energy(np.logspace(np.log10(e_reco[i_reco].value),np.log10(e_reco[i_reco+1].value),100),e_reco.unit))
+                    migra_center=e_tot.log_centers/e_true
+                    migra_bin=e_tot.bands/e_true
+                    val2 = self.evaluate(offset=offset, e_true=e_true, migra=migra_center)
+                    integral[i_reco]=np.sum(val2*migra_bin)/norm
+        """
+        """
+        if norm!=0:
+            for i_reco,erec in enumerate(e_reco[:-1]):
+                e_tot=EnergyBounds(Energy(np.logspace(np.log10(e_reco[i_reco].value),np.log10(e_reco[i_reco+1].value),100),e_reco.unit))
+                migra_center=e_tot.log_centers/e_true
+                migra_bin=e_tot.bands/e_true
+                val2 = self.evaluate(offset=offset, e_true=e_true, migra=migra_center)
+                integral[i_reco]=np.sum(val2*migra_bin)/norm
+        """
+            #if(e_true>Energy(10,"TeV")):
+            #    import IPython; IPython.embed()
+        #if(e_true>Energy(1,"TeV")):
+        #    import IPython; IPython.embed()
+
         val = self.evaluate(offset=offset, e_true=e_true, migra=migra)
 
         # Multiply by migra bin width (~Integration)
         rv = val * (e_reco.bands / e_true)
-
-        return rv.value
+        #if(e_true>Energy(1,"TeV")):
+        #    import IPython; IPython.embed()
+        #return rv.value
+        #import IPython; IPython.embed()
+        return integral
 
     def plot_migration(self, ax=None, offset=None, e_true=None,
                        migra=None, **kwargs):
