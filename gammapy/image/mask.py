@@ -133,30 +133,6 @@ class SkyMask(SkyImage):
         data = binary_erosion(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
-    def plot(self, ax=None, fig=None, **kwargs):
-        """Plot exclusion mask
-
-        Parameters
-        ----------
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
-        fig : `~matplotlib.figure.Figure`, optional
-            Figure
-
-        Returns
-        -------
-        fig : `~matplotlib.figure.Figure`, optional
-            Figure
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
-            WCS axis object
-        """
-        from matplotlib import colors
-
-        kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
-
-        fig, ax = super(SkyMask, self).plot(ax, fig, **kwargs)
-        return fig, ax
-
     @lazyproperty
     def distance_image(self):
         """Distance to nearest exclusion region.

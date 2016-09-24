@@ -180,11 +180,11 @@ class SpectrumFitResult(object):
                 raise ValueError(current_unit)
 
             t[parname] = Column(
-                data=np.atleast_1d(val*factor),
+                data=np.atleast_1d(val * factor),
                 unit=col_unit,
                 **kwargs)
             t['{}_err'.format(parname)] = Column(
-                data=np.atleast_1d(err*factor),
+                data=np.atleast_1d(err * factor),
                 unit=col_unit,
                 **kwargs)
 
@@ -304,7 +304,6 @@ class SpectrumFitResult(object):
         data[idx] = 0
         return CountsSpectrum(data=data, energy=energy)
 
-
     def plot(self, mode='wstat'):
         """Standard debug plot.
 
@@ -327,7 +326,8 @@ class SpectrumFitResult(object):
                                         fmt='none',
                                         energy_unit='TeV')
 
-        mu_on = self.expected_source_counts + self.obs.background_vector
+        mu_on = self.expected_source_counts.copy()
+        mu_on.data = self.expected_source_counts.data + self.obs.background_vector.data
         mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
 
         self.obs.on_vector.plot(ax=ax0,
@@ -338,8 +338,9 @@ class SpectrumFitResult(object):
 
         ax0.legend(numpoints=1)
         ax0.set_title('')
-    
-        resspec = mu_on - self.obs.on_vector
+
+        resspec = mu_on.copy()
+        resspec.data = mu_on.data - self.obs.on_vector.data
         resspec.plot(ax=ax1, ecolor='black', fmt='none')
         xx = ax1.get_xlim()
         yy = [0, 0]
@@ -399,7 +400,6 @@ class SpectrumResult(object):
             energy_unit = pars.reference.unit
             flux_unit = pars.amplitude.unit
 
-
         x = self.points['ENERGY'].quantity.to(energy_unit)
         y = self.points['DIFF_FLUX'].quantity.to(flux_unit)
         y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
@@ -412,7 +412,6 @@ class SpectrumResult(object):
         residuals = (points - func) / func
 
         return residuals
-
 
     def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, fit_kwargs=dict(),
@@ -467,19 +466,18 @@ class SpectrumResult(object):
         self.fit.model.plot(energy_range=energy_range,
                             ax=ax0,
                             **fit_kwargs)
-       
+
         energy = EnergyBounds.equal_log_spacing(energy_range[0],
                                                 energy_range[1],
                                                 100)
-        self.fit.butterfly(energy=energy).plot( ax=ax0, **butterfly_kwargs)
+        self.fit.butterfly(energy=energy).plot(ax=ax0, **butterfly_kwargs)
         self.points.plot(ax=ax0,
                          **point_kwargs)
         point_kwargs.pop('flux_unit')
         point_kwargs.pop('energy_power')
         ax0.set_title('')
         self._plot_residuals(ax=ax1,
-                            **point_kwargs)
-
+                             **point_kwargs)
 
         plt.xlim(energy_range[0].to(energy_unit).value * 0.9,
                  energy_range[1].to(energy_unit).value * 1.1)

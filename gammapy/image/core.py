@@ -833,7 +833,7 @@ class SkyImage(object):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, ax=None, fig=None, **kwargs):
+    def plot(self, ax=None, fig=None, add_cbar=False, **kwargs):
         """
         Plot image on matplotlib WCS axes.
 
@@ -846,15 +846,19 @@ class SkyImage(object):
 
         Returns
         -------
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
-            WCS axis object
         fig : `~matplotlib.figure.Figure`, optional
             Figure
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
+            WCS axis object
+        cbar : ?
+            Colorbar object (if ``add_cbar=True`` was set)
         """
         import matplotlib.pyplot as plt
 
-        if fig is None and ax is None:
+        if fig is None:
             fig = plt.gcf()
+
+        if ax is None:
             ax = fig.add_subplot(1, 1, 1, projection=self.wcs)
 
         kwargs['origin'] = kwargs.get('origin', 'lower')
@@ -869,7 +873,12 @@ class SkyImage(object):
             quantity = 'Unknown'
         else:
             quantity = Unit(unit).physical_type
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
+
+        if add_cbar:
+            cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
+        else:
+            cbar = None
+
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -879,7 +888,53 @@ class SkyImage(object):
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
 
-        return fig, ax
+        return fig, ax, cbar
+
+    def plot_norm(self, stretch='linear', power=1.0, asinh_a=0.1, min_cut=None,
+                  max_cut=None, min_percent=None, max_percent=None,
+                  percent=None, clip=True):
+        """Create a matplotlib norm object for plotting.
+
+        This is a copy of this function that will be available in Astropy 1.3:
+        `astropy.visualization.mpl_normalize.simple_norm`
+
+        Seet the parameter description there!
+
+        Examples
+        --------
+        >>> image = SkyImage()
+        >>> norm = image.plot_norm(stretch='sqrt', max_percent=99)
+        >>> image.plot(norm=norm)
+        """
+        import astropy.visualization as v
+        from astropy.visualization.mpl_normalize import ImageNormalize
+
+        if percent is not None:
+            interval = v.PercentileInterval(percent)
+        elif min_percent is not None or max_percent is not None:
+            interval = v.AsymmetricPercentileInterval(min_percent or 0.,
+                                                      max_percent or 100.)
+        elif min_cut is not None or max_cut is not None:
+            interval = v.ManualInterval(min_cut, max_cut)
+        else:
+            interval = v.MinMaxInterval()
+
+        if stretch == 'linear':
+            stretch = v.LinearStretch()
+        elif stretch == 'sqrt':
+            stretch = v.SqrtStretch()
+        elif stretch == 'power':
+            stretch = v.PowerStretch(power)
+        elif stretch == 'log':
+            stretch = v.LogStretch()
+        elif stretch == 'asinh':
+            stretch = v.AsinhStretch(asinh_a)
+        else:
+            raise ValueError('Unknown stretch: {0}.'.format(stretch))
+
+        vmin, vmax = interval.get_limits(self.data)
+
+        return ImageNormalize(vmin=vmin, vmax=vmax, stretch=stretch, clip=clip)
 
     def info(self):
         """
@@ -1017,7 +1072,6 @@ class SkyImage(object):
 
         return Angle(scales, unit='deg')
 
-
     def region_mask(self, region):
         """Create a boolean mask for a region.
 
@@ -1107,3 +1161,36 @@ class SkyImage(object):
         data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(data=data, wcs=wcs)
+
+    def smooth(self, kernel='gauss', width=3):
+        """Smooth the image (works on and returns a copy).
+
+        TODO: this is very preliminary and incomplete.
+        No tests yet, no control of boundary handling, ...
+        See https://github.com/gammapy/gammapy/issues/694
+
+        Parameters
+        ----------
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        width : float
+            Width in pixels
+
+        Returns
+        -------
+        image : `SkyImage`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        image = self.copy()
+
+        if kernel == 'gauss':
+            from scipy.ndimage import gaussian_filter
+            image.data = gaussian_filter(self.data, width)
+        elif kernel == 'disk':
+            raise NotImplementedError
+        elif kernel == 'box':
+            raise NotImplementedError
+        else:
+            raise ValueError('Invalid option kernel = {}'.format(kernel))
+
+        return image

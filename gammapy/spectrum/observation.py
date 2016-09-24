@@ -60,17 +60,12 @@ class SpectrumObservation(object):
 
     Examples
     --------
-    .. plot::
-        :include-source:
 
+    ::
         from gammapy.spectrum import SpectrumObservation
-        from gammapy.datasets import gammapy_extra
-        import matplotlib.pyplot as plt
-
-        phafile = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
-        obs = SpectrumObservation.read(phafile)
-        obs.peek()
-        plt.show()
+        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        obs = SpectrumObservation.read(filename)
+        print(obs)
     """
 
     def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
