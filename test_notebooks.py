@@ -17,7 +17,6 @@ status_codes = dict(
     error_no_gammapy_extra=2,
 )
 
-
 if 'GAMMAPY_EXTRA' not in os.environ:
     logging.info('GAMMAPY_EXTRA environment variable not set.')
     logging.info('Running notebook tests requires gammapy-extra.')
@@ -28,11 +27,29 @@ status_code = status_codes['success']
 
 
 def get_notebooks():
+    """Read `notebooks.yaml` info."""
     filename = os.environ['GAMMAPY_EXTRA'] + '/notebooks/notebooks.yaml'
     logging.info('')
     with open(filename) as fh:
         notebooks = yaml.safe_load(fh)
     return notebooks
+
+
+def requirement_missing(notebook):
+    """Check if one of the requirements is missing."""
+    if notebook['requires'] is None:
+        return False
+
+    for package in notebook['requires'].split():
+        try:
+            __import__(package)
+        except ImportError:
+            logging.warning('Skipping notebook {} because dependency {} is missing.'
+                            ''.format(notebook['name'], package))
+            return True
+
+    return False
+
 
 notebooks = get_notebooks()
 pprint(notebooks)
@@ -47,13 +64,8 @@ for notebook in notebooks:
         logging.info('Skipping notebook {} because test=false.'.format(notebook['name']))
         continue
 
-    if notebook['requires']:
-        for package in notebook['requires'].split():
-            try:
-                __import__(package)
-            except ImportError:
-                logging.warning('Skipping notebook {} because dependency {} is missing.'
-                                ''.format(notebook['name'], package))
+    if requirement_missing(notebook):
+        continue
 
     # For testing how `subprocess.Popen` works:
     # cmd = 'pwd && echo "hi" && asdf'
