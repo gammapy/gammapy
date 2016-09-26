@@ -281,9 +281,8 @@ class SpectrumObservation(object):
     def peek(self, figsize=(15, 15)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
-        plt.style.use('ggplot')
 
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
 
         ax1.set_title('Counts')
         energy_unit = 'TeV'
