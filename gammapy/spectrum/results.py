@@ -534,7 +534,6 @@ def get_plot_axis(figsize=(15, 10)):
     """
     from matplotlib import gridspec
     import matplotlib.pyplot as plt
-    plt.style.use('ggplot')
     plt.figure(figsize=figsize)
 
     gs = gridspec.GridSpec(5, 1)
