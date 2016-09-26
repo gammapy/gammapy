@@ -52,3 +52,12 @@ def pytest_configure(config):
 
     var = os.environ.get('GAMMAPY_EXTRA', 'not set')
     print('GAMMAPY_EXTRA = {}'.format(var))
+
+    try:
+        # Switch to non-interactive plotting backend to avoid GUI windows
+        # popping up while running the tests.
+        import matplotlib
+        matplotlib.use('agg')
+        print('Setting matplotlib backend to "agg" for the tests.')
+    except ImportError:
+        pass
