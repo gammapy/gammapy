@@ -50,9 +50,7 @@ def test_cash():
     assert_allclose(actual, desired)
 
 
-# TODO: fix this test
-# https://github.com/gammapy/gammapy/issues/724#issuecomment-249362709
-@pytest.mark.xfail
+# TODO: Make this test independent of Sherpa
 @requires_dependency('sherpa')
 def test_wstat():
     import sherpa.stats as ss
