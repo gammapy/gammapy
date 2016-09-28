@@ -438,11 +438,11 @@ class SpectrumObservation(object):
                                             o.on_vector.quality)
 
             # Alpha
-            backscal_on_data = o.on_vector.backscal.copy()
+            backscal_on_data = o.on_vector._backscal_array.copy()
             backscal_on_data[np.nonzero(o.on_vector.quality)] = 0
             backscal_on += backscal_on_data * o.off_vector.data
 
-            backscal_off_data = o.off_vector.backscal.copy()
+            backscal_off_data = o.off_vector._backscal_array.copy()
             backscal_off_data[np.nonzero(o.off_vector.quality)] = 0
             backscal_off += backscal_off_data * o.off_vector.data
 
