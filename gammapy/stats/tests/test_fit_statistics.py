@@ -50,7 +50,6 @@ def test_cash():
     assert_allclose(actual, desired)
 
 
-# TODO: Make this test independent of Sherpa
 @requires_dependency('sherpa')
 def test_wstat():
     import sherpa.stats as ss
@@ -77,18 +76,17 @@ def test_wstat():
                        exposure_time=[1, 1],
                        backscale_ratio=1. / alpha[test_bin],
                        data_size=1)
-
     desired_testbin, fvec = sherpa_stat.calc_stat(data[test_bin],
                                                   model[test_bin],
                                                   staterror=staterror[test_bin],
-                                                  bkg=bkg_testbin)
+                                                  extra_args=bkg_testbin)
 
     actual_testbin = statsvec[test_bin]
     #    assert_allclose(actual_testbin, desired_testbin)
 
     # Now check total stat for all bins
     desired, fvec = sherpa_stat.calc_stat(data, model, staterror=staterror,
-                                          bkg=bkg)
+                                          extra_args=bkg)
 
     actual = np.sum(statsvec)
     print(fvec)
