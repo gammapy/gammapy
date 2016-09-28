@@ -519,22 +519,23 @@ class FluxPointEstimator(object):
         #         sherpa_model.gamma.freeze()
         #         sherpa_model.ref = model.parameters.reference.to('keV')
         #         sherpa_model.ampl = 1e-20
-        return PowerLaw(
-            index=Quantity(2, ''),
-            amplitude=Quantity(1, 'm-2 s-1 TeV-1'),
-            reference=Quantity(1, 'TeV'),
-        )
+        #return PowerLaw(
+        #    index=Quantity(2, ''),
+        #    amplitude=Quantity(1, 'm-2 s-1 TeV-1'),
+        #    reference=Quantity(1, 'TeV'),
+        #)
+        return global_model
 
     def fit_point(self, model, energy_group, energy_ref):
         from gammapy.spectrum import SpectrumFit
 
         sherpa_model = model.to_sherpa()
         sherpa_model.gamma.freeze()
-
         fit = SpectrumFit(self.obs, sherpa_model)
 
         erange = energy_group.energy_range
-        fit.fit_range = erange.min, erange.max
+        # TODO: Notice channels contained in energy_group
+        fit.fit_range = erange.min, 0.9999 * erange.max
 
         log.debug(
             'Calling Sherpa fit for flux point '

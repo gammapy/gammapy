@@ -30,6 +30,11 @@ class SpectrumStats(ObservationStats):
         self.energy_max = kwargs.pop('energy_max', None)
         super(SpectrumStats, self).__init__(**kwargs)
 
+    def __str__(self):
+        ss = super(SpectrumStats, self).__str__()
+        ss += 'energy range: {:.2f} - {:.2f}'.format(self.energy_min, self.energy_max)
+        return ss
+
     def to_dict(self):
         """TODO: document"""
         data = super(SpectrumStats, self).to_dict()
@@ -138,13 +143,20 @@ class SpectrumObservation(object):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
         stats_list = [self.stats(ii) for ii in range(self.nbins)]
-        return SpectrumStats.stack(stats_list)
+        stacked_stats = SpectrumStats.stack(stats_list)
+        return stacked_stats
 
     @property
     def total_stats_safe_range(self):
         """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
         """
-        raise NotImplementedError()
+        safe_bins = self.on_vector.bins_in_safe_range
+        stats_list = [self.stats(ii) for ii in safe_bins]
+        stacked_stats = SpectrumStats.stack(stats_list)
+        stacked_stats.livetime = self.livetime
+        stacked_stats.energy_min = self.lo_threshold
+        stacked_stats.energy_max = self.hi_threshold
+        return stacked_stats
 
     def stats(self, idx):
         """Compute stats for one energy bin.
@@ -310,7 +322,7 @@ class SpectrumObservation(object):
 
         ax3.axis('off')
         if self.off_vector is not None:
-            ax3.text(0, 0.3, '{}'.format(self.total_stats), fontsize=18)
+            ax3.text(0, 0.3, '{}'.format(self.total_stats_safe_range), fontsize=18)
 
         ax4.set_title('Energy Dispersion')
         if self.edisp is not None:
@@ -346,7 +358,7 @@ class SpectrumObservation(object):
 
     def __str__(self):
         """String representation"""
-        ss = self.total_stats.__str__()
+        ss = self.total_stats_safe_range.__str__()
         return ss
 
     def _check_binning(self, **kwargs):
