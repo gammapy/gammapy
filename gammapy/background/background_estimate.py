@@ -15,8 +15,7 @@ class BackgroundEstimate(object):
     This container holds the result from a region based background estimation
     for one observation. Currently, it is filled by the functions
     :func:`~gammapy.background.ring_background_estimate` and
-    :func:`~gammapy.background.reflected_regions_background_estimate`. At some
-    points this should be replaced by a more elaborate analysis class.
+    the `~gammapy.background.ReflectedRegionsBackgroundEstimator`. 
 
     Parameters
     ----------
