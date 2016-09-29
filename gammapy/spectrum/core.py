@@ -375,13 +375,22 @@ class PHACountsSpectrum(CountsSpectrum):
 
         table = self.to_table()
 
+        # Workaround to avoid https://github.com/sherpa/sherpa/issues/248
+        # TODO: Remove
+        if np.isscalar(self.backscal):
+            backscal = self.backscal
+        else:
+            backscal = self.backscal.copy()
+            if (backscal.mean() == backscal).all():
+                backscal = backscal[0]
+
         kwargs = dict(
             name=name,
             channel=(table['CHANNEL'].data + 1).astype(SherpaFloat),
             counts=table['COUNTS'].data.astype(SherpaFloat),
             quality=table['QUALITY'].data,
             exposure=self.livetime.to('s').value,
-            backscal=self.backscal,
+            backscal=backscal,
             areascal=1.,
             syserror=None,
             staterror=None,
