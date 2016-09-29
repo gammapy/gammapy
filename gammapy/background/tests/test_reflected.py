@@ -42,6 +42,8 @@ def test_find_reflected_regions(mask, on_region):
     assert_quantity_allclose(regions[3].center.icrs.ra, Angle('81.752 deg'), rtol=1e-2)
 
 
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
 class TestReflectedRegionBackgroundEstimator:
     def setup(self):
         temp = ReflectedRegionsBackgroundEstimator(on_region = on_region(),

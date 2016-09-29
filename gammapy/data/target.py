@@ -72,11 +72,6 @@ class Target(object):
         ss += "Observations: {}\n".format(len(self.obs_id))
         return ss
 
-    @property
-    def summary(self):
-        """`~gammapy.data.TargetSummary`"""
-        return TargetSummary(self)
-
     @classmethod
     def from_config(cls, config):
         """Initialize target from config

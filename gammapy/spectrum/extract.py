@@ -118,6 +118,7 @@ class SpectrumExtraction(object):
         method creates one given a dict of parameters. 
 
         TODO: Link to high-level docs page.
+        TODO: Refactor
 
         Parameters
         ----------
@@ -126,12 +127,14 @@ class SpectrumExtraction(object):
         """
         method = self.background.pop('method')
         if method == 'reflected':
-            kwargs = self.background.copy()
-            kwargs.pop('n_min', None)
+            config = self.background.copy()
+            config.pop('n_min', None)
+            exclusion = config.pop('exclusion', None)
             refl = ReflectedRegionsBackgroundEstimator(
                 on_region=self.target.on_region,
                 obs_list=self.obs,
-                **kwargs) 
+                exclusion=exclusion,
+                config=config) 
             refl.run()
             self.background = refl.result
         else:
