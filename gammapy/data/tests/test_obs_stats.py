@@ -7,7 +7,7 @@ import astropy.units as u
 from regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats, Target
 from ...utils.testing import requires_data, requires_dependency
-from ...background import reflected_regions_background_estimate as refl
+from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyMask
 
 
@@ -42,7 +42,9 @@ def mask():
 @pytest.fixture(scope='session')
 def stats(target, mask):
     obs = get_obs(23523)
-    bg = refl(target.on_region, obs.pointing_radec, mask, obs.events)
+    bg = ReflectedRegionsBackgroundEstimator.process(on_region = target.on_region,
+                                                     exclusion = mask,
+                                                     obs = obs)
     return ObservationStats.from_target(obs, target, bg)
 
 
@@ -51,7 +53,9 @@ def stats_stacked(target, mask):
     obs_list = get_obs_list()
     obs_stats = list()
     for obs in obs_list:
-        bg = refl(target.on_region, obs.pointing_radec, mask, obs.events)
+        bg = ReflectedRegionsBackgroundEstimator.process(on_region = target.on_region,
+                                                         exclusion = mask,
+                                                         obs = obs)
         obs_stats.append(ObservationStats.from_target(obs, target, bg))
 
     return ObservationStats.stack(obs_stats)

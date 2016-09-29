@@ -9,7 +9,6 @@ from ..stats import Stats
 
 __all__ = [
     'Target',
-    'TargetSummary',
 ]
 
 

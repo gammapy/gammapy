@@ -8,7 +8,7 @@ from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats, ObservationStatsList, ObservationList
 from ...data import Target
 from ...utils.testing import requires_data, requires_dependency
-from ...background import reflected_regions_background_estimate as refl
+from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyMask
 
 
@@ -58,7 +58,9 @@ def obs_summary():
     obs_stats = ObservationStatsList()
 
     for index, run in enumerate(obs_list):
-        bkg = refl(on_region, run.pointing_radec, mask, run.events)
+        bkg = ReflectedRegionsBackgroundEstimator.process(on_region=on_region,
+                                                          obs=run,
+                                                          exclusion=mask)
 
         obs_stats.append(ObservationStats.from_target(run, target, bkg))
 
