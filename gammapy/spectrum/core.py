@@ -263,6 +263,13 @@ class PHACountsSpectrum(CountsSpectrum):
         return idx
 
     @property
+    def counts_in_safe_range(self):
+        """Counts with bins outside safe range set to 0"""
+        data = self.data.copy() 
+        masked_data = data[np.nonzero(self.quality)] = 0
+        return masked_data
+
+    @property
     def lo_threshold(self):
         """Low energy threshold of the observation (lower bin edge)"""
         idx = self.bins_in_safe_range[0]
