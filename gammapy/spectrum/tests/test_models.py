@@ -1,10 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
+import numpy as np
+from gammapy.utils.energy import EnergyBounds
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
-                      ExponentialCutoffPowerLaw3FGL, LogParabola)
+                      ExponentialCutoffPowerLaw3FGL, LogParabola, TableModel)
 from ...utils.testing import requires_dependency
+
+def table_model():
+    energy_edges = EnergyBounds.equal_log_spacing(0.1 * u.TeV, 100 * u.TeV, 1000)
+    energy = energy_edges.log_centers
+
+    index = 2.3 * u.Unit('')
+    amplitude = 4 / u.cm ** 2 / u.s / u.TeV
+    reference = 1 * u.TeV
+
+    flux = np.zeros(energy.size)
+    flux = PowerLaw.evaluate(energy, index, amplitude, reference)
+
+    return TableModel(energy, flux, 1 * u.Unit(''))
 
 TEST_MODELS = [
     dict(
@@ -73,6 +88,14 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1')
     ),
+    dict(
+        name='table_model',
+        model=table_model(),
+        # Values took from power law expectation
+        val_at_2TeV=u.Quantity(4 * 2. ** (-2.3), 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
+    ),
 ]
 
 
@@ -113,3 +136,4 @@ def test_to_sherpa(spectrum):
     # test plot
     energy_range = [1, 10] * u.TeV
     model.plot(energy_range=energy_range)
+
