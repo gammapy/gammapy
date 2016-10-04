@@ -193,7 +193,7 @@ class EnergyDispersion(NDDataArray):
     def to_table(self):
         """Convert to `~astropy.table.Table`.
 
-        The ouput table is in the OGIP RMF format.
+        The output table is in the OGIP RMF format.
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
         """
         table = Table()
@@ -328,12 +328,12 @@ class EnergyDispersion(NDDataArray):
 
         x stands for true energy and y for reconstructed energy
         """
-        x = self.e_reco.data[[0, -1]].value
-        y = self.e_true.data[[0, -1]].value
+        x = self.e_true.data[[0, -1]].value
+        y = self.e_reco.data[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, show_energy=None, **kwargs):
-        """Plot PDF matrix
+        """Plot PDF matrix.
         
         Parameters
         ----------
@@ -341,6 +341,11 @@ class EnergyDispersion(NDDataArray):
             Axis    
         show_energy : `~astropy.units.Quantity`, optional
             Show energy, e.g. threshold, as vertical line
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
         """
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
@@ -353,18 +358,17 @@ class EnergyDispersion(NDDataArray):
         ax = plt.gca() if ax is None else ax
 
         image = self.pdf_matrix.transpose()
-        cax = ax.imshow(image, extent=self._extent(), **kwargs)
+        ax.imshow(image, extent=self._extent(), **kwargs)
         if show_energy is not None:
             ener_val = Quantity(show_energy).to(self.reco_energy.unit).value
-            ax.hlines(ener_val, 0, 200200,
-                      linestyles='dashed')
-        ax.set_ylabel('True energy (TeV)')
-        ax.set_xlabel('Reco energy (TeV)')
+            ax.hlines(ener_val, 0, 200200, linestyles='dashed')
+
+        ax.set_xlabel('True energy (TeV)')
+        ax.set_ylabel('Reco energy (TeV)')
+
         ax.set_xscale('log')
         ax.set_yscale('log')
 
-        fig = ax.figure
-        cbar = fig.colorbar(cax)
         return ax
 
     def plot_bias(self, ax=None, **kwargs):
