@@ -23,6 +23,7 @@ __all__ = [
     'ExponentialCutoffPowerLaw',
     'ExponentialCutoffPowerLaw3FGL',
     'LogParabola',
+    'TableModel',
 ]
 
 
@@ -137,14 +138,16 @@ class SpectralModel(object):
         ax = plt.gca() if ax is None else ax
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
+        energy = EnergyBounds.equal_log_spacing(
+            emin, emax, n_points, energy_unit)
 
         # evaluate model
         flux = self(energy).to(flux_unit)
 
         eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
 
-        y = (flux * np.power(energy, energy_power)).to(flux.unit * eunit ** energy_power)
+        y = (flux * np.power(energy, energy_power)
+             ).to(flux.unit * eunit ** energy_power)
 
         ax.plot(energy.value, y.value, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy.unit))
@@ -316,7 +319,8 @@ class PowerLaw2(SpectralModel):
         """
         pars = self.parameters
         top = np.power(emax, -pars.index + 1) - np.power(emin, -pars.index + 1)
-        bottom = np.power(pars.emax, -pars.index + 1) - np.power(pars.emin, -pars.index + 1)
+        bottom = np.power(pars.emax, -pars.index + 1) - \
+            np.power(pars.emin, -pars.index + 1)
 
         return pars.amplitude * top / bottom
 
@@ -453,3 +457,51 @@ class LogParabola(SpectralModel):
             xx = energy / reference
             exponent = -alpha - beta * log(xx)
         return amplitude * np.power(xx, exponent)
+
+
+class TableModel(SpectralModel):
+    """A model generated from a table of energy and value arrays.
+
+    The units returned will be the units of the values array provided at
+    initialization. The model will return values interpolated in
+    log-space, returning 0 for energies outside of the limits of the provided
+    energy array.
+
+    Class implementation follows closely what has been done in 
+    `naima.models.TableModel`
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity` array
+        Array of energies at which the model values are given
+    values : array
+        Array with the values of the model at energies ``energy``.
+    amplitude : float
+        Model amplitude that is multiplied to the supplied arrays. Defaults to 1.
+    """
+
+    def __init__(self, energy, values, amplitude=1):
+        from scipy.interpolate import interp1d
+        self.parameters = Bunch(amplitude=amplitude)
+        self.energy = energy
+        self.values = values
+
+        loge = np.log10(self.energy.to('eV').value)
+        try:
+            self.unit = self.values.unit
+            logy = np.log10(self.values.value)
+        except AttributeError:
+            self.unit = u.Unit('')
+            logy = np.log10(self.values)
+
+        self.interplogy = interp1d(loge,
+                                   logy,
+                                   fill_value=-np.Inf,
+                                   bounds_error=False,
+                                   kind='cubic')
+
+    def evaluate(self, energy, amplitude):
+        interpy = np.power(10, self.interplogy(
+            np.log10(energy.to('eV').value))
+        )
+        return amplitude * interpy * self.unit
