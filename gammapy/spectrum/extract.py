@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..data import Target
-from ..background import reflected_regions_background_estimate
+from ..background import ReflectedRegionsBackgroundEstimator
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
@@ -118,6 +118,7 @@ class SpectrumExtraction(object):
         method creates one given a dict of parameters. 
 
         TODO: Link to high-level docs page.
+        TODO: Refactor
 
         Parameters
         ----------
@@ -126,16 +127,18 @@ class SpectrumExtraction(object):
         """
         method = self.background.pop('method')
         if method == 'reflected':
-            kwargs = self.background.copy()
-            kwargs.pop('n_min', None)
-            bkg = [reflected_regions_background_estimate(
+            config = self.background.copy()
+            config.pop('n_min', None)
+            exclusion = config.pop('exclusion', None)
+            refl = ReflectedRegionsBackgroundEstimator(
                 on_region=self.target.on_region,
-                pointing=_.pointing_radec,
-                events=_.events,
-                **kwargs) for _ in self.obs]
+                obs_list=self.obs,
+                exclusion=exclusion,
+                config=config) 
+            refl.run()
+            self.background = refl.result
         else:
             raise NotImplementedError("Method: {}".format(method))
-        self.background = bkg
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""

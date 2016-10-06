@@ -202,6 +202,21 @@ class DataStore(object):
             data_store=self,
         )
 
+    def obs_list(self, obs_id):
+        """Generate a `~gammapy.data.ObservationList`.
+
+        Parameters
+        ----------
+        obs_id : list
+            Observation IDs.
+
+        Returns
+        -------
+        obs : `~gammapy.data.ObservationList`
+            List of `~gammapy.data.DataStoreObservation`
+        """
+        return ObservationList(self.obs(_) for _ in obs_id)
+
     def load_all(self, hdu_type=None, hdu_class=None):
         """Load a given file type for all observations
 
@@ -653,6 +668,12 @@ class ObservationList(UserList):
 
     Could be extended to hold a more generic class of observations
     """
+    def __str__(self):
+        s = self.__class__.__name__ + '\n'
+        s += 'Number of observations: {}\n'.format(len(self))
+        for obs in self:
+            s += str(obs)
+        return s
 
     def make_psf(self, position, energy=None, theta=None):
         """Make energy-dependent mean PSF for a given position and a set of observations.
