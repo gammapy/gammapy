@@ -164,6 +164,8 @@ class SpectrumExtraction(object):
         if not isinstance(self.background, list):
             raise ValueError("Invalid background estimate: {}".format(self.background))
         for obs, bkg in zip(self.obs, self.background):
+            if bkg.a_off==0:
+                continue
             log.info('Extracting spectrum for observation\n {}'.format(obs))
             offset = obs.pointing_radec.separation(self.target.on_region.center)
             log.info('Offset : {}\n'.format(offset))
