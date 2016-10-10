@@ -26,14 +26,14 @@ env:
     global:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
-        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa libgfortran'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy sherpa libgfortran'
-        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy sherpa libgfortran runipy'
-        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy libgfortran runipy'
-        - PIP_DEPENDENCIES='regions uncertainties reproject'
+        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa libgfortran regions reproject'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa regions reproject'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes regions reproject'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy sherpa libgfortran regions reproject'
+        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy sherpa libgfortran runipy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy libgfortran runipy regions reproject'
+        - PIP_DEPENDENCIES='uncertainties'
         - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true
         - MAIN_CMD='python setup.py'
@@ -66,7 +66,7 @@ matrix:
         #- os: linux
         #  env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
         #       CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
-        #       PIP_DEPENDENCIES='uncertainties reproject git+http://github.com/sherpa/sherpa.git#egg=sherpa'
+        #       PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
 
         # Run tests
         # Coverage is measured on Python 2 (where Sherpa is available)
@@ -107,12 +107,12 @@ matrix:
         # Test with with optional dependencies disabled
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES='regions'
+               CONDA_DEPENDENCIES='Cython click regions'
+               PIP_DEPENDENCIES=''
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES='regions'
+               CONDA_DEPENDENCIES='Cython click regions'
+               PIP_DEPENDENCIES=''
 
         # Test with other numpy versions.
         - os: linux
