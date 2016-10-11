@@ -62,7 +62,7 @@ def find_reflected_regions(region, center, exclusion_mask=None,
     reflected_regions_pix = list()
     wcs = exclusion_mask.wcs
     pix_region = region.to_pixel(wcs)
-    pix_center = PixCoord(*center.to_pixel(wcs, origin=1))
+    pix_center = PixCoord(*center.to_pixel(wcs))
 
     # Compute angle of the ON regions
     dx = pix_region.center.x - pix_center.x

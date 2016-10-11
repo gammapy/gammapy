@@ -63,4 +63,4 @@ class TestReflectedRegionBackgroundEstimator:
     def test_run(self):
         self.bg_maker.config.update(min_distance = '0.2 deg')
         self.bg_maker.run()
-        assert len(self.bg_maker.result[1].off_region) == 21
+        assert len(self.bg_maker.result[1].off_region) == 22
