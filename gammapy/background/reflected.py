@@ -12,8 +12,8 @@ __all__ = [
     'ReflectedRegionsBackgroundEstimator',
 ]
 
-
 log = logging.getLogger(__name__)
+
 
 def find_reflected_regions(region, center, exclusion_mask=None,
                            angle_increment=None, min_distance=None,
@@ -52,17 +52,17 @@ def find_reflected_regions(region, center, exclusion_mask=None,
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
         exclusion_mask = SkyMask.empty(name='empty exclusion mask',
-                                      xref=center.galactic.l.value,
-                                      yref=center.galactic.b.value,
-                                      binsz=binsz,
-                                      nxpix=npix,
-                                      nypix=npix,
-                                      fill=1)
+                                       xref=center.galactic.l.value,
+                                       yref=center.galactic.b.value,
+                                       binsz=binsz,
+                                       nxpix=npix,
+                                       nypix=npix,
+                                       fill=1)
 
     reflected_regions_pix = list()
     wcs = exclusion_mask.wcs
     pix_region = region.to_pixel(wcs)
-    pix_center = PixCoord(*center.to_pixel(wcs, origin=1))
+    pix_center = PixCoord(*center.to_pixel(wcs))
 
     # Compute angle of the ON regions
     dx = pix_region.center.x - pix_center.x
@@ -93,7 +93,7 @@ def find_reflected_regions(region, center, exclusion_mask=None,
 
     reflected_regions = [_.to_sky(wcs) for _ in reflected_regions_pix]
     log.debug('Found {} reflected regions:\n {}'.format(len(reflected_regions),
-                                                            reflected_regions))
+                                                        reflected_regions))
     return reflected_regions
 
 
@@ -132,6 +132,7 @@ class ReflectedRegionsBackgroundEstimator(object):
     config : dict
         Config dict to be passed to :func:`gammapy.background.find_reflected_regions`
     """
+
     def __init__(self, on_region, obs_list, exclusion, config=dict()):
         self.on_region = on_region
         self.obs_list = obs_list
@@ -165,8 +166,8 @@ class ReflectedRegionsBackgroundEstimator(object):
         background : `~gammapy.background.BackgroundEstimate`
             Reflected regions background estimate
         """
-        off_region = find_reflected_regions(region = on_region,
-                                            center = obs.pointing_radec,
+        off_region = find_reflected_regions(region=on_region,
+                                            center=obs.pointing_radec,
                                             exclusion_mask=exclusion,
                                             **kwargs)
         # TODO: Properly use regions package
@@ -179,9 +180,9 @@ class ReflectedRegionsBackgroundEstimator(object):
         """Process all observations"""
         result = []
         for obs in self.obs_list:
-            temp = self.process(on_region = self.on_region,
-                                obs = obs,
-                                exclusion = self.exclusion,
+            temp = self.process(on_region=self.on_region,
+                                obs=obs,
+                                exclusion=self.exclusion,
                                 **self.config)
             result.append(temp)
 

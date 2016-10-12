@@ -63,14 +63,13 @@ def extraction():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
-
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
-                                                  sigma=22.88,
+                                                  sigma=24.98,
                                                   aeff=549861.8 * u.m ** 2
                                                   )),
         (dict(containment_correction=True), dict(n_on=172,
-                                                 sigma=22.88,
+                                                 sigma=24.98,
                                                  aeff=393356.2 * u.m ** 2
                                                  ))
     ])
