@@ -866,16 +866,10 @@ class SkyImage(object):
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
 
         caxes = ax.imshow(self.data, **kwargs)
-        unit = self.unit or 'A.U.'
-        if unit == 'ct':
-            quantity = 'counts'
-        elif unit is 'A.U.':
-            quantity = 'Unknown'
-        else:
-            quantity = Unit(unit).physical_type
-
         if add_cbar:
-            cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
+            unit = self.unit or 'A.U.'
+            label = self.name or 'None'
+            cbar = fig.colorbar(caxes, label='{0} ({1})'.format(label.title(), unit))
         else:
             cbar = None
 
@@ -1160,7 +1154,7 @@ class SkyImage(object):
         from scipy.ndimage import convolve
         data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
-        return self.__class__(data=data, wcs=wcs)
+        return self.__class__(name=self.name, data=data, wcs=wcs)
 
     def smooth(self, kernel='gauss', width=3):
         """Smooth the image (works on and returns a copy).

@@ -1,77 +1,48 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
+import logging
 import numpy as np
 from astropy.io import fits
-from astropy.convolution import Tophat2DKernel
+import astropy.units as u
+from astropy.convolution import Tophat2DKernel, CustomKernel
 from ..extern.pathlib import Path
-from ..stats import significance
-from ..image import SkyMask
+from ..image import SkyMask, SkyImage, SkyImageList
+from .lima import compute_lima_image
+
+log = logging.getLogger(__name__)
 
 __all__ = [
-    'KernelBackgroundEstimatorData',
     'KernelBackgroundEstimator',
 ]
 
 
-class KernelBackgroundEstimatorData(object):
-    """TODO: implement a more general images container class
-    that can be re-used in other places as well.
-    """
-
-    def __init__(self, counts, background=None, mask=None, header=None):
-        self.counts = counts
-
-        if header:
-            self.header = header
-
-        if background is not None:
-            self.background = background
-
-        if mask is None:
-            self.mask = np.ones_like(counts, dtype=bool)
-        else:
-            self.mask = np.asarray(mask, dtype=bool)
-
-    def initial_background(self, kernel):
-        """Computes initial background estimation
-        """
-        from scipy.ndimage import convolve
-        self.background = convolve(self.counts, kernel)
-        return self
-
-    def compute_correlated_images(self, kernel):
-        """Compute significance image for a given kernel.
-        """
-        from scipy.ndimage import convolve
-
-        if self.background is None:
-            self.initial_background(kernel)
-
-        self.counts_corr = convolve(self.counts, kernel)
-        self.background_corr = convolve(self.background, kernel)
-        self.significance = np.nan_to_num(significance(self.counts_corr,
-                                                       self.background_corr))
-        return self
-
-
 class KernelBackgroundEstimator(object):
-    """Estimate background using a source and background kernel.
+    """
+    Estimate background and exclusion mask iteratively.
 
-    Output is a background image and exclusion mask, which can be used
-    to other images, e.g. an excess, flux or significance image.
+    Starting from an initial background estimate and exclusion mask (both provided,
+    optionally) the algorithm works as following:
+
+        1. Compute significance image
+        2. Create exclusion mask by thresholding significance image
+        3. Compute improved background estimate based on new exclusion mask
+
+    The steps are executed repeatedly until the exclusion mask does not change
+    anymore.
+
+    For flexibility the algorithm takes arbitrary source and background kernels.
 
     Parameters
     ----------
-    images : `KernelBackgroundEstimatorData`
-        Counts image and (optional) initial background estimate.
-    source_kernel : `numpy.ndarray`
+    kernel_src : `numpy.ndarray`
         Source kernel as a numpy array.
-    background_kernel : `numpy.ndarray`
+    kernel_bkg : `numpy.ndarray`
         Background convolution kernel as a numpy array.
     significance_threshold : float
         Significance threshold above which regions are excluded.
-    mask_dilation_radius : float
-        Amount by which mask is dilated with each iteration.
+    mask_dilation_radius : `~astropy.units.Quantity`
+        Radius by which mask is dilated with each iteration.
     delete_intermediate_results : bool
         Specify whether results of intermediate iterations should be deleted.
         (Otherwise, these are held in memory). Default True.
@@ -88,153 +59,137 @@ class KernelBackgroundEstimator(object):
     gammapy.background.AdaptiveRingBackgroundEstimator
     """
 
-    def __init__(self, images, source_kernel, background_kernel,
-                 significance_threshold, mask_dilation_radius,
-                 delete_intermediate_results=True,
+    def __init__(self, kernel_src, kernel_bkg,
+                 significance_threshold=5, mask_dilation_radius=0.02 * u.deg,
+                 delete_intermediate_results=False,
                  save_intermediate_results=False, base_dir='temp'):
 
-        self.source_kernel = source_kernel
-        self.background_kernel = background_kernel
+        self.parameters = OrderedDict(significance_threshold=significance_threshold,
+                                      mask_dilation_radius=mask_dilation_radius,
+                                      save_intermediate_results=save_intermediate_results,
+                                      delete_intermediate_results=delete_intermediate_results,
+                                      base_dir=base_dir)
 
-        images.initial_background(background_kernel)
-        # self._data[i] is a GammaImages object representing iteration number `i`.
-        self._data = list()
-        self._data.append(images)
+        self.kernel_src = kernel_src
+        self.kernel_bkg = kernel_bkg
+        self.images_stack = []
 
-        self.header = images.header
-
-        self.significance_threshold = significance_threshold
-        self.mask_dilation_radius = mask_dilation_radius
-
-        self.delete_intermediate_results = delete_intermediate_results
-        self.save_intermediate_results = save_intermediate_results
-        # Calculate initial significance image
-        self._data[-1].compute_correlated_images(self.source_kernel)
-
-    def run(self, base_dir=None, max_iterations=10):
+    def run(self, images, niter_min=2, niter_max=10):
         """Run iterations until mask does not change (stopping condition).
 
         Parameters
         ----------
-        base_dir : str
-            Base string for filenames if iterations are saved to disk.
-            Default None.
-        max_iterations : int
+        images : `SkyImageList`
+            Input sky images.
+        niter_min : int
+            Minimum number of iterations, to prevent early termination of the
+            algorithm.
+        niter_max : int
             Maximum number of iterations after which the algorithm is
             terminated, if the termination condition (no change of mask between
             iterations) is not already satisfied.
 
         Returns
         -------
-        mask : array-like
-            Boolean array for the final mask after iterations are ended.
-        background : array-like
-            Array of floats for the final background estimation after
-            iterations are complete.
+        images : `SkyImageList`
+            List of sky images containing 'background', 'exclusion' mask and
+            'significance' images.
         """
+        images.check_required(['counts'])
+        wcs = images['counts'].wcs.copy()
+        p = self.parameters
 
-        if self.save_intermediate_results:
-            self.save_files(base_dir, index=0)
+        # initial mask, if not present
+        if not 'exclusion' in images.names:
+            images['exclusion'] = SkyMask.empty_like(images['counts'], fill=1)
 
-        for ii in np.arange(max_iterations):
-            self.run_iteration()
+        # initial background estimate, if not present
+        if not 'background' in images.names:
+            log.info('Estimating initial background.')
+            images['background'] = self._estimate_background(images['counts'],
+                                                             images['exclusion'])
 
-            if self.save_intermediate_results:
-                self.save_files(base_dir, index=ii)
+        images['significance'] = self._estimate_significance(images['counts'],
+                                                             images['background'])
+        self.images_stack.append(images)
 
-            # Dilate old mask to compare with new mask
-            old_mask = self._data[0].mask
-            new_mask = self._data[-1].mask
+        for idx in range(niter_max):
+            result_previous = self.images_stack.pop()
+            result = self._run_iteration(result_previous)
 
-            if ii >= 3:
-                # Prevents early termination in first two steps when
-                # mask is not yet correct
-                if np.alltrue(old_mask == new_mask):
-                    continue
+            if p['delete_intermediate_results']:
+                self.images_stack = [result]
+            else:
+                self.images_stack += [result_previous, result]
 
-            if self.delete_intermediate_results:
-                # Remove results from previous iteration
-                del self._data[0]
+            if p['save_intermediate_results']:
+                result.write(p['base_dir'] + 'ibe_iteration_{}.fits')
 
-        mask = self._data[-1].mask.astype(np.uint8)
-        background = self._data[-1].background
+            if self._is_converged(result, result_previous) and (idx >= niter_min):
+                log.info('Exclusion mask succesfully converged,'
+                         ' after {} iterations.'.format(idx))
+                break
 
-        return mask, background
+        return result
 
-    def run_iteration(self, update_mask=True):
+    def _is_converged(self, result, result_previous):
+        """
+        Check convercence by comparing the exclusion masks between two
+        subsequent iterations.
+        """
+        from scipy.ndimage.morphology import binary_fill_holes
+        mask = result['exclusion'].data == result_previous['exclusion'].data
+
+        # Because of pixel to pixel noise, the masks can still differ.
+        # This is handled by removing structures of the scale of one pixel
+        mask = binary_fill_holes(mask)
+        return np.all(mask)
+
+    # TODO: make more flexible, e.g. allow using adaptive ring etc.
+    def _estimate_background(self, counts, exclusion):
+        """
+        Estimate background by convolving the excluded counts image with
+        the background kernel and renormalizing the image.
+        """
+        wcs = counts.wcs.copy()
+
+        # recompute background estimate
+        counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
+        data = counts_excluded.convolve(self.kernel_bkg, mode='constant')
+        norm = exclusion.convolve(self.kernel_bkg, mode='constant')
+        return SkyImage(name='background', data=data.data / norm.data, wcs=wcs)
+
+    # TODO: make more flexible, e.g. allow using TS images tec.
+    def _estimate_significance(self, counts, background):
+        """
+        """
+        kernel = CustomKernel(self.kernel_src)
+        images_lima = compute_lima_image(counts, background, kernel=kernel)
+        return images_lima['significance']
+
+    def _run_iteration(self, images):
         """Run one iteration.
 
         Parameters
         ----------
-        update_mask : bool
-            Specify whether to update the exclusion mask stored in the input
-            data object with the exclusion mask
-            newly calculated in this method.
+        images : `SkyImageList`
+            Input sky images
         """
-        from scipy.ndimage import convolve
-        # Start with images from the last iteration. If not, makes one.
-        # Check if initial mask exists:
-        if len(self._data) >= 2:
-            mask = np.where(self._data[-1].significance > self.significance_threshold, 0, 1)
-        else:
-            # Compute new exclusion mask:
-            if update_mask:
-                mask = self._data[-1].significance > self.significance_threshold
-                structure = Tophat2DKernel(self.mask_dilation_radius)
-                mask = SkyMask(data=mask).dilate(structure)
-                mask = np.invert(mask.data)
-            else:
-                mask = self._data[-1].mask.copy()
+        images.check_required(['counts', 'exclusion', 'background'])
+        wcs = images['counts'].wcs.copy()
+        p = self.parameters
 
-        # Compute new background estimate:
-        # Convolve old background estimate with background kernel,
-        # excluding sources via the old mask.
-        weighted_counts = convolve(mask * self._data[-1].counts,
-                                   self.background_kernel)
-        weighted_counts_normalisation = convolve(mask.astype(float),
-                                                 self.background_kernel)
+        significance = self._estimate_significance(images['counts'], images['background'])
 
-        background = weighted_counts / weighted_counts_normalisation
-        counts = self._data[-1].counts
-        mask = mask.astype(int)
+        # update exclusion mask
+        mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
+        exclusion = SkyMask(name='exclusion', data=mask.astype('float'), wcs=wcs)
 
-        images = KernelBackgroundEstimatorData(counts, background, mask)
-        images.compute_correlated_images(self.source_kernel)
-        self._data.append(images)
+        # erode exclusion regions
+        radius = p['mask_dilation_radius'].to('deg')
+        scale = images['counts'].wcs_pixel_scale()[0]
+        structure = Tophat2DKernel((radius / scale).value)
+        exclusion = exclusion.erode(structure, border_value=1)
 
-    def save_files(self, base_dir, index):
-        """Saves files to fits."""
-        base_dir = Path(base_dir)
-
-        header = self.header
-
-        filename = base_dir / '{0:02d}_mask.fits'.format(index)
-        hdu = fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
-                            header=header)
-        hdu.writeto(str(filename), clobber=True)
-
-        filename = base_dir / '{0:02d}_background.fits'.format(index)
-        hdu = fits.ImageHDU(data=self._data[-1].background, header=header)
-        hdu.writeto(str(filename), clobber=True)
-
-        filename = base_dir / '{0:02d}_significance.fits'.format(index)
-        hdu = fits.ImageHDU(data=self._data[-1].significance, header=header)
-        hdu.writeto(str(filename), clobber=True)
-
-    @property
-    def mask_image_hdu(self):
-        """Mask (`~astropy.io.fits.ImageHDU`)"""
-        return fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
-                             header=self.header)
-
-    @property
-    def background_image_hdu(self):
-        """Background estimate (`~astropy.io.fits.ImageHDU`)"""
-        return fits.ImageHDU(data=self._data[-1].background,
-                             header=self.header)
-
-    @property
-    def significance_image_hdu(self):
-        """Significance estimate (`~astropy.io.fits.ImageHDU`)"""
-        return fits.ImageHDU(data=self._data[-1].significance,
-                             header=self.header)
+        background = self._estimate_background(images['counts'], exclusion)
+        return SkyImageList([images['counts'], background, exclusion, significance])
