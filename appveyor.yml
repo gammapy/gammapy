@@ -16,12 +16,12 @@ environment:
 
   matrix:
       - PYTHON_VERSION: "2.7"
-        ASTROPY_VERSION: "1.1"
-        NUMPY_VERSION: "1.10"
+        ASTROPY_VERSION: "stable"
+        NUMPY_VERSION: "stable"
 
       - PYTHON_VERSION: "3.5"
-        ASTROPY_VERSION: "1.1"
-        NUMPY_VERSION: "1.10"
+        ASTROPY_VERSION: "stable"
+        NUMPY_VERSION: "stable"
 
 
 platform:
