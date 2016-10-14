@@ -39,6 +39,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     """
     from scipy.ndimage import convolve
 
+    wcs = counts.wcs.copy()
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
 
@@ -54,10 +55,10 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
     images = SkyImageList([
-        SkyImage(name='significance', data=significance_conv),
-        SkyImage(name='counts', data=counts_conv),
-        SkyImage(name='background', data=background_conv),
-        SkyImage(name='excess', data=excess_conv),
+        SkyImage(name='significance', data=significance_conv, wcs=wcs),
+        SkyImage(name='counts', data=counts_conv, wcs=wcs),
+        SkyImage(name='background', data=background_conv, wcs=wcs),
+        SkyImage(name='excess', data=excess_conv, wcs=wcs),
     ])
 
     # TODO: should we be doing this here?

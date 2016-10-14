@@ -79,7 +79,7 @@ class KernelBackgroundEstimator(object):
 
         Parameters
         ----------
-        images : `SkyImageList`
+        images : `gammapy.image.SkyImageList`
             Input sky images.
         niter_min : int
             Minimum number of iterations, to prevent early termination of the
@@ -91,7 +91,7 @@ class KernelBackgroundEstimator(object):
 
         Returns
         -------
-        images : `SkyImageList`
+        images : `gammapy.image.SkyImageList`
             List of sky images containing 'background', 'exclusion' mask and
             'significance' images.
         """
@@ -172,7 +172,7 @@ class KernelBackgroundEstimator(object):
 
         Parameters
         ----------
-        images : `SkyImageList`
+        images : `gammapy.image.SkyImageList`
             Input sky images
         """
         images.check_required(['counts', 'exclusion', 'background'])
