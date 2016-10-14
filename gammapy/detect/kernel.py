@@ -193,3 +193,44 @@ class KernelBackgroundEstimator(object):
 
         background = self._estimate_background(images['counts'], exclusion)
         return SkyImageList([images['counts'], background, exclusion, significance])
+
+    def images_stack_show(self, dpi=120):
+        """
+        Show image stack.
+
+        Parameters
+        ----------
+        dpi : int
+            Dots per inch to scale the image.
+        """
+        import matplotlib.pyplot as plt
+        niter_max = len(self.images_stack)
+        wcs = self.images_stack[0]['background'].wcs
+
+        height_pix, width_pix = self.images_stack[0]['background'].data.shape
+        width = 2 * (width_pix / dpi + 1.)
+        height = niter_max * (height_pix / dpi + .5)
+        fig = plt.figure(figsize=(width, height))
+
+        for idx, images in enumerate(self.images_stack):
+            ax_bkg = fig.add_subplot(niter_max + 1, 2, 2 * idx + 1, projection=wcs)
+            bkg = images['background']
+            bkg.plot(ax=ax_bkg, vmin=0)
+            ax_bkg.set_title('Background, N_iter = {0}'.format(idx),
+                             fontsize='small')
+
+            ax_sig = fig.add_subplot(niter_max + 1, 2, 2 * idx + 2, projection=wcs)
+            sig = images['significance']
+            sig.plot(ax=ax_sig, vmin=0, vmax=20)
+            ax_sig.set_title('Significance, N_Iter = {0}'.format(idx),
+                             fontsize='small')
+            mask = images['exclusion'].data
+            ax_sig.contour(mask, levels=[0], linewidths=2, colors='green')
+            if idx < (niter_max - 1):
+                for ax in [ax_sig, ax_bkg]:
+                    ax.set_xlabel('')
+                    ax.coords['glon'].ticklabels.set_visible(False)
+            ax_bkg.set_ylabel('')
+            ax_sig.set_ylabel('')
+
+        plt.tight_layout(pad=1.08, h_pad=1.5, w_pad=0.2, rect=[0, 0, 1, 0.98])
