@@ -28,6 +28,12 @@ class TestSpectrumObservation:
         excess = self.obs.total_stats.excess
         assert_allclose(excess, 166.428, atol=1e-3)
 
+    def test_stats_in_safe_range(self):
+        stats = self.obs.total_stats_safe_range
+        assert_quantity_allclose(stats.energy_min, self.obs.lo_threshold)
+        assert_quantity_allclose(stats.energy_max, self.obs.hi_threshold)
+        assert_allclose(stats.excess, 135.428, atol=1e-3)
+
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.obs.peek()
@@ -37,35 +43,42 @@ class TestSpectrumObservation:
 @requires_data('gammapy-extra')
 class TestSpectrumObservationStacker:
     def setup(self):
-        self.obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
-        self.obs2 = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits')
+        self.obs_list = SpectrumObservationList.read(
+            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
         # Change threshold to make stuff more interesting
-        self.obs.lo_threshold = 1.2 * u.TeV
+        self.obs_list.obs(23523).lo_threshold = 1.2 * u.TeV
+        self.obs_stacker = SpectrumObservationStacker(self.obs_list)
+        self.obs_stacker.run()
 
-        self.obs_list = SpectrumObservationList([self.obs, self.obs2])
+    def test_basic(self):
+        assert 'Stacker' in str(self.obs_stacker)
+        counts1 = self.obs_list[0].total_stats_safe_range.n_on
+        counts2 = self.obs_list[1].total_stats_safe_range.n_on
+        summed_counts = counts1 + counts2
+        stacked_counts = self.obs_stacker.stacked_obs.total_stats.n_on
+        assert summed_counts == stacked_counts
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
-
-        obs_stacker = SpectrumObservationStacker(self.obs_list)
-        obs_stacker.run()
-
         pwl = models.PowerLaw(index=2 * u.Unit(''),
                               amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
                               reference=1 * u.TeV)
 
-        npred_stacked = obs_stacker.stacked_obs.predicted_counts(model=pwl)
+        npred_stacked = self.obs_stacker.stacked_obs.predicted_counts(model=pwl)
 
-        npred1 = self.obs.predicted_counts(model=pwl)
-        npred2 = self.obs2.predicted_counts(model=pwl)
+        npred1 = self.obs_list[0].predicted_counts(model=pwl)
+        npred2 = self.obs_list[1].predicted_counts(model=pwl)
         # Set npred outside safe range to 0
-        npred1.data[np.nonzero(self.obs.on_vector.quality)] = 0
-        npred2.data[np.nonzero(self.obs2.on_vector.quality)] = 0
+        npred1.data[np.nonzero(self.obs_list[0].on_vector.quality)] = 0
+        npred2.data[np.nonzero(self.obs_list[1].on_vector.quality)] = 0
 
         npred_summed = npred1.data + npred2.data
 
         assert_allclose(npred_stacked.data, npred_summed)
 
     def test_stack_method_on_list(self):
-        self.obs_list.stack()
+        stacked_obs = self.obs_list.stack()
+        assert 'Observation summary report' in str(stacked_obs)
+        assert stacked_obs.obs_id == [23523, 23592]
+

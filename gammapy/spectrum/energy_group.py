@@ -18,7 +18,7 @@ from astropy.table import Table
 from ..utils.fits import table_from_row_data
 from ..utils.energy import EnergyBounds
 from ..data import ObservationStats
-from .observation import SpectrumObservation
+from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = [
     'SpectrumEnergyGroupMaker',
@@ -484,6 +484,8 @@ def calculate_flux_point_binning(obs_list, min_signif):
     flux point interval, otherwise the sherpa covariance method breaks
     down.
 
+    TODO: Refactor
+
     Parameters
     ----------
     obs_list : `~gammapy.spectrum.SpectrumObservationList`
@@ -503,7 +505,7 @@ def calculate_flux_point_binning(obs_list, min_signif):
     # rebin_factor = 1
     rebin_factor = 2
 
-    obs = SpectrumObservation.stack(obs_list)
+    obs = SpectrumObservationList(obs_list).stack()
 
     # First first bin above low threshold and last bin below high threshold
     current_ebins = obs.on_vector.energy

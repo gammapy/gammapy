@@ -149,20 +149,35 @@ class SpectrumObservation(object):
     def total_stats(self):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
-        stats_list = [self.stats(ii) for ii in range(self.nbins)]
-        stacked_stats = SpectrumStats.stack(stats_list)
-        return stacked_stats
+        return self.stats_in_range(0, self.nbins-1)
 
     @property
     def total_stats_safe_range(self):
         """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
         """
         safe_bins = self.on_vector.bins_in_safe_range
-        stats_list = [self.stats(ii) for ii in safe_bins]
+        return self.stats_in_range(safe_bins[0], safe_bins[-1])
+
+    def stats_in_range(self, bin_min, bin_max):
+        """Compute stats for a range of energy bins
+        
+        Parameters
+        ----------
+        bin_min, bin_max: int
+            Bins to include
+
+        Returns
+        -------
+        stats : `~gammapy.spectrum.SpectrumStats`
+            Stacked stats
+        """
+        idx = np.arange(bin_min, bin_max)
+        stats_list = [self.stats(ii) for ii in idx] 
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
-        stacked_stats.energy_min = self.lo_threshold
-        stacked_stats.energy_max = self.hi_threshold
+        stacked_stats.obs_id = self.obs_id
+        stacked_stats.energy_min = self.e_reco[bin_min]
+        stacked_stats.energy_max = self.e_reco[bin_max + 1]
         return stacked_stats
 
     def stats(self, idx):
@@ -390,6 +405,15 @@ class SpectrumObservationList(UserList):
         idx = obs_id_list.index(obs_id)
         return self[idx]
 
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.obs_id)
+        return ss
+
+    @property
+    def obs_id(self):
+        return [o.obs_id for o in self]
+
     @property
     def total_livetime(self):
         livetimes = [o.livetime.to('s').value for o in self]
@@ -409,11 +433,31 @@ class SpectrumObservationList(UserList):
         outdir : str, `~gammapy.extern.pathlib.Path`, optional
             Output directory, default: pwd
         """
-        raise NotImplementedError
+        for obs in self:
+            obs.write(outdir=outdir, **kwargs)
 
+    @classmethod
+    def read(cls, directory):
+        """Read multiple observations
+        
+        This methods reads all PHA files contained in a given directory
+
+        Parameters
+        ----------
+        directory : `~gammapy.extern.pathlib.Path`
+            Directory holding the observations
+        """
+        obs_list = cls()
+        directory = make_path(directory)
+        filelist = directory.glob('pha*.fits')
+        for phafile in filelist:
+            obs = SpectrumObservation.read(phafile)
+            obs_list.append(obs)
+        return obs_list
+    
 
 class SpectrumObservationStacker(object):
-    """Stack `~gammapy.spectrumSpectrumObervationsList`
+    r"""Stack `~gammapy.spectrum.SpectrumObervationList`
 
     The stacking of :math:`j` observations is implemented as follows.
     :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
@@ -444,8 +488,29 @@ class SpectrumObservationStacker(object):
 
     Parameters
     ----------
-    obs_list: `~gammapy.spectrum.SpectrumObservationList`
+    obs_list : `~gammapy.spectrum.SpectrumObservationList`
         Observations to stack
+
+    Examples
+    --------
+    >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+    >>> obs_stacker = SpectrumObservationStacker(obs_list)
+    >>> obs_stacker.run()
+    >>> print(obs_stacker.stacked_obs)
+    *** Observation summary report ***
+    Observation Id: [23523-23592]
+    Livetime: 0.879 h
+    On events: 279
+    Off events: 108
+    Alpha: 0.037
+    Bkg events in On region: 3.96
+    Excess: 275.04
+    Excess / Background: 69.40
+    Gamma rate: 0.14 1 / min
+    Bkg rate: 0.00 1 / min
+    Sigma: 37.60
+    energy range: 681292069.06 keV - 87992254356.91 keV
     """
 
     def __init__(self, obs_list):
@@ -457,6 +522,11 @@ class SpectrumObservationStacker(object):
         self.stacked_bkscal_on = None
         self.stacked_bkscal_off = None
         self.stacked_obs = None
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.obs_list)
+        return ss
 
     def run(self):
         """Run all steps in the correct order"""
@@ -535,6 +605,8 @@ class SpectrumObservationStacker(object):
         self.stacked_off_vector.livetime = total_livetime
         self.stacked_on_vector.backscal = self.stacked_bkscal_on
         self.stacked_off_vector.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.obs_id = self.obs_list.obs_id
+        self.stacked_off_vector.obs_id = self.obs_list.obs_id
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime)
