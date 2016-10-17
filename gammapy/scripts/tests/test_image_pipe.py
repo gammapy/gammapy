@@ -71,3 +71,5 @@ def test_image_pipe(tmpdir):
     assert_allclose(images['exposure'].data.sum(), 54190569251987.68, atol=3)
     assert_allclose(images['significance'].lookup(center), 33.707901541600634, atol=3)
     assert_allclose(images['excess'].data.sum(), 346.8486363336217, atol=3)
+    assert_allclose(image_maker.table_bkg_scale[0]["bkg_scale"], 0.7495491394090461)
+    assert_allclose(image_maker.table_bkg_scale[1]["bkg_scale"], 0.725116527521305)
