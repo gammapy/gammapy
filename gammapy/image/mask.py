@@ -53,7 +53,7 @@ class SkyMask(SkyImage):
 
         self.data = data
 
-    def open(self, structure):
+    def open(self, structure, **kwargs):
         """
         Binary opening with structuring element.
 
@@ -70,10 +70,10 @@ class SkyMask(SkyImage):
             Opened sky mask.
         """
         from scipy.ndimage import binary_opening
-        data = binary_opening(self.data, structure)
-        return SkyMask(data=data, wcs=self.wcs)
+        data = binary_opening(self.data, structure, **kwargs)
+        return SkyMask(name=self.name, data=data.astype(self.data.dtype), wcs=self.wcs)
 
-    def dilate(self, structure):
+    def dilate(self, structure, **kwargs):
         """
         Binary dilation with structuring element.
 
@@ -90,10 +90,10 @@ class SkyMask(SkyImage):
             Dilated sky mask.
         """
         from scipy.ndimage import binary_dilation
-        data = binary_dilation(self.data, structure)
-        return SkyMask(data=data, wcs=self.wcs)
+        data = binary_dilation(self.data, structure, **kwargs)
+        return SkyMask(name=self.name, data=data.astype(self.data.dtype), wcs=self.wcs)
 
-    def close(self, structure):
+    def close(self, structure, **kwargs):
         """
         Binary closing with structuring element.
 
@@ -110,10 +110,10 @@ class SkyMask(SkyImage):
             Closed sky mask.
         """
         from scipy.ndimage import binary_closing
-        data = binary_closing(self.data, structure)
-        return SkyMask(data=data, wcs=self.wcs)
+        data = binary_closing(self.data, structure, **kwargs)
+        return SkyMask(name=self.name, data=data.astype(self.data.dtype), wcs=self.wcs)
 
-    def erode(self, structure):
+    def erode(self, structure, **kwargs):
         """
         Binary erosion with structuring element.
 
@@ -130,8 +130,8 @@ class SkyMask(SkyImage):
             Eroded sky mask.
         """
         from scipy.ndimage import binary_erosion
-        data = binary_erosion(self.data, structure)
-        return SkyMask(data=data, wcs=self.wcs)
+        data = binary_erosion(self.data, structure, **kwargs)
+        return SkyMask(name=self.name, data=data.astype(self.data.dtype), wcs=self.wcs)
 
     @lazyproperty
     def distance_image(self):
