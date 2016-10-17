@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import QTable
+from astropy.table import QTable, Table
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
 from ..stats import significance
@@ -41,10 +41,12 @@ class SingleObsImageMaker(object):
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation (TODO: used how?)
+    save_bkg_scale: bool
+        True if you want to save the normalisation of the bkg computed outside the exlusion region in a Table
     """
 
     def __init__(self, obs, empty_image,
-                 energy_band, offset_band, exclusion_mask=None, ncounts_min=0):
+                 energy_band, offset_band, exclusion_mask=None, ncounts_min=0, save_bkg_scale=True):
         # Select the events in the given energy and offset range
         self.energy_band = energy_band
         self.offset_band = offset_band
@@ -67,6 +69,9 @@ class SingleObsImageMaker(object):
         self.bkg = obs.bkg
         self.obs_center = obs.pointing_radec
         self.livetime = obs.observation_live_time_duration
+        self.save_bkg_scale = save_bkg_scale
+        if self.save_bkg_scale:
+            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
     def counts_image(self):
         """Fill the counts image for the events of one observation."""
@@ -98,6 +103,8 @@ class SingleObsImageMaker(object):
         if bkg_norm:
             scale = self.background_norm_factor(self.images["counts"], bkg_image)
             bkg_image.data = scale * bkg_image.data
+            if self.save_bkg_scale:
+                self.table_bkg_scale.add_row([self.obs_id, scale])
 
         self.images["bkg"] = bkg_image
 
@@ -253,10 +260,13 @@ class StackedObsImageMaker(object):
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation
+    save_bkg_scale: bool
+        True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm with two columns:
+         "OBS_ID" and "bkg_scale"
     """
 
     def __init__(self, empty_image=None, energy_band=None, offset_band=None,
-                 data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
+                 data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0, save_bkg_scale=True):
 
         self.images = SkyImageList()
 
@@ -274,6 +284,9 @@ class StackedObsImageMaker(object):
         self.ncounts_min = ncounts_min
         self.psfmeantab = None
         self.thetapsf = None
+        self.save_bkg_scale = save_bkg_scale
+        if self.save_bkg_scale:
+            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
     def make_images(self, make_background_image=False, bkg_norm=True,
                     spectral_index=2.3, for_integral_flux=False, radius=10):
@@ -309,6 +322,8 @@ class StackedObsImageMaker(object):
                 total_counts.data += obs_image.images['counts'].data
                 if make_background_image:
                     obs_image.bkg_image(bkg_norm)
+                    if self.save_bkg_scale:
+                        self.table_bkg_scale.add_row(obs_image.table_bkg_scale[0])
                     obs_image.exposure_image(spectral_index, for_integral_flux)
                     total_bkg.data += obs_image.images['bkg'].data
                     total_exposure.data += obs_image.images['exposure'].data
