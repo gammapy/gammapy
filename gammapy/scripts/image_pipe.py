@@ -41,6 +41,8 @@ class SingleObsImageMaker(object):
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation (TODO: used how?)
+    save_bkg_norm: bool
+        True if you want to save the normalisation of the bkg computed outside the exlusion region in a Table
     """
 
     def __init__(self, obs, empty_image,
@@ -67,10 +69,9 @@ class SingleObsImageMaker(object):
         self.bkg = obs.bkg
         self.obs_center = obs.pointing_radec
         self.livetime = obs.observation_live_time_duration
-        self.save_bkg_norm=save_bkg_norm
+        self.save_bkg_norm = save_bkg_norm
         if self.save_bkg_norm:
-            self.table_bkg_norm=Table(names=["OBS_ID", "bkg_norm"])
-
+            self.table_bkg_norm = Table(names=["OBS_ID", "bkg_norm"])
 
     def counts_image(self):
         """Fill the counts image for the events of one observation."""
@@ -259,6 +260,8 @@ class StackedObsImageMaker(object):
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation
+    save_bkg_norm: bool
+        True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm
     """
 
     def __init__(self, empty_image=None, energy_band=None, offset_band=None,
@@ -280,11 +283,9 @@ class StackedObsImageMaker(object):
         self.ncounts_min = ncounts_min
         self.psfmeantab = None
         self.thetapsf = None
-        self.save_bkg_norm=save_bkg_norm
+        self.save_bkg_norm = save_bkg_norm
         if self.save_bkg_norm:
-            self.table_bkg_norm=Table(names=["OBS_ID", "bkg_norm"])
-
-
+            self.table_bkg_norm = Table(names=["OBS_ID", "bkg_norm"])
 
     def make_images(self, make_background_image=False, bkg_norm=True,
                     spectral_index=2.3, for_integral_flux=False, radius=10):
