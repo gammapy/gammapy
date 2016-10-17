@@ -261,7 +261,8 @@ class StackedObsImageMaker(object):
     ncounts_min : int
         Minimum counts required for the observation
     save_bkg_norm: bool
-        True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm
+        True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm with two columns:
+         "OBS_ID" and "bkg_norm"
     """
 
     def __init__(self, empty_image=None, energy_band=None, offset_band=None,
