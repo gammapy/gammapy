@@ -5,6 +5,7 @@ from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
+from ..utils.energy import EnergyBounds
 from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
@@ -15,6 +16,7 @@ __all__ = [
     'SpectrumStats',
     'SpectrumObservation',
     'SpectrumObservationList',
+    'SpectrumObservationStacker',
 ]
 
 
@@ -95,10 +97,15 @@ class SpectrumObservation(object):
         return self.on_vector.backscal / self.off_vector.backscal
 
     @property
-    def ebounds(self):
+    def e_reco(self):
         """Reconstruced energy bounds array."""
-        return self.on_vector.energy.data.to('TeV')
-    
+        return EnergyBounds(self.on_vector.energy.data)
+
+    @property
+    def e_true(self):
+        """True energy bounds array."""
+        return EnergyBounds(self.aeff.energy.data)
+
     @property
     def nbins(self):
         """Number of reconstruced energy bins"""
@@ -142,20 +149,35 @@ class SpectrumObservation(object):
     def total_stats(self):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
-        stats_list = [self.stats(ii) for ii in range(self.nbins)]
-        stacked_stats = SpectrumStats.stack(stats_list)
-        return stacked_stats
+        return self.stats_in_range(0, self.nbins-1)
 
     @property
     def total_stats_safe_range(self):
         """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
         """
         safe_bins = self.on_vector.bins_in_safe_range
-        stats_list = [self.stats(ii) for ii in safe_bins]
+        return self.stats_in_range(safe_bins[0], safe_bins[-1])
+
+    def stats_in_range(self, bin_min, bin_max):
+        """Compute stats for a range of energy bins
+        
+        Parameters
+        ----------
+        bin_min, bin_max: int
+            Bins to include
+
+        Returns
+        -------
+        stats : `~gammapy.spectrum.SpectrumStats`
+            Stacked stats
+        """
+        idx = np.arange(bin_min, bin_max)
+        stats_list = [self.stats(ii) for ii in idx] 
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
-        stacked_stats.energy_min = self.lo_threshold
-        stacked_stats.energy_max = self.hi_threshold
+        stacked_stats.obs_id = self.obs_id
+        stacked_stats.energy_min = self.e_reco[bin_min]
+        stacked_stats.energy_max = self.e_reco[bin_max + 1]
         return stacked_stats
 
     def stats(self, idx):
@@ -172,8 +194,8 @@ class SpectrumObservation(object):
             Stats
         """
         return SpectrumStats(
-            energy_min=self.ebounds[idx],
-            energy_max=self.ebounds[idx + 1],
+            energy_min=self.e_reco[idx],
+            energy_max=self.e_reco[idx + 1],
             n_on=int(self.on_vector.data.value[idx]),
             n_off=int(self.off_vector.data.value[idx]),
             a_on=self.on_vector._backscal_array[idx],
@@ -190,7 +212,7 @@ class SpectrumObservation(object):
         table : `~astropy.table.Table`
             Table with stats for one energy bin in one row.
         """
-        rows = [self.stats(idx).to_dict() for idx in range(len(self.ebounds) - 1)]
+        rows = [self.stats(idx).to_dict() for idx in range(len(self.e_reco) - 1)]
         return table_from_row_data(rows=rows)
 
     def predicted_counts(self, model):
@@ -365,132 +387,6 @@ class SpectrumObservation(object):
         """
         raise NotImplementedError
 
-    @classmethod
-    def stack(cls, obs_list, group_id=None):
-        r"""Stack `~gammapy.spectrum.SpectrumObservationList`
-
-        The stacking of :math:`j` observations is implemented as follows.
-        :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
-        respectively. 
-
-        .. math:: 
-
-            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
-                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
-
-            \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
-                \epsilon_{jk} 
-
-            \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
-                \epsilon_{jk} 
-
-            \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
-                \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
-
-            \overline{t} = \sum_{j} t_i
-
-            \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl} 
-                \cdot t_j}{\overline{t}}
-
-            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl} 
-                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
-                \cdot t_j}
-
-
-        Parameters
-        ----------
-        obs_list : `~gammapy.spectrum.SpectrumObservationList`
-            Observations to stack
-        group_id : int, optional
-            ID for stacked observations
-        """
-        # TODO: Refactor into StackObservation class
-
-        group_id = group_id or obs_list[0].obs_id
-
-        # np.sum does not work with Quantities
-        e_true = obs_list[0].aeff.energy
-        e_reco = obs_list[0].on_vector.energy
-        reco_bins = obs_list[0].on_vector.energy.nbins
-        stacked_livetime = Quantity(0, 's')
-        stacked_on_counts = np.zeros(e_reco.nbins)
-        stacked_off_counts = np.zeros(e_reco.nbins)
-        stacked_quality = np.zeros(e_reco.nbins)
-        aefft = Quantity(np.zeros(e_true.nbins), 'cm2 s')
-        aefftedisp = Quantity(np.zeros(shape=(e_reco.nbins, e_true.nbins)), 'cm2 s')
-        backscal_on = np.zeros(e_reco.nbins)
-        backscal_off = np.zeros(e_reco.nbins)
-
-        for o in obs_list:
-            stacked_livetime += o.livetime
-
-            # Counts within safe range
-            on_data = o.on_vector.data.copy()
-            on_data[np.nonzero(o.on_vector.quality)] = 0
-            stacked_on_counts += on_data
-            off_data = o.off_vector.data.copy()
-            off_data[np.nonzero(o.off_vector.quality)] = 0
-            stacked_off_counts += off_data
-
-            # Qualitiy
-            stacked_quality = np.logical_or(stacked_quality,
-                                            o.on_vector.quality)
-
-            # Alpha
-            backscal_on_data = o.on_vector._backscal_array.copy()
-            backscal_on_data[np.nonzero(o.on_vector.quality)] = 0
-            backscal_on += backscal_on_data * o.off_vector.data
-
-            backscal_off_data = o.off_vector._backscal_array.copy()
-            backscal_off_data[np.nonzero(o.off_vector.quality)] = 0
-            backscal_off += backscal_off_data * o.off_vector.data
-
-            # Exposure weighted IRFs
-            aeff_data = o.aeff.evaluate(fill_nan=True)
-            aefft_current = aeff_data * o.livetime
-            aefft += aefft_current
-            edisp_data = o.edisp.pdf_in_safe_range(o.lo_threshold, o.hi_threshold)
-            aefftedisp += edisp_data.transpose() * aefft_current
-
-        stacked_backscal_on = backscal_on / stacked_off_counts
-        stacked_backscal_off = backscal_off / stacked_off_counts
-
-        # there should be no nan values in backscal_on or backscal_off
-        # this leads to problems when fitting the data
-        alpha_correction = - 1
-        idx = np.where(stacked_off_counts == 0)[0]
-        stacked_backscal_on[idx] = alpha_correction
-        stacked_backscal_off[idx] = alpha_correction
-
-        stacked_aeff = aefft / stacked_livetime
-        stacked_edisp = np.nan_to_num(aefftedisp / aefft)
-
-        aeff = EffectiveAreaTable(energy=e_true,
-                                  data=stacked_aeff.to('cm2'))
-        edisp = EnergyDispersion(e_true=e_true,
-                                 e_reco=e_reco,
-                                 data=stacked_edisp.transpose())
-
-        counts_kwargs = dict(
-            livetime=stacked_livetime,
-            obs_id=group_id,
-            energy=e_reco,
-            quality=stacked_quality,
-        )
-
-        on_vector = PHACountsSpectrum(backscal=stacked_backscal_on,
-                                      data=stacked_on_counts,
-                                      **counts_kwargs)
-        off_vector = PHACountsSpectrum(backscal=stacked_backscal_off,
-                                       data=stacked_off_counts,
-                                       is_bkg=True,
-                                       **counts_kwargs)
-
-        return cls(on_vector=on_vector,
-                   off_vector=off_vector,
-                   edisp=edisp,
-                   aeff=aeff)
-
 
 class SpectrumObservationList(UserList):
     """
@@ -509,39 +405,25 @@ class SpectrumObservationList(UserList):
         idx = obs_id_list.index(obs_id)
         return self[idx]
 
-    @property
-    def total_spectrum(self):
-        """Stack all observations belongig to the list"""
-        return SpectrumObservation.stack_observation_list(self)
-
-    def info(self):
-        """Info string"""
-        ss = " *** SpectrumObservationList ***"
-        ss += "\n\nNumber of observations: {}".format(len(self))
-        ss += "\nObservation IDs: {}".format([o.obs_id for o in self])
-
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.obs_id)
         return ss
 
-    def filter_by_reflected_regions(self, n_min):
-        """Filter observation list according to number of reflected regions.
+    @property
+    def obs_id(self):
+        return [o.obs_id for o in self]
 
-        Condition: number of reflected regions >= nmin.
+    @property
+    def total_livetime(self):
+        livetimes = [o.livetime.to('s').value for o in self]
+        return Quantity(np.sum(livetimes), 's')
 
-        Parameters
-        ----------
-        n_min : int
-            Minimum number of reflected regions
-
-        Returns
-        -------
-        idx : `~np.array`
-            Indices of element fulfilling the condition
-        """
-        val = [o.off_vector.meta.backscal for o in self]
-
-        condition = np.array(val) >= n_min
-        idx = np.nonzero(condition)
-        return idx[0]
+    def stack(self):
+        """Return stacked `~gammapy.spectrum.SpectrumObservation`"""
+        stacker = SpectrumObservationStacker(obs_list=self)
+        stacker.run()
+        return stacker.stacked_obs
 
     def write(self, outdir=None, **kwargs):
         """Create OGIP files
@@ -553,3 +435,224 @@ class SpectrumObservationList(UserList):
         """
         for obs in self:
             obs.write(outdir=outdir, **kwargs)
+
+    @classmethod
+    def read(cls, directory):
+        """Read multiple observations
+        
+        This methods reads all PHA files contained in a given directory
+
+        Parameters
+        ----------
+        directory : `~gammapy.extern.pathlib.Path`
+            Directory holding the observations
+        """
+        obs_list = cls()
+        directory = make_path(directory)
+        filelist = directory.glob('pha*.fits')
+        for phafile in filelist:
+            obs = SpectrumObservation.read(phafile)
+            obs_list.append(obs)
+        return obs_list
+    
+
+class SpectrumObservationStacker(object):
+    r"""Stack `~gammapy.spectrum.SpectrumObervationList`
+
+    The stacking of :math:`j` observations is implemented as follows.
+    :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
+    respectively. 
+
+    .. math:: 
+
+        \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+            bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
+            \epsilon_{jk} 
+
+        \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
+            \epsilon_{jk} 
+
+        \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
+            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
+
+        \overline{t} = \sum_{j} t_i
+
+        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl} 
+            \cdot t_j}{\overline{t}}
+
+        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl} 
+            \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+            \cdot t_j}
+
+    Parameters
+    ----------
+    obs_list : `~gammapy.spectrum.SpectrumObservationList`
+        Observations to stack
+
+    Examples
+    --------
+    >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+    >>> obs_stacker = SpectrumObservationStacker(obs_list)
+    >>> obs_stacker.run()
+    >>> print(obs_stacker.stacked_obs)
+    *** Observation summary report ***
+    Observation Id: [23523-23592]
+    Livetime: 0.879 h
+    On events: 279
+    Off events: 108
+    Alpha: 0.037
+    Bkg events in On region: 3.96
+    Excess: 275.04
+    Excess / Background: 69.40
+    Gamma rate: 0.14 1 / min
+    Bkg rate: 0.00 1 / min
+    Sigma: 37.60
+    energy range: 681292069.06 keV - 87992254356.91 keV
+    """
+
+    def __init__(self, obs_list):
+        self.obs_list = SpectrumObservationList(obs_list)
+        self.stacked_on_vector = None
+        self.stacked_off_vector = None
+        self.stacked_aeff = None
+        self.stacked_edisp = None
+        self.stacked_bkscal_on = None
+        self.stacked_bkscal_off = None
+        self.stacked_obs = None
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.obs_list)
+        return ss
+
+    def run(self):
+        """Run all steps in the correct order"""
+        self.stack_counts_vectors()
+        self.stack_aeff()
+        self.stack_edisp()
+        self.stack_obs()
+
+    def stack_counts_vectors(self):
+        """Stack on and off vector"""
+        self.stack_on_vector()
+        self.stack_off_vector()
+        self.stack_backscal()
+        self.setup_counts_vectors()
+
+    def stack_on_vector(self):
+        on_vector_list = [o.on_vector for o in self.obs_list]
+        self.stacked_on_vector = self.stack_counts_spectrum(on_vector_list)
+
+    def stack_off_vector(self):
+        off_vector_list = [o.off_vector for o in self.obs_list]
+        self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
+
+    @staticmethod
+    def stack_counts_spectrum(counts_spectrum_list):
+        """Stack `~gammapy.spectrum.PHACountsSpectrum`
+
+        Bins outside the safe energy range are set to 0, attributes
+        are set to None.
+        """
+        template = counts_spectrum_list[0].copy()
+        energy = template.energy
+        stacked_data = np.zeros(energy.nbins)
+        stacked_quality = np.zeros(energy.nbins)
+        for spec in counts_spectrum_list:
+            stacked_data += spec.counts_in_safe_range
+            stacked_quality = np.logical_or(stacked_quality,
+                                            spec.quality)
+
+        stacked_spectrum = PHACountsSpectrum(data=stacked_data,
+                                             energy=energy,
+                                             quality=stacked_quality)
+        return stacked_spectrum
+
+    def stack_backscal(self):
+        """Stack backscal for on and off vector
+        """
+        nbins = self.obs_list[0].e_reco.nbins
+        bkscal_on = np.zeros(nbins)
+        bkscal_off = np.zeros(nbins)
+
+        for o in self.obs_list:
+            bkscal_on_data = o.on_vector._backscal_array.copy()
+            bkscal_on += bkscal_on_data * o.off_vector.counts_in_safe_range
+
+            bkscal_off_data = o.off_vector._backscal_array.copy()
+            bkscal_off += bkscal_off_data * o.off_vector.counts_in_safe_range
+
+        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data
+        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data
+
+        # there should be no nan values in backscal_on or backscal_off
+        # this leads to problems when fitting the data
+        alpha_correction = - 1
+        idx = np.where(self.stacked_off_vector.data == 0)[0]
+        stacked_bkscal_on[idx] = alpha_correction
+        stacked_bkscal_off[idx] = alpha_correction
+
+        self.stacked_bkscal_on = stacked_bkscal_on
+        self.stacked_bkscal_off = stacked_bkscal_off
+
+    def setup_counts_vectors(self):
+        """Add correct attributes to stacked counts vectors"""
+        total_livetime = self.obs_list.total_livetime
+        self.stacked_on_vector.livetime = total_livetime
+        self.stacked_off_vector.livetime = total_livetime
+        self.stacked_on_vector.backscal = self.stacked_bkscal_on
+        self.stacked_off_vector.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.obs_id = self.obs_list.obs_id
+        self.stacked_off_vector.obs_id = self.obs_list.obs_id
+
+    def stack_aeff(self):
+        """Stack effective areas (weighted by livetime)
+
+        TODO: Refactor into staticmethod?
+        """
+        nbins = self.obs_list[0].e_true.nbins
+        aefft = Quantity(np.zeros(nbins), 'cm2 s')
+        for o in self.obs_list:
+            aeff_data = o.aeff.evaluate(fill_nan=True)
+            aefft_current = aeff_data * o.livetime
+            aefft += aefft_current
+
+        # TODO: Save aefft to reuse it in stack_edisp?
+        stacked_data = aefft / self.obs_list.total_livetime
+        self.stacked_aeff = EffectiveAreaTable(energy=self.obs_list[0].e_true,
+                                               data=stacked_data.to('cm2'))
+
+    def stack_edisp(self):
+        """Stack energy dispersion (weighted by exposure)"""
+
+        reco_bins = self.obs_list[0].e_reco.nbins
+        true_bins = self.obs_list[0].e_true.nbins
+
+        aefft = Quantity(np.zeros(true_bins), 'cm2 s')
+        temp = np.zeros(shape=(reco_bins, true_bins))
+        aefftedisp = Quantity(temp, 'cm2 s')
+
+        for o in self.obs_list:
+            aeff_data = o.aeff.evaluate(fill_nan=True)
+            aefft_current = aeff_data * o.livetime
+            aefft += aefft_current
+            edisp_data = o.edisp.pdf_in_safe_range(o.lo_threshold, o.hi_threshold)
+            aefftedisp += edisp_data.transpose() * aefft_current
+
+        stacked_edisp = np.nan_to_num(aefftedisp / aefft)
+
+        self.stacked_edisp = EnergyDispersion(e_true=self.obs_list[0].e_true,
+                                              e_reco=self.obs_list[0].e_reco,
+                                              data=stacked_edisp.transpose())
+
+    def stack_obs(self):
+        """Create stacked `~gammapy.spectrum.SpectrumObservation`"""
+        obs = SpectrumObservation(on_vector=self.stacked_on_vector,
+                                  off_vector=self.stacked_off_vector,
+                                  aeff=self.stacked_aeff,
+                                  edisp=self.stacked_edisp
+                                  )
+        self.stacked_obs = obs

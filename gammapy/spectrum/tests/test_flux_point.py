@@ -249,7 +249,7 @@ class TestFluxEstimator:
         filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
         self.obs = SpectrumObservation.read(filename)
         self.seg = SpectrumEnergyGroupMaker(obs=self.obs)
-        ebounds = [0.3, 1, 3, 10, 30] * u.TeV
+        ebounds = [0.3, 1.001, 3, 10.001, 30] * u.TeV
         self.seg.compute_range_safe()
         self.seg.compute_groups_fixed(ebounds=ebounds)
 
