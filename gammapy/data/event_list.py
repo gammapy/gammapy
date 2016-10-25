@@ -202,7 +202,12 @@ class EventList(Table):
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)"""
         energy = self['ENERGY']
-        return Quantity(energy, self.meta['EUNIT'])
+        try:
+            unit = self.meta['EUNIT']
+        except KeyError:
+            # Fermi lat event list format
+            unit = self.meta['DSUNI4']
+        return Quantity(energy, unit)
 
     def select_energy(self, energy_band):
         """Select events in energy band.
@@ -412,16 +417,15 @@ class EventList(Table):
 
         Convert to a `~gammapy.spectrum.CountsSpectrum` internally
         """
-
         if ebounds is None:
             emin = np.min(self['ENERGY'].quantity)
             emax = np.max(self['ENERGY'].quantity)
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
         from ..spectrum import CountsSpectrum
-        spec = CountsSpectrum.from_eventlist(self, ebounds)
+        spec = CountsSpectrum(energy=ebounds)
+        spec.fill(self)
         spec.plot(ax=ax, **kwargs)
-
         return ax
 
     def plot_offset_hist(self, ax=None):

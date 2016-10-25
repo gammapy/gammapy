@@ -448,7 +448,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectrum(self):
-        """Combined spectrum information (model + points) (`~gammapy.spectrum.SpectrumResult`)
+        """Spectrum information (`~gammapy.spectrum.SpectrumFitResult`)
         """
         data = self.data
         model = self.spectral_model
@@ -468,7 +468,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
             covar_axis=covar_axis,
         )
 
-        return SpectrumResult(fit=fit, points=self.flux_points)
+        return fit
 
 
 class SourceCatalog3FGL(SourceCatalog):
