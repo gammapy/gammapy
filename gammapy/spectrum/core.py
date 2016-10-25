@@ -265,7 +265,7 @@ class PHACountsSpectrum(CountsSpectrum):
     @property
     def counts_in_safe_range(self):
         """Counts with bins outside safe range set to 0"""
-        data = self.data.copy() 
+        data = self.data.copy()
         data[np.nonzero(self.quality)] = 0
         return data
 
@@ -277,7 +277,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @lo_threshold.setter
     def lo_threshold(self, thres):
-        idx = np.where(self.energy.data[1:] < thres)[0]
+        idx = np.where(self.energy.data < thres)[0]
         self.quality[idx] = 1
 
     @property
@@ -289,6 +289,8 @@ class PHACountsSpectrum(CountsSpectrum):
     @hi_threshold.setter
     def hi_threshold(self, thres):
         idx = np.where(self.energy.data[:-1] > thres)[0]
+        if len(idx) != 0:
+            idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
 
     @property

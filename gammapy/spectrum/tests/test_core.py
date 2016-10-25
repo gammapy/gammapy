@@ -11,7 +11,6 @@ from .. import CountsSpectrum, PHACountsSpectrum
 
 @requires_dependency('scipy')
 class TestCountsSpectrum:
-
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3] * u.ct
         self.bins = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
@@ -41,7 +40,6 @@ class TestCountsSpectrum:
 
 @requires_dependency('scipy')
 class TestPHACountsSpectrum:
-
     def setup(self):
         counts = [1, 2, 5, 6, 1, 7, 23]
         self.binning = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
@@ -64,9 +62,9 @@ class TestPHACountsSpectrum:
         self.spec.quality = np.zeros(self.spec.energy.nbins, dtype=int)
         self.spec.lo_threshold = 1.5 * u.TeV
         self.spec.hi_threshold = 4.5 * u.TeV
-        assert (self.spec.quality == [1, 0, 0, 0, 0, 1, 1]).all()
-        assert_quantity_allclose(self.spec.lo_threshold, 1.3894955 * u.TeV)
-        assert_quantity_allclose(self.spec.hi_threshold, 5.1794747 * u.TeV)
+        assert (self.spec.quality == [1, 1, 0, 0, 1, 1, 1]).all()
+        assert_quantity_allclose(self.spec.lo_threshold, 1.93069773 * u.TeV)
+        assert_quantity_allclose(self.spec.hi_threshold, 3.72759372 * u.TeV)
 
     def test_io(self, tmpdir):
         filename = tmpdir / 'test2.fits'
