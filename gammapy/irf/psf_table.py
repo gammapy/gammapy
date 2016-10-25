@@ -147,7 +147,7 @@ class TablePSF(object):
         return self.evaluate(offset)
 
     def kernel(self, pixel_size, offset_max=None, normalize=True,
-               discretize_model_kwargs=dict(factor=10)):
+               discretize_model_kwargs=dict(factor=1)):
         """Make a 2-dimensional kernel image.
 
         The kernel image is evaluated on a cartesian
@@ -175,9 +175,6 @@ class TablePSF(object):
           `astropy.convolution.Model2DKernel` could be used to construct
           the kernel.
         """
-        if not isinstance(pixel_size, Angle):
-            raise ValueError("pixel_size must be an Angle object.")
-
         if offset_max is None:
             offset_max = self._offset.max()
 
@@ -258,7 +255,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        offset_min, offset_max : `~astropy.units.Quantity` with angle units 
+        offset_min, offset_max : `~astropy.units.Quantity` with angle units
             Offset angle range
 
         Returns
@@ -344,22 +341,21 @@ class TablePSF(object):
         if normalize:
             self.normalize()
 
-    def plot_psf_vs_theta(self, quantity='dp_domega'):
+    def plot_psf_vs_theta(self, ax=None, quantity='dp_domega', **kwargs):
         """Plot PSF vs offset.
 
         TODO: describe PSF ``quantity`` argument in a central place and link to it from here.
         """
         import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
 
         x = self._offset.to('deg')
         y = self.evaluate(self._offset, quantity)
 
-        plt.plot(x.value, y.value, lw=2)
-        plt.semilogy()
-        plt.loglog()
-        plt.xlabel('Offset ({0})'.format(x.unit))
-        plt.ylabel('PSF ({0})'.format(y.unit))
-        plt.show()
+        ax.plot(x.value, y.value, **kwargs)
+        ax.loglog()
+        ax.set_xlabel('Offset ({0})'.format(x.unit))
+        ax.set_ylabel('PSF ({0})'.format(y.unit))
 
     def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
@@ -392,7 +388,7 @@ class TablePSF(object):
         y = self.integral(Angle(0, 'rad'), self._offset)
 
         # This is a hack to stabilize the univariate spline. Only use the first
-        # i entries, where the integral is srictly increasing, to build the spline. 
+        # i entries, where the integral is srictly increasing, to build the spline.
         i = (np.diff(y) <= 0).argmax()
         i = len(y) if i == 0 else i
         self._ppf_spline = UnivariateSpline(y[:i], x[:i], **spline_kwargs)
@@ -415,7 +411,7 @@ class EnergyDependentTablePSF(object):
         Energy (1-dim)
     offset : `~astropy.units.Quantity` with angle units
         Offset angle (1-dim)
-    exposure : `~astropy.units.Quantity` 
+    exposure : `~astropy.units.Quantity`
         Exposure (1-dim)
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
@@ -602,12 +598,12 @@ class EnergyDependentTablePSF(object):
         # making a `TablePSF`.
         return TablePSF(self.offset, total_psf_value, **kwargs)
 
-    def containment_radius(self, energy, fraction, interp_kwargs=None):
+    def containment_radius(self, energies, fraction, interp_kwargs=None):
         """Containment radius.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energies : `~astropy.units.Quantity`
             Energy
         fraction : float
             Containment fraction in %
@@ -617,9 +613,12 @@ class EnergyDependentTablePSF(object):
         radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        # TODO: useless at the moment ... support array inputs or remove!
-        psf = self.table_psf_at_energy(energy, interp_kwargs)
-        return psf.containment_radius(fraction)
+        # TODO: figure out if there's a more efficient implementation to support
+        # arrays of energy
+        energies = np.atleast_1d(energies)
+        psfs = [self.table_psf_at_energy(energy, interp_kwargs) for energy in energies]
+        radii = [psf.containment_radius(fraction) for psf in psfs]
+        return Quantity(radii)
 
     def integral(self, energy, offset_min, offset_max):
         """Containment fraction.
@@ -687,14 +686,24 @@ class EnergyDependentTablePSF(object):
         if filename != None:
             plt.savefig(filename)
 
-    def plot_containment_vs_energy(self, filename=None):
+    def plot_containment_vs_energy(self, ax=None, fractions=[0.63, 0.8, 0.95], **kwargs):
         """Plot containment versus energy."""
-        raise NotImplementedError
         import matplotlib.pyplot as plt
-        plt.clf()
 
-        if filename != None:
-            plt.savefig(filename)
+        ax = plt.gca() if ax is None else ax
+
+        energy = Energy.equal_log_spacing(
+            self.energy.min(), self.energy.max(), 10)
+
+        for fraction in fractions:
+            radius = self.containment_radius(energy, fraction)
+            label = '{:.1f}% Containment'.format(100 * fraction)
+            ax.plot(energy.value, radius.value, label=label, **kwargs)
+
+        ax.semilogx()
+        ax.legend(loc='best')
+        ax.set_xlabel('Energy (GeV)')
+        ax.set_ylabel('Containment radius (deg)')
 
     def plot_exposure_vs_energy(self, filename=None):
         """Plot exposure versus energy."""

@@ -827,7 +827,7 @@ class SkyImage(object):
         elif viewer == 'ds9':
             ds9options = ds9options or []
             with NamedTemporaryFile() as f:
-                self.write(f)
+                self.write(f.name)
                 call(['ds9', f.name, '-cmap', 'bb'] + ds9options)
         else:
             raise ValueError("Invalid image viewer option, choose either"
