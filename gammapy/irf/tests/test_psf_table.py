@@ -118,6 +118,16 @@ def test_EnergyDependentTablePSF():
 
     assert_allclose(actual, desired)
 
+@requires_data('gammapy-extra')
+@requires_dependency('matplotlib')
+def test_EnergyDependentTablePSF_plot():
+    filename = FermiGalacticCenter.filenames()['psf']
+    psf = EnergyDependentTablePSF.read(filename)
+    psf.plot_containment_vs_energy()
+
+    energy = Quantity(1, 'GeV')
+    psf_1GeV = psf.table_psf_at_energy(energy)
+    psf_1GeV.plot_psf_vs_theta()
 
 # TODO: fix this test (move the code from examples/plot_irfs.py here)
 @pytest.mark.xfail

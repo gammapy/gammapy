@@ -109,6 +109,10 @@ class TestFermi2FHLObject:
         desired = Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
         assert_quantity_allclose(model(energy), desired)
 
+    def test_spectrum(self):
+        spectrum = self.source.spectrum
+        assert "Fit result info" in str(spectrum)
+
 
 ############
 # Old stuff:
