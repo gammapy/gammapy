@@ -36,7 +36,7 @@ crab_2fhl.spectral_model.plot(crab_2fhl.energy_range, ax=ax, energy_power=2,
 # set up an energy array to evaluate the butterfly using the 2FHL energy range
 emin, emax = crab_2fhl.energy_range
 energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-butterfly_2fhl = crab_2fhl.spectrum.fit.butterfly(energy)
+butterfly_2fhl = crab_2fhl.spectrum.butterfly(energy)
 
 # plot butterfly and flux points
 butterfly_2fhl.plot(crab_2fhl.energy_range, ax=ax, energy_power=2, color='g',

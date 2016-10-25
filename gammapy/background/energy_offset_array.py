@@ -62,7 +62,7 @@ class EnergyOffsetArray(object):
         ev_energy = events.energy
 
         sample = np.vstack([ev_energy, offset]).T
-        bins = [self.energy.value, self.offset.value]
+        bins = [self.energy, self.offset]
         hist, edges = np.histogramdd(sample, bins)
 
         return hist

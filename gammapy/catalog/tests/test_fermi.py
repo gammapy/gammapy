@@ -6,7 +6,7 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
 from ...spectrum.models import (PowerLaw, ExponentialCutoffPowerLaw, LogParabola,
                                 ExponentialCutoffPowerLaw3FGL)
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 
 
 
@@ -109,6 +109,7 @@ class TestFermi2FHLObject:
         desired = Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
         assert_quantity_allclose(model(energy), desired)
 
+    @requires_dependency('uncertainties')
     def test_spectrum(self):
         spectrum = self.source.spectrum
         assert "Fit result info" in str(spectrum)
