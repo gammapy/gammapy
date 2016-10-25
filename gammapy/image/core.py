@@ -738,15 +738,17 @@ class SkyImage(object):
         hdu : `~astropy.io.fits.PrimaryHDU`
             Primary image hdu object.
         """
-        if self.wcs is not None:
-            header = self.wcs.to_header()
-        else:
-            header = fits.Header()
-
-        # Add meta data
+        header = fits.Header()
         header.update(self.meta)
+
+        if self.wcs is not None:
+            # update wcs, because it could have changed
+            header_wcs = self.wcs.to_header()
+            header.update(header_wcs)
+
         if self.unit is not None:
             header['BUNIT'] = Unit(self.unit).to_string('fits')
+
         if self.name is not None:
             header['EXTNAME'] = self.name
             header['HDUNAME'] = self.name
