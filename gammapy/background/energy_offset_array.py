@@ -58,11 +58,11 @@ class EnergyOffsetArray(object):
         events :`~gammapy.data.EventList`
            Event list
         """
-        offset = events.offset
-        ev_energy = events.energy
+        offset = events.offset.to(self.offset.unit).value
+        ev_energy = events.energy.to(self.energy.unit).value
 
         sample = np.vstack([ev_energy, offset]).T
-        bins = [self.energy, self.offset]
+        bins = [self.energy.value, self.offset.value]
         hist, edges = np.histogramdd(sample, bins)
 
         return hist
