@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest, assert_quantity_allclose
+import sherpa.optmethods as optmethods
 import astropy.units as u
 import numpy as np
 from astropy.utils.compat import NUMPY_LT_1_9
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_string_equal
 from ...datasets import gammapy_extra
 from ...spectrum import (
     SpectrumObservationList,
@@ -44,7 +45,7 @@ def test_spectral_fit(tmpdir):
     test_e = 12.5 * u.TeV
     assert_quantity_allclose(fit.result[0].model(test_e),
                              read_result.model(test_e))
-
+    assert_string_equal(fit.method_fit.name, optmethods.NelderMead().name)
     result = fit.result[0]
     result.plot()
 
@@ -92,6 +93,15 @@ def test_spectral_fit(tmpdir):
 
     assert_quantity_allclose(actual, desired)
 
+    # Test method fit
+    fit = SpectrumFit(obs_list, model)
+    fit.method_fit = "LevMar"
+    fit.run(outdir=tmpdir)
+    result = fit.result[0]
+    assert_string_equal(fit.method_fit.name, optmethods.LevMar().name)
+    assert_quantity_allclose(result.model.parameters.index,
+                             2.116 * u.Unit(''), rtol=1e-3)
+
     # Test ECPL
     ecpl = models.ExponentialCutoffPowerLaw(
         index=2 * u.Unit(''),
@@ -108,7 +118,7 @@ def test_spectral_fit(tmpdir):
 
 @requires_dependency('sherpa')
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.xfail(reason = 'wait for https://github.com/sherpa/sherpa/pull/249')
+@pytest.mark.xfail(reason='wait for https://github.com/sherpa/sherpa/pull/249')
 @requires_data('gammapy-extra')
 def test_stacked_fit():
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
