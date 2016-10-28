@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-""" 
+"""
 Implementation of adaptive smoothing algorithms.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -19,7 +19,7 @@ __all__ = ['ASmooth', 'asmooth_scales']
 def _significance_asmooth(counts, background):
     """
     Significance according to fomula (5) in asmooth paper.
-    
+
     Parameters
     ----------
     counts : ndarray
@@ -45,18 +45,18 @@ class ASmooth(object):
     """
     Adaptivly smooth counts image, achieving a roughly constant significance
     of features across the whole image.
-    
+
     Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E. The
     algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
     signifiance of a feature in the image.
-    
+
     Parameters
     ----------
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
     scales : `~astropy.units.Quantity`
         Smoothing scales.
-    method : str
+    method : {'simple', 'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
@@ -65,7 +65,7 @@ class ASmooth(object):
                  scales=None):
         self.parameters = OrderedDict(kernel=kernel, method=method,
                                       threshold=threshold, scales=scales)
-        
+
     def kernels(self, image):
         """
         Ring kernels according to the specified method.
@@ -93,7 +93,7 @@ class ASmooth(object):
             kernel.normalize('peak')
             kernels.append(kernel)
         return kernels
-        
+
     def _significance_cube(self, cubes):
         p = self.parameters
         if p['method'] == 'lima':
@@ -110,7 +110,7 @@ class ASmooth(object):
                              " 'asmooth' or 'ts'")
         return scube
 
-    def run(self, images, cache=True):
+    def run(self, images):
         """
 
         Parameters
@@ -130,9 +130,9 @@ class ASmooth(object):
         """
         images.check_required(['counts'])
         wcs = images['counts'].wcs.copy()
-        
+
         kernels = self.kernels(images['counts'])
-        
+
         cubes = {}
         cubes['counts'] = scale_cube(images['counts'].data, kernels)
 
@@ -146,9 +146,9 @@ class ASmooth(object):
             flux = ((images['counts'].data - images['background'].data) /
                      images['exposure'].data)
             cubes['flux'] = scale_cube(flux, kernels)
-        
+
         cubes['significance'] = self._significance_cube(cubes)
-        
+
         smoothed = self._reduce_cubes(cubes, kernels)
         self.cubes = cubes
         result = SkyImageList()
@@ -157,7 +157,7 @@ class ASmooth(object):
         if 'exposure' in images.names:
             result['flux'] = SkyImage(data=smoothed['flux'], wcs=wcs)
         return result
-     
+
 
     def _reduce_cubes(self, cubes, kernels):
         """
@@ -175,7 +175,7 @@ class ASmooth(object):
         # Init smoothed data arrays
         for key in ['counts', 'background', 'scale', 'significance', 'flux']:
             smoothed[key] = np.tile(np.nan, shape)
-        
+
         for idx, scale in enumerate(p['scales']):
             # slice out 2D image at index idx out of cube
             slice_ = np.s_[:, :, idx]
@@ -183,10 +183,10 @@ class ASmooth(object):
             mask = np.isnan(smoothed['counts'])
             if idx < (len(p['scales']) - 1):
                 mask = (cubes['significance'][slice_] > p['threshold']) & mask
-            
+
             smoothed['scale'][mask] = scale
             smoothed['significance'][mask] = cubes['significance'][slice_][mask]
-            
+
             # renormalize smoothed data arrays
             norm = kernels[idx].array.sum()
             for key in ['counts', 'background']:
