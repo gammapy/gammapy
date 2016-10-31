@@ -86,6 +86,12 @@ class SpectrumObservation(object):
         """Unique identifier"""
         return self.on_vector.obs_id
 
+    @obs_id.setter
+    def obs_id(self, obs_id):
+        self.on_vector.obs_id = obs_id
+        if self.off_vector is not None:
+            self.off_vector.obs_id = obs_id
+
     @property
     def livetime(self):
         """Dead-time corrected observation time"""
@@ -119,7 +125,8 @@ class SpectrumObservation(object):
     @lo_threshold.setter
     def lo_threshold(self, threshold):
         self.on_vector.lo_threshold = threshold
-        self.off_vector.lo_threshold = threshold
+        if self.off_vector is not None:
+            self.off_vector.lo_threshold = threshold
 
     @property
     def hi_threshold(self):
@@ -129,7 +136,8 @@ class SpectrumObservation(object):
     @hi_threshold.setter
     def hi_threshold(self, threshold):
         self.on_vector.hi_threshold = threshold
-        self.off_vector.hi_threshold = threshold
+        if self.off_vector is not None:
+            self.off_vector.hi_threshold = threshold
 
     @property
     def background_vector(self):
