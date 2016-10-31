@@ -68,17 +68,26 @@ class SpectrumSimulation(object):
     def run(self, seed):
         """Simluate `~gammapy.spectrum.SpectrumObservationList`
 
-        The seeds will be set as observation id.
+        The seeds will be set as observation id. Previously produced results
+        will be overwritten.
 
         Parameters
         ----------
         seed : array of ints
             Random number generator seeds
         """
+        self.reset()
         for current_seed in seed:
             self.simulate_obs(seed=current_seed)
             self.obs.obs_id = current_seed
             self.result.append(self.obs)
+
+    def reset(self):
+        """Clear all results"""
+        self.result = SpectrumObservationList()
+        self.obs = None
+        self.on_vector = None
+        self.off_vector = None
 
     def simulate_obs(self, seed='random-seed'):
         """Simulate one `~gammapy.spectrum.SpectrumObservation`.
