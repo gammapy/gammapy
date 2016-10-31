@@ -32,7 +32,6 @@ Content
    fitting
    flux_points
    energy_group
-   simulation
    plotting_fermi_spectra
 
 Reference/API
