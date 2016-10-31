@@ -255,9 +255,6 @@ class TestFluxEstimator:
 
         self.groups = self.seg.groups
 
-    # TODO: fix this test
-    # see https://github.com/gammapy/gammapy/issues/724
-    @pytest.mark.xfail
     def test_with_power_law(self):
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
