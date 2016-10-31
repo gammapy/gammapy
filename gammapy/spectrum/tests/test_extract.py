@@ -111,5 +111,5 @@ class TestSpectrumExtraction:
         extraction.define_energy_threshold(method_lo_threshold="area_max",
                                            percent=10)
         assert_quantity_allclose(extraction.observations[0].lo_threshold,
-                                 0.5994842503189409 * u.TeV,
+                                 0.6812920690579611 * u.TeV,
                                  rtol=1e-3)
