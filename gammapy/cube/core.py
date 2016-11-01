@@ -401,6 +401,37 @@ class SkyCube(object):
 
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
+    def show(self, viewer='mpl', ds9options=None, **kwargs):
+        """
+        Show sky cube in image viewer.
+
+        Parameters
+        ----------
+        viewer : {'mpl', 'ds9'}
+            Which image viewer to use. Option 'ds9' requires ds9 to be installed.
+        ds9options : list, optional
+            List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
+            Any valid ds9 command line option can be passed.
+            See http://ds9.si.edu/doc/ref/command.html for details.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+        """
+        import matplotlib.pyplot as plt
+        from ipywidgets import interact
+
+        if viewer == 'mpl':
+            max_ = self.data.shape[0] - 1
+            
+            def show_image(idx):
+                image = self.sky_image(idx)
+                image.data = image.data.value
+                image.show(**kwargs)
+
+            return interact(show_image, idx=(0, max_, 1))
+        elif viewer == 'ds9':
+            raise NotImplementedError
+
+
     def spectral_index(self, lon, lat, energy, dz=1e-3):
         """Power law spectral index (`numpy.array`).
 
