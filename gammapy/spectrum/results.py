@@ -448,7 +448,7 @@ class SpectrumResult(object):
         fit_kwargs.setdefault('color', 'navy')
         point_kwargs.setdefault('marker', '.')
         point_kwargs.setdefault('color', 'navy')
-        butterfly_kwargs.setdefault('color', 'darkblue')
+        butterfly_kwargs.setdefault('facecolor', 'darkblue')
         butterfly_kwargs.setdefault('alpha', '0.5')
         common_kwargs = dict(
             energy_unit=energy_unit,

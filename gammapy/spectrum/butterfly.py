@@ -29,7 +29,7 @@ class SpectrumButterfly(QTable):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        kwargs.setdefault('color', 'black')
+        kwargs.setdefault('facecolor', 'black')
         kwargs.setdefault('alpha', 0.2)
         kwargs.setdefault('linewidth', 0)
 
