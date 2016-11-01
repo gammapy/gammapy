@@ -101,10 +101,11 @@ class SpectralModel(object):
     @classmethod
     def from_dict(cls, val):
         """Serialize from dict"""
+        classname = val['name']
         kwargs = dict()
         for _ in val['parameters']:
             kwargs[_['name']] = _['val'] * u.Unit(_['unit'])
-        return cls(**kwargs)
+        return globals()[classname](**kwargs)
 
     def plot(self, energy_range, ax=None,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',

@@ -109,12 +109,7 @@ class SpectrumFitResult(object):
     @classmethod
     def from_dict(cls, val):
         modeldict = val['model']
-        if modeldict['name'] == 'PowerLaw':
-            model = models.PowerLaw.from_dict(modeldict)
-        elif modeldict['name'] == 'ExponentialCutoffPowerLaw':
-            model = models.ExponentialCutoffPowerLaw.from_dict(modeldict)
-        else:
-            raise NotImplementedError('{}'.format(modeldict['name']))
+        model = models.SpectralModel.from_dict(modeldict)
         try:
             erange = val['fit_range']
             energy_range = (erange['min'], erange['max']) * u.Unit(erange['unit'])
