@@ -23,7 +23,7 @@ class SpectrumButterfly(QTable):
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):
         """Plot.
 
-        ``kwargs`` are passed to ``matplotlib.pyplot.errorbar``.
+        ``kwargs`` are passed to ``matplotlib.pyplot.fill_between``.
         """
 
         import matplotlib.pyplot as plt
