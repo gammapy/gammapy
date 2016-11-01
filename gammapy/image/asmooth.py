@@ -46,7 +46,7 @@ class ASmooth(object):
     Adaptivly smooth counts image, achieving a roughly constant significance
     of features across the whole image.
     
-    Algorithm based on http://arxiv.org/pdf/astro-ph/0601306v1.pdf. The
+    Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E. The
     algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
     signifiance of a feature in the image.
     

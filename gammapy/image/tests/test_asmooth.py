@@ -10,7 +10,7 @@ from astropy.convolution import Gaussian2DKernel
 
 def test_asmooth():
 	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz')
-	images['COUNTS'].name = 'counts'
+	images['Counts'].name = 'counts'
 	images['BACKGROUND'].name = 'background'
 
 	kernel = Gaussian2DKernel
