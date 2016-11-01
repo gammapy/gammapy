@@ -475,7 +475,7 @@ class SpectrumResult(object):
                          **point_kwargs)
         point_kwargs.pop('flux_unit')
         point_kwargs.pop('energy_power')
-        ax0.set_title('')
+        ax0.set_xlabel('')
         self._plot_residuals(ax=ax1,
                              **point_kwargs)
 
