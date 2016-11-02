@@ -8,6 +8,7 @@ from functools import partial
 
 import numpy as np
 from astropy.coordinates import Angle
+from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
@@ -29,10 +30,19 @@ log = logging.getLogger(__name__)
 
 def _fftconvolve_wrap(kernel, data):
     from scipy.signal import fftconvolve
-    return fftconvolve(data, kernel.array, mode='same')
+    from scipy.ndimage.filters import gaussian_filter
+
+    # wrap gaussian filter as a special case, because the gain in
+    # performance is factor ~100
+    if isinstance(kernel, Gaussian2DKernel):
+        width = kernel.model.x_stddev.value
+        norm = kernel.array.sum()
+        return norm * gaussian_filter(data, width)
+    else:
+        return fftconvolve(data, kernel.array, mode='same')
 
 
-def scale_cube_fft(data, kernels, parallel=True):
+def scale_cube(data, kernels, parallel=True):
     """
     Compute scale space cube.
 
