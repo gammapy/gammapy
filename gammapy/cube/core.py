@@ -362,6 +362,26 @@ class SkyCube(object):
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
 
+    @property        
+    def spatial(self):
+        """
+        Spatial part of the cube obtained by summing over all energy bins.
+
+        Examples
+        --------
+        Can be used to acces the spatial information of the cube:
+
+            >>> from gammapy.cube import SkyCube
+            >>> cube = SkyCube.empty()
+            >>> coords = cube.spatial.coordinates()
+            >>> solid_angle = cube.spatial.solid_angle()
+
+        """
+        #TODO: what about meta info?
+        data = np.nansum(self.data, axis=0)
+        wcs = self.wcs.celestial.copy()
+        return SkyImage(name=self.name, data=data, wcs=wcs)
+
     @property
     def ref_sky_image(self):
         """Reference `~gammapy.image.SkyImage` that matches the cube.
