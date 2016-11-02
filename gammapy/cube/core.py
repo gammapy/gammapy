@@ -491,18 +491,19 @@ class SkyCube(object):
         reprojected_cube : `SkyCube`
             Cube spatially reprojected to the reference.
         """
+        if isinstance(reference, SkyCube):
+            reference = reference.spatial
+
         out = []
         for idx in range(len(self.data)):
             image = self.sky_image(idx)
             image_out = image.reproject(reference, mode=mode, *args, **kwargs)
             out.append(image_out.data)
 
-        data = np.dstack(out)
+        data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
-        return self.__class__(
-            name=self.name, data=data, wcs=wcs,
-            unit=self.unit, meta=self.meta,
-        )
+        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
+                              energy=self.energy)
 
  
     def to_fits(self):
