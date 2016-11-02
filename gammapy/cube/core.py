@@ -515,7 +515,7 @@ class SkyCube(object):
                          meta=header)
         return image
 
-    def reproject_to(self, reference_cube, projection_type='bicubic'):
+    def reproject(self, reference_cube, projection_type='bicubic'):
         """Spatially reprojects a `SkyCube` onto a reference cube.
 
         Parameters
