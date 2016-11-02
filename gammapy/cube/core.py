@@ -299,23 +299,6 @@ class SkyCube(object):
 
         return lon, lat, energy
 
-    def coordinates(self, mode='center'):
-        """Spatial coordinate images.
-
-        Wrapper of `gammapy.image.SkyImage.coordinates`
-
-        Parameters
-        ----------
-        mode : {'center', 'edges'}
-            Return coordinate values at the pixels edges or pixel centers.
-
-        Returns
-        -------
-        coordinates : `~astropy.coordinates.SkyCoord`
-            Position on the sky.
-        """
-        return self.ref_sky_image.coordinates(mode)
-
     def to_sherpa_data3d(self):
         """
         Convert sky cube to sherpa `Data3D` object.
@@ -382,18 +365,6 @@ class SkyCube(object):
         wcs = self.wcs.celestial.copy()
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
-    @property
-    def ref_sky_image(self):
-        """Reference `~gammapy.image.SkyImage` that matches the cube.
-        """
-        image = self.sky_image(idx_energy=0, copy=True)
-        image.data = 0 * image.data
-        return image
-
-    @property
-    def solid_angle(self):
-        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        return self.ref_sky_image.solid_angle()
 
     def flux(self, lon, lat, energy):
         """Differential flux.
