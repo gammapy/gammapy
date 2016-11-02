@@ -17,6 +17,7 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+from astropy.utils import lazyproperty
 
 from ..utils.scripts import make_path
 from ..utils.testing import assert_wcs_allclose
@@ -93,21 +94,6 @@ class SkyCube(object):
         self.energy = energy
         if energy:
             self.energy_axis = LogEnergyAxis(energy)
-
-        self._interpolate_cache = None
-
-    @property
-    def _interpolate(self):
-        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
-        if self._interpolate_cache is None:
-            # Initialise the interpolator
-            # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
-            from scipy.interpolate import RegularGridInterpolator
-            points = list(map(np.arange, self.data.shape))
-            self._interpolate_cache = RegularGridInterpolator(points, self.data.value,
-                                                              fill_value=None, bounds_error=False)
-
-        return self._interpolate_cache
 
     @classmethod
     def read_hdu(cls, hdu_list):
@@ -247,39 +233,32 @@ class SkyCube(object):
         energies = refcube.energies.copy()
         return cls(data=data, wcs=wcs, energy=energies, meta=refcube.meta)
 
-    def world2pix(self, lon, lat, energy, combine=False):
+    def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
 
         Parameters
         ----------
-        lon, lat, energy
-
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        energy : `~astropy.units.Quantity`
+            Energy
+        
         Returns
         -------
-        x, y, z or array with (x, y, z) as columns
+        (x, y, z) : tuple
+            Tuple of x, y, z coordinates.
         """
-        lon = lon.to('deg').value
-        lat = lat.to('deg').value
-        origin = 0  # convention for gammapy
-        x, y = self.wcs.wcs_world2pix(lon, lat, origin)
+        if not position.shape == energy.shape:
+            raise ValueError('Position and energy array must have the same shape.')
 
+        x, y = self.spatial.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
+        
+        #TODO: check order, so that it corresponds to data axis order
+        return (z, y, x)
 
-        shape = (x * y * z).shape
-        x = x * np.ones(shape)
-        y = y * np.ones(shape)
-        z = z * np.ones(shape)
-
-        if combine:
-            x = np.array(x).flat
-            y = np.array(y).flat
-            z = np.array(z).flat
-            return np.column_stack([z, y, x])
-        else:
-            return x, y, z
-
-    def pix2world(self, x, y, z):
-        """Convert world to pixel coordinates.
+    def wcs_pixel_to_skycoord(self, x, y, z):
+        """Convert pixel to world coordinates.
 
         Parameters
         ----------
@@ -289,15 +268,10 @@ class SkyCube(object):
         -------
         lon, lat, energy
         """
-        origin = 0  # convention for gammapy
-        lon, lat = self.wcs.wcs_pix2world(x, y, origin)
+        position = self.spatial.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.pix2world(z)
-
-        lon = Quantity(lon, 'deg')
-        lat = Quantity(lat, 'deg')
         energy = Quantity(energy, self.energy.unit)
-
-        return lon, lat, energy
+        return (position, energy)
 
     def to_sherpa_data3d(self):
         """
@@ -311,7 +285,7 @@ class SkyCube(object):
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        coordinates = self.coordinates()
+        coordinates = self.spatial.coordinates()
         ra = coordinates.data.lon
         dec = coordinates.data.lat
 
@@ -345,7 +319,7 @@ class SkyCube(object):
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
 
-    @property        
+    @lazyproperty        
     def spatial(self):
         """
         Spatial part of the cube obtained by summing over all energy bins.
@@ -365,16 +339,22 @@ class SkyCube(object):
         wcs = self.wcs.celestial.copy()
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
+    @property
+    def _interpolate(self):
+        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
+        # Initialise the interpolator
+        # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
+        from scipy.interpolate import RegularGridInterpolator
+        points = list(map(np.arange, self.data.shape))
+        return RegularGridInterpolator(points, self.data.value, fill_value=None, bounds_error=False)
 
-    def flux(self, lon, lat, energy):
+    def lookup(self, position, energy, interpolation=None):
         """Differential flux.
 
         Parameters
         ----------
-        lon : `~astropy.coordinates.Angle`
-            Longitude
-        lat : `~astropy.coordinates.Angle`
-            Latitude
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
         energy : `~astropy.units.Quantity`
             Energy
 
@@ -383,14 +363,13 @@ class SkyCube(object):
         flux : `~astropy.units.Quantity`
             Differential flux (1 / (cm2 MeV s sr))
         """
-        # Determine output shape by creating some array via broadcasting
-        shape = (lon * lat * energy).shape
+        if not position.shape == energy.shape:
+            raise ValueError('Position and energy array must have the same shape.')
 
-        pix_coord = self.world2pix(lon, lat, energy, combine=True)
-        values = self._interpolate(pix_coord)
-        values = values.reshape(shape)
-
-        return Quantity(values, '1 / (cm2 MeV s sr)')
+        z, y, x = self.wcs_skycoord_to_pixel(position, energy)
+       
+        return self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
+                         np.rint(x).astype('int')]
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
