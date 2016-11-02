@@ -174,11 +174,10 @@ class SkyCube(object):
         if weights is not None:
             weights = events[weights]
 
-        image = self.ref_sky_image
-        xx, yy = image._events_xy(events)
+        xx, yy = self.spatial._events_xy(events)
         zz = self._energy_to_zz(events.energy)
 
-        bins = self._bins_energy, image._bins_pix[0], image._bins_pix[1]
+        bins = self._bins_energy, self.spatial._bins_pix[0], self.spatial._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
@@ -255,7 +254,7 @@ class SkyCube(object):
         z = self.energy_axis.world2pix(energy)
         
         #TODO: check order, so that it corresponds to data axis order
-        return (z, y, x)
+        return (x, y, z)
 
     def wcs_pixel_to_skycoord(self, x, y, z):
         """Convert pixel to world coordinates.

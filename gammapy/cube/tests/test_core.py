@@ -8,6 +8,7 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList
@@ -41,31 +42,31 @@ class TestSkyCube(object):
         sky_cube = SkyCube.read(filename)
         assert sky_cube.data.shape == (30, 21, 61)
 
-    def test_pix2world(self):
+    def test_pixel_to_skycoord(self):
         # Corner pixel with index [0, 0, 0]
-        lon, lat, energy = self.sky_cube.pix2world(0, 0, 0)
+        position, energy = self.sky_cube.wcs_pixel_to_skycoord(0, 0, 0)
+        lon, lat = position.galactic.l, position.galactic.b
         assert_quantity_allclose(lon, Quantity(344.75, 'deg'))
         assert_quantity_allclose(lat, Quantity(-5.25, 'deg'))
         assert_quantity_allclose(energy, Quantity(50, 'MeV'))
 
-    def test_world2pix(self):
-        lon = Quantity(344.75, 'deg')
-        lat = Quantity(-5.25, 'deg')
+    def test_skycoord_to_pixel(self):
+        position = SkyCoord(344.75, -5.25, frame='galactic', unit='deg')
         energy = Quantity(50, 'MeV')
-        x, y, z = self.sky_cube.world2pix(lon, lat, energy)
+        x, y, z = self.sky_cube.wcs_skycoord_to_pixel(position, energy)
         assert_allclose((x, y, z), (0, 0, 0))
 
     def test_pix2world2pix(self):
         # Test round-tripping
         pix = 2.2, 3.3, 4.4
-        world = self.sky_cube.pix2world(*pix)
-        pix2 = self.sky_cube.world2pix(*world)
+        world = self.sky_cube.wcs_pixel_to_skycoord(*pix)
+        pix2 = self.sky_cube.wcs_skycoord_to_pixel(*world)
         assert_allclose(pix2, pix)
 
         # Check array inputs
         pix = [2.2, 2.2], [3.3, 3.3], [4.4, 4.4]
-        world = self.sky_cube.pix2world(*pix)
-        pix2 = self.sky_cube.world2pix(*world)
+        world = self.sky_cube.wcs_pixel_to_skycoord(*pix)
+        pix2 = self.sky_cube.wcs_skycoord_to_pixel(*world)
         assert_allclose(pix2, pix)
 
     @pytest.mark.xfail
@@ -94,30 +95,29 @@ class TestSkyCube(object):
         # expected = 10.13733026e-07
         assert_quantity_allclose(actual, expected)
 
-    def test_flux_mixed(self):
+    def test_lookup(self):
         # Corner pixel with index [0, 0, 0]
-        lon = Quantity([344.75, 344.75], 'deg')  # pixel 0 twice
-        lat = Quantity([-5.25, -5.25], 'deg')  # pixel 0 twice
+        position = SkyCoord(344.75, -5.25, frame='galactic', unit='deg')
         energy = Quantity(50, 'MeV')  # slice 0
-        actual = self.sky_cube.flux(lon, lat, energy)
+        actual = self.sky_cube.lookup(position, energy)
         expected = self.sky_cube.data[0, 0, 0]
         assert_quantity_allclose(actual, expected)
 
-    def test_flux_array(self):
+    def test_lookup_array(self):
         pix = [2, 2], [3, 3], [4, 4]
-        world = self.sky_cube.pix2world(*pix)
-        actual = self.sky_cube.flux(*world)
-        expected = self.sky_cube.data[4, 3, 2]
+        position, energy = self.sky_cube.wcs_pixel_to_skycoord(*pix)
+        actual = self.sky_cube.lookup(position, energy)
+        expected = self.sky_cube.data[2, 3, 4]
         # Quantity([3.50571123e-07, 2], '1 / (cm2 MeV s sr)')
         assert_quantity_allclose(actual, expected)
 
     def test_integral_flux_image(self):
         # For a very small energy band the integral flux should be roughly
         # differential flux times energy bin width
-        lon, lat, energy = self.sky_cube.pix2world(0, 0, 0)
+        position, energy = self.sky_cube.wcs_pixel_to_skycoord(0, 0, 0)
         denergy = 0.001 * energy
         energy_band = Quantity([energy, energy + denergy])
-        dflux = self.sky_cube.flux(lon, lat, energy)
+        dflux = self.sky_cube.lookup(position, energy)
         expected = dflux * denergy
         actual = Quantity(self.sky_cube.integral_flux_image(energy_band).data[0, 0],
                           '1 / (cm2 s sr)')
@@ -137,36 +137,6 @@ class TestSkyCube(object):
         assert_allclose(new_image.data, image.data)
 
         assert new_image.wcs.axis_type_names == ['GLON', 'GLAT']
-
-    # TODO: fix this test.
-    # It's currently failing. Dont' know which number (if any) is correct.
-    # E        x: array(7.615363001210512e-05)
-    # E        y: array(0.00015230870989335428)
-    @pytest.mark.xfail
-    def test_solid_angle(self):
-        actual = self.sky_cube.solid_angle[10][30]
-        expected = Quantity(self.sky_cube.wcs.wcs.cdelt[:-1].prod(), 'deg2')
-        assert_quantity_allclose(actual, expected, rtol=1e-4)
-
-    def test_coordinates(self):
-        coordinates = self.sky_cube.coordinates()
-        lon = coordinates.data.lon
-        lat = coordinates.data.lat
-
-        assert lon.shape == (21, 61)
-        assert lat.shape == (21, 61)
-
-        assert_allclose(lon[0, 0], Angle("344d45m00s"))
-        assert_allclose(lat[0, 0], Angle(" -5d15m00s"))
-
-        assert_allclose(lon[0, -1], Angle("14d45m00s"))
-        assert_allclose(lat[0, -1], Angle("-5d15m00s"))
-
-        assert_allclose(lon[-1, 0], Angle("344d45m00s"))
-        assert_allclose(lat[-1, 0], Angle("4d45m00s"))
-
-        assert_allclose(lon[-1, -1], Angle("14d45m00s"))
-        assert_allclose(lat[-1, -1], Angle("4d45m00s"))
 
     def test_to_images(self):
         images = self.sky_cube.to_images()
