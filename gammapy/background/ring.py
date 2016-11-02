@@ -8,7 +8,7 @@ import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 import astropy.units as u
 from ..image import SkyImageList, SkyImage
-from ..image.utils import scale_cube_fft
+from ..image.utils import scale_cube
 
 
 __all__ = [
@@ -135,7 +135,7 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         exposure  = images['exposure_on'].data
         exclusion = images['exclusion'].data
-        return scale_cube_fft(exposure * exclusion, kernels)
+        return scale_cube(exposure * exclusion, kernels)
 
     def _exposure_on_cube(self, images, kernels):
         """
@@ -161,7 +161,7 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         counts = images['counts'].data
         exclusion = images['exclusion'].data
-        return scale_cube_fft(counts * exclusion, kernels)
+        return scale_cube(counts * exclusion, kernels)
 
     def _reduce_cubes(self, cubes):
         """
