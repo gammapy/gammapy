@@ -95,6 +95,20 @@ class SkyCube(object):
         if energy:
             self.energy_axis = LogEnergyAxis(energy)
 
+        self._interpolate_cache = None
+
+    @property
+    def _interpolate(self):
+        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
+        if self._interpolate_cache is None:
+            # Initialise the interpolator
+            # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
+            from scipy.interpolate import RegularGridInterpolator
+            points = list(map(np.arange, self.data.shape))
+            self._interpolate_cache = RegularGridInterpolator(points, self.data.value,
+                                                              fill_value=None, bounds_error=False)
+        return self._interpolate_cache
+
     @classmethod
     def read_hdu(cls, hdu_list):
         """Read sky cube from HDU.
@@ -174,9 +188,8 @@ class SkyCube(object):
         if weights is not None:
             weights = events[weights]
 
-        xx, yy = self.spatial._events_xy(events)
-        zz = self._energy_to_zz(events.energy)
-
+        xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
+       
         bins = self._bins_energy, self.spatial._bins_pix[0], self.spatial._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
@@ -185,10 +198,6 @@ class SkyCube(object):
     @property
     def _bins_energy(self):
         return np.arange(self.data.shape[0] + 1)
-
-    def _energy_to_zz(self, energy):
-        zz = np.searchsorted(self.energy.value, energy.to(self.energy.unit).value)
-        return zz
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
@@ -349,16 +358,6 @@ class SkyCube(object):
         data = np.nansum(np.nansum(self.data, axis=1), axis=1)
         return CountsSpectrum(data=data, energy=self.energy)
 
-    @property
-    def _interpolate(self):
-        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
-        # Initialise the interpolator
-        # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
-        from scipy.interpolate import RegularGridInterpolator
-        points = list(map(np.arange, self.data.shape))
-        return RegularGridInterpolator(points, self.data.value, fill_value=None,
-                                       bounds_error=False)
-
     def lookup(self, position, energy, interpolation=None):
         """Differential flux.
 
@@ -374,6 +373,7 @@ class SkyCube(object):
         flux : `~astropy.units.Quantity`
             Differential flux (1 / (cm2 MeV s sr))
         """
+        # TODO: add interpolation option using NDDataArray
         if not position.shape == energy.shape:
             raise ValueError('Position and energy array must have the same shape.')
 

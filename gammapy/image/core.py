@@ -253,13 +253,10 @@ class SkyImage(object):
         if weights is not None:
             weights = events[weights]
 
-        xx, yy = self._events_xy(events)
+        xx, yy = self.wcs_skycoord_to_pixel(events.radec)
         bins = self._bins_pix
         data = np.histogramdd([yy, xx], bins, weights=weights)[0]
         self.data = self.data + data
-
-    def _events_xy(self, events):
-        return self.wcs_skycoord_to_pixel(events.radec)
 
     @property
     def _bins_pix(self):
