@@ -401,41 +401,6 @@ class SkyCube(object):
         elif viewer == 'ds9':
             raise NotImplementedError
 
-
-    def spectral_index(self, lon, lat, energy, dz=1e-3):
-        """Power law spectral index (`numpy.array`).
-
-        A forward finite difference method with step ``dz`` is used along
-        the ``z = log10(energy)`` axis.
-
-        Parameters
-        ----------
-        lon : `~astropy.coordinates.Angle`
-            Longitude
-        lat : `~astropy.coordinates.Angle`
-            Latitude
-        energy : `~astropy.units.Quantity`
-            Energy
-        """
-        raise NotImplementedError
-        # Compute flux at `z = log(energy)`
-        pix_coord = self.world2pix(lon, lat, energy, combine=True)
-        flux1 = self._interpolate(pix_coord)
-
-        # Compute flux at `z + dz`
-        pix_coord[:, 0] += dz
-        # pixel_coordinates += np.zeros(pixel_coordinates.shape)
-        flux2 = self._interpolate(pix_coord)
-
-        # Power-law spectral index through these two flux points
-        # d_log_flux = np.log(flux2 / flux1)
-        # spectral_index = d_log_flux / dz
-        energy1 = energy
-        energy2 = (1. + dz) * energy
-        spectral_index = powerlaw.g_from_points(energy1, energy2, flux1, flux2)
-
-        return spectral_index
-
     def integral_flux_image(self, energy_band, energy_bins=10):
         """Integral flux image for a given energy band.
 
