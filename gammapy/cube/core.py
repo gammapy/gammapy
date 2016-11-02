@@ -339,6 +339,17 @@ class SkyCube(object):
         wcs = self.wcs.celestial.copy()
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
+    @lazyproperty        
+    def spectral(self):
+        """
+        Spectral part of the cube obtained by summing over all spatial bins.
+
+        """
+        from ..spectrum import CountsSpectrum
+        #TODO: what about meta info?
+        data = np.nansum(np.nansum(self.data, axis=1), axis=1)
+        return CountsSpectrum(data=data, energy=self.energy)
+
     @property
     def _interpolate(self):
         """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
@@ -346,7 +357,8 @@ class SkyCube(object):
         # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
         from scipy.interpolate import RegularGridInterpolator
         points = list(map(np.arange, self.data.shape))
-        return RegularGridInterpolator(points, self.data.value, fill_value=None, bounds_error=False)
+        return RegularGridInterpolator(points, self.data.value, fill_value=None,
+                                       bounds_error=False)
 
     def lookup(self, position, energy, interpolation=None):
         """Differential flux.
@@ -459,66 +471,41 @@ class SkyCube(object):
                          meta=header)
         return image
 
-    def reproject(self, reference_cube, projection_type='bicubic'):
-        """Spatially reprojects a `SkyCube` onto a reference cube.
+    def reproject(self, reference, mode='interp', *args, **kwargs):
+        """Spatially reprojects a `SkyCube` onto a reference.
 
         Parameters
         ----------
-        reference_cube : `SkyCube`
-            Reference cube with the desired spatial projection.
-        projection_type : {'nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic', 'flux-conserving'}
-            Specify method of reprojection.
+        reference : `~astropy.io.fits.Header`, `SkyImage` or `SkyCube`
+            Reference wcs specification to reproject the data on.
+        mode : {'interp', 'exact'}
+            Interpolation mode.
+        *args : list
+            Arguments passed to `~reproject.reproject_interp` or
+            `~reproject.reproject_exact`.
+        **kwargs : dict
+            Keyword arguments passed to `~reproject.reproject_interp` or
+            `~reproject.reproject_exact`.
 
         Returns
         -------
         reprojected_cube : `SkyCube`
-            Cube spatially reprojected to the reference cube.
+            Cube spatially reprojected to the reference.
         """
-        from reproject import reproject_interp
+        out = []
+        for idx in range(len(self.data)):
+            image = self.sky_image(idx)
+            image_out = image.reproject(reference, mode=mode, *args, **kwargs)
+            out.append(image_out.data)
 
-        reference = reference_cube.data
-        shape_out = reference[0].shape
-        try:
-            wcs_in = self.wcs.dropaxis(2)
-        except:
-            wcs_in = self.wcs
-        try:
-            wcs_out = reference_cube.wcs.dropaxis(2)
-        except:
-            wcs_out = reference_cube.wcs
-        energy = self.energy
+        data = np.dstack(out)
+        wcs = image_out.wcs.copy()
+        return self.__class__(
+            name=self.name, data=data, wcs=wcs,
+            unit=self.unit, meta=self.meta,
+        )
 
-        cube = self.data
-        new_cube = np.zeros((cube.shape[0], reference.shape[1],
-                             reference.shape[2]))
-        energy_slices = np.arange(cube.shape[0])
-        # TODO: Re-implement to reproject cubes directly without needing
-        # to loop over energies here. Errors with reproject when doing this
-        # first need to be understood and fixed.
-        for i in energy_slices:
-            array = cube[i]
-            data_in = (array.value, wcs_in)
-            new_cube[i] = reproject_interp(data_in, wcs_out, shape_out, order=projection_type)[0]
-        new_cube = Quantity(new_cube, array.unit)
-        # Create new wcs
-        header_in = self.wcs.to_header()
-        header_out = reference_cube.wcs.to_header()
-        # Keep output energy info the same as input, but changes spatial information
-        # So need to restore energy parameters to input values here
-        try:
-            header_out['CRPIX3'] = header_in['CRPIX3']
-            header_out['CDELT3'] = header_in['CDELT3']
-            header_out['CTYPE3'] = header_in['CTYPE3']
-            header_out['CRVAL3'] = header_in['CRVAL3']
-        except KeyError:
-            pass
-
-        wcs_out = WCS(header_out).celestial
-
-        # TODO: how to fill 'meta' in better way?
-        meta = OrderedDict(header_out)
-        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=meta)
-
+ 
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.
 
