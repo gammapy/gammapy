@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from copy import deepcopy
 from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
 from ..extern.pathlib import Path
@@ -317,8 +318,8 @@ class SpectrumObservation(object):
         self.aeff.write(outdir / arffile, clobber=overwrite)
         if self.off_vector is not None:
             self.off_vector.write(outdir / bkgfile, clobber=overwrite)
-            if self.edisp is not None:
-                self.edisp.write(str(outdir / rmffile), clobber=overwrite)
+        if self.edisp is not None:
+            self.edisp.write(str(outdir / rmffile), clobber=overwrite)
 
     def peek(self, figsize=(15, 15)):
         """Quick-look summary plots."""
@@ -394,6 +395,11 @@ class SpectrumObservation(object):
         """Check that ARF and RMF binnings are compatible
         """
         raise NotImplementedError
+
+    def copy(self):
+        """A deep copy of self.
+        """
+        return deepcopy(self)
 
 
 class SpectrumObservationList(UserList):
