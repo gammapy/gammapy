@@ -273,11 +273,11 @@ class TestFluxEstimator:
         flux_points.info()
 
         actual = flux_points['diff_flux'][2]
-        desired = Quantity(6.081776402387885e-09, 'm-2 s-1 TeV-1')
+        desired = Quantity(5.737510858664804e-09, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
         actual = flux_points['diff_flux_err_hi'][2]
-        desired = Quantity(9.532100376178353e-10, 'm-2 s-1 TeV-1')
+        desired = Quantity(9.904468386098078e-10, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
     def test_with_ecpl(self):
