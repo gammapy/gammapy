@@ -141,36 +141,35 @@ def _configure_root_logger(level='info', format=None):
 
 def read_yaml(filename, logger=None):
     """
-    Read config from YAML file
+    Read YAML file
     """
     import yaml
     if logger is not None:
         logger.info('Reading {}'.format(filename))
     with open(filename) as fh:
-        config = yaml.safe_load(fh)
+        dictionary = yaml.safe_load(fh)
 
-    return config
+    return dictionary
 
 
-def write_yaml(config, filename, logger=None):
+def write_yaml(dictionary, filename, logger=None):
     """
-    Write YAML config file
-
-    This function can be used by scripts that alter the users config file.
+    Write YAML file
 
     Parameters
     ----------
-    config : dict
-        config to write
+    dictionary : dict
+        Python dictionary
     filename : str, `~gammapy.exter.pathlib.Path`
         file to write
     """
     import yaml
     filename = make_path(filename)
+    filename.parent.mkdir(exist_ok=True)
     if logger is not None:
         logger.info('Writing {}'.format(filename))
     with open(str(filename), 'w') as outfile:
-        outfile.write(yaml.safe_dump(config, default_flow_style=False))
+        outfile.write(yaml.safe_dump(dictionary, default_flow_style=False))
 
 
 def make_path(path):
