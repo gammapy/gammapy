@@ -24,7 +24,7 @@ def prepare_images():
     exposure_cube.data = Quantity(exposure_cube.data.value, 'cm2 s')
 
     # Re-project background cube
-    repro_bg_cube = background_model.reproject_to(exposure_cube)
+    repro_bg_cube = background_model.reproject(exposure_cube)
 
     # Define energy band required for output
     energies = EnergyBounds([10, 500], 'GeV')
@@ -38,12 +38,8 @@ def prepare_images():
                                          offset_max=Angle(3, 'deg'))
 
     # Counts data
-    counts_data = fits.open(counts_file)[0].data
-    counts_wcs = WCS(fits.open(counts_file)[0].header)
-    counts_cube = SkyCube(data=Quantity(counts_data, ''),
-                          wcs=counts_wcs,
-                          energy=energies)
-    counts_cube = counts_cube.reproject_to(npred_cube, projection_type='nearest-neighbor')
+    counts_cube = SkyCube.read(counts_file, format='fermi-counts')
+    counts_cube = counts_cube.reproject(npred_cube)
 
     counts = counts_cube.data[0]
     model = convolved_npred_cube.data[0]

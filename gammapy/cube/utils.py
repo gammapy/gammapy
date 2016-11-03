@@ -45,19 +45,17 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     energy_centers = energy_bins.log_centers
     wcs = exposure_cube.wcs
-    coordinates = exposure_cube.coordinates()
-    lon = coordinates.data.lon
-    lat = coordinates.data.lat
+    coordinates = exposure_cube.spatial.coordinates()
+    solid_angle = exposure_cube.spatial.solid_angle()
 
-    solid_angle = exposure_cube.solid_angle
     npred_cube = np.zeros((len(energy_bins) - 1,
                            exposure_cube.data.shape[1], exposure_cube.data.shape[2]))
     for i in range(len(energy_bins) - 1):
         energy_bound = energy_bins[i:i + 2]
         int_flux = flux_cube.integral_flux_image(energy_bound, integral_resolution)
         int_flux = Quantity(int_flux.data, '1 / (cm2 s sr)')
-        exposure = Quantity(exposure_cube.flux(lon, lat,
-                                               energy_centers[i]).value, 'cm2 s')
+        energy = energy_centers[i] * np.ones(coordinates.shape)
+        exposure = Quantity(exposure_cube.lookup(coordinates, energy, interpolation=True), 'cm2 s')
         npred_image = int_flux * exposure * solid_angle
         npred_cube[i] = npred_image.to('')
     npred_cube = np.nan_to_num(npred_cube)

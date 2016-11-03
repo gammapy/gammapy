@@ -358,7 +358,7 @@ class SkyCube(object):
         data = np.nansum(np.nansum(self.data, axis=1), axis=1)
         return CountsSpectrum(data=data, energy=self.energy)
 
-    def lookup(self, position, energy, interpolation=None):
+    def lookup(self, position, energy, interpolation=False):
         """Differential flux.
 
         Parameters
@@ -379,8 +379,14 @@ class SkyCube(object):
 
         z, y, x = self.wcs_skycoord_to_pixel(position, energy)
        
-        return self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
-                         np.rint(x).astype('int')]
+        if interpolation:
+            shape = z.shape
+            pix_coords = np.column_stack([x.flat, y.flat, z.flat])
+            vals = self._interpolate(pix_coords)
+            return vals.reshape(shape)
+        else:
+            return self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
+                             np.rint(x).astype('int')]
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
