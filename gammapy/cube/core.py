@@ -17,6 +17,7 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+from astropy.utils import lazyproperty
 
 from ..utils.scripts import make_path
 from ..utils.testing import assert_wcs_allclose
@@ -106,7 +107,6 @@ class SkyCube(object):
             points = list(map(np.arange, self.data.shape))
             self._interpolate_cache = RegularGridInterpolator(points, self.data.value,
                                                               fill_value=None, bounds_error=False)
-
         return self._interpolate_cache
 
     @classmethod
@@ -188,11 +188,9 @@ class SkyCube(object):
         if weights is not None:
             weights = events[weights]
 
-        image = self.ref_sky_image
-        xx, yy = image._events_xy(events)
-        zz = self._energy_to_zz(events.energy)
+        xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
 
-        bins = self._bins_energy, image._bins_pix[0], image._bins_pix[1]
+        bins = self._bins_energy, self.ref_sky_image._bins_pix[0], self.ref_sky_image._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
@@ -200,10 +198,6 @@ class SkyCube(object):
     @property
     def _bins_energy(self):
         return np.arange(self.data.shape[0] + 1)
-
-    def _energy_to_zz(self, energy):
-        zz = np.searchsorted(self.energy.value, energy.to(self.energy.unit).value)
-        return zz
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
@@ -247,39 +241,32 @@ class SkyCube(object):
         energies = refcube.energies.copy()
         return cls(data=data, wcs=wcs, energy=energies, meta=refcube.meta)
 
-    def world2pix(self, lon, lat, energy, combine=False):
+    def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
 
         Parameters
         ----------
-        lon, lat, energy
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        energy : `~astropy.units.Quantity`
+            Energy
 
         Returns
         -------
-        x, y, z or array with (x, y, z) as columns
+        (x, y, z) : tuple
+            Tuple of x, y, z coordinates.
         """
-        lon = lon.to('deg').value
-        lat = lat.to('deg').value
-        origin = 0  # convention for gammapy
-        x, y = self.wcs.wcs_world2pix(lon, lat, origin)
+        if not position.shape == energy.shape:
+            raise ValueError('Position and energy array must have the same shape.')
 
+        x, y = self.ref_sky_image.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
 
-        shape = (x * y * z).shape
-        x = x * np.ones(shape)
-        y = y * np.ones(shape)
-        z = z * np.ones(shape)
+        #TODO: check order, so that it corresponds to data axis order
+        return (x, y, z)
 
-        if combine:
-            x = np.array(x).flat
-            y = np.array(y).flat
-            z = np.array(z).flat
-            return np.column_stack([z, y, x])
-        else:
-            return x, y, z
-
-    def pix2world(self, x, y, z):
-        """Convert world to pixel coordinates.
+    def wcs_pixel_to_skycoord(self, x, y, z):
+        """Convert pixel to world coordinates.
 
         Parameters
         ----------
@@ -289,32 +276,10 @@ class SkyCube(object):
         -------
         lon, lat, energy
         """
-        origin = 0  # convention for gammapy
-        lon, lat = self.wcs.wcs_pix2world(x, y, origin)
+        position = self.ref_sky_image.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.pix2world(z)
-
-        lon = Quantity(lon, 'deg')
-        lat = Quantity(lat, 'deg')
         energy = Quantity(energy, self.energy.unit)
-
-        return lon, lat, energy
-
-    def coordinates(self, mode='center'):
-        """Spatial coordinate images.
-
-        Wrapper of `gammapy.image.SkyImage.coordinates`
-
-        Parameters
-        ----------
-        mode : {'center', 'edges'}
-            Return coordinate values at the pixels edges or pixel centers.
-
-        Returns
-        -------
-        coordinates : `~astropy.coordinates.SkyCoord`
-            Position on the sky.
-        """
-        return self.ref_sky_image.coordinates(mode)
+        return (position, energy)
 
     def to_sherpa_data3d(self):
         """
@@ -328,7 +293,7 @@ class SkyCube(object):
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        coordinates = self.coordinates()
+        coordinates = self.ref_sky_image.coordinates()
         ra = coordinates.data.lon
         dec = coordinates.data.lat
 
@@ -362,28 +327,32 @@ class SkyCube(object):
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
 
-    @property
+    @lazyproperty
     def ref_sky_image(self):
-        """Reference `~gammapy.image.SkyImage` that matches the cube.
         """
-        image = self.sky_image(idx_energy=0, copy=True)
-        image.data = 0 * image.data
-        return image
+        Empty reference `~gammapy.image.SkyImage`.
 
-    @property
-    def solid_angle(self):
-        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        return self.ref_sky_image.solid_angle()
+        Examples
+        --------
+        Can be used to access the spatial information of the cube:
 
-    def flux(self, lon, lat, energy):
+            >>> from gammapy.cube import SkyCube
+            >>> cube = SkyCube.empty()
+            >>> coords = cube.ref_sky_image.coordinates()
+            >>> solid_angle = cube.ref_sky_image.solid_angle()
+
+        """
+        ref_image = self.sky_image(0)
+        ref_image.data = np.zeros_like(ref_image.data)
+        return ref_image
+
+    def lookup(self, position, energy, interpolation=False):
         """Differential flux.
 
         Parameters
         ----------
-        lon : `~astropy.coordinates.Angle`
-            Longitude
-        lat : `~astropy.coordinates.Angle`
-            Latitude
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
         energy : `~astropy.units.Quantity`
             Energy
 
@@ -392,48 +361,50 @@ class SkyCube(object):
         flux : `~astropy.units.Quantity`
             Differential flux (1 / (cm2 MeV s sr))
         """
-        # Determine output shape by creating some array via broadcasting
-        shape = (lon * lat * energy).shape
+        # TODO: add interpolation option using NDDataArray
+        if not position.shape == energy.shape:
+            raise ValueError('Position and energy array must have the same shape.')
 
-        pix_coord = self.world2pix(lon, lat, energy, combine=True)
-        values = self._interpolate(pix_coord)
-        values = values.reshape(shape)
+        z, y, x = self.wcs_skycoord_to_pixel(position, energy)
 
-        return Quantity(values, '1 / (cm2 MeV s sr)')
+        if interpolation:
+            shape = z.shape
+            pix_coords = np.column_stack([x.flat, y.flat, z.flat])
+            vals = self._interpolate(pix_coords)
+            return vals.reshape(shape)
+        else:
+            return self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
+                             np.rint(x).astype('int')]
 
-    def spectral_index(self, lon, lat, energy, dz=1e-3):
-        """Power law spectral index (`numpy.array`).
-
-        A forward finite difference method with step ``dz`` is used along
-        the ``z = log10(energy)`` axis.
+    def show(self, viewer='mpl', ds9options=None, **kwargs):
+        """
+        Show sky cube in image viewer.
 
         Parameters
         ----------
-        lon : `~astropy.coordinates.Angle`
-            Longitude
-        lat : `~astropy.coordinates.Angle`
-            Latitude
-        energy : `~astropy.units.Quantity`
-            Energy
+        viewer : {'mpl', 'ds9'}
+            Which image viewer to use. Option 'ds9' requires ds9 to be installed.
+        ds9options : list, optional
+            List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
+            Any valid ds9 command line option can be passed.
+            See http://ds9.si.edu/doc/ref/command.html for details.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         """
-        raise NotImplementedError
-        # Compute flux at `z = log(energy)`
-        pix_coord = self.world2pix(lon, lat, energy, combine=True)
-        flux1 = self._interpolate(pix_coord)
+        import matplotlib.pyplot as plt
+        from ipywidgets import interact
 
-        # Compute flux at `z + dz`
-        pix_coord[:, 0] += dz
-        # pixel_coordinates += np.zeros(pixel_coordinates.shape)
-        flux2 = self._interpolate(pix_coord)
+        if viewer == 'mpl':
+            max_ = self.data.shape[0] - 1
 
-        # Power-law spectral index through these two flux points
-        # d_log_flux = np.log(flux2 / flux1)
-        # spectral_index = d_log_flux / dz
-        energy1 = energy
-        energy2 = (1. + dz) * energy
-        spectral_index = powerlaw.g_from_points(energy1, energy2, flux1, flux2)
+            def show_image(idx):
+                image = self.sky_image(idx)
+                image.data = image.data.value
+                image.show(**kwargs)
 
-        return spectral_index
+            return interact(show_image, idx=(0, max_, 1))
+        elif viewer == 'ds9':
+            raise NotImplementedError
 
     def integral_flux_image(self, energy_band, energy_bins=10):
         """Integral flux image for a given energy band.
@@ -493,65 +464,41 @@ class SkyCube(object):
                          meta=header)
         return image
 
-    def reproject_to(self, reference_cube, projection_type='bicubic'):
-        """Spatially reprojects a `SkyCube` onto a reference cube.
+    def reproject(self, reference, mode='interp', *args, **kwargs):
+        """Spatially reprojects a `SkyCube` onto a reference.
 
         Parameters
         ----------
-        reference_cube : `SkyCube`
-            Reference cube with the desired spatial projection.
-        projection_type : {'nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic', 'flux-conserving'}
-            Specify method of reprojection.
+        reference : `~astropy.io.fits.Header`, `SkyImage` or `SkyCube`
+            Reference wcs specification to reproject the data on.
+        mode : {'interp', 'exact'}
+            Interpolation mode.
+        *args : list
+            Arguments passed to `~reproject.reproject_interp` or
+            `~reproject.reproject_exact`.
+        **kwargs : dict
+            Keyword arguments passed to `~reproject.reproject_interp` or
+            `~reproject.reproject_exact`.
 
         Returns
         -------
         reprojected_cube : `SkyCube`
-            Cube spatially reprojected to the reference cube.
+            Cube spatially reprojected to the reference.
         """
-        from reproject import reproject_interp
+        if isinstance(reference, SkyCube):
+            reference = reference.ref_sky_image
 
-        reference = reference_cube.data
-        shape_out = reference[0].shape
-        try:
-            wcs_in = self.wcs.dropaxis(2)
-        except:
-            wcs_in = self.wcs
-        try:
-            wcs_out = reference_cube.wcs.dropaxis(2)
-        except:
-            wcs_out = reference_cube.wcs
-        energy = self.energy
+        out = []
+        for idx in range(len(self.data)):
+            image = self.sky_image(idx)
+            image_out = image.reproject(reference, mode=mode, *args, **kwargs)
+            out.append(image_out.data)
 
-        cube = self.data
-        new_cube = np.zeros((cube.shape[0], reference.shape[1],
-                             reference.shape[2]))
-        energy_slices = np.arange(cube.shape[0])
-        # TODO: Re-implement to reproject cubes directly without needing
-        # to loop over energies here. Errors with reproject when doing this
-        # first need to be understood and fixed.
-        for i in energy_slices:
-            array = cube[i]
-            data_in = (array.value, wcs_in)
-            new_cube[i] = reproject_interp(data_in, wcs_out, shape_out, order=projection_type)[0]
-        new_cube = Quantity(new_cube, array.unit)
-        # Create new wcs
-        header_in = self.wcs.to_header()
-        header_out = reference_cube.wcs.to_header()
-        # Keep output energy info the same as input, but changes spatial information
-        # So need to restore energy parameters to input values here
-        try:
-            header_out['CRPIX3'] = header_in['CRPIX3']
-            header_out['CDELT3'] = header_in['CDELT3']
-            header_out['CTYPE3'] = header_in['CTYPE3']
-            header_out['CRVAL3'] = header_in['CRVAL3']
-        except KeyError:
-            pass
+        data = Quantity(np.stack(out, axis=0), self.data.unit)
+        wcs = image_out.wcs.copy()
+        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
+                              energy=self.energy)
 
-        wcs_out = WCS(header_out).celestial
-
-        # TODO: how to fill 'meta' in better way?
-        meta = OrderedDict(header_out)
-        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=meta)
 
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.
