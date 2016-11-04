@@ -189,8 +189,8 @@ class SkyCube(object):
             weights = events[weights]
 
         xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
-       
-        bins = self._bins_energy, self.spatial._bins_pix[0], self.spatial._bins_pix[1]
+
+        bins = self._bins_energy, self.ref_sky_image._bins_pix[0], self.ref_sky_image._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
@@ -250,7 +250,7 @@ class SkyCube(object):
             Position on the sky.
         energy : `~astropy.units.Quantity`
             Energy
-        
+
         Returns
         -------
         (x, y, z) : tuple
@@ -259,9 +259,9 @@ class SkyCube(object):
         if not position.shape == energy.shape:
             raise ValueError('Position and energy array must have the same shape.')
 
-        x, y = self.spatial.wcs_skycoord_to_pixel(position)
+        x, y = self.ref_sky_image.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
-        
+
         #TODO: check order, so that it corresponds to data axis order
         return (x, y, z)
 
@@ -276,7 +276,7 @@ class SkyCube(object):
         -------
         lon, lat, energy
         """
-        position = self.spatial.wcs_pixel_to_skycoord(x, y)
+        position = self.ref_sky_image.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.pix2world(z)
         energy = Quantity(energy, self.energy.unit)
         return (position, energy)
@@ -293,7 +293,7 @@ class SkyCube(object):
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        coordinates = self.spatial.coordinates()
+        coordinates = self.ref_sky_image.coordinates()
         ra = coordinates.data.lon
         dec = coordinates.data.lat
 
@@ -327,36 +327,24 @@ class SkyCube(object):
         image = SkyImage(name=self.name, data=data, wcs=self.wcs)
         return image.copy() if copy else image
 
-    @lazyproperty        
-    def spatial(self):
+    @lazyproperty
+    def ref_sky_image(self):
         """
-        Spatial part of the cube obtained by summing over all energy bins.
+        Empty reference `~gammapy.image.SkyImage`.
 
         Examples
         --------
-        Can be used to acces the spatial information of the cube:
+        Can be used to access the spatial information of the cube:
 
             >>> from gammapy.cube import SkyCube
             >>> cube = SkyCube.empty()
-            >>> coords = cube.spatial.coordinates()
-            >>> solid_angle = cube.spatial.solid_angle()
+            >>> coords = cube.ref_sky_image.coordinates()
+            >>> solid_angle = cube.ref_sky_image.solid_angle()
 
         """
-        #TODO: what about meta info?
-        data = np.nansum(self.data, axis=0)
-        wcs = self.wcs.celestial.copy()
-        return SkyImage(name=self.name, data=data, wcs=wcs)
-
-    @lazyproperty        
-    def spectral(self):
-        """
-        Spectral part of the cube obtained by summing over all spatial bins.
-
-        """
-        from ..spectrum import CountsSpectrum
-        #TODO: what about meta info?
-        data = np.nansum(np.nansum(self.data, axis=1), axis=1)
-        return CountsSpectrum(data=data, energy=self.energy)
+        ref_image = self.sky_image(0)
+        ref_image.data = np.zeros_like(ref_image.data)
+        return ref_image
 
     def lookup(self, position, energy, interpolation=False):
         """Differential flux.
@@ -378,7 +366,7 @@ class SkyCube(object):
             raise ValueError('Position and energy array must have the same shape.')
 
         z, y, x = self.wcs_skycoord_to_pixel(position, energy)
-       
+
         if interpolation:
             shape = z.shape
             pix_coords = np.column_stack([x.flat, y.flat, z.flat])
@@ -408,7 +396,7 @@ class SkyCube(object):
 
         if viewer == 'mpl':
             max_ = self.data.shape[0] - 1
-            
+
             def show_image(idx):
                 image = self.sky_image(idx)
                 image.data = image.data.value
@@ -498,7 +486,7 @@ class SkyCube(object):
             Cube spatially reprojected to the reference.
         """
         if isinstance(reference, SkyCube):
-            reference = reference.spatial
+            reference = reference.ref_sky_image
 
         out = []
         for idx in range(len(self.data)):
@@ -511,7 +499,7 @@ class SkyCube(object):
         return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
                               energy=self.energy)
 
- 
+
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.
 

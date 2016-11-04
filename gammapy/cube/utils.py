@@ -45,8 +45,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     energy_centers = energy_bins.log_centers
     wcs = exposure_cube.wcs
-    coordinates = exposure_cube.spatial.coordinates()
-    solid_angle = exposure_cube.spatial.solid_angle()
+    coordinates = exposure_cube.ref_sky_image.coordinates()
+    solid_angle = exposure_cube.ref_sky_image.solid_angle()
 
     npred_cube = np.zeros((len(energy_bins) - 1,
                            exposure_cube.data.shape[1], exposure_cube.data.shape[2]))

@@ -36,7 +36,7 @@ def exposure_cube(pointing,
     expcube : `~gammapy.data.SkyCube`
         Exposure cube (3D)
     """
-    coordinates = ref_cube.spatial.coordinates()
+    coordinates = ref_cube.ref_sky_image.coordinates()
     offset = coordinates.separation(pointing)
     offset = np.clip(offset, Angle(0, 'deg'), offset_max)
 
