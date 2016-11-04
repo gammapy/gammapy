@@ -61,9 +61,13 @@ class EventList(Table):
         print('- Number of events: {}'.format(len(self)), file=file)
         # TODO: add time, RA, DEC and if present GLON, GLAT info ...
         print('- Median energy: {}'.format(np.median(self.energy)), file=file)
-        # TODO: azimuth should be circular median
-        print('- Median azimuth: {}'.format(np.median(self['AZ'])), file=file)
-        print('- Median altitude: {}'.format(np.median(self['ALT'])), file=file)
+
+        if 'AZ' in self.colnames:
+            # TODO: azimuth should be circular median
+            print('- Median azimuth: {}'.format(np.median(self['AZ'])), file=file)
+
+        if 'ALT' in self.colnames:
+            print('- Median altitude: {}'.format(np.median(self['ALT'])), file=file)
 
     @property
     def time(self):
@@ -201,13 +205,7 @@ class EventList(Table):
     @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)"""
-        energy = self['ENERGY']
-        try:
-            unit = self.meta['EUNIT']
-        except KeyError:
-            # Fermi lat event list format
-            unit = self.meta['DSUNI4']
-        return Quantity(energy, unit)
+        return self['ENERGY'].quantity
 
     def select_energy(self, energy_band):
         """Select events in energy band.

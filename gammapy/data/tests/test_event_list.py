@@ -46,6 +46,15 @@ class TestEventListHESS:
     def test_peek(self):
         self.events.peek()
 
+@requires_data('gammapy-extra')
+class TestEventListFermi:
+    def setup(self):
+        filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
+        self.events = EventList.read(filename)
+
+    def test_basics(self):
+        self.events.summary()
+
 
 @requires_data('gammapy-extra')
 def test_EventListDataset():
