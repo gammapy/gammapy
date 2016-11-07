@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
+import logging
 from ..utils.random import get_random_state
 from .utils import calculate_predicted_counts
 from .core import PHACountsSpectrum
@@ -10,6 +11,7 @@ __all__ = [
     'SpectrumSimulation'
 ]
 
+log = logging.getLogger(__name__)
 
 class SpectrumSimulation(object):
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
@@ -77,7 +79,12 @@ class SpectrumSimulation(object):
             Random number generator seeds
         """
         self.reset()
-        for current_seed in seed:
+        n_obs = len(seed)
+        log.info("Simulating {} observations".format(n_obs))
+        for counter, current_seed in enumerate(seed):
+            progress = ((counter + 1) / n_obs) * 100
+            if progress % 10 == 0:
+                log.info("Progress : {} %".format(progress))
             self.simulate_obs(seed=current_seed)
             self.obs.obs_id = current_seed
             self.result.append(self.obs)
