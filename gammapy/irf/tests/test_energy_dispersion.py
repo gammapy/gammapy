@@ -10,42 +10,42 @@ from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
 
-@requires_dependency('scipy')
-def test_EnergyDispersion():
-    e_true = np.logspace(0, 1, 101) * u.TeV
-    e_reco = e_true
-    resolution = 0.1
-    edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
-                                        pdf_threshold=1e-7,
-                                        sigma=resolution)
+class TestEnergyDispersion:
+    def setup(self):
+        e_true = np.logspace(0, 1, 101) * u.TeV
+        e_reco = e_true
+        self.resolution = 0.1
+        self.edisp = EnergyDispersion.from_gauss(e_true=e_true,
+                                                 e_reco=e_reco,
+                                                 pdf_threshold=1e-7,
+                                                 sigma=self.resolution)
 
-    test_e = 3.34 * u.TeV
-    # Check for correct normalization
-    test_pdf = edisp.data.evaluate(e_true=test_e)
-    assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
-    # Check bias
-    assert_allclose(edisp.get_bias(test_e), 0, atol=1e-4)
-    # Check resolution
-    assert_allclose(edisp.get_resolution(test_e), resolution, atol=1e-4)
+    def test_basic(self):
+        assert 'EnergyDispersion' in str(self.edisp)
+        test_e_true = 3.34 * u.TeV
+        # Check for correct normalization
+        test_pdf = self.edisp.data.evaluate(e_true=test_e_true)
+        assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
+        # Check bias
+        assert_allclose(self.edisp.get_bias(test_e_true), 0, atol=1e-4)
+        # Check resolution
+        assert_allclose(self.edisp.get_resolution(test_e_true),
+                        self.resolution,
+                        atol=1e-4)
 
-    # Check plotting methods
-    edisp.plot_matrix()
-    edisp.plot_bias()
+    requires_dependency('matplotlib')
+    def check_plot(self):
+        edisp.plot_matrix()
+        edisp.plot_bias()
 
-
-@requires_data('gammapy-extra')
-def test_EnergyDispersion_write(tmpdir):
-    filename = gammapy_extra.filename(
-        'test_datasets/irf/hess/ogip/run_rmf60741.fits')
-    edisp = EnergyDispersion.read(filename)
-
-    indices = np.array([[1, 3, 6], [3, 3, 2]])
-    desired = edisp.pdf_matrix[indices]
-    writename = str(tmpdir / 'rmf_test.fits')
-    edisp.write(writename)
-    edisp2 = EnergyDispersion.read(writename)
-    actual = edisp2.pdf_matrix[indices]
-    assert_allclose(actual, desired)
+    def test_io(self, tmpdir):
+        indices = np.array([[1, 3, 6], [3, 3, 2]])
+        desired = self.edisp.pdf_matrix[indices]
+        writename = str(tmpdir / 'rmf_test.fits')
+        self.edisp.write(writename)
+        edisp2 = EnergyDispersion.read(writename)
+        actual = edisp2.pdf_matrix[indices]
+        assert_allclose(actual, desired)
 
 
 @requires_dependency('scipy')
