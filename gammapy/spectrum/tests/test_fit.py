@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest, assert_quantity_allclose
-import sherpa.optmethods as optmethods
 import astropy.units as u
 import numpy as np
 from astropy.utils.compat import NUMPY_LT_1_9
@@ -45,7 +44,7 @@ def test_spectral_fit(tmpdir):
     test_e = 12.5 * u.TeV
     assert_quantity_allclose(fit.result[0].model(test_e),
                              read_result.model(test_e))
-    assert_string_equal(fit.method_fit.name, optmethods.NelderMead().name)
+    assert_string_equal(fit.method_fit.name, "simplex")
     result = fit.result[0]
     result.plot()
 
@@ -95,10 +94,10 @@ def test_spectral_fit(tmpdir):
 
     # Test method fit
     fit = SpectrumFit(obs_list, model)
-    fit.method_fit = "LevMar"
+    fit.method_fit = "levmar"
     fit.run(outdir=tmpdir)
     result = fit.result[0]
-    assert_string_equal(fit.method_fit.name, optmethods.LevMar().name)
+    assert_string_equal(fit.method_fit.name, "levmar")
     assert_quantity_allclose(result.model.parameters.index,
                              2.116 * u.Unit(''), rtol=1e-3)
 

@@ -44,7 +44,7 @@ class SpectrumFit(object):
     """Numerical constant to make model amplitude O(1) during the fit"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
-    DEFAULT_METHOD = 'NelderMead'
+    DEFAULT_METHOD = 'simplex'
     """Default method to be used for the fit"""
 
     def __init__(self, obs_list, model, stat=DEFAULT_STAT, method=DEFAULT_METHOD):
@@ -105,11 +105,11 @@ class SpectrumFit(object):
     def method_fit(self, method):
         import sherpa.optmethods as optmethod
         if isinstance(method, six.string_types):
-            if method == 'NelderMead':
+            if method == 'simplex':
                 method = optmethod.NelderMead()
-            elif method == 'MonCar':
+            elif method == 'moncar':
                 method = optmethod.MonCar()
-            elif method == 'LevMar':
+            elif method == 'levmar':
                 method = optmethod.LevMar()
             else:
                 raise ValueError("Undefined method string: {}".format(method))
