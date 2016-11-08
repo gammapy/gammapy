@@ -77,6 +77,7 @@ def test_EnergyDispersion2D():
     actual = len(response)
     desired = e_reco.nbins
     assert_equal(actual, desired)
+    assert_equal(response[60], 0.35626163699061753)
 
     # Check normalization
     actual = np.sum(response)

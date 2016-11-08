@@ -69,7 +69,7 @@ class EnergyDispersion(NDDataArray):
         data = self.data.copy()
         idx = np.where((self.e_reco.data[:-1] < lo_threshold) |
                        (self.e_reco.data[1:] > hi_threshold))
-        data[:,idx] = 0
+        data[:, idx] = 0
         return data
 
     @classmethod
@@ -439,16 +439,16 @@ class EnergyDispersion(NDDataArray):
                 n_chan = n_chan[good]
 
         kwargs = dict(
-            name = name,
-            energ_lo = table['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
-            energ_hi = table['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
-            matrix = matrix,
-            n_grp = n_grp,
-            n_chan = n_chan,
-            f_chan = f_chan,
-            detchans= self.e_reco.nbins,
-            e_min = self.e_reco.data[:-1].to('keV').value,
-            e_max = self.e_reco.data[1:].to('keV').value,
+            name=name,
+            energ_lo=table['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
+            energ_hi=table['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
+            matrix=matrix,
+            n_grp=n_grp,
+            n_chan=n_chan,
+            f_chan=f_chan,
+            detchans=self.e_reco.nbins,
+            e_min=self.e_reco.data[:-1].to('keV').value,
+            e_max=self.e_reco.data[1:].to('keV').value,
             offset=0,
         )
 
@@ -665,9 +665,7 @@ class EnergyDispersion2D(object):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
-        energy band. The `~gammapy.irf.EnergyDispersion2D` is evaluated at the
-        reco energy bin centers and the result is multiplied with the bin
-        width.
+        energy band. In each reco bin, you integrate with a riemann sum over the default migra bin of your analysis.
 
         Parameters
         ----------
@@ -698,12 +696,52 @@ class EnergyDispersion2D(object):
             center = e_reco.log_centers
             migra = center / e_true
 
-        val = self.evaluate(offset=offset, e_true=e_true, migra=migra)
+        # ensure to have a normalized edisp
+        migra_bin = self.migra_hi - self.migra_lo
+        if (migra_bin[0] == migra_bin[1]):
+            migra_mean = 1 / 2. * (self.migra_hi + self.migra_lo)
+        else:
+            migra_mean = np.sqrt(self.migra_hi * self.migra_lo)
+        val_norm = self.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
+        norm = np.sum(val_norm * migra_bin)
 
-        # Multiply by migra bin width (~Integration)
-        rv = val * (e_reco.bands / e_true)
+        migra_e_reco = e_reco / e_true
+        integral = np.zeros(len(e_reco) - 1)
+        if norm != 0:
+            for i, migra_int in enumerate(migra_e_reco[:-1]):
+                # The migra_e_reco bin is inferior to the migra min in the dispersion fits file
+                if migra_e_reco[i + 1] < migra_mean[0]:
+                    continue
+                # The migra_e_reco bin is superior to the migra max in the dispersion fits file
+                elif migra_e_reco[i] > migra_mean[-1]:
+                    continue
+                else:
+                    if migra_e_reco[i] < migra_mean[0]:
+                        i_min = 0
+                    else:
+                        i_min = np.where(migra_mean < migra_e_reco[i])[0][-1]
+                    i_max = np.where(migra_mean < migra_e_reco[i + 1])[0][-1]
 
-        return rv.value
+                    migra_bin_reco = migra_bin[i_min + 1:i_max]
+                    if migra_e_reco[i + 1] > migra_mean[-1]:
+                        index = np.arange(i_min, i_max, 1)
+                        migra_bin_reco = np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
+                    elif migra_e_reco[i] < migra_mean[0]:
+                        if i_max == 0:
+                            index = np.arange(i_min, i_max + 1, 1)
+                        else:
+                            index = np.arange(i_min + 1, i_max + 1, 1)
+                        migra_bin_reco = np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
+                    elif i_min == i_max:
+                        index = np.arange(i_min, i_max + 1, 1)
+                        migra_bin_reco = np.insert(migra_bin_reco, 0, (migra_e_reco[i + 1] - migra_e_reco[i]))
+                    else:
+                        index = np.arange(i_min, i_max + 1, 1)
+                        migra_bin_reco = np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
+                        migra_bin_reco = np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
+                    val = self.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
+                    integral[i] = np.sum(val * migra_bin_reco) / norm
+        return integral
 
     def plot_migration(self, ax=None, offset=None, e_true=None,
                        migra=None, **kwargs):
