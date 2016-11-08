@@ -271,9 +271,6 @@ class PSF3D(object):
         theta = theta or Angle(0, 'deg')
 
         psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
-        for v in psf_value.value:
-            if v != v or v == 0:
-                return None
         table_psf = TablePSF(self.rad_center(), psf_value, **kwargs)
 
         return table_psf
@@ -307,13 +304,18 @@ class PSF3D(object):
         radius = np.zeros((energy.size, theta.size))
         for e in range(energy.size):
             for t in range(theta.size):
-                psf = self.to_table_psf(energy[e], theta[t], interp_kwargs)
-                if psf == None:
+                try:
+                    psf = self.to_table_psf(energy[e], theta[t], interp_kwargs)
+                except:
+                    # This can raise an `error` from scipy UnivariateSpline:
+                    # error: (xb<=x[0]) failed for 2nd keyword xb: fpcurf0:xb=nan
+                    # Not sure what type exactly or how to catch it.
                     radius[e, t] = np.nan
                     continue
                 r = psf.containment_radius(fraction)
                 radius[e, t] = r.value
                 unit = r.unit
+
         return Quantity(radius.squeeze(), unit)
 
     def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
@@ -350,8 +352,7 @@ class PSF3D(object):
         """
 
         table = self.to_table_psf(energy=energy, theta=theta)
-        table.plot_psf_vs_theta()
-        return
+        return table.plot_psf_vs_theta()
 
     def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
                          add_cbar=True, **kwargs):
