@@ -46,7 +46,7 @@ class LogEnergyAxis(object):
         # Interpolate in `x`
         pix = np.interp(x, self.x, self.pix)
 
-        return pix
+        return np.atleast_1d(pix)
 
     def pix2world(self, pix):
         """TODO: document.
@@ -95,7 +95,7 @@ class LogEnergyAxis(object):
 
 
 def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
-    """Get npred 
+    """Get npred
 
     The true energy binning is inferred from the provided
     `~gammapy.irf.EffectiveAreaTable`. The reco energy binning can be inferred
@@ -122,7 +122,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
 
     Examples
     --------
-    Calculate prediced counts in a desired reconstruced energy binning 
+    Calculate prediced counts in a desired reconstruced energy binning
 
     .. plot::
         :include-source:
@@ -183,7 +183,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
         Function to integrate.
     xmin : `~astropy.units.Quantity` or array-like
         Integration range minimum
-    xmax : `~astropy.units.Quantity` or array-like 
+    xmax : `~astropy.units.Quantity` or array-like
         Integration range minimum
     ndecade : int, optional
         Number of grid points per decade used for the integration.

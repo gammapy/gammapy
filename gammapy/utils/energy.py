@@ -83,7 +83,7 @@ class Energy(Quantity):
         return self[0:self.size:self.size - 1]
 
     @classmethod
-    def equal_log_spacing(cls, emin, emax, nbins, unit=None):
+    def equal_log_spacing(cls, emin, emax, nbins, unit=None, per_decade=False):
         """Create Energy with equal log-spacing (`~gammapy.utils.energy.Energy`).
 
         if no unit is given, it will be taken from emax
@@ -94,10 +94,12 @@ class Energy(Quantity):
             Lowest energy bin
         emax : `~astropy.units.Quantity`, float
             Highest energy bin
-        bins : int
+        nbins : int
             Number of bins
         unit : `~astropy.units.UnitBase`, str
             Energy unit
+        per_decade : bool
+            Whether nbins is per decade.
         """
 
         if unit is not None:
@@ -110,6 +112,9 @@ class Energy(Quantity):
             emin = emin.to(unit)
 
         x_min, x_max = np.log10([emin.value, emax.value])
+
+        if per_decade:
+            nbins = (x_max - x_min) * nbins
         energy = np.logspace(x_min, x_max, nbins)
 
         return cls(energy, unit, copy=False)

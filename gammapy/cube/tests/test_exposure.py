@@ -27,6 +27,6 @@ def test_exposure_cube():
     assert np.shape(exp_cube.data)[1:] == np.shape(count_cube.data)[1:]
     assert np.shape(exp_cube.data)[0] == np.shape(count_cube.data)[0]
     assert exp_cube.wcs == count_cube.wcs
-    assert_equal(count_cube.energy, exp_cube.energy)
+    assert_equal(count_cube.energy_axis.energy, exp_cube.energy_axis.energy)
     assert_quantity_allclose(np.nanmax(exp_cube.data), exp_ref, rtol=100)
     assert exp_cube.data.unit == exp_ref.unit

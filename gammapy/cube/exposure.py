@@ -36,17 +36,17 @@ def exposure_cube(pointing,
     expcube : `~gammapy.data.SkyCube`
         Exposure cube (3D)
     """
-    coordinates = ref_cube.ref_sky_image.coordinates()
+    coordinates = ref_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)
     offset = np.clip(offset, Angle(0, 'deg'), offset_max)
 
-    energy = EnergyBounds(ref_cube.energy).log_centers
+    energy = ref_cube.energy_axis.energy
     exposure = aeff2d.evaluate(offset=offset, energy=energy)
     exposure *= livetime
 
     expcube = SkyCube(data=exposure,
                       wcs=ref_cube.wcs,
-                      energy=ref_cube.energy)
+                      energy=energy)
     return expcube
 
 

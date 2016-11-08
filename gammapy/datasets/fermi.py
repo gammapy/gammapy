@@ -74,7 +74,7 @@ class FermiGalacticCenter(object):
         """Diffuse model (`~gammapy.data.SkyCube`)"""
         from ..cube import SkyCube
         filename = FermiGalacticCenter.filenames()['diffuse_model']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-background')
 
     @staticmethod
     def exposure_cube():
@@ -134,7 +134,7 @@ class FermiVelaRegion(object):
         """Diffuse model (`~gammapy.data.SkyCube`)"""
         from ..cube import SkyCube
         filename = FermiVelaRegion.filenames()['diffuse_model']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-background')
 
     @staticmethod
     def background_image():

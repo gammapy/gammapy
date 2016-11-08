@@ -21,11 +21,11 @@ from astropy.utils import lazyproperty
 
 from ..utils.scripts import make_path
 from ..utils.testing import assert_wcs_allclose
-from ..utils.energy import EnergyBounds
+from ..utils.energy import EnergyBounds, Energy
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
 from ..spectrum import LogEnergyAxis
-from ..spectrum.powerlaw import power_law_I_from_points
+from ..spectrum.utils import _trapz_loglog
 
 __all__ = ['SkyCube']
 
@@ -66,7 +66,7 @@ class SkyCube(object):
     wcs : `~astropy.wcs.WCS`
         Word coordinate system transformation
     energy : `~astropy.units.Quantity`
-        Energy array
+        Energy values, at the center of the bin.
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
     meta : `~collections.OrderedDict`
@@ -91,23 +91,34 @@ class SkyCube(object):
         self.meta = meta
 
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
-        self.energy = energy
         if energy:
             self.energy_axis = LogEnergyAxis(energy)
 
-        self._interpolate_cache = None
+    @lazyproperty
+    def _interpolate_data(self):
+        """
+        Interpolate data using `~scipy.interpolate.RegularGridInterpolator`)
+        """
+        from scipy.interpolate import RegularGridInterpolator
 
-    @property
-    def _interpolate(self):
-        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
-        if self._interpolate_cache is None:
-            # Initialise the interpolator
-            # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
-            from scipy.interpolate import RegularGridInterpolator
-            points = list(map(np.arange, self.data.shape))
-            self._interpolate_cache = RegularGridInterpolator(points, self.data.value,
-                                                              fill_value=None, bounds_error=False)
-        return self._interpolate_cache
+        # set up log interpolation
+        unit = self.data.unit
+        # TODO: how to deal with zero values?
+        log_data = np.log(self.data.value)
+        z = np.arange(self.data.shape[0])
+        y = np.arange(self.data.shape[1])
+        x = np.arange(self.data.shape[2])
+
+        f = RegularGridInterpolator((z, y, x), log_data, fill_value=None,
+                                    bounds_error=False)
+
+        def interpolate(z, y, x, method='linear'):
+            shape = z.shape
+            coords = np.column_stack([z.flat, y.flat, x.flat])
+            val = f(coords, method=method)
+            return Quantity(np.exp(val).reshape(shape), unit)
+
+        return interpolate
 
     @classmethod
     def read_hdu(cls, hdu_list):
@@ -162,17 +173,24 @@ class SkyCube(object):
         header = fits.getheader(filename)
         wcs = WCS(header).celestial
         meta = OrderedDict(header)
-        if format == 'fermi':
+        if format == 'fermi-background':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy = Quantity(energy, 'MeV')
             data = Quantity(data, '1 / (cm2 MeV s sr)')
+            name = 'flux'
         elif format == 'fermi-counts':
             energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
+            energy = energy.log_centers
             data = Quantity(data, 'count')
+            name = 'counts'
+        elif format == 'fermi-exposure':
+            pass
+            name = 'exposure'
+
         else:
             raise ValueError('Not a valid cube fits format')
 
-        return cls(data=data, wcs=wcs, energy=energy, meta=meta)
+        return cls(name=name, data=data, wcs=wcs, energy=energy, meta=meta)
 
     def fill_events(self, events, weights=None):
         """
@@ -190,7 +208,7 @@ class SkyCube(object):
 
         xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
 
-        bins = self._bins_energy, self.ref_sky_image._bins_pix[0], self.ref_sky_image._bins_pix[1]
+        bins = self._bins_energy, self.sky_image_ref._bins_pix[0], self.sky_image_ref._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
@@ -200,7 +218,7 @@ class SkyCube(object):
         return np.arange(self.data.shape[0] + 1)
 
     @classmethod
-    def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
+    def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', **kwargs):
         """
         Create empty sky cube with log equal energy binning from the scratch.
 
@@ -210,7 +228,7 @@ class SkyCube(object):
             Minimum energy.
         emax : float
             Maximum energy.
-        enbins : int
+        enumbins : int
             Number of energy bins.
         eunit : str
             Energy unit.
@@ -219,8 +237,8 @@ class SkyCube(object):
             the spatial part of the cube.
         """
         image = SkyImage.empty(**kwargs)
-        energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
-        data = image.data * np.ones(len(energy)).reshape((-1, 1, 1))
+        energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
+        data = image.data * np.ones(len(energy)).reshape((-1, 1, 1)) * u.Unit('')
         return cls(data=data, wcs=image.wcs, energy=energy)
 
     @classmethod
@@ -253,13 +271,13 @@ class SkyCube(object):
 
         Returns
         -------
-        (x, y, z) : tuple
+        (z, y, x) : tuple
             Tuple of x, y, z coordinates.
         """
         if not position.shape == energy.shape:
             raise ValueError('Position and energy array must have the same shape.')
 
-        x, y = self.ref_sky_image.wcs_skycoord_to_pixel(position)
+        x, y = self.sky_image_ref.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
 
         #TODO: check order, so that it corresponds to data axis order
@@ -276,9 +294,9 @@ class SkyCube(object):
         -------
         lon, lat, energy
         """
-        position = self.ref_sky_image.wcs_pixel_to_skycoord(x, y)
+        position = self.sky_image_ref.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.pix2world(z)
-        energy = Quantity(energy, self.energy.unit)
+        energy = Quantity(energy, self.energy_axis.energy.unit)
         return (position, energy)
 
     def to_sherpa_data3d(self):
@@ -288,12 +306,12 @@ class SkyCube(object):
         from .sherpa_ import Data3D
 
         # Energy axes
-        energies = self.energy.to("TeV").value
+        energies = self.energy_axis.energy.to("TeV").value
         ebounds = EnergyBounds(Quantity(energies, 'TeV'))
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        coordinates = self.ref_sky_image.coordinates()
+        coordinates = self.sky_image_ref.coordinates()
         ra = coordinates.data.lon
         dec = coordinates.data.lat
 
@@ -307,15 +325,18 @@ class SkyCube(object):
                       dec_cube.ravel(), self.data.value.ravel(),
                       self.data.value.shape)
 
-    def sky_image(self, idx_energy, copy=True):
-        """Slice a 2-dim `~gammapy.image.SkyImage` from the cube.
+    def sky_image(self, energy, interpolation=None):
+        """
+        Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given energy.
 
         Parameters
         ----------
-        idx_energy : int
-            Energy slice index
-        copy : bool (default True)
-            Whether to make deep copy of returned object
+        energy : `~astropy.units.Quantity`
+            Energy value
+        interpolation : {None, 'linear', 'nearest'}
+            Interpolate data values between energies. None corresponds to
+            'nearest', but might have advantages in performance, because
+            no interpolator is set up.
 
         Returns
         -------
@@ -323,12 +344,19 @@ class SkyCube(object):
             2-dim sky image
         """
         # TODO: should we pass something in SkyImage (we speak about meta)?
-        data = self.data[idx_energy]
-        image = SkyImage(name=self.name, data=data, wcs=self.wcs)
-        return image.copy() if copy else image
+        z = self.energy_axis.world2pix(energy)
+
+        if interpolation:
+            y = np.arange(self.data.shape[1])
+            x = np.arange(self.data.shape[2])
+            z, y, x = np.meshgrid(z, y, x, indexing='ij')
+            data = self._interpolate_data(z, y, x)[0]
+        else:
+            data = self.data[int(z)]
+        return SkyImage(name=self.name, data=data, wcs=self.wcs)
 
     @lazyproperty
-    def ref_sky_image(self):
+    def sky_image_ref(self):
         """
         Empty reference `~gammapy.image.SkyImage`.
 
@@ -342,9 +370,9 @@ class SkyCube(object):
             >>> solid_angle = cube.ref_sky_image.solid_angle()
 
         """
-        ref_image = self.sky_image(0)
-        ref_image.data = np.zeros_like(ref_image.data)
-        return ref_image
+        wcs = self.wcs.celestial
+        data = np.zeros_like(self.data[0])
+        return SkyImage(name=self.name, data=data, wcs=wcs)
 
     def lookup(self, position, energy, interpolation=False):
         """Differential flux.
@@ -362,19 +390,15 @@ class SkyCube(object):
             Differential flux (1 / (cm2 MeV s sr))
         """
         # TODO: add interpolation option using NDDataArray
-        if not position.shape == energy.shape:
-            raise ValueError('Position and energy array must have the same shape.')
 
         z, y, x = self.wcs_skycoord_to_pixel(position, energy)
 
         if interpolation:
-            shape = z.shape
-            pix_coords = np.column_stack([x.flat, y.flat, z.flat])
-            vals = self._interpolate(pix_coords)
-            return vals.reshape(shape)
+            vals = self._interpolate_data(z, y, x)
         else:
-            return self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
+            vals = self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
                              np.rint(x).astype('int')]
+        return vals
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
@@ -398,7 +422,8 @@ class SkyCube(object):
             max_ = self.data.shape[0] - 1
 
             def show_image(idx):
-                image = self.sky_image(idx)
+                energy = self.energy_axis.pix2world(idx)
+                image = self.sky_image(energy)
                 image.data = image.data.value
                 image.show(**kwargs)
 
@@ -406,63 +431,44 @@ class SkyCube(object):
         elif viewer == 'ds9':
             raise NotImplementedError
 
-    def integral_flux_image(self, energy_band, energy_bins=10):
-        """Integral flux image for a given energy band.
-
-        A local power-law approximation in small energy bins is
-        used to compute the integral.
+    def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
+        """
+        Integrate cube along the energy axes using the log-log trapezoidal rule.
 
         Parameters
         ----------
-        energy_band : `~astropy.units.Quantity`
-            Tuple ``(energy_min, energy_max)``
-        energy_bins : int or `~astropy.units.Quantity`
-            Energy bin definition.
+        emin : `~astropy.units.Quantity`
+            Integration range minimum.
+        emax : `~astropy.units.Quantity`
+            Integration range maximum.
+        nbins : int, optional
+            Number of grid points used for the integration.
+        per_decade : bool
+            Whether nbins is per decade.
+        interpolation : {None, 'linear', 'nearest'}
+            Interpolate data values between energies.
 
         Returns
         -------
         image : `~gammapy.image.SkyImage`
-            Integral flux image (1 / (cm^2 s sr))
+            Integral image.
         """
-        if isinstance(energy_bins, int):
-            energy_bins = EnergyBounds.equal_log_spacing(
-                energy_band[0], energy_band[1], energy_bins)
+        y, x = np.indices(self.data.shape[1:])
+
+        if interpolation:
+            energy = Energy.equal_log_spacing(emin, emax, nbins, per_decade=per_decade)
+            z = self.energy_axis.world2pix(energy).reshape(-1, 1, 1)
+            y = np.arange(self.data.shape[1])
+            x = np.arange(self.data.shape[2])
+            z, y, x = np.meshgrid(z, y, x, indexing='ij')
+            data = self._interpolate_data(z, y, x)
         else:
-            energy_bins = EnergyBounds(energy_band)
+            energy = self.energy_axis.energy
+            data = self.data
+        integral = _trapz_loglog(data, energy, axis=0)
+        name = 'integrated {}'.format(self.name)
+        return SkyImage(name=name, data=integral, wcs=self.wcs.celestial)
 
-        energy_bins = energy_bins.to('MeV')
-        energy1 = energy_bins.lower_bounds
-        energy2 = energy_bins.upper_bounds
-
-        # Compute differential flux at energy bin edges of all pixels
-        xx = np.arange(self.data.shape[2])
-        yy = np.arange(self.data.shape[1])
-        zz = self.energy_axis.world2pix(energy_bins)
-
-        xx, yy, zz = np.meshgrid(zz, yy, xx, indexing='ij')
-        shape = xx.shape
-
-        pix_coords = np.column_stack([xx.flat, yy.flat, zz.flat])
-        flux = self._interpolate(pix_coords)
-        flux = flux.reshape(shape)
-
-        # Compute integral flux using power-law approximation in each bin
-        flux1 = flux[:-1, :, :]
-        flux2 = flux[1:, :, :]
-        energy1 = energy1[:, np.newaxis, np.newaxis].value
-        energy2 = energy2[:, np.newaxis, np.newaxis].value
-        integral_flux = power_law_I_from_points(energy1, energy2, flux1, flux2)
-
-        integral_flux = integral_flux.sum(axis=0)
-
-        header = self.wcs.to_header()
-
-        image = SkyImage(name='flux',
-                         data=integral_flux,
-                         wcs=self.wcs,
-                         unit='cm^-2 s^-1 sr^-1',
-                         meta=header)
-        return image
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """Spatially reprojects a `SkyCube` onto a reference.
@@ -497,7 +503,7 @@ class SkyCube(object):
         data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
         return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
-                              energy=self.energy)
+                              energy=self.energy_axis.energy)
 
 
     def to_fits(self):
@@ -516,7 +522,7 @@ class SkyCube(object):
 
         # for BinTableHDU's the data must be added via a Table object
         energy_table = Table()
-        energy_table['Energy'] = self.energy
+        energy_table['Energy'] = self.energy_axis.energy
         energy_table.meta['name'] = 'ENERGY'
 
         energies = table_to_fits_table(energy_table)
@@ -529,8 +535,8 @@ class SkyCube(object):
         """Convert to `~gammapy.cube.SkyCubeImages`.
         """
         from .images import SkyCubeImages
-        images = [self.sky_image(idx) for idx in range(len(self.data))]
-        return SkyCubeImages(self.name, images, self.wcs, self.energy)
+        images = [self.sky_image(energy) for energy in self.energy_axis.energy]
+        return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
 
     def write(self, filename, **kwargs):
         """Write to FITS file.
@@ -556,7 +562,7 @@ class SkyCube(object):
         ss += " n_lat:    {:5d}  type_lat:    {:15s}  unit_lat:    {}\n".format(
             self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
         ss += " n_energy: {:5d}  unit_energy: {}\n".format(
-            len(self.energy), self.energy.unit)
+            self.data.shape[0], self.energy_axis.energy.unit)
 
         return ss
 
