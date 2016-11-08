@@ -37,19 +37,24 @@ class SpectrumFit(object):
         Model to be fit
     stat : str, `~sherpa.stats.Stat`
         Fit statistic to be used
+    method : str, `~sherpa.optmethods.OptMethod`
+        Fit statistic to be used
     """
     FLUX_FACTOR = 1e-20
     """Numerical constant to make model amplitude O(1) during the fit"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
+    DEFAULT_METHOD = 'simplex'
+    """Default method to be used for the fit"""
 
-    def __init__(self, obs_list, model, stat=DEFAULT_STAT):
+    def __init__(self, obs_list, model, stat=DEFAULT_STAT, method=DEFAULT_METHOD):
         if isinstance(obs_list, SpectrumObservation):
             obs_list = [obs_list]
 
         self.obs_list = SpectrumObservationList(obs_list)
         self.model = model
         self.statistic = stat
+        self.method_fit = method
         self._fit_range = None
         self._result = list()
         self._global_result = list()
@@ -89,6 +94,30 @@ class SpectrumFit(object):
             raise ValueError("Only sherpa statistics are supported")
 
         self._stat = stat
+
+    @property
+    def method_fit(self):
+        """Sherpa `~sherpa.optmethods.OptMethod` to be used for the fit"""
+
+        return self._method
+
+    @method_fit.setter
+    def method_fit(self, method):
+        import sherpa.optmethods as optmethod
+        if isinstance(method, six.string_types):
+            if method == 'simplex':
+                method = optmethod.NelderMead()
+            elif method == 'moncar':
+                method = optmethod.MonCar()
+            elif method == 'levmar':
+                method = optmethod.LevMar()
+            else:
+                raise ValueError("Undefined method string: {}".format(method))
+
+        if not isinstance(method, optmethod.OptMethod):
+            raise ValueError("Only sherpa method are supported")
+
+        self._method = method
 
     @property
     def fit_range(self):
@@ -164,7 +193,7 @@ class SpectrumFit(object):
         fitmodel = SimulFitModel('simul fit model', folded_model)
         log.debug(fitmodel)
 
-        fit = Fit(data, fitmodel, self.statistic)
+        fit = Fit(data, fitmodel, self.statistic, method=self.method_fit)
 
         fitresult = fit.fit()
         log.debug(fitresult)
@@ -187,9 +216,9 @@ class SpectrumFit(object):
         global_result = copy.deepcopy(self.result[valid_result])
         global_result.npred = None
         global_result.obs = None
-        all_fitranges = [_.fit_range for _ in self._result if _ is not None] 
+        all_fitranges = [_.fit_range for _ in self._result if _ is not None]
         fit_range_min = min([_[0] for _ in all_fitranges])
-        fit_range_max = max([_[1] for _ in all_fitranges]) 
+        fit_range_max = max([_[1] for _ in all_fitranges])
         global_result.fit_range = u.Quantity((fit_range_min, fit_range_max))
         self._global_result = global_result
 
@@ -279,15 +308,15 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
         covar_axis.append(pardict[name][0])
         temp = covariance[idx] * pardict[name][1]
         covariance[idx] = temp
-        temp2 = covariance[:,idx] * pardict[name][1]
-        covariance[:,idx] = temp2
+        temp2 = covariance[:, idx] * pardict[name][1]
+        covariance[:, idx] = temp2
 
     # Efilter sometimes contains ','
     if ':' in efilter:
         temp = efilter.split(':')
     else:
         temp = efilter.split(',')
-    
+
     # Special case only one noticed bin
     if len(temp) == 1:
         fit_range = ([float(temp[0]), float(temp[0])] * u.keV).to('TeV')
