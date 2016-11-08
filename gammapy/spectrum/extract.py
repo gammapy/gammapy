@@ -134,7 +134,7 @@ class SpectrumExtraction(object):
                 on_region=self.target.on_region,
                 obs_list=self.obs,
                 exclusion=exclusion,
-                config=config) 
+                config=config)
             refl.run()
             self.background = refl.result
         else:
@@ -164,7 +164,8 @@ class SpectrumExtraction(object):
         if not isinstance(self.background, list):
             raise ValueError("Invalid background estimate: {}".format(self.background))
         for obs, bkg in zip(self.obs, self.background):
-            if bkg.a_off==0:
+            if bkg.a_off == 0:
+                log.info('The run {} is excluded since no off region was found'.format(obs.obs_id))
                 continue
             log.info('Extracting spectrum for observation\n {}'.format(obs))
             offset = obs.pointing_radec.separation(self.target.on_region.center)
@@ -232,8 +233,8 @@ class SpectrumExtraction(object):
                                        off_vector=off_vec,
                                        edisp=rmf)
 
-            temp.hi_threshold=obs.aeff.high_threshold
-            temp.lo_threshold=obs.aeff.low_threshold
+            temp.hi_threshold = obs.aeff.high_threshold
+            temp.lo_threshold = obs.aeff.low_threshold
 
             spectrum_observations.append(temp)
 
