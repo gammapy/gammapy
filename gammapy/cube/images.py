@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from .core import SkyCube
+from ..spectrum import LogEnergyAxis
 
 __all__ = ['SkyCubeImages']
 
@@ -41,4 +42,6 @@ class SkyCubeImages(object):
         else:
             unit = None
         data = Quantity([image.data for image in self.images], unit)
-        return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy, meta=self.meta)
+        energy_axis = LogEnergyAxis(self.energy)
+        return SkyCube(name=self.name, data=data, wcs=self.wcs,
+                       energy_axis=energy_axis, meta=self.meta)

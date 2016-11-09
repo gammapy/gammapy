@@ -87,7 +87,7 @@ class TestSkyCube(object):
         pix = [2, 2], [3, 3], [4, 4]
         position, energy = self.sky_cube.wcs_pixel_to_skycoord(*pix)
         actual = self.sky_cube.lookup(position, energy)
-        expected = self.sky_cube.data[2, 3, 4]
+        expected = self.sky_cube.data[4, 3, 2]
         # Quantity([3.50571123e-07, 2], '1 / (cm2 MeV s sr)')
         assert_quantity_allclose(actual, expected)
 

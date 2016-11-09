@@ -119,7 +119,7 @@ def test_cube_sed1():
     counts = FermiGalacticCenter.diffuse_model()
     counts.data = np.ones_like(counts.data)
 
-    coordinates = spec_cube.ref_sky_image.coordinates()
+    coordinates = spec_cube.sky_image_ref.coordinates()
     lons = coordinates.data.lon
     lats = coordinates.data.lat
 
@@ -148,7 +148,7 @@ def test_cube_sed2():
     counts = FermiGalacticCenter.diffuse_model()
     counts.data = np.ones_like(counts.data[:-1])
 
-    coordinates = spec_cube.ref_sky_image.coordinates()
+    coordinates = spec_cube.sky_image_ref.coordinates()
     lons = coordinates.data.lon
     lats = coordinates.data.lat
 
@@ -156,8 +156,8 @@ def test_cube_sed2():
 
     sed_table1 = cube_sed(spec_cube, mask, flux_type='integral')
 
-    assert_allclose(sed_table1['ENERGY'][0], 56.95239033587774)
-    assert_allclose(sed_table1['DIFF_FLUX'][0], 170.86224025271986)
+    assert_allclose(sed_table1['ENERGY'][0], 53.37451755960359)
+    assert_allclose(sed_table1['DIFF_FLUX'][0], 365.64943655965686)
     assert_allclose(sed_table1['DIFF_FLUX_ERR_HI'], 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='integral',

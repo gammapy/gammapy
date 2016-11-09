@@ -83,16 +83,13 @@ class SkyCube(object):
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
 
-    def __init__(self, name=None, data=None, wcs=None, energy=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
         self.data = data
         self.wcs = wcs
         self.meta = meta
-
-        # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
-        if energy:
-            self.energy_axis = LogEnergyAxis(energy)
+        self.energy_axis = energy_axis
 
     @lazyproperty
     def _interpolate_data(self):
@@ -170,27 +167,31 @@ class SkyCube(object):
         data = fits.getdata(filename)
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for LON, LAT and do ENERGY ourselves
+
         header = fits.getheader(filename)
         wcs = WCS(header).celestial
         meta = OrderedDict(header)
+
+        #TODO: check and give reference for fermi data units
         if format == 'fermi-background':
             energy = Table.read(filename, 'ENERGIES')['Energy']
-            energy = Quantity(energy, 'MeV')
+            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'))
             data = Quantity(data, '1 / (cm2 MeV s sr)')
             name = 'flux'
         elif format == 'fermi-counts':
             energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
-            energy = energy.log_centers
+            energy_axis = LogEnergyAxis(energy, mode='edges')
             data = Quantity(data, 'count')
             name = 'counts'
         elif format == 'fermi-exposure':
-            pass
+            energy = Table.read(filename, 'ENERGIES')['Energy']
+            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'))
+            data = Quantity(data, 'cm2 s')
             name = 'exposure'
-
         else:
             raise ValueError('Not a valid cube fits format')
 
-        return cls(name=name, data=data, wcs=wcs, energy=energy, meta=meta)
+        return cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis, meta=meta)
 
     def fill_events(self, events, weights=None):
         """
@@ -238,8 +239,9 @@ class SkyCube(object):
         """
         image = SkyImage.empty(**kwargs)
         energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
+        energy_axis = LogEnergyAxis(energy)
         data = image.data * np.ones(len(energy)).reshape((-1, 1, 1)) * u.Unit('')
-        return cls(data=data, wcs=image.wcs, energy=energy)
+        return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
@@ -256,8 +258,28 @@ class SkyCube(object):
         """
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
-        energies = refcube.energies.copy()
-        return cls(data=data, wcs=wcs, energy=energies, meta=refcube.meta)
+        energy_axis = refcube.energy_axis
+        return cls(data=data, wcs=wcs, energy_axis=energy_axis, meta=refcube.meta)
+
+    def energies(self, mode='center'):
+        """
+        Energy coordinate vector.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Return coordinate values at the pixels edges or pixel centers.
+
+        Returns
+        -------
+        coordinates : `~astropy.units.Quantity`
+            Energy
+        """
+        if mode == 'center':
+            z = np.arange(self.data.shape[0])
+        elif mode == 'edges':
+            z = np.arange(self.data.shape[0] + 1) - 0.5
+        return self.energy_axis.pix2world(z)
 
     def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
@@ -271,7 +293,7 @@ class SkyCube(object):
 
         Returns
         -------
-        (z, y, x) : tuple
+        (x, y, z) : tuple
             Tuple of x, y, z coordinates.
         """
         if not position.shape == energy.shape:
@@ -288,11 +310,17 @@ class SkyCube(object):
 
         Parameters
         ----------
-        x, y, z
+        x : `~numpy.ndarry`
+            x coordinate array
+        y : `~numpy.ndarry`
+            y coordinate array
+        z : `~numpy.ndarry`
+            z coordinate array
 
         Returns
         -------
-        lon, lat, energy
+        (position, energy) : tuple
+            Tuple of (`~astropy.coordinates.SkyCoord`, `~astropy.unit.Quantity`).
         """
         position = self.sky_image_ref.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.pix2world(z)
@@ -306,7 +334,7 @@ class SkyCube(object):
         from .sherpa_ import Data3D
 
         # Energy axes
-        energies = self.energy_axis.energy.to("TeV").value
+        energies = self.energies().to("TeV").value
         ebounds = EnergyBounds(Quantity(energies, 'TeV'))
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
@@ -366,8 +394,8 @@ class SkyCube(object):
 
             >>> from gammapy.cube import SkyCube
             >>> cube = SkyCube.empty()
-            >>> coords = cube.ref_sky_image.coordinates()
-            >>> solid_angle = cube.ref_sky_image.solid_angle()
+            >>> coords = cube.sky_image_ref.coordinates()
+            >>> solid_angle = cube.sky_image_ref.solid_angle()
 
         """
         wcs = self.wcs.celestial
@@ -391,7 +419,7 @@ class SkyCube(object):
         """
         # TODO: add interpolation option using NDDataArray
 
-        z, y, x = self.wcs_skycoord_to_pixel(position, energy)
+        x, y, z = self.wcs_skycoord_to_pixel(position, energy)
 
         if interpolation:
             vals = self._interpolate_data(z, y, x)
@@ -463,7 +491,7 @@ class SkyCube(object):
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)
         else:
-            energy = self.energy_axis.energy
+            energy = self.energies()
             data = self.data
         integral = _trapz_loglog(data, energy, axis=0)
         name = 'integrated {}'.format(self.name)
@@ -503,7 +531,7 @@ class SkyCube(object):
         data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
         return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
-                              energy=self.energy_axis.energy)
+                              energy_axes=self.energy_axis)
 
 
     def to_fits(self):

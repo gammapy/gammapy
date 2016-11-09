@@ -34,12 +34,12 @@ class TestFermiGalacticCenter:
     def test_diffuse_model(self):
         diffuse_model = FermiGalacticCenter.diffuse_model()
         assert diffuse_model.data.shape == (30, 21, 61)
-        assert_quantity_allclose(diffuse_model.energy[0], Quantity(50, 'MeV'))
+        assert_quantity_allclose(diffuse_model.energies()[0], Quantity(50, 'MeV'))
 
     def test_exposure_cube(self):
         exposure_cube = FermiGalacticCenter.exposure_cube()
         assert exposure_cube.data.shape == (21, 11, 31)
-        assert_quantity_allclose(exposure_cube.energy[0], Quantity(50, 'MeV'))
+        assert_quantity_allclose(exposure_cube.energies()[0], Quantity(50, 'MeV'))
 
 
 @requires_data('gammapy-extra')
@@ -84,7 +84,7 @@ class TestFermiVelaRegion:
         exposure_cube = FermiVelaRegion.exposure_cube()
         assert exposure_cube.data.shape == (21, 50, 50)
         assert exposure_cube.data.value.sum(), 4.978616e+15
-        assert_quantity_allclose(exposure_cube.energy[0], Quantity(10000, 'MeV'))
+        assert_quantity_allclose(exposure_cube.energies()[0], Quantity(10000, 'MeV'))
 
     def test_livetime(self):
         livetime_list = FermiVelaRegion.livetime_cube()

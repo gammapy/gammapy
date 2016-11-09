@@ -9,6 +9,8 @@ from ...image import SkyImage
 from ...irf import EnergyDependentTablePSF
 from ...cube import SkyCube
 from ...datasets import FermiGalacticCenter
+from ...spectrum import LogEnergyAxis
+
 
 
 def test_extended_image():
@@ -20,9 +22,9 @@ def test_extended_image():
 def test_source_image():
     reference_hdu = SkyImage.empty(nxpix=10, nypix=10, binsz=1).to_image_hdu()
     reference_wcs = WCS(reference_hdu.header)
-    energy = Quantity([10, 500], 'GeV')
+    energy_axis = LogEnergyAxis(Quantity([10, 500], 'GeV'))
     reference = SkyCube(data=reference_hdu.data,
-                        wcs=reference_wcs, energy=energy)
+                        wcs=reference_wcs, energy_axis=energy_axis)
 
     psf_file = FermiGalacticCenter.filenames()['psf']
     psf = EnergyDependentTablePSF.read(psf_file)
