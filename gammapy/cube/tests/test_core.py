@@ -148,7 +148,7 @@ class TestSkyCubeInterpolation(object):
         integral = self.sky_cube.sky_image_integral(emin, emax)
         assert_quantity_allclose(integral.data, self.pwl.integral(emin, emax))
 
-
+    @requires_dependency('reproject')
     def test_reproject(self):
         emin = 1 * u.TeV
         emax = 100 * u.TeV
