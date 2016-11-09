@@ -477,8 +477,10 @@ class SkyCube(object):
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)
         else:
-            energy = self.energies()
-            data = self.data
+            zmin = np.rint(self.energy_axis.world2pix(emin)).astype('int')
+            zmax = np.rint(self.energy_axis.world2pix(emax)).astype('int')
+            energy = self.energies()[zmin:zmax]
+            data = self.data[zmin:zmax]
         integral = _trapz_loglog(data, energy, axis=0)
         name = 'integrated {}'.format(self.name)
         return SkyImage(name=name, data=integral, wcs=self.wcs.celestial)
