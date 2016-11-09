@@ -148,14 +148,14 @@ class SkyCube(object):
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     @classmethod
-    def read(cls, filename, format='fermi'):
+    def read(cls, filename, format):
         """Read sky cube from FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-        format : {'fermi', 'fermi-counts'}
+        format : {'fermi-counts', 'fermi-background', 'fermi-exposure'}
             Fits file format.
 
         Returns
@@ -173,6 +173,7 @@ class SkyCube(object):
         meta = OrderedDict(header)
 
         #TODO: check and give reference for fermi data units
+        #TODO: choose format automatically
         if format == 'fermi-background':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'))
@@ -520,18 +521,18 @@ class SkyCube(object):
             Cube spatially reprojected to the reference.
         """
         if isinstance(reference, SkyCube):
-            reference = reference.ref_sky_image
+            reference = reference.sky_image_ref
 
         out = []
-        for idx in range(len(self.data)):
-            image = self.sky_image(idx)
+        for energy in self.energies():
+            image = self.sky_image(energy)
             image_out = image.reproject(reference, mode=mode, *args, **kwargs)
             out.append(image_out.data)
 
         data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
         return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
-                              energy_axes=self.energy_axis)
+                              energy_axis=self.energy_axis)
 
 
     def to_fits(self):

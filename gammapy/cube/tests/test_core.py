@@ -125,7 +125,7 @@ class TestSkyCube(object):
 class TestSkyCubeInterpolation(object):
     def setup(self):
         # Set up powerlaw
-        amplitude = 1E-12 * u.Unit('1 / (s cm2)')
+        amplitude = 1E-12 * u.Unit('1 / (s sr cm2)')
         index = 2
         emin = 1 * u.TeV
         emax = 100 * u.TeV
@@ -147,6 +147,24 @@ class TestSkyCubeInterpolation(object):
         emin, emax = [1, 100] * u.TeV
         integral = self.sky_cube.sky_image_integral(emin, emax)
         assert_quantity_allclose(integral.data, self.pwl.integral(emin, emax))
+
+
+    def test_reproject(self):
+        emin = 1 * u.TeV
+        emax = 100 * u.TeV
+        ref = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=6, nypix=6,
+                            binsz=0.01)
+        reprojected = self.sky_cube.reproject(ref)
+
+        # Check if reprojection conserves total flux
+        integral = self.sky_cube.sky_image_integral(emin, emax)
+        flux = (integral.data * integral.solid_angle().data).sum()
+
+        integral_rep = reprojected.sky_image_integral(emin, emax)
+        flux_rep = (integral_rep.data * integral_rep.solid_angle().data).sum()
+
+        assert_quantity_allclose(flux, flux_rep)
+
 
 
 @pytest.mark.xfail
