@@ -31,19 +31,21 @@ __all__ = ['SkyCube']
 
 
 class SkyCube(object):
-    """Sky cube with dimensions lon, lat and energy.
+    """
+    Sky cube with dimensions lon, lat and energy.
 
-    Can be used e.g. for Fermi or GALPROP diffuse model cubes.
 
-    Note that there is a very nice ``SkyCube`` implementation here:
-    http://spectral-cube.readthedocs.io/en/latest/index.html
+    .. note::
 
-    Here is some discussion if / how it could be used:
-    https://github.com/radio-astro-tools/spectral-cube/issues/110
+        There is a very nice ``SkyCube`` implementation here:
+        http://spectral-cube.readthedocs.io/en/latest/index.html
+
+        Here is some discussion if / how it could be used:
+        https://github.com/radio-astro-tools/spectral-cube/issues/110
 
     For now we re-implement what we need here.
 
-    The order of the sky cube axes can be very confusing ... this should help:
+    The order of the sky cube axes is defined as following:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
     * The ``wcs`` object is a two dimensional celestial WCS with axis order ``(lon, lat)``.
@@ -51,36 +53,16 @@ class SkyCube(object):
     Parameters
     ----------
     name : str
-        Name of the sky cube.
-    data : `~astropy.units.Quantity`
-        Data array (3-dim)
+        Name of the cube.
+    data : `~numpy.ndarray`
+        Data array.
     wcs : `~astropy.wcs.WCS`
-        Word coordinate system transformation
-    energy : `~astropy.units.Quantity`
-        Energy array
-
-    Attributes
-    ----------
-    data : `~astropy.units.Quantity`
-        Data array (3-dim)
-    wcs : `~astropy.wcs.WCS`
-        Word coordinate system transformation
-    energy : `~astropy.units.Quantity`
-        Energy values, at the center of the bin.
+        WCS transformation object.
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
-        Energy axis
+        Energy axis object, defining the energy transformation.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
 
-
-    Notes
-    -----
-    Diffuse model files in this format are distributed with the Fermi Science tools
-    software and can also be downloaded at
-    http://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html
-
-    E.g. the 2-year diffuse model that was used in the 2FGL catalog production is at
-    http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
 
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
