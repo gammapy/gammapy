@@ -222,8 +222,8 @@ class SkyCube(object):
         """
         image = SkyImage.empty(**kwargs)
         energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
-        energy_axis = LogEnergyAxis(energy)
-        data = image.data * np.ones(len(energy)).reshape((-1, 1, 1)) * u.Unit('')
+        energy_axis = LogEnergyAxis(energy, mode='edges')
+        data = image.data * np.ones(enumbins).reshape((-1, 1, 1)) * u.Unit('')
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
@@ -261,6 +261,10 @@ class SkyCube(object):
         if mode == 'center':
             z = np.arange(self.data.shape[0])
         elif mode == 'edges':
+            # Currently LogEnergyAxis can't extrapolate so we raise an erros
+            # instead of returning incorrect values
+            if len(self.energy_axis.energy) == self.data.shape[0]:
+                raise NotImplementedError
             z = np.arange(self.data.shape[0] + 1) - 0.5
         return self.energy_axis.pix2world(z)
 
@@ -317,10 +321,9 @@ class SkyCube(object):
         from .sherpa_ import Data3D
 
         # Energy axes
-        energies = self.energies().to("TeV").value
-        ebounds = EnergyBounds(Quantity(energies, 'TeV'))
-        elo = ebounds.lower_bounds.value
-        ehi = ebounds.upper_bounds.value
+        energies = self.energies(mode='edges').to("TeV").value
+        elo = energies[:-1]
+        ehi = energies[1:]
 
         coordinates = self.sky_image_ref.coordinates()
         ra = coordinates.data.lon
@@ -517,8 +520,15 @@ class SkyCube(object):
                               energy_axis=self.energy_axis)
 
 
-    def to_fits(self):
+    def to_fits(self, format):
         """Writes SkyCube to FITS hdu_list.
+
+        Parameters
+        ----------
+        format : {'fermi-counts', 'fermi-background', 'fermi-exposure'}
+            Fits file format.
+
+
 
         Returns
         -------
@@ -528,18 +538,29 @@ class SkyCube(object):
             * hdu_list[1] : `~astropy.io.fits.BinTableHDU`
                 Table of energies
         """
-        image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
-        image.header['SPECUNIT'] = '{0.unit:FITS}'.format(self.data)
+        image_hdu = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
+        image_hdu.header['SPECUNIT'] = '{0.unit:FITS}'.format(self.data)
 
-        # for BinTableHDU's the data must be added via a Table object
-        energy_table = Table()
-        energy_table['Energy'] = self.energy_axis.energy
-        energy_table.meta['name'] = 'ENERGY'
+        if format == 'fermi-counts':
+            energies = self.energies(mode='edges')
+            # for BinTableHDU's the data must be added via a Table object
+            energy_table = Table()
+            energy_table['E_MIN'] = energies[:-1]
+            energy_table['E_MAX'] = energies[1:]
+            energy_table.meta['name'] = 'EBOUNDS'
+            energy_hdu = table_to_fits_table(energy_table)
 
-        energies = table_to_fits_table(energy_table)
+        elif format in ['fermi-exposure', 'fermi-background']:
+            # for BinTableHDU's the data must be added via a Table object
+            energy_table = Table()
+            energy_table['Energy'] = self.energies()
+            energy_table.meta['name'] = 'ENERGIES'
+            energy_hdu = table_to_fits_table(energy_table)
 
-        hdu_list = fits.HDUList([image, energies])
+        else:
+            raise ValueError('Not a valid cube fits format')
 
+        hdu_list = fits.HDUList([image_hdu, energy_hdu])
         return hdu_list
 
     def to_images(self):
@@ -549,16 +570,18 @@ class SkyCube(object):
         images = [self.sky_image(energy) for energy in self.energy_axis.energy]
         return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, format, **kwargs):
         """Write to FITS file.
 
         Parameters
         ----------
         filename : str
             Filename
+        format : {'fermi-counts', 'fermi-background', 'fermi-exposure'}
+            Fits file format.
         """
         filename = str(make_path(filename))
-        self.to_fits().writeto(filename, **kwargs)
+        self.to_fits(format).writeto(filename, **kwargs)
 
     def __repr__(self):
         # Copied from `spectral-cube` package

@@ -121,7 +121,7 @@ class TestSkyCube(object):
         """)
         assert actual == expected
 
-
+@requires_dependency('scipy')
 class TestSkyCubeInterpolation(object):
     def setup(self):
         # Set up powerlaw
@@ -158,10 +158,10 @@ class TestSkyCubeInterpolation(object):
 
         # Check if reprojection conserves total flux
         integral = self.sky_cube.sky_image_integral(emin, emax)
-        flux = (integral.data * integral.solid_angle().data).sum()
+        flux = (integral.data * integral.solid_angle()).sum()
 
         integral_rep = reprojected.sky_image_integral(emin, emax)
-        flux_rep = (integral_rep.data * integral_rep.solid_angle().data).sum()
+        flux_rep = (integral_rep.data * integral_rep.solid_angle()).sum()
 
         assert_quantity_allclose(flux, flux_rep)
 

@@ -35,10 +35,14 @@ class LogEnergyAxis(object):
     def __init__(self, energy, mode='center'):
         self.energy = energy
         self.x = np.log10(energy.value)
+
         if mode == 'center':
             self.pix = np.arange(len(self.x))
         elif mode == 'edges':
             self.pix = np.arange(len(self.x)) - 0.5
+        else:
+            raise ValueError('Not a valid mode.')
+
 
     def world2pix(self, energy):
         """TODO: document.
