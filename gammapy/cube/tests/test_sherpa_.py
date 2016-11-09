@@ -48,10 +48,10 @@ def test_sherpa_crab_fit():
     fit = Fit(data=cube, model=model, stat=Chi2ConstVar(), method=LevMar())
     result = fit.fit()
 
-    reference = [1.216745e-01,
-                 8.362456e+01,
-                 2.201813e+01,
-                 7.811623e-02,
-                 2.201211e+00]
+    reference = [0.121556,
+                 83.625627,
+                 22.015564,
+                 0.096903,
+                 2.240989]
 
     assert_allclose(result.parvals, reference, rtol=1E-5)

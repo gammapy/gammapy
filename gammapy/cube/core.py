@@ -199,7 +199,7 @@ class SkyCube(object):
 
     @property
     def _bins_energy(self):
-        return np.arange(self.data.shape[0] + 1)
+        return np.arange(self.data.shape[0] + 1) - 0.5
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', **kwargs):

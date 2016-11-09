@@ -43,7 +43,7 @@ class TestSkyCube(object):
 
     def test_read_write(self, tmpdir):
         filename = str(tmpdir / 'sky_cube.fits')
-        self.sky_cube.write(filename)
+        self.sky_cube.write(filename, format='fermi-background')
 
         sky_cube = SkyCube.read(filename, format='fermi-background')
         assert sky_cube.data.shape == (30, 21, 61)
@@ -133,7 +133,7 @@ class TestSkyCubeInterpolation(object):
 
         # Set up data cube
         cube = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=3, nypix=3)
-        data = pwl(cube.energy_axis.energy).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
+        data = pwl(cube.energies()).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
         cube.data = data
         self.sky_cube = cube
         self.pwl = pwl
