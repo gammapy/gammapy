@@ -1,47 +1,45 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+import math
+import numpy as np
 
 
 class TablePSFChecker(object):
-    """Automated quality checks for Table PSF.
+    """Automated quality checks for `gammapy.irf.PSF3D`.
     
     At the moment used for HESS HAP HD.
-    """
-    def __init__(self, psf, config):
-        """Constructor
 
-        Parameters
-        ----------
-        psf : `~gammapy.irf.PSF3D`
-            Table PSF to check
-        config : `~OrderedDict`
-            Dictionary with configuration parameters:
-                d_norm:
-                    maximum norm deviation from 1
-                containment_fraction:
-                    containment fraction to check
-                d_rel_containment:
-                    maximum relative difference of containment
-                    radius between neighboring bins
-        """
+    Parameters
+    ----------
+    psf : `~gammapy.irf.PSF3D`
+        Table PSF to check
+    config : `~collections.OrderedDict`
+        Dictionary with configuration parameters:
+            d_norm:
+                maximum norm deviation from 1
+            containment_fraction:
+                containment fraction to check
+            d_rel_containment:
+                maximum relative difference of containment
+                radius between neighboring bins
+    """
+
+    def __init__(self, psf, config):
         self.psf = psf
         self.config = config
-        
-    
+        self.results = OrderedDict()
+
     def check_all(self):
+        """Run all checks.
+        """
+        self.check_nan()
+        self.check_normalise()
+        self.check_containment()
 
-        # init dict for all results
-        dict = OrderedDict()
-
-        # run checks
-        self.check_nan(dict)
-        self.check_normalise(dict)
-        self.check_containment(dict)
-        
-        return dict
-    
-    def check_nan(self, dict):
-        import numpy as np
-        import math
+    def check_nan(self):
+        """Check for `NaN` values in PSF.
+        """
 
         # genarate array for easier handling
         values = np.swapaxes(self.psf.psf_value, 0, 2)
@@ -57,7 +55,7 @@ class TablePSFChecker(object):
                 continue
             if self.psf.energy_thresh_hi < energy_lo:
                 continue
-            
+
             # loop over offsets
             for arr2 in arr:
 
@@ -66,74 +64,66 @@ class TablePSFChecker(object):
 
                     # check for nan
                     if math.isnan(v.value):
-
                         # add to fail counter
                         fail_count += 1
                         break
-                    
-        # write results to dict
-        check_dict = OrderedDict()
+
+        results = OrderedDict()
         if fail_count == 0:
-            check_dict['status'] = 'ok'
+            results['status'] = 'ok'
         else:
-            check_dict['status'] = 'failed'
-            check_dict['n_failed_bins'] = fail_count
-        dict['nan'] = check_dict
-        return
-    
-    def check_normalise(self, dict):
-        import numpy as np
+            results['status'] = 'failed'
+            results['n_failed_bins'] = fail_count
+
+        self.results['nan'] = results
+
+    def check_normalise(self):
 
         # generate array for easier handling
         values = np.swapaxes(self.psf.psf_value, 0, 2)
 
         # init fail count
         fail_count = 0
-        
+
         # loop over energies
         for i, arr in enumerate(values):
             energy_hi = self.psf.energy_hi[i]
             energy_lo = self.psf.energy_lo[i]
-            
+
             # check if energy is outside of safe energy threshold
             if self.psf.energy_thresh_lo > energy_hi:
                 continue
             if self.psf.energy_thresh_hi < energy_lo:
                 continue
-            
+
             # loop over offsets
             for arr2 in arr:
-                
+
                 # init integral
                 sum = 0
 
                 # loop over deltas
                 for j, v in enumerate(arr2):
-
                     # calculate contribution to integral
                     width = self.psf.rad_hi[j].rad - self.psf.rad_lo[j].rad
                     rad = 0.5 * (self.psf.rad_hi[j].rad + self.psf.rad_lo[j].rad)
                     sum += v.value * width * rad * 2 * np.pi
 
                 # check if integral is close enough to 1
-                if (np.abs(sum - 1.0) > self.config['d_norm']):
-
+                if np.abs(sum - 1.0) > self.config['d_norm']:
                     # add to fail counter
                     fail_count += 1
 
         # write results to dict
-        check_dict = OrderedDict()
+        results = OrderedDict()
         if fail_count == 0:
-            check_dict['status'] = 'ok'
+            results['status'] = 'ok'
         else:
-            check_dict['status'] = 'failed'
-            check_dict['n_failed_bins'] = fail_count
-        dict['normalise'] = check_dict
-        return
+            results['status'] = 'failed'
+            results['n_failed_bins'] = fail_count
+        self.results['normalise'] = results
 
-    def check_containment(self, dict):
-        import numpy as np
-        import math
+    def check_containment(self):
 
         # set fraction to check for
         fraction = self.config['containment_fraction']
@@ -154,7 +144,7 @@ class TablePSFChecker(object):
         for i, arr in enumerate(values):
             energy_hi = self.psf.energy_hi[i]
             energy_lo = self.psf.energy_lo[i]
-            
+
             # loop over offsets
             for k, arr2 in enumerate(arr):
 
@@ -170,20 +160,19 @@ class TablePSFChecker(object):
                 # init integral and containment radius
                 sum = 0
                 r = None
-                
+
                 # loop over deltas
                 for j, v in enumerate(arr2):
-                    
+
                     # calculate contribution to integral
                     width = self.psf.rad_hi[j].rad - self.psf.rad_lo[j].rad
                     rad = 0.5 * (self.psf.rad_hi[j].rad + self.psf.rad_lo[j].rad)
                     sum += v.value * width * rad * 2 * np.pi
-                    
-                    # check if conainmant radius is reached
-                    if (sum >= fraction):
 
+                    # check if conainmant radius is reached
+                    if sum >= fraction:
                         # convert radius to degrees
-                        r = rad*180./np.pi
+                        r = rad * 180. / np.pi
                         break
 
                 # store containment radius in array
@@ -195,7 +184,7 @@ class TablePSFChecker(object):
 
         # loop over energies
         for i, arr in enumerate(inner):
-            
+
             # loop over offsets
             for j, v in enumerate(inner[i]):
 
@@ -211,7 +200,7 @@ class TablePSFChecker(object):
                 jj = j + 1
 
                 # retrieve array of neighbors
-                nb = radii[ii-d:ii+d+1, jj-d:jj+d+1].flatten()
+                nb = radii[ii - d:ii + d + 1, jj - d:jj + d + 1].flatten()
 
                 # loop over neighbors
                 for n in nb:
@@ -222,58 +211,44 @@ class TablePSFChecker(object):
 
                     # calculate relative difference to neighbor
                     diff = np.abs(v - n) / v
-                    
+
                     # check if difference is to big
                     if diff > rel_diff:
-                        
                         # add to fail counter
                         fail_count += 1
-                    
+
         # write results to dict
-        check_dict = OrderedDict()
+        results = OrderedDict()
         if fail_count == 0:
-            check_dict['status'] = 'ok'
+            results['status'] = 'ok'
         else:
-            check_dict['status'] = 'failed'
-            check_dict['n_failed_bins'] = fail_count
-        dict['containment'] = check_dict
-        return
+            results['status'] = 'failed'
+            results['n_failed_bins'] = fail_count
+        self.results['containment'] = results
+
 
 def check_all_table_psf(data_store):
+    """Check all `gammapy.irf.PSF3D` for a given `gammapy.data.DataStore`.
+    """
+    config = OrderedDict(
+        d_norm=0.01,
+        containment_fraction=0.68,
+        d_rel_containment=0.7
+    )
 
-    # get obs ids
     obs_ids = data_store.obs_table['OBS_ID'].data
-    
-    # loop over observations
+
     for obs_id in obs_ids[:10]:
-
-        # get observation
         obs = data_store.obs(obs_id=obs_id)
-
-        # get table psf
         psf = obs.load(hdu_class='psf_table')
-
-        # init config
-        config = OrderedDict(
-            d_norm = 0.01,
-            containment_fraction = 0.68,
-            d_rel_containment = 0.7
-            )
-
-        # do the checks
-        results = TablePSFChecker(psf=psf, config=config).check_all()
-        print(results)
-
+        checker = TablePSFChecker(psf=psf, config=config)
+        checker.check_all()
+        print(checker.results)
 
 
 if __name__ == '__main__':
     import sys
-    from gammapy.data import DataStore
-    args = sys.argv
+    from ..data.data_store import DataStore
 
-    # get datastore
-    data_store = DataStore.from_dir(args[1])
-
-    # check all table psfs
+    data_store = DataStore.from_dir(sys.argv[1])
     check_all_table_psf(data_store)
-    
