@@ -168,7 +168,7 @@ class EnergyDependentMultiGaussPSF(object):
 
     def psf_at_energy_and_theta(self, energy, theta):
         """
-        Get `~gammapy.morphology.MultiGauss2D` model for given energy and theta.
+        Get `~gammapy.image.models.MultiGauss2D` model for given energy and theta.
 
         No interpolation is used.
 
