@@ -17,7 +17,8 @@ def test_sherpa_crab_fit():
     from ..sherpa_ import CombinedModel3D
 
     filename = gammapy_extra.filename('experiments/sherpa_cube_analysis/counts.fits.gz')
-    counts = SkyCube.read(filename)
+    # Note: The cube is stored in incorrect format
+    counts = SkyCube.read(filename, format='fermi-counts')
     cube = counts.to_sherpa_data3d()
 
     # Set up exposure table model
@@ -47,10 +48,10 @@ def test_sherpa_crab_fit():
     fit = Fit(data=cube, model=model, stat=Chi2ConstVar(), method=LevMar())
     result = fit.fit()
 
-    reference = (0.11925401159500593,
-                 83.640630749333056,
-                 22.020525848447541,
-                 0.036353759774770608,
-                 1.1900312815970555)
+    reference = [0.121556,
+                 83.625627,
+                 22.015564,
+                 0.096903,
+                 2.240989]
 
-    assert_allclose(result.parvals, reference, rtol=1E-8)
+    assert_allclose(result.parvals, reference, rtol=1E-5)

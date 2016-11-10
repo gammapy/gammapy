@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy.tests.helper import pytest, assert_quantity_allclose
-from astropy.units import Quantity
+import astropy.units as u
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 
@@ -16,6 +16,7 @@ from ...datasets import FermiGalacticCenter
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
+from ...spectrum.models import PowerLaw2
 from .. import SkyCube, compute_npred_cube, convolve_cube
 
 
@@ -26,33 +27,38 @@ class TestSkyCube(object):
         self.sky_cube = FermiGalacticCenter.diffuse_model()
         assert self.sky_cube.data.shape == (30, 21, 61)
 
+    def test_to_images(self):
+        images = self.sky_cube.to_images()
+        cube = images.to_cube()
+        SkyCube.assert_allclose(self.sky_cube, cube)
+
     def test_init(self):
         name = 'Axel'
         data = self.sky_cube.data
         wcs = self.sky_cube.wcs
-        energy = self.sky_cube.energy
+        energy = self.sky_cube.energy_axis.energy
 
         sky_cube = SkyCube(name, data, wcs, energy)
         assert sky_cube.data.shape == (30, 21, 61)
 
     def test_read_write(self, tmpdir):
         filename = str(tmpdir / 'sky_cube.fits')
-        self.sky_cube.write(filename)
+        self.sky_cube.write(filename, format='fermi-background')
 
-        sky_cube = SkyCube.read(filename)
+        sky_cube = SkyCube.read(filename, format='fermi-background')
         assert sky_cube.data.shape == (30, 21, 61)
 
     def test_pixel_to_skycoord(self):
         # Corner pixel with index [0, 0, 0]
         position, energy = self.sky_cube.wcs_pixel_to_skycoord(0, 0, 0)
         lon, lat = position.galactic.l, position.galactic.b
-        assert_quantity_allclose(lon, Quantity(344.75, 'deg'))
-        assert_quantity_allclose(lat, Quantity(-5.25, 'deg'))
-        assert_quantity_allclose(energy, Quantity(50, 'MeV'))
+        assert_quantity_allclose(lon, 344.75 * u.deg)
+        assert_quantity_allclose(lat, -5.25 * u.deg)
+        assert_quantity_allclose(energy, 50 * u.MeV)
 
     def test_skycoord_to_pixel(self):
         position = SkyCoord(344.75, -5.25, frame='galactic', unit='deg')
-        energy = Quantity(50, 'MeV')
+        energy = 50 * u.MeV
         x, y, z = self.sky_cube.wcs_skycoord_to_pixel(position, energy)
         assert_allclose((x, y, z), (0, 0, 0))
 
@@ -69,36 +75,10 @@ class TestSkyCube(object):
         pix2 = self.sky_cube.wcs_skycoord_to_pixel(*world)
         assert_allclose(pix2, pix)
 
-    @pytest.mark.xfail
-    def test_flux_scalar(self):
-        # Corner pixel with index [0, 0, 0]
-        lon = Quantity(344.75, 'deg')  # pixel 0
-        lat = Quantity(-5.25, 'deg')  # pixel 0
-        energy = Quantity(50, 'MeV')  # slice 0
-        actual = self.sky_cube.flux(lon, lat, energy)
-        expected = self.sky_cube.data[0, 0, 0]
-        assert_quantity_allclose(actual, expected)
-
-        # Galactic center position
-        lon = Quantity(0, 'deg')  # beween pixel 11 and 12 in ds9 viewer
-        lat = Quantity(0, 'deg')  # beween pixel 30 and 31 in ds9 viewer
-        energy = Quantity(528.9657943133443, 'MeV')  # slice 10 in ds9 viewer
-        actual = self.sky_cube.flux(lon, lat, energy)
-        # Compute expected value by interpolating 4 neighbors
-        # Use data axis order: energy, lat, lon
-        # and remember that numpy starts counting at 0 whereas FITS start at 1
-        s = self.sky_cube.data
-        expected = s[9, 10:12, 29:31].mean()
-
-        # TODO: why are these currently inconsistent by a few % !?
-        # actual   =  9.67254380e-07
-        # expected = 10.13733026e-07
-        assert_quantity_allclose(actual, expected)
-
     def test_lookup(self):
         # Corner pixel with index [0, 0, 0]
         position = SkyCoord(344.75, -5.25, frame='galactic', unit='deg')
-        energy = Quantity(50, 'MeV')  # slice 0
+        energy = 50 * u.MeV  # slice 0
         actual = self.sky_cube.lookup(position, energy)
         expected = self.sky_cube.data[0, 0, 0]
         assert_quantity_allclose(actual, expected)
@@ -107,51 +87,84 @@ class TestSkyCube(object):
         pix = [2, 2], [3, 3], [4, 4]
         position, energy = self.sky_cube.wcs_pixel_to_skycoord(*pix)
         actual = self.sky_cube.lookup(position, energy)
-        expected = self.sky_cube.data[2, 3, 4]
+        expected = self.sky_cube.data[4, 3, 2]
         # Quantity([3.50571123e-07, 2], '1 / (cm2 MeV s sr)')
         assert_quantity_allclose(actual, expected)
 
-    def test_integral_flux_image(self):
+    def test_sky_image_integral(self):
         # For a very small energy band the integral flux should be roughly
         # differential flux times energy bin width
         position, energy = self.sky_cube.wcs_pixel_to_skycoord(0, 0, 0)
         denergy = 0.001 * energy
-        energy_band = Quantity([energy, energy + denergy])
-        dflux = self.sky_cube.lookup(position, energy)
+        emin, emax = energy, energy + denergy
+        dflux = self.sky_cube.lookup(position, energy, interpolation='linear')
         expected = dflux * denergy
-        actual = Quantity(self.sky_cube.integral_flux_image(energy_band).data[0, 0],
-                          '1 / (cm2 s sr)')
-        assert_quantity_allclose(actual, expected, rtol=1e-3)
+        actual = self.sky_cube.sky_image_integral(emin, emax, nbins=100)
+        assert_quantity_allclose(actual.data[0, 0], expected, rtol=1e-3)
 
         # Test a wide energy band
-        energy_band = Quantity([1, 10], 'GeV')
-        image = self.sky_cube.integral_flux_image(energy_band)
-        actual = image.data.sum()
+        emin, emax = [1, 10] * u.GeV
+        image = self.sky_cube.sky_image_integral(emin, emax, nbins=100)
+        unit = '1 / (s sr cm2)'
+        actual = image.data.sum().to(unit)
         # TODO: the reference result is not verified ... just pasted from the test output.
-        expected = 5.2481972772213124e-02
+        expected = 0.05098313774120132 * u.Unit(unit)
         assert_allclose(actual, expected)
-
-        # Test integral flux for energy bands with units.
-        energy_band_check = Quantity([1000, 10000], 'MeV')
-        new_image = self.sky_cube.integral_flux_image(energy_band_check)
-        assert_allclose(new_image.data, image.data)
-
-        assert new_image.wcs.axis_type_names == ['GLON', 'GLAT']
-
-    def test_to_images(self):
-        images = self.sky_cube.to_images()
-        cube = images.to_cube()
-        SkyCube.assert_allclose(self.sky_cube, cube)
 
     def test_repr(self):
         actual = repr(self.sky_cube)
         expected = textwrap.dedent("""\
-        Sky cube None with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
+        Sky cube flux with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
          n_lon:       61  type_lon:    GLON-CAR         unit_lon:    deg
          n_lat:       21  type_lat:    GLAT-CAR         unit_lat:    deg
          n_energy:    30  unit_energy: MeV
         """)
         assert actual == expected
+
+@requires_dependency('scipy')
+class TestSkyCubeInterpolation(object):
+    def setup(self):
+        # Set up powerlaw
+        amplitude = 1E-12 * u.Unit('1 / (s sr cm2)')
+        index = 2
+        emin = 1 * u.TeV
+        emax = 100 * u.TeV
+        pwl = PowerLaw2(amplitude, index, emin, emax)
+
+        # Set up data cube
+        cube = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=3, nypix=3)
+        data = pwl(cube.energies()).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
+        cube.data = data
+        self.sky_cube = cube
+        self.pwl = pwl
+
+    def test_sky_image(self):
+        energy = 50 * u.TeV
+        image = self.sky_cube.sky_image(energy, interpolation='linear')
+        assert_quantity_allclose(image.data, self.pwl(energy))
+
+    def test_sky_image_integrate(self):
+        emin, emax = [1, 100] * u.TeV
+        integral = self.sky_cube.sky_image_integral(emin, emax)
+        assert_quantity_allclose(integral.data, self.pwl.integral(emin, emax))
+
+    @requires_dependency('reproject')
+    def test_reproject(self):
+        emin = 1 * u.TeV
+        emax = 100 * u.TeV
+        ref = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=6, nypix=6,
+                            binsz=0.01)
+        reprojected = self.sky_cube.reproject(ref)
+
+        # Check if reprojection conserves total flux
+        integral = self.sky_cube.sky_image_integral(emin, emax)
+        flux = (integral.data * integral.solid_angle()).sum()
+
+        integral_rep = reprojected.sky_image_integral(emin, emax)
+        flux_rep = (integral_rep.data * integral_rep.solid_angle()).sum()
+
+        assert_quantity_allclose(flux, flux_rep)
+
 
 
 @pytest.mark.xfail
@@ -301,7 +314,7 @@ def test_reproject_cube():
 def test_bin_events_in_cube():
     filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_events_023523.fits.gz'
     events = EventList.read(filename)
-    counts = SkyCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
+    counts = SkyCube.empty(emin=0.5, emax=80, enumbins=8, eunit='TeV',
                            nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
                            yref=events.meta['DEC_OBJ'], dtype='int',
                            coordsys='CEL')

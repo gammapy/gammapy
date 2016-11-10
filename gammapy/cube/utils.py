@@ -9,6 +9,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..image import SkyImage
 from .core import SkyCube
+from ..spectrum import LogEnergyAxis
 
 __all__ = [
     'compute_npred_cube',
@@ -45,24 +46,25 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     energy_centers = energy_bins.log_centers
     wcs = exposure_cube.wcs
-    coordinates = exposure_cube.ref_sky_image.coordinates()
-    solid_angle = exposure_cube.ref_sky_image.solid_angle()
+    coordinates = exposure_cube.sky_image_ref.coordinates()
+    solid_angle = exposure_cube.sky_image_ref.solid_angle()
 
     npred_cube = np.zeros((len(energy_bins) - 1,
                            exposure_cube.data.shape[1], exposure_cube.data.shape[2]))
     for i in range(len(energy_bins) - 1):
-        energy_bound = energy_bins[i:i + 2]
-        int_flux = flux_cube.integral_flux_image(energy_bound, integral_resolution)
+        emin, emax = energy_bins[i:i + 2]
+        int_flux = flux_cube.sky_image_integral(emin, emax, interpolation='linear', nbins=integral_resolution)
         int_flux = Quantity(int_flux.data, '1 / (cm2 s sr)')
         energy = energy_centers[i] * np.ones(coordinates.shape)
-        exposure = Quantity(exposure_cube.lookup(coordinates, energy, interpolation=True), 'cm2 s')
+        exposure = Quantity(exposure_cube.lookup(coordinates, energy, interpolation='linear'), 'cm2 s')
         npred_image = int_flux * exposure * solid_angle
         npred_cube[i] = npred_image.to('')
     npred_cube = np.nan_to_num(npred_cube)
 
+    energy_axis = LogEnergyAxis(energy_bins)
     npred_cube = SkyCube(data=npred_cube,
                          wcs=wcs,
-                         energy=energy_bins)
+                         energy_axis=energy_axis)
     return npred_cube
 
 
@@ -84,20 +86,21 @@ def convolve_cube(cube, psf, offset_max):
     convolved_cube : `SkyCube`
         PSF convolved predicted counts cube in energy bins.
     """
-    from scipy.ndimage import convolve
-    energy = cube.energy
-    indices = np.arange(len(energy) - 1)
-    convolved_cube = np.zeros_like(cube.data)
-    pixel_size = Angle(np.abs(cube.wcs.wcs.cdelt[0]), 'deg')
+    energy_edges = cube.energies(mode='edges')
+    convolved_cube = SkyCube.empty_like(cube)
 
-    for i in indices:
-        energy_band = energy[i:i + 2]
+    data = []
+    pixel_size = cube.sky_image_ref.wcs_pixel_scale()[0]
+
+    for i, energy in enumerate(cube.energies()):
+        image = cube.sky_image(energy)
+        energy_band = energy_edges[i:i + 2]
         psf_at_energy = psf.table_psf_in_energy_band(energy_band)
-        kernel_image = psf_at_energy.kernel(pixel_size, offset_max, normalize=True)
-        convolved_cube[i] = convolve(cube.data[i], kernel_image,
-                                     mode='mirror')
-    convolved_cube = SkyCube(data=convolved_cube, wcs=cube.wcs,
-                             energy=cube.energy)
+        kernel = psf_at_energy.kernel(pixel_size, offset_max, normalize=True)
+        convolved = image.convolve(kernel)
+        data.append(convolved.data)
+
+    convolved_cube.data = np.stack(data, axis=0)
     return convolved_cube
 
 

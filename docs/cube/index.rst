@@ -28,9 +28,9 @@ Use `~gammapy.cube.SkyCube` to read a Fermi-LAT diffuse model cube::
 
     >>> from gammapy.cube import SkyCube
     >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
-    >>> cube = SkyCube.read(filename)
+    >>> cube = SkyCube.read(filename, format='fermi-background')
     >>> print(cube)
-    Sky cube None with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
+    Sky cube flux with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
      n_lon:       61  type_lon:    GLON-CAR         unit_lon:    deg
      n_lat:       21  type_lat:    GLAT-CAR         unit_lat:    deg
      n_energy:    30  unit_energy: MeV
@@ -38,8 +38,8 @@ Use `~gammapy.cube.SkyCube` to read a Fermi-LAT diffuse model cube::
 Use the cube methods to do computations::
 
     import astropy.units as u
-    energy_band = [1, 10] * u.GeV
-    image = cube.integral_flux_image(energy_band=energy_band)
+    emin, emax = [1, 10] * u.GeV
+    image = cube.sky_image_integral(emin=emin, emax=emax)
     image.show('ds9')
 
 TODO: also show how to work with counts and exposure cube using the example at ``test_datasets/unbundled/fermi``

@@ -17,8 +17,8 @@ def prepare_images():
     background_file = FermiVelaRegion.filenames()['diffuse_model']
     exposure_file = FermiVelaRegion.filenames()['exposure_cube']
     counts_file = FermiVelaRegion.filenames()['counts_cube']
-    background_model = SkyCube.read(background_file)
-    exposure_cube = SkyCube.read(exposure_file)
+    background_model = SkyCube.read(background_file, format='fermi-background')
+    exposure_cube = SkyCube.read(exposure_file, format='fermi-exposure')
 
     # Add correct units
     exposure_cube.data = Quantity(exposure_cube.data.value, 'cm2 s')

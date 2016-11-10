@@ -53,7 +53,7 @@ image = catalog_image(reference, psf, catalog='simulation', source_type='point',
                       total_flux=True, sim_table=table)
 
 # Plot
-fig = FITSFigure(image.to_fits()[0], figsize=(15, 5))
+fig = FITSFigure(image.to_fits(format='fermi-background')[0], figsize=(15, 5))
 fig.show_colorscale(interpolation='bicubic', cmap='afmhot', stretch='log', vmin=1E30, vmax=1E35)
 fig.tick_labels.set_xformat('ddd')
 fig.tick_labels.set_yformat('dd')

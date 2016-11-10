@@ -74,14 +74,14 @@ class FermiGalacticCenter(object):
         """Diffuse model (`~gammapy.data.SkyCube`)"""
         from ..cube import SkyCube
         filename = FermiGalacticCenter.filenames()['diffuse_model']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-background')
 
     @staticmethod
     def exposure_cube():
         """Exposure cube (`~gammapy.data.SkyCube`)"""
         from ..cube import SkyCube
         filename = FermiGalacticCenter.filenames()['exposure_cube']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-exposure')
 
 
 class FermiVelaRegion(object):
@@ -134,7 +134,7 @@ class FermiVelaRegion(object):
         """Diffuse model (`~gammapy.data.SkyCube`)"""
         from ..cube import SkyCube
         filename = FermiVelaRegion.filenames()['diffuse_model']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-background')
 
     @staticmethod
     def background_image():
@@ -172,7 +172,7 @@ class FermiVelaRegion(object):
         """Exposure cube (`~gammapy.data.SkyCube`)."""
         from ..cube import SkyCube
         filename = FermiVelaRegion.filenames()['exposure_cube']
-        return SkyCube.read(filename)
+        return SkyCube.read(filename, format='fermi-exposure')
 
     @staticmethod
     def livetime_cube():

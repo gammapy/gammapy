@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
+from astropy import units as u
 from ...datasets import FermiGalacticCenter
 from ...utils.testing import requires_data, requires_dependency
 from ...image import SkyImage, block_reduce_hdu
@@ -20,7 +21,7 @@ class TestSkyCubeImages:
         assert_array_equal(image_list.images[0].data, sky_cube_original.data[0])
 
         assert_array_equal(sky_cube_restored.data, sky_cube_original.data)
-        assert_array_equal(sky_cube_restored.energy, sky_cube_original.energy)
+        assert_array_equal(sky_cube_restored.energy_axis.energy, sky_cube_original.energy_axis.energy)
         assert sky_cube_restored.name == sky_cube_original.name
         assert sky_cube_restored.wcs == sky_cube_original.wcs
 
@@ -37,15 +38,17 @@ class TestBlockReduceHDU:
         self.image_hdu = self.image.to_image_hdu()
 
         # Create test cube
-        self.indices = np.arange(4)
-        self.cube_images = [self.image for _ in self.indices]
-        self.cube = SkyCubeImages(images=self.cube_images, wcs=self.image.wcs).to_cube()
+        self.energy = [1, 3, 10, 30, 100] * u.TeV
+        self.cube_images = [self.image for _ in self.energy]
+        self.cube = SkyCubeImages(images=self.cube_images, wcs=self.image.wcs,
+                                 energy=self.energy).to_cube()
 
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_cube(self, operation):
-        for index in self.indices:
-            image = self.cube.sky_image(index)
-            layer = self.cube.data[index]
+        for energy in self.energy:
+            image = self.cube.sky_image(energy)
+            idx = int(self.cube.energy_axis.world2pix(energy))
+            layer = self.cube.data[idx]
             layer_hdu = fits.ImageHDU(data=layer, header=image.wcs.to_header())
             image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:

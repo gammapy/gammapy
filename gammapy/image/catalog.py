@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.table import Table
 
+
 __all__ = [
     'catalog_image',
     'catalog_table',
@@ -102,12 +103,13 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
     from ..cube import SkyCube
+    from ..spectrum import LogEnergyAxis
 
     wcs = WCS(reference.header)
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack
     reference_cube = SkyCube(data=Quantity(np.array(reference.data), ''),
-                             wcs=wcs, energy=Quantity([1e-3, 1], 'GeV'))
+                             wcs=wcs)
 
     if source_type == 'extended':
         raise NotImplementedError
@@ -128,7 +130,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     else:
         raise ValueError
 
-    total_point_image = SkyCube(data=new_image, wcs=wcs, energy=energy)
+    total_point_image = SkyCube(data=new_image, wcs=wcs, energy_axis=LogEnergyAxis(energy))
     convolved_cube = new_image.copy()
 
     psf = psf.table_psf_in_energy_band(Quantity([np.min(energy).value,
@@ -142,8 +144,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     convolved_cube = convolve(new_image, kernel_array, mode='constant')
 
     out_cube = SkyCube(data=Quantity(convolved_cube, ''),
-                       wcs=total_point_image.wcs,
-                       energy=energy)
+                       wcs=total_point_image.wcs, energy_axis=LogEnergyAxis(energy))
 
     return out_cube
 

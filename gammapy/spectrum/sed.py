@@ -317,7 +317,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         errors = np.zeros_like(values)
 
     if flux_type == 'differential':
-        energy = cube.energy
+        energy = cube.energies()
         table = Table()
         table['ENERGY'] = energy
         table['DIFF_FLUX'] = Quantity(values, cube.data.unit)
@@ -326,8 +326,9 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
 
     elif flux_type == 'integral':
 
-        emins = cube.energy[:-1]
-        emaxs = cube.energy[1:]
+        energies = cube.energies(mode='edges')
+        emins = energies[:-1]
+        emaxs = energies[1:]
         table = compute_differential_flux_points(x_method='lafferty',
                                                  y_method='power_law',
                                                  spectral_index=spectral_index,
