@@ -21,15 +21,13 @@ def make_test_array(dummy_data=False):
         # Define an EventList with three events
         table = Table()
         table['RA'] = [0.6, 0, 2]
-        table['DEC'] = [0, 1.5, 0]
-        table['ENERGY'] = [0.12, 22, 55]
+        table['RA'].unit = 'deg'
+        table['DEC'] = [0, 1.5, 0] * u.deg
+        table['ENERGY'] = [0.12, 22, 55] * u.TeV
         table.meta['RA_PNT'] = 0
         table.meta['DEC_PNT'] = 0
-        table.meta['EUNIT'] = 'TeV'
         events = EventList(table)
-        ev_list = [events]
-        # Fill the array with these three events
-        array.fill_events(ev_list)
+        array.fill_events([events])
         return array, events.offset, events.energy
     else:
         return array
@@ -53,11 +51,24 @@ def test_energy_offset_array_fill():
     data_store = DataStore.from_dir(dir)
     ev_list = data_store.load_all('events')
 
+    # TODO: fix up the test dataset
+    # It's an old version that doesn't have units
+    for events in ev_list:
+        events.table['ENERGY'].unit = 'TeV'
+
     array = make_test_array()
+    print(array.__dict__)
+    print(ev_list[0].info())
+    print(ev_list[0].table['ENERGY'])
+    print(ev_list[0].energy)
+    # import IPython; IPython.embed()
+
+
     array.fill_events(ev_list)
 
     # TODO: add some assert, e.g. counts in some bin with non-zero entries.
 
+test_energy_offset_array_fill()
 
 @requires_dependency('scipy')
 def test_energy_offset_array_fill_evaluate():

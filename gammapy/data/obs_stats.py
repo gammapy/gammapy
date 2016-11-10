@@ -74,7 +74,7 @@ class ObservationStats(Stats):
         """
         # TODO: add as property to DataStoreObservation
         n_on = cls._get_on_events(obs, target)
-        n_off = len(bg_estimate.off_events)
+        n_off = len(bg_estimate.off_events.table)
         a_on = bg_estimate.a_on
         a_off = bg_estimate.a_off
 
@@ -114,9 +114,8 @@ class ObservationStats(Stats):
     def _get_on_events(obs, target):
         """Number of ON events in the region of interest (`int`)
         """
-        idx = target.on_region.contains(obs.events.radec)
-        on_events = obs.events[idx]
-        return len(on_events)
+        mask = target.on_region.contains(obs.events.radec)
+        return len(obs.events.table[mask])
 
     @classmethod
     def stack(cls, stats_list):

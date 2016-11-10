@@ -43,6 +43,17 @@ class DataStore(object):
         Observation index table
     name : str
         Data store name
+
+    Examples
+    --------
+
+    Here's an example how to create a `DataStore` to access H.E.S.S. data:
+
+    >>> from gammapy.data import DataStore
+    >>> dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+    >>> data_store = DataStore.from_dir(dir)
+    >>> data_store.info()
+
     """
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
     """Default HDU table filename."""

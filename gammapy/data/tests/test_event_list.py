@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-# from astropy.tests.helper import pytest
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
@@ -16,9 +15,9 @@ class TestEventListHESS:
         self.events = EventList.read(filename)
 
     def test_basics(self):
-        self.events.summary()
+        self.events.info()
 
-        assert len(self.events) == 49
+        assert len(self.events.table) == 49
         assert self.events.time[0].iso == '2004-10-14 00:08:39.214'
         assert self.events.radec[0].to_string() == '82.7068 19.8186'
         assert self.events.galactic[0].to_string(precision=2) == '185.96 -7.69'
@@ -35,16 +34,18 @@ class TestEventListHESS:
         pos = SkyCoord(81, 21, unit='deg', frame='icrs')
         radius = Angle(1, 'deg')
         circ = CircleSkyRegion(pos, radius)
-        idx = circ.contains(self.events.radec)
-        filtered_list = self.events[idx]
 
-        assert_allclose(filtered_list[4]['RA'], 81, rtol=1)
-        assert_allclose(filtered_list[2]['DEC'], 21, rtol=1)
-        assert len(filtered_list) == 5
+        idx = circ.contains(self.events.radec)
+        table = self.events.table[idx]
+
+        assert_allclose(table[4]['RA'], 81, rtol=1)
+        assert_allclose(table[2]['DEC'], 21, rtol=1)
+        assert len(table) == 5
 
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.events.peek()
+
 
 @requires_data('gammapy-extra')
 class TestEventListFermi:
@@ -53,7 +54,7 @@ class TestEventListFermi:
         self.events = EventList.read(filename)
 
     def test_basics(self):
-        self.events.summary()
+        self.events.info()
 
 
 @requires_data('gammapy-extra')
@@ -62,7 +63,7 @@ def test_EventListDataset():
     dset = EventListDataset.read(filename)
     dset.info()
 
-    assert len(dset.event_list) == 49
+    assert len(dset.event_list.table) == 49
     # TODO: test all methods ... get ~ 100% test coverage
     # even without running the following test.
 

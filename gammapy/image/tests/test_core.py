@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from astropy.table import Table
 from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -422,11 +424,12 @@ def test_image_fill_events():
         (10 + EPS, 0, 99),  # outside image
     ]
     lon, lat, weights = np.array(data).T
-    events = EventList()
     coord = SkyCoord(lon, lat, unit='deg', frame='galactic').icrs
-    events['RA'] = coord.ra.deg
-    events['DEC'] = coord.dec.deg
-    events['WEIGHT'] = weights
+    table = Table()
+    table['RA'] = coord.ra.deg
+    table['DEC'] = coord.dec.deg
+    table['WEIGHT'] = weights
+    events = EventList(table)
 
     image.fill_events(events, weights='WEIGHT')
 
