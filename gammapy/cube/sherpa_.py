@@ -112,6 +112,7 @@ class Data3D(DataND):
         BaseData.notice(self, (x0lo, x1lo, x2lo), (x0hi, x1hi, x2hi), self.get_indep(),
                         ignore)
 
+
 class Data3DInt(DataND):
     "3-D integrated data set"
 
@@ -166,6 +167,7 @@ class Data3DInt(DataND):
     def notice(self, x0lo=None, x0hi=None, x1lo=None, x1hi=None, x2lo=None, x2hi=None, ignore=False):
         BaseData.notice(self, (x0lo, x1lo, x2hi),
                         (x0hi, x1hi, x2hi), self.get_indep(), ignore)
+
 
 class CombinedModel3D(ArithmeticModel):
     """
@@ -246,6 +248,7 @@ class CombinedModel3DInt(ArithmeticModel):
             _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
         _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
         return _spatial * _spectral
+
 
 class CombinedModel3D(ArithmeticModel):
     """

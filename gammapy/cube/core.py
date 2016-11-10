@@ -9,7 +9,6 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
@@ -18,7 +17,6 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.utils import lazyproperty
-
 from ..utils.scripts import make_path
 from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds, Energy
@@ -584,6 +582,7 @@ class SkyCube(object):
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=convolved, wcs=wcs,
                               energy_axis=self.energy_axis)
+
 
     def to_fits(self, format):
         """Writes SkyCube to FITS hdu_list.
