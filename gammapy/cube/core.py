@@ -202,7 +202,7 @@ class SkyCube(object):
         return np.arange(self.data.shape[0] + 1) - 0.5
 
     @classmethod
-    def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', **kwargs):
+    def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', mode='edges', **kwargs):
         """
         Create empty sky cube with log equal energy binning from the scratch.
 
@@ -216,13 +216,20 @@ class SkyCube(object):
             Number of energy bins.
         eunit : str
             Energy unit.
+        mode : {'edges', 'center'}
+            Whether emin and emax denote the bin centers or edges.
         kwargs : dict
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
         """
         image = SkyImage.empty(**kwargs)
-        energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
-        energy_axis = LogEnergyAxis(energy, mode='edges')
+        if mode == 'edges':
+            energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
+            energy_axis = LogEnergyAxis(energy, mode='edges')
+        elif mode == 'center':
+            energy = Energy.equal_log_spacing(emin, emax, enumbins, eunit)
+            energy_axis = LogEnergyAxis(energy, mode='center')
+
         data = image.data * np.ones(enumbins).reshape((-1, 1, 1)) * u.Unit('')
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
@@ -326,8 +333,8 @@ class SkyCube(object):
         ehi = energies[1:]
 
         coordinates = self.sky_image_ref.coordinates()
-        ra = coordinates.data.lon
-        dec = coordinates.data.lat
+        ra = coordinates.data.lon.degree
+        dec = coordinates.data.lat.degree
 
         n_ebins = len(elo)
         ra_cube = np.tile(ra, (n_ebins, 1, 1))
@@ -367,6 +374,23 @@ class SkyCube(object):
             data = self._interpolate_data(z, y, x)[0]
         else:
             data = self.data[int(z)]
+        return SkyImage(name=self.name, data=data, wcs=self.wcs)
+
+    def sky_image_idx(self, idx):
+        """
+        Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given index.
+
+        Parameters
+        ----------
+        idx : int
+            Index of the sky image.
+
+        Returns
+        -------
+        image : `~gammapy.image.SkyImage`
+            2-dim sky image
+        """
+        data = self.data[idx]
         return SkyImage(name=self.name, data=data, wcs=self.wcs)
 
     @lazyproperty
@@ -521,6 +545,33 @@ class SkyCube(object):
         return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
                               energy_axis=self.energy_axis)
 
+    def convolve(self, kernels, **kwargs):
+        """
+        Convolve cube with a given energy dependent PSF.
+
+        Parameters
+        ----------
+        kernels : list
+            List of 2D convolution kernels.
+
+        Returns
+        -------
+        convolved : `SkyCube`
+            PSF convolved cube.
+        """
+        data = []
+        if not len(kernels) == self.data.shape[0]:
+            raise ValueError('Number of kernels must match size of energy axis'
+                             ' of the cube.')
+
+        for idx, kernel in enumerate(kernels):
+            image = cube.sky_image_idx(idx)
+            data.append(image.convolve(kernel, **kwargs).data)
+
+        convolved = np.stack(data, axis=0)
+        wcs = self.wcs.deepcopy() if self.wcs else None
+        return self.__class__(name=self.name, data=convolved, wcs=wcs,
+                              energy_axis=self.energy_axis)
 
     def to_fits(self, format):
         """Writes SkyCube to FITS hdu_list.
@@ -571,6 +622,35 @@ class SkyCube(object):
         from .images import SkyCubeImages
         images = [self.sky_image(energy) for energy in self.energy_axis.energy]
         return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
+
+    def to_spectrum(self, region, weights=None):
+        """
+        Integrate spatial dimensions of the cube to give a spectrum.
+
+        TODO: give formulas.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region to sum the data in.
+        weighting : {None, 'solid_angle'}, optional
+            Weighting factor to use.
+
+        Returns
+        -------
+        spectrum : numpy.array
+            Summed spectrum of pixels in the mask.
+        """
+
+        # TODO: clean up API and implementation and add test
+        value = cube.dat
+
+        mask = region.contains(sky_image_ref.coordinates())
+        if weights == 'solid_angle':
+            weights = self.sky_image_ref.solid_angle()
+
+        spectrum = np.nansum(data * weights).sum(-1).sum(-1)
+        return spectrum
 
     def write(self, filename, format, **kwargs):
         """Write to FITS file.

@@ -146,65 +146,47 @@ class TablePSF(object):
         offset = center.separation(point)
         return self.evaluate(offset)
 
-    def kernel(self, pixel_size, offset_max=None, normalize=True,
-               discretize_model_kwargs=dict(factor=1)):
-        """Make a 2-dimensional kernel image.
+    def kernel(self, reference, containment=0.95, normalize=True):
+        """
+        Make a 2-dimensional kernel image.
 
-        The kernel image is evaluated on a cartesian
-        grid with ``pixel_size`` spacing, not on the sphere.
-
-        Calls `astropy.convolution.discretize_model`,
-        allowing for accurate discretization.
+        The kernel image is evaluated on a cartesian grid defined by the
+        reference sky image.
 
         Parameters
         ----------
-        pixel_size : `~astropy.coordinates.Angle`
-            Kernel pixel size
-        discretize_model_kwargs : dict
-            Keyword arguments passed to
-            `astropy.convolution.discretize_model`
+        reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
+            Reference sky image or sky cube.
+        containment : float
+            Minimal containment fraction of the kernel image.
+        normalize : bool
+            Whether to nomalize the kernel.
 
         Returns
         -------
         kernel : `~astropy.units.Quantity`
             Kernel 2D image of Quantities
 
-        Notes
-        -----
-        * In the future, `astropy.modeling.Fittable2DModel` and
-          `astropy.convolution.Model2DKernel` could be used to construct
-          the kernel.
         """
-        if offset_max is None:
-            offset_max = self._offset.max()
+        from ..cube import SkyCube
 
-        def _model(x, y):
-            """Model in the appropriate format for discretize_model."""
-            offset = np.sqrt(x * x + y * y) * pixel_size
-            return self.evaluate(offset)
+        if isinstance(reference, SkyCube):
+            reference = reference.sky_image_ref
 
-        npix = int(offset_max.radian / pixel_size.radian)
-        pix_range = (-npix, npix + 1)
+        # compute offset for given containment
+        offset_max = self.containment_radius(containment)
 
-        # FIXME: Using `discretize_model` is currently very cumbersome due to these issue:
-        # https://github.com/astropy/astropy/issues/2274
-        # https://github.com/astropy/astropy/issues/1763#issuecomment-39552900
-        # from astropy.modeling import Fittable2DModel
-        #
-        # class TempModel(Fittable2DModel):
-        #    @staticmethod
-        #    def evaluate(x, y):
-        #        return 42 temp_model_function(x, y)
-        #
-        # temp_model = TempModel()
+        # setup coordinate grid
+        cutout = reference.cutout(reference.center, size=offset_max)
+        coordinates = cutout.coordinates()
+        offset = coordinates.separation(cutout.center)
 
-        array = discretize_oversample_2D(_model,
-                                         x_range=pix_range, y_range=pix_range,
-                                         **discretize_model_kwargs)
+        # evalute PSF model
+        kernel = self.evaluate(offset)
         if normalize:
-            return array / array.value.sum()
+            return kernel / kernel.sum()
         else:
-            return array
+            return kernel
 
     def evaluate(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
@@ -543,8 +525,37 @@ class EnergyDependentTablePSF(object):
         """
         psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
         table_psf = TablePSF(self.offset, psf_value, **kwargs)
-
         return table_psf
+
+    def kernels(self, cube, **kwargs):
+        """
+        Make a set of 2-dimensional kernel images.
+
+        The kernel image is evaluated on the spatial and energy grid defined by
+        the reference sky cube.
+
+        Parameters
+        ----------
+        cube : `~gammapy.cube.SkyCube`
+            Reference sky cube.
+        kwargs : dict
+            Keyword arguments passed to
+            `EnergyDependentTablePSF.table_psf_in_energy_band()`.
+
+        Returns
+        -------
+        kernels : list
+            List of 2D image kernels.
+        """
+        energies = cube.energies(mode='edges')
+
+        kernels = []
+        for emin, emax in zip(energies[:-1], energies[1:]):
+            energy_band = Quantity([emin, emax])
+            psf = self.table_psf_in_energy_band(energy_band, **kwargs)
+            kernel = psf.kernel(cube.sky_image_ref)
+            kernels.append(kernel)
+        return kernels
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.

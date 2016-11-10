@@ -704,8 +704,8 @@ class SkyImage(object):
 
         if dstype == 'Data2D':
             coordinates = self.coordinates(mode='center')
-            x = coordinates.data.lon
-            y = coordinates.data.lat
+            x = coordinates.data.lon.degree
+            y = coordinates.data.lat.degree
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
