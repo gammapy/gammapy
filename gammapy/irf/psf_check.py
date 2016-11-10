@@ -4,8 +4,12 @@ from collections import OrderedDict
 import math
 import numpy as np
 
+__all__ = [
+    'PSF3DChecker',
+]
 
-class TablePSFChecker(object):
+
+class PSF3DChecker(object):
     """Automated quality checks for `gammapy.irf.PSF3D`.
     
     At the moment used for HESS HAP HD.
