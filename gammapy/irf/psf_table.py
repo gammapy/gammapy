@@ -146,7 +146,8 @@ class TablePSF(object):
         offset = center.separation(point)
         return self.evaluate(offset)
 
-    def kernel(self, reference, containment=0.95, normalize=True):
+    def kernel(self, reference, containment=0.99, normalize=True,
+               discretize_model_kwargs=dict(factor=10)):
         """
         Make a 2-dimensional kernel image.
 
@@ -169,20 +170,22 @@ class TablePSF(object):
 
         """
         from ..cube import SkyCube
+        offset_max = self.containment_radius(containment)
+        pixel_size = reference.wcs_pixel_scale()[0]
 
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref
 
-        # compute offset for given containment
-        offset_max = self.containment_radius(containment)
+        def _model(x, y):
+            """Model in the appropriate format for discretize_model."""
+            offset = np.sqrt(x * x + y * y) * pixel_size
+            return self.evaluate(offset)
 
-        # setup coordinate grid
-        cutout = reference.cutout(reference.center, size=offset_max)
-        coordinates = cutout.coordinates()
-        offset = coordinates.separation(cutout.center)
+        npix = int(offset_max.radian / pixel_size.radian)
+        pix_range = (-npix, npix + 1)
 
-        # evalute PSF model
-        kernel = self.evaluate(offset)
+        kernel = discretize_oversample_2D(_model, x_range=pix_range, y_range=pix_range,
+                                         **discretize_model_kwargs)
         if normalize:
             return kernel / kernel.sum()
         else:

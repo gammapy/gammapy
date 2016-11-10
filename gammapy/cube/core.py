@@ -565,7 +565,7 @@ class SkyCube(object):
                              ' of the cube.')
 
         for idx, kernel in enumerate(kernels):
-            image = cube.sky_image_idx(idx)
+            image = self.sky_image_idx(idx)
             data.append(image.convolve(kernel, **kwargs).data)
 
         convolved = np.stack(data, axis=0)

@@ -53,6 +53,6 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         npred = flux_int.data * exposure.data * exposure.solid_angle()
         data.append(npred)
 
-    data = u.Quantity(data)
+    data = u.Quantity(data, '')
     return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)
 
