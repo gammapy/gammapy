@@ -641,7 +641,7 @@ class SkyCube(object):
         spectrum : numpy.array
             Summed spectrum of pixels in the mask.
         """
-
+        raise NotImplementedError
         # TODO: clean up API and implementation and add test
         value = cube.dat
 

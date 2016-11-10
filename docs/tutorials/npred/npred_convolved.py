@@ -24,10 +24,10 @@ f2.tick_labels.set_yformat('dd')
 
 image3 = fits.ImageHDU(data=ratio, header=header)
 f3 = FITSFigure(image3, figure=fig, subplot=(1, 3, 3), convention='wells')
-f3.show_colorscale(vmin=0.9, vmax=1.1, cmap='RdBu')
+f3.show_colorscale(vmin=0.95, vmax=1.05, cmap='RdBu')
 f3.tick_labels.set_xformat('ddd')
 f3.tick_labels.set_yformat('dd')
-f3.add_colorbar(ticks=[0.9, 0.95, 1, 1.05, 1.1])
+f3.add_colorbar(ticks=[0.95, 0.975, 1, 1.025, 1.05])
 
 fig.text(0.12, 0.95, "Gammapy Background")
 fig.text(0.45, 0.95, "Fermi Tools Background")
