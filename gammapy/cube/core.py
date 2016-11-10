@@ -568,7 +568,7 @@ class SkyCube(object):
             image = self.sky_image_idx(idx)
             data.append(image.convolve(kernel, **kwargs).data)
 
-        convolved = np.stack(data, axis=0)
+        convolved = u.Quantity(data)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=convolved, wcs=wcs,
                               energy_axis=self.energy_axis)

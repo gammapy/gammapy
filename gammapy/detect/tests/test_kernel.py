@@ -51,9 +51,7 @@ class TestKernelBackgroundEstimator(object):
         psf = FermiGalacticCenter.psf()
         erange = [10, 500] * u.GeV
         psf = psf.table_psf_in_energy_band(erange)
-        kernel_array = psf.kernel(pixel_size=Angle(1, 'deg'),
-                                  offset_max=Angle(3, 'deg'),
-                                  normalize=True)
+        kernel_array = psf.kernel(images['counts'])
 
         images['counts'] = images['counts'].convolve(kernel_array, mode='constant')
         return images
