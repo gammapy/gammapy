@@ -12,7 +12,7 @@ from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList
-from ...datasets import FermiGalacticCenter
+from ...datasets import FermiGalacticCenter, FermiVelaRegion
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
@@ -182,67 +182,34 @@ class TestSkyCubeInterpolation(object):
         assert_quantity_allclose(actual, solid_angle.value)
 
 
-
-
-#@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_dependency('reproject')
+@requires_data('gammapy-extra')
 def test_compute_npred_cube():
-    # A quickly implemented check - should be improved
-    filenames = FermiGalacticCenter.filenames()
-    sky_cube = SkyCube.read(filenames['diffuse_model'])
-    exposure_cube = SkyCube.read(filenames['exposure_cube'])
-    counts_cube = FermiGalacticCenter.counts()
-    energy_bounds = Quantity([10, 30, 100, 500], 'GeV')
+    fermi_vela = FermiVelaRegion()
 
-    sky_cube = sky_cube.reproject_to(exposure_cube)
+    background = fermi_vela.diffuse_model()
+    exposure = fermi_vela.exposure_cube()
 
-    npred_cube = compute_npred_cube(sky_cube,
-                                    exposure_cube,
-                                    energy_bounds)
-    expected_sum = counts_cube.data.sum()
-    actual_sum = np.nan_to_num(npred_cube.data).sum()
-    # Check npredicted is same order of magnitude of true counts
-    assert_allclose(expected_sum, actual_sum, rtol=1)
-    # PSF convolve the npred cube
-    psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
+    # Re-project background cube
+    repro_bg_cube = background.reproject(exposure)
 
+    # Define energy band required for output
+    energies = [10, 500] * u.GeV
+
+    # Compute the predicted counts cube
+    npred_cube = compute_npred_cube(repro_bg_cube, exposure, energies,
+                                    integral_resolution=5)
+
+    # Convolve with Energy-dependent Fermi LAT PSF
+    psf = fermi_vela.psf()
     kernels = psf.kernels(npred_cube)
-    npred_cube_convolved = npred_cube.convolve(kernels)
+    convolved_npred_cube = npred_cube.convolve(kernels)
 
-    actual_convolved_sum = npred_cube_convolved.data.sum()
-    # Check sum is the same after convolution
-    assert_allclose(actual_sum, actual_convolved_sum, rtol=0.1)
-    # Test shape
-    expected = ((len(energy_bounds) - 1, exposure_cube.data.shape[1],
-                 exposure_cube.data.shape[2]))
-    actual = npred_cube_convolved.data.shape
-    assert_allclose(actual, expected)
+    actual = convolved_npred_cube.data.value.sum()
+    desired = fermi_vela.background_image().data.sum()
 
-
-# @requires_dependency('scipy')
-# @requires_dependency('reproject')
-# def test_convolve_cube():
-#     filenames = FermiGalacticCenter.filenames()
-#     sky_cube = SkyCube.read(filenames['diffuse_model'], format='fermi-background')
-#     exposure_cube = SkyCube.read(filenames['exposure_cube'], format='fermi-exposure')
-#     energy_bounds = [10, 30, 100, 500] * u.GeV
-
-#     sky_cube = sky_cube.reproject(exposure_cube)
-
-#     npred_cube = compute_npred_cube(sky_cube,
-#                                     exposure_cube,
-#                                     energy_bounds)
-#     # PSF convolve the npred cube
-#     psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
-
-#     kernels = psf.kernels(npred_cube)
-#     npred_cube_convolved = npred_cube.convolve(kernels)
-
-#     expected = npred_cube.data.sum()
-#     actual = npred_cube_convolved.data.sum()
-
-#     assert_allclose(actual, expected, rtol=1e-2)
+    assert_allclose(actual, desired, rtol=0.001)
 
 
 @requires_data('gammapy-extra')
