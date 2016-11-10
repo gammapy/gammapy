@@ -322,30 +322,39 @@ class SkyCube(object):
         energy = Quantity(energy, self.energy_axis.energy.unit)
         return (position, energy)
 
-    def to_sherpa_data3d(self):
+    def to_sherpa_data3d(self, use_intspatialmodel=False):
         """
         Convert sky cube to sherpa `Data3D` object.
         """
-        from .sherpa_ import Data3D
-
-        # Energy axes
+        from .sherpa_ import Data3D, Data3DInt
         energies = self.energies(mode='edges').to("TeV").value
         elo = energies[:-1]
         ehi = energies[1:]
-
-        coordinates = self.sky_image_ref.coordinates()
-        ra = coordinates.data.lon.degree
-        dec = coordinates.data.lat.degree
-
         n_ebins = len(elo)
-        ra_cube = np.tile(ra, (n_ebins, 1, 1))
-        dec_cube = np.tile(dec, (n_ebins, 1, 1))
-        elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra)
-        ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra)
-
-        return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                      dec_cube.ravel(), self.data.value.ravel(),
-                      self.data.value.shape)
+        if use_intspatialmodel:
+            coordinates = self.sky_image_ref.coordinates(mode="edges")
+            ra = coordinates.data.lon
+            dec = coordinates.data.lat
+            ra_cube_hi = np.tile(ra[0:-1, 0:-1].value, (n_ebins, 1, 1))
+            ra_cube_lo = np.tile(ra[0:-1, 1:].value, (n_ebins, 1, 1))
+            dec_cube_hi = np.tile(dec[1:, 0:-1].value, (n_ebins, 1, 1))
+            dec_cube_lo = np.tile(dec[0:-1, 0:-1].value, (n_ebins, 1, 1))
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1].value) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1].value) * u.TeV
+            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
+                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+                             self.data.value.shape)
+        else:
+            coordinates = self.sky_image_ref.coordinates()
+            ra = coordinates.data.lon
+            dec = coordinates.data.lat
+            ra_cube = np.tile(ra, (n_ebins, 1, 1))
+            dec_cube = np.tile(dec, (n_ebins, 1, 1))
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra.value) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra.value) * u.TeV
+            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
+                          dec_cube.ravel(), self.data.value.ravel(),
+                          self.data.value.shape)
 
     def sky_image(self, energy, interpolation=None):
         """
