@@ -32,7 +32,7 @@ def test_sherpa_crab_fit():
     # Setup combined spatial and spectral model
     spatial_model = NormGauss2D('spatial-model')
     spectral_model = PowLaw1D('spectral-model')
-    source_model = CombinedModel3D(spatial_model=spatial_model, spectral_model=spectral_model)
+    source_model = CombinedModel3D(spatial_model=spatial_model, spectral_model=spectral_model, use_psf=False)
 
     # Set starting values
     source_model.gamma = 2.2
