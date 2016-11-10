@@ -17,21 +17,38 @@ class PSF3DChecker(object):
     Parameters
     ----------
     psf : `~gammapy.irf.PSF3D`
-        Table PSF to check
-    config : `~collections.OrderedDict`
-        Dictionary with configuration parameters:
-            d_norm:
-                maximum norm deviation from 1
-            containment_fraction:
-                containment fraction to check
-            d_rel_containment:
-                maximum relative difference of containment
-                radius between neighboring bins
+        PSF to check
+    d_norm : float
+        Config option: maximum norm deviation from 1
+    containment_fraction : float
+        Config option: containment fraction to check
+    d_rel_containment : float
+        Config option: maximum relative difference of containment
+        radius between neighboring bins
+
+    Examples
+    --------
+    To check a PSF, load it, run the checker and look at the results dict::
+
+        from gammapy.irf import PSF3D, PSF3DChecker
+        filename = '$GAMMAPY_EXTRA/datasets/hess-hap-hd-prod3/psf_table.fits.gz'
+        psf = PSF3D.read(filename)
+        checker = PSF3DChecker(psf)
+        print('config: ', checker.config)
+        checker.check_all()
+        print('results: ', checker.results)
     """
 
-    def __init__(self, psf, config):
+    def __init__(self, psf, d_norm=0.01, containment_fraction=0.68,
+                 d_rel_containment=0.7):
         self.psf = psf
-        self.config = config
+
+        self.config = OrderedDict(
+            d_norm=d_norm,
+            containment_fraction=containment_fraction,
+            d_rel_containment=d_rel_containment,
+        )
+
         self.results = OrderedDict()
 
     def check_all(self):
@@ -40,6 +57,13 @@ class PSF3DChecker(object):
         self.check_nan()
         self.check_normalise()
         self.check_containment()
+
+        # Aggregate status of all checks
+        status = 'ok'
+        for key in ['nan', 'normalise', 'containment']:
+            if self.results[key]['status'] == 'failed':
+                status = 'failed'
+        self.results['status'] = status
 
     def check_nan(self):
         """Check for `NaN` values in PSF.
@@ -82,6 +106,10 @@ class PSF3DChecker(object):
         self.results['nan'] = results
 
     def check_normalise(self):
+        """Check PSF normalisation.
+
+        For each energy / offset, the PSF should integrate to 1.
+        """
 
         # generate array for easier handling
         values = np.swapaxes(self.psf.psf_value, 0, 2)
@@ -128,6 +156,10 @@ class PSF3DChecker(object):
         self.results['normalise'] = results
 
     def check_containment(self):
+        """Check PSF containment.
+
+        TODO: describe what this actually does!?
+        """
 
         # set fraction to check for
         fraction = self.config['containment_fraction']
@@ -237,7 +269,7 @@ def check_all_table_psf(data_store):
     config = OrderedDict(
         d_norm=0.01,
         containment_fraction=0.68,
-        d_rel_containment=0.7
+        d_rel_containment=0.7,
     )
 
     obs_ids = data_store.obs_table['OBS_ID'].data
@@ -245,7 +277,7 @@ def check_all_table_psf(data_store):
     for obs_id in obs_ids[:10]:
         obs = data_store.obs(obs_id=obs_id)
         psf = obs.load(hdu_class='psf_table')
-        checker = TablePSFChecker(psf=psf, config=config)
+        checker = PSF3DChecker(psf=psf, **config)
         checker.check_all()
         print(checker.results)
 
