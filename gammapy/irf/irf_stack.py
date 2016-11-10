@@ -6,28 +6,46 @@ from astropy.units import Quantity
 from ..irf import EffectiveAreaTable, EnergyDispersion
 
 __all__ = [
-    'IRFstack',
+    'IRFStacker',
 ]
 
 log = logging.getLogger(__name__)
 
 
-class IRFstack(object):
-    """
+class IRFStacker(object):
+    r"""
     Compute the mean effective area and the mean rmf for several observations for a given list of rmf and arf
+
+        The stacking of :math:`j` observations is implemented as follows.
+    :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
+    respectively.
+
+    .. math::
+
+        \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+            bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        \overline{t} = \sum_{j} t_i
+
+        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
+            \cdot t_j}{\overline{t}}
+
+        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
+            \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+            \cdot t_j}
 
     Parameters
     ----------
     list_arf: list
-        list of arf
+        list of `~gammapy.irf.EffectiveAreaTable`
     list_livetime: list
         list of livetime
     list_rmf: list
-        list of rmf
+        list of `~gammapy.irf.EnergyDispersion`
     list_low_threshold: list
-        list of low energy threshold (for the rmf mean computation)
+        list of low energy threshold, optional for arf mean computation
     list_high_threshold: list
-        list of high energy threshold (for the rmf mean computation)
+        list of high energy threshold, optional for arf mean computation
 
 
     """
@@ -76,16 +94,7 @@ class IRFstack(object):
             aeff_data = self.list_arf[i].evaluate(fill_nan=True)
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
-            if (not self.list_low_threshold) & (not self.list_high_threshold):
-                log.info('There is no low and high threshold')
-            else:
-                if not self.list_low_threshold:
-                    log.info('There is no low threshold')
-                elif not self.list_high_threshold:
-                    print('There is no high threshold')
-                else:
-                    edisp_data = rmf.pdf_in_safe_range(self.list_low_threshold[i], self.list_high_threshold[i])
-
+            edisp_data = rmf.pdf_in_safe_range(self.list_low_threshold[i], self.list_high_threshold[i])
             aefftedisp += edisp_data.transpose() * aefft_current
 
         stacked_edisp = np.nan_to_num(aefftedisp / aefft)

@@ -10,7 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..irf import IRFstack
+from ..irf import IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum
 from .utils import calculate_predicted_counts
 
@@ -633,7 +633,7 @@ class SpectrumObservationStacker(object):
         for o in self.obs_list:
             list_arf.append(o.aeff)
             list_livetime.append(o.livetime)
-        irf_stack = IRFstack(list_arf=list_arf, list_livetime=list_livetime)
+        irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime)
         irf_stack.mean_arf()
 
         self.stacked_aeff = irf_stack.stacked_aeff
@@ -651,8 +651,8 @@ class SpectrumObservationStacker(object):
             list_rmf.append(o.edisp)
             list_elo_threshold.append(o.lo_threshold)
             list_ehi_threshold.append(o.hi_threshold)
-        irf_stack = IRFstack(list_arf=list_arf, list_livetime=list_livetime, list_rmf=list_rmf,
-                             list_low_threshold=list_elo_threshold, list_high_threshold=list_ehi_threshold)
+        irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime, list_rmf=list_rmf,
+                               list_low_threshold=list_elo_threshold, list_high_threshold=list_ehi_threshold)
         irf_stack.mean_rmf()
 
         self.stacked_edisp = irf_stack.stacked_edisp
