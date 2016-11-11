@@ -10,6 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
+from ..irf import IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum
 from .utils import calculate_predicted_counts
 
@@ -158,7 +159,7 @@ class SpectrumObservation(object):
     def total_stats(self):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
-        return self.stats_in_range(0, self.nbins-1)
+        return self.stats_in_range(0, self.nbins - 1)
 
     @property
     def total_stats_safe_range(self):
@@ -181,7 +182,7 @@ class SpectrumObservation(object):
             Stacked stats
         """
         idx = np.arange(bin_min, bin_max)
-        stats_list = [self.stats(ii) for ii in idx] 
+        stats_list = [self.stats(ii) for ii in idx]
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
         stacked_stats.obs_id = self.obs_id
@@ -468,7 +469,7 @@ class SpectrumObservationList(UserList):
             obs = SpectrumObservation.read(phafile)
             obs_list.append(obs)
         return obs_list
-    
+
 
 class SpectrumObservationStacker(object):
     r"""Stack `~gammapy.spectrum.SpectrumObervationList`
@@ -624,43 +625,42 @@ class SpectrumObservationStacker(object):
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime)
-
-        TODO: Refactor into staticmethod?
+    
+        calls :func:`~gammapy.irf.IRFStacker.stack_aeff`
         """
-        nbins = self.obs_list[0].e_true.nbins
-        aefft = Quantity(np.zeros(nbins), 'cm2 s')
+        list_arf = list()
+        list_livetime = list()
         for o in self.obs_list:
-            aeff_data = o.aeff.evaluate(fill_nan=True)
-            aefft_current = aeff_data * o.livetime
-            aefft += aefft_current
+            list_arf.append(o.aeff)
+            list_livetime.append(o.livetime)
+        irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime)
+        irf_stack.stack_aeff()
 
-        # TODO: Save aefft to reuse it in stack_edisp?
-        stacked_data = aefft / self.obs_list.total_livetime
-        self.stacked_aeff = EffectiveAreaTable(energy=self.obs_list[0].e_true,
-                                               data=stacked_data.to('cm2'))
+        self.stacked_aeff = irf_stack.stacked_aeff
 
     def stack_edisp(self):
-        """Stack energy dispersion (weighted by exposure)"""
-
-        reco_bins = self.obs_list[0].e_reco.nbins
-        true_bins = self.obs_list[0].e_true.nbins
-
-        aefft = Quantity(np.zeros(true_bins), 'cm2 s')
-        temp = np.zeros(shape=(reco_bins, true_bins))
-        aefftedisp = Quantity(temp, 'cm2 s')
-
+        """Stack energy dispersion (weighted by exposure)
+        
+        calls :func:`~gammapy.irf.IRFStacker.stack_edisp`
+        """
+        list_arf = list()
+        list_rmf = list()
+        list_livetime = list()
+        list_elo_threshold = list()
+        list_ehi_threshold = list()
         for o in self.obs_list:
-            aeff_data = o.aeff.evaluate(fill_nan=True)
-            aefft_current = aeff_data * o.livetime
-            aefft += aefft_current
-            edisp_data = o.edisp.pdf_in_safe_range(o.lo_threshold, o.hi_threshold)
-            aefftedisp += edisp_data.transpose() * aefft_current
-
-        stacked_edisp = np.nan_to_num(aefftedisp / aefft)
-
-        self.stacked_edisp = EnergyDispersion(e_true=self.obs_list[0].e_true,
-                                              e_reco=self.obs_list[0].e_reco,
-                                              data=stacked_edisp.transpose())
+            list_arf.append(o.aeff)
+            list_livetime.append(o.livetime)
+            list_rmf.append(o.edisp)
+            list_elo_threshold.append(o.lo_threshold)
+            list_ehi_threshold.append(o.hi_threshold)
+        irf_stack = IRFStacker(list_arf=list_arf,
+                               list_livetime=list_livetime,
+                               list_rmf=list_rmf,
+                               list_low_threshold=list_elo_threshold,
+                               list_high_threshold=list_ehi_threshold)
+        irf_stack.mean_rmf()
+        self.stacked_edisp = irf_stack.stacked_edisp
 
     def stack_obs(self):
         """Create stacked `~gammapy.spectrum.SpectrumObservation`"""

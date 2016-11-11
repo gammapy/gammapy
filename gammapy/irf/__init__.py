@@ -10,3 +10,5 @@ from .psf_check import *
 from .psf_analytical import *
 from .psf_king import *
 from .energy_dispersion import *
+from .irf_stack import *
+

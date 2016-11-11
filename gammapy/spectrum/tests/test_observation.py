@@ -81,4 +81,5 @@ class TestSpectrumObservationStacker:
         stacked_obs = self.obs_list.stack()
         assert 'Observation summary report' in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
-
+        assert_quantity_allclose(stacked_obs.aeff.data[10], 86443352.23037884 * u.cm ** 2)
+        assert_quantity_allclose(stacked_obs.edisp.data[50, 52], 0.029627067949207702)
