@@ -704,8 +704,8 @@ class SkyImage(object):
 
         if dstype == 'Data2D':
             coordinates = self.coordinates(mode='center')
-            x = coordinates.data.lon
-            y = coordinates.data.lat
+            x = coordinates.data.lon.degree
+            y = coordinates.data.lat.degree
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
@@ -863,12 +863,12 @@ class SkyImage(object):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
-
         caxes = ax.imshow(self.data, **kwargs)
+
         if add_cbar:
             unit = self.unit or 'A.U.'
             label = self.name or 'None'
-            cbar = fig.colorbar(caxes, label='{0} ({1})'.format(label.title(), unit))
+            cbar = fig.colorbar(caxes, ax=ax, label='{0} ({1})'.format(label.title(), unit))
         else:
             cbar = None
 
@@ -1146,7 +1146,7 @@ class SkyImage(object):
         Parameters
         ----------
         kernel : `~numpy.ndarray`
-            Convolution kernel.
+            2D array representing the convolution kernel.
         **kwargs : dict
             Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """

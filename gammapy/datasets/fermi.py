@@ -138,12 +138,13 @@ class FermiVelaRegion(object):
 
     @staticmethod
     def background_image():
-        """Predicted background counts image (`~astropy.io.fits.PrimaryHDU`).
+        """Predicted background counts image (`~gammapy.image.SkyImage`).
 
         Based on the Fermi Diffuse model (see class docstring).
         """
+        from ..image import SkyImage
         filename = FermiVelaRegion.filenames()['background_image']
-        return fits.open(filename)[0]
+        return SkyImage.read(filename)
 
     @staticmethod
     def predicted_image():

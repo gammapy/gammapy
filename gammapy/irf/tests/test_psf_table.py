@@ -9,6 +9,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...datasets import FermiGalacticCenter
 from ...irf import TablePSF, EnergyDependentTablePSF
+from ...image import SkyImage
 
 
 @requires_dependency('scipy')
@@ -79,17 +80,14 @@ def test_TablePSF():
 @requires_data('gammapy-extra')
 def test_EnergyDependentTablePSF():
     # TODO: test __init__
-
-    filename = FermiGalacticCenter.filenames()['psf']
-    psf = EnergyDependentTablePSF.read(filename)
+    fermi_gc = FermiGalacticCenter()
+    psf = fermi_gc.psf()
 
     # Test cases
     energy = Quantity(1, 'GeV')
     offset = Angle(0.1, 'deg')
     energies = Quantity([1, 2], 'GeV').to('TeV')
     offsets = Angle([0.1, 0.2], 'deg')
-
-    pixel_size = Angle(0.1, 'deg')
 
     # actual = psf.evaluate(energy=energy, offset=offset)
     # desired = Quantity(17760.814249206363, 'sr^-1')
@@ -114,8 +112,9 @@ def test_EnergyDependentTablePSF():
     desired = 1.0
     energy_band = Quantity([10, 500], 'GeV')
     psf_band = psf.table_psf_in_energy_band(energy_band)
-    actual = psf_band.kernel(pixel_size, pixel_size, normalize=True).value.sum()
 
+    ref = SkyImage.empty(binsz=0.1)
+    actual = psf_band.kernel(ref, normalize=True).value.sum()
     assert_allclose(actual, desired)
 
 @requires_data('gammapy-extra')

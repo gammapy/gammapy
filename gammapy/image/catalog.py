@@ -137,9 +137,8 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
                                                  np.max(energy).value], energy.unit))
 
     resolution = abs(reference.header['CDELT1'])
-
-    kernel_array = psf.kernel(pixel_size=Angle(resolution, 'deg'),
-                              offset_max=Angle(5, 'deg'), normalize=True)
+    ref = total_point_image.sky_image_ref
+    kernel_array = psf.kernel(ref, normalize=True)
 
     convolved_cube = convolve(new_image, kernel_array, mode='constant')
 

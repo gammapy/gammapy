@@ -42,7 +42,7 @@ class LogEnergyAxis(object):
             self.pix = np.arange(len(self.x)) - 0.5
         else:
             raise ValueError('Not a valid mode.')
-
+        self.mode = mode
 
     def world2pix(self, energy):
         """TODO: document.

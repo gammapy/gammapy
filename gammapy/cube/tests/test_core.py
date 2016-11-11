@@ -12,12 +12,12 @@ from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList
-from ...datasets import FermiGalacticCenter
+from ...datasets import FermiGalacticCenter, FermiVelaRegion
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
 from ...spectrum.models import PowerLaw2
-from .. import SkyCube, compute_npred_cube, convolve_cube
+from .. import SkyCube, compute_npred_cube
 
 
 @requires_data('gammapy-extra')
@@ -165,154 +165,57 @@ class TestSkyCubeInterpolation(object):
 
         assert_quantity_allclose(flux, flux_rep)
 
+    @requires_dependency('scipy')
+    @requires_dependency('reproject')
+    def test_analytical_npred_cube(self):
+        # Choose exposure such that exposure * flux_int integrates to unity
+        energies = [1, 100] * u.TeV
+        exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1E12)
+        exposure_cube.data *= u.Unit('cm2 s')
+
+        solid_angle = exposure_cube.sky_image_ref.solid_angle()
+
+        # Integral resolution is 1 as this is a true powerlaw case
+        npred_cube = compute_npred_cube(self.sky_cube, exposure_cube,
+                                        energies, integral_resolution=2)
+        actual = npred_cube.data[0]
+        assert_quantity_allclose(actual, solid_angle.value)
 
 
-@pytest.mark.xfail
-@requires_dependency('scipy.interpolate.RegularGridInterpolator')
-@requires_dependency('reproject')
-def test_compute_npred_cube():
-    # A quickly implemented check - should be improved
-    filenames = FermiGalacticCenter.filenames()
-    sky_cube = SkyCube.read(filenames['diffuse_model'])
-    exposure_cube = SkyCube.read(filenames['exposure_cube'])
-    counts_cube = FermiGalacticCenter.counts()
-    energy_bounds = Quantity([10, 30, 100, 500], 'GeV')
-
-    sky_cube = sky_cube.reproject_to(exposure_cube)
-
-    npred_cube = compute_npred_cube(sky_cube,
-                                    exposure_cube,
-                                    energy_bounds)
-    expected_sum = counts_cube.data.sum()
-    actual_sum = np.nan_to_num(npred_cube.data).sum()
-    # Check npredicted is same order of magnitude of true counts
-    assert_allclose(expected_sum, actual_sum, rtol=1)
-    # PSF convolve the npred cube
-    psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
-    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(3, 'deg'))
-    actual_convolved_sum = npred_cube_convolved.data.sum()
-    # Check sum is the same after convolution
-    assert_allclose(actual_sum, actual_convolved_sum, rtol=0.1)
-    # Test shape
-    expected = ((len(energy_bounds) - 1, exposure_cube.data.shape[1],
-                 exposure_cube.data.shape[2]))
-    actual = npred_cube_convolved.data.shape
-    assert_allclose(actual, expected)
-
-
-def make_test_cubes(energies, nxpix, nypix, binsz):
-    """Makes exposure and spectral cube for tests.
-    Parameters
-    ----------
-    energies : `~astropy.units.Quantity`
-        Quantity 1D array of energies of cube layers
-    nxpix : int
-        Number of pixels in x-spatial direction
-    nypix : int
-        Number of pixels in y-spatial direction
-    binsz : float
-        Spatial resolution of cube, in degrees per pixel
-
-    Returns
-    -------
-    exposure_cube : `~gammapy.sky_cube.SkyCube`
-        Cube of uniform exposure = 1 cm^2 s
-    sky_cube : `~gammapy.sky_cube.SkyCube`
-        Cube of differential fluxes in units of cm^-2 s^-1 GeV^-1 sr^-1
-    """
-    header = make_header(nxpix, nypix, binsz)
-    header['NAXIS'] = 3
-    header['NAXIS3'] = len(energies)
-    header['CDELT3'] = 1
-    header['CRVAL3'] = 1
-    header['CRPIX3'] = 1
-    wcs = WCS(header)
-    data_array = np.ones((len(energies), 10, 10))
-    exposure_cube = SkyCube(data=Quantity(data_array, 'cm2 s'),
-                            wcs=wcs, energy=energies)
-
-    flux = power_law_evaluate(energies.value, 1, 2, 1)
-    flux = Quantity(flux, '1/(cm2 s GeV sr)')
-    flux_array = np.zeros_like(data_array)
-    for i in np.arange(len(flux)):
-        flux_array[i] = flux.value[i] * data_array[i]
-    sky_cube = SkyCube(data=Quantity(flux_array, flux.unit),
-                       wcs=wcs, energy=energies)
-    return exposure_cube, sky_cube
-
-
-@requires_dependency('scipy.interpolate.RegularGridInterpolator')
-@requires_dependency('reproject')
-def test_analytical_npred_cube():
-    # Analytical check: g=2, N=1 gives int. flux 0.25 between 1 and 2
-    # (arbitrary units of energy).
-    # Exposure = 1, so solid angle only factor which varies.
-    # Result should be 0.5 * 1 * solid_angle_array from integrating analytically
-
-    energies = Quantity([1, 2], 'MeV')
-    exposure_cube, sky_cube = make_test_cubes(energies, 10, 10, 1)
-
-    solid_angle_array = exposure_cube.solid_angle
-    # Expected npred counts (so no quantity)
-    expected = 0.5 * solid_angle_array.value
-    # Integral resolution is 1 as this is a true powerlaw case
-    npred_cube = compute_npred_cube(sky_cube, exposure_cube,
-                                    energies, integral_resolution=1)
-
-    actual = npred_cube.data[0]
-
-    assert_allclose(actual, expected)
-
-
-@requires_dependency('scipy.interpolate.RegularGridInterpolator')
-@requires_dependency('reproject')
-def test_convolve_cube():
-    filenames = FermiGalacticCenter.filenames()
-    sky_cube = SkyCube.read(filenames['diffuse_model'])
-    exposure_cube = SkyCube.read(filenames['exposure_cube'])
-    energy_bounds = Quantity([10, 30, 100, 500], 'GeV')
-
-    sky_cube = sky_cube.reproject_to(exposure_cube)
-
-    npred_cube = compute_npred_cube(sky_cube,
-                                    exposure_cube,
-                                    energy_bounds)
-    # PSF convolve the npred cube
-    psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
-    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(5, 'deg'))
-    expected = npred_cube.data.sum()
-    actual = npred_cube_convolved.data.sum()
-
-    assert_allclose(actual, expected, rtol=1e-2)
-
-
-@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_dependency('reproject')
-def test_reproject_cube():
-    # TODO: a better test can probably be implemented here to avoid
-    # repeating code
-    filenames = FermiGalacticCenter.filenames()
-    sky_cube = SkyCube.read(filenames['diffuse_model'])
-    exposure_cube = SkyCube.read(filenames['exposure_cube'])
+@requires_data('gammapy-extra')
+def test_compute_npred_cube():
+    fermi_vela = FermiVelaRegion()
 
-    original_cube = Quantity(np.nan_to_num(sky_cube.data.value),
-                             sky_cube.data.unit)
-    sky_cube = sky_cube.reproject_to(exposure_cube)
-    reprojected_cube = Quantity(np.nan_to_num(sky_cube.data.value),
-                                sky_cube.data.unit)
-    # 0.5 degrees per pixel in diffuse model
-    # 2 degrees in reprojection reference
-    # sum of reprojected should be 1/16 of sum of original if flux-preserving
-    expected = 0.0625 * original_cube.sum()
-    actual = reprojected_cube.sum()
+    background = fermi_vela.diffuse_model()
+    exposure = fermi_vela.exposure_cube()
 
-    assert_quantity_allclose(actual, expected, rtol=1e-2)
+    # Re-project background cube
+    repro_bg_cube = background.reproject(exposure)
+
+    # Define energy band required for output
+    energies = [10, 500] * u.GeV
+
+    # Compute the predicted counts cube
+    npred_cube = compute_npred_cube(repro_bg_cube, exposure, energies,
+                                    integral_resolution=5)
+
+    # Convolve with Energy-dependent Fermi LAT PSF
+    psf = fermi_vela.psf()
+    kernels = psf.kernels(npred_cube)
+    convolved_npred_cube = npred_cube.convolve(kernels)
+
+    actual = convolved_npred_cube.data.value.sum()
+    desired = fermi_vela.background_image().data.sum()
+
+    assert_allclose(actual, desired, rtol=0.001)
 
 
 @requires_data('gammapy-extra')
 def test_bin_events_in_cube():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_events_023523.fits.gz'
+    filename = ('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599'
+                '/run023523/hess_events_023523.fits.gz')
     events = EventList.read(filename)
     counts = SkyCube.empty(emin=0.5, emax=80, enumbins=8, eunit='TeV',
                            nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
