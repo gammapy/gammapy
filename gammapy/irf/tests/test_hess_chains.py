@@ -3,67 +3,27 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...datasets.core import GammapyExtraNotFoundError
 from ...utils.scripts import make_path
 from ...utils.testing import requires_dependency, requires_data, data_manager
-from ...datasets import gammapy_extra
+from ...irf import EffectiveAreaTable2D, EnergyDispersion2D
 
-
-def get_list_of_chains():
-    """Provide parametrization list for test_EffectiveArea
-
-    Returns emtpy list if YAML or Gammapy extra are not available, but the
-    test does not run in this case anyway.
-    """
-    try:
-        import yaml
-    except ImportError:
-        return []
-    try:
-        structure_file = gammapy_extra.filename(
-            'test_datasets/reference/reference_info.yaml')
-    except GammapyExtraNotFoundError:
-        return []
-    with open(structure_file) as fh:
-        test_args = yaml.safe_load(fh)
-    return test_args
-
-
-@pytest.mark.parametrize('chain', get_list_of_chains())
-@requires_dependency('scipy')
-@requires_dependency('yaml')
 @requires_data('gammapy-extra')
-def test_hess_chains(data_manager, chain):
-    ref_file_aeff = make_path(chain['aeff2D_reference_file'])
-    ref_aeff = np.loadtxt(str(ref_file_aeff))
-    ref_file_edisp = make_path(chain['edisp2D_reference_file'])
-    ref_edisp = open(str(ref_file_edisp), 'r').read()
-    ref_file_psf = make_path(chain['psf_reference_file'])
-    ref_psf = open(str(ref_file_psf), 'r').read()
-    ref_file_obs = make_path(chain['obs_reference_file'])
-    ref_obs = open(str(ref_file_obs), 'r').read()
-    ref_file_loc = make_path(chain['location_reference_file'])
-    ref_loc = open(str(ref_file_loc), 'r').read()
+class TestHAPHDExporter:
+    def setup(self):
+        dm = data_manager()
+        ref_store = 'hess-crab4-hd-hap-prod2'
+        self.ds = dm[ref_store]
+        self.obs_id = 23523
+        self.ref_energy = 1 * u.TeV
+        self.ref_offset = 0.25 * u.deg
+        self.obs = self.ds.obs(self.obs_id)
 
-    obs_nr = chain['obs']
-    obs_id = chain['obs_id']
+    def test_aeff(self):
+        aeff = self.obs.load(hdu_type='aeff', hdu_class='aeff_2d')
+        actual = aeff.evaluate(energy=self.ref_energy, offset=self.ref_offset)
+        desired = 267252.7018649852 * u.m ** 2
+        assert_quantity_allclose(actual, desired)
 
-    store = data_manager[chain['store']]
-    obs = store.obs(obs_id=obs_id)
 
-    assert str(obs.location(hdu_type='events').path(abs_path=False)) == ref_loc
-
-    assert store.obs_table['OBS_ID'][obs_nr] == obs_id
-    assert str(obs) == ref_obs
-
-    assert obs.edisp.info() == ref_edisp
-    assert obs.psf.info() == ref_psf
-
-    # These values are copied from
-    # gammapy-extra/test_datasets/reference/make_reference_files.py 
-    test_energy = [0.1, 1, 5, 10] * u.TeV
-    test_offset = [0.1, 0.2, 0.4] * u.deg
-
-    aeff_val = obs.aeff.evaluate(offset=test_offset, energy=test_energy)
-    assert_allclose(aeff_val.value, ref_aeff)
