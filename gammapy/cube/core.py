@@ -374,8 +374,9 @@ class SkyCube(object):
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)[0]
         else:
-            data = self.data[int(z)]
-        return SkyImage(name=self.name, data=data, wcs=self.wcs)
+            data = self.data[int(np.rint(z))].copy()
+        wcs = self.wcs.deepcopy() if self.wcs else None
+        return SkyImage(name=self.name, data=data, wcs=wcs)
 
     def sky_image_idx(self, idx):
         """
@@ -391,8 +392,9 @@ class SkyCube(object):
         image : `~gammapy.image.SkyImage`
             2-dim sky image
         """
-        data = self.data[idx]
-        return SkyImage(name=self.name, data=data, wcs=self.wcs)
+        data = self.data[idx].copy()
+        wcs = self.wcs.deepcopy() if self.wcs else None
+        return SkyImage(name=self.name, data=data, wcs=wcs)
 
     @lazyproperty
     def sky_image_ref(self):
