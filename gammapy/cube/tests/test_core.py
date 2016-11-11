@@ -4,18 +4,13 @@ import textwrap
 
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import Angle
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
-from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
-from ...image import make_header
-from ...irf import EnergyDependentTablePSF
-from ...spectrum.powerlaw import power_law_evaluate
 from ...spectrum.models import PowerLaw2
 from .. import SkyCube, compute_npred_cube
 
@@ -120,6 +115,7 @@ class TestSkyCube(object):
          n_energy:    30  unit_energy: MeV
         """)
         assert actual == expected
+
 
 @requires_dependency('scipy')
 class TestSkyCubeInterpolation(object):

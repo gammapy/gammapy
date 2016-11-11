@@ -153,8 +153,8 @@ class SkyCube(object):
         wcs = WCS(header).celestial
         meta = OrderedDict(header)
 
-        #TODO: check and give reference for fermi data units
-        #TODO: choose format automatically
+        # TODO: check and give reference for fermi data units
+        # TODO: choose format automatically
         if format == 'fermi-background':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'), mode='center')
@@ -297,7 +297,7 @@ class SkyCube(object):
         x, y = self.sky_image_ref.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
 
-        #TODO: check order, so that it corresponds to data axis order
+        # TODO: check order, so that it corresponds to data axis order
         return (x, y, z)
 
     def wcs_pixel_to_skycoord(self, x, y, z):
@@ -511,7 +511,6 @@ class SkyCube(object):
         integral = _trapz_loglog(data, energy, axis=0)
         name = 'integrated {}'.format(self.name)
         return SkyImage(name=name, data=integral, wcs=self.wcs.celestial)
-
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """Spatially reprojects a `SkyCube` onto a reference.

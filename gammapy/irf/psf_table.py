@@ -161,7 +161,7 @@ class TablePSF(object):
         containment : float
             Minimal containment fraction of the kernel image.
         normalize : bool
-            Whether to nomalize the kernel.
+            Whether to normalize the kernel.
 
         Returns
         -------
@@ -186,7 +186,7 @@ class TablePSF(object):
         pix_range = (-npix, npix + 1)
 
         kernel = discretize_oversample_2D(_model, x_range=pix_range, y_range=pix_range,
-                                         **discretize_model_kwargs)
+                                          **discretize_model_kwargs)
         if normalize:
             return kernel / kernel.sum()
         else:
