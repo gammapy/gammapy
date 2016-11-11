@@ -95,7 +95,7 @@ class TablePSF(object):
         >>> from astropy.coordinates import Angle
         >>> from gammapy.irf import TablePSF
         >>> TablePSF.from_shape(shape='gauss', width=Angle(0.2, 'deg'),
-        ...                     offset=Angle(np.linspace(0, 0.7, 100), 'deg'))
+                             offset=Angle(np.linspace(0, 0.7, 100), 'deg'))
         """
         width = Angle(width)
         offset = Angle(offset)
@@ -157,7 +157,7 @@ class TablePSF(object):
         Parameters
         ----------
         reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
-            Reference sky image or sky cube.
+            Reference sky image or sky cube defining the spatial grid.
         containment : float
             Minimal containment fraction of the kernel image.
         normalize : bool
@@ -171,10 +171,11 @@ class TablePSF(object):
         """
         from ..cube import SkyCube
         offset_max = self.containment_radius(containment)
-        pixel_size = reference.wcs_pixel_scale()[0]
 
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref
+
+        pixel_size = reference.wcs_pixel_scale()[0]
 
         def _model(x, y):
             """Model in the appropriate format for discretize_model."""
@@ -532,7 +533,7 @@ class EnergyDependentTablePSF(object):
 
     def kernels(self, cube, **kwargs):
         """
-        Make a set of 2-dimensional kernel images.
+        Make a set of 2D kernel images, representing the PSF at different energies.
 
         The kernel image is evaluated on the spatial and energy grid defined by
         the reference sky cube.
@@ -542,13 +543,12 @@ class EnergyDependentTablePSF(object):
         cube : `~gammapy.cube.SkyCube`
             Reference sky cube.
         kwargs : dict
-            Keyword arguments passed to
-            `EnergyDependentTablePSF.table_psf_in_energy_band()`.
+            Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
 
         Returns
         -------
-        kernels : list
-            List of 2D image kernels.
+        kernels : list of `~numpy.ndarray`
+            List of 2D convolution kernels.
         """
         energies = cube.energies(mode='edges')
 
@@ -560,7 +560,8 @@ class EnergyDependentTablePSF(object):
             kernels.append(kernel)
         return kernels
 
-    def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
+    def table_psf_in_energy_band(self, energy_band, spectral_index=2,
+                                 spectrum=None, **kwargs):
         """Average PSF in a given energy band.
 
         Expected counts in sub energy bands given the given exposure

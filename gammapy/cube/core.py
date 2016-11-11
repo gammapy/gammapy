@@ -130,7 +130,7 @@ class SkyCube(object):
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     @classmethod
-    def read(cls, filename, format):
+    def read(cls, filename, format='fermi-counts'):
         """Read sky cube from FITS file.
 
         Parameters
@@ -146,11 +146,10 @@ class SkyCube(object):
             Sky cube
         """
         filename = str(make_path(filename))
-        data = fits.getdata(filename)
-        # Note: the energy axis of the FITS cube is unusable.
-        # We only use proj for LON, LAT and do ENERGY ourselves
 
+        data = fits.getdata(filename)
         header = fits.getheader(filename)
+
         wcs = WCS(header).celestial
         meta = OrderedDict(header)
 
@@ -158,7 +157,7 @@ class SkyCube(object):
         #TODO: choose format automatically
         if format == 'fermi-background':
             energy = Table.read(filename, 'ENERGIES')['Energy']
-            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'))
+            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'), mode='center')
             data = Quantity(data, '1 / (cm2 MeV s sr)')
             name = 'flux'
         elif format == 'fermi-counts':
@@ -168,7 +167,7 @@ class SkyCube(object):
             name = 'counts'
         elif format == 'fermi-exposure':
             energy = Table.read(filename, 'ENERGIES')['Energy']
-            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'))
+            energy_axis = LogEnergyAxis(Quantity(energy, 'MeV'), mode='center')
             data = Quantity(data, 'cm2 s')
             name = 'exposure'
         else:
@@ -223,13 +222,15 @@ class SkyCube(object):
             the spatial part of the cube.
         """
         image = SkyImage.empty(**kwargs)
+
         if mode == 'edges':
             energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
-            energy_axis = LogEnergyAxis(energy, mode='edges')
         elif mode == 'center':
             energy = Energy.equal_log_spacing(emin, emax, enumbins, eunit)
-            energy_axis = LogEnergyAxis(energy, mode='center')
+        else:
+            raise ValueError("Not a valid mode. Choose either 'center' or 'edges'.")
 
+        energy_axis = LogEnergyAxis(energy, mode=mode)
         data = image.data * np.ones(enumbins).reshape((-1, 1, 1)) * u.Unit('')
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
@@ -547,17 +548,18 @@ class SkyCube(object):
 
     def convolve(self, kernels, **kwargs):
         """
-        Convolve cube with a given energy dependent PSF.
+        Convolve cube with a given set of kernels.
 
         Parameters
         ----------
-        kernels : list
-            List of 2D convolution kernels.
+        kernels : list or `~numpy.ndarray`
+            List of 2D convolution kernels or 3D array. The energy axis
+            must correspond to array axis=0.
 
         Returns
         -------
         convolved : `SkyCube`
-            PSF convolved cube.
+            Convolved cube.
         """
         data = []
         if not len(kernels) == self.data.shape[0]:
