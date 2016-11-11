@@ -625,8 +625,8 @@ class SpectrumObservationStacker(object):
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime)
-
-        TODO: Refactor into staticmethod?
+    
+        calls :func:`~gammapy.irf.IRFStacker.stack_aeff`
         """
         list_arf = list()
         list_livetime = list()
@@ -634,12 +634,15 @@ class SpectrumObservationStacker(object):
             list_arf.append(o.aeff)
             list_livetime.append(o.livetime)
         irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime)
-        irf_stack.mean_arf()
+        irf_stack.stack_aeff()
 
         self.stacked_aeff = irf_stack.stacked_aeff
 
     def stack_edisp(self):
-        """Stack energy dispersion (weighted by exposure)"""
+        """Stack energy dispersion (weighted by exposure)
+        
+        calls :func:`~gammapy.irf.IRFStacker.stack_edisp`
+        """
         list_arf = list()
         list_rmf = list()
         list_livetime = list()
@@ -651,10 +654,12 @@ class SpectrumObservationStacker(object):
             list_rmf.append(o.edisp)
             list_elo_threshold.append(o.lo_threshold)
             list_ehi_threshold.append(o.hi_threshold)
-        irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime, list_rmf=list_rmf,
-                               list_low_threshold=list_elo_threshold, list_high_threshold=list_ehi_threshold)
+        irf_stack = IRFStacker(list_arf=list_arf,
+                               list_livetime=list_livetime,
+                               list_rmf=list_rmf,
+                               list_low_threshold=list_elo_threshold,
+                               list_high_threshold=list_ehi_threshold)
         irf_stack.mean_rmf()
-
         self.stacked_edisp = irf_stack.stacked_edisp
 
     def stack_obs(self):
