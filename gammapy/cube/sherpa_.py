@@ -248,31 +248,3 @@ class CombinedModel3DInt(ArithmeticModel):
             _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
         _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
         return _spatial * _spectral
-
-
-class CombinedModel3D(ArithmeticModel):
-    """
-    Combined spatial and spectral 3D model.
-    """
-
-    def __init__(self, name='cube-model', spatial_model=None, spectral_model=None):
-        self.spatial_model = spatial_model
-        self.spectral_model = spectral_model
-
-        # Fix spectral ampl parameter
-        spectral_model.ampl = 1
-        spectral_model.ampl.freeze()
-
-        pars = []
-        for _ in spatial_model.pars + spectral_model.pars:
-            setattr(self, _.name, _)
-            pars.append(_)
-
-        self._spatial_pars = slice(0, len(spatial_model.pars))
-        self._spectral_pars = slice(len(spatial_model.pars), len(pars))
-        ArithmeticModel.__init__(self, name, pars)
-
-    def calc(self, pars, elo, ehi, x, y):
-        _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
-        _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
-        return _spatial * _spectral

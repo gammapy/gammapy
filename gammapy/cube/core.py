@@ -320,16 +320,21 @@ class SkyCube(object):
         energy = Quantity(energy, self.energy_axis.energy.unit)
         return (position, energy)
 
-    def to_sherpa_data3d(self, use_intspatialmodel=False):
+    def to_sherpa_data3d(self, dstype='Data3D'):
         """
         Convert sky cube to sherpa `Data3D` object.
+
+        Parameters
+        ----------
+        dstype : {'Data3D', 'Data3DInt'}
+            Sherpa data type.
         """
         from .sherpa_ import Data3D, Data3DInt
         energies = self.energies(mode='edges').to("TeV").value
         elo = energies[:-1]
         ehi = energies[1:]
         n_ebins = len(elo)
-        if use_intspatialmodel:
+        if dstype=='Data3DInt':
             coordinates = self.sky_image_ref.coordinates(mode="edges")
             ra = coordinates.data.lon
             dec = coordinates.data.lat
@@ -342,7 +347,7 @@ class SkyCube(object):
             return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
                              ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
                              self.data.value.shape)
-        else:
+        if dstype=='Data3D':
             coordinates = self.sky_image_ref.coordinates()
             ra = coordinates.data.lon
             dec = coordinates.data.lat
@@ -353,6 +358,9 @@ class SkyCube(object):
             return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
                           dec_cube.ravel(), self.data.value.ravel(),
                           self.data.value.shape)
+
+        else:
+            raise ValueError('Invalid sherpa data type.')
 
     def sky_image(self, energy, interpolation=None):
         """
