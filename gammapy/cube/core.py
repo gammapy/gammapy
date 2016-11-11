@@ -322,7 +322,7 @@ class SkyCube(object):
 
     def to_sherpa_data3d(self, dstype='Data3D'):
         """
-        Convert sky cube to sherpa `Data3D` object.
+        Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
 
         Parameters
         ----------
