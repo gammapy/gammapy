@@ -7,19 +7,10 @@ from astropy.wcs import WCS
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
-    binary_disk,
     block_reduce_hdu,
     lon_lat_rectangle_mask,
     SkyImage,
 )
-
-
-def test_binary_disk():
-    actual = binary_disk(1)
-    desired = np.array([[False, True, False],
-                        [True, True, True],
-                        [False, True, False]])
-    assert_equal(actual, desired)
 
 
 @pytest.mark.xfail

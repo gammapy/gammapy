@@ -1,4 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+    # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
@@ -10,14 +10,10 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
-# TODO:
-# Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
-from astropy.utils.exceptions import AstropyDeprecationWarning
+
 
 __all__ = [
-    'binary_disk',
     'block_reduce_hdu',
-    'disk_correlate',
     'image_groupby',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
@@ -73,77 +69,6 @@ def scale_cube(data, kernels, parallel=True):
     else:
         result = map(wrap, kernels)
     return np.dstack(result)
-
-
-def _get_structure_indices(radius):
-    """Get arrays of indices for a symmetric structure.
-
-    Always generate an odd number of pixels and 0 at the center.
-
-    Parameters
-    ----------
-    radius : float
-        Structure radius in pixels.
-
-    Returns
-    -------
-    y, x : mesh-grid `~numpy.ndarrays` all of the same dimensions
-        Structure indices arrays.
-    """
-    radius = int(radius)
-    y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
-    return x, y
-
-
-def binary_disk(radius):
-    """Generate a binary disk mask.
-
-    Value 1 inside and 0 outside.
-
-    Useful as a structure element for morphological transformations.
-
-    Note that the returned structure always has an odd number
-    of pixels so that shifts during correlation are avoided.
-
-    Parameters
-    ----------
-    radius : float
-        Disk radius in pixels
-
-    Returns
-    -------
-    structure : `numpy.array`
-        Structure element (bool array)
-    """
-    x, y = _get_structure_indices(radius)
-    structure = x ** 2 + y ** 2 <= radius ** 2
-    return structure
-
-
-def disk_correlate(image, radius, mode='constant'):
-    """Correlate image with binary disk kernel.
-
-    Parameters
-    ----------
-    image : `~numpy.ndarray`
-        Image to be correlated.
-    radius : float
-        Disk radius in pixels.
-    mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
-        the mode parameter determines how the array borders are handled.
-        For 'constant' mode, values beyond borders are set to be cval.
-        Default is 'constant'.
-
-    Returns
-    -------
-    convolve : `~numpy.ndarray`
-        The result of convolution of image with disk of given radius.
-
-    """
-    from scipy.ndimage import convolve
-    structure = binary_disk(radius)
-    return convolve(image, structure, mode=mode)
-
 
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.

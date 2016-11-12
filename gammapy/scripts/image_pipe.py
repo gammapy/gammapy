@@ -5,10 +5,11 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.table import QTable, Table
 from astropy.coordinates import Angle
+from astropy.convolution import Tophat2DKernel
 from ..utils.energy import EnergyBounds
 from ..stats import significance
 from ..background import fill_acceptance_image
-from ..image import SkyImage, SkyImageList, disk_correlate
+from ..image import SkyImage, SkyImageList
 
 __all__ = ['SingleObsImageMaker', 'StackedObsImageMaker']
 
@@ -219,10 +220,11 @@ class SingleObsImageMaker(object):
             Disk radius in pixels.
         """
         image = SkyImage.empty_like(self.empty_image)
-        counts = disk_correlate(self.images["counts"].data, radius)
-        bkg = disk_correlate(self.images["bkg"].data, radius)
+        disk = Tophat2Dkernel(radius)
+        disk.normalize('peak')
+        counts = self.images["counts"].convolve(disk.array)
+        bkg = self.images["bkg"].convolve(disk.array)
         image.data = significance(counts, bkg)
-
         self.images["significance"] = image
 
     def excess_image(self):
@@ -345,8 +347,11 @@ class StackedObsImageMaker(object):
             Disk radius in pixels.
         """
         image = SkyImage.empty_like(self.empty_image, name='significance')
-        counts = disk_correlate(self.images['counts'].data, radius)
-        bkg = disk_correlate(self.images['bkg'].data, radius)
+        
+        disk = Tophat2Dkernel(radius)
+        disk.normalize('peak')
+        counts = self.images["counts"].convolve(disk.array)
+        bkg = self.images["bkg"].convolve(disk.array)
         image.data = significance(counts, bkg)
 
         self.images['significance'] = image
