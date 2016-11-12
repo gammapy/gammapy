@@ -15,7 +15,7 @@ from ..utils.scripts import make_path
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
-from ..irf import EnergyDependentTablePSF
+from ..irf import EnergyDependentTablePSF, IRFStacker
 
 __all__ = [
     'DataStore',
@@ -668,6 +668,7 @@ class ObservationList(UserList):
 
     Could be extended to hold a more generic class of observations
     """
+
     def __str__(self):
         s = self.__class__.__name__ + '\n'
         s += 'Number of observations: {}\n'.format(len(self))
@@ -711,3 +712,55 @@ class ObservationList(UserList):
         psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
                                           psf_value=psf_value.T)
         return psf_tot
+
+    def make_mean_rmf(self, position, e_true, e_reco):
+        r"""Make mean rmf for a given position and a set of observations.
+
+        Compute the mean rmf of a set of observations j at a given position
+
+        The stacking of :math:`j` observations is implemented as follows.  :math:`k`
+        and :math:`l` denote a bin in reconstructed and true energy, respectively.
+
+        .. math::
+
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
+                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+                \cdot t_j}
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position at which to compute the PSF
+        e_true : `~gammapy.utils.energy.EnergyBounds`
+            True energy axis
+        e_reco : `~gammapy.utils.energy.EnergyBounds`
+            Reconstructed energy axis
+
+        Returns
+        -------
+        stacked_rmf: `~gammapy.irf.EnergyDispersion`
+            Stacked RMF for a set of observation
+        """
+
+        list_arf = list()
+        list_rmf = list()
+        list_livetime = list()
+        # Voir quoi mettre pour ce threshold
+        list_low_threshold = list()
+        list_high_threshold = list()
+        for obs in self[1:]:
+            offset = position.separation(obs.pointing_radec)
+            list_arf.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
+            list_rmf.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
+            list_livetime.append(obs.observation_live_time_duration)
+            list_low_threshold.append(Quantity(0.3, "TeV"))
+            list_high_threshold.append(Quantity(100, "TeV"))
+
+        irf_stack = IRFStacker(list_arf=list_arf, list_rmf=list_rmf, list_livetime=list_livetime,
+                               list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
+        irf_stack.mean_rmf()
+
+        return irf_stack.stacked_edisp

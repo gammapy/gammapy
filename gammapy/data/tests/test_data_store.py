@@ -6,7 +6,7 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
-from ...data import DataStore, DataManager
+from ...data import DataStore, DataManager, ObservationList
 from ...utils.testing import data_manager, requires_data, requires_dependency
 from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
@@ -150,3 +150,21 @@ def test_make_psf(pars, result):
     assert_quantity_allclose(psf.energy[10], result["psf_energy"])
     assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])
     assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])
+
+
+def test_make_meanrmf(tmpdir):
+    position = SkyCoord(83.63, 22.01, unit='deg')
+    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
+    data_store = DataStore.from_dir(store)
+
+    obs1 = data_store.obs(23523)
+    obs2 = data_store.obs(23523)
+    obslist = ObservationList([obs1, obs2])
+
+    e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
+    e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
+    rmf = obslist.make_mean_rmf(position=position, e_true=e_true, e_reco=e_reco)
+
+    assert len(rmf.e_true.nodes) == 80
+    assert len(rmf.e_reco.nodes) == 15
+    assert_quantity_allclose(rmf.data[53, 8], 0.06075748606173905)
