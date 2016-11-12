@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
+from astropy import units as u
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
@@ -316,6 +317,14 @@ class TestSkyImage:
         center = self.image.center
         assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
         assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
+
+    @requires_dependency('scipy')
+    @pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])
+    def test_smooth(self, kernel):
+        desired = self.image.data.sum()
+        smoothed = self.image.smooth(kernel, 0.2 * u.deg)
+        actual = smoothed.data.sum()
+        assert_allclose(actual, desired)
 
 
 def test_image_pad():
