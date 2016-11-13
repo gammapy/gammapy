@@ -1166,9 +1166,10 @@ class SkyImage(object):
         ----------
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
-        width : `~astropy.units.Quantity` or float
+        radius : `~astropy.units.Quantity` or float
             Smoothing width given as quantity or float. If a float is given it
-            interpreted as smoothing width in pixels.
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `SkyImage.wcs_pixel_scale()`.
         kwargs : dict
             Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
             ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss') or
