@@ -170,7 +170,7 @@ class SpectrumObservation(object):
 
     def stats_in_range(self, bin_min, bin_max):
         """Compute stats for a range of energy bins
-        
+
         Parameters
         ----------
         bin_min, bin_max: int
@@ -454,7 +454,7 @@ class SpectrumObservationList(UserList):
     @classmethod
     def read(cls, directory):
         """Read multiple observations
-        
+
         This methods reads all PHA files contained in a given directory
 
         Parameters
@@ -464,7 +464,9 @@ class SpectrumObservationList(UserList):
         """
         obs_list = cls()
         directory = make_path(directory)
-        filelist = directory.glob('pha*.fits')
+        # glob default order depends on OS, so we call sorted() explicitely to
+        # get reproducable results
+        filelist = sorted(directory.glob('pha*.fits'))
         for phafile in filelist:
             obs = SpectrumObservation.read(phafile)
             obs_list.append(obs)
@@ -476,28 +478,28 @@ class SpectrumObservationStacker(object):
 
     The stacking of :math:`j` observations is implemented as follows.
     :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
-    respectively. 
+    respectively.
 
-    .. math:: 
+    .. math::
 
         \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
             bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
 
         \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
-            \epsilon_{jk} 
+            \epsilon_{jk}
 
         \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
-            \epsilon_{jk} 
+            \epsilon_{jk}
 
         \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
             \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
 
         \overline{t} = \sum_{j} t_i
 
-        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl} 
+        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
             \cdot t_j}{\overline{t}}
 
-        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl} 
+        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
             \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
             \cdot t_j}
 
@@ -625,7 +627,7 @@ class SpectrumObservationStacker(object):
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime)
-    
+
         calls :func:`~gammapy.irf.IRFStacker.stack_aeff`
         """
         list_arf = list()
@@ -640,7 +642,7 @@ class SpectrumObservationStacker(object):
 
     def stack_edisp(self):
         """Stack energy dispersion (weighted by exposure)
-        
+
         calls :func:`~gammapy.irf.IRFStacker.stack_edisp`
         """
         list_arf = list()

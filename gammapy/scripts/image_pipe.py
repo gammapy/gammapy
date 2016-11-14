@@ -220,11 +220,11 @@ class SingleObsImageMaker(object):
             Disk radius in pixels.
         """
         image = SkyImage.empty_like(self.empty_image)
-        disk = Tophat2Dkernel(radius)
+        disk = Tophat2DKernel(radius)
         disk.normalize('peak')
         counts = self.images["counts"].convolve(disk.array)
         bkg = self.images["bkg"].convolve(disk.array)
-        image.data = significance(counts, bkg)
+        image.data = significance(counts.data, bkg.data)
         self.images["significance"] = image
 
     def excess_image(self):
@@ -347,12 +347,12 @@ class StackedObsImageMaker(object):
             Disk radius in pixels.
         """
         image = SkyImage.empty_like(self.empty_image, name='significance')
-        
-        disk = Tophat2Dkernel(radius)
+
+        disk = Tophat2DKernel(radius)
         disk.normalize('peak')
         counts = self.images["counts"].convolve(disk.array)
         bkg = self.images["bkg"].convolve(disk.array)
-        image.data = significance(counts, bkg)
+        image.data = significance(counts.data, bkg.data)
 
         self.images['significance'] = image
 
