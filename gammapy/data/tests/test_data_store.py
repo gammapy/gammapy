@@ -158,7 +158,7 @@ def test_make_meanrmf(tmpdir):
     data_store = DataStore.from_dir(store)
 
     obs1 = data_store.obs(23523)
-    obs2 = data_store.obs(23523)
+    obs2 = data_store.obs(23592)
     obslist = ObservationList([obs1, obs2])
 
     e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
@@ -167,4 +167,4 @@ def test_make_meanrmf(tmpdir):
 
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
-    assert_quantity_allclose(rmf.data[53, 8], 0.06075748606173905)
+    assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)

@@ -12,6 +12,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
+from ..utils.energy import Energy
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
@@ -713,7 +714,7 @@ class ObservationList(UserList):
                                           psf_value=psf_value.T)
         return psf_tot
 
-    def make_mean_rmf(self, position, e_true, e_reco):
+    def make_mean_rmf(self, position, e_true, e_reco, low_reco_threshold=None, high_reco_threshold=None):
         r"""Make mean rmf for a given position and a set of observations.
 
         Compute the mean rmf of a set of observations j at a given position
@@ -738,7 +739,10 @@ class ObservationList(UserList):
             True energy axis
         e_reco : `~gammapy.utils.energy.EnergyBounds`
             Reconstructed energy axis
-
+        low_reco_threshold : `~gammapy.utils.energy.Energy`
+            low energy threshold in reco energy, default 0.002 TeV
+        high_reco_threshold : `~gammapy.utils.energy.Energy`
+            high energy threshold in reco energy , default 150 TeV
         Returns
         -------
         stacked_rmf: `~gammapy.irf.EnergyDispersion`
@@ -748,16 +752,17 @@ class ObservationList(UserList):
         list_arf = list()
         list_rmf = list()
         list_livetime = list()
-        # Voir quoi mettre pour ce threshold
-        list_low_threshold = list()
-        list_high_threshold = list()
-        for obs in self[1:]:
+        if not low_reco_threshold:
+            low_reco_threshold = Energy(0.002, "TeV")
+        if not high_reco_threshold:
+            high_reco_threshold = Energy(150, "TeV")
+        list_low_threshold = [low_reco_threshold] * len(self)
+        list_high_threshold = [high_reco_threshold] * len(self)
+        for obs in self:
             offset = position.separation(obs.pointing_radec)
             list_arf.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
             list_rmf.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
             list_livetime.append(obs.observation_live_time_duration)
-            list_low_threshold.append(Quantity(0.3, "TeV"))
-            list_high_threshold.append(Quantity(100, "TeV"))
 
         irf_stack = IRFStacker(list_arf=list_arf, list_rmf=list_rmf, list_livetime=list_livetime,
                                list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
