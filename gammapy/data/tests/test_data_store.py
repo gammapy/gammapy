@@ -153,7 +153,7 @@ def test_make_psf(pars, result):
     assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])
 
 
-def test_make_meanrmf(tmpdir):
+def test_make_meanedisp(tmpdir):
     position = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)
