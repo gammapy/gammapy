@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
 from ...data import DataStore, DataManager, ObservationList
 from ...utils.testing import data_manager, requires_data, requires_dependency
+from ...utils.energy import Energy
 from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
@@ -168,3 +169,20 @@ def test_make_meanrmf(tmpdir):
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
     assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)
+
+    rmf2 = obslist.make_mean_rmf(position=position, e_true=e_true, e_reco=e_reco,
+                                 low_reco_threshold=Energy(1, "TeV"), high_reco_threshold=Energy(60, "TeV"))
+    # Test that the energy dispersion is equal to zero for the reco energy bin inferior to low_reco_threshold and
+    #  superior to high_reco_threshold
+    i2 = np.where(rmf2.data[:, 13] != 0)[0]
+    assert len(i2) == 0
+    i2 = np.where(rmf2.data[:, 1] != 0)[0]
+    assert len(i2) == 0
+    # Test that for the reco energy bin inside the thresholds, the edisp defined without threshold in the same than
+    # the edisp defined with the low and high reco energy thresholds
+    i = np.where(rmf.data[:, 12] != 0)[0]
+    i2 = np.where(rmf2.data[:, 12] != 0)[0]
+    assert_equal(i, i2)
+    i = np.where(rmf.data[:, 2] != 0)[0]
+    i2 = np.where(rmf2.data[:, 2] != 0)[0]
+    assert_equal(i, i2)

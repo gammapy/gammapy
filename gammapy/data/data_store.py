@@ -734,7 +734,7 @@ class ObservationList(UserList):
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
-            Position at which to compute the PSF
+            Position at which to compute the mean EDISP
         e_true : `~gammapy.utils.energy.EnergyBounds`
             True energy axis
         e_reco : `~gammapy.utils.energy.EnergyBounds`
@@ -766,6 +766,6 @@ class ObservationList(UserList):
 
         irf_stack = IRFStacker(list_arf=list_arf, list_rmf=list_rmf, list_livetime=list_livetime,
                                list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
-        irf_stack.mean_rmf()
+        irf_stack.mean_edisp()
 
         return irf_stack.stacked_edisp
