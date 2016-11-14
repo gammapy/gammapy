@@ -995,7 +995,7 @@ Write a test for an IPython notebook
 There is a script called ``test_notebooks.py`` in the gammapy main folder. It
 exectues all notebooks listed in file ``notebook.yaml`` in
 ``gammapy-extra/notebooks.yaml`` using
-`runipy<https://github.com/paulgb/runipy>`_. So if you edit an existing
+`runipy <https://github.com/paulgb/runipy>`__. So if you edit an existing
 notebook or make changes to gammapy that break an existing notebook, you have
 to run ``test_notebooks.py`` until all notebooks run without raising an error.
 If you add a new notebook and want it to be under test (which of course is what
