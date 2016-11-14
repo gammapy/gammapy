@@ -334,23 +334,23 @@ class SkyCube(object):
         elo = energies[:-1]
         ehi = energies[1:]
         n_ebins = len(elo)
-        if dstype=='Data3DInt':
+        if dstype == 'Data3DInt':
             coordinates = self.sky_image_ref.coordinates(mode="edges")
-            ra = coordinates.data.lon
-            dec = coordinates.data.lat
-            ra_cube_hi = np.tile(ra[0:-1, 0:-1].value, (n_ebins, 1, 1))
-            ra_cube_lo = np.tile(ra[0:-1, 1:].value, (n_ebins, 1, 1))
-            dec_cube_hi = np.tile(dec[1:, 0:-1].value, (n_ebins, 1, 1))
-            dec_cube_lo = np.tile(dec[0:-1, 0:-1].value, (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1].value) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1].value) * u.TeV
+            ra = coordinates.data.lon.degree
+            dec = coordinates.data.lat.degree
+            ra_cube_hi = np.tile(ra[0:-1, 0:-1], (n_ebins, 1, 1))
+            ra_cube_lo = np.tile(ra[0:-1, 1:], (n_ebins, 1, 1))
+            dec_cube_hi = np.tile(dec[1:, 0:-1], (n_ebins, 1, 1))
+            dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
                              ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
                              self.data.value.shape)
-        if dstype=='Data3D':
+        if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
-            ra = coordinates.data.lon
-            dec = coordinates.data.lat
+            ra = coordinates.data.lon.degree
+            dec = coordinates.data.lat.degree
             ra_cube = np.tile(ra, (n_ebins, 1, 1))
             dec_cube = np.tile(dec, (n_ebins, 1, 1))
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra.value) * u.TeV
@@ -590,7 +590,6 @@ class SkyCube(object):
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=convolved, wcs=wcs,
                               energy_axis=self.energy_axis)
-
 
     def to_fits(self, format):
         """Writes SkyCube to FITS hdu_list.
