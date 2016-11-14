@@ -43,7 +43,7 @@ class IRFStacker(object):
         list of `~gammapy.irf.EffectiveAreaTable`
     list_livetime: list
         list of `~astropy.units.Quantity` (livetime)
-    list_rmf: list
+    list_edisp: list
         list of `~gammapy.irf.EnergyDispersion`
     list_low_threshold: list
         list of low energy threshold, optional for effective area mean computation
@@ -53,11 +53,11 @@ class IRFStacker(object):
 
     """
 
-    def __init__(self, list_arf, list_livetime, list_rmf=None,
+    def __init__(self, list_arf, list_livetime, list_edisp=None,
                  list_low_threshold=None, list_high_threshold=None):
         self.list_arf = list_arf
         self.list_livetime = Quantity(list_livetime)
-        self.list_rmf = list_rmf
+        self.list_edisp = list_edisp
         self.list_low_threshold = list_low_threshold
         self.list_high_threshold = list_high_threshold
         self.stacked_aeff = None
@@ -84,23 +84,23 @@ class IRFStacker(object):
         """
         Compute mean energy dispersion
         """
-        reco_bins = self.list_rmf[0].e_reco.nbins
-        true_bins = self.list_rmf[0].e_true.nbins
+        reco_bins = self.list_edisp[0].e_reco.nbins
+        true_bins = self.list_edisp[0].e_true.nbins
 
         aefft = Quantity(np.zeros(true_bins), 'cm2 s')
         temp = np.zeros(shape=(reco_bins, true_bins))
         aefftedisp = Quantity(temp, 'cm2 s')
 
-        for i, rmf in enumerate(self.list_rmf):
+        for i, edisp in enumerate(self.list_edisp):
             aeff_data = self.list_arf[i].evaluate(fill_nan=True)
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
-            edisp_data = rmf.pdf_in_safe_range(self.list_low_threshold[i],
-                                               self.list_high_threshold[i])
+            edisp_data = edisp.pdf_in_safe_range(self.list_low_threshold[i],
+                                                 self.list_high_threshold[i])
 
             aefftedisp += edisp_data.transpose() * aefft_current
 
         stacked_edisp = np.nan_to_num(aefftedisp / aefft)
-        self.stacked_edisp = EnergyDispersion(e_true=self.list_rmf[0].e_true,
-                                              e_reco=self.list_rmf[0].e_reco,
+        self.stacked_edisp = EnergyDispersion(e_true=self.list_edisp[0].e_true,
+                                              e_reco=self.list_edisp[0].e_reco,
                                               data=stacked_edisp.transpose())

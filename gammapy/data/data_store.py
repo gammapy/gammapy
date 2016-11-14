@@ -714,7 +714,7 @@ class ObservationList(UserList):
                                           psf_value=psf_value.T)
         return psf_tot
 
-    def make_mean_rmf(self, position, e_true, e_reco, low_reco_threshold=None, high_reco_threshold=None):
+    def make_mean_edisp(self, position, e_true, e_reco, low_reco_threshold=None, high_reco_threshold=None):
         r"""Make mean rmf for a given position and a set of observations.
 
         Compute the mean rmf of a set of observations j at a given position
@@ -750,7 +750,7 @@ class ObservationList(UserList):
         """
 
         list_arf = list()
-        list_rmf = list()
+        list_edisp = list()
         list_livetime = list()
         if not low_reco_threshold:
             low_reco_threshold = Energy(0.002, "TeV")
@@ -761,10 +761,10 @@ class ObservationList(UserList):
         for obs in self:
             offset = position.separation(obs.pointing_radec)
             list_arf.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
-            list_rmf.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
+            list_edisp.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
             list_livetime.append(obs.observation_live_time_duration)
 
-        irf_stack = IRFStacker(list_arf=list_arf, list_rmf=list_rmf, list_livetime=list_livetime,
+        irf_stack = IRFStacker(list_arf=list_arf, list_edisp=list_edisp, list_livetime=list_livetime,
                                list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
         irf_stack.mean_edisp()
 

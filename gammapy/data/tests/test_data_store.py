@@ -164,13 +164,13 @@ def test_make_meanrmf(tmpdir):
 
     e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
     e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
-    rmf = obslist.make_mean_rmf(position=position, e_true=e_true, e_reco=e_reco)
+    rmf = obslist.make_mean_edisp(position=position, e_true=e_true, e_reco=e_reco)
 
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
     assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)
 
-    rmf2 = obslist.make_mean_rmf(position=position, e_true=e_true, e_reco=e_reco,
+    rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true, e_reco=e_reco,
                                  low_reco_threshold=Energy(1, "TeV"), high_reco_threshold=Energy(60, "TeV"))
     # Test that the energy dispersion is equal to zero for the reco energy bin inferior to low_reco_threshold and
     #  superior to high_reco_threshold

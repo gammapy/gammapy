@@ -644,19 +644,19 @@ class SpectrumObservationStacker(object):
         calls :func:`~gammapy.irf.IRFStacker.stack_edisp`
         """
         list_arf = list()
-        list_rmf = list()
+        list_edisp = list()
         list_livetime = list()
         list_elo_threshold = list()
         list_ehi_threshold = list()
         for o in self.obs_list:
             list_arf.append(o.aeff)
             list_livetime.append(o.livetime)
-            list_rmf.append(o.edisp)
+            list_edisp.append(o.edisp)
             list_elo_threshold.append(o.lo_threshold)
             list_ehi_threshold.append(o.hi_threshold)
         irf_stack = IRFStacker(list_arf=list_arf,
                                list_livetime=list_livetime,
-                               list_rmf=list_rmf,
+                               list_edisp=list_edisp,
                                list_low_threshold=list_elo_threshold,
                                list_high_threshold=list_ehi_threshold)
         irf_stack.mean_edisp()
