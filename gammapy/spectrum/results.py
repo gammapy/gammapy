@@ -529,7 +529,8 @@ def get_plot_axis(figsize=(15, 10)):
     """
     from matplotlib import gridspec
     import matplotlib.pyplot as plt
-    plt.figure(figsize=figsize)
+
+    fig = plt.figure(figsize=figsize)
 
     gs = gridspec.GridSpec(5, 1)
 
@@ -541,5 +542,7 @@ def get_plot_axis(figsize=(15, 10)):
 
     ax0.set_xscale('log')
     ax1.set_xscale('log')
+
+    gs.tight_layout(fig)
 
     return ax0, ax1
