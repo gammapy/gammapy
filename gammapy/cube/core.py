@@ -353,8 +353,8 @@ class SkyCube(object):
             dec = coordinates.data.lat.degree
             ra_cube = np.tile(ra, (n_ebins, 1, 1))
             dec_cube = np.tile(dec, (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra.value) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra.value) * u.TeV
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
                           dec_cube.ravel(), self.data.value.ravel(),
                           self.data.value.shape)
