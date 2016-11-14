@@ -9,7 +9,6 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
@@ -18,7 +17,6 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.utils import lazyproperty
-
 from ..utils.scripts import make_path
 from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds, Energy
@@ -322,30 +320,47 @@ class SkyCube(object):
         energy = Quantity(energy, self.energy_axis.energy.unit)
         return (position, energy)
 
-    def to_sherpa_data3d(self):
+    def to_sherpa_data3d(self, dstype='Data3D'):
         """
-        Convert sky cube to sherpa `Data3D` object.
-        """
-        from .sherpa_ import Data3D
+        Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
 
-        # Energy axes
+        Parameters
+        ----------
+        dstype : {'Data3D', 'Data3DInt'}
+            Sherpa data type.
+        """
+        from .sherpa_ import Data3D, Data3DInt
         energies = self.energies(mode='edges').to("TeV").value
         elo = energies[:-1]
         ehi = energies[1:]
-
-        coordinates = self.sky_image_ref.coordinates()
-        ra = coordinates.data.lon.degree
-        dec = coordinates.data.lat.degree
-
         n_ebins = len(elo)
-        ra_cube = np.tile(ra, (n_ebins, 1, 1))
-        dec_cube = np.tile(dec, (n_ebins, 1, 1))
-        elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra)
-        ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra)
+        if dstype == 'Data3DInt':
+            coordinates = self.sky_image_ref.coordinates(mode="edges")
+            ra = coordinates.data.lon.degree
+            dec = coordinates.data.lat.degree
+            ra_cube_hi = np.tile(ra[0:-1, 0:-1], (n_ebins, 1, 1))
+            ra_cube_lo = np.tile(ra[0:-1, 1:], (n_ebins, 1, 1))
+            dec_cube_hi = np.tile(dec[1:, 0:-1], (n_ebins, 1, 1))
+            dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
+            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
+                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+                             self.data.value.shape)
+        if dstype == 'Data3D':
+            coordinates = self.sky_image_ref.coordinates()
+            ra = coordinates.data.lon.degree
+            dec = coordinates.data.lat.degree
+            ra_cube = np.tile(ra, (n_ebins, 1, 1))
+            dec_cube = np.tile(dec, (n_ebins, 1, 1))
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
+            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
+                          dec_cube.ravel(), self.data.value.ravel(),
+                          self.data.value.shape)
 
-        return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                      dec_cube.ravel(), self.data.value.ravel(),
-                      self.data.value.shape)
+        else:
+            raise ValueError('Invalid sherpa data type.')
 
     def sky_image(self, energy, interpolation=None):
         """

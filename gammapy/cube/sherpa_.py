@@ -113,6 +113,62 @@ class Data3D(DataND):
                         ignore)
 
 
+class Data3DInt(DataND):
+    "3-D integrated data set"
+
+    def _set_mask(self, val):
+        DataND._set_mask(self, val)
+        try:
+            self._x0lo = self.apply_filter(self.x0lo)
+            self._x0hi = self.apply_filter(self.x0hi)
+            self._x1lo = self.apply_filter(self.x1lo)
+            self._x1hi = self.apply_filter(self.x1hi)
+            self._x2lo = self.apply_filter(self.x2lo)
+            self._x2hi = self.apply_filter(self.x2hi)
+        except DataErr:
+            self._x0lo = self.x0lo
+            self._x1lo = self.x1lo
+            self._x0hi = self.x0hi
+            self._x1hi = self.x1hi
+            self._x2hi = self.x2hi
+            self._x2hi = self.x2hi
+
+    mask = property(DataND._get_mask, _set_mask,
+                    doc='Mask array for dependent variable')
+
+    def __init__(self, name, x0lo, x1lo, x2lo, x0hi, x1hi, x2hi, y, shape=None,
+                 staterror=None, syserror=None):
+        self._x0lo = x0lo
+        self._x1lo = x1lo
+        self._x2lo = x2lo
+        self._x0hi = x0hi
+        self._x1hi = x1hi
+        self._x2hi = x2hi
+        BaseData.__init__(self)
+
+    def get_indep(self, filter=False):
+        filter = bool_cast(filter)
+        if filter:
+            return (self._x0lo, self._x1lo, self._x2lo, self._x0hi, self._x1hi, self._x2hi)
+        return (self.x0lo, self.x1lo, self.x2lo, self.x0hi, self.x1hi, self.x2hi)
+
+    def get_x0(self, filter=False):
+        indep = self.get_indep(filter)
+        return (indep[0] + indep[3]) / 2.0
+
+    def get_x1(self, filter=False):
+        indep = self.get_indep(filter)
+        return (indep[1] + indep[4]) / 2.0
+
+    def get_x2(self, filter=False):
+        indep = self.get_indep(filter)
+        return (indep[2] + indep[5]) / 2.0
+
+    def notice(self, x0lo=None, x0hi=None, x1lo=None, x1hi=None, x2lo=None, x2hi=None, ignore=False):
+        BaseData.notice(self, (x0lo, x1lo, x2hi),
+                        (x0hi, x1hi, x2hi), self.get_indep(), ignore)
+
+
 class CombinedModel3D(ArithmeticModel):
     """
     Combined spatial and spectral 3D model.
@@ -137,5 +193,58 @@ class CombinedModel3D(ArithmeticModel):
 
     def calc(self, pars, elo, ehi, x, y):
         _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
+        _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
+        return _spatial * _spectral
+
+
+class CombinedModel3DInt(ArithmeticModel):
+    """
+    Combined spatial and spectral 3D model.
+
+    Parameters
+    ----------
+    use_psf: bool
+        if true will convolve the spatial model by the psf
+    exposure: `~numpy.array`
+        3D `~numpy.array` with the dimension (E,x,y)
+    psf: `~numpy.array`
+        3D `~numpy.array` with the dimension (E,x,y)
+
+    """
+
+    def __init__(self, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
+                 spectral_model=None):
+        self.spatial_model = spatial_model
+        self.spectral_model = spectral_model
+        self.use_psf = use_psf
+        self.exposure = exposure
+        self.psf = psf
+
+        # Fix spectral ampl parameter
+        spectral_model.ampl = 1
+        spectral_model.ampl.freeze()
+
+        pars = []
+        for _ in spatial_model.pars + spectral_model.pars:
+            setattr(self, _.name, _)
+            pars.append(_)
+
+        self._spatial_pars = slice(0, len(spatial_model.pars))
+        self._spectral_pars = slice(len(spatial_model.pars), len(pars))
+        ArithmeticModel.__init__(self, name, pars)
+
+    def calc(self, pars, elo, xlo, ylo, ehi, xhi, yhi):
+        from scipy import signal
+        shape = self.exposure.shape
+        result_convol = np.zeros(shape)
+        if self.use_psf:
+            a = (self.exposure * self.spatial_model.calc(pars[self._spatial_pars], xlo, xhi, ylo, yhi).reshape(shape))
+            for ind_E in range(shape[0]):
+                result_convol[ind_E, :, :] = signal.fftconvolve(a[ind_E, :, :], self.psf[ind_E, :, :] /
+                                                                (self.psf[ind_E, :, :].sum()), mode='same')
+
+            _spatial = result_convol.ravel()
+        else:
+            _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
         _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
         return _spatial * _spectral
