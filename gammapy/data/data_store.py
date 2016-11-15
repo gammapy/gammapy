@@ -727,7 +727,7 @@ class ObservationList(UserList):
         Compute the mean edisp of a set of observations j at a given position
 
         The stacking is implemented in
-        :func:`~gammapy.irf.IRFStacker.stack_edisp
+        :func:`~gammapy.irf.IRFStacker.stack_edisp`
 
         Parameters
         ----------
