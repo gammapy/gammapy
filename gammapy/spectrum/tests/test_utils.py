@@ -9,6 +9,7 @@ from ...spectrum import (
     integrate_spectrum,
 )
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
+from ..models import ExponentialCutoffPowerLaw
 
 
 @requires_dependency('scipy')
@@ -66,3 +67,22 @@ def test_integrate_spectrum():
 
     assert_allclose(unumpy.nominal_values(val), unumpy.nominal_values(ref))
     assert_allclose(unumpy.std_devs(val), unumpy.std_devs(ref))
+
+
+@requires_dependency('uncertainties')
+def test_integrate_spectrum_ecpl():
+    """
+    Test ecpl integration. Regression test for
+    https://github.com/gammapy/gammapy/issues/687
+    """
+    from uncertainties import unumpy
+    amplitude = unumpy.uarray(1E-12, 1E-13)
+    index = unumpy.uarray(2.3, 0.2)
+    reference = 1
+    lambda_ = 0.1
+    ecpl = ExponentialCutoffPowerLaw(index, amplitude, reference, lambda_)
+    emin, emax = 1, 1E10
+    val = ecpl.integral(emin, emax)
+
+    assert_allclose(unumpy.nominal_values(val), 5.956578235358054e-13)
+    assert_allclose(unumpy.std_devs(val), 9.278302514378108e-14)
