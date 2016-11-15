@@ -987,3 +987,19 @@ examples.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator. 
+
+
+Write a test for an IPython notebook
+------------------------------------
+
+There is a script called ``test_notebooks.py`` in the gammapy main folder. It
+exectues all notebooks listed in file ``notebook.yaml`` in
+``gammapy-extra/notebooks.yaml`` using
+`runipy <https://github.com/paulgb/runipy>`__. So if you edit an existing
+notebook or make changes to gammapy that break an existing notebook, you have
+to run ``test_notebooks.py`` until all notebooks run without raising an error.
+If you add a new notebook and want it to be under test (which of course is what
+you want) you have to add it to ``gammapy-extra/notebooks/notebooks.yaml``.
+Note that there is also the command ``make test-notebooks`` which is used for
+continuous integration on travis CI. It is not recommended to use this locally,
+since it overwrides your gammapy installation (see issue 727).

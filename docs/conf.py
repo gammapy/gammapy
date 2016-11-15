@@ -170,6 +170,23 @@ htmlhelp_basename = project + 'doc'
 html_static_path = ['_static']
 
 
+# download gammapy-extra for read the docs build
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    from zipfile import ZipFile
+    from astropy.extern.six.moves import urllib
+    from tempfile import mktemp
+
+    filename = mktemp('gammapy-extra-master.zip')
+    url = 'https://github.com/gammapy/gammapy-extra/archive/master.zip'
+    name, hdrs = urllib.request.urlretrieve(url, filename)
+    gp_extra_zip = ZipFile(filename)
+    path = os.path.dirname(filename)
+    gp_extra_zip.extractall(path)
+    gp_extra_zip.close()
+    os.environ['GAMMAPY_EXTRA'] = os.path.join(path, 'gammapy-extra-master')
+
+
 def copy_gp_extra_file(source, target):
     """Copy file from `gammapy-extra` to `gammapy/docs` folder."""
     cmd = 'cp $GAMMAPY_EXTRA/{} {}'.format(source, target)
