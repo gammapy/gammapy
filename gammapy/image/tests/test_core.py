@@ -307,6 +307,7 @@ class TestSkyImage:
             xref=self.center.l.deg, yref=self.center.b.deg,
             proj='TAN', coordsys='GAL',
         )
+        self.image.data = np.arange(50, dtype=float).reshape((5, 10))
 
     def test_center_pix(self):
         center = self.image.center_pix

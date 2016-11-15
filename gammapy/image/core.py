@@ -1159,7 +1159,7 @@ class SkyImage(object):
         """
         Smooth the image (works on and returns a copy).
 
-        The definition of the smoothing parameter radius is equivalent to the 
+        The definition of the smoothing parameter radius is equivalent to the
         one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
 
         Parameters
@@ -1183,13 +1183,13 @@ class SkyImage(object):
         from scipy.ndimage import gaussian_filter, uniform_filter
         from scipy.ndimage import convolve
         from scipy.stats import gmean
-        
+
         image = self.copy()
 
         if isinstance(radius, u.Quantity):
             # use geometric mean if x an y pixel scale differ
             radius = gmean((radius / self.wcs_pixel_scale()).value)
-        
+
         if kernel in ['box', 'disk']:
             width = 2 * radius + 1
         else:
@@ -1200,6 +1200,7 @@ class SkyImage(object):
             image.data = gaussian_filter(self.data, width, **kwargs)
         elif kernel == 'disk':
             disk = Tophat2DKernel(width)
+            disk.normalize('integral')
             image.data = convolve(self.data, disk.array, **kwargs)
         elif kernel == 'box':
             image.data = uniform_filter(self.data, width, **kwargs)
