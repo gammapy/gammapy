@@ -633,7 +633,7 @@ class SpectrumObservationStacker(object):
         for o in self.obs_list:
             list_arf.append(o.aeff)
             list_livetime.append(o.livetime)
-        irf_stack = IRFStacker(list_arf=list_arf, list_livetime=list_livetime)
+        irf_stack = IRFStacker(list_aeff=list_arf, list_livetime=list_livetime)
         irf_stack.stack_aeff()
 
         self.stacked_aeff = irf_stack.stacked_aeff
@@ -654,7 +654,7 @@ class SpectrumObservationStacker(object):
             list_edisp.append(o.edisp)
             list_elo_threshold.append(o.lo_threshold)
             list_ehi_threshold.append(o.hi_threshold)
-        irf_stack = IRFStacker(list_arf=list_arf,
+        irf_stack = IRFStacker(list_aeff=list_arf,
                                list_livetime=list_livetime,
                                list_edisp=list_edisp,
                                list_low_threshold=list_elo_threshold,

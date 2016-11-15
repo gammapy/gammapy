@@ -39,7 +39,7 @@ class IRFStacker(object):
 
     Parameters
     ----------
-    list_arf: list
+    list_aeff: list
         list of `~gammapy.irf.EffectiveAreaTable`
     list_livetime: list
         list of `~astropy.units.Quantity` (livetime)
@@ -53,9 +53,9 @@ class IRFStacker(object):
 
     """
 
-    def __init__(self, list_arf, list_livetime, list_edisp=None,
+    def __init__(self, list_aeff, list_livetime, list_edisp=None,
                  list_low_threshold=None, list_high_threshold=None):
-        self.list_arf = list_arf
+        self.list_aeff = list_aeff
         self.list_livetime = Quantity(list_livetime)
         self.list_edisp = list_edisp
         self.list_low_threshold = list_low_threshold
@@ -67,17 +67,17 @@ class IRFStacker(object):
         """
         Compute mean effective area
         """
-        nbins = self.list_arf[0].energy.nbins
+        nbins = self.list_aeff[0].energy.nbins
         aefft = Quantity(np.zeros(nbins), 'cm2 s')
         livetime_tot = np.sum(self.list_livetime)
 
-        for i, arf in enumerate(self.list_arf):
-            aeff_data = arf.evaluate(fill_nan=True)
+        for i, aeff in enumerate(self.list_aeff):
+            aeff_data = aeff.evaluate(fill_nan=True)
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
 
         stacked_data = aefft / livetime_tot
-        self.stacked_aeff = EffectiveAreaTable(energy=self.list_arf[0].energy,
+        self.stacked_aeff = EffectiveAreaTable(energy=self.list_aeff[0].energy,
                                                data=stacked_data.to('cm2'))
 
     def mean_edisp(self):
@@ -92,7 +92,7 @@ class IRFStacker(object):
         aefftedisp = Quantity(temp, 'cm2 s')
 
         for i, edisp in enumerate(self.list_edisp):
-            aeff_data = self.list_arf[i].evaluate(fill_nan=True)
+            aeff_data = self.list_aeff[i].evaluate(fill_nan=True)
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
             edisp_data = edisp.pdf_in_safe_range(self.list_low_threshold[i],

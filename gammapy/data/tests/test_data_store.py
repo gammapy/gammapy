@@ -174,17 +174,13 @@ def test_make_mean_edisp(tmpdir):
 
     rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true, e_reco=e_reco,
                                    low_reco_threshold=Energy(1, "TeV"), high_reco_threshold=Energy(60, "TeV"))
-    # Test that the energy dispersion is equal to zero for the reco energy bin inferior to low_reco_threshold and
-    #  superior to high_reco_threshold
-    i2 = np.where(rmf2.data[:, 13] != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(0.8, "TeV")) != 0)[0]
     assert len(i2) == 0
-    i2 = np.where(rmf2.data[:, 1] != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(61, "TeV")) != 0)[0]
     assert len(i2) == 0
-    # Test that for the reco energy bin inside the thresholds, the edisp defined without threshold in the same than
-    # the edisp defined with the low and high reco energy thresholds
-    i = np.where(rmf.data[:, 12] != 0)[0]
-    i2 = np.where(rmf2.data[:, 12] != 0)[0]
+    i = np.where(rmf.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
     assert_equal(i, i2)
-    i = np.where(rmf.data[:, 2] != 0)[0]
-    i2 = np.where(rmf2.data[:, 2] != 0)[0]
+    i = np.where(rmf.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
     assert_equal(i, i2)

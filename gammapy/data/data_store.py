@@ -720,17 +720,7 @@ class ObservationList(UserList):
 
         Compute the mean edisp of a set of observations j at a given position
 
-        The stacking of :math:`j` observations is implemented as follows.  :math:`k`
-        and :math:`l` denote a bin in reconstructed and true energy, respectively.
-
-        .. math::
-
-            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
-                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
-
-            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
-                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
-                \cdot t_j}
+        The stacking is implemented in :func:`~gammapy.irf.IRFStacker.stack_edisp
 
         Parameters
         ----------
@@ -744,24 +734,25 @@ class ObservationList(UserList):
             low energy threshold in reco energy, default 0.002 TeV
         high_reco_threshold : `~gammapy.utils.energy.Energy`
             high energy threshold in reco energy , default 150 TeV
+
         Returns
         -------
-        stacked_edisp: `~gammapy.irf.EnergyDispersion`
+        stacked_edisp : `~gammapy.irf.EnergyDispersion`
             Stacked EDISP for a set of observation
         """
 
-        list_arf = list()
+        list_aeff = list()
         list_edisp = list()
         list_livetime = list()
         list_low_threshold = [low_reco_threshold] * len(self)
         list_high_threshold = [high_reco_threshold] * len(self)
         for obs in self:
             offset = position.separation(obs.pointing_radec)
-            list_arf.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
+            list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
             list_edisp.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
             list_livetime.append(obs.observation_live_time_duration)
 
-        irf_stack = IRFStacker(list_arf=list_arf, list_edisp=list_edisp, list_livetime=list_livetime,
+        irf_stack = IRFStacker(list_aeff=list_aeff, list_edisp=list_edisp, list_livetime=list_livetime,
                                list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
         irf_stack.mean_edisp()
 
