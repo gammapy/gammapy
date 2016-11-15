@@ -714,10 +714,11 @@ class ObservationList(UserList):
                                           psf_value=psf_value.T)
         return psf_tot
 
-    def make_mean_edisp(self, position, e_true, e_reco, low_reco_threshold=None, high_reco_threshold=None):
-        r"""Make mean rmf for a given position and a set of observations.
+    def make_mean_edisp(self, position, e_true, e_reco, low_reco_threshold=Energy(0.002, "TeV"),
+                        high_reco_threshold=Energy(150, "TeV")):
+        r"""Make mean edisp for a given position and a set of observations.
 
-        Compute the mean rmf of a set of observations j at a given position
+        Compute the mean edisp of a set of observations j at a given position
 
         The stacking of :math:`j` observations is implemented as follows.  :math:`k`
         and :math:`l` denote a bin in reconstructed and true energy, respectively.
@@ -745,17 +746,13 @@ class ObservationList(UserList):
             high energy threshold in reco energy , default 150 TeV
         Returns
         -------
-        stacked_rmf: `~gammapy.irf.EnergyDispersion`
-            Stacked RMF for a set of observation
+        stacked_edisp: `~gammapy.irf.EnergyDispersion`
+            Stacked EDISP for a set of observation
         """
 
         list_arf = list()
         list_edisp = list()
         list_livetime = list()
-        if not low_reco_threshold:
-            low_reco_threshold = Energy(0.002, "TeV")
-        if not high_reco_threshold:
-            high_reco_threshold = Energy(150, "TeV")
         list_low_threshold = [low_reco_threshold] * len(self)
         list_high_threshold = [high_reco_threshold] * len(self)
         for obs in self:

@@ -16,7 +16,7 @@ class IRFStacker(object):
     r"""
     Stack instrument response functions
     
-    Compute mean effective area and the mean energy dispersio for a given for a
+    Compute mean effective area and the mean energy dispersion for a given for a
     given list of instrument response functions. Results are stored as
     attributes.
 

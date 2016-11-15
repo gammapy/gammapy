@@ -155,7 +155,7 @@ def test_make_psf(pars, result):
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_make_meanedisp(tmpdir):
+def test_make_mean_edisp(tmpdir):
     position = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)
