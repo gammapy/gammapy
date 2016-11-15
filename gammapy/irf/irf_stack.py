@@ -80,7 +80,7 @@ class IRFStacker(object):
         self.stacked_aeff = EffectiveAreaTable(energy=self.list_aeff[0].energy,
                                                data=stacked_data.to('cm2'))
 
-    def mean_edisp(self):
+    def stack_edisp(self):
         """
         Compute mean energy dispersion
         """

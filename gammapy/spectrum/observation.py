@@ -659,7 +659,7 @@ class SpectrumObservationStacker(object):
                                list_edisp=list_edisp,
                                list_low_threshold=list_elo_threshold,
                                list_high_threshold=list_ehi_threshold)
-        irf_stack.mean_edisp()
+        irf_stack.stack_edisp()
         self.stacked_edisp = irf_stack.stacked_edisp
 
     def stack_obs(self):
