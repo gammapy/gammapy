@@ -142,11 +142,18 @@ def _configure_root_logger(level='info', format=None):
 def read_yaml(filename, logger=None):
     """
     Read YAML file
+
+    Parameters
+    ----------
+    filename : `~gammapy.extern.pathlib.Path`, str
+        File to read
     """
     import yaml
+    
+    filename = make_path(filename)
     if logger is not None:
         logger.info('Reading {}'.format(filename))
-    with open(filename) as fh:
+    with open(str(filename)) as fh:
         dictionary = yaml.safe_load(fh)
 
     return dictionary
