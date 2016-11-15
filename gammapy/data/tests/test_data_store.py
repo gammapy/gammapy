@@ -153,6 +153,8 @@ def test_make_psf(pars, result):
     assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])
 
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_make_meanedisp(tmpdir):
     position = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
@@ -171,7 +173,7 @@ def test_make_meanedisp(tmpdir):
     assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)
 
     rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true, e_reco=e_reco,
-                                 low_reco_threshold=Energy(1, "TeV"), high_reco_threshold=Energy(60, "TeV"))
+                                   low_reco_threshold=Energy(1, "TeV"), high_reco_threshold=Energy(60, "TeV"))
     # Test that the energy dispersion is equal to zero for the reco energy bin inferior to low_reco_threshold and
     #  superior to high_reco_threshold
     i2 = np.where(rmf2.data[:, 13] != 0)[0]
