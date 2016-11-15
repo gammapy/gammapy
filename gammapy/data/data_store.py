@@ -655,12 +655,13 @@ class DataStoreObservation(object):
         if not theta:
             theta = self.psf.to_table_psf(theta=offset).offset
 
-        psf_value = self.psf.to_table_psf(theta=offset, offset=theta).evaluate(energy)
+        psf_value = self.psf.to_table_psf(theta=offset, offset=theta)\
+            .evaluate(energy)
         arf = self.aeff.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
 
-        psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
-                                      psf_value=psf_value)
+        psf = EnergyDependentTablePSF(energy=energy, offset=theta,
+                                      exposure=exposure, psf_value=psf_value)
         return psf
 
 
@@ -678,7 +679,8 @@ class ObservationList(UserList):
         return s
 
     def make_psf(self, position, energy=None, theta=None):
-        """Make energy-dependent mean PSF for a given position and a set of observations.
+        """Make energy-dependent mean PSF for a given position and a set of
+        observations.
 
         Parameters
         ----------
@@ -686,10 +688,12 @@ class ObservationList(UserList):
             Position at which to compute the PSF
         energy : `~astropy.units.Quantity`
             1-dim energy array for the output PSF.
-            If none is given, the energy array of the PSF from the first observation is used.
+            If none is given, the energy array of the PSF from the first
+            observation is used.
         theta : `~astropy.coordinates.Angle`
             1-dim offset array for the output PSF.
-            If none is given, the energy array of the PSF from the first observation is used.
+            If none is given, the energy array of the PSF from the first
+             observation is used.
 
         Returns
         -------
@@ -710,17 +714,20 @@ class ObservationList(UserList):
             psf_value += psf.psf_value.T * psf.exposure
 
         psf_value /= exposure
-        psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
+        psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta,
+                                          exposure=exposure,
                                           psf_value=psf_value.T)
         return psf_tot
 
-    def make_mean_edisp(self, position, e_true, e_reco, low_reco_threshold=Energy(0.002, "TeV"),
+    def make_mean_edisp(self, position, e_true, e_reco,
+                        low_reco_threshold=Energy(0.002, "TeV"),
                         high_reco_threshold=Energy(150, "TeV")):
         r"""Make mean edisp for a given position and a set of observations.
 
         Compute the mean edisp of a set of observations j at a given position
 
-        The stacking is implemented in :func:`~gammapy.irf.IRFStacker.stack_edisp
+        The stacking is implemented in
+        :func:`~gammapy.irf.IRFStacker.stack_edisp
 
         Parameters
         ----------
@@ -748,12 +755,17 @@ class ObservationList(UserList):
         list_high_threshold = [high_reco_threshold] * len(self)
         for obs in self:
             offset = position.separation(obs.pointing_radec)
-            list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
-            list_edisp.append(obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true))
+            list_aeff.append(obs.aeff.to_effective_area_table(offset,
+                                                              energy=e_true))
+            list_edisp.append(obs.edisp.to_energy_dispersion(offset,
+                                                             e_reco=e_reco,
+                                                             e_true=e_true))
             list_livetime.append(obs.observation_live_time_duration)
 
-        irf_stack = IRFStacker(list_aeff=list_aeff, list_edisp=list_edisp, list_livetime=list_livetime,
-                               list_low_threshold=list_low_threshold, list_high_threshold=list_high_threshold)
+        irf_stack = IRFStacker(list_aeff=list_aeff, list_edisp=list_edisp,
+                               list_livetime=list_livetime,
+                               list_low_threshold=list_low_threshold,
+                               list_high_threshold=list_high_threshold)
         irf_stack.mean_edisp()
 
         return irf_stack.stacked_edisp
