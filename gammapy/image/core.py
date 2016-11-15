@@ -1190,19 +1190,16 @@ class SkyImage(object):
             # use geometric mean if x an y pixel scale differ
             radius = gmean((radius / self.wcs_pixel_scale()).value)
 
-        if kernel in ['box', 'disk']:
-            width = 2 * radius + 1
-        else:
-            # gaussian
-            width = radius / 2.
-
         if kernel == 'gauss':
+            width = radius / 2.
             image.data = gaussian_filter(self.data, width, **kwargs)
         elif kernel == 'disk':
+            width = 2 * radius + 1
             disk = Tophat2DKernel(width)
             disk.normalize('integral')
             image.data = convolve(self.data, disk.array, **kwargs)
         elif kernel == 'box':
+            width = 2 * radius + 1
             image.data = uniform_filter(self.data, width, **kwargs)
         else:
             raise ValueError('Invalid option kernel = {}'.format(kernel))
