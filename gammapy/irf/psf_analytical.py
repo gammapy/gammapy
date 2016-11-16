@@ -383,8 +383,6 @@ class EnergyDependentMultiGaussPSF(object):
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        #ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
-        #energies = ebounds.log_centers
         energies = self.energy
 
         # Defaults and input handling
