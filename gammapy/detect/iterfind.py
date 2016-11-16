@@ -37,7 +37,6 @@ import numpy as np
 from astropy.io import fits
 from ..extern.pathlib import Path
 from .. import stats
-from ..image import disk_correlate
 
 __all__ = [
     'IterativeSourceDetector',
@@ -144,6 +143,7 @@ class IterativeSourceDetector(object):
 
     def compute_iter_images(self):
         """Compute images for this iteration."""
+        from scipy.ndimage import convolve
         log.debug('Computing images for this iteration.')
         self.iter_images = dict()
 
@@ -153,8 +153,10 @@ class IterativeSourceDetector(object):
 
         self.iter_images['significance'] = dict()
         for scale in self.scales:
-            counts = disk_correlate(self.images['counts'], scale)
-            background = disk_correlate(self.iter_images['background'], scale)
+            disk = Tophat2Dkernel(scale)
+            disk.normalize('peak')
+            counts = convolve(self.images['counts'], disk.array)
+            background = convolve(self.iter_images['background'], disk.array)
             significance = stats.significance(counts, background)
             self.iter_images['significance'][scale] = significance
 

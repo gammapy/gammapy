@@ -2,18 +2,13 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.datasets import load_poisson_stats_image
-from gammapy.image import disk_correlate
-from gammapy.stats import significance
 from gammapy.image import colormap_hess, colormap_milagro
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import LinearStretch
+from gammapy.image import SkyImage
 
-# Compute an example significance image
-counts = load_poisson_stats_image()
-counts = disk_correlate(counts, radius=5, mode='reflect')
-background = np.median(counts) * np.ones_like(counts)
-image = significance(counts, background)
+filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz'
+image = SkyImage.read(filename, extname='sqrt_ts')
 
 # Plot with the HESS and Milagro colormap
 vmin, vmax, vtransition = -5, 15, 5

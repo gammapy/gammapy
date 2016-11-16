@@ -2,19 +2,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from astropy.convolution import Tophat2DKernel
+from scipy.ndimage import convolve
 from gammapy.stats import significance
-from gammapy.image.utils import disk_correlate
 from aplpy import FITSFigure
 from npred_general import prepare_images
 
 model, gtmodel, ratio, counts, header = prepare_images()
 
 # Top hat correlation
-correlation_radius = 3
+tophat = Tophat2DKernel(3)
+tophat.normalize('peak')
 
-correlated_gtmodel = disk_correlate(gtmodel, correlation_radius)
-correlated_counts = disk_correlate(counts, correlation_radius)
-correlated_model = disk_correlate(model, correlation_radius)
+correlated_gtmodel = convolve(gtmodel, tophat.array)
+correlated_counts = convolve(counts, tophat.array)
+correlated_model = convolve(model, tophat.array)
 
 # Fermi significance
 fermi_significance = np.nan_to_num(significance(correlated_counts, correlated_gtmodel,

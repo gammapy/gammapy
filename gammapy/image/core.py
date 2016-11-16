@@ -11,7 +11,8 @@ from numpy.lib.arraypad import _validate_lengths
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
-from astropy.units import Quantity, Unit
+from astropy.convolution import Tophat2DKernel
+from astropy import units as u
 from astropy.nddata.utils import Cutout2D
 from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
@@ -123,7 +124,7 @@ class SkyImage(object):
             name = header.get('EXTNAME')
         try:
             # Validate unit string
-            unit = Unit(header['BUNIT'], format='fits').to_string()
+            unit = u.Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
 
@@ -668,7 +669,7 @@ class SkyImage(object):
 
         dx = angular_separation(*(ylo_xlo + ylo_xhi))
         dy = angular_separation(*(ylo_xlo + yhi_xlo))
-        omega = Quantity(dx * dy, 'sr')
+        omega = u.Quantity(dx * dy, 'sr')
         return omega
 
     def lookup(self, position, interpolation=None):
@@ -689,7 +690,7 @@ class SkyImage(object):
         """
         Convert image to `~astropy.units.Quantity`.
         """
-        return Quantity(self.data, self.unit)
+        return u.Quantity(self.data, self.unit)
 
     def to_sherpa_data2d(self, dstype='Data2D'):
         """
@@ -744,7 +745,7 @@ class SkyImage(object):
             header.update(header_wcs)
 
         if self.unit is not None:
-            header['BUNIT'] = Unit(self.unit).to_string('fits')
+            header['BUNIT'] = u.Unit(self.unit).to_string('fits')
 
         if self.name is not None:
             header['EXTNAME'] = self.name
@@ -1055,7 +1056,6 @@ class SkyImage(object):
         >>> image.wcs_pixel_scale()
         <Angle [ 0.02, 0.02] deg>
         """
-        import astropy.units as u
         if method == 'cdelt':
             scales = np.abs(self.wcs.wcs.cdelt)
         elif method == 'proj_plane':
@@ -1155,34 +1155,52 @@ class SkyImage(object):
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=data, wcs=wcs)
 
-    def smooth(self, kernel='gauss', width=3):
-        """Smooth the image (works on and returns a copy).
+    def smooth(self, kernel='gauss', radius=0.1 * u.deg, **kwargs):
+        """
+        Smooth the image (works on and returns a copy).
 
-        TODO: this is very preliminary and incomplete.
-        No tests yet, no control of boundary handling, ...
-        See https://github.com/gammapy/gammapy/issues/694
+        The definition of the smoothing parameter radius is equivalent to the
+        one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
 
         Parameters
         ----------
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
-        width : float
-            Width in pixels
+        radius : `~astropy.units.Quantity` or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `SkyImage.wcs_pixel_scale()`.
+        kwargs : dict
+            Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
+            ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss') or
+            `~scipy.ndimage.convolve` ('disk').
 
         Returns
         -------
         image : `SkyImage`
             Smoothed image (a copy, the original object is unchanged).
         """
+        from scipy.ndimage import gaussian_filter, uniform_filter
+        from scipy.ndimage import convolve
+        from scipy.stats import gmean
+
         image = self.copy()
 
+        if isinstance(radius, u.Quantity):
+            # use geometric mean if x an y pixel scale differ
+            radius = gmean((radius / self.wcs_pixel_scale()).value)
+
         if kernel == 'gauss':
-            from scipy.ndimage import gaussian_filter
-            image.data = gaussian_filter(self.data, width)
+            width = radius / 2.
+            image.data = gaussian_filter(self.data, width, **kwargs)
         elif kernel == 'disk':
-            raise NotImplementedError
+            width = 2 * radius + 1
+            disk = Tophat2DKernel(width)
+            disk.normalize('integral')
+            image.data = convolve(self.data, disk.array, **kwargs)
         elif kernel == 'box':
-            raise NotImplementedError
+            width = 2 * radius + 1
+            image.data = uniform_filter(self.data, width, **kwargs)
         else:
             raise ValueError('Invalid option kernel = {}'.format(kernel))
 

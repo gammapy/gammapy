@@ -43,9 +43,6 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
 
-    if not kernel.is_bool:
-        log.warn('Using weighted kernels can lead to biased results.')
-
     kernel.normalize('peak')
     conv_opt = dict(mode='constant', cval=np.nan)
 
@@ -101,9 +98,6 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
-
-    if not kernel.is_bool:
-        log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
     conv_opt = dict(mode='constant', cval=np.nan)
