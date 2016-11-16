@@ -28,7 +28,7 @@ def test_cta_irf():
     # psf = irf.psf.to_table_psf(offset=offset)
     psf = irf.psf.psf_at_energy_and_theta(energy=energy, theta=offset)
     val = psf(Quantity(0.1, 'deg'))
-    assert_quantity_allclose(val, 7.192032750656662)
+    assert_quantity_allclose(val, 5.423486126591272)
 
     # TODO: Background cube class doesn't have a working evaluate yet
     # val = irf.bkg.evaluate(energy=energy, x=offset, y=Quantity(0, 'deg'))
