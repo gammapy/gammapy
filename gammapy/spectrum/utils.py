@@ -218,7 +218,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
 
     y = func(x)
 
-    val = _trapz_loglog(y, x, ulog10=True, intervals=intervals)
+    val = _trapz_loglog(y, x, intervals=intervals)
 
     return val
 
@@ -226,7 +226,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
 # This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
 # and slightly modified to allow use with the uncertainties package
 
-def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
+def _trapz_loglog(y, x, axis=-1, intervals=False):
     """
     Integrate along the given axis using the composite trapezoidal rule in
     loglog space.
@@ -243,9 +243,6 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
         Specify the axis.
     intervals : bool, optional
         Return array of shape x not the total integral, default: False
-    ulog10 : bool, optional
-        Use `~uncertainties.unumpy.log10` to allow uarrays for y and do error
-        propagation for the integral value.
 
     Returns
     -------
@@ -253,9 +250,6 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
         Definite integral as approximated by trapezoidal rule in loglog space.
     """
     log10 = np.log10
-
-    if ulog10:
-        from uncertainties.unumpy import log10
 
     try:
         y_unit = y.unit
@@ -275,6 +269,17 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
     slice2 = [slice(None)] * y.ndim
     slice1[axis] = slice(None, -1)
     slice2[axis] = slice(1, None)
+
+    # arrays with uncertainties contain objects
+    if y.dtype == 'O':
+        from uncertainties.unumpy import log10
+        # uncertainties.unumpy.log10 can't deal with tiny values see
+        # https://github.com/gammapy/gammapy/issues/687, so we filter out the values
+        # here. As the values are so small it doesn't affect the final result.
+        # the sqrt is taken to create a margin, because of the later division
+        # y[slice2] / y[slice1]
+        valid = y > np.sqrt(np.finfo(float).tiny)
+        x, y = x[valid], y[valid]
 
     if x.ndim == 1:
         shape = [1] * y.ndim
