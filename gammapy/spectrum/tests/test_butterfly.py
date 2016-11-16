@@ -4,15 +4,14 @@ from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency
 from ..butterfly import SpectrumButterfly
-from ..crab import crab_flux
-
+from ..crab import CrabSpectrum
 
 @pytest.fixture
 def butterfly():
     bf = SpectrumButterfly()
-
+    crab = CrabSpectrum()
     bf['energy'] = Quantity([1, 2, 10], 'TeV')
-    bf['flux'] = Quantity(crab_flux(bf['energy'].value), 'cm^-2 s^-1 TeV^-1')
+    bf['flux'] = crab.model(bf['energy'])
     bf['flux_lo'] = [0.9, 0.8, 0.9] * bf['flux']
     bf['flux_hi'] = [1.1, 1.2, 1.1] * bf['flux']
 
