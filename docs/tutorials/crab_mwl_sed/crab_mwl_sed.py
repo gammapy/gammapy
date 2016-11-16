@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
 from gammapy.datasets import load_crab_flux_points
-from gammapy.spectrum import crab_flux
+from gammapy.spectrum import CrabSpectrum
 
 # Plot flux points
 for component in ['pulsar', 'nebula']:
@@ -16,7 +16,10 @@ for component in ['pulsar', 'nebula']:
 
 # Plot SED model
 energy = np.logspace(2, 8, 100) * u.MeV
-flux = u.Quantity(crab_flux(energy.to('TeV').value), 'cm^-2 s^-1 TeV^-1')
+
+crab = CrabSpectrum(reference='meyer')
+
+flux = crab.model(energy)
 energy_flux = (energy ** 2 * flux).to('erg cm^-2 s^-1')
 plt.plot(energy.value, energy_flux.value, label='Meyer (2010) model', lw=3)
 

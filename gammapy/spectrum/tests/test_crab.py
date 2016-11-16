@@ -8,8 +8,8 @@ from ...spectrum import CrabSpectrum
 
 
 desired = dict()
-desired['meyer'] = [u.Quantity(5.57243750e-12, 'cm-2 s-1 TeV-1'),
-                    u.Quantity(2.0744425607241013e-11, 'cm-2 s-1'),
+desired['meyer'] = [u.Quantity(5.572437502365652e-12, 'cm-2 s-1 TeV-1'),
+                    u.Quantity(2.0744425607240974e-11, 'cm-2 s-1'),
                     2.631535530090332]
 desired['hegra'] = [u.Quantity(4.60349681e-12, 'cm-2 s-1 TeV-1'),
                     u.Quantity(1.74688947e-11, 'cm-2 s-1'),
@@ -33,9 +33,9 @@ class TestCrabSpectrum(object):
         f = crab_spectrum.model(e)
         I = crab_spectrum.model.integral(emin, emax)
         g = crab_spectrum.model.spectral_index(e)
-        assert_quantity_allclose(f, desired[reference][0])
-        assert_quantity_allclose(I, desired[reference][1])
-        assert_quantity_allclose(g, desired[reference][2])
+        assert_quantity_allclose(desired[reference][0], f)
+        assert_quantity_allclose(desired[reference][1], I)
+        assert_quantity_allclose(desired[reference][2], g)
 
 
 

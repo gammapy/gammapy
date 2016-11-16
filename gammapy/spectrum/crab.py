@@ -65,7 +65,7 @@ class MeyerCrabModel(SpectralModel):
     @staticmethod
     def evaluate(energy, coefficients):
         polynomial = np.poly1d(coefficients)
-        log_energy = np.log10(energy.value)
+        log_energy = np.log10(energy.to('TeV').value)
         log_flux = polynomial(log_energy)
         flux = np.power(10, log_flux) * u.Unit('erg / (cm2 s)')
         return flux / energy ** 2
