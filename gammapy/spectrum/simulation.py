@@ -68,7 +68,7 @@ class SpectrumSimulation(object):
         return npred
 
     def run(self, seed):
-        """Simluate `~gammapy.spectrum.SpectrumObservationList`
+        """Simulate `~gammapy.spectrum.SpectrumObservationList`
 
         The seeds will be set as observation id. Previously produced results
         will be overwritten.
@@ -118,7 +118,7 @@ class SpectrumSimulation(object):
 
     def simulate_source_counts(self, rand):
         """Simulate source `~gammapy.spectrum.PHACountsSpectrum`
-        
+
         Source counts are added to the on vector.
 
         Parameters
