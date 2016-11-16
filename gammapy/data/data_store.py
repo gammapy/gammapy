@@ -693,7 +693,7 @@ class ObservationList(UserList):
         theta : `~astropy.coordinates.Angle`
             1-dim offset array for the output PSF.
             If none is given, the energy array of the PSF from the first
-             observation is used.
+            observation is used.
 
         Returns
         -------
@@ -722,7 +722,7 @@ class ObservationList(UserList):
     def make_mean_edisp(self, position, e_true, e_reco,
                         low_reco_threshold=Energy(0.002, "TeV"),
                         high_reco_threshold=Energy(150, "TeV")):
-        r"""Make mean edisp for a given position and a set of observations.
+        """Make mean edisp for a given position and a set of observations.
 
         Compute the mean edisp of a set of observations j at a given position
 
