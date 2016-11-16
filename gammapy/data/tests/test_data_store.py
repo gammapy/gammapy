@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
-from ...data import DataStore, DataManager
+from ...data import DataStore, DataManager, ObservationList
 from ...utils.testing import data_manager, requires_data, requires_dependency
+from ...utils.energy import Energy
 from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
@@ -121,17 +122,26 @@ def test_data_summary(data_manager):
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars,result", [
     (dict(energy=None, theta=None),
-     dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.05 * u.deg,
-          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(205215.42446175334, "1/sr"))),
+     dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV,
+          psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"),
+          psf_value=Quantity(205215.42446175334, "1/sr"))),
     (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=None),
-     dict(energy_shape=101, theta_shape=300, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.05 * u.deg,
-          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(119662.71915415104, "1/sr"))),
+     dict(energy_shape=101, theta_shape=300,
+          psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"),
+          psf_value=Quantity(119662.71915415104, "1/sr"))),
     (dict(energy=None, theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=18, theta_shape=1000, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.02 * u.deg,
-          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(23082.369133891403, "1/sr"))),
-    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=101, theta_shape=1000, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
-          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(27987.773313506143, "1/sr"))),
+     dict(energy_shape=18, theta_shape=1000,
+          psf_energy=2.5178505859375 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"),
+          psf_value=Quantity(23082.369133891403, "1/sr"))),
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
+          theta=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=101, theta_shape=1000,
+          psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"),
+          psf_value=Quantity(27987.773313506143, "1/sr"))),
 ])
 def test_make_psf(pars, result):
     position = SkyCoord(83.63, 22.01, unit='deg')
@@ -139,14 +149,52 @@ def test_make_psf(pars, result):
     data_store = DataStore.from_dir(store)
 
     obs1 = data_store.obs(23523)
-    psf = obs1.make_psf(position=position, energy=pars["energy"], theta=pars["theta"])
+    psf = obs1.make_psf(position=position, energy=pars["energy"],
+                        theta=pars["theta"])
 
     assert_allclose(psf.offset.shape, result["theta_shape"])
     assert_allclose(psf.energy.shape, result["energy_shape"])
     assert_allclose(psf.exposure.shape, result["energy_shape"])
-    assert_allclose(psf.psf_value.shape, (result["energy_shape"], result["theta_shape"]))
+    assert_allclose(psf.psf_value.shape, (result["energy_shape"],
+                                          result["theta_shape"]))
 
     assert_quantity_allclose(psf.offset[10], result["psf_theta"])
     assert_quantity_allclose(psf.energy[10], result["psf_energy"])
     assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])
     assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_make_mean_edisp(tmpdir):
+    position = SkyCoord(83.63, 22.01, unit='deg')
+    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
+    data_store = DataStore.from_dir(store)
+
+    obs1 = data_store.obs(23523)
+    obs2 = data_store.obs(23592)
+    obslist = ObservationList([obs1, obs2])
+
+    e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
+    e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
+    rmf = obslist.make_mean_edisp(position=position, e_true=e_true,
+                                  e_reco=e_reco)
+
+    assert len(rmf.e_true.nodes) == 80
+    assert len(rmf.e_reco.nodes) == 15
+    assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)
+
+    rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true,
+                                   e_reco=e_reco,
+                                   low_reco_threshold=Energy(1, "TeV"),
+                                   high_reco_threshold=Energy(60, "TeV"))
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(0.8, "TeV")) != 0)[0]
+    assert len(i2) == 0
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(61, "TeV")) != 0)[0]
+    assert len(i2) == 0
+    i = np.where(rmf.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    assert_equal(i, i2)
+    i = np.where(rmf.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    assert_equal(i, i2)
