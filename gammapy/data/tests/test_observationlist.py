@@ -28,6 +28,6 @@ def test_make_psftable():
 
     # Check that the mean PSF is consistent with the individual PSFs
     # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
-    assert_quantity_allclose(psf1_int.containment_radius(0.68), Angle(0.06012802199573515, 'deg'))
-    assert_quantity_allclose(psf2_int.containment_radius(0.68), Angle(0.05637627703540551, 'deg'))
-    assert_quantity_allclose(psf_tot_int.containment_radius(0.68), Angle(0.05818540290833362, 'deg'))
+    assert_quantity_allclose(psf1_int.containment_radius(0.68), Angle(0.051631020571253086, 'deg'))
+    assert_quantity_allclose(psf2_int.containment_radius(0.68), Angle(0.046057158496144834, 'deg'))
+    assert_quantity_allclose(psf_tot_int.containment_radius(0.68), Angle(0.04867483602155482, 'deg'))
