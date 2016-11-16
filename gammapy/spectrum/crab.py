@@ -15,138 +15,89 @@ to several publications:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.units import Unit
+from astropy import units as u
+from .models import PowerLaw, ExponentialCutoffPowerLaw, SpectralModel
+from ..extern.bunch import Bunch
 
 __all__ = [
-    'crab_flux',
-    'crab_integral_flux',
-    'crab_spectral_index',
-    'CRAB_DEFAULT_REFERENCE',
-    'CRAB_REFERENCES',
+    'CrabSpectrum',
 ]
 
 # HESS publication: 2006A&A...457..899A
-hess_pl = {'diff_flux': 3.45e-11,
+#'int_flux' = 2.26e-11
+hess_pl = {'amplitude': 3.45e-11 * u.Unit('1 / (cm2 s TeV)'),
            'index': 2.63,
-           'int_flux': 2.26e-11}
+           'reference' : 1 * u.TeV}
+
 # Note that for ecpl, the diff_flux is not
 # the differential flux at 1 TeV, that you
 # get by multiplying with exp(-e / cutoff)
-hess_ecpl = {'diff_flux': 3.76e-11,
+# int_flux: 2.27e-11
+hess_ecpl = {'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
              'index': 2.39,
-             'cutoff': 14.3,
-             'int_flux': 2.27e-11}
+             'lambda_': 1 / (14.3 * u.TeV),
+             'reference': 1 * u.TeV}
+
 # HEGRA publication : 2004ApJ...614..897A
-hegra = {'diff_flux': 2.83e-11,
+# int_flux': 1.75e-11
+hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
          'index': 2.62,
-         'int_flux': 1.75e-11}
+         'reference': 1 * u.TeV}
+
 # Meyer et al. publication: 2010arXiv1008.4524M
 # diff_flux and index were calculated numerically
 # by hand at 1 TeV as a finite differene
-meyer = {'diff_flux': 3.3457e-11,
+meyer = {'diff_flux': 3.3457e-11 * u.Unit('1 / (cm2 s TeV)'),
          'index': 2.5362,
          'int_flux': 2.0744e-11}
 
-CRAB_REFERENCES = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl']
 
-CRAB_DEFAULT_REFERENCE = 'meyer'
+#TODO: make this a general LogPolynomial spectral model
+class MeyerCrabModel(SpectralModel):
+    """
+    Log polynomial model as used by 2010arXiv1008.4524M.
+    """
+    def __init__(self):
+        coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475,
+                                 -0.53616, -10.2708])
+        self.parameters = Bunch(coefficients=coefficients)
+
+    @staticmethod
+    def evaluate(energy, coefficients):
+        polynomial = np.poly1d(coefficients)
+        log_energy = np.log10(energy.value)
+        log_flux = polynomial(log_energy)
+        flux = np.power(10, log_flux) * u.Unit('erg / (cm2 s)')
+        return flux / energy ** 2
 
 
-def crab_flux(energy=1, reference=CRAB_DEFAULT_REFERENCE):
-    """Differential Crab flux.
+class CrabSpectrum(object):
+    """
+    Crab spectral model.
 
-    See the ``gammapy.spectrum.crab`` module docstring for a description
-    of the available reference spectra.
+    The following references are available:
+
+        * 'meyer', 2010arXiv1008.4524M
+        * 'hegra', 2004ApJ...614..897A
+        * 'hess_pl', 2006A&A...457..899A
+        * 'hess_ecpl', 2006A&A...457..899A
 
     Parameters
     ----------
-    energy : array_like
-        Energy (TeV)
-    reference : {{'hegra', 'hess_pl', 'hess_ecpl', 'meyer'}}
-        Published Crab reference spectrum
-
-    Returns
-    -------
-    flux : array
-        Differential flux (cm^-2 s^-1 TeV^-1) at ``energy``
+    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl'}
+        Which reference to use for the spectral model.
     """
-    if reference == 'hegra':
-        f = hegra['diff_flux']
-        g = hegra['index']
-        return f * energy ** (-g)
-    elif reference == 'hess_pl':
-        f = hess_pl['diff_flux']
-        g = hess_pl['index']
-        return f * energy ** (-g)
-    elif reference == 'hess_ecpl':
-        f = hess_ecpl['diff_flux']
-        g = hess_ecpl['index']
-        e_c = hess_ecpl['cutoff']
-        return f * energy ** (-g) * np.exp(-energy / e_c)
-    elif reference == 'meyer':
-        # Meyer et al., 2010arXiv1008.4524M, Appendix D
-        p = np.array([-0.00449161, 0, 0.0473174,
-                      - 0.179475, -0.53616, -10.2708])
-        log_energy = np.log10(np.asarray(energy))
-        log_flux = np.poly1d(p)(log_energy)
-        flux = 10 ** log_flux
-        return Unit('erg').to('TeV') * flux / energy ** 2
-    else:
-        raise ValueError('Unknown reference: {0}'.format(reference))
-
-
-def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFERENCE):
-    """Integral Crab flux.
-
-    See the ``gammapy.spectrum.crab`` module docstring for a description
-    of the available reference spectra.
-
-    Parameters
-    ----------
-    energy_min, energy_max : array_like
-        Energy band (TeV)
-    reference : {{'hegra', 'hess_pl', 'hess_ecpl', 'meyer'}}
-        Published Crab reference spectrum
-
-    Returns
-    -------
-    flux : array
-        Integral flux (cm^-2 s^-1) in energy band ``energy_min`` to ``energy_max``
-    """
-    from scipy.integrate import quad
-    # TODO: How does one usually handle 0-dim and 1-dim
-    # arrays at the same time?
-    energy_min, energy_max = np.asarray(energy_min, dtype=float), np.asarray(energy_max, dtype=float)
-    npoints = energy_min.size
-    energy_min, energy_max = energy_min.reshape(npoints), energy_max.reshape(npoints)
-    I, I_err = np.empty_like(energy_min), np.empty_like(energy_max)
-    for ii in range(npoints):
-        I[ii], I_err[ii] = quad(crab_flux, energy_min[ii], energy_max[ii],
-                                (reference), epsabs=1e-20)
-    return I
-
-
-def crab_spectral_index(energy=1, reference=CRAB_DEFAULT_REFERENCE):
-    """Spectral index (positive number) at a given energy.
-
-    See the ``gammapy.spectrum.crab`` module docstring for a description
-    of the available reference spectra.
-
-    Parameters
-    ----------
-    energy : array_like
-        Energy (TeV)
-    reference : {{'hegra', 'hess_pl', 'hess_ecpl', 'meyer'}}
-        Published Crab reference spectrum
-
-    Returns
-    -------
-    spectral_index : array
-        Spectral index at ``energy``
-    """
-    # Compute spectral index as slope in log -- log
-    # as a finite difference
-    eps = 1 + 1e-3
-    f1 = crab_flux(energy, reference)
-    f2 = crab_flux(eps * energy, reference)
-    return (np.log10(f1) - np.log10(f2)) / np.log10(eps)
+    def __init__(self, reference='meyer'):
+        if reference == 'meyer':
+            model = MeyerCrabModel()
+        elif reference == 'hegra':
+            model = PowerLaw(**hegra)
+        elif reference == 'hess_pl':
+            model = PowerLaw(**hess_pl)
+        elif reference == 'hess_ecpl':
+            model = ExponentialCutoffPowerLaw(**hess_ecpl)
+        else:
+            raise ValueError("Unknown reference, choose one of the following:"
+                             "'meyer', 'hegra', 'hess_pl' or 'hess_ecpl'")
+        self.model = model
+        self.reference = reference

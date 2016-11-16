@@ -167,6 +167,26 @@ class SpectralModel(object):
         """
         raise NotImplementedError('{}'.format(self.__class__.__name__))
 
+    def spectral_index(self, energy):
+        """
+        Compute spectral index at given energy using a local powerlaw
+        approximisation.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy at which to estimate the index
+
+        Returns
+        -------
+        index : float
+            Estimated spectral index.
+        """
+        eps = np.sqrt(np.finfo(float).eps)
+        f1 = self(energy).value
+        f2 = self(energy * np.exp(-eps)).value
+        return (np.log(f2) - np.log(f1)) / eps
+
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
@@ -468,7 +488,7 @@ class TableModel(SpectralModel):
     log-space, returning 0 for energies outside of the limits of the provided
     energy array.
 
-    Class implementation follows closely what has been done in 
+    Class implementation follows closely what has been done in
     `naima.models.TableModel`
 
     Parameters
