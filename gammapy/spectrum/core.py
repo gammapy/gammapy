@@ -423,7 +423,7 @@ class PHACountsSpectrum(CountsSpectrum):
             backscal = self.backscal
         else:
             backscal = self.backscal.copy()
-            if (backscal.mean() == backscal).all():
+            if np.allclose(backscal.mean(), backscal):
                 backscal = backscal[0]
 
         kwargs = dict(
