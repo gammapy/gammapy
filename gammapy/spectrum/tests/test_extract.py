@@ -70,7 +70,7 @@ class TestSpectrumExtraction:
                                                   )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
-                                                 aeff=393356.2 * u.m ** 2
+                                                 aeff=412731.8043631101 * u.m ** 2
                                                  ))
     ])
     def test_extract(self, pars, results, target, obs, bkg, tmpdir):
