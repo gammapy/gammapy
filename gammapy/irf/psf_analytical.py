@@ -75,6 +75,9 @@ class EnergyDependentMultiGaussPSF(object):
         # Set attributes
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo,
+                                                           self.energy_hi)
+        self.energy = ebounds.log_centers
         self.theta = theta.to('deg')
         self.sigmas = sigmas
         self.norms = norms
@@ -188,7 +191,7 @@ class EnergyDependentMultiGaussPSF(object):
         theta = Angle(theta)
 
         # Find nearest energy value
-        i = np.argmin(np.abs(self.energy_hi - energy))
+        i = np.argmin(np.abs(self.energy - energy))
         j = np.argmin(np.abs(self.theta - theta))
 
         # TODO: Use some kind of interpolation to get PSF
@@ -380,8 +383,7 @@ class EnergyDependentMultiGaussPSF(object):
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
-        energies = ebounds.log_centers
+        energies = self.energy
 
         # Defaults and input handling
         if theta:
