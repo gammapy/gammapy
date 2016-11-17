@@ -112,6 +112,7 @@ class ASmooth(object):
 
     def run(self, images):
         """
+        Run image smoothing.
 
         Parameters
         ----------
