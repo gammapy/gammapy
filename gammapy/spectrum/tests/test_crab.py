@@ -35,7 +35,8 @@ class TestCrabSpectrum(object):
         g = crab_spectrum.model.spectral_index(e)
         assert_quantity_allclose(desired[reference][0], f)
         assert_quantity_allclose(desired[reference][1], I)
-        assert_quantity_allclose(desired[reference][2], g)
+        # for spectral indices rtol=1E-5 is more then sufficient
+        assert_quantity_allclose(desired[reference][2], g, rtol=1E-5)
 
 
 

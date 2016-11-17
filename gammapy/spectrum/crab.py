@@ -77,15 +77,25 @@ class CrabSpectrum(object):
 
     The following references are available:
 
-        * 'meyer', 2010arXiv1008.4524M
-        * 'hegra', 2004ApJ...614..897A
-        * 'hess_pl', 2006A&A...457..899A
-        * 'hess_ecpl', 2006A&A...457..899A
+    * 'meyer', 2010arXiv1008.4524M
+    * 'hegra', 2004ApJ...614..897A
+    * 'hess_pl', 2006A&A...457..899A
+    * 'hess_ecpl', 2006A&A...457..899A
 
     Parameters
     ----------
     reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl'}
         Which reference to use for the spectral model.
+
+    Examples
+    --------
+    Plot the 'hess_ecpl' reference crab spectrum between 1 TeV and 100 TeV:
+
+        >>> from gammapy.spectrum import CrabSpectrum
+        >>> import astropy.units as u
+        >>> crab_hess_ecpl = CrabSpectrum('hess_ecpl')
+        >>> crab_hess_ecpl.model.plot([1, 100] * u.TeV)
+
     """
     def __init__(self, reference='meyer'):
         if reference == 'meyer':
