@@ -96,6 +96,35 @@ class CrabSpectrum(object):
         >>> crab_hess_ecpl = CrabSpectrum('hess_ecpl')
         >>> crab_hess_ecpl.model.plot([1, 100] * u.TeV)
 
+    Use a reference crab spectrum as unit to measure flux:
+
+        >>> from astropy import units as u
+        >>> from gammapy.spectrum import CrabSpectrum
+        >>> from gammapy.spectrum.models import PowerLaw
+        >>>
+        >>> # define power law model
+        >>> amplitude = 1E-12 * u.Unit('1 / (cm2 s TeV)')
+        >>> index = 2.3
+        >>> reference = 1 * u.TeV
+        >>> pwl = PowerLaw(index, amplitude, reference)
+        >>>
+        >>> # define crab reference
+        >>> crab = CrabSpectrum('hess_pl').model
+        >>>
+        >>> # compute flux at 10 TeV in crab units
+        >>> energy = 10 * u.TeV
+        >>> flux_cu = (pwl(energy) / crab(energy)).to('%')
+        >>> print(flux_cu)
+        6.19699156377 %
+
+    And the same for integral fluxes:
+
+        >>> # compute integral flux in crab units
+        >>> emin, emax = [1, 10] * u.TeV
+        >>> flux_int_cu = (pwl.integral(emin, emax) / crab.integral(emin, emax)).to('%')
+        >>> print(flux_int_cu)
+        3.5350582166 %
+
     """
     def __init__(self, reference='meyer'):
         if reference == 'meyer':
