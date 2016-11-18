@@ -3,13 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 import numpy as np
 from astropy.table import Table
+from astropy.io import fits
 import astropy.units as u
 from .. import version
 from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..utils.scripts import make_path
 from ..utils.fits import (
     energy_axis_to_ebounds,
     fits_table_to_table,
     ebounds_to_energy_axis,
+    table_to_fits_table,
 )
 from ..data import EventList
 
@@ -440,3 +443,59 @@ class PHACountsSpectrum(CountsSpectrum):
         )
 
         return DataPHA(**kwargs)
+
+
+class PHACountsSpectrumList(list):
+    """List of `~gammapy.spectrum.PHACountsSpectrum
+    
+    All spectra must have the same energy binning. This represent the PHA type
+    II data format. See
+    https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
+    """
+    def write(self, outdir, **kwargs):
+        outdir = make_path(outdir)
+        self.to_hdulist().writeto(str(outdir), **kwargs)
+
+    def to_hdulist(self):
+        prim_hdu = fits.PrimaryHDU()
+        hdu = table_to_fits_table(self.to_table()) 
+        ebounds = energy_axis_to_ebounds(self[0].energy)
+        return fits.HDUList([prim_hdu, hdu, ebounds])
+
+    def to_table(self):
+        """Create `~astropy.table.Table`
+        """
+        is_bkg = self[0].is_bkg
+        nbins = self[0].energy.nbins
+        spec_num = np.empty([len(self), 1], dtype=np.int16)
+        channel = np.empty([len(self), nbins], dtype=np.int16)
+        counts = np.empty([len(self), nbins], dtype=np.int32)
+        quality = np.empty([len(self), nbins], dtype=np.int32)
+        backscal = np.empty([len(self), nbins], dtype=np.int32)
+        backfile = list()
+        for idx, pha in enumerate(self):
+            t = pha.to_table()
+            spec_num[idx] = pha.obs_id
+            channel[idx] = t['CHANNEL'].data
+            counts[idx] = t['COUNTS'].data
+            quality[idx] = t['QUALITY'].data
+            backscal[idx] = t['BACKSCAL'].data
+            backfile.append('bkg.fits[{}]'.format(idx))
+
+        names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
+        meta = self[0].to_table().meta
+        meta['hduclas4'] = 'TYPE:II'
+        meta['ancrfile'] = 'arf.fits'
+        meta['respfile'] = 'rmf.fits'
+        meta.pop('obs_id')
+
+        table = Table([spec_num, channel, counts, quality, backscal],
+                      names=names,
+                      meta=meta)
+
+        if not is_bkg:
+            table.meta.pop('backfile')
+            table['BACKFILE'] = backfile
+
+        return table
+
