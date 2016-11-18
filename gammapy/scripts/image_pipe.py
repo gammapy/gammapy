@@ -52,7 +52,7 @@ class SingleObsImageMaker(object):
         self.energy_band = energy_band
         self.offset_band = offset_band
         events = obs.events
-        self.obs_id = events.meta["OBS_ID"]
+        self.obs_id = events.table.meta["OBS_ID"]
         events = events.select_energy(self.energy_band)
         self.events = events.select_offset(self.offset_band)
 
@@ -78,7 +78,7 @@ class SingleObsImageMaker(object):
         """Fill the counts image for the events of one observation."""
         self.images['counts'] = SkyImage.empty_like(self.empty_image, name='counts')
 
-        if len(self.events) > self.ncounts_min:
+        if len(self.events.table) > self.ncounts_min:
             self.images['counts'].fill_events(self.events)
         else:
             log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
@@ -317,7 +317,7 @@ class StackedObsImageMaker(object):
             obs = self.data_store.obs(obs_id)
             obs_image = SingleObsImageMaker(obs, self.empty_image, self.energy_band, self.offset_band,
                                             self.exclusion_mask, self.ncounts_min)
-            if len(obs_image.events) <= self.ncounts_min:
+            if len(obs_image.events.table) <= self.ncounts_min:
                 continue
             else:
                 obs_image.counts_image()

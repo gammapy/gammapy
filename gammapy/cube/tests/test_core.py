@@ -213,11 +213,6 @@ def test_bin_events_in_cube():
     filename = ('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599'
                 '/run023523/hess_events_023523.fits.gz')
     events = EventList.read(filename)
-
-    # TODO: fix up the test dataset
-    # It's an old version that doesn't have units
-    events.table['ENERGY'].unit = 'TeV'
-
     meta = events.table.meta
     counts = SkyCube.empty(
         emin=0.5, emax=80, enumbins=8, eunit='TeV',

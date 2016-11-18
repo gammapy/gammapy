@@ -252,7 +252,7 @@ class SkyImage(object):
         Show example how to make an empty image and fill it.
         """
         if weights is not None:
-            weights = events[weights]
+            weights = events.table[weights]
 
         xx, yy = self.wcs_skycoord_to_pixel(events.radec)
         bins = self._bins_pix

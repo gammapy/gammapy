@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class EventList(object):
     """Event list.
 
-    Event list data is stored in `table` (`~astropy.table.Table`) data member.
+    Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
 
     TODO: merge this class with EventListDataset, which also holds a GTI extension.
 
@@ -76,6 +76,15 @@ class EventList(object):
     """
 
     def __init__(self, table):
+
+        # TODO: remove this temp fix once we change to a new test dataset
+        # This is a temp fix because this test dataset is used for many Gammapy tests
+        # but it doesn't have the units set properly
+        # '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+        if 'ENERGY' in table.colnames:
+            if not table['ENERGY'].unit:
+                table['ENERGY'].unit = 'TeV'
+
         self.table = table
 
     @classmethod
@@ -233,6 +242,35 @@ class EventList(object):
         """Event energies (`~astropy.units.Quantity`)"""
         return self.table['ENERGY'].quantity
 
+    def select_row_subset(self, row_specifier):
+        """Select table row subset.
+
+        Parameters
+        ----------
+        row_specifier : slice, int, or array of ints
+            Specification for rows to select,
+            passed on to ``self.table[row_specifier]``.
+
+        Returns
+        -------
+        event_list : `EventList`
+            New event list with table row subset selected
+
+        Examples
+        --------
+        Use a boolean mask as ``row_specifier``:
+
+            mask = events.table['FOO'] > 42
+            events2 = events.select_row_subset(mask)
+
+        Use row index array as ``row_specifier``:
+
+            idx = np.where(events.table['FOO'] > 42)[0]
+            events2 = events.select_row_subset(idx)
+        """
+        table = self.table[row_specifier]
+        return self.__class__(table=table)
+
     def select_energy(self, energy_band):
         """Select events in energy band.
 
@@ -257,9 +295,7 @@ class EventList(object):
         energy = self.energy
         mask = (energy_band[0] <= energy)
         mask &= (energy < energy_band[1])
-        table = self.table[mask]
-
-        return self.__class__(table=table)
+        return self.select_row_subset(mask)
 
     def select_offset(self, offset_band):
         """Select events in offset band.
@@ -273,12 +309,11 @@ class EventList(object):
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
-
         """
         offset = self.offset
         mask = (offset_band[0] <= offset)
         mask &= (offset < offset_band[1])
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
         """Select events in interval.
@@ -286,7 +321,7 @@ class EventList(object):
         time = self.time
         mask = (time_interval[0] <= time)
         mask &= (time < time_interval[1])
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_cone(self, center, radius):
         """Select events in sky circle.
@@ -306,7 +341,7 @@ class EventList(object):
         position = self.radec
         separation = center.separation(position)
         mask = separation < radius
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_ring(self, center, inner_radius, outer_radius):
         """Select events in sky circle.
@@ -325,14 +360,12 @@ class EventList(object):
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-
         position = self.radec
         separation = center.separation(position)
         mask1 = inner_radius < separation
         mask2 = separation < outer_radius
         mask = mask1 * mask2
-
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
         """Select events in sky box.
@@ -361,8 +394,7 @@ class EventList(object):
         if not isinstance(region, list):
             region = list([region])
         mask = self.filter_circular_region(region)
-        table = self.table[mask]
-        return self.__class__(table=table)
+        return self.select_row_subset(mask)
 
     def filter_circular_region(self, region):
         """Create selection mask for event in given circular regions
@@ -379,7 +411,6 @@ class EventList(object):
         index_array : `np.array`
             Index array of selected events
         """
-
         position = self.radec
         mask = np.array([], dtype=int)
         for reg in region:

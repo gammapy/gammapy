@@ -198,13 +198,14 @@ def test_select_events_outside_pie():
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
 
     # Create fake EventList with the radec of all the pixel in the empty image
-    events = EventList()
-    events["RA"] = [0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48]
-    events["DEC"] = [0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24]
+    table = Table()
+    table['RA'] = [0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48] * u.deg
+    table['DEC'] = [0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24] * u.deg
+    events = EventList(table=table)
 
     # Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
     idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
-    assert_allclose(np.arange(len(events)), idx)
+    assert_allclose(np.arange(len(events.table)), idx)
 
     # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
     idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
@@ -253,5 +254,6 @@ class TestEnergyOffsetBackgroundModel:
         offmax = multi_array1.counts.offset.max()
 
         # This is important since in the counts array the events > offsetmax will not be in the histogram.
-        nevents_sup_offmax = len(np.where(events[idx].offset > offmax)[0])
+        events2 = events.select_row_subset(idx)
+        nevents_sup_offmax = len(np.where(events2.offset > offmax)[0])
         assert_allclose(np.sum(multi_array1.counts.data), len(idx) - nevents_sup_offmax)

@@ -61,7 +61,7 @@ class TestEventListFermi:
 def test_EventListDataset():
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     dset = EventListDataset.read(filename)
-    dset.info()
+    assert 'Event list dataset info' in str(dset)
 
     assert len(dset.event_list.table) == 49
     # TODO: test all methods ... get ~ 100% test coverage

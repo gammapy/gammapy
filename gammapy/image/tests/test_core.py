@@ -185,9 +185,10 @@ class TestSkyImagePoisson:
 
         events = data_store.obs(obs_id=23523).events
 
-        counts = SkyImage.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                                yref=events.meta['DEC_OBJ'], dtype='int',
-                                coordsys='CEL')
+        counts = SkyImage.empty(nxpix=200, nypix=200,
+                                xref=events.table.meta['RA_OBJ'],
+                                yref=events.table.meta['DEC_OBJ'],
+                                dtype='int', coordsys='CEL')
         counts.fill_events(events)
         assert counts.data.sum() == 1233
         assert counts.data.shape == (200, 200)
