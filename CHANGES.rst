@@ -1,39 +1,61 @@
 .. _gammapy_1p0_release:
 
-1.0 (2016, unreleased)
-----------------------
-
-Summary
-+++++++
-
-Gammapy 1.0 will be released in fall 2016.
-
-For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
-
-.. _gammapy_0p5_release:
-
-0.5 (unreleased)
+1.0 (unreleased)
 ----------------
 
 Summary
 +++++++
 
-Gammapy 0.5 will be released very soon.
+For plans and progress for Gammapy 1.0, see https://github.com/gammapy/gammapy/milestones/1.0
 
-For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
+.. _gammapy_0p6_release:
+
+0.6 (unreleased)
+----------------
+
+Summary
++++++++
+
+For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
+
+Contributors
+++++++++++++
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
+
+- tbd
+
+.. _gammapy_0p5_release:
+
+0.5 (November 18, 2016)
+-----------------------
+
+Summary
++++++++
+
+- Released on November 18, 2016 (`Gammapy 0.5 on PyPI <https://pypi.python.org/pypi/gammapy/0.5>`__)
+- 12 contributors (5 new)
+- 7 months of work (from April 20, 2016 to November 18, 2016)
+- 181 pull requests (not all listed below)
+- Requires Python 2.7 or 3.4+, Numpy 1.8, Scipy 0.15, Astropy 1.2, Sherpa 4.8.2
 
 Highlights:
 
-- Spectrum analysis improvements
-- Image and cube analysis improvements
-- Detect module (CWT and TS map improvements)
-- A lightcurve class and variability test (see :ref:`time`)
-- Many improvements to IRF classes, especially the PSF classes.
-- We have removed ``gammapy.regions`` and have switched to the move complete
+- Tutorial-style getting started documentation as Jupyter notebooks
+- Removed ``gammapy.regions`` and have switched to the move complete
   and powerful `regions <http://astropy-regions.readthedocs.io/>`__ package
-  that will probably be added to Astropy core soon.
-- Improved documentation (2FHL reference dataset)
-- Improved test coverage
+  (planned to be added to the Astropy core within the next year).
+- ``gammapy.spectrum`` - Many 1-dimensional spectrum analysis improvements (e.g. spectral point computation)
+- ``gammapy.image`` - Many ``SkyImage`` improvements, adaptive ring background estimation, asmooth algorithm
+- ``gammapy.detect`` - CWT and TS map improvements
+- ``gammapy.time`` - A lightcurve class and variability test
+- ``gammapy.irf`` - Many improvements to IRF classes, especially the PSF classes.
+- Many improved tests and test coverage
 
 Contributors
 ++++++++++++
@@ -54,10 +76,30 @@ Contributors
 Pull requests
 +++++++++++++
 
-This list is incomplete. Many small improvements and bug fixes are not listed here.
+This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#778] Fix Gauss PSF energy bin issue (Léa Jouvin)
+- [#777] Rewrite crab spectrum as class (Axel Donath)
+- [#774] Add skyimage smooth method (Axel Donath)
+- [#772] Stack EDISP for a set of observations (Léa Jouvin)
+- [#767] Improve PSF checker and add a test (Christoph Deil)
+- [#766] Improve SkyCube convolution and npred computation (Axel Donath)
+- [#763] Add TablePSFChecker (Domenico Tiziani)
+- [#762] Add IRFStacker class (Léa Jouvin)
+- [#759] Improve SkyCube energy axes (Axel Donath)
+- [#754] Change EventList from Table subclass to attribute (Christoph Deil)
+- [#753] Improve SkyCube class (Axel Donath)
+- [#746] Add image asmooth algorithm (Axel Donath)
+- [#740] Add SpectrumObservationStacker (Johannes King)
+- [#739] Improve kernel background estimator (Axel Donath)
+- [#738] Fix reflected region pixel origin issue (Léa Jouvin)
+- [#733] Add spectral table model (Julien Lefaucheur)
+- [#731] Add energy dispersion RMF integration (Léa Jouvin)
+- [#719] Add adaptive ring background estimation (Axel Donath)
+- [#713] Improve ring background estimation (Axel Donath)
+- [#710] Misc image and cube cleanup (Christoph Deil)
 - [#709] Spectrum energy grouping (Christoph Deil)
 - [#679] Add flux point computation method (Johannes King)
 - [#677] Fermi 3FGL and 2FHL spectrum plotting (Axel Donath)
@@ -143,7 +185,7 @@ Contributors
 Pull requests
 +++++++++++++
 
-This list is incomplete. Many small improvements and bug fixes are not listed here.
+This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
 
