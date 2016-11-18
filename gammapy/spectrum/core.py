@@ -453,10 +453,12 @@ class PHACountsSpectrumList(list):
     https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
     """
     def write(self, outdir, **kwargs):
+        """Write to file"""
         outdir = make_path(outdir)
         self.to_hdulist().writeto(str(outdir), **kwargs)
 
     def to_hdulist(self):
+        """Create `~astropy.fits.HDUList`"""
         prim_hdu = fits.PrimaryHDU()
         hdu = table_to_fits_table(self.to_table()) 
         ebounds = energy_axis_to_ebounds(self[0].energy)
@@ -499,3 +501,31 @@ class PHACountsSpectrumList(list):
 
         return table
 
+    @classmethod
+    def read(cls, filename):
+        """Read from file"""
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename))
+        return cls.from_hdulist(hdulist)
+
+    @classmethod
+    def from_hdulist(cls, hdulist):
+        """Create from `~astropy.fits.HDUList`"""
+        counts_table = fits_table_to_table(hdulist[1])
+        kwargs = dict(
+            energy=ebounds_to_energy_axis(hdulist[2]),
+            livetime=hdulist[1].header['EXPOSURE'] * u.s,
+        )
+        if hdulist[1].header['HDUCLAS2'] == 'BKG':
+            kwargs.update(is_bkg=True)
+
+        counts_table = fits_table_to_table(hdulist[1])
+        speclist = cls()
+        for row in counts_table:
+            kwargs['data']=row['COUNTS'] * u.ct
+            kwargs['backscal']=row['BACKSCAL']
+            kwargs['quality']=row['QUALITY']
+            kwargs['obs_id']=row['SPEC_NUM']
+            speclist.append(PHACountsSpectrum(**kwargs))
+
+        return speclist 

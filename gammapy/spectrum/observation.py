@@ -522,7 +522,17 @@ class SpectrumObservationList(UserList):
                 obs = SpectrumObservation.read(phafile)
                 obs_list.append(obs)
         else:
-            1/0 
+            # NOTE: filenames for type II PHA files are hardcoded
+            on_vectors = PHACountsSpectrumList.read(directory / 'pha2.fits')
+            off_vectors = PHACountsSpectrumList.read(directory / 'bkg.fits')
+            aeff = EffectiveAreaTable.read(directory / 'arf.fits')
+            edisp = EnergyDispersion.read(directory / 'rmf.fits')
+
+            
+            for on, off in zip(on_vectors, off_vectors):
+                obs = SpectrumObservation(on_vector=on, off_vector=off,
+                                          aeff=aeff, edisp=edisp)
+                obs_list.append(obs)
 
         return obs_list
 
@@ -726,3 +736,4 @@ class SpectrumObservationStacker(object):
                                   edisp=self.stacked_edisp
                                   )
         self.stacked_obs = obs
+
