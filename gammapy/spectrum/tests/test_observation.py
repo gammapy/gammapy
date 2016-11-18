@@ -5,6 +5,7 @@ import astropy.units as u
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.scripts import make_path
 from ...spectrum import (
     SpectrumObservation,
     SpectrumObservationList,
@@ -77,9 +78,24 @@ class TestSpectrumObservationStacker:
 
         assert_allclose(npred_stacked.data, npred_summed)
 
-    def test_stack_method_on_list(self):
+
+@requires_data('gammapy-extra')
+class TestSpectrumObservationList:
+    def setup(self):
+        self.obs_list = SpectrumObservationList.read(
+            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+
+    def test_stack_method(self):
         stacked_obs = self.obs_list.stack()
         assert 'Observation summary report' in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
         assert_quantity_allclose(stacked_obs.aeff.data[10], 86443352.23037884 * u.cm ** 2)
         assert_quantity_allclose(stacked_obs.edisp.data[50, 52], 0.029627067949207702)
+        
+    def test_write(self, tmpdir):
+        self.obs_list.write(outdir=str(tmpdir), single_file=False)
+        written_files = make_path(tmpdir).glob('*')
+        assert len(list(written_files)) == len(self.obs_list) * 4
+
+        self.obs_list.write(outdir=str(tmpdir / 'single_file'),
+                            pha_typeII=True)
