@@ -15,7 +15,7 @@ class TestEventListHESS:
         self.events = EventList.read(filename)
 
     def test_basics(self):
-        self.events.info()
+        assert 'EventList' in str(self.events)
 
         assert len(self.events.table) == 49
         assert self.events.time[0].iso == '2004-10-14 00:08:39.214'
@@ -54,7 +54,7 @@ class TestEventListFermi:
         self.events = EventList.read(filename)
 
     def test_basics(self):
-        self.events.info()
+        assert 'EventList' in str(self.events)
 
 
 @requires_data('gammapy-extra')

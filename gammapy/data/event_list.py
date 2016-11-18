@@ -55,6 +55,11 @@ class EventList(object):
     - `energy` for ``ENERGY``
     - `galactic` for ``GLON``, ``GLAT``
 
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
     Examples
     --------
 
@@ -89,23 +94,21 @@ class EventList(object):
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
-    def info(self, file=None):
-        """Summary info string."""
-        if not file:
-            file = sys.stdout
-
-        print('EventList info:', file=file)
-        print('- Number of events: {}'.format(len(self.table)), file=file)
+    def __str__(self):
+        ss = 'EventList info:\n'
+        ss += '- Number of events: {}\n'.format(len(self.table))
         # TODO: add time, RA, DEC and if present GLON, GLAT info ...
 
-        print('- Median energy: {}'.format(np.median(self.energy)), file=file)
+        ss += '- Median energy: {}\n'.format(np.median(self.energy))
 
         if 'AZ' in self.table.colnames:
             # TODO: azimuth should be circular median
-            print('- Median azimuth: {}'.format(np.median(self.table['AZ'])), file=file)
+            ss += '- Median azimuth: {}\n'.format(np.median(self.table['AZ']))
 
         if 'ALT' in self.table.colnames:
-            print('- Median altitude: {}'.format(np.median(self.table['ALT'])), file=file)
+            ss += '- Median altitude: {}\n'.format(np.median(self.table['ALT']))
+
+        return ss
 
     @property
     def time(self):
@@ -680,14 +683,11 @@ class EventListDataset(object):
 
         return hdu_list
 
-    def info(self, file=None):
-        """Summary info string."""
-        if not file:
-            file = sys.stdout
-
-        print('Event list dataset info:', file=file)
-        self.event_list.info(file=file)
-        self.gti.summary(file=file)
+    def __str__(self):
+        ss = 'Event list dataset info:\n'
+        ss += str(self.event_list)
+        ss += str(self.gti)
+        return ss
 
     def check(self, checks='all'):
         """Check if format and content is ok.
