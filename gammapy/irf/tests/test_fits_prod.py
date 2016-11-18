@@ -71,10 +71,8 @@ class FitsProductionTester:
         assert_quantity_allclose(actual[0][4], desired)
 
 @pytest.mark.parametrize('prod', get_tested_prods())
+@requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_fits_prods(prod):
     tester = FitsProductionTester(prod)
     tester.test_all()
-
-
-
