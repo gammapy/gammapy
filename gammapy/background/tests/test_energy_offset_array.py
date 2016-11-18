@@ -50,20 +50,9 @@ def test_energy_offset_array_fill():
     dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     ev_list = data_store.load_all('events')
-
     array = make_test_array()
-    print(array.__dict__)
-    print(ev_list[0])
-    print(ev_list[0].table['ENERGY'])
-    print(ev_list[0].energy)
-    # import IPython; IPython.embed()
-
     array.fill_events(ev_list)
-
     # TODO: add some assert, e.g. counts in some bin with non-zero entries.
-
-
-test_energy_offset_array_fill()
 
 
 @requires_dependency('scipy')
