@@ -79,6 +79,7 @@ class TestSpectrumObservationStacker:
         assert_allclose(npred_stacked.data, npred_summed)
 
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumObservationList:
     def setup(self):
@@ -93,9 +94,13 @@ class TestSpectrumObservationList:
         assert_quantity_allclose(stacked_obs.edisp.data[50, 52], 0.029627067949207702)
         
     def test_write(self, tmpdir):
-        self.obs_list.write(outdir=str(tmpdir), single_file=False)
+        self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)
         written_files = make_path(tmpdir).glob('*')
         assert len(list(written_files)) == len(self.obs_list) * 4
 
-        self.obs_list.write(outdir=str(tmpdir / 'single_file'),
-                            pha_typeII=True)
+        outdir = tmpdir / 'pha_typeII'
+        self.obs_list.write(outdir=str(outdir), pha_typeII=True)
+         
+        test_list = SpectrumObservationList.read(outdir, pha_typeII=True)
+        assert str(test_list[0].total_stats) == str(self.obs_list[0].total_stats)
+

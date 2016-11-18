@@ -438,12 +438,12 @@ class SpectrumObservationList(UserList):
         return Quantity(np.sum(livetimes), 's')
 
     @property
-    def on_vector_list(self): 
+    def on_vector_list(self):
         """On `~gammapy.spectrum.PHACountsSpectrumList`"""
         return PHACountsSpectrumList([o.on_vector for o in self])
 
     @property
-    def off_vector_list(self): 
+    def off_vector_list(self):
         """Off `~gammapy.spectrum.PHACountsSpectrumList`"""
         return PHACountsSpectrumList([o.off_vector for o in self])
 
@@ -455,7 +455,7 @@ class SpectrumObservationList(UserList):
 
     def write(self, outdir=None, pha_typeII=False, **kwargs):
         """Create OGIP files
-        
+
         Each observation will be written as seperate set of FITS files by
         default. If the option ``pha_typeII`` is enabled all on and off counts
         spectra will be collected into one
@@ -463,7 +463,7 @@ class SpectrumObservationList(UserList):
         All datasets will be associated to the same response files.
         see
         https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
-        
+
         TODO: File written with the ``pha_typeII`` option are not read
         properly with sherpa. This could be a sherpa issue. Investigate and
         file issue.
@@ -490,12 +490,11 @@ class SpectrumObservationList(UserList):
             rmf_file = onlist.to_table().meta['respfile']
             self[0].aeff.write(outdir / arf_file, **kwargs)
             self[0].edisp.write(outdir / rmf_file, **kwargs)
-            
 
     @classmethod
     def read(cls, directory, pha_typeII=False):
         """Read multiple observations
-        
+
         This methods reads all PHA files contained in a given directory. Enable
         ``pha_typeII`` to read a PHA type II file.
 
@@ -528,7 +527,6 @@ class SpectrumObservationList(UserList):
             aeff = EffectiveAreaTable.read(directory / 'arf.fits')
             edisp = EnergyDispersion.read(directory / 'rmf.fits')
 
-            
             for on, off in zip(on_vectors, off_vectors):
                 obs = SpectrumObservation(on_vector=on, off_vector=off,
                                           aeff=aeff, edisp=edisp)
@@ -736,4 +734,3 @@ class SpectrumObservationStacker(object):
                                   edisp=self.stacked_edisp
                                   )
         self.stacked_obs = obs
-

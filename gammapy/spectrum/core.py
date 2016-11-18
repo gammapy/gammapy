@@ -226,6 +226,7 @@ class CountsSpectrum(NDDataArray):
 
         return spectral_index
 
+
 class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent
 
@@ -447,11 +448,12 @@ class PHACountsSpectrum(CountsSpectrum):
 
 class PHACountsSpectrumList(list):
     """List of `~gammapy.spectrum.PHACountsSpectrum
-    
+
     All spectra must have the same energy binning. This represent the PHA type
     II data format. See
     https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
     """
+
     def write(self, outdir, **kwargs):
         """Write to file"""
         outdir = make_path(outdir)
@@ -460,7 +462,7 @@ class PHACountsSpectrumList(list):
     def to_hdulist(self):
         """Create `~astropy.fits.HDUList`"""
         prim_hdu = fits.PrimaryHDU()
-        hdu = table_to_fits_table(self.to_table()) 
+        hdu = table_to_fits_table(self.to_table())
         ebounds = energy_axis_to_ebounds(self[0].energy)
         return fits.HDUList([prim_hdu, hdu, ebounds])
 
@@ -522,10 +524,10 @@ class PHACountsSpectrumList(list):
         counts_table = fits_table_to_table(hdulist[1])
         speclist = cls()
         for row in counts_table:
-            kwargs['data']=row['COUNTS'] * u.ct
-            kwargs['backscal']=row['BACKSCAL']
-            kwargs['quality']=row['QUALITY']
-            kwargs['obs_id']=row['SPEC_NUM']
+            kwargs['data'] = row['COUNTS'] * u.ct
+            kwargs['backscal'] = row['BACKSCAL']
+            kwargs['quality'] = row['QUALITY']
+            kwargs['obs_id'] = row['SPEC_NUM']
             speclist.append(PHACountsSpectrum(**kwargs))
 
-        return speclist 
+        return speclist
