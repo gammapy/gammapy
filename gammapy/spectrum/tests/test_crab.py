@@ -1,29 +1,43 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose
-from astropy.units import Unit
+import astropy.units as u
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency
-from ...spectrum import crab
+from ...spectrum import CrabSpectrum
 
 
-@requires_dependency('scipy')
-def test_evaluate():
-    e, e1, e2 = 2, 1, 1e3
+desired = dict()
+desired['meyer'] = [u.Quantity(5.572437502365652e-12, 'cm-2 s-1 TeV-1'),
+                    u.Quantity(2.0744425607240974e-11, 'cm-2 s-1'),
+                    2.631535530090332]
+desired['hegra'] = [u.Quantity(4.60349681e-12, 'cm-2 s-1 TeV-1'),
+                    u.Quantity(1.74688947e-11, 'cm-2 s-1'),
+                    2.62000000]
+desired['hess_pl'] = [u.Quantity(5.57327158e-12, 'cm-2 s-1 TeV-1'),
+                      u.Quantity(2.11653715e-11, 'cm-2 s-1'),
+                      2.63000000]
+desired['hess_ecpl'] = [u.Quantity(6.23714253e-12, 'cm-2 s-1 TeV-1'),
+                        u.Quantity(2.267957713046026e-11, 'cm-2 s-1'),
+                        2.529860258102417]
 
-    # This is just a test that the functions run
-    # These results are not verified
-    vals = dict()
-    vals['meyer'] = [5.57243750e-12, 2.07445434e-11, 2.63159544e+00]
-    vals['hegra'] = [4.60349681e-12, 1.74688947e-11, 2.62000000e+00]
-    vals['hess_pl'] = [5.57327158e-12, 2.11653715e-11, 2.63000000e+00]
-    vals['hess_ecpl'] = [6.23714253e-12, 2.26797344e-11, 2.52993006e+00]
 
-    for reference in crab.CRAB_REFERENCES:
-        f = crab.crab_flux(e, reference)
-        I = crab.crab_integral_flux(e1, e2, reference)
-        g = crab.crab_spectral_index(e, reference)
-        assert_allclose([f, I, g], vals[reference])
+class TestCrabSpectrum(object):
+
+    @pytest.mark.parametrize('reference', ['meyer', 'hegra', 'hess_pl', 'hess_ecpl'])
+    def test_evaluate(self, reference):
+        e = 2 * u.TeV
+        emin, emax = [1, 1E3] * u.TeV
+
+        crab_spectrum = CrabSpectrum(reference)
+        f = crab_spectrum.model(e)
+        I = crab_spectrum.model.integral(emin, emax)
+        g = crab_spectrum.model.spectral_index(e)
+        assert_quantity_allclose(desired[reference][0], f)
+        assert_quantity_allclose(desired[reference][1], I)
+        # for spectral indices rtol=1E-5 is more then sufficient
+        assert_quantity_allclose(desired[reference][2], g, rtol=1E-5)
+
 
 
 # TODO: move this to the docs (this is not a test)
