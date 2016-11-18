@@ -110,6 +110,7 @@ def event_lists():
     dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     event_lists = data_store.load_all('events')
+
     return event_lists
 
 

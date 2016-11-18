@@ -27,8 +27,12 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-class EventList(Table):
-    """Event list `~astropy.table.Table`.
+class EventList(object):
+    """Event list.
+
+    Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
+
+    TODO: merge this class with EventListDataset, which also holds a GTI extension.
 
     The most important reconstructed event parameters
     are available as the following columns:
@@ -50,56 +54,38 @@ class EventList(Table):
     - `radec` for ``RA``, ``DEC``
     - `energy` for ``ENERGY``
     - `galactic` for ``GLON``, ``GLAT``
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
+    Examples
+    --------
+
+    To load an example H.E.S.S. event list:
+
+    >>> from gammapy.data import EventList
+    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
+    >>> events = EventList.read(filename)
+
+    To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
+
+    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
+    >>> events = EventList.read(filename)
     """
 
-    def summary(self, file=None):
-        """Summary info string."""
-        if not file:
-            file = sys.stdout
+    def __init__(self, table):
 
-        print('-- Event info:', file=file)
-        print('- Number of events: {}'.format(len(self)), file=file)
-        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
-        print('- Median energy: {}'.format(np.median(self.energy)), file=file)
-        # TODO: azimuth should be circular median
-        print('- Median azimuth: {}'.format(np.median(self['AZ'])), file=file)
-        print('- Median altitude: {}'.format(np.median(self['ALT'])), file=file)
+        # TODO: remove this temp fix once we change to a new test dataset
+        # This is a temp fix because this test dataset is used for many Gammapy tests
+        # but it doesn't have the units set properly
+        # '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+        if 'ENERGY' in table.colnames:
+            if not table['ENERGY'].unit:
+                table['ENERGY'].unit = 'TeV'
 
-    @property
-    def time(self):
-        """Event times (`~astropy.time.Time`)
-
-        Notes
-        -----
-        Times are automatically converted to 64-bit floats.
-        With 32-bit floats times will be incorrect by a few seconds
-        when e.g. adding them to the reference time.
-        """
-        met_ref = time_ref_from_dict(self.meta)
-        met = Quantity(self['TIME'].astype('float64'), 'second')
-        time = met_ref + met
-        return time
-
-    @property
-    def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)
-
-        TODO: the `radec` and `galactic` properties should be cached as table columns
-        """
-        lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
-
-    @property
-    def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)
-
-        Note: uses the ``GLON`` and ``GLAT`` columns.
-        If only ``RA`` and ``DEC`` are present use the explicit
-        ``event_list.radec.to('galactic')`` instead.
-        """
-        self.add_galactic_columns()
-        lon, lat = self['GLON'], self['GLAT']
-        return SkyCoord(lon, lat, unit='deg', frame='galactic')
+        self.table = table
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -113,7 +99,61 @@ class EventList(Table):
         filename = make_path(filename)
         if 'hdu' not in kwargs:
             kwargs.update(hdu='EVENTS')
-        return super(EventList, cls).read(str(filename), **kwargs)
+
+        table = Table.read(str(filename), **kwargs)
+        return cls(table=table)
+
+    def __str__(self):
+        ss = 'EventList info:\n'
+        ss += '- Number of events: {}\n'.format(len(self.table))
+        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
+
+        ss += '- Median energy: {}\n'.format(np.median(self.energy))
+
+        if 'AZ' in self.table.colnames:
+            # TODO: azimuth should be circular median
+            ss += '- Median azimuth: {}\n'.format(np.median(self.table['AZ']))
+
+        if 'ALT' in self.table.colnames:
+            ss += '- Median altitude: {}\n'.format(np.median(self.table['ALT']))
+
+        return ss
+
+    @property
+    def time(self):
+        """Event times (`~astropy.time.Time`)
+
+        Notes
+        -----
+        Times are automatically converted to 64-bit floats.
+        With 32-bit floats times will be incorrect by a few seconds
+        when e.g. adding them to the reference time.
+        """
+        met_ref = time_ref_from_dict(self.table.meta)
+        met = Quantity(self.table['TIME'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
+
+    @property
+    def radec(self):
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)
+
+        TODO: the `radec` and `galactic` properties should be cached as table columns
+        """
+        lon, lat = self.table['RA'], self.table['DEC']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @property
+    def galactic(self):
+        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)
+
+        Note: uses the ``GLON`` and ``GLAT`` columns.
+        If only ``RA`` and ``DEC`` are present use the explicit
+        ``event_list.radec.to('galactic')`` instead.
+        """
+        self.add_galactic_columns()
+        lon, lat = self.table['GLON'], self.table['GLAT']
+        return SkyCoord(lon, lat, unit='deg', frame='galactic')
 
     def add_galactic_columns(self):
         """Add Galactic coordinate columns to the table.
@@ -122,12 +162,12 @@ class EventList(Table):
         - "GLON" - Galactic longitude (deg)
         - "GLAT" - Galactic latitude (deg)
         """
-        if set(['GLON', 'GLAT']).issubset(self.colnames):
+        if set(['GLON', 'GLAT']).issubset(self.table.colnames):
             return
 
         galactic = self.radec.galactic
-        self['GLON'] = galactic.l.degree
-        self['GLAT'] = galactic.b.degree
+        self.table['GLON'] = galactic.l.degree
+        self.table['GLAT'] = galactic.b.degree
 
     # TODO: the following properties are also present on the `DataStoreObservation` class.
     # This duplication should be removed.
@@ -135,7 +175,7 @@ class EventList(Table):
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)"""
-        return _earth_location_from_dict(self.meta)
+        return _earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):
@@ -143,7 +183,7 @@ class EventList(Table):
 
         The wall time, including dead-time.
         """
-        return Quantity(self.meta['ONTIME'], 'second')
+        return Quantity(self.table.meta['ONTIME'], 'second')
 
     @property
     def observation_live_time_duration(self):
@@ -154,7 +194,7 @@ class EventList(Table):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.meta['LIVETIME'], 'second')
+        return Quantity(self.table.meta['LIVETIME'], 'second')
 
     @property
     def observation_dead_time_fraction(self):
@@ -170,7 +210,7 @@ class EventList(Table):
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.meta['DEADC']
+        return 1 - self.table.meta['DEADC']
 
     @property
     def altaz(self):
@@ -179,13 +219,13 @@ class EventList(Table):
         location = self.observatory_earth_location
         altaz_frame = AltAz(obstime=time, location=location)
 
-        lon, lat = self['AZ'], self['ALT']
+        lon, lat = self.table['AZ'], self.table['ALT']
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
 
     @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        info = self.meta
+        info = self.table.meta
         lon, lat = info['RA_PNT'], info['DEC_PNT']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
@@ -196,18 +236,40 @@ class EventList(Table):
         center = self.pointing_radec
         offset = center.separation(position)
         return Angle(offset, unit='deg')
-        # return Angle(self['THETA'], unit='deg')
 
     @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)"""
-        energy = self['ENERGY']
-        try:
-            unit = self.meta['EUNIT']
-        except KeyError:
-            # Fermi lat event list format
-            unit = self.meta['DSUNI4']
-        return Quantity(energy, unit)
+        return self.table['ENERGY'].quantity
+
+    def select_row_subset(self, row_specifier):
+        """Select table row subset.
+
+        Parameters
+        ----------
+        row_specifier : slice, int, or array of ints
+            Specification for rows to select,
+            passed on to ``self.table[row_specifier]``.
+
+        Returns
+        -------
+        event_list : `EventList`
+            New event list with table row subset selected
+
+        Examples
+        --------
+        Use a boolean mask as ``row_specifier``:
+
+            mask = events.table['FOO'] > 42
+            events2 = events.select_row_subset(mask)
+
+        Use row index array as ``row_specifier``:
+
+            idx = np.where(events.table['FOO'] > 42)[0]
+            events2 = events.select_row_subset(idx)
+        """
+        table = self.table[row_specifier]
+        return self.__class__(table=table)
 
     def select_energy(self, energy_band):
         """Select events in energy band.
@@ -233,7 +295,7 @@ class EventList(Table):
         energy = self.energy
         mask = (energy_band[0] <= energy)
         mask &= (energy < energy_band[1])
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_offset(self, offset_band):
         """Select events in offset band.
@@ -247,12 +309,11 @@ class EventList(Table):
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
-
         """
         offset = self.offset
         mask = (offset_band[0] <= offset)
         mask &= (offset < offset_band[1])
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
         """Select events in interval.
@@ -260,7 +321,7 @@ class EventList(Table):
         time = self.time
         mask = (time_interval[0] <= time)
         mask &= (time < time_interval[1])
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_cone(self, center, radius):
         """Select events in sky circle.
@@ -280,7 +341,7 @@ class EventList(Table):
         position = self.radec
         separation = center.separation(position)
         mask = separation < radius
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_ring(self, center, inner_radius, outer_radius):
         """Select events in sky circle.
@@ -299,14 +360,12 @@ class EventList(Table):
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-
         position = self.radec
         separation = center.separation(position)
         mask1 = inner_radius < separation
         mask2 = separation < outer_radius
         mask = mask1 * mask2
-
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
         """Select events in sky box.
@@ -335,7 +394,7 @@ class EventList(Table):
         if not isinstance(region, list):
             region = list([region])
         mask = self.filter_circular_region(region)
-        return self[mask]
+        return self.select_row_subset(mask)
 
     def filter_circular_region(self, region):
         """Create selection mask for event in given circular regions
@@ -352,7 +411,6 @@ class EventList(Table):
         index_array : `np.array`
             Index array of selected events
         """
-
         position = self.radec
         mask = np.array([], dtype=int)
         for reg in region:
@@ -391,16 +449,16 @@ class EventList(Table):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        max_x = max(self['DETX'])
-        min_x = min(self['DETX'])
-        max_y = max(self['DETY'])
-        min_y = min(self['DETY'])
+        max_x = max(self.table['DETX'])
+        min_x = min(self.table['DETX'])
+        max_y = max(self.table['DETY'])
+        min_y = min(self.table['DETY'])
 
         x_edges = np.linspace(min_x, max_x, number_bins)
         y_edges = np.linspace(min_y, max_y, number_bins)
 
         count_image, x_edges, y_edges = np.histogram2d(
-            self[:]['DETY'], self[:]['DETX'],
+            self.table[:]['DETY'], self.table[:]['DETX'],
             bins=(x_edges, y_edges)
         )
 
@@ -479,10 +537,11 @@ class EventList(Table):
 
         ax = plt.gca() if ax is None else ax
 
-        first_event_time = np.min(self[:]['TIME'])
+        time = self.table['TIME']
+        first_event_time = np.min(time)
 
         # Note the events are not necessarily in time order
-        relative_event_times = self[:]['TIME'] - first_event_time
+        relative_event_times = time - first_event_time
 
         diffs = relative_event_times[1:] - relative_event_times[:-1]
 
@@ -655,14 +714,11 @@ class EventListDataset(object):
 
         return hdu_list
 
-    def info(self, file=None):
-        """Summary info string."""
-        if not file:
-            file = sys.stdout
-
-        print('Event list dataset info:', file=file)
-        self.event_list.summary(file=file)
-        self.gti.summary(file=file)
+    def __str__(self):
+        ss = 'Event list dataset info:\n'
+        ss += str(self.event_list)
+        ss += str(self.gti)
+        return ss
 
     def check(self, checks='all'):
         """Check if format and content is ok.
@@ -762,7 +818,7 @@ class EventListDatasetChecker(object):
         ok = True
 
         required_meta = ['TELESCOP', 'OBS_ID']
-        missing_meta = set(required_meta) - set(self.dset.event_list.meta)
+        missing_meta = set(required_meta) - set(self.dset.event_list.table.meta)
         if missing_meta:
             ok = False
             self.logger.error('Missing meta info: {}'.format(missing_meta))
@@ -801,14 +857,15 @@ class EventListDatasetChecker(object):
         ok = True
 
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
+        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
         telescope_met_refs = OrderedDict(
             FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2000-01-01T12:00:00.000'),
-            # TODO: Once CTA has specified their MET reference add check here
+            HESS=Time('2001-01-01T00:00:00'),
         )
 
-        telescope = self.dset.event_list.meta['TELESCOP']
-        met_ref = time_ref_from_dict(self.dset.event_list.meta)
+        meta = self.dset.event_list.table.meta
+        telescope = meta['TELESCOP']
+        met_ref = time_ref_from_dict(meta)
 
         if telescope in telescope_met_refs.keys():
             dt = (met_ref - telescope_met_refs[telescope])
@@ -871,7 +928,7 @@ class EventListDatasetChecker(object):
         event_list = self.dset.event_list
 
         for colname in ['RA', 'DEC', 'GLON', 'GLAT']:
-            if colname not in event_list.colnames:
+            if colname not in event_list.table.colnames:
                 # GLON / GLAT columns are optional ...
                 # so it's OK if they are not present ... just move on ...
                 self.logger.info('Skipping Galactic coordinate check. '
@@ -888,7 +945,7 @@ class EventListDatasetChecker(object):
         event_list = self.dset.event_list
 
         for colname in ['RA', 'DEC', 'AZ', 'ALT']:
-            if colname not in event_list.colnames:
+            if colname not in event_list.table.colnames:
                 # AZ / ALT columns are optional ...
                 # so it's OK if they are not present ... just move on ...
                 self.logger.info('Skipping AltAz coordinate check. '

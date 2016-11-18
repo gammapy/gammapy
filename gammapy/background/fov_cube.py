@@ -866,8 +866,8 @@ class FOVCube(object):
            Event list objects.
         """
         energy = events.energy.to('TeV').value
-        detx = np.array(events['DETX'])
-        dety = np.array(events['DETY'])
+        detx = np.array(events.table['DETX'])
+        dety = np.array(events.table['DETY'])
         sample = np.vstack([energy, detx, dety]).T
 
         bins = [self.energy_edges.value, self.coordy_edges.value, self.coordx_edges.value]

@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity
+from ..data import EventList
 from ..utils.energy import EnergyBounds
 from .energy_offset_array import EnergyOffsetArray
 from .fov_cube import _make_bin_edges_array, FOVCube
@@ -72,7 +73,7 @@ def _compute_pie_fraction(sources, pointing_position, fov_radius):
 
 
 def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
-    """The index table of the events outside the pie.
+    """Table row indices of events outside the pie.
 
     Parameters
     ----------
@@ -89,14 +90,14 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
     Returns
     -------
     idx : `~numpy.array`
-        coord of the events that are outside the pie
+        Table row indices of the events that are outside the pie
     """
     sources = _add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
     phi = Angle(sources["phi"])[0]
     separation = Angle(sources["separation"])[0]
     if separation > fov_radius:
-        return np.arange(len(events))
+        return np.arange(len(events.table))
     else:
         phi_min = phi - np.arctan(radius / separation)
         phi_max = phi + np.arctan(radius / separation)
@@ -668,7 +669,7 @@ class EnergyOffsetBackgroundModel(object):
             if excluded_sources:
                 pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
                 idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, fov_radius)
-                events = events[idx]
+                events = EventList(events.table[idx])
             else:
                 pie_fraction = 0
 

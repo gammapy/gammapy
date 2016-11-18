@@ -172,7 +172,7 @@ class SpectrumExtraction(object):
             log.info('Offset : {}\n'.format(offset))
 
             idx = self.target.on_region.contains(obs.events.radec)
-            on_events = obs.events[idx]
+            on_events = obs.events.select_row_subset(idx)
 
             counts_kwargs = dict(energy=self.e_reco,
                                  livetime=obs.observation_live_time_duration,

@@ -213,10 +213,12 @@ def test_bin_events_in_cube():
     filename = ('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599'
                 '/run023523/hess_events_023523.fits.gz')
     events = EventList.read(filename)
-    counts = SkyCube.empty(emin=0.5, emax=80, enumbins=8, eunit='TeV',
-                           nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                           yref=events.meta['DEC_OBJ'], dtype='int',
-                           coordsys='CEL')
+    meta = events.table.meta
+    counts = SkyCube.empty(
+        emin=0.5, emax=80, enumbins=8, eunit='TeV',
+        dtype='int', nxpix=200, nypix=200,
+        xref=meta['RA_OBJ'], yref=meta['DEC_OBJ'], coordsys='CEL',
+    )
 
     counts.fill_events(events)
 

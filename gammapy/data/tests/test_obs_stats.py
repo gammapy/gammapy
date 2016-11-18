@@ -72,8 +72,14 @@ class TestObservationStats(object):
 
     def test_to_dict(self, stats):
         data = stats.to_dict()
-        assert data['sigma'] == 16.973577445630323
+        assert data['n_on'] == 235
+        assert data['n_off'] == 107
+        assert_allclose(data['alpha'], 0.333, rtol=1e-2)
+        assert_allclose(data['sigma'], 16.973577445630323, rtol=1e-3)
 
     def test_stack(self, stats_stacked):
-        assert_allclose(stats_stacked.alpha, 0.333, rtol=1e-2)
-        assert_allclose(stats_stacked.sigma, 22.89225735104067, rtol=1e-3)
+        data = stats_stacked.to_dict()
+        assert data['n_on'] == 454
+        assert data['n_off'] == 226
+        assert_allclose(data['alpha'], 0.333, rtol=1e-2)
+        assert_allclose(data['sigma'], 22.89225735104067, rtol=1e-3)

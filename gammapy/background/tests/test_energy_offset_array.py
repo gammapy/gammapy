@@ -21,15 +21,13 @@ def make_test_array(dummy_data=False):
         # Define an EventList with three events
         table = Table()
         table['RA'] = [0.6, 0, 2]
-        table['DEC'] = [0, 1.5, 0]
-        table['ENERGY'] = [0.12, 22, 55]
+        table['RA'].unit = 'deg'
+        table['DEC'] = [0, 1.5, 0] * u.deg
+        table['ENERGY'] = [0.12, 22, 55] * u.TeV
         table.meta['RA_PNT'] = 0
         table.meta['DEC_PNT'] = 0
-        table.meta['EUNIT'] = 'TeV'
         events = EventList(table)
-        ev_list = [events]
-        # Fill the array with these three events
-        array.fill_events(ev_list)
+        array.fill_events([events])
         return array, events.offset, events.energy
     else:
         return array
@@ -52,10 +50,8 @@ def test_energy_offset_array_fill():
     dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     ev_list = data_store.load_all('events')
-
     array = make_test_array()
     array.fill_events(ev_list)
-
     # TODO: add some assert, e.g. counts in some bin with non-zero entries.
 
 
