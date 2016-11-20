@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from .core import SkyCube
@@ -38,12 +39,11 @@ def exposure_cube(pointing,
     """
     coordinates = ref_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)
-    offset = np.clip(offset, Angle(0, 'deg'), offset_max)
 
     energy = ref_cube.energies()
     exposure = aeff2d.evaluate(offset=offset, energy=energy)
     exposure *= livetime
-
+    exposure[:, offset >= offset_max] = 0
     expcube = SkyCube(data=exposure,
                       wcs=ref_cube.wcs,
                       energy_axis=ref_cube.energy_axis)
