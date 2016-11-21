@@ -262,11 +262,16 @@ class PowerLaw(SpectralModel):
         """
         pars = self.parameters
         val = -1 * pars.index + 2
+        if val == 0:
+            # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
+            # for reference
+            return pars.amplitude * pars.reference ** 2 * np.log(emax / emin)
+        else:
+            prefactor = pars.amplitude * pars.reference ** 2 / val
+            upper = (emax / pars.reference) ** val
+            lower = (emin / pars.reference) ** val
+            return prefactor * (upper - lower)
 
-        prefactor = pars.amplitude * pars.reference ** 2 / val
-        upper = (emax / pars.reference) ** val
-        lower = (emin / pars.reference) ** val
-        return prefactor * (upper - lower)
 
     def to_sherpa(self, name='default'):
         """Return Sherpa `~sherpa.models.PowLaw1d`
