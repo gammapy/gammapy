@@ -10,7 +10,7 @@ Spectral Fitting
 
 In the following you will see how to fit spectral data in OGIP format. The
 format is described at :ref:`gadf:ogip`. An example dataset is available in the
-`gammapy-extra repo <https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4_pha>`_.
+`gammapy-extra repo <https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4_pha>`_. For a description of the available fit statstics see :ref:`fit-statistics`.
 
 Getting Started
 ===============
@@ -39,7 +39,6 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
     fit.statistic = 'WStat'
     fit.fit()
     
-For a description of the available fit statistic see :ref:`fit-statistics`.
 You can check the fit results by looking at
 `~gammapy.spectrum.SpectrumFitResult` that is attached to the
 `~gammapy.spectrum.SpectrumFit` for each observation.
@@ -47,7 +46,7 @@ You can check the fit results by looking at
 
 .. code-block:: python
 
-    >>> print(fit.result[0].fit)
+    >>> print(fit.global_result)
 
     Fit result info 
     --------------- 
