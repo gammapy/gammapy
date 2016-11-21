@@ -262,7 +262,13 @@ class PowerLaw(SpectralModel):
         """
         pars = self.parameters
         val = -1 * pars.index + 2
-        if val == 0:
+
+        try:
+            val_zero = (val.n == 0)
+        except AttributeError:
+            val_zero = (val == 0)
+
+        if val_zero:
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
             return pars.amplitude * pars.reference ** 2 * np.log(emax / emin)
