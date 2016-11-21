@@ -7,7 +7,8 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 * ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SkyCube`` (``gtexpcube`` format)
 * ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
@@ -63,7 +64,8 @@ class SkyCube(object):
 
     """
 
-    def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, energy_axis=None,
+                 meta=None):
         # TODO: check validity of inputs
         self.name = name
         self.data = data
@@ -159,7 +161,8 @@ class SkyCube(object):
             data = Quantity(data, '1 / (cm2 MeV s sr)')
             name = 'flux'
         elif format == 'fermi-counts':
-            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
+            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'],
+                                               unit='keV')
             energy_axis = LogEnergyAxis(energy, mode='edges')
             data = Quantity(data, 'count')
             name = 'counts'
@@ -171,7 +174,8 @@ class SkyCube(object):
         else:
             raise ValueError('Not a valid cube fits format')
 
-        return cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis, meta=meta)
+        return cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis,
+                   meta=meta)
 
     def fill_events(self, events, weights=None):
         """
@@ -186,10 +190,11 @@ class SkyCube(object):
         """
         if weights is not None:
             weights = events[weights]
+        xx, yy = self.sky_image_ref.wcs_skycoord_to_pixel(events.radec)
+        zz = events.energy
+        bins = self.energy_axis.energy, self.sky_image_ref._bins_pix[0], \
+               self.sky_image_ref._bins_pix[1]
 
-        xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
-
-        bins = self._bins_energy, self.sky_image_ref._bins_pix[0], self.sky_image_ref._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
@@ -199,7 +204,8 @@ class SkyCube(object):
         return np.arange(self.data.shape[0] + 1) - 0.5
 
     @classmethod
-    def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', mode='edges', **kwargs):
+    def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', mode='edges',
+              **kwargs):
         """
         Create empty sky cube with log equal energy binning from the scratch.
 
@@ -222,11 +228,13 @@ class SkyCube(object):
         image = SkyImage.empty(**kwargs)
 
         if mode == 'edges':
-            energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins, eunit)
+            energy = EnergyBounds.equal_log_spacing(emin, emax, enumbins,
+                                                    eunit)
         elif mode == 'center':
             energy = Energy.equal_log_spacing(emin, emax, enumbins, eunit)
         else:
-            raise ValueError("Not a valid mode. Choose either 'center' or 'edges'.")
+            raise ValueError(
+                "Not a valid mode. Choose either 'center' or 'edges'.")
 
         energy_axis = LogEnergyAxis(energy, mode=mode)
         data = image.data * np.ones(enumbins).reshape((-1, 1, 1)) * u.Unit('')
@@ -248,7 +256,8 @@ class SkyCube(object):
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
         energy_axis = refcube.energy_axis
-        return cls(data=data, wcs=wcs, energy_axis=energy_axis, meta=refcube.meta)
+        return cls(data=data, wcs=wcs, energy_axis=energy_axis,
+                   meta=refcube.meta)
 
     def energies(self, mode='center'):
         """
@@ -290,7 +299,8 @@ class SkyCube(object):
             Tuple of x, y, z coordinates.
         """
         if not position.shape == energy.shape:
-            raise ValueError('Position and energy array must have the same shape.')
+            raise ValueError(
+                'Position and energy array must have the same shape.')
 
         x, y = self.sky_image_ref.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.world2pix(energy)
@@ -342,10 +352,14 @@ class SkyCube(object):
             ra_cube_lo = np.tile(ra[0:-1, 1:], (n_ebins, 1, 1))
             dec_cube_hi = np.tile(dec[1:, 0:-1], (n_ebins, 1, 1))
             dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
-            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
-                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(
+                ra[0:-1, 0:-1]) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(
+                ra[0:-1, 0:-1]) * u.TeV
+            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(),
+                             dec_cube_lo.ravel(), ehi_cube.ravel(),
+                             ra_cube_hi.ravel(), dec_cube_hi.ravel(),
+                             self.data.value.ravel(),
                              self.data.value.shape)
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
@@ -355,7 +369,8 @@ class SkyCube(object):
             dec_cube = np.tile(dec, (n_ebins, 1, 1))
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
-            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
+            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(),
+                          ra_cube.ravel(),
                           dec_cube.ravel(), self.data.value.ravel(),
                           self.data.value.shape)
 
@@ -452,8 +467,9 @@ class SkyCube(object):
         if interpolation:
             vals = self._interpolate_data(z, y, x)
         else:
-            vals = self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
-                             np.rint(x).astype('int')]
+            vals = self.data[
+                np.rint(z).astype('int'), np.rint(y).astype('int'),
+                np.rint(x).astype('int')]
         return vals
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
@@ -487,7 +503,8 @@ class SkyCube(object):
         elif viewer == 'ds9':
             raise NotImplementedError
 
-    def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
+    def sky_image_integral(self, emin, emax, nbins=10, per_decade=False,
+                           interpolation='linear'):
         """
         Integrate cube along the energy axes using the log-log trapezoidal rule.
 
@@ -512,7 +529,8 @@ class SkyCube(object):
         y, x = np.indices(self.data.shape[1:])
 
         if interpolation:
-            energy = Energy.equal_log_spacing(emin, emax, nbins, per_decade=per_decade)
+            energy = Energy.equal_log_spacing(emin, emax, nbins,
+                                              per_decade=per_decade)
             z = self.energy_axis.world2pix(energy).reshape(-1, 1, 1)
             y = np.arange(self.data.shape[1])
             x = np.arange(self.data.shape[2])
@@ -559,7 +577,8 @@ class SkyCube(object):
 
         data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
-        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
+        return self.__class__(name=self.name, data=data, wcs=wcs,
+                              meta=self.meta,
                               energy_axis=self.energy_axis)
 
     def convolve(self, kernels, **kwargs):
@@ -639,7 +658,8 @@ class SkyCube(object):
         """
         from .images import SkyCubeImages
         images = [self.sky_image(energy) for energy in self.energy_axis.energy]
-        return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
+        return SkyCubeImages(self.name, images, self.wcs,
+                             self.energy_axis.energy)
 
     def to_spectrum(self, region, weights=None):
         """
