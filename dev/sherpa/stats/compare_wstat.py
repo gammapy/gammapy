@@ -10,22 +10,32 @@ from gammapy.stats.tests.test_fit_statistics import test_data
 
 def calc_wstat_sherpa(mu_sig, n_on, n_off, alpha):
     import sherpa.stats as ss
+    from sherpa.astro.data import DataPHA
+    from sherpa.models import Const1D
     wstat = ss.WStat()
 
-    # This is how sherpa want the background
-    # We assume equal exposure
-    bkg = dict(bkg=n_off,
-               exposure_time=[1, 1],
-               backscale_ratio=1. / alpha,
-               data_size=1
-               )
+    model = Const1D()
+    model.c0 = mu_sig
+    data = DataPHA(counts=np.atleast_1d(n_on),
+                   name='dummy',
+                   channel=np.atleast_1d(1),
+                   backscal=1,
+                   exposure=1)
+    background = DataPHA(counts=np.atleast_1d(n_off),
+                         name='dummy background',
+                         channel=np.atleast_1d(1),
+                         backscal=np.atleast_1d(1. / alpha),
+                         exposure=1)
 
-    stat = wstat.calc_stat(n_on,
-                           mu_sig,
-                           None,
-                           extra_args=bkg)
+    data.set_background(background, 1)
+
+    # Docstring for ``calc_stat``
+    # https://github.com/sherpa/sherpa/blob/fe8508818662346cb6d9050ba676e23318e747dd/sherpa/stats/__init__.py#L219
+
+    stat = wstat.calc_stat(model=model, data=data)
     print("Sherpa stat: {}".format(stat[0]))
     print("Sherpa fvec: {}".format(stat[1]))
+
 
 
 def calc_wstat_gammapy(mu_sig, n_on, n_off, alpha):
@@ -98,16 +108,16 @@ def test_case(args):
     calc_wstat_xspec(mu_sig, n_on, n_off, alpha)
 
 if __name__ == "__main__":
-    
-    if (len(sys.argv) != 5) & (len(sys.argv) !=2):
+
+    if (len(sys.argv) != 5) & (len(sys.argv) != 2):
         print('Usage: {} <mu_sig> <n_on> <n_off> <alpha>'.format(sys.argv[0]))
         print('Usage: {} ref-vals-for-test'.format(sys.argv[0]))
         sys.exit()
-    
+
     if len(sys.argv) == 5:
         test_case(sys.argv)
     else:
-        td = test_data() 
+        td = test_data()
         for mu_sig, n_on, n_off, alpha in zip(
-            td['mu_sig'], td['n_on'], td['n_off'], td['alpha']):
-               test_case([None, mu_sig, n_on, n_off, alpha])
+                td['mu_sig'], td['n_on'], td['n_off'], td['alpha']):
+            test_case([None, mu_sig, n_on, n_off, alpha])

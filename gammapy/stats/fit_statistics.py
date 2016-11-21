@@ -148,23 +148,24 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
     n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
     alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
     mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
-   
+
     mu_bkg = _get_wstat_background(n_on, n_off, alpha, mu_sig)
-    
-    term1 = mu_sig + (1 + alpha) * mu_bkg 
+
+    term1 = mu_sig + (1 + alpha) * mu_bkg
     term2 = - n_on * np.log(mu_sig + alpha * mu_bkg)
-    term3 = - n_off * np.log(mu_bkg) 
-    
-    stat = 2 * (term1 + term2 + term3)
+    term3 = - n_off * np.log(mu_bkg)
+
+    stat = term1 + term2 + term3
 
     if extra_terms:
         stat += _get_wstat_extra_terms(n_on, n_off)
 
-        # special case n_on or n_off = 0 
+        # special case n_on or n_off = 0
         special_case = _get_wstat_special_case(n_on, n_off, alpha, mu_sig)
         stat = np.where(special_case != 0, special_case, stat)
 
-    return stat
+    return 2 * stat
+
 
 def _get_wstat_background(n_on, n_off, alpha, mu_sig):
     """Calculate nuisance parameter mu_bkg (profile likelihood)
@@ -178,8 +179,9 @@ def _get_wstat_background(n_on, n_off, alpha, mu_sig):
     # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
     # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
     # mu_bkg = np.where(temp_plus > 0, temp_plus, temp_minus)
-    mu_bkg = (C + D)/ (2 * alpha * (alpha + 1))
+    mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
     return mu_bkg
+
 
 def _get_wstat_extra_terms(n_on, n_off):
     """Calculate additional term that can be added to wstat
@@ -187,8 +189,9 @@ def _get_wstat_extra_terms(n_on, n_off):
     see:
     https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
-    term = - n_on*(1-np.log(n_on)) - n_off*(1-np.log(n_off))
-    return 2 * term
+    term = - n_on * (1 - np.log(n_on)) - n_off * (1 - np.log(n_off))
+    return term
+
 
 def _get_wstat_special_case(n_on, n_off, alpha, mu_sig):
     """Calculate corner cases for wstat
@@ -197,22 +200,22 @@ def _get_wstat_special_case(n_on, n_off, alpha, mu_sig):
     https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
     special_case = np.zeros(len(n_on))
-    indices =  np.where((n_on == 0) | (n_off == 0))
+    indices = np.where((n_on == 0) | (n_off == 0))
     for idx in indices[0]:
         if n_on[idx] == 0:
-            first_term =  mu_sig[idx] 
+            first_term = mu_sig[idx]
             second_term = - n_off[idx] * np.log(1 / (1 + alpha[idx]))
         else:
-            if mu_sig[idx] < (n_on[idx] * alpha[idx])/(alpha[idx] + 1):
-                first_term  = - mu_sig[idx] / alpha[idx] 
+            if mu_sig[idx] < (n_on[idx] * alpha[idx]) / (alpha[idx] + 1):
+                first_term = - mu_sig[idx] / alpha[idx]
                 second_term = - n_on[idx] * np.log(alpha[idx] / (1 + alpha[idx]))
             else:
                 first_term = mu_sig[idx]
                 second_term = n_on[idx] * (np.log(n_on[idx]) - np.log(mu_sig[idx]) - 1)
-        
-        
-        special_case[idx] = first_term + second_term 
+
+        special_case[idx] = first_term + second_term
     return special_case
+
 
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
