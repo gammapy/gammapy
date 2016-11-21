@@ -36,10 +36,10 @@ def xspec_wstat(t_s, t_b, m, S, B):
     if S == 0:
         W = t_s * m - B * log(t_b / t)
     elif B == 0:
-        if M < S / t_s:
+        if m < S / t:
             W = -t_b * m - S * log(t_s / t)
         else:
-            temp = log(S) - log(t * m) - 1
+            temp = log(S) - log(t_s * m) - 1
             W = t_s * m + S * temp
     else:
         d = xspec_wstat_d(t_s, t_b, m, S, B)
