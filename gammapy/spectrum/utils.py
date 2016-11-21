@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import numpy as np
 from astropy.units import Quantity
 
@@ -51,12 +52,14 @@ class LogEnergyAxis(object):
         x = np.log10(energy.to(self.energy.unit).value)
 
         # Interpolate in `x`
-        pix = np.interp(x, self.x, self.pix)
+        pix = np.interp(x, self.x, self.pix, left=self.pix[0] - 0.5,
+                        right=self.pix[1] + 0.5)
 
         return np.atleast_1d(pix)
 
     def pix2world(self, pix):
         """TODO: document.
+        change interp for left and right no?
         """
         # Interpolate in `x = log10(energy)`
         x = np.interp(pix, self.pix, self.x)
@@ -294,7 +297,8 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         # powerlaw integration
         trapzs = np.where(
             np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
+                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (
+            b + 1),
             x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
 
     tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
