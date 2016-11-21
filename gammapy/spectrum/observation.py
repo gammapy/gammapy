@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
+from astropy.table import Table
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
@@ -11,7 +12,7 @@ from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..irf import IRFStacker
-from .core import CountsSpectrum, PHACountsSpectrum
+from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
 from .utils import calculate_predicted_counts
 
 __all__ = [
@@ -427,12 +428,24 @@ class SpectrumObservationList(UserList):
 
     @property
     def obs_id(self):
+        """List of observations ids"""
         return [o.obs_id for o in self]
 
     @property
     def total_livetime(self):
+        """Summed livetime"""
         livetimes = [o.livetime.to('s').value for o in self]
         return Quantity(np.sum(livetimes), 's')
+
+    @property
+    def on_vector_list(self):
+        """On `~gammapy.spectrum.PHACountsSpectrumList`"""
+        return PHACountsSpectrumList([o.on_vector for o in self])
+
+    @property
+    def off_vector_list(self):
+        """Off `~gammapy.spectrum.PHACountsSpectrumList`"""
+        return PHACountsSpectrumList([o.off_vector for o in self])
 
     def stack(self):
         """Return stacked `~gammapy.spectrum.SpectrumObservation`"""
@@ -440,36 +453,85 @@ class SpectrumObservationList(UserList):
         stacker.run()
         return stacker.stacked_obs
 
-    def write(self, outdir=None, **kwargs):
+    def write(self, outdir=None, pha_typeII=False, **kwargs):
         """Create OGIP files
+
+        Each observation will be written as seperate set of FITS files by
+        default. If the option ``pha_typeII`` is enabled all on and off counts
+        spectra will be collected into one
+        `~gammapy.spectrum.PHACountsSpectrumList` and written to one FITS file.
+        All datasets will be associated to the same response files.
+        see
+        https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
+
+        TODO: File written with the ``pha_typeII`` option are not read
+        properly with sherpa. This could be a sherpa issue. Investigate and
+        file issue.
 
         Parameters
         ----------
         outdir : str, `~gammapy.extern.pathlib.Path`, optional
             Output directory, default: pwd
+        pha_typeII : bool, default: False
+            Collect PHA datasets into one file
         """
-        for obs in self:
-            obs.write(outdir=outdir, **kwargs)
+        outdir = make_path(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
+        if not pha_typeII:
+            for obs in self:
+                obs.write(outdir=outdir, **kwargs)
+        else:
+            onlist = self.on_vector_list
+            onlist.write(outdir / 'pha2.fits', **kwargs)
+            offlist = self.off_vector_list
+            # This filename is hardcoded since it is a column in the on list
+            offlist.write(outdir / 'bkg.fits', **kwargs)
+            arf_file = onlist.to_table().meta['ancrfile']
+            rmf_file = onlist.to_table().meta['respfile']
+            self[0].aeff.write(outdir / arf_file, **kwargs)
+            self[0].edisp.write(outdir / rmf_file, **kwargs)
 
     @classmethod
-    def read(cls, directory):
+    def read(cls, directory, pha_typeII=False):
         """Read multiple observations
 
-        This methods reads all PHA files contained in a given directory
+        This methods reads all PHA files contained in a given directory. Enable
+        ``pha_typeII`` to read a PHA type II file.
+
+        see
+        https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
+
+        TODO: Replace with more sophisticated file managment system
 
         Parameters
         ----------
         directory : `~gammapy.extern.pathlib.Path`
             Directory holding the observations
+        pha_typeII : bool, default: False
+            Read PHA typeII file
         """
         obs_list = cls()
         directory = make_path(directory)
-        # glob default order depends on OS, so we call sorted() explicitely to
-        # get reproducable results
-        filelist = sorted(directory.glob('pha*.fits'))
-        for phafile in filelist:
-            obs = SpectrumObservation.read(phafile)
-            obs_list.append(obs)
+
+        if not pha_typeII:
+            # glob default order depends on OS, so we call sorted() explicitely to
+            # get reproducable results
+            filelist = sorted(directory.glob('pha*.fits'))
+            for phafile in filelist:
+                obs = SpectrumObservation.read(phafile)
+                obs_list.append(obs)
+        else:
+            # NOTE: filenames for type II PHA files are hardcoded
+            on_vectors = PHACountsSpectrumList.read(directory / 'pha2.fits')
+            off_vectors = PHACountsSpectrumList.read(directory / 'bkg.fits')
+            aeff = EffectiveAreaTable.read(directory / 'arf.fits')
+            edisp = EnergyDispersion.read(directory / 'rmf.fits')
+
+            for on, off in zip(on_vectors, off_vectors):
+                obs = SpectrumObservation(on_vector=on, off_vector=off,
+                                          aeff=aeff, edisp=edisp)
+                obs_list.append(obs)
+
         return obs_list
 
 
