@@ -46,8 +46,8 @@ def xspec_wstat(t_s, t_b, m, S, B):
         f = xspec_wstat_f(S, B, t_s, t_b, m, d)
         term1 = t_s * m + t * f - S * log(t_s * m + t_s * f)
         term2 = -B * log(t_b * f) - S * (1 - log(S)) - B * (1 - log(B))
-        W = 2 * (term1 + term2)
-    return W
+        W = term1 + term2
+    return 2 * W
 
 def xspec_wstat_limit(t_s, t_b, m, f, S, B):
     term1 = S - t_s * m - t_s * f
