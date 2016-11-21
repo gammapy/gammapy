@@ -40,8 +40,8 @@ TODO
 
 Poisson data with background measurement
 ----------------------------------------
-If you not only have a  measurement of counts  ``n_on`` in the signal region,
-but also a measurement ``n_off`` in a background region you can write down the
+If you not only have a  measurement of counts  :math:`n_{on}` in the signal region,
+but also a measurement :math:`n_{off}` in a background region you can write down the
 likelihood formula as 
 
 .. math::
@@ -97,7 +97,7 @@ where
 The best-fit value of the WStat as defined now contains no information about
 the goodness of the fit. In order to provide such an estimate, we can add a
 constant term to the WStat, namely twice the log likelihood of the data
-``n_on`` and ``n_off`` under the expectation of ``n_on`` and ``n_off``,
+:math:`n_{on}` and :math:`n_{off}` under the expectation of :math:`n_{on}` and :math:`n_{off}`,
 
 .. math::
 
@@ -125,9 +125,64 @@ Hence, we rewrite WStat as:
     - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})}))
 
 
-TODO: Explain how to handle corner cases
+The above formular is obviously undefined if :math:`n_{on}` or :math:`n_{off}`
+are equal to zero. This case is treated as follows.
 
+If :math:`n_{on} = 0`
 
+.. math::
+
+    W = \mu_{sig} - n_{on} \log{\frac{1}{1 + \alpha}}
+
+Otherwise, two cases are distinguished.
+
+If 
+:math:`mu_{sig} < n_{on} (\frac{\alpha}{1 + \alpha})`
+
+.. math::
+
+    W = -\mu_{sig} (\frac{1}{\alpha}) - n_{on} \log{(\frac{\alpha}{1 + alpha})}
+
+else
+
+.. math::
+
+    W = \mu_{sig} + n_{on}(\log{(n_{on})} - \log{(mu_{sig})} - 1)
+
+The following table gives an overview over values that WStat takes in different
+scenarios
+
+    >>> from gammapy.stats import wstat    
+    >>> from astropy.table import Table
+    >>> table = Table()
+    >>> table['n_on'] = [0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 10, 20, 100]
+    >>> table['n_off'] = [0, 1, 1, 10 , 10, 0, 5, 5, 20, 40, 2, 70, 10]
+    >>> table['alpha'] = [0.01, 0.01, 0.5, 0.1 , 0.2, 0.2, 0.2, 0.01, 0.4, 0.4,
+    ...                   0.2, 0.1, 0.6]
+    >>> table['mu_sig'] = [0.1, 0.95, 1.4, 0.2, 0.1, 5.2, 6.2, 4.1, 6.4, 4.9, 10.2,
+    ...                    16.9, 102.5]
+    >>> table['wstat'] = wstat(n_on=table['n_on'],
+    ...                        n_off=table['n_off'],
+    ...                        alpha=table['alpha'],
+    ...                        mu_sig=table['mu_sig'])
+    >>> table['wstat'].format = '.3f'
+    >>> table.pprint()
+    n_on n_off alpha mu_sig wstat
+    ---- ----- ----- ------ -----
+       0     0  0.01    0.1  0.10
+       0     1  0.01   0.95  0.96
+       0     1   0.5    1.4  1.81
+       0    10   0.1    0.2  1.15
+       0    10   0.2    0.1  1.92
+       5     0   0.2    5.2  0.00
+       5     5   0.2    6.2  0.74
+       5     5  0.01    4.1  0.16
+       5    20   0.4    6.4  7.13
+       5    40   0.4    4.9 14.58
+      10     2   0.2   10.2  0.03
+      20    70   0.1   16.9  0.66
+     100    10   0.6  102.1  0.60
+     
 Further references
 ------------------
 * `Sherpa statistics page <http://cxc.cfa.harvard.edu/sherpa/statistics>`_ 
