@@ -46,7 +46,10 @@ class LogEnergyAxis(object):
         self.mode = mode
 
     def world2pix(self, energy):
-        """TODO: document.
+        """
+        pix value fix to self.pix[0]-0.5 (respectively self.pix[-1]+0.5) if the
+        energy is lower than the min energy range (respectively greater than
+        the max energy range).
         """
         # Convert `energy` to `x = log10(energy)`
         x = np.log10(energy.to(self.energy.unit).value)
@@ -58,14 +61,15 @@ class LogEnergyAxis(object):
         return np.atleast_1d(pix)
 
     def pix2world(self, pix):
-        """TODO: document.
-        change interp for left and right no?
+        """
+        Energy fix to nan if the pix value are outside the pixel range
         """
         # Interpolate in `x = log10(energy)`
         x = np.interp(pix, self.pix, self.x)
 
         # Convert `x` to `energy`
-        energy = Quantity(10 ** x, self.energy.unit)
+        energy = Quantity(10 ** x, self.energy.unit, left=np.nan,
+                        right=np.nan)
 
         return energy
 
