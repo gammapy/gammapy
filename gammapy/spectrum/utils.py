@@ -65,11 +65,11 @@ class LogEnergyAxis(object):
         Energy fix to nan if the pix value are outside the pixel range
         """
         # Interpolate in `x = log10(energy)`
-        x = np.interp(pix, self.pix, self.x)
+        x = np.interp(pix, self.pix, self.x, left=np.nan,
+                        right=np.nan)
 
         # Convert `x` to `energy`
-        energy = Quantity(10 ** x, self.energy.unit, left=np.nan,
-                        right=np.nan)
+        energy = Quantity(10 ** x, self.energy.unit)
 
         return energy
 
