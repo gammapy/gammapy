@@ -17,7 +17,7 @@ def get_tested_prods():
         test_obs = 23523,
         aeff_ref = 267252.7018649852 * u.m**2,
         psf_type = 'psf_3gauss',
-        psf_ref = 175.35700075369178 / u.sr,
+        psf_ref = 106.31031643387723 / u.sr,
         edisp_ref = 2.059754779846907)
     )
     prods.append(dict(
