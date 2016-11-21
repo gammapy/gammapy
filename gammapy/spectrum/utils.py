@@ -297,8 +297,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         # powerlaw integration
         trapzs = np.where(
             np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (
-            b + 1),
+                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
             x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
 
     tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
