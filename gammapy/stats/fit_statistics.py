@@ -107,7 +107,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     return stat
 
 
-def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
+def wstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
     r"""W statistic, for Poisson data with Poisson background.
 
     For a definition of WStat see :ref:`wstat`.
@@ -124,7 +124,7 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
         Signal expected counts
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
-        parameter
+        parameter, default: True
 
     Returns
     -------
@@ -144,13 +144,12 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
     # t_b * m_b = mu_bkg
     # t_s / t_b = alpha
 
-    n_on = np.asanyarray(n_on, dtype=np.float64)
-    n_off = np.asanyarray(n_off, dtype=np.float64)
-    alpha = np.asanyarray(alpha, dtype=np.float64)
-    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
+    n_on = np.atleast_1d(np.asanyarray(n_on, dtype=np.float64))
+    n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
+    alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
+    mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
    
     mu_bkg = _get_wstat_background(n_on, n_off, alpha, mu_sig)
-
     
     term1 = mu_sig + (1 + alpha) * mu_bkg 
     term2 = - n_on * np.log(mu_sig + alpha * mu_bkg)
@@ -160,6 +159,10 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
 
     if extra_terms:
         stat += _get_wstat_extra_terms(n_on, n_off)
+
+        # special case n_on or n_off = 0 
+        special_case = _get_wstat_special_case(n_on, n_off, alpha, mu_sig)
+        stat = np.where(special_case != 0, special_case, stat)
 
     return stat
 
@@ -186,6 +189,30 @@ def _get_wstat_extra_terms(n_on, n_off):
     """
     term = - n_on*(1-np.log(n_on)) - n_off*(1-np.log(n_off))
     return 2 * term
+
+def _get_wstat_special_case(n_on, n_off, alpha, mu_sig):
+    """Calculate corner cases for wstat
+
+    see
+    https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    """
+    special_case = np.zeros(len(n_on))
+    indices =  np.where((n_on == 0) | (n_off == 0))
+    for idx in indices[0]:
+        if n_on[idx] == 0:
+            first_term =  mu_sig[idx] 
+            second_term = - n_off[idx] * np.log(1 / (1 + alpha[idx]))
+        else:
+            if mu_sig[idx] < (n_on[idx] * alpha[idx])/(alpha[idx] + 1):
+                first_term  = - mu_sig[idx] / alpha[idx] 
+                second_term = - n_on[idx] * np.log(alpha[idx] / (1 + alpha[idx]))
+            else:
+                first_term = mu_sig[idx]
+                second_term = n_on[idx] * (np.log(n_on[idx]) - np.log(mu_sig[idx]) - 1)
+        
+        
+        special_case[idx] = first_term + second_term 
+    return special_case
 
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
