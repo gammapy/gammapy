@@ -80,9 +80,12 @@ These are the steps you should do on the day of the release:
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
 #. Update the Gammapy stable branch to point to the new tag
    as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
-#. Add the new version on readthedocs.
-#. Make a pull request that updates the Gammapy version number in this file to trigger a conda package build:
-   https://github.com/astropy/conda-builder-affiliated/blob/master/requirements.txt
+#. Add the new version on readthedocs: https://readthedocs.org/dashboard/gammapy/versions/
+   This will automatically trigger a build for that version, which you can check here:
+   https://readthedocs.org/projects/gammapy/builds/
+#. Update the Gammapy conda package by updating these files:
+     - https://github.com/astropy/conda-channel-astropy/blob/master/requirements.yml
+     - https://github.com/astropy/conda-channel-astropy/blob/master/recipe_templates/gammapy/meta.yaml
 
 Post release
 ------------
