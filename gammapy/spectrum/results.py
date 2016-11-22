@@ -294,7 +294,7 @@ class SpectrumFitResult(object):
         return butterfly
 
     @property
-    def stat_per_bin(self):
+    def stats_per_bin(self):
         """`~np.array` of fit statistics per bin
 
         Computed with `~gammapy.stats`. Check that the sum is equal to the
