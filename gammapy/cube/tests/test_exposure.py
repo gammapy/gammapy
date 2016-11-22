@@ -27,14 +27,13 @@ def test_exposure_cube():
     offset_max = Angle(2.2, 'deg')
     exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube,
                              offset_max=offset_max)
-    exp_ref = Quantity(4.7e8, 'm^2 s')
+    exp_ref = Quantity(4.7e8, 'm2 s')
     coordinates = exp_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)
 
     assert np.shape(exp_cube.data)[1:] == np.shape(count_cube.data)[1:]
     assert np.shape(exp_cube.data)[0] == np.shape(count_cube.data)[0]
     assert exp_cube.wcs == count_cube.wcs
-    assert_equal(count_cube.energy_axis.energy, exp_cube.energy_axis.energy)
     assert_quantity_allclose(np.nanmax(exp_cube.data), exp_ref, rtol=100)
     assert exp_cube.data.unit == exp_ref.unit
     assert exp_cube.data[:, offset > offset_max].sum() == 0

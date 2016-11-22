@@ -21,7 +21,6 @@ class TestSkyCubeImages:
         assert_array_equal(image_list.images[0].data, sky_cube_original.data[0])
 
         assert_array_equal(sky_cube_restored.data, sky_cube_original.data)
-        assert_array_equal(sky_cube_restored.energy_axis.energy, sky_cube_original.energy_axis.energy)
         assert sky_cube_restored.name == sky_cube_original.name
         assert sky_cube_restored.wcs == sky_cube_original.wcs
 
@@ -47,8 +46,7 @@ class TestBlockReduceHDU:
     def test_cube(self, operation):
         for energy in self.energy:
             image = self.cube.sky_image(energy)
-            idx = int(self.cube.energy_axis.world2pix(energy))
-            layer = self.cube.data[idx]
+            layer = image.data
             layer_hdu = fits.ImageHDU(data=layer, header=image.wcs.to_header())
             image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
