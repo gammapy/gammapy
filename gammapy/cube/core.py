@@ -338,14 +338,10 @@ class SkyCube(object):
             ra_cube_lo = np.tile(ra[0:-1, 1:], (n_ebins, 1, 1))
             dec_cube_hi = np.tile(dec[1:, 0:-1], (n_ebins, 1, 1))
             dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(
-                ra[0:-1, 0:-1]) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(
-                ra[0:-1, 0:-1]) * u.TeV
-            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(),
-                             dec_cube_lo.ravel(), ehi_cube.ravel(),
-                             ra_cube_hi.ravel(), dec_cube_hi.ravel(),
-                             self.data.value.ravel(),
+            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
+            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
+            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
+                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
                              self.data.value.shape)
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
@@ -355,8 +351,7 @@ class SkyCube(object):
             dec_cube = np.tile(dec, (n_ebins, 1, 1))
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
-            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(),
-                          ra_cube.ravel(),
+            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
                           dec_cube.ravel(), self.data.value.ravel(),
                           self.data.value.shape)
 
@@ -453,9 +448,8 @@ class SkyCube(object):
         if interpolation:
             vals = self._interpolate_data(z, y, x)
         else:
-            vals = self.data[
-                np.rint(z).astype('int'), np.rint(y).astype('int'),
-                np.rint(x).astype('int')]
+            vals = self.data[np.rint(z).astype('int'), np.rint(y).astype('int'),
+                             np.rint(x).astype('int')]
         return vals
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
@@ -489,8 +483,7 @@ class SkyCube(object):
         elif viewer == 'ds9':
             raise NotImplementedError
 
-    def sky_image_integral(self, emin, emax, nbins=10, per_decade=False,
-                           interpolation='linear'):
+    def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
         """
         Integrate cube along the energy axes using the log-log trapezoidal rule.
 
@@ -515,8 +508,7 @@ class SkyCube(object):
         y, x = np.indices(self.data.shape[1:])
 
         if interpolation:
-            energy = Energy.equal_log_spacing(emin, emax, nbins,
-                                              per_decade=per_decade)
+            energy = Energy.equal_log_spacing(emin, emax, nbins, per_decade=per_decade)
             z = self.energy_axis.world2pix(energy).reshape(-1, 1, 1)
             y = np.arange(self.data.shape[1])
             x = np.arange(self.data.shape[2])
@@ -563,8 +555,7 @@ class SkyCube(object):
 
         data = Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
-        return self.__class__(name=self.name, data=data, wcs=wcs,
-                              meta=self.meta,
+        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
                               energy_axis=self.energy_axis)
 
     def convolve(self, kernels, **kwargs):
@@ -644,8 +635,7 @@ class SkyCube(object):
         """
         from .images import SkyCubeImages
         images = [self.sky_image(energy) for energy in self.energy_axis.energy]
-        return SkyCubeImages(self.name, images, self.wcs,
-                             self.energy_axis.energy)
+        return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
 
     def to_spectrum(self, region, weights=None):
         """
