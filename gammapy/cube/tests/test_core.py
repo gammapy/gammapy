@@ -31,7 +31,7 @@ class TestSkyCube(object):
         name = 'Axel'
         data = self.sky_cube.data
         wcs = self.sky_cube.wcs
-        energy = self.sky_cube.energy_axis.energy
+        energy = self.sky_cube.energies()
 
         sky_cube = SkyCube(name, data, wcs, energy)
         assert sky_cube.data.shape == (30, 21, 61)

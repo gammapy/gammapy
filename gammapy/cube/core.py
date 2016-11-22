@@ -263,12 +263,8 @@ class SkyCube(object):
         if mode == 'center':
             z = np.arange(self.data.shape[0])
         elif mode == 'edges':
-            # Currently LogEnergyAxis can't extrapolate so we raise an erros
-            # instead of returning incorrect values
-            if len(self.energy_axis.energy) == self.data.shape[0]:
-                raise NotImplementedError
             z = np.arange(self.data.shape[0] + 1) - 0.5
-        return self.energy_axis.pix2world(z)
+        return self.energy_axis.wcs_pix2world(z)
 
     def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
@@ -285,12 +281,8 @@ class SkyCube(object):
         (x, y, z) : tuple
             Tuple of x, y, z coordinates.
         """
-        if not position.shape == energy.shape:
-            raise ValueError('Position and energy array must have the same shape.')
-
         x, y = self.sky_image_ref.wcs_skycoord_to_pixel(position)
-        z = self.energy_axis.world2pix(energy)
-
+        z = self.energy_axis.wcs_world2pix(energy)
         # TODO: check order, so that it corresponds to data axis order
         return (x, y, z)
 
@@ -312,8 +304,7 @@ class SkyCube(object):
             Tuple of (`~astropy.coordinates.SkyCoord`, `~astropy.unit.Quantity`).
         """
         position = self.sky_image_ref.wcs_pixel_to_skycoord(x, y)
-        energy = self.energy_axis.pix2world(z)
-        energy = Quantity(energy, self.energy_axis.energy.unit)
+        energy = self.energy_axis.wcs_pix2world(z)
         return (position, energy)
 
     def to_sherpa_data3d(self, dstype='Data3D'):
@@ -377,7 +368,7 @@ class SkyCube(object):
             2-dim sky image
         """
         # TODO: should we pass something in SkyImage (we speak about meta)?
-        z = self.energy_axis.world2pix(energy)
+        z = self.energy_axis.wcs_world2pix(energy)
 
         if interpolation:
             y = np.arange(self.data.shape[1])
@@ -474,7 +465,7 @@ class SkyCube(object):
             max_ = self.data.shape[0] - 1
 
             def show_image(idx):
-                energy = self.energy_axis.pix2world(idx)
+                energy = self.energy_axis.wcs_pix2world(idx)
                 image = self.sky_image(energy)
                 image.data = image.data.value
                 image.show(**kwargs)
@@ -509,14 +500,14 @@ class SkyCube(object):
 
         if interpolation:
             energy = Energy.equal_log_spacing(emin, emax, nbins, per_decade=per_decade)
-            z = self.energy_axis.world2pix(energy).reshape(-1, 1, 1)
+            z = self.energy_axis.wcs_world2pix(energy).reshape(-1, 1, 1)
             y = np.arange(self.data.shape[1])
             x = np.arange(self.data.shape[2])
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)
         else:
-            zmin = np.rint(self.energy_axis.world2pix(emin)).astype('int')
-            zmax = np.rint(self.energy_axis.world2pix(emax)).astype('int')
+            zmin = np.rint(self.energy_axis.wcs_world2pix(emin)).astype('int')
+            zmax = np.rint(self.energy_axis.wcs_world2pix(emax)).astype('int')
             energy = self.energies()[zmin:zmax]
             data = self.data[zmin:zmax]
         integral = _trapz_loglog(data, energy, axis=0)
@@ -634,8 +625,9 @@ class SkyCube(object):
         """Convert to `~gammapy.cube.SkyCubeImages`.
         """
         from .images import SkyCubeImages
-        images = [self.sky_image(energy) for energy in self.energy_axis.energy]
-        return SkyCubeImages(self.name, images, self.wcs, self.energy_axis.energy)
+        energies = self.energies(mode='center')
+        images = [self.sky_image(energy) for energy in energies]
+        return SkyCubeImages(self.name, images, self.wcs, energies)
 
     def to_spectrum(self, region, weights=None):
         """
@@ -692,7 +684,7 @@ class SkyCube(object):
         ss += " n_lat:    {:5d}  type_lat:    {:15s}  unit_lat:    {}\n".format(
             self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
         ss += " n_energy: {:5d}  unit_energy: {}\n".format(
-            self.data.shape[0], self.energy_axis.energy.unit)
+            self.data.shape[0], self.energy_axis._eunit)
 
         return ss
 
