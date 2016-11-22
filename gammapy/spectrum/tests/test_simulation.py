@@ -40,21 +40,21 @@ class TestSpectrumSimulation:
 
     def test_without_background(self):
         self.sim.simulate_obs(seed=23)
-        assert self.sim.obs.on_vector.total_counts == 156
+        assert self.sim.obs.on_vector.total_counts == 156 * u.ct
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
         self.sim.alpha = self.alpha
         self.sim.simulate_obs(seed=23)
-        assert self.sim.obs.on_vector.total_counts == 525
-        assert self.sim.obs.off_vector.total_counts == 1096
+        assert self.sim.obs.on_vector.total_counts == 525 * u.ct
+        assert self.sim.obs.off_vector.total_counts == 1096 * u.ct
 
     def test_observations_list(self):
         seeds = np.arange(5)
         self.sim.run(seed=seeds)
         assert (self.sim.result.obs_id == seeds).all()
-        assert self.sim.result[0].on_vector.total_counts == 169
-        assert self.sim.result[1].on_vector.total_counts == 159
-        assert self.sim.result[2].on_vector.total_counts == 151
-        assert self.sim.result[3].on_vector.total_counts == 163
-        assert self.sim.result[4].on_vector.total_counts == 185
+        assert self.sim.result[0].on_vector.total_counts == 169 * u.ct
+        assert self.sim.result[1].on_vector.total_counts == 159 * u.ct
+        assert self.sim.result[2].on_vector.total_counts == 151 * u.ct
+        assert self.sim.result[3].on_vector.total_counts == 163 * u.ct
+        assert self.sim.result[4].on_vector.total_counts == 185 * u.ct
