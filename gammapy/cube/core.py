@@ -186,17 +186,13 @@ class SkyCube(object):
         """
         if weights is not None:
             weights = events[weights]
+        xx, yy = self.sky_image_ref.wcs_skycoord_to_pixel(events.radec)
+        zz = events.energy
+        bins = self.energies(mode='edges'), self.sky_image_ref._bins_pix[0], self.sky_image_ref._bins_pix[1]
 
-        xx, yy, zz = self.wcs_skycoord_to_pixel(events.radec, events.energy)
-
-        bins = self._bins_energy, self.sky_image_ref._bins_pix[0], self.sky_image_ref._bins_pix[1]
         data = np.histogramdd([zz, yy, xx], bins, weights=weights)[0]
 
         self.data = self.data + data
-
-    @property
-    def _bins_energy(self):
-        return np.arange(self.data.shape[0] + 1) - 0.5
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', mode='edges', **kwargs):
