@@ -53,16 +53,18 @@ class CountsSpectrum(NDDataArray):
     interp_kwargs = dict(bounds_error=False, method='nearest')
 
     def __init__(self, **kwargs):
-        data = kwargs['data']
-        if isinstance(data, u.Quantity):
-            if data.unit.is_equivalent('ct'):
-                pass
-            elif data.unit.is_equivalent(u.Unit('')):
-                data = data.value
-            else:
-                raise ValueError('Invalid data unit {}'.format(data.unit))
+        # Special case this to set data unit to counts for coherence
+        if 'data' in kwargs.keys():
+            data = kwargs['data']
+            if isinstance(data, u.Quantity):
+                if data.unit.is_equivalent('ct'):
+                    pass
+                elif data.unit.is_equivalent(u.Unit('')):
+                    data = data.value
+                else:
+                    raise ValueError('Invalid data unit {}'.format(data.unit))
+            kwargs['data'] = u.Quantity(data, 'ct')
 
-        kwargs['data'] = u.Quantity(data, 'ct')
         self = super(CountsSpectrum, self).__init__(**kwargs)        
 
     @classmethod
