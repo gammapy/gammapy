@@ -9,6 +9,7 @@ from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
 from ..utils.energy import EnergyBounds
+import ..stats
 
 __all__ = [
     'SpectrumFitResult',
@@ -291,13 +292,32 @@ class SpectrumFitResult(object):
 
     @property
     def expected_source_counts(self):
-        """`~gammapy.spectrum.CountsSpectrum` of predicted counts
+        """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
         energy = self.obs.on_vector.energy
         data = self.npred * u.ct
         idx = np.isnan(data)
         data[idx] = 0
         return CountsSpectrum(data=data, energy=energy)
+
+    @property
+    def expected_on_counts(self):
+        """`~gammapy.spectrum.CountsSpectrum` of predicted on counts
+        """
+        mu_on = self.expected_source_counts.copy()
+        mu_on.data += self.obs.background_vector.data
+        return mu_on
+
+    @property
+    def residuals(self):
+        """Residuals
+
+        Prediced on counts - expected on counts
+        """
+        resspec = self.expected_on_counts.copy()
+        resspec.data -= self.obs.on_vector.data
+        return resspec
+
 
     def plot(self, mode='wstat'):
         """Standard debug plot.
@@ -306,51 +326,61 @@ class SpectrumFitResult(object):
         source and background counts (CStat) or prediced source counts plus a
         background estimate from off regions (WStat). The ``mode`` parameter
         controls this.
+
+        Parameters
+        ----------
+        mode : str {'wstat'}
+            Analysis mode
         """
         if mode != 'wstat':
             raise NotImplementedError('Mode {}'.format(mode))
 
         ax0, ax1 = get_plot_axis()
 
-        self.expected_source_counts.plot(ax=ax0,
+        self.plot_counts(ax0)
+        self.plot_residuals(ax1)
+
+        return ax0, ax1
+
+    def plot_counts(self, ax):
+        """Plot predicted and detected counts"""
+
+        self.expected_source_counts.plot(ax=ax,
                                          fmt='none',
                                          label='mu_source')
 
-        self.obs.background_vector.plot(ax=ax0,
+        self.obs.background_vector.plot(ax=ax,
                                         label='mu_background',
                                         fmt='none',
                                         energy_unit='TeV')
 
-        mu_on = self.expected_source_counts.copy()
-        mu_on.data = self.expected_source_counts.data + self.obs.background_vector.data
-        mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
+        self.expected_on_counts.plot(ax=ax, label='mu_on', energy_unit='TeV')
 
-        self.obs.on_vector.plot(ax=ax0,
+        self.obs.on_vector.plot(ax=ax,
                                 label='n_on',
                                 show_poisson_errors=True,
                                 fmt='none',
                                 energy_unit='TeV')
 
-        ax0.legend(numpoints=1)
-        ax0.set_title('')
+        ax.legend(numpoints=1)
+        ax.set_title('')
 
-        resspec = mu_on.copy()
-        resspec.data = mu_on.data - self.obs.on_vector.data
-        resspec.plot(ax=ax1, ecolor='black', fmt='none')
-        xx = ax1.get_xlim()
+    def plot_residuals(self, ax):
+        """Plot residuals"""
+
+        self.residuals.plot(ax=ax, ecolor='black', fmt='none')
+        xx = ax.get_xlim()
         yy = [0, 0]
-        ax1.plot(xx, yy, color='black')
+        ax.plot(xx, yy, color='black')
 
-        ymax = 1.4 * max(resspec.data.value)
-        ax1.set_ylim(-ymax, ymax)
+        ymax = 1.4 * max(self.residuals.data.value)
+        ax.set_ylim(-ymax, ymax)
 
         xmin = self.fit_range.to('TeV').value[0] * 0.8
         xmax = self.fit_range.to('TeV').value[1] * 1.2
-        ax1.set_xlim(xmin, xmax)
-        ax1.set_xlabel('Energy [{}]'.format('TeV'))
-        ax1.set_ylabel('ON (Predicted - Detected)')
-
-        return ax0, ax1
+        ax.set_xlim(xmin, xmax)
+        ax.set_xlabel('Energy [{}]'.format('TeV'))
+        ax.set_ylabel('ON (Predicted - Detected)')
 
 
 class SpectrumResult(object):
