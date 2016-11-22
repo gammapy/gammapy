@@ -35,6 +35,18 @@ TEST_MODELS = [
     ),
 
     dict(
+        name='powerlaw',
+        model=PowerLaw(
+            index=2 * u.Unit(''),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV
+        ),
+        val_at_2TeV=u.Quantity(1.0, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(3.6, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(9.210340371976184, 'TeV cm-2 s-1'),
+    ),
+
+    dict(
         name='powerlaw2',
         model=PowerLaw2(
             amplitude=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
