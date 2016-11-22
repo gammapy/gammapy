@@ -24,6 +24,7 @@ class TestSourceCatalogHGPS:
         assert len(self.cat.associations) == 223
 
 
+@requires_dependency('uncertainties')
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
     def setup(self):
@@ -69,7 +70,6 @@ class TestSourceCatalogObjectHGPS:
         source = self.cat['HESS J1825-137']
         assert 'Fit result info' in str(source.spectrum)
 
-    @requires_dependency('uncertainties')
     def test_ecut_error(self):
         import uncertainties
         val = self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL']
@@ -79,12 +79,6 @@ class TestSourceCatalogObjectHGPS:
         energy_err = err / val ** 2
         assert_allclose(err, energy.std_dev)
 
-    @requires_dependency('matplotlib')
-    def test_model_plot(self):
-        model = self.source.spectral_model
-        erange = Quantity([1, 10], 'TeV')
-        model.plot(erange)
-
     def test_model(self):
         model = self.source.spectral_model
         pars = model.parameters
@@ -93,7 +87,7 @@ class TestSourceCatalogObjectHGPS:
         assert_quantity_allclose(pars.reference, Quantity(1.1561109149, 'TeV'))
 
         emin, emax = Quantity([1, 1E10], 'TeV')
-        desired =  Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
+        desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
         assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
 
     def test_ecpl_model(self):
@@ -105,5 +99,11 @@ class TestSourceCatalogObjectHGPS:
         assert_quantity_allclose(pars.lambda_, Quantity(0.081517637, 'TeV-1'))
 
         emin, emax = Quantity([1, 1E10], 'TeV')
-        desired =  Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
+        desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
         assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+
+    @requires_dependency('matplotlib')
+    def test_model_plot(self):
+        model = self.source.spectral_model
+        erange = Quantity([1, 10], 'TeV')
+        model.plot(erange)
