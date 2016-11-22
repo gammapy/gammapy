@@ -15,7 +15,7 @@ __all__ = [
 class ObservationTableSummary(object):
     """Observation table summary.
 
-    Class allowing to summarize informations contained in 
+    Class allowing to summarize informations contained in
     Observation index table (`~gammapy.data.ObservationTable`)
 
     Parameters
@@ -133,7 +133,7 @@ class ObservationTableSummary(object):
 class ObservationSummary(object):
     """Summary of observations.
 
-    Class allowing to summarise informations contained in 
+    Class allowing to summarise informations contained in
     a list of observations (`~gammapy.data.ObservationStatsList`)
 
     Parameters

@@ -115,7 +115,7 @@ class SpectrumExtraction(object):
         """Create `~gammapy.background.BackgroundEstimate`
 
         In case no background estimate was passed on initialization, this
-        method creates one given a dict of parameters. 
+        method creates one given a dict of parameters.
 
         TODO: Link to high-level docs page.
         TODO: Refactor

@@ -1,6 +1,6 @@
 """Compute flux points
 
-This is an example script that show how to compute flux points in Gammapy. 
+This is an example script that show how to compute flux points in Gammapy.
 TODO: Refactor and add to FluxPointsComputation class or so
 """
 

@@ -13,7 +13,7 @@ __all__ = [
 
 class EffectiveAreaTable(NDDataArray):
     """Effective Area Table
-    
+
     TODO: Document
 
     Parameters
@@ -46,19 +46,19 @@ class EffectiveAreaTable(NDDataArray):
         ax.set_ylim([1e3, 1e12])
         plt.legend(loc='best')
         plt.show()
-        
+
     Find energy where the effective area is at 10% of its maximum value
 
     >>> import numpy as np
-    >>> from gammapy.irf import EffectiveAreaTable 
-    >>> import astropy.units as u  
+    >>> from gammapy.irf import EffectiveAreaTable
+    >>> import astropy.units as u
     >>> energy = np.logspace(-1,2) * u.TeV
     >>> aeff_max = aeff.max_area
     >>> print(aeff_max).to('m2')
     156909.413371 m2
     >>> ener = aeff.find_energy(0.1 * aeff_max)
-    >>> print(ener) 
-    0.185368478744 TeV 
+    >>> print(ener)
+    0.185368478744 TeV
     """
     energy = BinnedDataAxis(interpolation_mode='log')
     """Energy Axis"""
@@ -72,7 +72,7 @@ class EffectiveAreaTable(NDDataArray):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy : `~astropy.units.Quantity`
-            Energy nodes 
+            Energy nodes
         show_energy : `~astropy.units.Quantity`, optional
             Show energy, e.g. threshold, as vertical line
 
@@ -105,7 +105,7 @@ class EffectiveAreaTable(NDDataArray):
 
     @classmethod
     def from_parametrization(cls, energy, instrument='HESS'):
-        """Get parametrized effective area 
+        """Get parametrized effective area
 
         Parametrizations of the effective areas of different Cherenkov
         telescopes taken from Appendix B of Abramowski et al. (2010), see
@@ -161,13 +161,13 @@ class EffectiveAreaTable(NDDataArray):
 
     def evaluate(self, fill_nan=False, **kwargs):
         """Modified evalute function
-        
+
         Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
         possible nan values. Below the finite range the effective area is set
         to zero and above to value of the last valid note. This is needed since
         other Sofwares, e.g. sherpa, don't like nan values in FITS files. Make
         sure that the replacement happens outside of the energy range, where
-        the `~gammapy.irf.EffectiveAreaTable` is used. 
+        the `~gammapy.irf.EffectiveAreaTable` is used.
 
         Parameters
         ----------
@@ -184,7 +184,7 @@ class EffectiveAreaTable(NDDataArray):
     def to_table(self):
         """Convert to `~astropy.table.Table`
 
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file 
+        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
         """
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
@@ -201,7 +201,7 @@ class EffectiveAreaTable(NDDataArray):
 
     def find_energy(self, aeff):
         """Find energy for given effective area
-        
+
         A linear interpolation is performed between the two nodes closest to
         the desired effective area value.
 
@@ -213,7 +213,7 @@ class EffectiveAreaTable(NDDataArray):
         Returns
         -------
         energy: `~astropy.units.Quantity`
-            Energy corresponing to aeff 
+            Energy corresponing to aeff
         """
         # TODO: Move to base class?
         idx = np.where(self.data > aeff)[0][0]
@@ -226,7 +226,7 @@ class EffectiveAreaTable(NDDataArray):
 
     def to_sherpa(self, name):
         """Return `~sherpa.astro.data.DataARF`
-        
+
         Parameters
         ----------
         name : str
@@ -312,7 +312,7 @@ class EffectiveAreaTable2D(NDDataArray):
         return cls(offset=offset, energy=energy, data=data, meta=table.meta)
 
     def to_effective_area_table(self, offset, energy=None):
-        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable` 
+        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`
 
         Parameters
         ----------
@@ -418,7 +418,7 @@ class EffectiveAreaTable2D(NDDataArray):
         return ax
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
-        """Plot effective area image. 
+        """Plot effective area image.
         """
         import matplotlib.pyplot as plt
 

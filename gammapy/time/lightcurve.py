@@ -14,11 +14,11 @@ __all__ = [
 class LightCurve(QTable):
     """LightCurve class.
 
-    Contains all data in the tabular form with columns 
-    tstart, tstop, flux, flux error, time bin (opt). 
-    Possesses functions allowing plotting data, saving as txt 
+    Contains all data in the tabular form with columns
+    tstart, tstop, flux, flux error, time bin (opt).
+    Possesses functions allowing plotting data, saving as txt
     and elementary stats like mean & std dev.
-    
+
     TODO: specification of format is work in progress
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/pull/61
     """

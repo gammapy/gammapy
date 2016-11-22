@@ -30,7 +30,7 @@ class Stats(object):
     # TODO: add gamma exposure
 
     def __init__(self, n_on, n_off, a_on, a_off):
-        self.n_on = n_on   
+        self.n_on = n_on
         self.n_off = n_off
         self.a_on = a_on
         self.a_off = a_off

@@ -41,7 +41,7 @@ def get_pixel_size_from_nside(nside):
     """ Returns an estimate of the pixel size from the HEALPix nside coordinate
 
     This just uses a lookup table to provide a nice round number for each
-    HEALPix order. 
+    HEALPix order.
     """
     order = int(np.log2(nside))
     if order < 0 or order > 13:
@@ -190,7 +190,7 @@ class HPX(object):
 
         For all-sky maps it just returns the input array.
         For partial-sky maps in returns the local indices corresponding to the
-        indices in the input array, and -1 for those pixels that are outside the 
+        indices in the input array, and -1 for those pixels that are outside the
         selected region.
         """
 
@@ -318,7 +318,7 @@ class HPX(object):
         """ Builds and returns a FITs HDU with input data
 
         data      : The data begin stored
-        extname   : The HDU extension name        
+        extname   : The HDU extension name
         """
         shape = data.shape
         if shape[-1] != self._npix:
@@ -342,7 +342,7 @@ class HPX(object):
     def make_energy_bounds_hdu(self, extname="EBOUNDS"):
         """ Builds and returns a FITs HDU with the energy bin boundries
 
-        extname   : The HDU extension name            
+        extname   : The HDU extension name
         """
         if self._ebins is None:
             return None
@@ -359,7 +359,7 @@ class HPX(object):
 
         data      : The data begin stored
         outfile   : The name of the output file
-        extname   : The HDU extension name        
+        extname   : The HDU extension name
         clobber   : True -> overwrite existing files
         """
         hdu_prim = fits.PrimaryHDU()
@@ -407,8 +407,8 @@ class HPX(object):
 
     @staticmethod
     def get_ref_dir(region, coordsys):
-        """ Finds and returns the reference direction for a given 
-        HEALPix region string.   
+        """ Finds and returns the reference direction for a given
+        HEALPix region string.
 
         region   : a string describing a HEALPix region
         coordsys : coordinate system, GAL | CEL
@@ -454,8 +454,8 @@ class HPX(object):
 
     @staticmethod
     def get_region_size(region):
-        """ Finds and returns the approximate size of region (in degrees)  
-        from a HEALPix region string.   
+        """ Finds and returns the approximate size of region (in degrees)
+        from a HEALPix region string.
         """
         if region is None:
             return 180.

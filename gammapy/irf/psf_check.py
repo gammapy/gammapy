@@ -11,7 +11,7 @@ __all__ = [
 
 class PSF3DChecker(object):
     """Automated quality checks for `gammapy.irf.PSF3D`.
-    
+
     At the moment used for HESS HAP HD.
 
     Parameters
@@ -224,7 +224,7 @@ class PSF3DChecker(object):
             # loop over offsets
             for j, v in enumerate(inner[i]):
 
-                # check if radius is nan 
+                # check if radius is nan
                 if math.isnan(v):
                     continue
 

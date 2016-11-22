@@ -34,7 +34,7 @@ def get_tested_prods():
 
 class FitsProductionTester:
     def __init__(self, prod):
-        self.ref_dict = prod 
+        self.ref_dict = prod
         dm = data_manager()
         self.ds = dm[prod['datastore']]
         self.ref_energy = 1 * u.TeV

@@ -120,7 +120,7 @@ def _is_inside_exclusion(pixreg, exclusion):
 
 class ReflectedRegionsBackgroundEstimator(object):
     """Reflected Regions background estimator
-    
+
     Parameters
     ----------
     on_region : `~regions.CircleSkyRegion`
@@ -155,7 +155,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         Parameters
         ----------
         on_region : `~regions.CircleSkyRegion`
-            Target region 
+            Target region
         obs : `~gammapy.data.DataStoreObservation`
             Observation
         exclusion : `~gammapy.image.ExclusionMask`

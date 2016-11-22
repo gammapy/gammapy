@@ -11,9 +11,9 @@ from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 @requires_dependency('scipy')
 def test_EffectiveAreaTable2D_generic():
-    # This tests NDData subclassing. Not needed for other IRF classes 
+    # This tests NDData subclassing. Not needed for other IRF classes
 
-    # Exercise __init__  method 
+    # Exercise __init__  method
     energy = np.logspace(0, 1, 4) * u.TeV
     offset = [0.2, 0.3] * u.deg
     effective_area = np.arange(6).reshape(3, 2) * u.cm * u.cm
@@ -31,7 +31,7 @@ def test_EffectiveAreaTable2D_generic():
         aeff.data = wrong_data
         aeff = EffectiveAreaTable(offset=offset, energy=energy, data=wrong_data)
 
-    # Test evaluate function 
+    # Test evaluate function
     # Check that nodes are evaluated correctly
     e_node = 1
     off_node = 0

@@ -54,7 +54,7 @@ class TestSpectrumSimulation:
         self.sim.run(seed=seeds)
         assert (self.sim.result.obs_id == seeds).all()
         assert self.sim.result[0].on_vector.total_counts == 169
-        assert self.sim.result[1].on_vector.total_counts == 159 
-        assert self.sim.result[2].on_vector.total_counts == 151 
-        assert self.sim.result[3].on_vector.total_counts == 163 
+        assert self.sim.result[1].on_vector.total_counts == 159
+        assert self.sim.result[2].on_vector.total_counts == 151
+        assert self.sim.result[3].on_vector.total_counts == 163
         assert self.sim.result[4].on_vector.total_counts == 185

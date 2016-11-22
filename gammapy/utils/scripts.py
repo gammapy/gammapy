@@ -149,7 +149,7 @@ def read_yaml(filename, logger=None):
         File to read
     """
     import yaml
-    
+
     filename = make_path(filename)
     if logger is not None:
         logger.info('Reading {}'.format(filename))

@@ -121,18 +121,18 @@ class NDDataArray(object):
 
     def to_table(self):
         raise NotImplementedError('This must be implemented by subclasses')
-   
+
     def to_hdulist(self):
         """Convert to HDUList
 
         Default: One extension containing the output of ``to_table``
-        
+
         Returns
         -------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list
         """
-        hdu = table_to_fits_table(self.to_table()) 
+        hdu = table_to_fits_table(self.to_table())
         prim_hdu = fits.PrimaryHDU()
         return fits.HDUList([prim_hdu, hdu])
 
@@ -149,11 +149,11 @@ class NDDataArray(object):
     @classmethod
     def from_table(cls, table):
         raise NotImplementedError('This must be implemented by subclasses')
-    
+
     @classmethod
     def from_hdulist(cls, hdulist):
         """Read from disk
-        
+
         Default: Read first extension as BinTableHDU
         """
         table = fits_table_to_table(hdulist[1])
@@ -255,7 +255,7 @@ class NDDataArray(object):
             Interpolation kwargs
         """
         from scipy.interpolate import RegularGridInterpolator
-        
+
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]

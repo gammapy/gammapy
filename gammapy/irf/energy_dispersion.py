@@ -58,7 +58,7 @@ class EnergyDispersion(NDDataArray):
 
     def pdf_in_safe_range(self, lo_threshold, hi_threshold):
         """PDF matrix with bins outside threshold set to 0
-        
+
         Parameters
         ----------
         lo_threshold : `~astropy.units.Quantity`
@@ -252,7 +252,7 @@ class EnergyDispersion(NDDataArray):
 
     def get_resolution(self, e_true):
         """Get energy resolution for a fiven true energy
-        
+
         Resolution is the 1 sigma containment of the energy dispersion PDF.
 
         Parameters
@@ -269,7 +269,7 @@ class EnergyDispersion(NDDataArray):
 
     def get_bias(self, e_true):
         r"""Get reconstruction bias for a given true energy
-        
+
         Bias is defined as
 
         .. math::
@@ -334,11 +334,11 @@ class EnergyDispersion(NDDataArray):
 
     def plot_matrix(self, ax=None, show_energy=None, **kwargs):
         """Plot PDF matrix.
-        
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis    
+            Axis
         show_energy : `~astropy.units.Quantity`, optional
             Show energy, e.g. threshold, as vertical line
 
@@ -373,13 +373,13 @@ class EnergyDispersion(NDDataArray):
 
     def plot_bias(self, ax=None, **kwargs):
         """Plot reconstruction bias.
-        
+
         see :func:`~gammapy.irf.EnergyDispersion.get_bias`
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis    
+            Axis
         """
         import matplotlib.pyplot as plt
 
@@ -396,7 +396,7 @@ class EnergyDispersion(NDDataArray):
 
     def to_sherpa(self, name):
         """Return `~sherpa.astro.data.DataARF`
-        
+
         Parameters
         ----------
         name : str
@@ -405,7 +405,7 @@ class EnergyDispersion(NDDataArray):
         from sherpa.astro.data import DataRMF
         from sherpa.utils import SherpaInt, SherpaUInt, SherpaFloat
 
-        # Need to modify RMF data 
+        # Need to modify RMF data
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
 
         table = self.to_table()

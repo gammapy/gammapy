@@ -67,7 +67,7 @@ class SpectrumFit(object):
     @property
     def global_result(self):
         """Global `~gammapy.spectrum.SpectrumFitResult`
-        
+
         Contains only model and fitrange over all observations
         """
         return self._global_result

@@ -37,7 +37,7 @@ def test_model(model):
     # butterfly
     # npred
     reco_bins = 5
-    true_bins = 10 
+    true_bins = 10
     e_reco = Q(np.logspace(-1,1,reco_bins+1), 'TeV')
     e_true = Q(np.logspace(-1.5, 1.5, true_bins+1), 'TeV')
     livetime = Q(26, 'min')

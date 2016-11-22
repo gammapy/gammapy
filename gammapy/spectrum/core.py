@@ -75,7 +75,7 @@ class CountsSpectrum(NDDataArray):
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`
 
-        This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by 
+        This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by
         ``to_table``, in order to store the energy axis
         """
         hdulist = super(CountsSpectrum, self).to_hdulist()
@@ -84,11 +84,11 @@ class CountsSpectrum(NDDataArray):
         return hdulist
 
     def fill(self, events):
-        """Fill with list of events 
+        """Fill with list of events
 
         Parameters
         ----------
-        events: `~astropy.units.Quantity`, `gammapy.data.EventList`, 
+        events: `~astropy.units.Quantity`, `gammapy.data.EventList`,
             List of event energies
         """
 

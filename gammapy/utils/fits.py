@@ -154,7 +154,7 @@ def fits_table_to_table(tbhdu):
 
 def energy_axis_to_ebounds(energy):
     """Convert energy `~gammapy.utils.nddata.BinnedEnergyAxis` to OGIP
-    ``EBOUNDS`` extension 
+    ``EBOUNDS`` extension
 
     see
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2

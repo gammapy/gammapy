@@ -419,7 +419,7 @@ class EnergyRange(object):
 
     This is just a little helper class.
     We could have used length-2 tuple or Quantity for this.
-    
+
     TODO: Merge with `~gammapy.utils.energy.EnergyBounds`
     """
 
