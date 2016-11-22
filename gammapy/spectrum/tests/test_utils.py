@@ -18,14 +18,11 @@ def test_LogEnergyAxis():
     energy = Quantity([1, 10, 100], 'TeV')
     energy_axis = LogEnergyAxis(energy)
 
-    assert_allclose(energy_axis.x, [0, 1, 2])
-    assert_quantity_allclose(energy_axis.energy, energy)
-
     energy = Quantity(gmean([1, 10]), 'TeV')
-    pix = energy_axis.world2pix(energy.to('MeV'))
+    pix = energy_axis.wcs_world2pix(energy.to('MeV'))
     assert_allclose(pix, 0.5)
 
-    world = energy_axis.pix2world(pix)
+    world = energy_axis.wcs_pix2world(pix)
     assert_quantity_allclose(world, energy)
 
 
