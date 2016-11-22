@@ -80,6 +80,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#790] Add powerlaw energy flux integral for ``gamma=2`` (Axel Donath)
 - [#789] Fix Wstat (Johannes King)
 - [#783] Add PHA type II file I/O to SpectrumObservationList (Johannes King)
 - [#778] Fix Gauss PSF energy bin issue (Léa Jouvin)
