@@ -93,19 +93,13 @@ To install the current Gammapy **development** version using `pip`_:
 
    $ pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
+If that doesn't work because the download from PyPI or Github is blocked by your network,
+but you have some other means of copying files onto that machine,
+you can get the tarball (``.tar.gz`` file) from PyPI or ``.zip`` file from Github, and then
+``pip install <filename>``.
+
 setup.py
 --------
-
-To download the latest stable version of Gammapy, download it from
-https://pypi.python.org/pypi/gammapy, if you have the
-`wget <http://www.gnu.org/software/wget/>`_ tool available you can do this
-from the command line:
-
-.. code-block:: bash
-
-   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.3.tar.gz
-   $ tar zxf gammapy-0.3.tar.gz
-   $ cd gammapy-0.3
 
 To download the latest development version of Gammapy:
 
@@ -114,13 +108,13 @@ To download the latest development version of Gammapy:
    $ git clone https://github.com/gammapy/gammapy.git
    $ cd gammapy
 
-Either way, you now can install, test or build the documentation:
+Now you install, run tests or build the documentation:
 
 .. code-block:: bash
 
    $ python setup.py install
    $ python setup.py test
-   $ python setup.py build_sphinx
+   $ python setup.py build_docs
 
 Also you have easy access to the Python scripts from the tutorials and examples: 
 
@@ -300,13 +294,13 @@ The required core dependencies of Gammapy are:
 
 * `Numpy`_ - the fundamental package for scientific computing with Python
 * `Astropy`_ - the core package for Astronomy in Python
+* `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as `astropy.regions`.
+* `click`_ for making command line tools
 
 We're currently using
 
-* `click`_ for making command line tools
-* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files
+* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
 * `flask`_ and some Flask plugins for Gammapy web apps
-
 
 Currently optional dependencies that are being considered as core dependencies:
 

@@ -74,7 +74,6 @@ Make release
 
 These are the steps you should do on the day of the release:
 
-#. Update the Gammapy version in the :ref:`install` section.
 #. Mention release in the :ref:`gammapy_news` section.
 #. Follow the instructions how to release an Astropy affiliated package
    `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.

@@ -104,11 +104,10 @@ setup(
     # Older versions could work, but are unsupported.
     # To find out if everything works run the Gammapy tests.
     install_requires=[
-      'setuptools',
-      'click',
       'numpy>=1.8',
-      'astropy>=1.1',
+      'astropy>=1.2',
       'regions',
+      'click',
     ],
     extras_require=dict(
       analysis=[
