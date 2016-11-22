@@ -664,8 +664,8 @@ class SpectrumObservationStacker(object):
             bkscal_off_data = o.off_vector._backscal_array.copy()
             bkscal_off += bkscal_off_data * o.off_vector.counts_in_safe_range
 
-        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data
-        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data
+        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.value
+        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.value
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data

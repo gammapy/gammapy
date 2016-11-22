@@ -27,7 +27,7 @@ class CountsSpectrum(NDDataArray):
 
     Parameters
     ----------
-    data : `~numpy.array`, list
+    data : `~astropy.units.Quantity`, array-like
         Counts
     energy : `~gammapy.utils.energy.EnergyBounds`
         Bin edges of energy axis
@@ -51,6 +51,21 @@ class CountsSpectrum(NDDataArray):
     axis_names = ['energy']
     # Use nearest neighbour interpolation for counts
     interp_kwargs = dict(bounds_error=False, method='nearest')
+
+    def __init__(self, **kwargs):
+        # Special case this to set data unit to counts for coherence
+        if 'data' in kwargs.keys():
+            data = kwargs['data']
+            if isinstance(data, u.Quantity):
+                if data.unit.is_equivalent('ct'):
+                    pass
+                elif data.unit.is_equivalent(u.Unit('')):
+                    data = data.value
+                else:
+                    raise ValueError('Invalid data unit {}'.format(data.unit))
+            kwargs['data'] = u.Quantity(data, 'ct')
+
+        self = super(CountsSpectrum, self).__init__(**kwargs)        
 
     @classmethod
     def from_hdulist(cls, hdulist):
@@ -269,7 +284,7 @@ class PHACountsSpectrum(CountsSpectrum):
     def __init__(self, **kwargs):
         kwargs.setdefault('is_bkg', False)
         kwargs.setdefault('quality', None)
-        super(CountsSpectrum, self).__init__(**kwargs)
+        super(PHACountsSpectrum, self).__init__(**kwargs)
         if self.quality is None:
             self.quality = np.zeros(self.energy.nbins, dtype=int)
 
