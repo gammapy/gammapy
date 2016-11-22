@@ -9,7 +9,7 @@ from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
 from ..utils.energy import EnergyBounds
-import ..stats
+from .. import stats
 
 __all__ = [
     'SpectrumFitResult',
@@ -19,6 +19,9 @@ __all__ = [
 
 class SpectrumFitResult(object):
     """Class representing the result of a spectral fit
+    
+    TODO: This only supports WStat fits at the moment. Find a solution to
+    display also Cash fits (flag, subclass).
 
     Parameters
     ----------
@@ -291,6 +294,20 @@ class SpectrumFitResult(object):
         return butterfly
 
     @property
+    def stat_per_bin(self):
+        """`~np.array` of fit statistics per bin
+
+        Computed with `~gammapy.stats`. Check that the sum is equal to the
+        total fit statistic returned by the `~gammapy.spectrum.SpectrumFit`
+        (i.e. Sherpa).
+        """
+        n_on = self.obs.on_vector.data.value
+        n_off = self.obs.off_vector.data.value
+        alpha = self.obs.alpha
+        mu_sig = self.expected_source_counts.data.value
+        return stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
+
+    @property
     def expected_source_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
@@ -318,23 +335,11 @@ class SpectrumFitResult(object):
         resspec.data -= self.obs.on_vector.data
         return resspec
 
-
-    def plot(self, mode='wstat'):
+    def plot(self):
         """Standard debug plot.
 
-        Plot ON counts in comparison to model. The model can contain predicted
-        source and background counts (CStat) or prediced source counts plus a
-        background estimate from off regions (WStat). The ``mode`` parameter
-        controls this.
-
-        Parameters
-        ----------
-        mode : str {'wstat'}
-            Analysis mode
+        Plot ON counts in comparison to model.
         """
-        if mode != 'wstat':
-            raise NotImplementedError('Mode {}'.format(mode))
-
         ax0, ax1 = get_plot_axis()
 
         self.plot_counts(ax0)
