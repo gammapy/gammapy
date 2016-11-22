@@ -37,7 +37,7 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
-* November 18, 2016 --- Gammapy **0.5** release. See changelog: :ref:`gammapy_0p5_release`
+* November 22, 2016 --- Gammapy **0.5** release. See changelog: :ref:`gammapy_0p5_release`
 * July 2016 --- `Gammapy poster at Gamma 2016`_
 * June 2016 --- `First Gammapy coding sprint`_ at MPIK, Heidelberg
 * June 2016 --- Gammapy is used to build `gamma-sky.net`_

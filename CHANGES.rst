@@ -32,17 +32,17 @@ See the complete `Gammapy 0.6 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p5_release:
 
-0.5 (November 18, 2016)
+0.5 (November 22, 2016)
 -----------------------
 
 Summary
 +++++++
 
-- Released on November 18, 2016 (`Gammapy 0.5 on PyPI <https://pypi.python.org/pypi/gammapy/0.5>`__)
+- Released on November 22, 2016 (`Gammapy 0.5 on PyPI <https://pypi.python.org/pypi/gammapy/0.5>`__)
 - 12 contributors (5 new)
-- 7 months of work (from April 20, 2016 to November 18, 2016)
-- 181 pull requests (not all listed below)
-- Requires Python 2.7 or 3.4+, Numpy 1.8, Scipy 0.15, Astropy 1.2, Sherpa 4.8.2
+- 7 months of work (from April 20, 2016 to November 22, 2016)
+- 184 pull requests (not all listed below)
+- Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.2+, Sherpa 4.8.2+
 
 Highlights:
 
@@ -80,6 +80,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#789] Fix Wstat (Johannes King)
+- [#783] Add PHA type II file I/O to SpectrumObservationList (Johannes King)
 - [#778] Fix Gauss PSF energy bin issue (Léa Jouvin)
 - [#777] Rewrite crab spectrum as class (Axel Donath)
 - [#774] Add skyimage smooth method (Axel Donath)
@@ -155,7 +157,7 @@ Summary
 - 10 contributors (5 new)
 - 8 months of work (from August 13, 2015 to April 20, 2016)
 - 108 pull requests (not all listed below)
-- Requires Python 2.7 or 3.4+, Numpy 1.8, Scipy 0.15, Astropy 1.0, Sherpa 4.8
+- Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.0+, Sherpa 4.8+
 - Support for Windows added (testing on AppVeyor)
 
 Highlights:
