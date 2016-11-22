@@ -4,7 +4,7 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
 import numpy as np
 from astropy.utils.compat import NUMPY_LT_1_9
-from numpy.testing import assert_allclose, assert_string_equal
+from numpy.testing import assert_allclose
 from ...datasets import gammapy_extra
 from ...spectrum import (
     SpectrumObservationList,
@@ -21,7 +21,7 @@ from ...utils.testing import (
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.xfail(reason='wait for https://github.com/sherpa/sherpa/pull/249')
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
@@ -44,7 +44,7 @@ def test_spectral_fit(tmpdir):
     test_e = 12.5 * u.TeV
     assert_quantity_allclose(fit.result[0].model(test_e),
                              read_result.model(test_e))
-    assert_string_equal(fit.method_fit.name, "simplex")
+    assert fit.method_fit.name == 'simplex'
     result = fit.result[0]
     result.plot()
 
@@ -53,12 +53,12 @@ def test_spectral_fit(tmpdir):
     assert 'index' in result.to_table().colnames
 
     # Test values
-    assert_allclose(result.statval, 103.595, rtol=1e-3)
+    assert_allclose(result.statval, 92.57702753797243)
     assert_quantity_allclose(result.model.parameters.index,
-                             2.116 * u.Unit(''), rtol=1e-3)
+                             2.207512847977245)
     model_with_errors = result.model_with_uncertainties
     assert_allclose(model_with_errors.parameters.index.s,
-                    0.0542, rtol=1e-3)
+                    0.06360751148900917, rtol=1e-3)
 
     # Actual fit range can differ from threshold due to binning effects
     # We take the lowest bin that is completely within threshold
@@ -70,7 +70,7 @@ def test_spectral_fit(tmpdir):
 
     # Test npred
     npred = obs1.predicted_counts(result.model)
-    assert_allclose(result.npred, npred.data, rtol=1e-3)
+    assert_allclose(result.npred, npred.data.value, rtol=1e-3)
 
     # Restrict fit range
     fit_range = [4, 20] * u.TeV
@@ -97,9 +97,9 @@ def test_spectral_fit(tmpdir):
     fit.method_fit = "levmar"
     fit.run(outdir=tmpdir)
     result = fit.result[0]
-    assert_string_equal(fit.method_fit.name, "levmar")
+    fit.method_fit.name ==  "levmar"
     assert_quantity_allclose(result.model.parameters.index,
-                             2.116 * u.Unit(''), rtol=1e-3)
+                             2.207462243733832)
 
     # Test ECPL
     ecpl = models.ExponentialCutoffPowerLaw(
@@ -112,12 +112,12 @@ def test_spectral_fit(tmpdir):
     fit = SpectrumFit(obs_list, ecpl)
     fit.fit()
     assert_quantity_allclose(fit.result[0].model.parameters.lambda_,
-                             0.06321 / u.TeV, rtol=1e-3)
+                             0.04493212578027793 / u.TeV)
 
 
 @requires_dependency('sherpa')
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.xfail(reason='wait for https://github.com/sherpa/sherpa/pull/249')
 @requires_data('gammapy-extra')
 def test_stacked_fit():
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
@@ -125,7 +125,7 @@ def test_stacked_fit():
     obs1 = SpectrumObservation.read(pha1)
     obs2 = SpectrumObservation.read(pha2)
 
-    stacked_obs = SpectrumObservation.stack([obs1, obs2])
+    stacked_obs = SpectrumObservationList([obs1, obs2]).stack()
 
     model = models.PowerLaw(index=2 * u.Unit(''),
                             amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -134,10 +134,9 @@ def test_stacked_fit():
     fit = SpectrumFit(stacked_obs, model)
     fit.fit()
     pars = fit.global_result.model.parameters
-    assert_quantity_allclose(pars.index, 2.12, rtol=1e-2)
+    assert_quantity_allclose(pars.index, 2.2462501437579476, rtol=1e-2)
     assert_quantity_allclose(pars.amplitude,
-                             2.11e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                             rtol=1e-2)
+                             2.5160334568171844e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
 
 @requires_dependency('sherpa')

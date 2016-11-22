@@ -19,7 +19,7 @@ __all__ = [
     'assert_skycoord_allclose',
 ]
 
-SHERPA_LT_4_8 = not minversion('sherpa', '4.8')
+SHERPA_LT_4_8 = not minversion('sherpa', '4.8.2+81')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
