@@ -156,8 +156,8 @@ install:
       fi
 
     - if $FETCH_GAMMA_CAT; then
-          git clone https://github.com/gammapy/gammapy-cat.git $HOME/gammapy-cat;
-          export GAMMA_CAT=${HOME}/gammapy-cat;
+          git clone https://github.com/gammapy/gamma-cat.git $HOME/gamma-cat;
+          export GAMMA_CAT=${HOME}/gamma-cat;
       fi
 
     # This is needed to make matplotlib plot testing work
