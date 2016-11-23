@@ -48,6 +48,15 @@ class TestCountsSpectrum:
         spec2 = CountsSpectrum.read(filename)
         assert_quantity_allclose(spec2.energy.data, self.bins)
 
+    def test_rebin(self):
+        rebinned_spec = self.spec.rebin(2)
+        assert rebinned_spec.energy.nbins == self.spec.energy.nbins / 2
+        assert rebinned_spec.data.shape[0] == self.spec.data.shape[0] / 2
+        assert rebinned_spec.total_counts == self.spec.total_counts
+
+        with pytest.raises(ValueError):
+            rebinned_spec = self.spec.rebin(4)
+
 
 @requires_dependency('scipy')
 class TestPHACountsSpectrum:

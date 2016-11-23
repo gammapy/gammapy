@@ -241,6 +241,32 @@ class CountsSpectrum(NDDataArray):
 
         return spectral_index
 
+    def rebin(self, parameter):
+        """Rebin
+
+        Parameters
+        ----------
+        parameter, int
+            Number of bins to merge
+
+        Returns
+        -------
+        rebinned_spectrum : `~gammapy.spectrum.CountsSpectrum`
+            Rebinned spectrum
+        """
+        if len(self.data) % parameter != 0:
+            raise ValueError("Invalid rebin parameter: {}, nbins: {}".format(
+                parameter, len(self.data)))
+
+        retval = self.copy()
+        retval.energy.data = retval.energy.data[0::parameter]
+        split_indices = np.arange(parameter, len(retval.data), parameter)
+        counts_grp = np.split(retval.data, split_indices)
+        counts_rebinned = np.sum(counts_grp, axis=1)
+        retval.data = counts_rebinned * u.ct
+
+        return retval
+
 
 class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent
