@@ -138,7 +138,7 @@ If :math:`n_{on} = 0`
 Otherwise, two cases are distinguished.
 
 If 
-:math:`mu_{sig} < n_{on} (\frac{\alpha}{1 + \alpha})`
+:math:`\mu_{sig} < n_{on} (\frac{\alpha}{1 + \alpha})`
 
 .. math::
 
