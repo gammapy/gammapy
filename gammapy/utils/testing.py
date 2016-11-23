@@ -80,6 +80,8 @@ def has_data(name):
         return has_hess_test_data()
     elif name == 'hgps':
         return ('HGPS_DATA' in os.environ) and ('HGPS_ANALYSIS' in os.environ)
+    elif name == 'gamma-cat':
+        return ('GAMMA_CAT' in os.environ)
     else:
         raise ValueError('Invalid name: {}'.format(name))
 

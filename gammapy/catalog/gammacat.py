@@ -130,7 +130,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
 
-class GammaCatNotFoundError(Error):
+class GammaCatNotFoundError(OSError):
     """
     The gammapy-cat repo is not available.
 
