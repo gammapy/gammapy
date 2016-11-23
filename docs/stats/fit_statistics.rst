@@ -133,7 +133,7 @@ If :math:`n_{on} = 0`
 
 .. math::
 
-    W = 2\big(\mu_{sig} - n_{on} \log{\left(\frac{1}{1 + \alpha}\right)}\big)
+    W = 2\big(\mu_{sig} - n_{off} \log{\left(\frac{1}{1 + \alpha}\right)}\big)
 
 Otherwise, two cases are distinguished.
 
