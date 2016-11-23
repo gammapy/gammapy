@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ..gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
 from ...utils.energy import Energy
 
@@ -23,7 +23,7 @@ DESIRED_SM = [ {'flux_at_1TeV': 1.36e-11 * u.Unit('1 / (cm2 TeV s)'),
 
 DESIRED_FP = [{'N': 24},
               {'N': 11},
-              {'N': 0}]
+              {'N': 13}]
 
 DESIRED_BF = [{'energy_sum': 40.8695 * u.TeV,
                'flux_lo_sum': 3.965e-11 * u.Unit('1 / (cm2 s TeV)'),
@@ -74,6 +74,7 @@ class TestSourceCatalogObjectGammaCat:
         flux_points = source.flux_points
         assert len(flux_points) == desired['N']
 
+    @requires_dependency('uncertainties')
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_BF))
     def test_butterfly(self, name, desired):
         source = self.cat[name]
