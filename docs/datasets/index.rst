@@ -93,8 +93,8 @@ If you don't have git, you can also fetch the latest version as a zip file as we
 
 .. code-block:: bash
 
-    wget https://github.com/gammapy/gammapy-cat/archive/master.zip
-    unzip master.zip # will result in a `gammapy-cat-master` folder
+    wget https://github.com/gammapy/gamma-cat/archive/master.zip
+    unzip master.zip # will result in a `gamma-cat-master` folder
 
 
 The `~gammapy.catalog.SourceCatalogGammaCat` and `~gammapy.catalog.SourceCatalogObjectGammaCat`
@@ -103,7 +103,7 @@ For this reason the ``GAMMA_CAT`` shell environment variable has to be set using
 
 .. code-block:: bash
 
-    export GAMMAPY_CAT=/path/on/your/machine/to/gammapy-cat
+    export GAMMAPY_CAT=/path/on/your/machine/to/gamma-cat
 
 
 Getting Started
