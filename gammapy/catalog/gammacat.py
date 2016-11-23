@@ -65,6 +65,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         elif spec_type == 'pl2':
             pars['emin'] = d['spec_ref']
+            # TODO: I'd be better to put np.inf, but uncertainties can't handle it
             pars['emax'] = 1E10 * u.TeV
             pars['amplitude'] = d['spec_norm'] * u.Unit('cm-2 s-1')
             return PowerLaw2(**pars)
@@ -129,6 +130,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
 
+class GammaCatNotFoundError(Error):
+    """
+    The gammapy-cat repo is not available.
+
+    You have to set the GAMMA_CAT environment variable so that it's found.
+    """
+    pass
+
+
 class SourceCatalogGammaCat(SourceCatalog):
     """
     Gammacat open TeV sources catalog.
@@ -139,7 +149,14 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = Path(os.environ['GAMMA_CAT']) / 'docs/data/gammacat.fits.gz'
+            if not 'GAMMA_CAT' in os.environ:
+                msg = 'The gamma-cat repo is not available. '
+                msg += 'You have to set the GAMMA_CAT environment variable '
+                msg += 'to point to the location for it to be found.'
+                raise GammapyCatFoundError(msg)
+            else:
+                filename = Path(os.environ['GAMMA_CAT']) / 'docs/data/gammacat.fits.gz'
+
         self.filename = str(filename)
         table = QTable.read(self.filename)
         super(SourceCatalogGammaCat, self).__init__(table=table, source_name_key='common_name')
