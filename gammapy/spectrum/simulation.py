@@ -13,33 +13,34 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 class SpectrumSimulation(object):
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
     Parameters
     ----------
-    aeff : `~gammapy.irf.EffectiveAreaTable`
-        Effective Area
-    edisp : `~gammapy.irf.EnergyDispersion`,
-        Energy Dispersion
-    source_model : `~gammapy.spectrum.models.SpectralModel`
-        Source model
     livetime : `~astropy.units.Quantity`
         Livetime
+    source_model : `~gammapy.spectrum.models.SpectralModel`
+        Source model
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        Effective Area
+    edisp : `~gammapy.irf.EnergyDispersion`, optional
+        Energy Dispersion
     e_reco : `~astropy.units.Quantity`, optional
-        Desired energy axis of the prediced counts vector By default, the reco
-        energy axis of the energy dispersion matrix is used.
+        see :func:`gammapy.spectrum.utils.calculate_predicted_counts`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model
     alpha : float, optional
         Exposure ratio between source and background
     """
-    def __init__(self, aeff, edisp, source_model, livetime,
+
+    def __init__(self, livetime, source_model, aeff, edisp=None,
                  e_reco=None, background_model=None, alpha=None):
+        self.livetime = livetime
+        self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
-        self.source_model = source_model
-        self.livetime = livetime
         self.e_reco = e_reco or edisp.e_reco.data
         self.background_model = background_model
         self.alpha = alpha
@@ -51,20 +52,28 @@ class SpectrumSimulation(object):
 
     @property
     def npred_source(self):
-        """Predicted source `~gammapy.spectrum.CountsSpectrum`"""
+        """Predicted source `~gammapy.spectrum.CountsSpectrum`
+
+        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        """
         npred = calculate_predicted_counts(livetime=self.livetime,
                                            aeff=self.aeff,
                                            edisp=self.edisp,
-                                           model=self.source_model)
+                                           model=self.source_model,
+                                           e_reco=self.e_reco)
         return npred
 
     @property
     def npred_background(self):
-        """Predicted background `~gammapy.spectrum.CountsSpectrum`"""
+        """Predicted background `~gammapy.spectrum.CountsSpectrum`
+
+        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        """
         npred = calculate_predicted_counts(livetime=self.livetime,
                                            aeff=self.aeff,
                                            edisp=self.edisp,
-                                           model=self.background_model)
+                                           model=self.background_model,
+                                           e_reco=self.e_reco)
         return npred
 
     def run(self, seed):
