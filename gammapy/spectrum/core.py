@@ -258,6 +258,7 @@ class CountsSpectrum(NDDataArray):
             raise ValueError("Invalid rebin parameter: {}, nbins: {}".format(
                 parameter, len(self.data)))
 
+        # Copy to keep attributes
         retval = self.copy()
         retval.energy.data = retval.energy.data[0::parameter]
         split_indices = np.arange(parameter, len(retval.data), parameter)
@@ -370,6 +371,24 @@ class PHACountsSpectrum(CountsSpectrum):
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
+
+    def rebin(self, parameter):
+        """Rebin
+
+        see `~gammapy.spectrum.CountsSpectrum`, this function treats the
+        quality vector correctly
+        """
+        retval = super(PHACountsSpectrum, self).rebin(parameter)
+        split_indices = np.arange(parameter, len(self.data), parameter)
+        quality_grp = np.split(retval.quality, split_indices)
+        quality_summed = np.sum(quality_grp, axis=1)
+        # Exclude groups where not all bins are within the safe threshold
+        condition = (quality_summed == parameter)
+        quality_rebinned = np.where(condition,
+                                    np.ones(len(retval.data)),
+                                    np.zeros(len(retval.data)))
+        retval.quality = np.array(quality_rebinned, dtype=int)
+        return retval
 
     @property
     def _backscal_array(self):
