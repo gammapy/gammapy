@@ -59,9 +59,9 @@ terms, we define the **WStat**.
 
 .. math::
 
-    W = 2 (\mu_{sig} + (1 + \alpha)\mu_{bkg}
+    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg}
     - n_{on} \log{(\mu_{sig} + \alpha \mu_{bkg})}
-    - n_{off} \log{(\mu_{bkg})})
+    - n_{off} \log{(\mu_{bkg})}\big)
 
 Most of the times you probably won't have a model in order to get
 :math:`\mu_{bkg}`. The strategy in this case is to treat :math:`\mu_{bkg}` as
@@ -77,7 +77,7 @@ likelihood'.
 This yields a quadratic equation for :math:`\mu_{bkg}` 
 
 .. math::
-    \frac{\alpha n_{on}}{mu_{sig}+\alpha \mu_{bkg}} +
+    \frac{\alpha\,n_{on}}{mu_{sig}+\alpha \mu_{bkg}} +
     \frac{n_{off}}{\mu_{bkg}} - (\alpha + 1) = 0
 
 with the solution
@@ -97,7 +97,8 @@ where
 The best-fit value of the WStat as defined now contains no information about
 the goodness of the fit. In order to provide such an estimate, we can add a
 constant term to the WStat, namely twice the log likelihood of the data
-:math:`n_{on}` and :math:`n_{off}` under the expectation of :math:`n_{on}` and :math:`n_{off}`,
+:math:`n_{on}` and :math:`n_{off}` under the expectation of :math:`n_{on}` and
+:math:`n_{off}`,
 
 .. math::
 
@@ -120,9 +121,9 @@ Hence, we rewrite WStat as:
 
 .. math::
 
-    W = 2 (\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{on} - n_{off}
+    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{on} - n_{off}
     - n_{on} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{on})}})
-    - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})}))
+    - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})})\big)
 
 
 The above formular is obviously undefined if :math:`n_{on}` or :math:`n_{off}`
@@ -132,7 +133,7 @@ If :math:`n_{on} = 0`
 
 .. math::
 
-    W = \mu_{sig} - n_{on} \log{\frac{1}{1 + \alpha}}
+    W = 2\big(\mu_{sig} - n_{on} \log{\left(\frac{1}{1 + \alpha}\right)}\big)
 
 Otherwise, two cases are distinguished.
 
@@ -141,13 +142,13 @@ If
 
 .. math::
 
-    W = -\mu_{sig} (\frac{1}{\alpha}) - n_{on} \log{(\frac{\alpha}{1 + alpha})}
+    W = -2\big(\mu_{sig} \left(\frac{1}{\alpha}\right) + n_{on} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
 
 else
 
 .. math::
 
-    W = \mu_{sig} + n_{on}(\log{(n_{on})} - \log{(mu_{sig})} - 1)
+    W = 2\big(\mu_{sig} + n_{on}(\log{(n_{on})} - \log{(\mu_{sig})} - 1)\big)
 
 The following table gives an overview over values that WStat takes in different
 scenarios
