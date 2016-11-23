@@ -21,6 +21,7 @@ from ...utils.testing import (
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 class TestSpectralFit:

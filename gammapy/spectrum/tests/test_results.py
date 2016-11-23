@@ -16,6 +16,7 @@ from ...utils.testing import (
 )
 
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumFitResult:
 
