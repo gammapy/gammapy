@@ -41,61 +41,64 @@ TODO
 Poisson data with background measurement
 ----------------------------------------
 If you not only have a  measurement of counts  :math:`n_{\mathrm{on}}` in the signal region,
-but also a measurement :math:`n_{off}` in a background region you can write down the
+but also a measurement :math:`n_{\mathrm{off}}` in a background region you can write down the
 likelihood formula as 
 
 .. math::
 
-    L (n_{\mathrm{on}}, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
-         \frac{(\mu_{sig}+\alpha \mu_{bkg})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
-        \exp{(-(\mu_{sig}+\alpha \mu_{bkg}))}\times 
-        \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-\mu_{bkg})},
+    L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}},
+    \mu_{\mathrm{bkg}}) = \frac{(\mu_{\mathrm{sig}}+\alpha
+    \mu_{\mathrm{bkg}})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
+    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
+    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
+    !}\exp{(-\mu_{\mathrm{bkg}})},
 
-where :math:`\mu_{sig}` is the number of expected counts in the signal regions,
-and :math:`\mu_{bkg}` is the number of expected counts in the background
+where :math:`\mu_{\mathrm{sig}}` is the number of expected counts in the signal regions,
+and :math:`\mu_{\mathrm{bkg}}` is the number of expected counts in the background
 region, as defined in the :ref:`stats-introduction`. By taking two time the
 negative log likelihood and neglecting model independent and thus constant
 terms, we define the **WStat**.
 
 .. math::
 
-    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg}
-    - n_{\mathrm{on}} \log{(\mu_{sig} + \alpha \mu_{bkg})}
-    - n_{off} \log{(\mu_{bkg})}\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}}
+    - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}})}
+    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
 
 
 Profile Likelihood
 ^^^^^^^^^^^^^^^^^^
 
 Most of the times you probably won't have a model in order to get
-:math:`\mu_{bkg}`. The strategy in this case is to treat :math:`\mu_{bkg}` as
+:math:`\mu_{\mathrm{bkg}}`. The strategy in this case is to treat :math:`\mu_{\mathrm{bkg}}` as
 so-called nuisance parameter, i.e. a free parameter that is of no physical
 interest.  Of course you don't want an additional free parameter for each bin
-during a fit. Therefore one calculates an estimator for :math:`\mu_{bkg}` by
+during a fit. Therefore one calculates an estimator for :math:`\mu_{\mathrm{bkg}}` by
 analytically minimizing the likelihood function. This is called 'profile
 likelihood'.
 
 .. math::
-    \frac{\mathrm d \log L}{\mathrm d \mu_{bkg}} = 0
+    \frac{\mathrm d \log L}{\mathrm d \mu_{\mathrm{bkg}}} = 0
     
-This yields a quadratic equation for :math:`\mu_{bkg}` 
+This yields a quadratic equation for :math:`\mu_{\mathrm{bkg}}` 
 
 .. math::
-    \frac{\alpha\,n_{\mathrm{on}}}{\mu_{sig}+\alpha \mu_{bkg}} +
-    \frac{n_{off}}{\mu_{bkg}} - (\alpha + 1) = 0
+    \frac{\alpha\,n_{\mathrm{on}}}{\mu_{\mathrm{sig}}+\alpha
+    \mu_{\mathrm{bkg}}} + \frac{n_{\mathrm{off}}}{\mu_{\mathrm{bkg}}} - (\alpha
+    + 1) = 0
 
 with the solution
 
 .. math::
 
-    \mu_{bkg} = \frac{C + D}{2\alpha(\alpha + 1)}
+    \mu_{\mathrm{bkg}} = \frac{C + D}{2\alpha(\alpha + 1)}
 
 where
 
 .. math::
 
-    C = \alpha(n_{\mathrm{on}} + n_{off}) - (\alpha+1)\mu_{sig} \\
-    D^2 = C^2 + 4 (\alpha+1)\alpha n_{off} \mu_{sig}
+    C = \alpha(n_{\mathrm{on}} + n_{\mathrm{off}}) - (\alpha+1)\mu_{\mathrm{sig}} \\
+    D^2 = C^2 + 4 (\alpha+1)\alpha n_{\mathrm{off}} \mu_{\mathrm{sig}}
 
 
 Goodness of fit
@@ -104,20 +107,22 @@ Goodness of fit
 The best-fit value of the WStat as defined now contains no information about
 the goodness of the fit. In order to provide such an estimate, we can add a
 constant term to the WStat, namely twice the log likelihood of the data
-:math:`n_{\mathrm{on}}` and :math:`n_{off}` under the expectation of :math:`n_{\mathrm{on}}` and
-:math:`n_{off}`,
+:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of :math:`n_{\mathrm{on}}` and
+:math:`n_{\mathrm{off}}`,
 
 .. math::
 
-     2 \log L (n_{\mathrm{on}}, n_{off}; n_{\mathrm{on}}, n_{off}) =
-         2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) + n_{off} ( \log{(n_{off})} - 1))
+     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}},
+     n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
+     n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
 
 In doing so, we are computing the likelihood ratio:
 
 .. math::
 
-    -2 \log \frac{L(n_{\mathrm{on}},n_{off},\alpha; \mu_{sig},\mu_{bkg})}
-        {L(n_{\mathrm{on}},n_{off};n_{\mathrm{on}},n_{off})}
+    -2 \log \frac{L(n_{\mathrm{on}},n_{\mathrm{off}},\alpha;
+    \mu_{\mathrm{sig}},\mu_{\mathrm{bkg}})}
+    {L(n_{\mathrm{on}},n_{\mathrm{off}};n_{\mathrm{on}},n_{\mathrm{off}})}
 
 Intuitively, this log-likelihood ratio should asymptotically behave like a
 chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
@@ -129,74 +134,82 @@ Final result
 
 .. math::
 
-    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{\mathrm{on}} - n_{off}
-    - n_{\mathrm{on}} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{\mathrm{on}})}})
-    - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})})\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
+    n_{\mathrm{on}} - n_{\mathrm{off}} - n_{\mathrm{on}}
+    (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
+    \log{(n_{\mathrm{on}})}}) - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    \log{(n_{\mathrm{off}})})\big)
 
 
 Special cases
 ^^^^^^^^^^^^^
 
-The above formular is obviously undefined if :math:`n_{\mathrm{on}}` or :math:`n_{off}`
+The above formular is obviously undefined if :math:`n_{\mathrm{on}}` or :math:`n_{\mathrm{off}}`
 are equal to zero. These cases are treated as follows.
 
 If :math:`n_{\mathrm{on}} = 0` the likelihood formular reads
 
 .. math::
 
-    L (0, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
-        \exp{(-(\mu_{sig}+\alpha \mu_{bkg}))}\times 
-        \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-\mu_{bkg})},
+    L (0, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}}, \mu_{\mathrm{bkg}}) =
+    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
+    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
+    !}\exp{(-\mu_{\mathrm{bkg}})},
 
 WStat is derived by taking 2 times the negative log likelihood as ever
 
 .. math::
 
-    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{off} \log{(\mu_{bkg})}\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
+    n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
 
-The analytical result for :math:`\mu_{bkg}` in this case reads 
+The analytical result for :math:`\mu_{\mathrm{bkg}}` in this case reads 
 
 .. math::
 
-    \mu_{bkg} = \frac{n_{off}}{\alpha + 1}
+    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{off}}}{\alpha + 1}
 
 When inserting this into the WStat formular and also adding the goodness of fit
-term :math:`2 n_{off}(\log{(n_{off})} - 1)` one arrives at
+term :math:`2 n_{\mathrm{off}}(\log{(n_{\mathrm{off}})} - 1)` one arrives at
 
 .. math::
 
-    W = 2\big(\mu_{sig} + n_{off} \log{(1 + \alpha)}\big)
+    W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{off}} \log{(1 + \alpha)}\big)
 
 
-If :math:`n_{off} = 0` Wstat becomes
+If :math:`n_{\mathrm{off}} = 0` Wstat becomes
 
 .. math::
 
-    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg}
-    - n_{\mathrm{on}} \log{(\mu_{sig} + \alpha \mu_{bkg} )}\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
+    n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}
+    )}\big)
 
 and
 
 .. math::
 
-    \mu_{bkg} = \frac{n_{\mathrm{on}}}{1+\alpha} - \frac{\mu_{sig}}{\alpha}
+    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{on}}}{1+\alpha} -
+    \frac{\mu_{\mathrm{sig}}}{\alpha}
 
-Obviously, :math:`\mu_{bkg}` can become negative which is unphyisical.
+Obviously, :math:`\mu_{\mathrm{bkg}}` can become negative which is unphyisical.
 Therefore we distince two cases. The physical one where
 
-:math:`\mu_{sig} < n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`. 
+:math:`\mu_{\mathrm{sig}} < n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`. 
 
 is straightforward and gives
 
 .. math::
 
-    W = -2\big(\mu_{sig} \left(\frac{1}{\alpha}\right) + n_{\mathrm{on}} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
+    W = -2\big(\mu_{\mathrm{sig}} \left(\frac{1}{\alpha}\right) +
+    n_{\mathrm{on}} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
 
-For the unphysical case, we set :math:`\mu_{bkg}=0` and arrive at
+For the unphysical case, we set :math:`\mu_{\mathrm{bkg}}=0` and arrive at
 
 .. math::
 
-    W = 2\big(\mu_{sig} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} - \log{(\mu_{sig})} - 1)\big)
+    W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} -
+    \log{(\mu_{\mathrm{sig}})} - 1)\big)
 
 
 Example
@@ -246,8 +259,8 @@ with the substitutions
 
 .. math::
 
-    \mu_{sig} = t_s \cdot m_i \\
-    \mu_{bkg} = t_b \cdot m_b \\
+    \mu_{\mathrm{sig}} = t_s \cdot m_i \\
+    \mu_{\mathrm{bkg}} = t_b \cdot m_b \\
     \alpha = t_s / t_b  \\
 
 
