@@ -204,7 +204,7 @@ def _get_wstat_special_case(n_on, n_off, alpha, mu_sig):
     for idx in indices[0]:
         if n_on[idx] == 0:
             first_term = mu_sig[idx]
-            second_term = - n_off[idx] * np.log(1 / (1 + alpha[idx]))
+            second_term = n_off[idx] * np.log((1 + alpha[idx]))
         else:
             if mu_sig[idx] < (n_on[idx] * alpha[idx]) / (alpha[idx] + 1):
                 first_term = - mu_sig[idx] / alpha[idx]

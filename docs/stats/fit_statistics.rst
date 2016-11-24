@@ -40,14 +40,14 @@ TODO
 
 Poisson data with background measurement
 ----------------------------------------
-If you not only have a  measurement of counts  :math:`n_{on}` in the signal region,
+If you not only have a  measurement of counts  :math:`n_{\mathrm{on}}` in the signal region,
 but also a measurement :math:`n_{off}` in a background region you can write down the
 likelihood formula as 
 
 .. math::
 
-    L (n_{on}, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
-         \frac{(\mu_{sig}+\alpha \mu_{bkg})^{n_{on}}}{n_{on} !}
+    L (n_{\mathrm{on}}, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
+         \frac{(\mu_{sig}+\alpha \mu_{bkg})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
         \exp{(-(\mu_{sig}+\alpha \mu_{bkg}))}\times 
         \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-\mu_{bkg})},
 
@@ -60,8 +60,12 @@ terms, we define the **WStat**.
 .. math::
 
     W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg}
-    - n_{on} \log{(\mu_{sig} + \alpha \mu_{bkg})}
+    - n_{\mathrm{on}} \log{(\mu_{sig} + \alpha \mu_{bkg})}
     - n_{off} \log{(\mu_{bkg})}\big)
+
+
+Profile Likelihood
+^^^^^^^^^^^^^^^^^^
 
 Most of the times you probably won't have a model in order to get
 :math:`\mu_{bkg}`. The strategy in this case is to treat :math:`\mu_{bkg}` as
@@ -77,7 +81,7 @@ likelihood'.
 This yields a quadratic equation for :math:`\mu_{bkg}` 
 
 .. math::
-    \frac{\alpha\,n_{on}}{\mu_{sig}+\alpha \mu_{bkg}} +
+    \frac{\alpha\,n_{\mathrm{on}}}{\mu_{sig}+\alpha \mu_{bkg}} +
     \frac{n_{off}}{\mu_{bkg}} - (\alpha + 1) = 0
 
 with the solution
@@ -90,65 +94,113 @@ where
 
 .. math::
 
-    C = \alpha(n_{on} + n_{off}) - (\alpha+1)\mu_{sig} \\
+    C = \alpha(n_{\mathrm{on}} + n_{off}) - (\alpha+1)\mu_{sig} \\
     D^2 = C^2 + 4 (\alpha+1)\alpha n_{off} \mu_{sig}
 
+
+Goodness of fit
+^^^^^^^^^^^^^^^
 
 The best-fit value of the WStat as defined now contains no information about
 the goodness of the fit. In order to provide such an estimate, we can add a
 constant term to the WStat, namely twice the log likelihood of the data
-:math:`n_{on}` and :math:`n_{off}` under the expectation of :math:`n_{on}` and
+:math:`n_{\mathrm{on}}` and :math:`n_{off}` under the expectation of :math:`n_{\mathrm{on}}` and
 :math:`n_{off}`,
 
 .. math::
 
-     2 \log L (n_{on}, n_{off}; n_{on}, n_{off}) =
-         2 (n_{on} ( \log n_{on} - 1 ) + n_{off} ( \log n_{off} - 1))
-
+     2 \log L (n_{\mathrm{on}}, n_{off}; n_{\mathrm{on}}, n_{off}) =
+         2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) + n_{off} ( \log{(n_{off})} - 1))
 
 In doing so, we are computing the likelihood ratio:
 
 .. math::
 
-    -2 \log \frac{L(n_{on},n_{off},\alpha; \mu_{sig},\mu_{bkg})}
-        {L(n_{on},n_{off};n_{on},n_{off})}
+    -2 \log \frac{L(n_{\mathrm{on}},n_{off},\alpha; \mu_{sig},\mu_{bkg})}
+        {L(n_{\mathrm{on}},n_{off};n_{\mathrm{on}},n_{off})}
 
 Intuitively, this log-likelihood ratio should asymptotically behave like a
 chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
 measurements and ``n`` the number of model parameters.
 
-Hence, we rewrite WStat as:
+
+Final result
+^^^^^^^^^^^^
 
 .. math::
 
-    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{on} - n_{off}
-    - n_{on} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{on})}})
+    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{\mathrm{on}} - n_{off}
+    - n_{\mathrm{on}} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{\mathrm{on}})}})
     - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})})\big)
 
 
-The above formular is obviously undefined if :math:`n_{on}` or :math:`n_{off}`
-are equal to zero. This case is treated as follows.
+Special cases
+^^^^^^^^^^^^^
 
-If :math:`n_{on} = 0`
+The above formular is obviously undefined if :math:`n_{\mathrm{on}}` or :math:`n_{off}`
+are equal to zero. These cases are treated as follows.
 
-.. math::
-
-    W = 2\big(\mu_{sig} - n_{off} \log{\left(\frac{1}{1 + \alpha}\right)}\big)
-
-Otherwise, two cases are distinguished.
-
-If 
-:math:`\mu_{sig} < n_{on} (\frac{\alpha}{1 + \alpha})`
+If :math:`n_{\mathrm{on}} = 0` the likelihood formular reads
 
 .. math::
 
-    W = -2\big(\mu_{sig} \left(\frac{1}{\alpha}\right) + n_{on} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
+    L (0, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
+        \exp{(-(\mu_{sig}+\alpha \mu_{bkg}))}\times 
+        \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-\mu_{bkg})},
 
-else
+WStat is derived by taking 2 times the negative log likelihood as ever
 
 .. math::
 
-    W = 2\big(\mu_{sig} + n_{on}(\log{(n_{on})} - \log{(\mu_{sig})} - 1)\big)
+    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{off} \log{(\mu_{bkg})}\big)
+
+The analytical result for :math:`\mu_{bkg}` in this case reads 
+
+.. math::
+
+    \mu_{bkg} = \frac{n_{off}}{\alpha + 1}
+
+When inserting this into the WStat formular and also adding the goodness of fit
+term :math:`2 n_{off}(\log{(n_{off})} - 1)` one arrives at
+
+.. math::
+
+    W = 2\big(\mu_{sig} + n_{off} \log{(1 + \alpha)}\big)
+
+
+If :math:`n_{off} = 0` Wstat becomes
+
+.. math::
+
+    W = 2 \big(\mu_{sig} + (1 + \alpha)\mu_{bkg}
+    - n_{\mathrm{on}} \log{(\mu_{sig} + \alpha \mu_{bkg} )}\big)
+
+and
+
+.. math::
+
+    \mu_{bkg} = \frac{n_{\mathrm{on}}}{1+\alpha} - \frac{\mu_{sig}}{\alpha}
+
+Obviously, :math:`\mu_{bkg}` can become negative which is unphyisical.
+Therefore we distince two cases. The physical one where
+
+:math:`\mu_{sig} < n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`. 
+
+is straightforward and gives
+
+.. math::
+
+    W = -2\big(\mu_{sig} \left(\frac{1}{\alpha}\right) + n_{\mathrm{on}} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
+
+For the unphysical case, we set :math:`\mu_{bkg}=0` and arrive at
+
+.. math::
+
+    W = 2\big(\mu_{sig} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} - \log{(\mu_{sig})} - 1)\big)
+
+
+Example
+^^^^^^^
 
 The following table gives an overview over values that WStat takes in different
 scenarios
@@ -183,6 +235,21 @@ scenarios
       10.2   10     2   0.2  0.034
       16.9   20    70   0.1  0.656
      102.5  100    10   0.6  0.663
+
+Notes
+^^^^^
+
+All above formulae are equivalent to what is given on the 
+`XSpec manual statistics page
+<http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
+with the substitutions
+
+.. math::
+
+    \mu_{sig} = t_s \cdot m_i \\
+    \mu_{bkg} = t_b \cdot m_b \\
+    \alpha = t_s / t_b  \\
+
 
 Further references
 ------------------
