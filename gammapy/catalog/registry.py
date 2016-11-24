@@ -43,6 +43,10 @@ class SourceCatalogRegistry(object):
             from .hess import SourceCatalogHGPS
             source_catalogs.register('hgps', SourceCatalogHGPS)
 
+        if 'GAMMA_CAT' in os.environ:
+            from .gammacat import SourceCatalogGammaCat
+            source_catalogs.register('hgps', SourceCatalogGammaCat)
+
         return source_catalogs
 
     @property
