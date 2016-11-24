@@ -57,6 +57,10 @@ class TestCountsSpectrum:
         with pytest.raises(ValueError):
             rebinned_spec = self.spec.rebin(4)
 
+        actual = rebinned_spec.evaluate(energy = [2, 3, 5] * u.TeV)
+        desired = [0, 7, 20] * u.ct
+        assert (actual == desired).all()
+
 
 @requires_dependency('scipy')
 class TestPHACountsSpectrum:
