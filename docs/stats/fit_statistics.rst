@@ -77,7 +77,7 @@ likelihood'.
 This yields a quadratic equation for :math:`\mu_{bkg}` 
 
 .. math::
-    \frac{\alpha\,n_{on}}{mu_{sig}+\alpha \mu_{bkg}} +
+    \frac{\alpha\,n_{on}}{\mu_{sig}+\alpha \mu_{bkg}} +
     \frac{n_{off}}{\mu_{bkg}} - (\alpha + 1) = 0
 
 with the solution
