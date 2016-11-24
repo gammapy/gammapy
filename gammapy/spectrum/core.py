@@ -241,6 +241,33 @@ class CountsSpectrum(NDDataArray):
 
         return spectral_index
 
+    def rebin(self, parameter):
+        """Rebin
+
+        Parameters
+        ----------
+        parameter, int
+            Number of bins to merge
+
+        Returns
+        -------
+        rebinned_spectrum : `~gammapy.spectrum.CountsSpectrum`
+            Rebinned spectrum
+        """
+        if len(self.data) % parameter != 0:
+            raise ValueError("Invalid rebin parameter: {}, nbins: {}".format(
+                parameter, len(self.data)))
+
+        # Copy to keep attributes
+        retval = self.copy()
+        retval.energy.data = retval.energy.data[0::parameter]
+        split_indices = np.arange(parameter, len(retval.data), parameter)
+        counts_grp = np.split(retval.data, split_indices)
+        counts_rebinned = np.sum(counts_grp, axis=1)
+        retval.data = counts_rebinned * u.ct
+
+        return retval
+
 
 class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent
@@ -344,6 +371,24 @@ class PHACountsSpectrum(CountsSpectrum):
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
+
+    def rebin(self, parameter):
+        """Rebin
+
+        see `~gammapy.spectrum.CountsSpectrum`, this function treats the
+        quality vector correctly
+        """
+        retval = super(PHACountsSpectrum, self).rebin(parameter)
+        split_indices = np.arange(parameter, len(self.data), parameter)
+        quality_grp = np.split(retval.quality, split_indices)
+        quality_summed = np.sum(quality_grp, axis=1)
+        # Exclude groups where not all bins are within the safe threshold
+        condition = (quality_summed == parameter)
+        quality_rebinned = np.where(condition,
+                                    np.ones(len(retval.data)),
+                                    np.zeros(len(retval.data)))
+        retval.quality = np.array(quality_rebinned, dtype=int)
+        return retval
 
     @property
     def _backscal_array(self):

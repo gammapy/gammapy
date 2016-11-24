@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 import numpy as np
+from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import SpectrumExtraction, SpectrumSimulation
@@ -41,6 +42,7 @@ class TestSpectrumSimulation:
     def test_without_background(self):
         self.sim.simulate_obs(seed=23)
         assert self.sim.obs.on_vector.total_counts == 156 * u.ct
+        # print(np.sum(self.sim.npred_source.data.value))
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
@@ -58,3 +60,12 @@ class TestSpectrumSimulation:
         assert self.sim.result[2].on_vector.total_counts == 151 * u.ct
         assert self.sim.result[3].on_vector.total_counts == 163 * u.ct
         assert self.sim.result[4].on_vector.total_counts == 185 * u.ct
+
+    def test_without_edisp(self):
+        self.sim.edisp=None
+        self.sim.simulate_obs(seed=23)
+        assert self.sim.obs.on_vector.total_counts == 160 * u.ct
+        # The test value is taken from the test with edisp
+        assert_allclose(np.sum(self.sim.npred_source.data.value),
+                        167.467572145, rtol=0.01)
+

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
+from .. utils.energy import EnergyBounds
 
 __all__ = [
     'LogEnergyAxis',
@@ -101,7 +102,7 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
+def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
     """Get npred
 
     The true energy binning is inferred from the provided
@@ -116,11 +117,11 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
         Observation duration
     aeff : `~gammapy.irf.EffectiveAreaTable`
         EffectiveArea
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EnergyDispersion`, optional
         EnergyDispersion
     e_reco : `~astropy.units.Quantity`, optional
-        Desired energy axis of the prediced counts vector By default, the reco
-        energy axis of the energy dispersion matrix is used.
+        Desired energy axis of the prediced counts vector. If an energy
+        dispersion matrix is provided, its reco energy axis is used by default.
 
     Returns
     -------
@@ -164,15 +165,26 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
         plt.show()
     """
     from . import CountsSpectrum
+    if e_reco is None and edisp is None:
+        raise ValueError("No reconstruced energy binning provided. "
+                         "Please specifiy e_reco or edisp") 
+    else:
+        temp = e_reco or edisp.e_reco.data
+        e_reco = EnergyBounds(temp)
 
-    true_energy = aeff.energy.data.to('TeV')
-    flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:])
+    if edisp is not None:
+        true_energy = aeff.energy.data.to('TeV')
+        flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:])
+        # Need to fill nan values in aeff due to matrix multiplication with RMF
+        counts = flux * livetime * aeff.evaluate(fill_nan=True)
+        counts = counts.to('')
+        reco_counts = edisp.apply(counts, e_reco=e_reco)
+    else:
+        flux = model.integral(emin=e_reco[:-1], emax=e_reco[1:])
+        reco_counts = flux * livetime * aeff.evaluate(energy=e_reco.log_centers,
+                                                      fill_nan=True)
+        reco_counts = reco_counts.to('')
 
-    # Need to fill nan values in aeff due to matrix multiplication with RMF
-    counts = flux * livetime * aeff.evaluate(fill_nan=True)
-    counts = counts.to('')
-    reco_counts = edisp.apply(counts, e_reco=e_reco)
-    e_reco = e_reco or edisp.e_reco.data
     return CountsSpectrum(data=reco_counts, energy=e_reco)
 
 
