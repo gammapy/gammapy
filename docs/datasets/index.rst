@@ -16,7 +16,7 @@ relevant for gamma-ray astronomy.
 
 The functions have a naming pattern (following the `sklearn.datasets` lead):
 
-* ``load_*`` functions load datasets that are distributed with Gammapy (bundled in the repo) 
+* ``load_*`` functions load datasets that are distributed with Gammapy (bundled in the repo)
 * ``fetch_*`` functions fetch datasets from the web (either from ``gammapy-extra`` or other sites)
 * ``make_*`` functions create datasets programatically (sometimes involving a random number generator)
 
@@ -74,6 +74,38 @@ Example usage:
     >>> gammapy_extra.filename('logo/gammapy_banner.png')
     '/Users/deil/code/gammapy-extra/logo/gammapy_banner.png'
 
+
+.. _gammapy-cat:
+
+gammapy-cat
+===========
+
+Gamma-cat is an open catalog for TeV gamma-ray sources. It is maintained as an
+open git repository and hosted on github. To get the data you can use the
+`git clone` command:
+
+.. code-block:: bash
+
+  git clone https://github.com/gammapy/gamma-cat.git
+  git clone git@github.com:gammapy/gamma-cat.git
+
+If you don't have git, you can also fetch the latest version as a zip file as well:
+
+.. code-block:: bash
+
+    wget https://github.com/gammapy/gamma-cat/archive/master.zip
+    unzip master.zip # will result in a `gamma-cat-master` folder
+
+
+The `~gammapy.catalog.SourceCatalogGammaCat` and `~gammapy.catalog.SourceCatalogObjectGammaCat`
+classes need to know where the gamma-cat repository is located on your machine.
+For this reason the ``GAMMA_CAT`` shell environment variable has to be set using:
+
+.. code-block:: bash
+
+    export GAMMAPY_CAT=/path/on/your/machine/to/gamma-cat
+
+
 Getting Started
 ===============
 
@@ -91,11 +123,11 @@ the Astropy cache and need internet access on first call):
 .. code-block:: python
 
    >>> from gammapy.datasets import fetch_fermi_catalog
-   >>> catalog = fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')  
+   >>> catalog = fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')
 
 TODO: explain how the Astropy cache works and make it configurable for Gammapy.
 
-Example how to make a dataset (from scratch, no file is loaded): 
+Example how to make a dataset (from scratch, no file is loaded):
 
 .. code-block:: python
 

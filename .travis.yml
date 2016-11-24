@@ -36,6 +36,7 @@ env:
         - PIP_DEPENDENCIES='uncertainties'
         - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true
+        - FETCH_GAMMA_CAT=true
         - MAIN_CMD='python setup.py'
 
     matrix:
@@ -152,6 +153,11 @@ install:
     - if $FETCH_GAMMAPY_EXTRA; then
           git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
           export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
+      fi
+
+    - if $FETCH_GAMMA_CAT; then
+          git clone https://github.com/gammapy/gamma-cat.git $HOME/gamma-cat;
+          export GAMMA_CAT=${HOME}/gamma-cat;
       fi
 
     # This is needed to make matplotlib plot testing work

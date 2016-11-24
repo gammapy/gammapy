@@ -31,7 +31,7 @@ class SourceCatalogObject(object):
     _source_index_key = 'catalog_row_index'
 
     def __init__(self, data):
-        self.data = OrderedDict(data)
+        self.data = data
 
     @property
     def name(self):
