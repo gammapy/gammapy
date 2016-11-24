@@ -224,11 +224,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     """
 
     def __str__(self):
-        """Print default summary info string"""
-        return self.summary()
-
-    def summary(self):
-        """Print summary info."""
+        """Summary info string."""
         d = self.data
 
         ss = 'Source: {}\n'.format(d['Source_Name'])
@@ -243,7 +239,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
         ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
         ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
-
         return ss
 
     @property
@@ -380,10 +375,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     """Energy range of the Fermi 2FHL source catalog"""
 
     def __str__(self):
-        """Print default summary info string"""
-        return self.summary()
-
-    def summary(self):
         """Print summary info."""
         # TODO: can we share code with 3FGL summary funtion?
         d = self.data

@@ -71,6 +71,8 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_FP))
     def test_flux_points(self, name, desired):
         source = self.cat[name]
+
+        assert name == source.name
         flux_points = source.flux_points
         assert len(flux_points) == desired['N']
 

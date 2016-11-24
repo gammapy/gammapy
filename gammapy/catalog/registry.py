@@ -45,7 +45,7 @@ class SourceCatalogRegistry(object):
 
         if 'GAMMA_CAT' in os.environ:
             from .gammacat import SourceCatalogGammaCat
-            source_catalogs.register('hgps', SourceCatalogGammaCat)
+            source_catalogs.register('gamma-cat', SourceCatalogGammaCat)
 
         return source_catalogs
 

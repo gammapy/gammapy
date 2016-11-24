@@ -76,19 +76,25 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog.
     """
 
-    def __str__(self):
-        """Print default summary info string"""
-        return self.summary()
-
     @property
     def energy_range(self):
         erange = Quantity([self.data['Energy_Range_Spec_Lo'],
                            self.data['Energy_Range_Spec_Hi']], 'TeV')
         return erange
 
+    def info(self, info='all'):
+        """
+        Parameters
+        ----------
+        info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations'}
+            Comma separated list of options
+        """
+        ss = self.__str__(info=info)
+        print(ss)
 
-    def summary(self, info='all'):
-        """Print summary info string.
+    def __str__(self, info='all'):
+        """
+        Info string.
 
         Parameters
         ----------
@@ -101,20 +107,20 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = ''
         ops = info.split(',')
         if 'basic' in ops:
-            ss += self._summary_basic()
+            ss += self._info_basic()
         if 'map' in ops:
-            ss += self._summary_map()
+            ss += self._info_map()
         if 'spec' in ops:
-            ss += self._summary_spec()
+            ss += self._info_spec()
         if 'flux_points' in ops:
-            ss += self._summary_flux_points()
+            ss += self._info_flux_points()
         if 'components' in ops:
-            ss += self._summary_components()
+            ss += self._info_components()
         if 'associations' in ops:
-            ss += self._summary_associations()
+            ss += self._info_associations()
         return ss
 
-    def _summary_basic(self):
+    def _info_basic(self):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
@@ -128,7 +134,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return ss
 
-    def _summary_map(self):
+    def _info_map(self):
         """Print info from map analysis."""
         d = self.data
         ss = '\n*** Info from map analysis ***\n\n'
@@ -196,7 +202,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return ss
 
-    def _summary_spec(self):
+    def _info_spec(self):
         """Print info from spectral analysis."""
         d = self.data
         ss = '\n*** Info from spectral analysis ***\n\n'
@@ -225,12 +231,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
 
         # TODO: can we just use the Gammapy model classes here instead of duplicating the code?
-        ss += self._summary_spec_pl()
-        ss += self._summary_spec_ecpl()
+        ss += self._info_spec_pl()
+        ss += self._info_spec_ecpl()
 
         return ss
 
-    def _summary_spec_pl(self):
+    def _info_spec_pl(self):
         d = self.data
         ss = '{:<20s} : {:.1f} TeV\n'.format('Pivot energy', d['Energy_Spec_PL_Pivot'])
 
@@ -255,7 +261,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return ss
 
-    def _summary_spec_ecpl(self):
+    def _info_spec_ecpl(self):
         d = self.data
         ss = ''
         # ss = '{:<20s} : {:.1f} TeV\n'.format('Pivot energy', d['Energy_Spec_ECPL_Pivot'])
@@ -287,7 +293,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return ss
 
-    def _summary_flux_points(self):
+    def _info_flux_points(self):
         """Print flux point results"""
         d = self.data
         ss = '\n*** Flux points info ***\n\n'
@@ -309,7 +315,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '\n\t'.join(flux_points.pformat(-1))
         return ss + '\n'
 
-    def _summary_components(self):
+    def _info_components(self):
         """Print info about the components."""
         if not hasattr(self, 'components'):
             return ''
@@ -324,7 +330,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             ss += '\n\n'
         return ss
 
-    def _summary_associations(self):
+    def _info_associations(self):
         ss = '\n*** Source associations info ***\n\n'
         associations = ', '.join(self.associations)
         ss += 'List of associated objects: {}\n'.format(associations)
