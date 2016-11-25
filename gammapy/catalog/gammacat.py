@@ -166,11 +166,11 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
         filename = make_path(filename)
-        if not filename.exists():
+        if not 'GAMMA_CAT' in os.environ:
             msg = 'The gamma-cat repo is not available. '
             msg += 'You have to set the GAMMA_CAT environment variable '
             msg += 'to point to the location for it to be found.'
-            raise GammapyCatFoundError(msg)
+            raise GammaCatNotFoundError(msg)
 
         self.filename = str(filename)
         table = QTable.read(self.filename)
