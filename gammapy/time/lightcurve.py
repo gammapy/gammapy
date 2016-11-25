@@ -5,6 +5,7 @@ Lightcurve and elementary temporal functions
 from astropy.table import QTable
 from astropy.units import Quantity
 import astropy.units as u
+import numpy as np
 
 __all__ = [
     'LightCurve',
@@ -68,3 +69,35 @@ class LightCurve(QTable):
         lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
 
         return lc
+
+    def compute_fvar(self):
+        """Calculate the fractional excess variance (Fvar) of `LightCurve`.
+
+        """
+        time_min = self['TIME_MIN']
+        time_max = self['TIME_MAX']
+	time = (time_min+time_max)/2.0
+	flux = self['FLUX'].value
+   	fluxerr = self['FLUX_ERR'].value
+   	nptsperbin = len(flux)
+   	phisum = np.sum(flux)
+   	phimean = phisum / nptsperbin
+  	#print nptsperbin,phisum,phimean     
+   	unityrow = np.ones(nptsperbin)
+   	Ssq = (np.sum( (flux[:]-phimean*unityrow[:])**2) ) / (nptsperbin-1.0)
+   	S = np.sqrt(Ssq)
+   	Sigsq = np.nansum(fluxerr[:]**2) / nptsperbin
+   	#print fluxerr,np.nansum(fluxerr)#,nptsperbin        
+   	fvar = np.sqrt(np.abs(Ssq-Sigsq)) / phimean
+   	fluxerrT = np.transpose(fluxerr)
+   	#ascii.write([fluxerrT],'simfluxerr.txt')#,np.sum(fluxerr),fluxerr#nptsperbin
+   	sigxserrA = np.sqrt( 2.0/nptsperbin) * (Sigsq/phimean)**2
+   	sigxserrB = np.sqrt(Sigsq/nptsperbin) * (2.0*fvar/phimean)
+	#print sigxserrA,sigxserrB
+	#import IPython; IPython.embed()
+   	sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)#*phimean
+   	fvarerr = sigxserr / (2.0 * fvar)
+   	#print sigxserrA,sigxserrB,sigxserr,fvar,fvarerr
+	return fvar,fvarerr
+  
+     	
