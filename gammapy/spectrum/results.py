@@ -445,7 +445,7 @@ class SpectrumResult(object):
 
     def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, fit_kwargs=dict(),
-             butterfly_kwargs=dict(), point_kwargs=dict()):
+             butterfly_kwargs=dict(), point_kwargs=dict(), fig_kwargs=dict()):
         """Plot spectrum
 
         Plot best fit model, flux points and residuals
@@ -466,6 +466,8 @@ class SpectrumResult(object):
             forwarded to :func:`gammapy.spectrum.SpectrumButterfly.plot`
         point_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.DifferentialFluxPoints.plot`
+        fig_kwargs : dict, optional
+            forwarded to :func:`matplotlib.pyplot.figure`
 
         Returns
         -------
@@ -476,7 +478,7 @@ class SpectrumResult(object):
         """
         import matplotlib.pyplot as plt
 
-        ax0, ax1 = get_plot_axis()
+        ax0, ax1 = get_plot_axis(**fig_kwargs)
         ax0.set_yscale('log')
 
         fit_kwargs.setdefault('lw', '2')
@@ -552,8 +554,10 @@ class SpectrumResult(object):
         return ax
 
 
-def get_plot_axis(figsize=(15, 10)):
+def get_plot_axis(**kwargs):
     """Axis setup used for standard plots
+
+    kwargs are forwarded to plt.figure()
 
     Returns
     -------
@@ -565,7 +569,7 @@ def get_plot_axis(figsize=(15, 10)):
     from matplotlib import gridspec
     import matplotlib.pyplot as plt
 
-    fig = plt.figure(figsize=figsize)
+    fig = plt.figure(**kwargs)
 
     gs = gridspec.GridSpec(5, 1)
 

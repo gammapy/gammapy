@@ -65,6 +65,14 @@ terms, we define the **WStat**.
     - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}})}
     - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
 
+In the most general case, where :math:`\mu_{\mathrm{src}}` and
+:math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
+
+.. math::
+
+    \mu_{\mathrm{sig}} = n_{\mathrm{on}} - \alpha\,n_{\mathrm{off}}   \\
+    \mu_{\mathrm{bkg}} = n_{\mathrm{off}}
+
 
 Profile Likelihood
 ^^^^^^^^^^^^^^^^^^
