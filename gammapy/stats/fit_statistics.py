@@ -181,6 +181,9 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
     mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
 
+    # NOTE: I am pretty sure we don't need the follwoing since the formula
+    # above is already well defined
+
     # Handle n_on == 0
     mu_bkg_zero_on = n_off / (alpha + 1)
     mu_bkg = np.where(n_on == 0, mu_bkg_zero_on, mu_bkg)

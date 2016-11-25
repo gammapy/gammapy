@@ -39,17 +39,11 @@ def calc_wstat_sherpa(mu_sig, n_on, n_off, alpha):
 
 
 def calc_wstat_gammapy(mu_sig, n_on, n_off, alpha):
-    from gammapy.stats import wstat
-    from gammapy.stats.fit_statistics import (
-        _get_wstat_background,
-        _get_wstat_extra_terms,
-        _get_wstat_special_case,
-    )
+    from gammapy.stats import wstat, get_wstat_mu_bkg, get_wstat_gof_terms
 
-#    # background estimate
-#    bkg = _get_wstat_background(mu_sig=mu_sig, n_on=n_on, n_off=n_off,
-#                                alpha=alpha)
-#    print("Gammapy mu_bkg: {}".format(bkg))
+    # background estimate
+    bkg = get_wstat_mu_bkg(mu_sig=mu_sig, n_on=n_on, n_off=n_off, alpha=alpha)
+    print("Gammapy mu_bkg: {}".format(bkg))
 
 #    # without extra terms
 #    statsvec = wstat(extra_terms=False, mu_sig=mu_sig, n_on=n_on, n_off=n_off,
@@ -85,7 +79,7 @@ def calc_wstat_xspec(mu_sig, n_on, n_off, alpha):
     bkg = f * t_b
     stat = wstat(t_s, t_b, mu_sig, n_on, n_off)
 
-    #print("XSPEC mu_bkg (f * t_b): {}".format(bkg))
+    print("XSPEC mu_bkg (f * t_b): {}".format(bkg))
     print("XSPEC stat: {}".format(stat))
 
 
@@ -121,3 +115,4 @@ if __name__ == "__main__":
         for mu_sig, n_on, n_off, alpha in zip(
                 td['mu_sig'], td['n_on'], td['n_off'], td['alpha']):
             test_case([None, mu_sig, n_on, n_off, alpha])
+            print('\n-------------------------\n')
