@@ -111,7 +111,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     r"""W statistic, for Poisson data with Poisson background.
 
     For a definition of WStat see :ref:`wstat`. If ``mu_bkg`` is not provided
-    it will be calculated according to the profile likelihood formular.
+    it will be calculated according to the profile likelihood formula.
 
     Parameters
     ----------

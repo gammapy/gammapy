@@ -105,10 +105,19 @@ Goodness of fit
 ^^^^^^^^^^^^^^^
 
 The best-fit value of the WStat as defined now contains no information about
-the goodness of the fit. In order to provide such an estimate, we can add a
-constant term to the WStat, namely twice the log likelihood of the data
-:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of :math:`n_{\mathrm{on}}` and
-:math:`n_{\mathrm{off}}`,
+the goodness of the fit. We consider the likelihood of the data
+:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of
+:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`,
+
+.. math::
+
+    L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}}, n_{\mathrm{off}}) =
+    \frac{n_{\mathrm{on}}^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
+    \exp{(-n_{\mathrm{on}})}\times
+    \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
+    \exp{(-n_{\mathrm{off}})}
+
+and add twice the log likelihood
 
 .. math::
 
@@ -116,7 +125,7 @@ constant term to the WStat, namely twice the log likelihood of the data
      n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
      n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
 
-In doing so, we are computing the likelihood ratio:
+to WStat. In doing so, we are computing the likelihood ratio:
 
 .. math::
 
@@ -144,10 +153,12 @@ Final result
 Special cases
 ^^^^^^^^^^^^^
 
-The above formular is obviously undefined if :math:`n_{\mathrm{on}}` or :math:`n_{\mathrm{off}}`
-are equal to zero. These cases are treated as follows.
+The above formula is undefined if :math:`n_{\mathrm{on}}` or
+:math:`n_{\mathrm{off}}` are equal to zero, because of the :math:`n\log{{n}}`
+terms, that were introduced by adding the goodness of fit terms.
+These cases are treated as follows.
 
-If :math:`n_{\mathrm{on}} = 0` the likelihood formular reads
+If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 
 .. math::
 
@@ -156,21 +167,34 @@ If :math:`n_{\mathrm{on}} = 0` the likelihood formular reads
     \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
     !}\exp{(-\mu_{\mathrm{bkg}})},
 
-WStat is derived by taking 2 times the negative log likelihood as ever
+and
+
+.. math::
+
+    L (0, n_{\mathrm{off}}; 0, n_{\mathrm{off}}) =
+    \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
+    \exp{(-n_{\mathrm{off}})}
+
+WStat is derived by taking 2 times the negative log likelihood and adding the
+goodness of fit term as ever
 
 .. math::
 
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
+    n_{\mathrm{off}} - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    \log{(n_{\mathrm{off}})})\big)
 
-The analytical result for :math:`\mu_{\mathrm{bkg}}` in this case reads 
+Note that this is the limit of the original Wstat formula for
+:math:`n_{\mathrm{on}} \rightarrow 0`.
+
+The analytical result for
+:math:`\mu_{\mathrm{bkg}}` in this case reads:
 
 .. math::
 
     \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{off}}}{\alpha + 1}
 
-When inserting this into the WStat formular and also adding the goodness of fit
-term :math:`2 n_{\mathrm{off}}(\log{(n_{\mathrm{off}})} - 1)` one arrives at
+When inserting this into the WStat we find the simplified expression.
 
 .. math::
 
@@ -182,8 +206,8 @@ If :math:`n_{\mathrm{off}} = 0` Wstat becomes
 .. math::
 
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}
-    )}\big)
+    n_{\mathrm{on}} - n_{\mathrm{on}} (\log{(\mu_{\mathrm{sig}} + \alpha
+    \mu_{\mathrm{bkg}}) - \log{(n_{\mathrm{on}})}}) 
 
 and
 
@@ -192,8 +216,10 @@ and
     \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{on}}}{1+\alpha} -
     \frac{\mu_{\mathrm{sig}}}{\alpha}
 
-Obviously, :math:`\mu_{\mathrm{bkg}}` can become negative which is unphyisical.
-Therefore we distince two cases. The physical one where
+For :math:`\mu_{\mathrm{sig}} > n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`,
+:math:`\mu_{\mathrm{bkg}}` becomes negative which is unphysical.
+
+Therefore we distinct two cases. The physical one where 
 
 :math:`\mu_{\mathrm{sig}} < n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`. 
 
@@ -221,7 +247,7 @@ scenarios
     >>> from gammapy.stats import wstat    
     >>> from astropy.table import Table
     >>> table = Table()
-    >>> table['mu_sig'] = [0.1, 0.95, 1.4, 0.2, 0.1, 5.2, 6.2, 4.1, 6.4, 4.9, 10.2,
+    >>> table['mu_sig'] = [0.1, 0.1, 1.4, 0.2, 0.1, 5.2, 6.2, 4.1, 6.4, 4.9, 10.2,
     ...                    16.9, 102.5]
     >>> table['n_on'] = [0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 10, 20, 100]
     >>> table['n_off'] = [0, 1, 1, 10 , 10, 0, 5, 5, 20, 40, 2, 70, 10]
