@@ -9,6 +9,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
+from ...image import SkyImage
 from ...data import EventList
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
 from ...spectrum.models import PowerLaw2
@@ -216,10 +217,17 @@ def test_bin_events_in_cube():
     meta = events.table.meta
     counts = SkyCube.empty(
         emin=0.5, emax=80, enumbins=8, eunit='TeV',
-        dtype='int', nxpix=200, nypix=200,
+        dtype='int', nxpix=200, nypix=200, mode='edges',
         xref=meta['RA_OBJ'], yref=meta['DEC_OBJ'], coordsys='CEL',
     )
 
     counts.fill_events(events)
 
+    # check against event list energy selection
+    counts_image = SkyImage.empty(dtype='int', nxpix=200, nypix=200, xref=meta['RA_OBJ'],
+                       yref=meta['DEC_OBJ'], coordsys='CEL', proj='CAR')
+    events = events.select_energy([0.5, 80] * u.TeV)
+    counts_image.fill_events(events)
+
     assert counts.data.sum() == 1233
+    assert counts.data.sum() == counts_image.data.sum()
