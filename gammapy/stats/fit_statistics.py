@@ -8,7 +8,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 
 __all__ = [
-    'cash', 'cstat', 'wstat', 'lstat', 'pgstat',
+    'cash', 'cstat', 'wstat', 'get_wstat_mu_bkg', 'get_wstat_gof_terms',
+    'lstat', 'pgstat',
     'chi2', 'chi2constvar', 'chi2datavar',
     'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
 ]
@@ -153,14 +154,14 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
 
     if mu_bkg is None:
-        mu_bkg =  get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig)
+        mu_bkg = get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig)
 
     term1 = mu_sig + (1 + alpha) * mu_bkg
     term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
-    
+
     # Handle n_on == 0
     term2 = np.where(n_on == 0, 0, term2_)
-    term3_ = - n_off * np.log(mu_bkg) 
+    term3_ = - n_off * np.log(mu_bkg)
     term3 = np.where(n_off == 0, 0, term3_)
 
     stat = 2 * (term1 + term2 + term3)
@@ -173,18 +174,18 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
 def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
     """Calculate ``mu_bkg`` for wstat
-    
+
     see :ref:`wstat`.
     """
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
     mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
 
-    # Handle n_on == 0 
+    # Handle n_on == 0
     mu_bkg_zero_on = n_off / (alpha + 1)
     mu_bkg = np.where(n_on == 0, mu_bkg_zero_on, mu_bkg)
 
-    # Handle n_off == 0 
+    # Handle n_off == 0
     mu_bkg_zero_off = n_on / (alpha + 1) - mu_sig / alpha
     mu_bkg_zero_off = np.where(mu_bkg_zero_off < 0, 0, mu_bkg_zero_off)
     mu_bkg = np.where(n_off == 0, mu_bkg_zero_off, mu_bkg)
@@ -200,10 +201,10 @@ def get_wstat_gof_terms(n_on, n_off):
     term = np.zeros(len(n_on))
     term1 = - n_on * (1 - np.log(n_on))
     term2 = - n_off * (1 - np.log(n_off))
-    
+
     term += np.where(n_on == 0, 0, term1)
     term += np.where(n_off == 0, 0, term2)
-    
+
     return 2 * term
 
 
