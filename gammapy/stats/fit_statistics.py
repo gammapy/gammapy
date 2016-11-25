@@ -107,10 +107,11 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     return stat
 
 
-def wstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
+def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     r"""W statistic, for Poisson data with Poisson background.
 
-    For a definition of WStat see :ref:`wstat`.
+    For a definition of WStat see :ref:`wstat`. If ``mu_bkg`` is not provided
+    it will be calculated according to the profile likelihood formula.
 
     Parameters
     ----------
@@ -122,6 +123,8 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
         Exposure ratio between on and off region
     mu_sig : array_like
         Signal expected counts
+    mu_bkg : array_like, optional
+        Background expected counts
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
         parameter, default: True
@@ -149,72 +152,59 @@ def wstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
     alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
     mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
 
-    mu_bkg = _get_wstat_background(n_on, n_off, alpha, mu_sig)
+    if mu_bkg is None:
+        mu_bkg =  get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig)
 
     term1 = mu_sig + (1 + alpha) * mu_bkg
-    term2 = - n_on * np.log(mu_sig + alpha * mu_bkg)
-    term3 = - n_off * np.log(mu_bkg)
+    term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    
+    # Handle n_on == 0
+    term2 = np.where(n_on == 0, 0, term2_)
+    term3_ = - n_off * np.log(mu_bkg) 
+    term3 = np.where(n_off == 0, 0, term3_)
 
-    stat = term1 + term2 + term3
+    stat = 2 * (term1 + term2 + term3)
 
     if extra_terms:
-        stat += _get_wstat_extra_terms(n_on, n_off)
+        stat += get_wstat_gof_terms(n_on, n_off)
 
-        # special case n_on or n_off = 0
-        special_case = _get_wstat_special_case(n_on, n_off, alpha, mu_sig)
-        stat = np.where(special_case != 0, special_case, stat)
-
-    return 2 * stat
+    return stat
 
 
-def _get_wstat_background(n_on, n_off, alpha, mu_sig):
-    """Calculate nuisance parameter mu_bkg (profile likelihood)
+def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
+    """Calculate ``mu_bkg`` for wstat
+    
+    see :ref:`wstat`.
     """
-    # Get mu_backgroud
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
-
-    # TODO : Investigate this
-    # For n_off = 0, mu_bkg = 0. Effect?
-    # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
-    # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
-    # mu_bkg = np.where(temp_plus > 0, temp_plus, temp_minus)
     mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
+
+    # Handle n_on == 0 
+    mu_bkg_zero_on = n_off / (alpha + 1)
+    mu_bkg = np.where(n_on == 0, mu_bkg_zero_on, mu_bkg)
+
+    # Handle n_off == 0 
+    mu_bkg_zero_off = n_on / (alpha + 1) - mu_sig / alpha
+    mu_bkg_zero_off = np.where(mu_bkg_zero_off < 0, 0, mu_bkg_zero_off)
+    mu_bkg = np.where(n_off == 0, mu_bkg_zero_off, mu_bkg)
+
     return mu_bkg
 
 
-def _get_wstat_extra_terms(n_on, n_off):
-    """Calculate additional term that can be added to wstat
+def get_wstat_gof_terms(n_on, n_off):
+    """Calculate goodness of fit terms for wstat
 
-    see:
-    https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    see :ref:`wstat`.
     """
-    term = - n_on * (1 - np.log(n_on)) - n_off * (1 - np.log(n_off))
-    return term
-
-
-def _get_wstat_special_case(n_on, n_off, alpha, mu_sig):
-    """Calculate corner cases for wstat
-
-    see
-    https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    special_case = np.zeros(len(n_on))
-    indices = np.where((n_on == 0) | (n_off == 0))
-    for idx in indices[0]:
-        if n_on[idx] == 0:
-            first_term = mu_sig[idx]
-            second_term = - n_off[idx] * np.log(1 / (1 + alpha[idx]))
-        else:
-            if mu_sig[idx] < (n_on[idx] * alpha[idx]) / (alpha[idx] + 1):
-                first_term = - mu_sig[idx] / alpha[idx]
-                second_term = - n_on[idx] * np.log(alpha[idx] / (1 + alpha[idx]))
-            else:
-                first_term = mu_sig[idx]
-                second_term = n_on[idx] * (np.log(n_on[idx]) - np.log(mu_sig[idx]) - 1)
-
-        special_case[idx] = first_term + second_term
-    return special_case
+    term = np.zeros(len(n_on))
+    term1 = - n_on * (1 - np.log(n_on))
+    term2 = - n_off * (1 - np.log(n_off))
+    
+    term += np.where(n_on == 0, 0, term1)
+    term += np.where(n_off == 0, 0, term2)
+    
+    return 2 * term
 
 
 def lstat():
