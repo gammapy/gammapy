@@ -156,8 +156,8 @@ def test_cube_sed2():
 
     sed_table1 = cube_sed(spec_cube, mask, flux_type='integral')
 
-    assert_allclose(sed_table1['ENERGY'][0], 53.37451755960359)
-    assert_allclose(sed_table1['DIFF_FLUX'][0], 365.64943655965686)
+    assert_allclose(sed_table1['ENERGY'][0], 49.9571490582045)
+    assert_allclose(sed_table1['DIFF_FLUX'][0], 194.78719630693772)
     assert_allclose(sed_table1['DIFF_FLUX_ERR_HI'], 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='integral',
