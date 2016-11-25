@@ -158,11 +158,10 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     term1 = mu_sig + (1 + alpha) * mu_bkg
     term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
     
-    zero_val = np.zeros(len(n_on))
     # Handle n_on == 0
-    term2 = np.where(n_on == 0, zero_val, term2_)
+    term2 = np.where(n_on == 0, 0, term2_)
     term3_ = - n_off * np.log(mu_bkg) 
-    term3 = np.where(n_off == 0, zero_val, term3_)
+    term3 = np.where(n_off == 0, 0, term3_)
 
     stat = 2 * (term1 + term2 + term3)
 
@@ -187,8 +186,7 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
 
     # Handle n_off == 0 
     mu_bkg_zero_off = n_on / (alpha + 1) - mu_sig / alpha
-    val_zero = np.zeros(len(mu_bkg_zero_off))
-    mu_bkg_zero_off = np.where(mu_bkg_zero_off < 0, val_zero, mu_bkg_zero_off)
+    mu_bkg_zero_off = np.where(mu_bkg_zero_off < 0, 0, mu_bkg_zero_off)
     mu_bkg = np.where(n_off == 0, mu_bkg_zero_off, mu_bkg)
 
     return mu_bkg
@@ -199,13 +197,12 @@ def get_wstat_gof_terms(n_on, n_off):
 
     see :ref:`wstat`.
     """
-    zeros = np.zeros(len(n_on)) 
     term = np.zeros(len(n_on))
     term1 = - n_on * (1 - np.log(n_on))
     term2 = - n_off * (1 - np.log(n_off))
     
-    term += np.where(n_on == 0, zeros, term1)
-    term += np.where(n_off == 0, zeros, term2)
+    term += np.where(n_on == 0, 0, term1)
+    term += np.where(n_off == 0, 0, term2)
     
     return 2 * term
 
