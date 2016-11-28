@@ -11,6 +11,7 @@ from ...image import SkyImage, block_reduce_hdu
 from ..images import SkyCubeImages
 
 
+@requires_dependency('scipy')
 @requires_data("gammapy-extra")
 class TestSkyCubeImages:
     def test_to_cube(self):

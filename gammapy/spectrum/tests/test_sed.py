@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...datasets import FermiGalacticCenter
 from ...image import lon_lat_rectangle_mask
 from ...spectrum import SED, add_spec, cube_sed
@@ -108,7 +108,7 @@ def test_42():
     # sed.add(['2FGL J0534.5+2201']) # Crab
     sed.plot('sed.png')
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_cube_sed1():
     """Tests against known results with differential cube of 1s.
@@ -137,7 +137,7 @@ def test_cube_sed1():
                           errors=True, counts=counts)
     assert_allclose(sed_table3['DIFF_FLUX_ERR_HI'].data, 2560 * np.sqrt(1. / 256))
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_cube_sed2():
     """Tests against known results with integral cube of 1s.

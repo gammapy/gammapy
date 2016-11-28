@@ -17,7 +17,7 @@ def test_extended_image():
     # TODO: implement me
     pass
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_source_image():
     reference_hdu = SkyImage.empty(nxpix=10, nypix=10, binsz=1).to_image_hdu()

@@ -208,7 +208,7 @@ def test_compute_npred_cube():
 
     assert_allclose(actual, desired, rtol=0.001)
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_bin_events_in_cube():
     filename = ('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599'
