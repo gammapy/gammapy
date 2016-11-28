@@ -13,6 +13,7 @@ from astropy.table import Table, QTable
 from ..extern.pathlib import Path
 from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
+from ..utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -22,6 +23,11 @@ __all__ = [
 
 
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
+    """
+    One object from the gamma-cat source catalog.
+    """
+    _source_name_key = 'common_name'
+    _source_index_key = 'catalog_row_index'
 
     def __str__(self):
         """Print default summary info string"""
@@ -38,7 +44,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '\n'
         return ss
 
-    def summary(self):
+    def info(self):
         """Print summary info."""
         print(self)
 
@@ -85,6 +91,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         dnde = d['sed_dnde'][valid]
         dnde_errp = d['sed_dnde_errp'][valid]
         dnde_errn = d['sed_dnde_errn'][valid]
+
+        if len(e_ref) == 0:
+            raise DataMissingError('No flux points available.')
+
         return DifferentialFluxPoints.from_arrays(energy=e_ref,
                                                   diff_flux=dnde,
                                                   diff_flux_err_lo=dnde_errn,
@@ -142,20 +152,25 @@ class GammaCatNotFoundError(OSError):
 class SourceCatalogGammaCat(SourceCatalog):
     """
     Gammacat open TeV sources catalog.
+
+    See: https://github.com/gammapy/gamma-cat
+
+    Parameters
+    ----------
+    filename : str
+        Path to the gamma-cat fits file.
     """
     name = 'gamma-cat'
-    description = 'an open catalog of gamma-ray sources'
+    description = 'An open catalog of gamma-ray sources'
     source_object_class = SourceCatalogObjectGammaCat
 
-    def __init__(self, filename=None):
-        if not filename:
-            if not 'GAMMA_CAT' in os.environ:
-                msg = 'The gamma-cat repo is not available. '
-                msg += 'You have to set the GAMMA_CAT environment variable '
-                msg += 'to point to the location for it to be found.'
-                raise GammapyCatFoundError(msg)
-            else:
-                filename = Path(os.environ['GAMMA_CAT']) / 'docs/data/gammacat.fits.gz'
+    def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
+        filename = make_path(filename)
+        if not 'GAMMA_CAT' in os.environ:
+            msg = 'The gamma-cat repo is not available. '
+            msg += 'You have to set the GAMMA_CAT environment variable '
+            msg += 'to point to the location for it to be found.'
+            raise GammaCatNotFoundError(msg)
 
         self.filename = str(filename)
         table = QTable.read(self.filename)

@@ -56,6 +56,12 @@ class SourceCatalogObject(object):
         # Maybe even add HTML output for IPython repr?
         # Or at to_table method?
 
+    def info(self):
+        """
+        Print summary info about the object.
+        """
+        print(self)
+
 
 class SourceCatalog(object):
     """Generic source catalog.
@@ -186,3 +192,17 @@ class SourceCatalog(object):
         data = OrderedDict(zip(row.colnames, row_data))
         data[self._source_index_key] = index
         return data
+
+    def info(self):
+        """
+        Print info string.
+        """
+        print(self)
+
+    def __str__(self):
+        """
+        Info string
+        """
+        ss = self.description
+        ss += ' with {} objects.'.format(len(self.table))
+        return ss
