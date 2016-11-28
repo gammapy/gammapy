@@ -81,3 +81,49 @@ def test_wstat(test_data, reference_values):
                            extra_terms=True)
 
     assert_allclose(statsvec, reference_values['wstat'])
+
+
+def test_wstat_corner_cases():
+    """test WSTAT formulae for corner cases"""
+
+    # n_on = 0
+    n_on = 0
+    n_off = 5
+    mu_sig = 2.3
+    alpha = 0.5
+
+    actual = stats.wstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = 2 * (mu_sig + n_off * np.log(1 + alpha))
+    assert_allclose(actual, desired)
+
+    actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = n_off / (alpha + 1)
+    assert_allclose(actual, desired)
+
+    # n_off = 0 and mu_sig < n_on * (alpha / alpha + 1)
+    n_on = 9
+    n_off = 0
+    mu_sig = 2.3
+    alpha = 0.5
+
+    actual = stats.wstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = -2 * (mu_sig * (1. / alpha) + n_on * np.log(alpha / (1 + alpha)))
+    assert_allclose(actual, desired)
+
+    actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = n_on / (1 + alpha) - (mu_sig / alpha)
+    assert_allclose(actual, desired)
+
+    # n_off = 0 and mu_sig > n_on * (alpha / alpha + 1)
+    n_on = 5
+    n_off = 0
+    mu_sig = 5.3
+    alpha = 0.5
+
+    actual = stats.wstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = 2 * (mu_sig + n_on * (np.log(n_on) - np.log(mu_sig) - 1))
+    assert_allclose(actual, desired)
+
+    actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    desired = 0
+    assert_allclose(actual, desired)

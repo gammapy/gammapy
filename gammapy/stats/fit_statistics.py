@@ -183,6 +183,7 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
 
     see :ref:`wstat`.
     """
+    # NOTE: Corner cases in the docs are all handled correcty by this formula
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
     mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
