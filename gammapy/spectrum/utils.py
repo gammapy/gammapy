@@ -12,7 +12,8 @@ __all__ = [
 
 
 class LogEnergyAxis(object):
-    """Log10 energy axis.
+    """
+    Log energy axis.
 
     Defines a transformation between:
 
@@ -31,75 +32,54 @@ class LogEnergyAxis(object):
     ----------
     energy : `~astropy.units.Quantity`
         Energy array
+    mode : ['center', 'edges']
+        Whether the energy array represents the values at the center or edges of
+        the pixels.
     """
 
     def __init__(self, energy, mode='center'):
-        self.energy = energy
-        self.x = np.log10(energy.value)
-
+        from scipy.interpolate import RegularGridInterpolator
+        
         if mode == 'center':
-            self.pix = np.arange(len(self.x))
+            z = np.arange(len(energy))
         elif mode == 'edges':
-            self.pix = np.arange(len(self.x)) - 0.5
+            z = np.arange(len(energy)) - 0.5
         else:
             raise ValueError('Not a valid mode.')
+        
         self.mode = mode
+        self._eunit = energy.unit
 
-    def world2pix(self, energy):
-        """TODO: document.
+        log_e = np.log(energy.value)
+        kwargs = dict(bounds_error=False, fill_value=None, method='linear')
+        self._z_to_log_e = RegularGridInterpolator((z,), log_e, **kwargs)
+        self._log_e_to_z = RegularGridInterpolator((log_e,), z, **kwargs)
+        
+    def wcs_world2pix(self, energy):
         """
-        # Convert `energy` to `x = log10(energy)`
-        x = np.log10(energy.to(self.energy.unit).value)
-
-        # Interpolate in `x`
-        pix = np.interp(x, self.x, self.pix)
-
-        return np.atleast_1d(pix)
-
-    def pix2world(self, pix):
-        """TODO: document.
-        """
-        # Interpolate in `x = log10(energy)`
-        x = np.interp(pix, self.pix, self.x)
-
-        # Convert `x` to `energy`
-        energy = Quantity(10 ** x, self.energy.unit)
-
-        return energy
-
-    def closest_point(self, energy):
-        """TODO: document
-        """
-        x = np.log10(energy.value)
-        # TODO: I'm not sure which is faster / better here?
-        index = np.argmin(np.abs(self.x - x))
-        # np.searchsorted(self.x, x)
-        return index
-
-    def bin_edges(self, energy):
-        """TODO: document.
+        Convert energy to pixel coordinates.
 
         Parameters
         ----------
-        TODO
-
-        Returns
-        -------
-        TODO
+        energy : `~astropy.units.Quantity`
+            Energy coordinate.
         """
-        try:
-            pix = np.where(energy >= self.energy)[0][-1]
-        except ValueError:
-            # Loop over es by hand
-            pix1 = np.empty_like(energy, dtype=int)
-            for ii in range(energy.size):
-                # print ii, e[ii], np.where(e[ii] >= self.e)
-                pix1[ii] = np.where(energy[ii] >= self.energy)[0][-1]
-        pix2 = pix1 + 1
-        energy1 = self.energy[pix1]
-        energy2 = self.energy[pix2]
+        log_e = np.log(energy.to(self._eunit).value)
+        log_e = np.atleast_1d(log_e)
+        return self._log_e_to_z(log_e)
 
-        return pix1, pix2, energy1, energy2
+    def wcs_pix2world(self, z):
+        """
+        Convert pixel to energy coordinates.
+
+        Parameters
+        ----------
+        z : float
+            Pixel coordinate
+        """
+        z = np.atleast_1d(z)
+        log_e = self._z_to_log_e(z)
+        return np.exp(log_e) * self._eunit
 
 
 def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):

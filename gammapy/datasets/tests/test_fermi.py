@@ -31,11 +31,13 @@ class TestFermiGalacticCenter:
         assert counts.data.shape == (201, 401)
         assert counts.data.sum() == 24803
 
+    @requires_dependency('scipy')
     def test_diffuse_model(self):
         diffuse_model = FermiGalacticCenter.diffuse_model()
         assert diffuse_model.data.shape == (30, 21, 61)
         assert_quantity_allclose(diffuse_model.energies()[0], Quantity(50, 'MeV'))
 
+    @requires_dependency('scipy')
     def test_exposure_cube(self):
         exposure_cube = FermiGalacticCenter.exposure_cube()
         assert exposure_cube.data.shape == (21, 11, 31)
@@ -62,6 +64,7 @@ class TestFermiVelaRegion:
         angle = psf.containment_radius(energy, fraction, interpol_param)
         assert_quantity_allclose(angle, Angle(0.13185321269896136, 'deg'), rtol=1e-1)
 
+    @requires_dependency('scipy')
     def test_diffuse_model(self):
         diffuse_model = FermiVelaRegion.diffuse_model()
         assert diffuse_model.data.shape == (30, 161, 161)
@@ -80,6 +83,7 @@ class TestFermiVelaRegion:
         events_list = FermiVelaRegion.events()
         assert events_list['EVENTS'].data.shape == (2042,)
 
+    @requires_dependency('scipy')
     def test_exposure_cube(self):
         exposure_cube = FermiVelaRegion.exposure_cube()
         assert exposure_cube.data.shape == (21, 50, 50)

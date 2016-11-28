@@ -9,6 +9,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
+from ...image import SkyImage
 from ...data import EventList
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
 from ...spectrum.models import PowerLaw2
@@ -31,7 +32,7 @@ class TestSkyCube(object):
         name = 'Axel'
         data = self.sky_cube.data
         wcs = self.sky_cube.wcs
-        energy = self.sky_cube.energy_axis.energy
+        energy = self.sky_cube.energies()
 
         sky_cube = SkyCube(name, data, wcs, energy)
         assert sky_cube.data.shape == (30, 21, 61)
@@ -207,7 +208,7 @@ def test_compute_npred_cube():
 
     assert_allclose(actual, desired, rtol=0.001)
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_bin_events_in_cube():
     filename = ('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599'
@@ -216,10 +217,17 @@ def test_bin_events_in_cube():
     meta = events.table.meta
     counts = SkyCube.empty(
         emin=0.5, emax=80, enumbins=8, eunit='TeV',
-        dtype='int', nxpix=200, nypix=200,
+        dtype='int', nxpix=200, nypix=200, mode='edges',
         xref=meta['RA_OBJ'], yref=meta['DEC_OBJ'], coordsys='CEL',
     )
 
     counts.fill_events(events)
 
+    # check against event list energy selection
+    counts_image = SkyImage.empty(dtype='int', nxpix=200, nypix=200, xref=meta['RA_OBJ'],
+                       yref=meta['DEC_OBJ'], coordsys='CEL', proj='CAR')
+    events = events.select_energy([0.5, 80] * u.TeV)
+    counts_image.fill_events(events)
+
     assert counts.data.sum() == 1233
+    assert counts.data.sum() == counts_image.data.sum()
