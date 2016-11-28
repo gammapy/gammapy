@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from .. utils.energy import EnergyBounds
@@ -46,21 +47,27 @@ class LogEnergyAxis(object):
         self.mode = mode
 
     def world2pix(self, energy):
-        """TODO: document.
+        """
+        pix value fix to self.pix[0]-0.5 (respectively self.pix[-1]+0.5) if the
+        energy is lower than the min energy range (respectively greater than
+        the max energy range).
         """
         # Convert `energy` to `x = log10(energy)`
         x = np.log10(energy.to(self.energy.unit).value)
 
         # Interpolate in `x`
-        pix = np.interp(x, self.x, self.pix)
+        pix = np.interp(x, self.x, self.pix, left=self.pix[0] - 0.5,
+                        right=self.pix[1] + 0.5)
 
         return np.atleast_1d(pix)
 
     def pix2world(self, pix):
-        """TODO: document.
+        """
+        Energy fix to nan if the pix value are outside the pixel range
         """
         # Interpolate in `x = log10(energy)`
-        x = np.interp(pix, self.pix, self.x)
+        x = np.interp(pix, self.pix, self.x, left=np.nan,
+                      right=np.nan)
 
         # Convert `x` to `energy`
         energy = Quantity(10 ** x, self.energy.unit)
@@ -306,7 +313,8 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         # powerlaw integration
         trapzs = np.where(
             np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
+                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (
+            b + 1),
             x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
 
     tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
