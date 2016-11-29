@@ -6,6 +6,7 @@ from collections import OrderedDict
 import sys
 from pprint import pprint
 from astropy.extern import six
+from astropy.utils import lazyproperty
 
 __all__ = [
     'SourceCatalog',
@@ -89,13 +90,15 @@ class SourceCatalog(object):
         self.table = table
         self._source_name_key = source_name_key
 
+    @lazyproperty
+    def _name_to_index_cache(self):
         # Make a dict for quick lookup: source name -> row index
         names = dict()
         source_name_col = self.table[self._source_name_key]
         for index, name in enumerate(source_name_col):
             name = name.strip()
             names[name] = index
-        self._name_to_index_cache = names
+        return names
 
     def row_index(self, name):
         """Look up row index of source by name.
@@ -110,7 +113,13 @@ class SourceCatalog(object):
         index : int
             Row index of source in table
         """
-        return self._name_to_index_cache[name]
+        index = self._name_to_index_cache[name]
+
+        # check if name lookup is correct other wise recompute _name_to_index_cache
+        if not name == self.table[index][self._source_name_key]:
+            self.__dict__.pop('_name_to_index_cache')
+            index = self._name_to_index_cache[name]
+        return index
 
     def source_name(self, index):
         """Look up source name by row index.

@@ -10,6 +10,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, QTable
+from astropy.utils import lazyproperty
 from ..extern.pathlib import Path
 from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
@@ -175,6 +176,46 @@ class SourceCatalogGammaCat(SourceCatalog):
         self.filename = str(filename)
         table = QTable.read(self.filename)
         super(SourceCatalogGammaCat, self).__init__(table=table, source_name_key='common_name')
+
+    @lazyproperty
+    def _name_to_index_cache(self):
+        """
+        Name to index cache with alias names.
+        """
+        names = {}
+        for index, row in enumerate(self.table):
+            name = row['common_name'].strip()
+            names[name] = index
+            for alias in row['gamma_names'].split(','):
+                names[alias] = index
+            for alias in row['other_names'].split(','):
+                names[alias] = index
+        return names
+
+    def row_index(self, name):
+        """Look up row index of source by name.
+
+        Parameters
+        ----------
+        name : str
+            Source name
+
+        Returns
+        -------
+        index : int
+            Row index of source in table
+        """
+        index = self._name_to_index_cache[name]
+
+        row = self.table[index]
+        possible_names = [row['common_name']] + row['gamma_names'].split(',') + \
+                          row['other_names'].split(',')
+
+        if not name in possible_names:
+            self.__dict__.pop('_name_to_index_cache')
+            index = self._name_to_index_cache[name]
+
+        return index
 
     def _make_source_dict(self, index):
         """Make one source data dict.
