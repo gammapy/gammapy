@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 class SpectrumSimulation(object):
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
+    For a usage example see :notebook:`spectrum_simulation`
+
     Parameters
     ----------
     livetime : `~astropy.units.Quantity`
