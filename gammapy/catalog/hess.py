@@ -21,6 +21,7 @@ from ..extern.pathlib import Path
 from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from .core import SourceCatalog, SourceCatalogObject
+from .gammacat import SourceCatalogGammaCat, GammaCatNotFoundError
 
 __all__ = [
     'SourceCatalogHGPS',
@@ -126,13 +127,26 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = '\n*** Basic info ***\n\n'
         # ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
         ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
-        ss += '{:<20s} : {}\n'.format('Analysis reference', d['Analysis_Reference'])
+
+        ref = d['Analysis_Reference']
+        if ref == 'EXTERN':
+            paper_id = self._get_paper_id_gamma_cat(d['Source_Name'])
+            ref += ' ({})'.format(paper_id)
+        ss += '{:<20s} : {}\n'.format('Analysis reference', ref)
         ss += '{:<20s} : {}\n'.format('Source class', d['Source_Class'])
         ss += '{:<20s} : {}\n'.format('Associated object', d['Associated_Object'])
         ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
-
         return ss
+
+    def _get_paper_id_gamma_cat(self, name):
+        try:
+            gamma_cat = SourceCatalogGammaCat()
+            source = gamma_cat[name]
+            paper_id = source.data['paper_id']
+            return 'N.A.' if paper_id == '' else paper_id
+        except GammaCatNotFoundError:
+            return 'N.A.'
 
     def _info_map(self):
         """Print info from map analysis."""
