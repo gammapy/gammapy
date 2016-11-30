@@ -79,6 +79,9 @@ class SourceCatalog(object):
         Table with catalog data.
     source_name_key : str ('Source_Name')
         Column with source name information
+    source_name_alias : tuple of str
+        Columns with source name aliases. This will allow accessing the source
+        row by alias names as well.
     """
     source_object_class = SourceCatalogObject
 
@@ -86,18 +89,22 @@ class SourceCatalog(object):
     # Should we share them somehow?
     _source_index_key = 'catalog_row_index'
 
-    def __init__(self, table, source_name_key='Source_Name'):
+    def __init__(self, table, source_name_key='Source_Name', source_name_alias=()):
         self.table = table
         self._source_name_key = source_name_key
+        self._source_name_alias = source_name_alias
 
     @lazyproperty
     def _name_to_index_cache(self):
         # Make a dict for quick lookup: source name -> row index
         names = dict()
-        source_name_col = self.table[self._source_name_key]
-        for index, name in enumerate(source_name_col):
-            name = name.strip()
-            names[name] = index
+        for idx, row in enumerate(self.table):
+            name = row[self._source_name_key]
+            names[name.strip()] = idx
+            for alias_column in self._source_name_alias:
+                for alias in row[alias_column].split(','):
+                    if not alias == '':
+                        names[alias.strip()] = idx
         return names
 
     def row_index(self, name):
@@ -114,9 +121,14 @@ class SourceCatalog(object):
             Row index of source in table
         """
         index = self._name_to_index_cache[name]
-
+        row = self.table[index]
         # check if name lookup is correct other wise recompute _name_to_index_cache
-        if not name == self.table[index][self._source_name_key]:
+
+        possible_names = [row[self._source_name_key]]
+        for alias_column in self._source_name_alias:
+            possible_names += row[alias_column].split(',')
+
+        if not name in possible_names:
             self.__dict__.pop('_name_to_index_cache')
             index = self._name_to_index_cache[name]
         return index

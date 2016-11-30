@@ -477,7 +477,14 @@ class SourceCatalog3FGL(SourceCatalog):
         self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
 
         table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
-        super(SourceCatalog3FGL, self).__init__(table=table)
+
+        source_name_key='Source_Name'
+        source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
+                             '2FGL_Name', '1FHL_Name', 'ASSOC_TEV', 'ASSOC1',
+                             'ASSOC2')
+        super(SourceCatalog3FGL, self).__init__(table=table,
+                                source_name_key=source_name_key,
+                                source_name_alias=source_name_alias)
 
 
 class SourceCatalog2FHL(SourceCatalog):
@@ -495,6 +502,10 @@ class SourceCatalog2FHL(SourceCatalog):
         self.count_map_hdu = self.hdu_list['Count Map']
         self.extended_sources_table = Table(self.hdu_list['Extended Sources'].data)
         self.rois = Table(self.hdu_list['ROIs'].data)
-
         table = Table(self.hdu_list['2FHL Source Catalog'].data)
-        super(SourceCatalog2FHL, self).__init__(table=table)
+
+        source_name_key='Source_Name'
+        source_name_alias = ('ASSOC', '3FGL_Name', '1FHL_Name', 'TeVCat_Name')
+        super(SourceCatalog2FHL, self).__init__(table=table,
+                                source_name_key=source_name_key,
+                                source_name_alias=source_name_alias)

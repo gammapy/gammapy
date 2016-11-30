@@ -440,7 +440,9 @@ class SourceCatalogHGPS(SourceCatalog):
             raise ValueError("Must be one of the following: 'HGPS_SOURCES',"
                              "'HGPS_SOURCES_PA' or 'HESS_GALACTIC'")
 
-        super(SourceCatalogHGPS, self).__init__(table=table)
+        source_name_alias = ('Associated_Object',)
+        super(SourceCatalogHGPS, self).__init__(table=table,
+                                            source_name_alias=source_name_alias)
 
 
     def _make_source_object(self, index):
