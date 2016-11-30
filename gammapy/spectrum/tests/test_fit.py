@@ -64,9 +64,8 @@ class TestSpectralFit:
         assert_allclose(actual, desired)
 
     def test_stats(self):
-        stats = self.result.stats_per_bin
-        idx = self.result.obs.on_vector.bins_in_safe_range
-        actual = np.sum(np.nan_to_num(stats[idx]))
+        stats = self.result.stats_per_bin()
+        actual = np.sum(stats)
         desired = self.result.statval
         assert_allclose(actual, desired)
 

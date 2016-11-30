@@ -293,19 +293,30 @@ class SpectrumFitResult(object):
         butterfly['flux_hi'] = flux + flux_err
         return butterfly
 
-    @property
-    def stats_per_bin(self):
+    def stats_per_bin(self, fit_range=True):
         """`~np.array` of fit statistics per bin
 
         Computed with `~gammapy.stats`. Check that the sum is equal to the
         total fit statistic returned by the `~gammapy.spectrum.SpectrumFit`
         (i.e. Sherpa).
+
+        Parameters
+        ----------
+        fit_range : bool, optional
+            Set bins outside the fitted range to 0, default: True
         """
         n_on = self.obs.on_vector.data.value
         n_off = self.obs.off_vector.data.value
         alpha = self.obs.alpha
         mu_sig = self.expected_source_counts.data.value
-        return stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
+        stat = stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
+        if fit_range:
+            # TODO: make active bins during the fit available more easily
+            e = self.obs.e_reco
+            condition = (e[1:] < self.fit_range[0]) | (e[:-1] > self.fit_range[1])
+            idx = np.where(condition)
+            stat[idx] = 0
+        return stat
 
     @property
     def expected_source_counts(self):
@@ -318,11 +329,25 @@ class SpectrumFitResult(object):
         return CountsSpectrum(data=data, energy=energy)
 
     @property
+    def expected_background_counts(self):
+        """`~gammapy.spectrum.CountsSpectrum` of predicted background counts
+        
+        According to profile likelihood, see :ref:`wstat`.
+        """
+        energy = self.obs.e_reco
+        n_on = self.obs.on_vector.data.value
+        n_off = self.obs.off_vector.data.value
+        alpha = self.obs.alpha
+        mu_sig = self.expected_source_counts.data.value
+        data = stats.get_wstat_mu_bkg(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
+        return CountsSpectrum(data=data, energy=energy)
+
+    @property
     def expected_on_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted on counts
         """
         mu_on = self.expected_source_counts.copy()
-        mu_on.data += self.obs.background_vector.data
+        mu_on.data += self.expected_background_counts.data
         return mu_on
 
     @property
@@ -354,10 +379,10 @@ class SpectrumFitResult(object):
                                          fmt='none',
                                          label='mu_source')
 
-        self.obs.background_vector.plot(ax=ax,
-                                        label='mu_background',
-                                        fmt='none',
-                                        energy_unit='TeV')
+        self.expected_background_counts.plot(ax=ax,
+                                             label='mu_background',
+                                             fmt='none',
+                                             energy_unit='TeV')
 
         self.expected_on_counts.plot(ax=ax, label='mu_on', energy_unit='TeV')
 
