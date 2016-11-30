@@ -129,7 +129,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n'.format('Analysis reference', d['Analysis_Reference'])
         ss += '{:<20s} : {}\n'.format('Source class', d['Source_Class'])
         ss += '{:<20s} : {}\n'.format('Associated object', d['Associated_Object'])
-        ss += '{:<20s} : {}\n'.format('TeVCat reference', d['TeVCat_Reference'])
+        ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
 
         return ss
