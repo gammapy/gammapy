@@ -10,6 +10,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, QTable
+from astropy.utils import lazyproperty
 from ..extern.pathlib import Path
 from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
@@ -174,7 +175,11 @@ class SourceCatalogGammaCat(SourceCatalog):
 
         self.filename = str(filename)
         table = QTable.read(self.filename)
-        super(SourceCatalogGammaCat, self).__init__(table=table, source_name_key='common_name')
+        source_name_key='common_name'
+        source_name_alias = ('other_names', 'gamma_names')
+        super(SourceCatalogGammaCat, self).__init__(table=table,
+                                source_name_key=source_name_key,
+                                source_name_alias=source_name_alias)
 
     def _make_source_dict(self, index):
         """Make one source data dict.

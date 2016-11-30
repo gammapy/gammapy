@@ -14,6 +14,11 @@ MODEL_TEST_DATA = [(0, PowerLaw, Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
                    (4, LogParabola, Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
                    (55, ExponentialCutoffPowerLaw3FGL, Quantity(1.8666925e-09, 'GeV-1 s-1 cm-2'))]
 
+CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
+                   '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201']
+CRAB_NAMES_2FHL = ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201',
+                   'TeV J0534+2200']
+
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
     def test_main_table(self):
@@ -72,11 +77,12 @@ class TestFermi3FGLObject:
                    1.308784e-08]
         assert_allclose(flux_points['DIFF_FLUX'].data, desired, rtol=1E-5)
 
-
-
     def test_flux_points_integral(self):
         assert len(self.source.flux_points_integral) == 5
 
+    @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
+    def test_crab_alias(self, name):
+        assert str(self.cat['Crab']) == str(self.cat[name])
 
 
 @requires_data('gammapy-extra')
@@ -90,6 +96,10 @@ class TestSourceCatalog2FHL:
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
         assert len(table) == 25
+
+    @pytest.mark.parametrize('name', CRAB_NAMES_2FHL)
+    def test_crab_alias(self, name):
+        assert str(self.cat['Crab']) == str(self.cat[name])
 
 
 @requires_data('gammapy-extra')

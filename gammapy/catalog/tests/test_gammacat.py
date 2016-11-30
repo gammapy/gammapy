@@ -9,6 +9,7 @@ from ...utils.energy import Energy
 
 
 SOURCES = ['Vela X', 'HESS J1848-018', 'HESS J1813-178']
+
 DESIRED_SM = [ {'flux_at_1TeV': 1.36e-11 * u.Unit('1 / (cm2 TeV s)'),
                 'flux_above_1TeV': 2.104e-11 * u.Unit('1 / (cm2 s)'),
                 'eflux_1_10TeV': 5.783e-11 * u.Unit('TeV / (cm2 s)')},
@@ -37,6 +38,10 @@ DESIRED_BF = [{'energy_sum': 40.8695 * u.TeV,
                'flux_lo_sum': 5.691e-12 * u.Unit('1 / (cm2 s TeV)'),
                'flux_hi_sum': 7.181e-12 * u.Unit('1 / (cm2 s TeV)')}]
 
+W28_NAMES = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1', 'SNR G006.4-00.1',
+             'GRO J1801-2320']
+
+SORT_KEYS = ['ra', 'dec', 'paper_id']
 
 @requires_data('gamma-cat')
 class TestSourceCatalogGammaCat:
@@ -46,6 +51,17 @@ class TestSourceCatalogGammaCat:
     def test_source_table(self):
         assert self.cat.name == 'gamma-cat'
         assert len(self.cat.table) == 162
+
+    @pytest.mark.parametrize('name', W28_NAMES)
+    def test_w28_alias_names(self, name):
+        assert str(self.cat[name]) == str(self.cat['W28'])
+
+    @pytest.mark.parametrize(['name', 'key'], zip(SOURCES, SORT_KEYS))
+    def test_sort_table(self, name, key):
+        before = str(self.cat[name])
+        self.cat.table.sort(key)
+        after = str(self.cat[name])
+        assert before == after
 
 
 @requires_data('gamma-cat')

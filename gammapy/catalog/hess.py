@@ -129,7 +129,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n'.format('Analysis reference', d['Analysis_Reference'])
         ss += '{:<20s} : {}\n'.format('Source class', d['Source_Class'])
         ss += '{:<20s} : {}\n'.format('Associated object', d['Associated_Object'])
-        ss += '{:<20s} : {}\n'.format('TeVCat reference', d['TeVCat_Reference'])
+        ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
 
         return ss
@@ -440,7 +440,9 @@ class SourceCatalogHGPS(SourceCatalog):
             raise ValueError("Must be one of the following: 'HGPS_SOURCES',"
                              "'HGPS_SOURCES_PA' or 'HESS_GALACTIC'")
 
-        super(SourceCatalogHGPS, self).__init__(table=table)
+        source_name_alias = ('Associated_Object',)
+        super(SourceCatalogHGPS, self).__init__(table=table,
+                                            source_name_alias=source_name_alias)
 
 
     def _make_source_object(self, index):
