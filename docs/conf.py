@@ -128,7 +128,7 @@ html_theme_options = {
     'logotext1': 'gamma',  # white,  semi-bold
     'logotext2': 'py',  # orange, light
     'logotext3': ':docs'   # white,  light
-    }
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
@@ -206,6 +206,7 @@ except KeyError:
     print('*** gammapy-extra *not* found.')
     print('*** Set the GAMMAPY_EXTRA environment variable!')
     print('*** Docs build will be incomplete.')
+    print('*** Notebook links will not be verified.')
 
 
 # define role to generate notebook links
@@ -214,10 +215,16 @@ from docutils import nodes
 from gammapy.utils.scripts import read_yaml
 
 # see https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
+
+
 def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook on gammapy-extra"""
-    available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
-    exists = notebook in [_['name'] for _ in available_notebooks]
+    try:
+        available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
+        exists = notebook in [_['name'] for _ in available_notebooks]
+    except IOError:
+        exists = True
+
     if not exists:
         msg = inliner.reporter.error('Unknown notebook {}'.format(notebook),
                                      line=lineno)
@@ -228,10 +235,11 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
         node = make_link_node(rawtext, app, notebook, options)
         return [node], []
 
+
 def make_link_node(rawtext, app, notebook, options):
-    base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'  
+    base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
     full_name = notebook + '.ipynb'
-    ref = base + full_name 
+    ref = base + full_name
     roles.set_classes(options)
     node = nodes.reference(rawtext, full_name, refuri=ref, **options)
     return node
@@ -259,7 +267,7 @@ man_pages = [('index', project.lower(), project + u' Documentation',
               [author], 1)]
 
 
-## -- Options for the edit_on_github extension ----------------------------------------
+# -- Options for the edit_on_github extension ----------------------------------------
 
 if eval(setup_cfg.get('edit_on_github')):
     extensions += ['astropy.sphinx.ext.edit_on_github']
