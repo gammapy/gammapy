@@ -225,7 +225,7 @@ class SkyCube(object):
             raise ValueError("Not a valid mode. Choose either 'center' or 'edges'.")
 
         energy_axis = LogEnergyAxis(energy, mode=mode)
-        data = image.data * np.ones(enumbins).reshape((-1, 1, 1)) * u.Unit('')
+        data = Quantity(image.data * np.ones(enumbins).reshape((-1, 1, 1)), image.unit)
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
