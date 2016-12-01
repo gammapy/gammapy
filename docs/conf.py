@@ -244,7 +244,7 @@ def make_link_node(rawtext, app, notebook, options):
     node = nodes.reference(rawtext, full_name, refuri=ref, **options)
     return node
 
-roles.register_local_role('notebook', notebook_role)
+roles.register_local_role('gp-extra-notebook', notebook_role)
 
 
 # print(html_static_path); 1/0

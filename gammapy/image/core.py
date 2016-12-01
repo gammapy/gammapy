@@ -33,7 +33,7 @@ class SkyImage(object):
     """
     Sky image.
 
-    for a usage example see :notebook:`image_analysis`
+    for a usage example see :gp-extra-notebook`image_analysis`
 
     Parameters
     ----------
