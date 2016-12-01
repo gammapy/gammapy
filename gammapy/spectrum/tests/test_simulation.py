@@ -40,14 +40,14 @@ class TestSpectrumSimulation:
                                       livetime=4 * u.h)
 
     def test_without_background(self):
-        self.sim.simulate_obs(seed=23)
+        self.sim.simulate_obs(seed=23, obs_id=23)
         assert self.sim.obs.on_vector.total_counts == 156 * u.ct
         # print(np.sum(self.sim.npred_source.data.value))
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
         self.sim.alpha = self.alpha
-        self.sim.simulate_obs(seed=23)
+        self.sim.simulate_obs(seed=23, obs_id=23)
         assert self.sim.obs.on_vector.total_counts == 525 * u.ct
         assert self.sim.obs.off_vector.total_counts == 1096 * u.ct
 
@@ -63,7 +63,7 @@ class TestSpectrumSimulation:
 
     def test_without_edisp(self):
         self.sim.edisp=None
-        self.sim.simulate_obs(seed=23)
+        self.sim.simulate_obs(seed=23, obs_id=23)
         assert self.sim.obs.on_vector.total_counts == 160 * u.ct
         # The test value is taken from the test with edisp
         assert_allclose(np.sum(self.sim.npred_source.data.value),
