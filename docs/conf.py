@@ -228,7 +228,7 @@ class ExtraImage(directives.images.Image):
 
         return super(ExtraImage, self).run()
 
-directives.register_directive('extra-image', ExtraImage)
+directives.register_directive('gp-extra-image', ExtraImage)
 
 
 # define role to generate notebook links
