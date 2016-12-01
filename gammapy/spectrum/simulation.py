@@ -96,8 +96,7 @@ class SpectrumSimulation(object):
             progress = ((counter + 1) / n_obs) * 100
             if progress % 10 == 0:
                 log.info("Progress : {} %".format(progress))
-            self.simulate_obs(seed=current_seed)
-            self.obs.obs_id = current_seed
+            self.simulate_obs(seed=current_seed, obs_id=current_seed)
             self.result.append(self.obs)
 
     def reset(self):
@@ -107,24 +106,27 @@ class SpectrumSimulation(object):
         self.on_vector = None
         self.off_vector = None
 
-    def simulate_obs(self, seed='random-seed'):
+    def simulate_obs(self, obs_id, seed='random-seed'):
         """Simulate one `~gammapy.spectrum.SpectrumObservation`.
 
         The result is stored as ``obs`` attribute
 
         Parameters
         ----------
+        obs_id : int
+            Observation identifier
         seed : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             see :func:~`gammapy.utils.random.get_random_state`
         """
-        rand = get_random_state(seed)
-        self.simulate_source_counts(rand)
+        random_state = get_random_state(seed)
+        self.simulate_source_counts(random_state)
         if self.background_model is not None:
-            self.simulate_background_counts(rand)
+            self.simulate_background_counts(random_state)
         obs = SpectrumObservation(on_vector=self.on_vector,
                                   off_vector=self.off_vector,
                                   aeff=self.aeff,
                                   edisp=self.edisp)
+        obs.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):

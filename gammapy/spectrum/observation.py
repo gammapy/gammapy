@@ -203,14 +203,21 @@ class SpectrumObservation(object):
         -------
         stats : `~gammapy.spectrum.SpectrumStats`
             Stats
-        """
+        """ 
+        if self.off_vector is not None:
+            n_off = int(self.off_vector.data.value[idx])
+            a_off = self.off_vector._backscal_array[idx]
+        else:
+            n_off = 0
+            a_off = 1 # avoid zero division error
+
         return SpectrumStats(
             energy_min=self.e_reco[idx],
             energy_max=self.e_reco[idx + 1],
             n_on=int(self.on_vector.data.value[idx]),
-            n_off=int(self.off_vector.data.value[idx]),
+            n_off=n_off,
             a_on=self.on_vector._backscal_array[idx],
-            a_off=self.off_vector._backscal_array[idx],
+            a_off=a_off,
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
