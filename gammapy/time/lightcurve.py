@@ -72,7 +72,8 @@ class LightCurve(QTable):
 
     def compute_fvar(self):
         """Calculate the fractional excess variance (Fvar) of `LightCurve`.
-
+        reference : On characterizing the variability properties of X-ray light curves from active galaxiesVaughan et al.,2003 
+	http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
         time_min = self['TIME_MIN']
         time_max = self['TIME_MAX']
@@ -82,22 +83,16 @@ class LightCurve(QTable):
    	nptsperbin = len(flux)
    	phisum = np.sum(flux)
    	phimean = phisum / nptsperbin
-  	#print nptsperbin,phisum,phimean     
    	unityrow = np.ones(nptsperbin)
    	Ssq = (np.sum( (flux[:]-phimean*unityrow[:])**2) ) / (nptsperbin-1.0)
    	S = np.sqrt(Ssq)
    	Sigsq = np.nansum(fluxerr[:]**2) / nptsperbin
-   	#print fluxerr,np.nansum(fluxerr)#,nptsperbin        
    	fvar = np.sqrt(np.abs(Ssq-Sigsq)) / phimean
    	fluxerrT = np.transpose(fluxerr)
-   	#ascii.write([fluxerrT],'simfluxerr.txt')#,np.sum(fluxerr),fluxerr#nptsperbin
    	sigxserrA = np.sqrt( 2.0/nptsperbin) * (Sigsq/phimean)**2
    	sigxserrB = np.sqrt(Sigsq/nptsperbin) * (2.0*fvar/phimean)
-	#print sigxserrA,sigxserrB
-	#import IPython; IPython.embed()
-   	sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)#*phimean
+   	sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)
    	fvarerr = sigxserr / (2.0 * fvar)
-   	#print sigxserrA,sigxserrB,sigxserr,fvar,fvarerr
 	return fvar,fvarerr
   
      	
