@@ -182,7 +182,7 @@ class SpectrumObservation(object):
         stats : `~gammapy.spectrum.SpectrumStats`
             Stacked stats
         """
-        idx = np.arange(bin_min, bin_max)
+        idx = np.arange(bin_min, bin_max + 1)
         stats_list = [self.stats(ii) for ii in idx]
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
@@ -249,7 +249,8 @@ class SpectrumObservation(object):
         return calculate_predicted_counts(model=model,
                                           edisp=self.edisp,
                                           aeff=self.aeff,
-                                          livetime=self.livetime)
+                                          livetime=self.livetime,
+                                          e_reco=self.e_reco)
 
     @classmethod
     def read(cls, filename):
