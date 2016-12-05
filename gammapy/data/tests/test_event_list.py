@@ -17,7 +17,7 @@ class TestEventListHESS:
     def test_basics(self):
         assert 'EventList' in str(self.events)
 
-        assert len(self.events.table) == 49
+        assert len(self.events) == 49
         assert self.events.time[0].iso == '2004-10-14 00:08:39.214'
         assert self.events.radec[0].to_string() == '82.7068 19.8186'
         assert self.events.galactic[0].to_string(precision=2) == '185.96 -7.69'
