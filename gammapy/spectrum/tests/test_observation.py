@@ -8,6 +8,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.scripts import make_path
 from ...datasets import gammapy_extra
 from ...spectrum import (
+    PHACountsSpectrum,
     SpectrumObservation,
     SpectrumObservationList,
     SpectrumObservationStacker,
@@ -26,17 +27,18 @@ def get_test_obs():
     except ImportError:
         return test_obs
 
-    # Obs read from file
+    # 1 : Obs read from file
     obs_1 = SpectrumObservation.read(
         gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits'))
     test_obs.append(dict(
         obs=obs_1,
         total_on=172,
         livetime = 1581.73681640625 * u.second,
+        npred =  210.86182536480652,
         excess = 166.428,
         excess_safe_range = 135.428)
     )
-    # Simulated obs without background
+    # 2 : Simulated obs without background
     energy = np.logspace(-2, 2, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     edisp = EnergyDispersion.from_gauss(e_true = energy, e_reco = energy)
@@ -51,9 +53,31 @@ def get_test_obs():
         obs=sim.obs,
         total_on=821,
         livetime = livetime, 
+        npred =  291.84115011604587,
         excess = 821, 
         excess_safe_range = 821)
     )
+
+    # 3 : obs without edisp
+    energy = np.logspace(-1,1, 20) * u.TeV
+    livetime = 2 * u.h
+    on_vector = PHACountsSpectrum(energy=energy,
+                                  data=np.arange(19),
+                                  obs_id=2,
+                                  backscal=1,
+                                  livetime=livetime)
+    aeff = EffectiveAreaTable(energy=energy,
+                              data=np.ones(19) * 1e5 * u.m**2)
+    obs_3 = SpectrumObservation(on_vector=on_vector, aeff=aeff)
+    test_obs.append(dict(
+        obs=obs_3,
+        total_on=171,
+        livetime = livetime, 
+        npred = 1425.6, 
+        excess = 171, 
+        excess_safe_range = 171)
+    )
+
     return test_obs
 
 @pytest.mark.parametrize('obs', get_test_obs())
@@ -74,9 +98,17 @@ class SpectrumObservationTester:
         self.test_total_stats()
         self.test_stats_in_safe_range()
         self.test_peek()
+        self.test_npred()
 
     def test_basic(self):
         assert 'Observation summary report' in str(self.obs)
+
+    def test_npred(self):
+        pwl=models.PowerLaw(index=2 * u.Unit(''),
+                              amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                              reference=1 * u.TeV)
+        npred = self.obs.predicted_counts(model=pwl)
+        assert_allclose(npred.total_counts.value, self.vals['npred'])
 
     def test_stats_table(self):
         table=self.obs.stats_table()
