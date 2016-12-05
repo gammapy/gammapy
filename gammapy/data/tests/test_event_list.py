@@ -29,6 +29,11 @@ class TestEventListHESS:
         assert '{:1.5f}'.format(lon) == '16.50022 deg'
         assert '{:1.5f}'.format(lat) == '-23.27178 deg'
         assert '{:1.5f}'.format(height) == '1835.00000 m'
+        
+    def test_stack(self):
+        event_lists = [self.events] * 3
+        stacked_list = EventList.stack(event_lists)
+        assert len(stacked_list) == 49 * 3
 
     def test_region(self):
         pos = SkyCoord(81, 21, unit='deg', frame='icrs')

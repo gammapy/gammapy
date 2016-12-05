@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
-from astropy.table import Table
+from astropy.table import Table, vstack
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
@@ -102,6 +102,21 @@ class EventList(object):
 
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
+
+    @classmethod
+    def stack(cls, event_lists, **kwargs):
+        """Stack `~gammapy.data.EventList`
+
+        calling `~astropy.table.vstack`
+
+        Parameters
+        ----------
+        event_lists : list
+            list of `~gammapy.data.EventList` to stack
+        """
+        tables = [_.table for _ in event_lists]
+        stacked_table =  vstack(tables, **kwargs)
+        return cls(stacked_table)
 
     def __str__(self):
         ss = 'EventList info:\n'
