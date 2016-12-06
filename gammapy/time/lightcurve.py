@@ -19,7 +19,7 @@ class LightCurve(QTable):
     tstart, tstop, flux, flux error, time bin (opt). 
     Possesses functions allowing plotting data, saving as txt 
     and elementary stats like mean & std dev.
-    
+
     TODO: specification of format is work in progress
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/pull/61
     """
@@ -48,7 +48,8 @@ class LightCurve(QTable):
         flux = self['FLUX'].to('cm-2 s-1')
         errors = self['FLUX_ERR'].to('cm-2 s-1')
 
-        ax.errorbar(time.value, flux.value, yerr=errors.value, linestyle="None")
+        ax.errorbar(time.value, flux.value,
+                    yerr=errors.value, linestyle="None")
         ax.scatter(time, flux)
         ax.set_xlabel("Time (secs)")
         ax.set_ylabel("Flux ($cm^{-2} sec^{-1}$)")
@@ -73,26 +74,25 @@ class LightCurve(QTable):
     def compute_fvar(self):
         """Calculate the fractional excess variance (Fvar) of `LightCurve`.
         reference : On characterizing the variability properties of X-ray light curves from active galaxiesVaughan et al.,2003 
-	http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
+        http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
         time_min = self['TIME_MIN']
         time_max = self['TIME_MAX']
-	time = (time_min+time_max)/2.0
-	flux = self['FLUX'].value
-   	fluxerr = self['FLUX_ERR'].value
-   	nptsperbin = len(flux)
-   	phisum = np.sum(flux)
-   	phimean = phisum / nptsperbin
-   	unityrow = np.ones(nptsperbin)
-   	Ssq = (np.sum( (flux[:]-phimean*unityrow[:])**2) ) / (nptsperbin-1.0)
-   	S = np.sqrt(Ssq)
-   	Sigsq = np.nansum(fluxerr[:]**2) / nptsperbin
-   	fvar = np.sqrt(np.abs(Ssq-Sigsq)) / phimean
-   	fluxerrT = np.transpose(fluxerr)
-   	sigxserrA = np.sqrt( 2.0/nptsperbin) * (Sigsq/phimean)**2
-   	sigxserrB = np.sqrt(Sigsq/nptsperbin) * (2.0*fvar/phimean)
-   	sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)
-   	fvarerr = sigxserr / (2.0 * fvar)
-	return fvar,fvarerr
-  
-     	
+        time = (time_min + time_max) / 2.0
+        flux = self['FLUX'].value
+        fluxerr = self['FLUX_ERR'].value
+        nptsperbin = len(flux)
+        phisum = np.sum(flux)
+        phimean = phisum / nptsperbin
+        unityrow = np.ones(nptsperbin)
+        Ssq = (np.sum((flux[:] - phimean * unityrow[:])**2)
+               ) / (nptsperbin - 1.0)
+        S = np.sqrt(Ssq)
+        Sigsq = np.nansum(fluxerr[:]**2) / nptsperbin
+        fvar = np.sqrt(np.abs(Ssq - Sigsq)) / phimean
+        fluxerrT = np.transpose(fluxerr)
+        sigxserrA = np.sqrt(2.0 / nptsperbin) * (Sigsq / phimean)**2
+        sigxserrB = np.sqrt(Sigsq / nptsperbin) * (2.0 * fvar / phimean)
+        sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)
+        fvarerr = sigxserr / (2.0 * fvar)
+        return fvar, fvarerr
