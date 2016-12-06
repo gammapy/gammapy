@@ -18,10 +18,337 @@ __all__ = [
     'IntegralFluxPoints',
     'compute_differential_flux_points',
     'FluxPointEstimator',
+    'FluxPoints',
     'SEDLikelihoodProfile',
 ]
 
 log = logging.getLogger(__name__)
+
+
+REQUIRED_COLUMNS = {'dnde' : ['e_ref', 'dnde'],
+                    'flux' : ['e_min', 'e_max', 'flux'],
+                    'eflux': ['e_min', 'e_max', 'eflux']}
+
+OPTIONAL_COLUMNS = {'dnde' : ['dnde_err', 'dnde_errp', 'dnde_errn'],
+                    'flux' : ['flux_err', 'flux_errp', 'flux_errn'],
+                    'eflux': ['eflux_err', 'eflux_errp', 'eflux_errn']}
+
+DEFAULT_UNIT = {'dnde' : u.Unit('ph cm-2 s-1 TeV-1'),
+                'flux' : u.Unit('ph cm-2 s-1'),
+                'eflux': u.Unit('erg cm-2 s-1')}
+
+
+class FluxPoints(object):
+    """
+    Flux point object.
+
+    For a complete documentation see :ref:`gadf:flux-points`, for an usage
+    example see :ref:`flux-point-computation`.
+    """
+    def __init__(self, table, sed_type='dnde', ul_conf=None):
+
+        valid_sed_types = list(REQUIRED_COLUMNS.keys())
+
+        if not sed_type in valid_sed_types:
+            raise ValueError("SED type must be one of the following"
+                             ": {}".format(valid_sed_types))
+
+        # validate that the table is a valid representation of the given
+        # flux point sed type
+        self.table = self._validate_table(table, sed_type)
+
+        # TODO: store these in meta attribute?
+        self.sed_type = sed_type
+        self.ul_conf = ul_conf
+
+    @staticmethod
+    def _guess_sed_type(table):
+        """
+        Guess sed type from table content.
+        """
+        valid_sed_types = list(REQUIRED_COLUMNS.keys())
+        for sed_type in valid_sed_types:
+            required = set(REQUIRED_COLUMNS[sed_type])
+            if required.issubset(table.colnames):
+                return sed_type
+
+    @staticmethod
+    def _guess_sed_type_from_unit(unit):
+        """
+        Estimate sed type from data unit.
+        """
+        for sed_type, default_unit in DEFAULT_UNIT.items():
+            if unit.is_equivalent(default_unit):
+                return sed_type
+
+    def _validate_table(self, table, sed_type):
+        """
+        Validate input flux point table.
+        """
+        required = set(REQUIRED_COLUMNS[sed_type])
+
+        if not required.issubset(table.colnames):
+            missing = required.difference(table.colnames)
+            raise ValueError("Missing columns for sed type '{0}':"
+                             " {1}".format(sed_type, missing))
+        return table
+
+    def _get_y_energy_unit(self, y_unit):
+        try:
+            return [_ for _ in y_unit.bases if _.physical_type == 'energy'][0]
+        except IndexError:
+            return u.Unit('TeV')
+
+    def plot(self, ax, sed_type, energy_unit='TeV', y_unit=None,
+             energy_power=0, **kwargs):
+        """
+        Plot flux points
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axis object to plot on.
+        sed_type : ['dnde', 'flux', 'eflux']
+            Sed type to plot.
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        y_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        energy_power : int
+            Power of energy to multiply y axis with
+        kwargs : dict
+            Keyword arguments passed to :func:`~matplotlib.pyplot.errorbar`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis object
+        """
+        import matplotlib.pyplot as plt
+
+        sed_type = sed_type or self.sed_type
+        y_unit = y_unit or DEFAULT_UNIT[sed_type]
+
+        y = self.table[sed_type].quantity.to(y_unit)
+        #y_err = self.table[sed_type + '_err'].quantity.to(y_unit)
+
+        y_errn = self.table[sed_type + '_errn'].quantity.to(y_unit)
+        y_errp = self.table[sed_type + '_errp'].quantity.to(y_unit)
+
+        e_unit = self._get_y_energy_unit(y_unit)
+        e_min = self.e_min.to(energy_unit)
+        e_ref = self.e_ref.to(energy_unit)
+        e_max = self.e_max.to(energy_unit)
+
+        y_unit = y.unit * e_unit ** energy_power
+        y = (y * np.power(e_ref, energy_power)).to(y_unit)
+        y_hi = (y_errn * np.power(e_ref, energy_power)).to(y_unit)
+        y_lo = (y_errp * np.power(e_ref, energy_power)).to(y_unit)
+
+        # plot flux points
+        is_ul = self._is_ul
+
+        y_err = (y_errn[~is_ul].value, y_errp[~is_ul].value)
+        x_err = ((e_ref - e_min)[~is_ul].value, (e_max - e_ref)[~is_ul].value)
+
+        kwargs.setdefault('marker', 'None')
+        kwargs.setdefault('ls', 'None')
+
+        ax.errorbar(e_ref[~is_ul].value, y[~is_ul].value, yerr=y_err, xerr=x_err,
+                    **kwargs)
+
+        if is_ul.any():
+            self._plot_y_ul(ax, is_ul, e_min, e_max, e_ref, **kwargs)
+
+        ax.set_xscale('log', nonposx='clip')
+        ax.set_yscale('log', nonposy='clip')
+        return ax
+
+    @property
+    def _is_ul(self):
+        try:
+            is_ul = self.table['is_ul'].astype('bool')
+        except KeyError:
+            is_ul = np.zeros(len(self.table)).astype('bool')
+        return is_ul
+
+    def _plot_y_ul(self, ax, is_ul, e_min, e_max, e_ref, **kwargs):
+        """
+        Plot flux point upper limits.
+        """
+         # plot upper limit flux points
+        x_err = (e_min[is_ul], e_max[is_ul])
+        y_ul = self.table[sed_type + '_ul'].quantity.to(y_unit)
+
+        ul_kwargs = {'marker': 'v',
+                     'label': None}
+
+        kwargs.setdefault('ms', 10)
+        kwargs.setdefault('mec', 'None')
+        kwargs.update(ul_kwargs)
+
+        ax.errorbar(e_ref[is_ul], y_ul[is_ul], xerr=x_err, **kwargs)
+
+    def show(self, figsize=(8, 5), sed_type=None, **kwargs):
+        """
+        Show flux points.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Figure size
+        kwargs : dict
+            Keyword arguments passed to `FluxPoints.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Plotting axes object.
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(111)
+        self.plot(ax=ax, sed_type=sed_type, **kwargs)
+        return ax
+
+    def __str__(self):
+        """
+        String representation of the flux points class.
+        """
+        info = ''
+        info += "Flux points of type '{}'".format(self.sed_type)
+        return info
+
+    def info(self):
+        """
+        Print flux points info.
+        """
+        print(self)
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """
+        Read flux points.
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`.
+        """
+        table = Table.read(filename, **kwargs)
+
+        for name in table.colnames:
+            table.rename_column(name, name.lower())
+
+        #TODO: read sed type from header
+        sed_type = None
+        if not sed_type:
+            sed_type = cls._guess_sed_type(table)
+
+        #ul_conf = header.get('UL_CONF')
+        return cls(table=table, sed_type=sed_type)
+
+    def write(self, filename, **kwargs):
+        """
+        Write flux points.
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.write`.
+        """
+        #TODO: handle meta data
+        self.table.write(filename, **kwargs)
+
+    def _flux_to_dnde(self, x_method='lafferty', y_method='power_law', model=None,
+                      spectral_index=None):
+        """
+        See :func:`~gammapy.spectrum.compute_differential_flux_points`.
+        """
+        e_min = self.e_min.to('TeV').value
+        e_max = self.e_max.to('TeV').value
+        flux = self.table['flux'].quantity.to('ph cm-2 s-1').value
+        flux_errp = self.table['flux_errp'].quantity.to('ph cm-2 s-1').value
+        flux_errn = self.table['flux_errn'].quantity.to('ph cm-2 s-1').value
+
+        val = compute_differential_flux_points(
+            x_method=x_method,
+            y_method=y_method,
+            model=model,
+            spectral_index=spectral_index,
+            energy_min=e_min,
+            energy_max=e_max,
+            int_flux=flux,
+            int_flux_err_hi=flux_errp,
+            int_flux_err_lo=flux_errn,
+        )
+
+        table = Table()
+        table['e_ref'] = val['ENERGY'] * u.Unit('TeV')
+        table['dnde'] = val['DIFF_FLUX'] * u.Unit('ph TeV-1 cm-2 s-1')
+        table['dnde_errp'] = val['DIFF_FLUX_ERR_HI'] * u.Unit('ph TeV-1 cm-2 s-1')
+        table['dnde_errn'] = val['DIFF_FLUX_ERR_LO'] * u.Unit('ph TeV-1 cm-2 s-1')
+        table['dnde_ul'] = val['DIFF_FLUX_ERR_HI'] * u.Unit('ph TeV-1 cm-2 s-1')
+        table['e_min'] = self.table['e_min']
+        table['e_max'] = self.table['e_max']
+        return table
+
+    def dnde(self, **kwargs):
+        """
+        Get flux points dnde.
+        """
+        if self.sed_type == 'dnde':
+            dnde = self.table['dnde'].quantity
+        elif self.sed_type == 'flux':
+            table = self._flux_to_dnde(**kwargs)
+            return table['dnde'].quantity
+        elif self.sed_type == 'eflux':
+            dnde = self.eflux() * self.e_ref ** -2
+        return dnde
+
+    def flux(self):
+        if self.sed_type == 'flux':
+            flux = self.table['flux'].quantity
+        else:
+            raise NotImplementedError
+        return flux
+
+    def eflux(self):
+        if self.sed_type == 'dnde':
+            eflux = self.dnde() * self.e_ref ** 2
+        elif self.sed_type == 'flux':
+            raise NotImplementedError
+        elif self.sed_type == 'eflux':
+            eflux = self.table['eflux'].quantity
+        return eflux
+
+    @property
+    def e_ref(self):
+        try:
+            return self.table['e_ref'].quantity
+        except KeyError:
+            e_ref = np.sqrt(self.e_min * self.e_max)
+            return e_ref
+
+    @property
+    def e_min(self):
+        try:
+            return self.table['e_min'].quantity
+        except KeyError:
+            raise NotImplementedError
+
+    @property
+    def e_max(self):
+        try:
+            return self.table['e_max'].quantity
+        except KeyError:
+            raise NotImplementedError
+
 
 
 class DifferentialFluxPoints(Table):
