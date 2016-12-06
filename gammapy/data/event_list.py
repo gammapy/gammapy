@@ -120,7 +120,7 @@ class EventList(object):
 
     def __str__(self):
         ss = 'EventList info:\n'
-        ss += '- Number of events: {}\n'.format(len(self))
+        ss += '- Number of events: {}\n'.format(len(self.table))
         # TODO: add time, RA, DEC and if present GLON, GLAT info ...
 
         ss += '- Median energy: {}\n'.format(np.median(self.energy))
@@ -133,9 +133,6 @@ class EventList(object):
             ss += '- Median altitude: {}\n'.format(np.median(self.table['ALT']))
 
         return ss
-
-    def __len__(self):
-        return len(self.table)
 
     @property
     def time(self):
