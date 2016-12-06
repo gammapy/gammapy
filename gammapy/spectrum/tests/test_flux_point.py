@@ -13,7 +13,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law, DifferentialFluxPoints,
-                          IntegralFluxPoints, FluxPointEstimator)
+                          IntegralFluxPoints, FluxPointEstimator, FluxPoints)
 from ..flux_point import SEDLikelihoodProfile
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
@@ -297,3 +297,30 @@ class TestSEDLikelihoodProfile:
     @requires_dependency('matplotlib')
     def test_plot(self):
         ax = self.sed.plot()
+
+
+FILENAMES = [#'1es0229_hess_spectrum.ecsv',
+             #'1es0229_hess_spectrum.fits',
+             'diff_flux_points.ecsv',
+             'diff_flux_points.fits',
+             'flux_points.ecsv',
+             'flux_points.fits']
+
+@pytest.fixture(params=FILENAMES)
+def flux_points(request):
+    path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
+    return FluxPoints.read(path)
+
+@requires_data('gammapy-extra')
+class TestFluxPoints:
+    @requires_dependency('matplotlib')
+    def test_plot(self, flux_points):
+        import matplotlib.pyplot as plt
+        ax = plt.gca()
+        flux_points.plot(ax=ax)
+
+    def test_to_sed_type(self):
+        pass
+
+    def test_table(self):
+        pass
