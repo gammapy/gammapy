@@ -332,7 +332,11 @@ class FluxPoints(object):
         kwargs : dict
             Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        self.table.write(filename, **kwargs)
+        try:
+            self.table.write(str(filename), **kwargs)
+        except IORegistryError:
+            kwargs.setdefault('format', 'ascii.ecsv')
+            self.table.write(str(filename), **kwargs)
 
     # TODO: handle with Energy or EnergyBounds classes?
     @property
