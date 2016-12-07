@@ -26,16 +26,19 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-REQUIRED_COLUMNS = {'dnde' : ['e_ref', 'dnde'],
-                    'flux' : ['e_min', 'e_max', 'flux'],
+REQUIRED_COLUMNS = {'dnde': ['e_ref', 'dnde'],
+                    'flux': ['e_min', 'e_max', 'flux'],
                     'eflux': ['e_min', 'e_max', 'eflux']}
 
-OPTIONAL_COLUMNS = {'dnde' : ['dnde_err', 'dnde_errp', 'dnde_errn'],
-                    'flux' : ['flux_err', 'flux_errp', 'flux_errn'],
-                    'eflux': ['eflux_err', 'eflux_errp', 'eflux_errn']}
+OPTIONAL_COLUMNS = {'dnde': ['dnde_err', 'dnde_errp', 'dnde_errn',
+                             'dnde_ul', 'is_ul'],
+                    'flux': ['flux_err', 'flux_errp', 'flux_errn',
+                             'flux_ul', 'is_ul'],
+                    'eflux': ['eflux_err', 'eflux_errp', 'eflux_errn',
+                              'eflux_ul', 'is_ul']}
 
-DEFAULT_UNIT = {'dnde' : u.Unit('ph cm-2 s-1 TeV-1'),
-                'flux' : u.Unit('ph cm-2 s-1'),
+DEFAULT_UNIT = {'dnde': u.Unit('ph cm-2 s-1 TeV-1'),
+                'flux': u.Unit('ph cm-2 s-1'),
                 'eflux': u.Unit('erg cm-2 s-1')}
 
 
@@ -45,6 +48,24 @@ class FluxPoints(object):
 
     For a complete documentation see :ref:`gadf:flux-points`, for an usage
     example see :ref:`flux-point-computation`.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Input data table, with the following minimal required columns:
+
+        * Format 'dnde': 'dnde' and 'e_ref'
+        * Format 'flux': 'flux' and 'e_ref'
+        * Format 'elfux': 'eflux' and 'e_ref'
+
+    Examples
+    --------
+
+    >>> from gammapy.spectrum import FluxPoints
+    >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+    >>> flux_points = FluxPoints.read(filename)
+    >>> flux_points.show()
+
     """
     def __init__(self, table):
         # validate that the table is a valid representation of the given
@@ -98,6 +119,9 @@ class FluxPoints(object):
         return table
 
     def _get_y_energy_unit(self, y_unit):
+        """
+        Get energy part of the given y unit.
+        """
         try:
             return [_ for _ in y_unit.bases if _.physical_type == 'energy'][0]
         except IndexError:
@@ -113,7 +137,7 @@ class FluxPoints(object):
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
         sed_type : ['dnde', 'flux', 'eflux']
-            Sed type to plot.
+            Which sed type to plot.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         y_unit : str, `~astropy.units.Unit`, optional
@@ -223,7 +247,7 @@ class FluxPoints(object):
         except KeyError:
             return np.isnan(self.table[self.sed_type])
 
-    def show(self, figsize=(8, 5), sed_type=None, **kwargs):
+    def show(self, figsize=(8, 5), **kwargs):
         """
         Show flux points.
 
@@ -243,7 +267,7 @@ class FluxPoints(object):
 
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111)
-        self.plot(ax=ax, sed_type=sed_type, **kwargs)
+        self.plot(ax=ax, **kwargs)
         return ax
 
     def __str__(self):
@@ -272,6 +296,14 @@ class FluxPoints(object):
         kwargs : dict
             Keyword arguments passed to `~astropy.table.Table.read`.
 
+        Examples
+        --------
+
+        >>> from gammapy.spectrum import FluxPoints
+        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        >>> flux_points = FluxPoints.read(filename)
+        >>> flux_points.show()
+
         """
         filename = make_path(filename)
         try:
@@ -280,11 +312,11 @@ class FluxPoints(object):
             kwargs.setdefault('format', 'ascii.ecsv')
             table = Table.read(str(filename), **kwargs)
 
-        if not 'SED_TYPE' in table.meta.keys():
+        if 'SED_TYPE' not in table.meta.keys():
             sed_type = cls._guess_sed_type(table)
             table.meta['SED_TYPE'] = sed_type
 
-        if not 'UL_CONF' in table.meta.keys():
+        if 'UL_CONF' not in table.meta.keys():
             table.meta['UL_CONF'] = 0.95
 
         return cls(table=table)
@@ -300,86 +332,59 @@ class FluxPoints(object):
         kwargs : dict
             Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        #TODO: handle meta data
         self.table.write(filename, **kwargs)
 
-    def _flux_to_dnde(self, x_method='lafferty', y_method='power_law', model=None,
-                      spectral_index=2):
-        """
-        See :func:`~gammapy.spectrum.compute_differential_flux_points`.
-        """
-        e_min = self.e_min.to('TeV').value
-        e_max = self.e_max.to('TeV').value
-        flux = self.table['flux'].quantity.to('ph cm-2 s-1').value
-        try:
-            flux_errp = self.table['flux_errp'].quantity.to('ph cm-2 s-1').value
-            flux_errn = self.table['flux_errn'].quantity.to('ph cm-2 s-1').value
-        except KeyError:
-            flux_errn = flux_errp = self.table['flux_err'].quantity.to('ph cm-2 s-1').value
-
-        val = compute_differential_flux_points(
-            x_method=x_method,
-            y_method=y_method,
-            model=model,
-            spectral_index=spectral_index,
-            energy_min=e_min,
-            energy_max=e_max,
-            int_flux=flux,
-            int_flux_err_hi=flux_errp,
-            int_flux_err_lo=flux_errn,
-        )
-
-        table = Table()
-        table['e_ref'] = val['ENERGY'] * u.Unit('TeV')
-        table['e_min'] = self.table['e_min']
-        table['e_max'] = self.table['e_max']
-        table['dnde'] = val['DIFF_FLUX'] * u.Unit('ph TeV-1 cm-2 s-1')
-        table['dnde_errp'] = val['DIFF_FLUX_ERR_HI'] * u.Unit('ph TeV-1 cm-2 s-1')
-        table['dnde_errn'] = val['DIFF_FLUX_ERR_LO'] * u.Unit('ph TeV-1 cm-2 s-1')
-        try:
-            # hack to compute ul
-            flux_ul = self.table['flux_ul'].quantity
-            dnde_ul = table['dnde'].quantity / self.table['flux'].quantity * flux_ul
-            table['dnde_ul'] = dnde_ul
-        except KeyError:
-            pass
-        return table
-
-    def to_sed_type_dnde(self, **kwargs):
-        """
-        Convert flux points to dnde sed type.
-
-        Paramters
-        ---------
-        kwargs : dict
-            Keyword arguments passed to `compute_differential_flux_points`.
-        """
-        if self.sed_type == 'flux':
-            table = self._flux_to_dnde(**kwargs)
-        elif self.sed_type == 'eflux':
-            raise NotImplementedError
-        else:
-            raise ValueError("Can only convert to 'flux' or 'eflux' sed type.")
-        table.meta['SED_TYPE'] = 'dnde'
-        return self.__class__(table)
-
+    # TODO: handle with Energy or EnergyBounds classes?
     @property
     def e_ref(self):
+        """
+        Reference energy.
+
+        Defined by `e_ref` column in `FluxPoints.table` or computed as log
+        center, if `e_min` and `e_max` columns are present in `FluxPoints.table`.
+
+        Returns
+        -------
+        e_ref : `~astropy.units.Quantity`
+            Reference energy.
+        """
         try:
             return self.table['e_ref'].quantity
         except KeyError:
             e_ref = np.sqrt(self.e_min * self.e_max)
             return e_ref
 
+    # TODO: handle with Energy or EnergyBounds classes?
     @property
     def e_min(self):
+        """
+        Lower bound of energy bin.
+
+        Defined by `e_min` column in `FluxPoints.table`.
+
+        Returns
+        -------
+        e_min : `~astropy.units.Quantity`
+            Lower bound of energy bin.
+        """
         try:
             return self.table['e_min'].quantity
         except KeyError:
             raise NotImplementedError
 
+    # TODO: handle with Energy or EnergyBounds classes?
     @property
     def e_max(self):
+        """
+        Upper bound of energy bin.
+
+        Defined by `e_max` column in `FluxPoints.table`.
+
+        Returns
+        -------
+        e_max : `~astropy.units.Quantity`
+            Upper bound of energy bin.
+        """
         try:
             return self.table['e_max'].quantity
         except KeyError:
