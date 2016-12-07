@@ -54,9 +54,9 @@ class FluxPoints(object):
     table : `~astropy.table.Table`
         Input data table, with the following minimal required columns:
 
-        * Format 'dnde': 'dnde' and 'e_ref'
-        * Format 'flux': 'flux' and 'e_ref'
-        * Format 'elfux': 'eflux' and 'e_ref'
+        * Format `'dnde'`: `'dnde'` and `'e_ref'`
+        * Format `'flux'`: `'flux'` and `'e_ref'`
+        * Format `'eflux'`: `'eflux'` and `'e_ref'`
 
     Examples
     --------
