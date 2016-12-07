@@ -75,8 +75,7 @@ class FluxPoints(object):
     @property
     def sed_type(self):
         """
-        Flux points SED type.
-
+        Flux points sed type.
 
         Returns
         -------
@@ -315,9 +314,6 @@ class FluxPoints(object):
         if 'SED_TYPE' not in table.meta.keys():
             sed_type = cls._guess_sed_type(table)
             table.meta['SED_TYPE'] = sed_type
-
-        if 'UL_CONF' not in table.meta.keys():
-            table.meta['UL_CONF'] = 0.95
 
         return cls(table=table)
 
