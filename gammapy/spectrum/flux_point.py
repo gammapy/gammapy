@@ -126,7 +126,7 @@ class FluxPoints(object):
         except IndexError:
             return u.Unit('TeV')
 
-    def plot(self, ax, sed_type=None, energy_unit='TeV', y_unit=None,
+    def plot(self, ax=None, sed_type=None, energy_unit='TeV', y_unit=None,
              energy_power=0, **kwargs):
         """
         Plot flux points
@@ -152,6 +152,9 @@ class FluxPoints(object):
             Axis object
         """
         import matplotlib.pyplot as plt
+
+        if ax is None:
+            ax = plt.gca()
 
         sed_type = sed_type or self.sed_type
         y_unit = y_unit or DEFAULT_UNIT[sed_type]
@@ -217,7 +220,7 @@ class FluxPoints(object):
         try:
             e_min = self.table['e_min'].quantity
             e_max = self.table['e_max'].quantity
-            e_ref = np.sqrt(e_min * e_max)
+            e_ref = self.e_ref
             x_err = ((e_ref - e_min), (e_max - e_ref))
         except KeyError:
             x_err = None
@@ -295,14 +298,6 @@ class FluxPoints(object):
         kwargs : dict
             Keyword arguments passed to `~astropy.table.Table.read`.
 
-        Examples
-        --------
-
-        >>> from gammapy.spectrum import FluxPoints
-        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-        >>> flux_points = FluxPoints.read(filename)
-        >>> flux_points.show()
-
         """
         filename = make_path(filename)
         try:
@@ -328,6 +323,7 @@ class FluxPoints(object):
         kwargs : dict
             Keyword arguments passed to `~astropy.table.Table.write`.
         """
+        filename = make_path(filename)
         try:
             self.table.write(str(filename), **kwargs)
         except IORegistryError:
@@ -367,10 +363,7 @@ class FluxPoints(object):
         e_min : `~astropy.units.Quantity`
             Lower bound of energy bin.
         """
-        try:
-            return self.table['e_min'].quantity
-        except KeyError:
-            raise NotImplementedError
+        return self.table['e_min'].quantity
 
     # TODO: handle with Energy or EnergyBounds classes?
     @property
@@ -385,11 +378,7 @@ class FluxPoints(object):
         e_max : `~astropy.units.Quantity`
             Upper bound of energy bin.
         """
-        try:
-            return self.table['e_max'].quantity
-        except KeyError:
-            raise NotImplementedError
-
+        return self.table['e_max'].quantity
 
 
 class DifferentialFluxPoints(Table):

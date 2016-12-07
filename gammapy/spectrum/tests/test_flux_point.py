@@ -310,7 +310,7 @@ def flux_points(request):
     path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
     return FluxPoints.read(path)
 
-
+@requires_dependency('yaml')
 @requires_data('gammapy-extra')
 class TestFluxPoints:
 
