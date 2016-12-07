@@ -351,9 +351,11 @@ class TestFluxPoints:
     def test_write_fits(self, tmpdir, flux_points):
         filename = tmpdir / 'flux_points.fits'
         flux_points.write(filename)
-        pass
+        actual = FluxPoints.read(filename)
+        assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmpdir, flux_points):
         filename = tmpdir / 'flux_points.ecsv'
         flux_points.write(filename)
-        assert True
+        actual = FluxPoints.read(filename)
+        assert str(flux_points) == str(actual)
