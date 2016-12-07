@@ -52,8 +52,6 @@ class SpectrumExtraction(object):
     TODO
 
     """
-    OGIP_FOLDER = 'ogip_data'
-    """Folder that will contain the output ogip data"""
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
@@ -102,16 +100,13 @@ class SpectrumExtraction(object):
         outdir : Path, str
             directory to write results files to
         """
-        cwd = Path.cwd()
-        outdir = cwd if outdir is None else make_path(outdir)
+        outdir = make_path(outdir) 
         outdir.mkdir(exist_ok=True, parents=True)
-        os.chdir(str(outdir))
         if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background(self.background)
         self.extract_spectrum()
-        self.write()
-        os.chdir(str(cwd))
+        self.write(outdir)
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
@@ -276,7 +271,16 @@ class SpectrumExtraction(object):
                 raise ValueError('Undefine method for low threshold: {}'.format(
                     method_lo_threshold))
 
-    def write(self):
-        """Write results to disk"""
-        self.observations.write(self.OGIP_FOLDER)
+    def write(self, outdir, ogipdir='ogip_data'):
+        """Write results to disk
+        
+        Parameters
+        ----------
+        outdir : `~gammapy.extern.pathlib.Path`
+            Output folder
+        ogipdir : str, optional
+            Folder name for OGIP data, default: 'ogip_data'
+        """
+        log.info("Writing OGIP files to {}".format(outdir / ogipdir))
+        self.observations.write(outdir / ogipdir)
         # TODO : add more debug plots etc. here

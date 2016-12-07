@@ -263,10 +263,13 @@ class SpectrumFit(object):
         os.chdir(str(outdir))
 
         self.fit()
+        log.info(self.global_result)
 
         # Assume only one model is fit to all data
         modelname = self.result[0].model.__class__.__name__
-        self.result[0].to_yaml('fit_result_{}.yaml'.format(modelname))
+        filename = 'fit_result_{}.yaml'.format(modelname)
+        log.info('Writing {}'.format(filename))
+        self.result[0].to_yaml(filename)
         os.chdir(str(cwd))
 
 
