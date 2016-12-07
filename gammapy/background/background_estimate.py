@@ -60,7 +60,7 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     off_events = events.select_sky_ring(pos, inner_radius, outer_radius)
     off_region = dict(inner=inner_radius, outer=outer_radius)
     a_on = 1
-    a_off = ring_area_factor(on_radius, inner_radius, outer_radius)
+    a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
 
     return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
 
