@@ -71,14 +71,11 @@ class TestFermi3FGLObject:
     def test_flux_points(self):
         flux_points = self.source.flux_points
 
-        assert len(flux_points) == 5
+        assert len(flux_points.table) == 5
 
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06,
                    1.308784e-08]
-        assert_allclose(flux_points['DIFF_FLUX'].data, desired, rtol=1E-5)
-
-    def test_flux_points_integral(self):
-        assert len(self.source.flux_points_integral) == 5
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
     def test_crab_alias(self, name):
