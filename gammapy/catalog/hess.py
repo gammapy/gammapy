@@ -18,7 +18,7 @@ from astropy.coordinates import Angle
 from gammapy.utils.scripts import make_path
 
 from ..extern.pathlib import Path
-from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
+from ..spectrum import FluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from .core import SourceCatalog, SourceCatalogObject
 from .gammacat import SourceCatalogGammaCat, GammaCatNotFoundError
@@ -314,13 +314,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += 'Number of flux points: {}\n'.format(d['N_Flux_Points'])
         ss += 'Flux points table: \n\n\t'
 
-        flux_points = self.flux_points['ENERGY', 'DIFF_FLUX', 'DIFF_FLUX_ERR_HI',
-                                       'DIFF_FLUX_ERR_LO'][:int(d['N_Flux_Points'])]
+        flux_points = self.flux_points.table.copy()
+        flux_points = flux_points[['e_ref', 'dnde', 'dnde_errn', 'dnde_errp']]
+        flux_points['e_ref'].format = '.3f'
 
-        flux_points['ENERGY'].format = '.3f'
 
-        flux_unit = Unit('1E-12 cm^-2 s^-1 TeV^-1')
-        for _ in ['DIFF_FLUX', 'DIFF_FLUX_ERR_HI', 'DIFF_FLUX_ERR_LO']:
+        flux_unit = Unit('1E-12 ph cm-2 s-1 TeV-1')
+        for _ in ['dnde', 'dnde_errp', 'dnde_errn']:
             flux_points[_] = flux_points[_].to(flux_unit)
             flux_points[_].format = '.3f'
             flux_points[_].unit = flux_unit
@@ -411,18 +411,19 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.DifferentialFluxPoints`)
+        """Flux points (`~gammapy.spectrum.FluxPoints`)
         """
-        energy = Quantity(self.data['Flux_Points_Energy'], 'TeV')
-        diff_flux = Quantity(self.data['Flux_Points_Flux'], 's^-1 cm^-2 TeV^-1')
-        energy_err_hi = Quantity(self.data['Flux_Points_Energy_Err_Hi'], 'TeV')
-        energy_err_lo = Quantity(self.data['Flux_Points_Energy_Err_Lo'], 'TeV')
-        diff_flux_err_hi = Quantity(self.data['Flux_Points_Flux_Err_Hi'], 's^-1 cm^-2 TeV^-1')
-        diff_flux_err_lo = Quantity(self.data['Flux_Points_Flux_Err_Lo'], 's^-1 cm^-2 TeV^-1')
-        return DifferentialFluxPoints.from_arrays(
-            energy, diff_flux, energy_err_hi,
-            energy_err_lo, diff_flux_err_hi, diff_flux_err_lo,
-        )
+        table = Table()
+        table.meta['SED_TYPE'] = 'dnde'
+        mask = ~np.isnan(self.data['Flux_Points_Energy'])
+        e_ref = Quantity(self.data['Flux_Points_Energy'][mask], 'TeV')
+        table['e_ref'] = e_ref
+        table['e_min'] = e_ref - Quantity(self.data['Flux_Points_Energy_Err_Lo'][mask], 'TeV')
+        table['e_max'] = e_ref + Quantity(self.data['Flux_Points_Energy_Err_Hi'][mask], 'TeV')
+        table['dnde'] = Quantity(self.data['Flux_Points_Flux'][mask], 'ph s-1 cm-2 TeV-1')
+        table['dnde_errp'] = Quantity(self.data['Flux_Points_Flux_Err_Hi'][mask], 'ph s-1 cm-2 TeV-1')
+        table['dnde_errn'] = Quantity(self.data['Flux_Points_Flux_Err_Lo'][mask], 'ph s-1 cm-2 TeV-1')
+        return FluxPoints(table)
 
 
 class SourceCatalogHGPS(SourceCatalog):

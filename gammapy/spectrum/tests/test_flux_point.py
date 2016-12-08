@@ -13,13 +13,18 @@ from ...utils.testing import requires_dependency, requires_data
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law, DifferentialFluxPoints,
-                          IntegralFluxPoints, FluxPointEstimator)
+                          IntegralFluxPoints, FluxPointEstimator, FluxPoints)
 from ..flux_point import SEDLikelihoodProfile
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 x_methods = ['table', 'lafferty', 'log_center']
 y_methods = ['power_law', 'model']
 indices = [0, 1, 2, 3]
+
+FLUX_POINTS_FILES = ['diff_flux_points.ecsv',
+                     'diff_flux_points.fits',
+                     'flux_points.ecsv',
+                     'flux_points.fits']
 
 
 @requires_dependency('scipy')
@@ -288,7 +293,8 @@ class TestFluxEstimator:
 @requires_data('gammapy-extra')
 class TestSEDLikelihoodProfile:
     def setup(self):
-        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits')
+        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/'
+                                             'llsed_hights.fits')
 
     def test_basics(self):
         # print(self.sed)
@@ -297,3 +303,59 @@ class TestSEDLikelihoodProfile:
     @requires_dependency('matplotlib')
     def test_plot(self):
         ax = self.sed.plot()
+
+
+@pytest.fixture(params=FLUX_POINTS_FILES)
+def flux_points(request):
+    path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
+    return FluxPoints.read(path)
+
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
+class TestFluxPoints:
+
+    @requires_dependency('matplotlib')
+    def test_plot(self, flux_points):
+        import matplotlib.pyplot as plt
+        ax = plt.gca()
+        flux_points.plot(ax=ax)
+
+    def test_info(self, flux_points):
+        info = str(flux_points)
+        assert flux_points.sed_type in info
+
+    def test_e_ref(self, flux_points):
+        actual = flux_points.e_ref
+        if flux_points.sed_type == 'dnde':
+            pass
+        elif flux_points.sed_type == 'flux':
+            desired = np.sqrt(flux_points.e_min * flux_points.e_max)
+            assert_quantity_allclose(actual, desired)
+
+    def test_e_min(self, flux_points):
+        if flux_points.sed_type == 'dnde':
+            pass
+        elif flux_points.sed_type == 'flux':
+            actual = flux_points.e_min
+            desired = 299530.9757217623 * u.MeV
+            assert_quantity_allclose(actual.sum(), desired)
+
+    def test_e_max(self, flux_points):
+        if flux_points.sed_type == 'dnde':
+            pass
+        elif flux_points.sed_type == 'flux':
+            actual = flux_points.e_max
+            desired = 399430.975721694 * u.MeV
+            assert_quantity_allclose(actual.sum(), desired)
+
+    def test_write_fits(self, tmpdir, flux_points):
+        filename = tmpdir / 'flux_points.fits'
+        flux_points.write(filename)
+        actual = FluxPoints.read(filename)
+        assert str(flux_points) == str(actual)
+
+    def test_write_ecsv(self, tmpdir, flux_points):
+        filename = tmpdir / 'flux_points.ecsv'
+        flux_points.write(filename)
+        actual = FluxPoints.read(filename)
+        assert str(flux_points) == str(actual)
