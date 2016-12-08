@@ -157,7 +157,7 @@ class FluxPoints(object):
             ax = plt.gca()
 
         sed_type = sed_type or self.sed_type
-        y_unit = y_unit or DEFAULT_UNIT[sed_type]
+        y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
 
         y = self.table[sed_type].quantity.to(y_unit)
         x = self.e_ref.to(energy_unit)
