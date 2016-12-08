@@ -4,7 +4,6 @@
 (Not released yet.)
 
 TODO:
-- [ ] Comparison with previous publication
 - [ ] Links to SNRCat
 - [ ] Show image in ds9 or js9
 - [ ] Take units automatically from table?
@@ -14,9 +13,10 @@ import os
 from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity, Unit
-from astropy.io import fits
 from astropy.table import Table
 from astropy.coordinates import Angle
+from gammapy.utils.scripts import make_path
+
 from ..extern.pathlib import Path
 from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
@@ -429,8 +429,7 @@ class SourceCatalogHGPS(SourceCatalog):
     """HESS Galactic plane survey (HGPS) source catalog.
 
     Note: this catalog isn't publicly available yet.
-    For now you need to be a H.E.S.S. member with an account
-    at MPIK to fetch it.
+    H.E.S.S. members have access and can use this.
     """
     name = 'hgps'
     description = 'H.E.S.S. Galactic plane survey (HGPS) source catalog'
@@ -439,25 +438,19 @@ class SourceCatalogHGPS(SourceCatalog):
     def __init__(self, filename=None, hdu='HGPS_SOURCES'):
         if not filename:
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
-        self.filename = str(filename)
-        self.hdu_list = fits.open(str(filename))
-        if hdu == 'HGPS_SOURCES':
-            table = Table.read(self.hdu_list['HGPS_SOURCES'])
-            self.components = Table.read(self.hdu_list['HGPS_COMPONENTS'])
-            self.associations = Table.read(self.hdu_list['HGPS_ASSOCIATIONS'])
-            self.identifications = Table.read(self.hdu_list['HGPS_IDENTIFICATIONS'])
-        elif hdu == 'HGPS_SOURCES_PA':
-            table = Table.read(self.hdu_list['HGPS_SOURCES_PA'])
-        elif hdu == 'HESS_GALACTIC':
-            table = Table.read(self.hdu_list['HESS_GALACTIC_SOURCES'])
-        else:
-            raise ValueError("Must be one of the following: 'HGPS_SOURCES',"
-                             "'HGPS_SOURCES_PA' or 'HESS_GALACTIC'")
+
+        filename = make_path(filename)
+
+        table = Table.read(str(filename), hdu=hdu)
 
         source_name_alias = ('Associated_Object',)
         super(SourceCatalogHGPS, self).__init__(table=table,
-                                            source_name_alias=source_name_alias)
+                                                source_name_alias=source_name_alias)
 
+        if hdu == 'HGPS_SOURCES':
+            self.components = Table.read(str(filename), hdu='HGPS_COMPONENTS')
+            self.associations = Table.read(str(filename), hdu='HGPS_ASSOCIATIONS')
+            self.identifications = Table.read(str(filename), hdu='HGPS_IDENTIFICATIONS')
 
     def _make_source_object(self, index):
         """Make one source object.

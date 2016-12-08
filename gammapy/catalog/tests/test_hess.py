@@ -11,7 +11,6 @@ from ..hess import SourceCatalogHGPS
 class TestSourceCatalogHGPS:
     def setup(self):
         self.cat = SourceCatalogHGPS()
-        self.cat.hdu_list.info()
 
     def test_source_table(self):
         assert self.cat.name == 'hgps'
