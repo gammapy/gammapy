@@ -124,13 +124,18 @@ except ImportError:
 def test_models(spectrum):
     model = spectrum['model']
     energy = 2 * u.TeV
-    assert_quantity_allclose(model(energy), spectrum['val_at_2TeV'])
+    value = model(energy)
+    assert_quantity_allclose(value, spectrum['val_at_2TeV'])
     emin = 1 * u.TeV
     emax = 10 * u.TeV
     assert_quantity_allclose(model.integral(emin=emin, emax=emax),
                              spectrum['integral_1_10TeV'])
     assert_quantity_allclose(model.energy_flux(emin=emin, emax=emax),
                              spectrum['eflux_1_10TeV'])
+
+    # inverse for TableModel is not implemented
+    if not isinstance(model, TableModel):
+        assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
     model.to_dict()
 
 

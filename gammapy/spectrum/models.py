@@ -188,6 +188,34 @@ class SpectralModel(object):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
+    def inverse(self, value, emin=0.1*u.TeV, emax=100*u.TeV):
+        """
+        Return energy for a given function value of the spectral model.
+
+        Uses numerical root finding algorithm.
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+            Function value of the spectral model.
+        emin : `~astropy.units.Quantity`
+            Lower bracket value in case solution is not unique.
+        emax : `~astropy.units.Quantity`
+            Upper bracket value in case solution is not unique.
+        """
+        from scipy.optimize import brentq
+
+        energies = []
+        for val in np.atleast_1d(value):
+            def f(x):
+                # scale by 1E12 to achieve better precision
+                y = self(x * u.TeV).to(value.unit).value
+                return 1E12 * (y - val.value)
+
+            energy = brentq(f, emin.to('TeV').value, emax.to('TeV').value)
+            energies.append(energy)
+        return energies * u.TeV
+
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
@@ -213,7 +241,7 @@ class PowerLaw(SpectralModel):
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
-        return amplitude * (energy / reference) ** (-index)
+        return amplitude * np.power((energy / reference), -index)
 
     def integral(self, emin, emax):
         r"""
@@ -238,8 +266,8 @@ class PowerLaw(SpectralModel):
 
         val = -1 * pars.index + 1
         prefactor = pars.amplitude * pars.reference / val
-        upper = (emax / pars.reference) ** val
-        lower = (emin / pars.reference) ** val
+        upper = np.power((emax / pars.reference), val)
+        lower = np.power((emin / pars.reference), val)
         return prefactor * (upper - lower)
 
     def energy_flux(self, emin, emax):
@@ -278,7 +306,6 @@ class PowerLaw(SpectralModel):
             lower = (emin / pars.reference) ** val
             return prefactor * (upper - lower)
 
-
     def to_sherpa(self, name='default'):
         """Return Sherpa `~sherpa.models.PowLaw1d`
 
@@ -293,6 +320,19 @@ class PowerLaw(SpectralModel):
         model.ref = self.parameters.reference.to('keV').value
         model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
         return model
+
+    def inverse(self, value):
+        """
+        Return energy for a given function value of the spectral model.
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+            Function value of the spectral model.
+        """
+        p = self.parameters
+        base = value / p['amplitude']
+        return p['reference'] * np.power(base, - 1. / p['index'])
 
 
 class PowerLaw2(SpectralModel):
@@ -356,6 +396,23 @@ class PowerLaw2(SpectralModel):
             np.power(pars.emin, -pars.index + 1)
 
         return pars.amplitude * top / bottom
+
+    def inverse(self, value):
+        """
+        Return energy for a given function value of the spectral model.
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+            Function value of the spectral model.
+        """
+        p = self.parameters
+        index = p['index']
+        top = -index + 1
+        bottom = (p['emax'].to('TeV').value ** (-index + 1) -
+                  p['emin'].to('TeV').value ** (-index + 1))
+        term = (bottom / top) * (value / p['amplitude']).to('1 / TeV')
+        return np.power(term.value, -1. / index) * u.TeV
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):

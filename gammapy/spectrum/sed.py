@@ -7,7 +7,6 @@ import numpy as np
 from astropy.extern.six.moves import UserList
 from astropy.table import Table
 from astropy.units import Unit, Quantity
-from ..spectrum import compute_differential_flux_points
 
 __all__ = [
     'SEDComponent',
@@ -325,7 +324,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         table['DIFF_FLUX_ERR_LO'] = Quantity(-errors * values, cube.data.unit)
 
     elif flux_type == 'integral':
-
+        raise NotImplementedError
         energies = cube.energies(mode='edges')
         emins = energies[:-1]
         emaxs = energies[1:]
