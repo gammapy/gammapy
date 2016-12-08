@@ -11,7 +11,6 @@ from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
 from ..spectrum import (
     FluxPoints,
-    IntegralFluxPoints,
     SpectrumResult,
     SpectrumFitResult
 )
@@ -274,7 +273,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def flux_points(self):
         """
-        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
+        Differential flux points (`~gammapy.spectrum.FluxPoints`).
         """
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
@@ -392,26 +391,17 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         return Quantity(values, unit)
 
     @property
-    def flux_points(self):
-        """
-        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
-        """
-        int_flux_points = self.flux_points_integral
-        gamma = self.data['Spectral_Index']
-        return int_flux_points.to_differential_flux_points(
-            x_method='log_center',
-            spectral_index=gamma,
-        )
-
-    @property
     def flux_points_integral(self):
         """
-        Integral flux points (`~gammapy.spectrum.IntegralFluxPoints`).
+        Integral flux points (`~gammapy.spectrum.FluxPoints`).
         """
-        flux = self._get_flux_values()
+        table = Table()
+        table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
-                                              flux_err[:, 0])
+        table['flux_errn'] = flux_err[:, 0]
+        table['flux_errp'] = flux_err[:, 1]
+        # TODO: add dnde quantities
+        return FluxPoints(table)
 
     @property
     def spectral_model(self):
