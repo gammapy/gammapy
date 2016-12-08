@@ -90,7 +90,7 @@ class TestSourceCatalogObjectGammaCat:
 
         assert name == source.name
         flux_points = source.flux_points
-        assert len(flux_points) == desired['N']
+        assert len(flux_points.table) == desired['N']
 
     @requires_dependency('uncertainties')
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_BF))

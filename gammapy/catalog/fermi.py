@@ -10,14 +10,12 @@ from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
 from ..spectrum import (
-    DifferentialFluxPoints,
-    IntegralFluxPoints,
+    FluxPoints,
     SpectrumResult,
     SpectrumFitResult
 )
 from ..spectrum.models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                                ExponentialCutoffPowerLaw3FGL, LogParabola)
-from ..spectrum.powerlaw import power_law_flux
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -275,37 +273,30 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def flux_points(self):
         """
-        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
+        Differential flux points (`~gammapy.spectrum.FluxPoints`).
         """
-        energy = self._ebounds.log_centers
-        energy_err_lo = energy - self._ebounds.lower_bounds
-        energy_err_hi = self._ebounds.upper_bounds - energy
+        table = Table()
+        table.meta['SED_TYPE'] = 'flux'
+        e_ref = self._ebounds.log_centers
+        table['e_ref'] = e_ref
+        table['e_min'] = self._ebounds.lower_bounds
+        table['e_max'] = self._ebounds.upper_bounds
 
-        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
-        diff_flux = (nuFnu * energy ** -2).to('TeV-1 cm-2 s-1')
-
-        # Get relativ error on integral fluxes
-        int_flux_points = self.flux_points_integral
-        diff_flux_err_hi = diff_flux * int_flux_points['INT_FLUX_ERR_HI_%'] / 100
-        diff_flux_err_lo = diff_flux * int_flux_points['INT_FLUX_ERR_LO_%'] / 100
-
-        return DifferentialFluxPoints.from_arrays(energy=energy,
-                                                  energy_err_hi=energy_err_hi,
-                                                  energy_err_lo=energy_err_lo,
-                                                  diff_flux=diff_flux,
-                                                  diff_flux_err_lo=diff_flux_err_lo,
-                                                  diff_flux_err_hi=diff_flux_err_hi)
-
-    @property
-    def flux_points_integral(self):
-        """
-        Integral flux points (`~gammapy.spectrum.IntegralFluxPoints`).
-        """
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
+        table['flux'] = flux
+        table['flux_errn'] = np.abs(flux_err[:, 0])
+        table['flux_errp'] = flux_err[:, 1]
 
-        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
-                                              flux_err[:, 0])
+        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
+        table['eflux'] = nuFnu
+        table['eflux_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table['eflux_errp'] = nuFnu * flux_err[:, 1] / flux
+
+        # TODO: check if nuFnu is maybe integral flux
+        table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
+        return FluxPoints(table)
+
 
     @property
     def spectrum(self):
@@ -347,7 +338,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             covar_axis=par_names,
         )
 
-    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
 
@@ -394,7 +385,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         return ss
 
-    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
 
@@ -404,24 +395,18 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     @property
     def flux_points(self):
         """
-        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
+        Integral flux points (`~gammapy.spectrum.FluxPoints`).
         """
-        int_flux_points = self.flux_points_integral
-        gamma = self.data['Spectral_Index']
-        return int_flux_points.to_differential_flux_points(
-            x_method='log_center',
-            spectral_index=gamma,
-        )
-
-    @property
-    def flux_points_integral(self):
-        """
-        Integral flux points (`~gammapy.spectrum.IntegralFluxPoints`).
-        """
-        flux = self._get_flux_values()
+        table = Table()
+        table.meta['SED_TYPE'] = 'flux'
+        table['e_min'] = self._ebounds.lower_bounds
+        table['e_max'] = self._ebounds.upper_bounds
+        table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
-                                              flux_err[:, 0])
+        table['flux_errn'] = flux_err[:, 0]
+        table['flux_errp'] = flux_err[:, 1]
+        # TODO: add dnde quantities
+        return FluxPoints(table)
 
     @property
     def spectral_model(self):

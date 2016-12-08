@@ -12,7 +12,7 @@ from astropy import units as u
 from astropy.table import Table, QTable
 from astropy.utils import lazyproperty
 from ..extern.pathlib import Path
-from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
+from ..spectrum import FluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
@@ -85,21 +85,21 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
         """
         d = self.data
+        table = Table()
+        table.meta['SED_TYPE'] = 'dnde'
+
         e_ref = d['sed_e_ref']
         valid = ~np.isnan(e_ref)
 
-        e_ref = e_ref[valid]
-        dnde = d['sed_dnde'][valid]
-        dnde_errp = d['sed_dnde_errp'][valid]
-        dnde_errn = d['sed_dnde_errn'][valid]
+        table['e_ref'] = e_ref[valid]
+        table['dnde'] = d['sed_dnde'][valid]
+        table['dnde_errp'] = d['sed_dnde_errp'][valid]
+        table['dnde_errn'] = d['sed_dnde_errn'][valid]
 
         if len(e_ref) == 0:
             raise DataMissingError('No flux points available.')
 
-        return DifferentialFluxPoints.from_arrays(energy=e_ref,
-                                                  diff_flux=dnde,
-                                                  diff_flux_err_lo=dnde_errn,
-                                                  diff_flux_err_hi=dnde_errp)
+        return FluxPoints(table)
 
     @property
     def spectrum(self):

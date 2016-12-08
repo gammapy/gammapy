@@ -197,6 +197,7 @@ def test_compute_differential_flux_points(x_method, y_method):
     assert_allclose(actual, desired, rtol=1e-3)
 
 
+@pytest.mark.xfail
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 def test_3fgl_flux_points():
