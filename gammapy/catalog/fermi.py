@@ -282,17 +282,19 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['e_min'] = self._ebounds.lower_bounds
         table['e_max'] = self._ebounds.upper_bounds
 
-        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
-        table['eflux'] = nuFnu
-        # TODO: check if nuFnu is maybe integral flux
-        table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
-
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-
         table['flux'] = flux
-        table['flux_errn'] = flux_err[:, 0]
+        table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
+
+        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
+        table['eflux'] = nuFnu
+        table['eflux_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table['eflux_errp'] = nuFnu * flux_err[:, 1] / flux
+
+        # TODO: check if nuFnu is maybe integral flux
+        table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
 
 
@@ -336,7 +338,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             covar_axis=par_names,
         )
 
-    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
 
@@ -383,7 +385,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         return ss
 
-    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
 
@@ -391,11 +393,14 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         return Quantity(values, unit)
 
     @property
-    def flux_points_integral(self):
+    def flux_points(self):
         """
         Integral flux points (`~gammapy.spectrum.FluxPoints`).
         """
         table = Table()
+        table.meta['SED_TYPE'] = 'flux'
+        table['e_min'] = self._ebounds.lower_bounds
+        table['e_max'] = self._ebounds.upper_bounds
         table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
         table['flux_errn'] = flux_err[:, 0]
