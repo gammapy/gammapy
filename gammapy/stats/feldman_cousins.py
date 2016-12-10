@@ -401,8 +401,8 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
         try:
             limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
         except:
-            print("Warning: Calculation of average limit incomplete!")
-            print("Add more bins in mue direction or decrease prob_limit.")
+            log.warning("Warning: Calculation of average limit incomplete!")
+            log.warning("Add more bins in mu direction or decrease prob_limit.")
             return avergage_limit
         avergage_limit += matrix[0][i] * limit
 
