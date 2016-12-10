@@ -2,7 +2,7 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.spectrum.flux_point import compute_differential_flux_points
+#from gammapy.spectrum.flux_point import compute_differential_flux_points
 from gammapy.spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 

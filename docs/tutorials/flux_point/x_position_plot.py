@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.table import Table
-from gammapy.spectrum.flux_point import _energy_lafferty_power_law
+#from gammapy.spectrum.flux_point import _energy_lafferty_power_law
 from gammapy.spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 from flux_point_demo import get_flux_tables
 

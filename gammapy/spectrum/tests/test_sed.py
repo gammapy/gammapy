@@ -137,6 +137,7 @@ def test_cube_sed1():
                           errors=True, counts=counts)
     assert_allclose(sed_table3['DIFF_FLUX_ERR_HI'].data, 2560 * np.sqrt(1. / 256))
 
+@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_cube_sed2():

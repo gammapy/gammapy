@@ -3,9 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.table import Table
-from gammapy.spectrum.flux_point import (compute_differential_flux_points,
-                                         _x_lafferty, _integrate)
-from gammapy.spectrum.powerlaw import power_law_integral_flux
+#from gammapy.spectrum.flux_point import (compute_differential_flux_points,
+#                                         _x_lafferty, _integrate)
+#from gammapy.spectrum.powerlaw import power_law_integral_flux
 
 SPECTRAL_INDEX = 4
 
