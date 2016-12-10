@@ -12,8 +12,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ..flux_point import (_e_ref_lafferty, _dnde_from_flux,
                           compute_flux_points_dnde,
-                          DifferentialFluxPoints,
-                          IntegralFluxPoints, FluxPointEstimator, FluxPoints)
+                          FluxPointEstimator, FluxPoints)
 from ..flux_point import SEDLikelihoodProfile
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 from ...spectrum.models import SpectralModel
@@ -316,6 +315,7 @@ class TestFluxPoints:
         assert str(flux_points) == str(actual)
 
 
+@requires_data('gammapy-extra')
 def test_compute_flux_points_dnde():
     """
     Test compute_flux_points_dnde on reference spectra.
