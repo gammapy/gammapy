@@ -52,7 +52,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def spectral_model(self):
         """
-        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
+        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
         d = self.data
         spec_type = d['spec_type']
@@ -82,7 +82,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def flux_points(self):
         """
-        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
+        Differential flux points (`~gammapy.spectrum.FluxPoints`).
         """
         d = self.data
         table = Table()

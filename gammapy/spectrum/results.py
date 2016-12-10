@@ -19,7 +19,7 @@ __all__ = [
 
 class SpectrumFitResult(object):
     """Class representing the result of a spectral fit
-    
+
     TODO: This only supports WStat fits at the moment. Find a solution to
     display also Cash fits (flag, subclass).
 
@@ -331,7 +331,7 @@ class SpectrumFitResult(object):
     @property
     def expected_background_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted background counts
-        
+
         According to profile likelihood, see :ref:`wstat`.
         """
         energy = self.obs.e_reco
@@ -425,7 +425,7 @@ class SpectrumResult(object):
     ----------
     fit : `~SpectrumFitResult`
         Spectrum fit result holding best fit model
-    points : `~gammapy.spectrum.DifferentialFluxPoints`, optional
+    points : `~gammapy.spectrum.FluxPoints`, optional
         Flux points
     """
 
@@ -455,9 +455,9 @@ class SpectrumResult(object):
             energy_unit = pars.reference.unit
             flux_unit = pars.amplitude.unit
 
-        x = self.points['ENERGY'].quantity.to(energy_unit)
-        y = self.points['DIFF_FLUX'].quantity.to(flux_unit)
-        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
+        x = self.points.table['e_ref'].quantity.to(energy_unit)
+        y = self.points.table['dnde'].quantity.to(flux_unit)
+        y_err = self.points.table['dnde_err'].quantity.to(flux_unit)
 
         points = list()
         for val, err in zip(y.value, y_err.value):
@@ -490,7 +490,7 @@ class SpectrumResult(object):
         butterfly_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.SpectrumButterfly.plot`
         point_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.DifferentialFluxPoints.plot`
+            forwarded to :func:`gammapy.spectrum.FluxPoints.plot`
         fig_kwargs : dict, optional
             forwarded to :func:`matplotlib.pyplot.figure`
 

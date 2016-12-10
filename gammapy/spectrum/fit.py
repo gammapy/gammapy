@@ -11,7 +11,6 @@ from . import (
     SpectrumObservationList,
     SpectrumObservation,
     models,
-    DifferentialFluxPoints,
 )
 
 __all__ = [
@@ -241,6 +240,8 @@ class SpectrumFit(object):
         from . import SpectrumResult
         obs_list = self.obs_list
         model = self.result[0].model
+        #TODO: doesn't work .compute() never existed, remove whole method?
+        raise NotImplementedError
         points = DifferentialFluxPoints.compute(model=model,
                                                 binning=binning,
                                                 obs_list=obs_list)

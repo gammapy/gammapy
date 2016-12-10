@@ -411,7 +411,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     @property
     def spectral_model(self):
         """
-        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
+        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
         emin, emax = self.energy_range
         g = Quantity(self.data['Spectral_Index'], '')
