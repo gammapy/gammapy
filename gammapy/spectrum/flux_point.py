@@ -422,16 +422,6 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     """
     input_table = flux_points.table
     flux = input_table['flux'].quantity
-
-    try:
-        flux_err = input_table['flux_err'].quantity
-    except KeyError:
-        flux_err = None
-    try:
-        flux_ul = input_table['flux_ul'].quantity
-    except KeyError:
-        flux_ul = None
-
     e_min = flux_points.e_min
     e_max = flux_points.e_max
 
@@ -453,11 +443,16 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     table['e_ref'] = e_ref
     table['dnde'] = dnde
 
-    if flux_err:
+    if 'flux_err' in table.colnames:
         # TODO: implement better error handling, e.g. MC based method
-        table['dnde_err'] = dnde * flux_err / flux
+        table['dnde_err'] = dnde * table['flux_err'].quantity / flux
 
-    if flux_ul:
+    if 'flux_errn' in table.colnames:
+        table['dnde_errn'] = dnde * table['flux_errn'].quantity / flux
+        table['dnde_errp'] = dnde * table['flux_errp'].quantity / flux
+
+    if 'flux_ul' in table.colnames:
+        flux_ul = table['flux_ul'].quantity
         dnde_ul = _dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
         table['dnde_ul'] = dnde_ul
 

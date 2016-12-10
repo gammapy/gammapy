@@ -11,8 +11,8 @@ from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
 from ..spectrum import (
     FluxPoints,
-    SpectrumResult,
-    SpectrumFitResult
+    SpectrumFitResult,
+    compute_flux_points_dnde
 )
 from ..spectrum.models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                                ExponentialCutoffPowerLaw3FGL, LogParabola)
@@ -403,10 +403,12 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         table['e_max'] = self._ebounds.upper_bounds
         table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        table['flux_errn'] = flux_err[:, 0]
+        table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
-        # TODO: add dnde quantities
-        return FluxPoints(table)
+        flux_points = FluxPoints(table)
+
+        flux_points_dnde = compute_flux_points_dnde(flux_points, model=self.spectral_model)
+        return flux_points_dnde
 
     @property
     def spectral_model(self):
