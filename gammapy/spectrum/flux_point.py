@@ -106,6 +106,7 @@ class FluxPoints(object):
         """
         Validate input flux point table.
         """
+        table = Table(table)
         sed_type = table.meta['SED_TYPE']
         required = set(REQUIRED_COLUMNS[sed_type])
 
@@ -124,7 +125,7 @@ class FluxPoints(object):
         except IndexError:
             return u.Unit('TeV')
 
-    def plot(self, ax=None, sed_type=None, energy_unit='TeV', y_unit=None,
+    def plot(self, ax=None, sed_type=None, energy_unit='TeV', flux_unit=None,
              energy_power=0, **kwargs):
         """
         Plot flux points
@@ -137,7 +138,7 @@ class FluxPoints(object):
             Which sed type to plot.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
-        y_unit : str, `~astropy.units.Unit`, optional
+        flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
         energy_power : int
             Power of energy to multiply y axis with
@@ -155,7 +156,7 @@ class FluxPoints(object):
             ax = plt.gca()
 
         sed_type = sed_type or self.sed_type
-        y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
+        y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
         y = self.table[sed_type].quantity.to(y_unit)
         x = self.e_ref.to(energy_unit)
@@ -506,7 +507,8 @@ class FluxPointEstimator(object):
 
     def compute_points(self):
         meta = OrderedDict(
-            method='TODO',
+            METHOD='TODO',
+            SED_TYPE='dnde'
         )
         rows = []
         for group in self.groups:
@@ -517,7 +519,8 @@ class FluxPointEstimator(object):
             row = self.compute_flux_point(group)
             rows.append(row)
 
-        self.flux_points = table_from_row_data(rows=rows, meta=meta)
+        self.flux_points = FluxPoints(table_from_row_data(rows=rows,
+                                                          meta=meta))
 
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
@@ -597,19 +600,18 @@ class FluxPointEstimator(object):
 
         res = fit.global_result
 
-        energy_err_hi = energy_group.energy_range.max - energy_ref
-        energy_err_lo = energy_ref - energy_group.energy_range.min
+        e_max = energy_group.energy_range.max
+        e_min = energy_group.energy_range.min
         diff_flux = res.model(energy_ref).to('m-2 s-1 TeV-1')
         err = res.model_with_uncertainties(energy_ref.to('TeV').value)
         diff_flux_err = err.s * u.Unit('m-2 s-1 TeV-1')
 
         return OrderedDict(
-            energy=energy_ref,
-            energy_err_hi=energy_err_hi,
-            energy_err_lo=energy_err_lo,
-            diff_flux=diff_flux,
-            diff_flux_err_hi=diff_flux_err,
-            diff_flux_err_lo=diff_flux_err,
+            e_ref=energy_ref,
+            e_min=e_min,
+            e_max=e_max,
+            dnde=diff_flux,
+            dnde_err=diff_flux_err,
         )
 
 

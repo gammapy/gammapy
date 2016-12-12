@@ -565,7 +565,7 @@ class SpectrumResult(object):
         res = self.flux_point_residuals
         y = [_.n for _ in res]
         y_err = [_.s for _ in res]
-        x = self.points['ENERGY'].quantity
+        x = self.points.e_ref
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
 
