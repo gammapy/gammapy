@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency
-from ...scripts import CTAIrf
+from ...scripts import CTAIrf, CTAPerf
 
 
 @requires_dependency('scipy')
@@ -34,5 +34,16 @@ def test_cta_irf():
     # val = irf.bkg.evaluate(energy=energy, x=offset, y=Quantity(0, 'deg'))
     # assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
 
+
+@requires_dependency('matplotlib')
+@requires_data('gammapy-extra')
+def test_point_like_perf():
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/\
+CTA-Performance-South-20150511/CTA-Performance-South-50h_20150511.fits'
+    cta_perf = CTAPerf.read(filename)
+    cta_perf.peek()
+    
+    
 if __name__ == '__main__':
     test_cta_irf()
+    test_point_like_perf()
