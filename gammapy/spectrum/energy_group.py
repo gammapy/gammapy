@@ -477,7 +477,7 @@ def calculate_flux_point_binning(obs_list, min_signif):
     """Compute energy binning.
 
     This is useful to get an energy binning to use with
-    :func:`~gammapy.spectrum.DifferentialFluxPoints.compute` Each bin in the
+    :func:`~gammapy.spectrum.FluxPoints` Each bin in the
     resulting energy binning will include a ``min_signif`` source detection.
 
     TODO: It is required that at least two fine bins be included in one

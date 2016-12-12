@@ -15,8 +15,6 @@ from ..spectrum.powerlaw import power_law_flux
 from ..spectrum.models import PowerLaw
 
 __all__ = [
-    'DifferentialFluxPoints',
-    'IntegralFluxPoints',
     'compute_flux_points_dnde',
     'FluxPointEstimator',
     'FluxPoints',
@@ -108,6 +106,7 @@ class FluxPoints(object):
         """
         Validate input flux point table.
         """
+        table = Table(table)
         sed_type = table.meta['SED_TYPE']
         required = set(REQUIRED_COLUMNS[sed_type])
 
@@ -126,7 +125,7 @@ class FluxPoints(object):
         except IndexError:
             return u.Unit('TeV')
 
-    def plot(self, ax=None, sed_type=None, energy_unit='TeV', y_unit=None,
+    def plot(self, ax=None, sed_type=None, energy_unit='TeV', flux_unit=None,
              energy_power=0, **kwargs):
         """
         Plot flux points
@@ -139,7 +138,7 @@ class FluxPoints(object):
             Which sed type to plot.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
-        y_unit : str, `~astropy.units.Unit`, optional
+        flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
         energy_power : int
             Power of energy to multiply y axis with
@@ -157,7 +156,7 @@ class FluxPoints(object):
             ax = plt.gca()
 
         sed_type = sed_type or self.sed_type
-        y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
+        y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
         y = self.table[sed_type].quantity.to(y_unit)
         x = self.e_ref.to(energy_unit)
@@ -381,208 +380,6 @@ class FluxPoints(object):
         return self.table['e_max'].quantity
 
 
-class DifferentialFluxPoints(Table):
-    """Differential flux points table
-
-    Column names: ENERGY, ENERGY_ERR_HI, ENERGY_ERR_LO,
-    DIFF_FLUX, DIFF_FLUX_ERR_HI, DIFF_FLUX_ERR_LO
-    For a complete documentation see :ref:`gadf:flux-points`, for an usage
-    example see :ref:`flux-point-computation`.
-
-    Upper limits are stored as in the Fermi catalogs. I.e. the lower error is set
-    to `NaN`, while the upper error represents the 1 sigma upper limit.
-    """
-
-    @classmethod
-    def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
-                    energy_err_lo=None, diff_flux_err_hi=None,
-                    diff_flux_err_lo=None):
-        """Create `~gammapy.spectrum.DifferentialFluxPoints` from numpy arrays"""
-        t = Table()
-        energy = Energy(energy)
-        diff_flux = u.Quantity(diff_flux)
-        if not diff_flux.unit.is_equivalent('TeV-1 cm-2 s-1'):
-            raise ValueError(
-                'Flux (unit {}) not a differential flux'.format(diff_flux.unit))
-
-        # Set errors to zero by default
-        def_f = np.zeros(len(energy)) * diff_flux.unit
-        def_e = np.zeros(len(energy)) * energy.unit
-        if energy_err_hi is None:
-            energy_err_hi = def_e
-        if energy_err_lo is None:
-            energy_err_lo = def_e
-        if diff_flux_err_hi is None:
-            diff_flux_err_hi = def_f
-        if diff_flux_err_lo is None:
-            diff_flux_err_lo = def_f
-
-        t['ENERGY'] = energy
-        t['ENERGY_ERR_HI'] = u.Quantity(energy_err_hi)
-        t['ENERGY_ERR_LO'] = u.Quantity(energy_err_lo)
-        t['DIFF_FLUX'] = diff_flux
-        t['DIFF_FLUX_ERR_HI'] = u.Quantity(diff_flux_err_hi)
-        t['DIFF_FLUX_ERR_LO'] = u.Quantity(diff_flux_err_lo)
-        return cls(t)
-
-    def plot(self, ax=None, energy_unit='TeV',
-             flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
-        """Plot flux points
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
-        energy_power : int
-            Power of energy to multiply flux axis with
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-
-        kwargs.setdefault('fmt', 'o')
-        ax = plt.gca() if ax is None else ax
-
-        energy = self['ENERGY'].quantity.to(energy_unit)
-        energy_hi = self['ENERGY_ERR_HI'].quantity.to(energy_unit)
-        energy_lo = self['ENERGY_ERR_LO'].quantity.to(energy_unit)
-
-        flux = self['DIFF_FLUX'].quantity.to(flux_unit)
-
-        # lower flux error is stored with negative sign, account for that
-        flux_lo = np.abs(self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit))
-        flux_hi = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
-
-        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
-        yunit = flux.unit * eunit ** energy_power
-        y = (flux * np.power(energy, energy_power)).to(yunit)
-        y_hi = (flux_hi * np.power(energy, energy_power)).to(yunit)
-        y_lo = (flux_lo * np.power(energy, energy_power)).to(yunit)
-
-        # plot flux points
-        is_ul = np.isnan(flux_lo).astype('bool')
-        yerr = (y_lo.value[~is_ul], y_hi.value[~is_ul])
-        xerr = (energy_lo.value[~is_ul], energy_hi.value[~is_ul])
-
-        kwargs.setdefault('marker', 'None')
-        ax.errorbar(energy.value[~is_ul], y.value[~is_ul],
-                    yerr=yerr, xerr=xerr, **kwargs)
-
-        # plot upper limit flux points
-        xerr = (energy_lo.value[is_ul], energy_hi.value[is_ul])
-
-        ul_kwargs = {'marker': 'v',
-                     'label': None}
-
-        kwargs.setdefault('ms', 10)
-        kwargs.setdefault('mec', 'None')
-        kwargs.update(ul_kwargs)
-
-        # UL are typically shown as 2 * sigma
-        ax.errorbar(energy.value[is_ul], 2 * y_hi.value[is_ul], xerr=xerr, **kwargs)
-
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        if energy_power > 0:
-            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, yunit))
-        else:
-            ax.set_ylabel('Flux [{}]'.format(yunit))
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
-        return ax
-
-
-class IntegralFluxPoints(Table):
-    """Integral flux points table
-
-    Column names: ENERGY_MIN, ENERGY_MAX, INT_FLUX, INT_FLUX_ERR_HI, INT_FLUX_ERR_LO
-    For a complete documentation see :ref:`gadf:flux-points`
-    """
-
-    @classmethod
-    def from_arrays(cls, ebounds, int_flux, int_flux_err_hi=None,
-                    int_flux_err_lo=None):
-        """Create `~gammapy.spectrum.IntegralFluxPoints` from numpy arrays"""
-        t = Table()
-        ebounds = EnergyBounds(ebounds)
-        int_flux = u.Quantity(int_flux)
-        if not int_flux.unit.is_equivalent('cm-2 s-1'):
-            raise ValueError('Flux (unit {}) not an integrated flux'.format(int_flux.unit))
-
-        # Set errors to zero by default
-        def_f = np.zeros(ebounds.nbins) * int_flux.unit
-        int_flux_err_hi = def_f if int_flux_err_hi is None else int_flux_err_hi
-        int_flux_err_lo = def_f if int_flux_err_lo is None else int_flux_err_lo
-
-        t['ENERGY_MIN'] = ebounds.lower_bounds
-        t['ENERGY_MAX'] = ebounds.upper_bounds
-        t['INT_FLUX'] = int_flux
-        t['INT_FLUX_ERR_HI'] = int_flux_err_hi
-        t['INT_FLUX_ERR_LO'] = int_flux_err_lo
-
-        t['INT_FLUX_ERR_HI_%'] = 100 * int_flux_err_hi / int_flux
-        t['INT_FLUX_ERR_LO_%'] = 100 * int_flux_err_lo / int_flux
-        return cls(t)
-
-    @property
-    def ebounds(self):
-        """Energy bounds"""
-        return EnergyBounds.from_lower_and_upper_bounds(
-            self['ENERGY_MIN'], self['ENERGY_MAX'])
-
-    def to_differential_flux_points(self, x_method='lafferty',
-                                    y_method='power_law', model=None,
-                                    spectral_index=None):
-        """Create `~gammapy.spectrum.DifferentialFluxPoints`
-
-        see :func:`~gammapy.spectrum.compute_differential_flux_points`.
-        """
-        energy_min = self['ENERGY_MIN'].to('TeV').value
-        energy_max = self['ENERGY_MAX'].to('TeV').value
-        int_flux = self['INT_FLUX'].to('cm-2 s-1').value
-        # Use upper error as symmetric value
-        int_flux_err_hi = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
-        int_flux_err_lo = self['INT_FLUX_ERR_LO'].to('cm-2 s-1').value
-
-        val = compute_differential_flux_points(
-            x_method=x_method,
-            y_method=y_method,
-            model=model,
-            spectral_index=spectral_index,
-            energy_min=energy_min,
-            energy_max=energy_max,
-            int_flux=int_flux,
-            int_flux_err_hi=int_flux_err_hi,
-            int_flux_err_lo=int_flux_err_lo,
-        )
-
-        energy = val['ENERGY'] * u.Unit('TeV')
-        f = val['DIFF_FLUX'] * u.Unit('TeV-1 cm-2 s-1')
-        f_err_hi = val['DIFF_FLUX_ERR_HI'] * u.Unit('TeV-1 cm-2 s-1')
-        f_err_lo = val['DIFF_FLUX_ERR_LO'] * u.Unit('TeV-1 cm-2 s-1')
-
-        energy_min = u.Quantity(self['ENERGY_MIN'])
-        energy_max = u.Quantity(self['ENERGY_MAX'])
-
-        # assume symmetric errors
-        return DifferentialFluxPoints.from_arrays(
-            energy=energy,
-            energy_err_hi=energy_max - energy,
-            energy_err_lo=energy - energy_min,
-            diff_flux=f,
-            diff_flux_err_lo=f_err_lo,
-            diff_flux_err_hi=f_err_hi,
-        )
-
-
 def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     """
     Compute differential flux points quantities.
@@ -626,16 +423,6 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     """
     input_table = flux_points.table
     flux = input_table['flux'].quantity
-
-    try:
-        flux_err = input_table['flux_err'].quantity
-    except KeyError:
-        flux_err = None
-    try:
-        flux_ul = input_table['flux_ul'].quantity
-    except KeyError:
-        flux_ul = None
-
     e_min = flux_points.e_min
     e_max = flux_points.e_max
 
@@ -657,11 +444,16 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     table['e_ref'] = e_ref
     table['dnde'] = dnde
 
-    if flux_err:
+    if 'flux_err' in table.colnames:
         # TODO: implement better error handling, e.g. MC based method
-        table['dnde_err'] = dnde * flux_err / flux
+        table['dnde_err'] = dnde * table['flux_err'].quantity / flux
 
-    if flux_ul:
+    if 'flux_errn' in table.colnames:
+        table['dnde_errn'] = dnde * table['flux_errn'].quantity / flux
+        table['dnde_errp'] = dnde * table['flux_errp'].quantity / flux
+
+    if 'flux_ul' in table.colnames:
+        flux_ul = table['flux_ul'].quantity
         dnde_ul = _dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
         table['dnde_ul'] = dnde_ul
 
@@ -715,7 +507,8 @@ class FluxPointEstimator(object):
 
     def compute_points(self):
         meta = OrderedDict(
-            method='TODO',
+            METHOD='TODO',
+            SED_TYPE='dnde'
         )
         rows = []
         for group in self.groups:
@@ -726,7 +519,8 @@ class FluxPointEstimator(object):
             row = self.compute_flux_point(group)
             rows.append(row)
 
-        self.flux_points = table_from_row_data(rows=rows, meta=meta)
+        self.flux_points = FluxPoints(table_from_row_data(rows=rows,
+                                                          meta=meta))
 
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
@@ -806,19 +600,18 @@ class FluxPointEstimator(object):
 
         res = fit.global_result
 
-        energy_err_hi = energy_group.energy_range.max - energy_ref
-        energy_err_lo = energy_ref - energy_group.energy_range.min
+        e_max = energy_group.energy_range.max
+        e_min = energy_group.energy_range.min
         diff_flux = res.model(energy_ref).to('m-2 s-1 TeV-1')
         err = res.model_with_uncertainties(energy_ref.to('TeV').value)
         diff_flux_err = err.s * u.Unit('m-2 s-1 TeV-1')
 
         return OrderedDict(
-            energy=energy_ref,
-            energy_err_hi=energy_err_hi,
-            energy_err_lo=energy_err_lo,
-            diff_flux=diff_flux,
-            diff_flux_err_hi=diff_flux_err,
-            diff_flux_err_lo=diff_flux_err,
+            e_ref=energy_ref,
+            e_min=e_min,
+            e_max=e_max,
+            dnde=diff_flux,
+            dnde_err=diff_flux_err,
         )
 
 
