@@ -228,14 +228,14 @@ class TestFluxEstimator:
 
         fpe.compute_points()
         flux_points = fpe.flux_points
-        flux_points.pprint()
-        flux_points.info()
+        flux_points.table.pprint()
+        flux_points.table.info()
 
-        actual = flux_points['diff_flux'][2]
+        actual = flux_points.table['dnde'].quantity[2]
         desired = Quantity(5.737510858664804e-09, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
-        actual = flux_points['diff_flux_err_hi'][2]
+        actual = flux_points.table['dnde_err'].quantity[2]
         desired = Quantity(9.904468386098078e-10, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
