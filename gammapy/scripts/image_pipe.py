@@ -72,7 +72,7 @@ class SingleObsImageMaker(object):
         self.livetime = obs.observation_live_time_duration
         self.save_bkg_scale = save_bkg_scale
         if self.save_bkg_scale:
-            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
+            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale", "N_counts"])
 
     def counts_image(self):
         """Fill the counts image for the events of one observation."""
@@ -102,10 +102,10 @@ class SingleObsImageMaker(object):
         bkg_image.data = bkg_image.data.decompose()
         bkg_image.data = bkg_image.data.value
         if bkg_norm:
-            scale = self.background_norm_factor(self.images["counts"], bkg_image)
+            scale, counts = self.background_norm_factor(self.images["counts"], bkg_image)
             bkg_image.data = scale * bkg_image.data
             if self.save_bkg_scale:
-                self.table_bkg_scale.add_row([self.obs_id, scale])
+                self.table_bkg_scale.add_row([self.obs_id, scale, counts])
 
         self.images["bkg"] = bkg_image
 
@@ -209,7 +209,7 @@ class SingleObsImageMaker(object):
         bkg_sum = np.sum(bkg.data * self.images['exclusion'].data)
         scale = counts_sum / bkg_sum
 
-        return scale
+        return scale, counts_sum
 
     def significance_image(self, radius):
         """Make the significance image from the counts and bkg images.
@@ -288,7 +288,7 @@ class StackedObsImageMaker(object):
         self.thetapsf = None
         self.save_bkg_scale = save_bkg_scale
         if self.save_bkg_scale:
-            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
+            self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale", "N_counts"])
 
     def make_images(self, make_background_image=False, bkg_norm=True,
                     spectral_index=2.3, for_integral_flux=False, radius=10):

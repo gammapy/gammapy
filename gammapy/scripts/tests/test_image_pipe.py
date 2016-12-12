@@ -73,3 +73,12 @@ def test_image_pipe(tmpdir):
     assert_allclose(images['excess'].data.sum(), 346.8486363336217, atol=3)
     assert_allclose(image_maker.table_bkg_scale[0]["bkg_scale"], 0.7495491394090461)
     assert_allclose(image_maker.table_bkg_scale[1]["bkg_scale"], 0.725116527521305)
+
+    image_maker2 = StackedObsImageMaker(
+        empty_image=ref_image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+        obs_table=data_store.obs_table, exclusion_mask=exclusion_mask,
+        save_bkg_scale=True)
+    image_maker2.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
+    assert image_maker2.table_bkg_scale["OBS_ID"][0] == 23523
+    assert image_maker2.table_bkg_scale["bkg_scale"][0] == 0.74954913940912238
+    assert image_maker2.table_bkg_scale["N_counts"][0] == 525.0583940319832
