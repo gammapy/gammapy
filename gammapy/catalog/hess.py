@@ -423,6 +423,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['dnde'] = Quantity(self.data['Flux_Points_Flux'][mask], 'ph s-1 cm-2 TeV-1')
         table['dnde_errp'] = Quantity(self.data['Flux_Points_Flux_Err_Hi'][mask], 'ph s-1 cm-2 TeV-1')
         table['dnde_errn'] = Quantity(self.data['Flux_Points_Flux_Err_Lo'][mask], 'ph s-1 cm-2 TeV-1')
+        table['dnde_ul'] = Quantity(self.data['Flux_Points_Flux_UL'][mask], 'ph s-1 cm-2 TeV-1')
         return FluxPoints(table)
 
 
