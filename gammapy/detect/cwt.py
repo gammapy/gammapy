@@ -66,11 +66,11 @@ class CWT(object):
         Kernels for the algorithm.
     max_iter : int, optional (default 10)
         The maximum number of iterations of the CWT algorithm.
-    tol : double, optional (default 1e-5)
+    tol : float, optional (default 1e-5)
         Tolerance for stopping criterion.
-    significance_threshold : double, optional (default 3.0)
+    significance_threshold : float, optional (default 3.0)
         Measure of statistical significance.
-    significance_island_threshold : double, optional (default None)
+    significance_island_threshold : float, optional (default None)
         Measure is used for cleaning of isolated pixel islands
         that are slightly above ``significance_threshold``.
     remove_isolated : boolean, optional (default True)
@@ -296,9 +296,9 @@ class CWTKernels(object):
     ----------
     n_scale : int
         Number of scales.
-    min_scale : double
+    min_scale : float
         First scale used.
-    step_scale : double
+    step_scale : float
         Base scaling factor.
     old : boolean (default False)
         DEBUG attribute. If False, use astropy MaxicanHat kernels for kernel_base.
@@ -307,9 +307,9 @@ class CWTKernels(object):
     ----------
     n_scale : int
         Number of scales considered.
-    min_scale : double
+    min_scale : float
         First scale used.
-    step_scale : double
+    step_scale : float
         Base scaling factor.
     scales : '~numpy.ndarray'
         Grid of scales.

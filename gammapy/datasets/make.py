@@ -325,7 +325,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
         observation altitude angle for the model.
     sigma : `~astropy.coordinates.Angle`, optional
         Width of the gaussian model used for the spatial coordinates.
-    spectral_index : double, optional
+    spectral_index : float, optional
         Index for the power-law model used for the energy coordinate.
     apply_mask : bool, optional
         If set, 1/4th of the image is masked (for **x > x_center**
@@ -488,7 +488,7 @@ def make_test_dataset(outdir, overwrite=False,
         the observations.
     sigma : `~astropy.coordinates.Angle`, optional
         Width of the gaussian model used for the spatial coordinates.
-    spectral_index : double, optional
+    spectral_index : float, optional
         Index for the power-law model used for the energy coordinate.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
@@ -582,7 +582,7 @@ def make_test_eventlist(observation_table,
         Observation ID of the observation to fake inside the observation table.
     sigma : `~astropy.coordinates.Angle`, optional
         Width of the gaussian model used for the spatial coordinates.
-    spectral_index : double, optional
+    spectral_index : float, optional
         Index for the power-law model used for the energy coordinate.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.

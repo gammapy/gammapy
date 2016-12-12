@@ -29,9 +29,9 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
 
     Parameters
     ----------
-    mu : double
+    mu : float
         Mean of the Gaussian
-    sigma : double
+    sigma : float
         Width of the Gaussian
     x_bins : array-like
         Bins in x
@@ -110,13 +110,13 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
 
     Parameters
     ----------
-    mu : double
+    mu : float
         Mean of the signal
-    background : double
+    background : float
         Mean of the background
     x_bins : array-like
         Bins in x
-    alpha : double
+    alpha : float
         Desired confidence level
 
     Returns
@@ -229,8 +229,11 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
         # For each mu, this is the position of the largest entry that is not yet a rank.
         largest_entry_position = np.argmax(largest_entry, axis=1)
         # Invalidate indices where there is no maximum (every entry is already a rank)
-        largest_entry_position = [largest_entry_position[i] if largest_entry[i][largest_entry_position[i]] != -1 \
-                                      else -1 for i in range(len(largest_entry_position))]
+        largest_entry_position = [
+            largest_entry_position[i]
+            if largest_entry[i][largest_entry_position[i]] != -1 else -1
+            for i in range(len(largest_entry_position))
+            ]
         # Replace the largest entry with the highest rank so far plus one
         # Add the probability
         for i in range(number_mus):
@@ -364,7 +367,7 @@ def fc_find_limit(x_value, x_values, y_values):
 
 
 def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
-                                prob_limit = 1E-5):
+                                prob_limit=1e-5):
     r"""
     Function to calculate the average upper limit for a confidence belt
 
