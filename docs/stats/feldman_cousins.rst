@@ -105,7 +105,7 @@ background and no true signal. It can be calculated using `~gammapy.stats.fc_fin
 
 .. code-block:: python
 
-   >>> gstats.fc_average_upper_limit(x_bins[0:14], matrix, UpperLimitNum, mu_bins)
+   >>> gstats.fc_find_average_upper_limit(x_bins, matrix, UpperLimitNum, mu_bins)
    4.41
 
 General Case

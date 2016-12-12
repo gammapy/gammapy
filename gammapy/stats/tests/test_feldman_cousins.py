@@ -105,7 +105,7 @@ def test_numerical_confidence_interval_pdfs():
     # Calculate the average upper limit. The upper limit calculated here is
     # only defined for a small x range, so limit the x bins here so the
     # calculation of the average limit is meaningful.
-    average_upper_limit = fc_find_average_upper_limit(x_bins[0:14], matrix,
+    average_upper_limit = fc_find_average_upper_limit(x_bins, matrix,
                                                       upper_limit_num, mu_bins)
 
     # Values are taken from Table XII in the Feldman and Cousins paper.

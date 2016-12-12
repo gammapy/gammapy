@@ -35,7 +35,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
         Width of the Gaussian
     x_bins : array-like
         Bins in x
-    alpha : double
+    alpha : float
         Desired confidence level
 
     Returns
@@ -333,7 +333,7 @@ def fc_find_limit(x_value, x_values, y_values):
 
     Parameters
     ----------
-    x_value : double
+    x_value : float
         The measured x value for which the upper limit is wanted.
     x_values : array-like
         The x coordinates of the confidence belt.
@@ -342,7 +342,7 @@ def fc_find_limit(x_value, x_values, y_values):
 
     Returns
     -------
-    limit : double
+    limit : float
         The Feldman Cousins limit
     """
 
@@ -363,7 +363,8 @@ def fc_find_limit(x_value, x_values, y_values):
             return y_values[i + 1]
 
 
-def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
+def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
+                                prob_limit = 1E-5):
     r"""
     Function to calculate the average upper limit for a confidence belt
 
@@ -380,10 +381,13 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
         Feldman Cousins upper limit x-coordinates
     mu_bins : array-like
         The bins used in mue direction.
+    prob_limit : float
+        Probability value at which x values are no longer considered for the
+        average limit.
 
     Returns
     -------
-    average_limit : double
+    average_limit : float
         Average upper limit
     """
 
@@ -391,7 +395,15 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
     number_points = len(x_bins)
 
     for i in range(number_points):
-        limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
+        # Bins with very low probability will not contribute to average limit
+        if matrix[0][i] < prob_limit:
+            continue
+        try:
+            limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
+        except:
+            log.warning("Warning: Calculation of average limit incomplete!")
+            log.warning("Add more bins in mu direction or decrease prob_limit.")
+            return avergage_limit
         avergage_limit += matrix[0][i] * limit
 
     return avergage_limit
