@@ -21,6 +21,11 @@ For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/m
 Contributors
 ++++++++++++
 
+- Axel Donath
+- Dirk Lennarz
+- Johannes King
+- Léa Jouvin
+
 Pull requests
 +++++++++++++
 
@@ -28,7 +33,15 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
-- tbd
+- [#813] Improve Feldman Cousins code (Dirk Lennarz)
+- [#812] Improve differential flux point computation code (Axel Donath)
+- [#811] Adapt catalogs to new flux point class (Axel Donath)
+- [#810] Add new flux point class (Axel Donath)
+- [#796] Improve LogEnergyAxis object (Axel Donath)
+- [#797] Improve WStat implementation (Johannes King)
+- [#793] Add GammaCat source catalog (Axel Donath)
+- [#791] Misc fixes to spectrum fitting code (Johannes King)
+- [#784] Improve SkyCube exposure computation (Léa Jouvin)
 
 .. _gammapy_0p5_release:
 
