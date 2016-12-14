@@ -11,9 +11,12 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table, QTable
 from astropy.utils import lazyproperty
+from astropy.coordinates import Angle
+from astropy.modeling.models import Gaussian2D
 from ..extern.pathlib import Path
 from ..spectrum import FluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
+from ..image.models import Shell2D, Delta2D
 from ..utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -78,6 +81,51 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             return PowerLaw2(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
+
+    def morphology_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
+        """
+        d = self.data
+        morph_type = d['morph_type']
+        pars = {}
+        flux = self.spectral_model.integral(emin, emax)
+
+        glon = Angle(d['glon'], 'deg').wrap_at('180d').deg
+        glat = Angle(d['glat'], 'deg').wrap_at('180d').deg
+
+        if morph_type == 'gauss':
+            pars['x_mean'] = glon
+            pars['y_mean'] = glat
+            pars['x_stddev'] = d['morph_sigma']
+            pars['y_stddev'] = d['morph_sigma']
+            if not np.isnan(d['morph_sigma2']):
+                pars['y_stddev'] = d['morph_sigma2'].value
+            if not np.isnan(d['morph_pa']):
+                #TODO: handle reference frame for rotation angle
+                pars['theta'] = Angle(d['morph_pa'], 'deg').rad
+            ampl = flux.to('cm-2 s-1').value
+            pars['amplitude'] = ampl * 1 / (2 * np.pi * pars['x_stddev'] * pars['y_stddev'])
+
+            return Gaussian2D(**pars)
+
+        elif morph_type == 'shell':
+            pars['amplitude'] = flux.to('cm-2 s-1').value
+            pars['x_0'] = glon
+            pars['y_0'] = glat
+            pars['r_in'] = d['morph_sigma'] * 0.8
+            pars['width'] = 0.2 * d['morph_sigma']
+            return Shell2D(**pars)
+
+        elif morph_type == 'point':
+            pars['amplitude'] = flux.to('cm-2 s-1').value
+            pars['x_mean'] = glon
+            pars['y_mean'] = glat
+            pars['x_stddev'] = 0.05
+            pars['y_stddev'] = 0.05
+            return Gaussian2D(**pars)
+        else:
+            raise ValueError('Morphology model {} not available'.format(morph_type))
 
     @property
     def flux_points(self):
