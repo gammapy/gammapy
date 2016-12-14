@@ -90,6 +90,16 @@ def test_energy_offset_array_read_write(tmpdir):
     assert_equal(array.energy, array2.energy)
     assert_equal(array.offset, array2.offset)
 
+    # Test if the data in the EnergyOffsetArray have an associated error
+    array, event_off, event_energy = make_test_array(True)
+    filename = str(tmpdir / 'data2.fits')
+    array.write(filename)
+    array2 = EnergyOffsetArray.read(filename)
+    assert_equal(array.data_err, array2.data_err)
+    assert_equal(array.data, array2.data)
+    assert_equal(array.energy, array2.energy)
+    assert_equal(array.offset, array2.offset)
+
 
 def test_energy_offset_array_bin_volume():
     array = make_test_array()
