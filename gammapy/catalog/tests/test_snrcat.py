@@ -28,4 +28,3 @@ def test_load_catalog_snrcat(tmpdir):
     # Check if catalog can be serialised to FITS
     filename = str(tmpdir / 'obs_test.fits')
     table.write(filename)
-

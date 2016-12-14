@@ -41,10 +41,11 @@ DESIRED_BF = [
         'flux_lo_sum': 6.2880e-12 * u.Unit('1 / (cm2 s TeV)'),
         'flux_hi_sum': 8.168e-12 * u.Unit('1 / (cm2 s TeV)'),
     },
-    {'energy_sum': 40.8695 * u.TeV,
-     'flux_lo_sum': 5.691e-12 * u.Unit('1 / (cm2 s TeV)'),
-     'flux_hi_sum': 7.181e-12 * u.Unit('1 / (cm2 s TeV)'),
-     },
+    {
+        'energy_sum': 40.8695 * u.TeV,
+        'flux_lo_sum': 5.691e-12 * u.Unit('1 / (cm2 s TeV)'),
+        'flux_hi_sum': 7.181e-12 * u.Unit('1 / (cm2 s TeV)'),
+    },
 ]
 
 W28_NAMES = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1', 'SNR G006.4-00.1',

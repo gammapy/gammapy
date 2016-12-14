@@ -26,6 +26,7 @@ def test_load_catalog_green(tmpdir):
     filename = str(tmpdir / 'green_test.fits')
     catalog.write(filename)
 
+
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_load_catalog_tevcat(tmpdir):

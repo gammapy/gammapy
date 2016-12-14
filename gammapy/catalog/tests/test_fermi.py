@@ -4,11 +4,8 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
-from ...spectrum.models import (PowerLaw, ExponentialCutoffPowerLaw, LogParabola,
-                                ExponentialCutoffPowerLaw3FGL)
+from ...spectrum.models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL
 from ...utils.testing import requires_data, requires_dependency
-
-
 
 MODEL_TEST_DATA = [(0, PowerLaw, Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
                    (4, LogParabola, Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
@@ -18,6 +15,7 @@ CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
                    '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201']
 CRAB_NAMES_2FHL = ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201',
                    'TeV J0534+2200']
+
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
@@ -120,33 +118,3 @@ class TestFermi2FHLObject:
     def test_spectrum(self):
         spectrum = self.source.spectrum
         assert "Fit result info" in str(spectrum)
-
-
-############
-# Old stuff:
-#
-# from ..fermi import fetch_fermi_catalog, fetch_fermi_extended_sources
-#
-#
-# # TODO: refactor (currently skipped)
-# @requires_data('gammapy-extra')
-# def _test_fetch_fermi_catalog():
-#     n_hdu = len(fetch_fermi_catalog('3FGL'))
-#     assert n_hdu == 6
-#
-#     n_sources = len(fetch_fermi_catalog('3FGL', 'LAT_Point_Source_Catalog'))
-#     assert n_sources == 3034
-#
-#     n_hdu = len(fetch_fermi_catalog('2FGL'))
-#     assert n_hdu == 5
-#
-#     n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
-#     assert n_sources == 1873
-#
-#
-# # TODO: refactor (currently skipped)
-# @requires_data('gammapy-extra')
-# def _test_fetch_fermi_extended_sources():
-#     assert len(fetch_fermi_extended_sources('3FGL')) == 26
-#     assert len(fetch_fermi_extended_sources('2FGL')) == 12
-#     assert len(fetch_fermi_extended_sources('1FHL')) == 23
