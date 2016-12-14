@@ -54,7 +54,10 @@ class SpectralModel(object):
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
 
-        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum``.
+        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum`.
+        
+        If array input for ``emin`` and ``emax`` is given you have to set
+        ``intervals=True`` if you want the integral in each energy bin.
 
         Parameters
         ----------
@@ -243,7 +246,7 @@ class PowerLaw(SpectralModel):
     def evaluate(energy, index, amplitude, reference):
         return amplitude * np.power((energy / reference), -index)
 
-    def integral(self, emin, emax):
+    def integral(self, emin, emax, **kwargs):
         r"""
         Integrate power law analytically.
 
@@ -262,6 +265,8 @@ class PowerLaw(SpectralModel):
             Upper bound of integration range.
 
         """
+        # kwargs are passed to this function but not used
+        # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
 
         val = -1 * pars.index + 1
@@ -275,6 +280,7 @@ class PowerLaw(SpectralModel):
         Compute energy flux in given energy range analytically.
 
         .. math::
+
 
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
             \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
