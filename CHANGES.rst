@@ -33,6 +33,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#820] Add morphology method to gammacat (Axel Donath)
+- [#814] Remove old flux point classes (Axel Donath)
 - [#813] Improve Feldman Cousins code (Dirk Lennarz)
 - [#812] Improve differential flux point computation code (Axel Donath)
 - [#811] Adapt catalogs to new flux point class (Axel Donath)

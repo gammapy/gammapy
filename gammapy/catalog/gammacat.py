@@ -2,18 +2,17 @@
 """
 Meow!!!!
 
-Gammacat open TeV source catalog see https://github.com/gammapy/gamma-cat for details
+Gammacat open TeV source catalog
+
+https://github.com/gammapy/gamma-cat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
-from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, QTable
-from astropy.utils import lazyproperty
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
-from ..extern.pathlib import Path
 from ..spectrum import FluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import Shell2D, Delta2D
@@ -26,9 +25,26 @@ __all__ = [
 ]
 
 
+class NoDataAvailableError(LookupError):
+    """Generic error used in Gammapy, when some data isn't available.
+    """
+    pass
+
+
+class GammaCatNotFoundError(OSError):
+    """
+    The gammapy-cat repo is not available.
+
+    You have to set the GAMMA_CAT environment variable so that it's found.
+    """
+    pass
+
+
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
     """
     One object from the gamma-cat source catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalogGammaCat`.
     """
     _source_name_key = 'common_name'
     _source_index_key = 'catalog_row_index'
@@ -38,7 +54,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
 
         ss = 'Source: {}\n'.format(d['common_name'])
-        ss += 'Paper ID: {}\n'.format(d['paper_id'])
+        ss += 'source_id: {}\n'.format(d['source_id'])
+        ss += 'reference_id: {}\n'.format(d['reference_id'])
         ss += '\n'
 
         ss += 'RA (J2000)  : {:.2f}\n'.format(d['ra'])
@@ -55,7 +72,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def spectral_model(self):
         """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
+        Source spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
         d = self.data
         spec_type = d['spec_type']
@@ -76,15 +93,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         elif spec_type == 'pl2':
             pars['emin'] = d['spec_ref']
             # TODO: I'd be better to put np.inf, but uncertainties can't handle it
-            pars['emax'] = 1E10 * u.TeV
+            pars['emax'] = 1e10 * u.TeV
             pars['amplitude'] = d['spec_norm'] * u.Unit('cm-2 s-1')
             return PowerLaw2(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
 
-    def morphology_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
+        Source spatial model.
         """
         d = self.data
         morph_type = d['morph_type']
@@ -102,7 +119,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             if not np.isnan(d['morph_sigma2']):
                 pars['y_stddev'] = d['morph_sigma2'].value
             if not np.isnan(d['morph_pa']):
-                #TODO: handle reference frame for rotation angle
+                # TODO: handle reference frame for rotation angle
                 pars['theta'] = Angle(d['morph_pa'], 'deg').rad
             ampl = flux.to('cm-2 s-1').value
             pars['amplitude'] = ampl * 1 / (2 * np.pi * pars['x_stddev'] * pars['y_stddev'])
@@ -123,9 +140,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             pars['y_mean'] = glat
             pars['x_stddev'] = 0.05
             pars['y_stddev'] = 0.05
+            # TODO: make Delta2D work and use it here.
             return Gaussian2D(**pars)
         else:
-            raise ValueError('Morphology model {} not available'.format(morph_type))
+            raise ValueError('Spatial model {} not available'.format(morph_type))
 
     @property
     def flux_points(self):
@@ -145,7 +163,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         table['dnde_errn'] = d['sed_dnde_errn'][valid]
 
         if len(e_ref) == 0:
-            raise DataMissingError('No flux points available.')
+            raise NoDataAvailableError('No flux points available.')
 
         return FluxPoints(table)
 
@@ -154,6 +172,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """
         Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
 
+        At the moment this is needed to access the butterfly info.
         TODO: remove!???
         """
         d = self.data
@@ -189,25 +208,36 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
 
-class GammaCatNotFoundError(OSError):
-    """
-    The gammapy-cat repo is not available.
-
-    You have to set the GAMMA_CAT environment variable so that it's found.
-    """
-    pass
-
-
 class SourceCatalogGammaCat(SourceCatalog):
     """
     Gammacat open TeV sources catalog.
 
     See: https://github.com/gammapy/gamma-cat
 
+    One source is represented by `~gammapy.catalog.SourceCatalogObjectGammaCat`.
+
     Parameters
     ----------
     filename : str
         Path to the gamma-cat fits file.
+
+    Examples
+    --------
+
+    Load the catalog data:
+
+    >>> from gammapy.catalog import SourceCatalogGammaCat
+    >>> cat = SourceCatalogGammaCat()
+
+    Access a source by name:
+
+    >>> source = cat['Vela Junior']
+
+    Access source spectral data and plot it:
+
+    >>> source.spectrum.butterfly().plot()
+    >>> # source.spectral_model.plot(energy_range=energy_range)
+    >>> source.flux_points.plot()
     """
     name = 'gamma-cat'
     description = 'An open catalog of gamma-ray sources'
@@ -215,7 +245,8 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
         filename = make_path(filename)
-        if not 'GAMMA_CAT' in os.environ:
+
+        if 'GAMMA_CAT' not in os.environ:
             msg = 'The gamma-cat repo is not available. '
             msg += 'You have to set the GAMMA_CAT environment variable '
             msg += 'to point to the location for it to be found.'
@@ -223,11 +254,13 @@ class SourceCatalogGammaCat(SourceCatalog):
 
         self.filename = str(filename)
         table = QTable.read(self.filename)
-        source_name_key='common_name'
+        source_name_key = 'common_name'
         source_name_alias = ('other_names', 'gamma_names')
-        super(SourceCatalogGammaCat, self).__init__(table=table,
-                                source_name_key=source_name_key,
-                                source_name_alias=source_name_alias)
+        super(SourceCatalogGammaCat, self).__init__(
+            table=table,
+            source_name_key=source_name_key,
+            source_name_alias=source_name_alias,
+        )
 
     def _make_source_dict(self, index):
         """Make one source data dict.
