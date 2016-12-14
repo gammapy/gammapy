@@ -250,6 +250,8 @@ def skycoord_from_table(table):
         lon, lat, frame = 'RA', 'DEC', 'icrs'
     elif set(['GLON', 'GLAT']).issubset(table.colnames):
         lon, lat, frame = 'GLON', 'GLAT', 'galactic'
+    elif set(['glon', 'glat']).issubset(table.colnames):
+        lon, lat, frame = 'glon', 'glat', 'galactic'
     else:
         raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
 
