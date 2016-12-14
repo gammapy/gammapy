@@ -202,7 +202,7 @@ class EnergyOffsetArray(object):
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
 
-        energy_bin = self.energy.log_centers
+        energy_bin = self.energy.to('TeV').log_centers
         offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interp_kwargs)
