@@ -42,6 +42,6 @@ butterfly_2fhl = crab_2fhl.spectrum.butterfly(energy)
 butterfly_2fhl.plot(crab_2fhl.energy_range, ax=ax, energy_power=2, color='g',
                     flux_unit='erg-1 cm-2 s-1')
 crab_2fhl.flux_points.plot(ax=ax, sed_type='dnde', energy_power=2, color='g',
-                           flux_unit='ph cm-2 s-1 erg-1')
+                           flux_unit='cm-2 s-1 erg-1')
 plt.legend(loc=0)
 plt.show()
