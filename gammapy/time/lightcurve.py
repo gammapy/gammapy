@@ -73,6 +73,8 @@ class LightCurve(QTable):
 
     def compute_fvar(self):
         """Calculate the fractional excess variance (Fvar) of `LightCurve`.
+	.. math :: 
+	    Fvar = \sqrt{\frac{S^{2} - \bar{\sigma^{2}}}{\bar{x}^{2}}}
         reference : On characterizing the variability properties of X-ray light curves from active galaxiesVaughan et al.,2003 
         http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
@@ -84,11 +86,10 @@ class LightCurve(QTable):
         nptsperbin = len(flux)
         phisum = np.sum(flux)
         phimean = phisum / nptsperbin
-        unityrow = np.ones(nptsperbin)
-        Ssq = (np.sum((flux[:] - phimean * unityrow[:])**2)
+        Ssq = (np.sum((flux - phimean )**2)
                ) / (nptsperbin - 1.0)
         S = np.sqrt(Ssq)
-        Sigsq = np.nansum(fluxerr[:]**2) / nptsperbin
+        Sigsq = np.nansum(fluxerr**2) / nptsperbin
         fvar = np.sqrt(np.abs(Ssq - Sigsq)) / phimean
         fluxerrT = np.transpose(fluxerr)
         sigxserrA = np.sqrt(2.0 / nptsperbin) * (Sigsq / phimean)**2
