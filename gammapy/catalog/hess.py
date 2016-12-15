@@ -130,8 +130,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         ref = d['Analysis_Reference']
         if ref == 'EXTERN':
-            paper_id = self._get_paper_id_gamma_cat(d['Source_Name'])
-            ref += ' ({})'.format(paper_id)
+            reference_id = self._get_reference_id_gamma_cat(d['Source_Name'])
+            ref += ' ({})'.format(reference_id)
         ss += '{:<20s} : {}\n'.format('Analysis reference', ref)
         ss += '{:<20s} : {}\n'.format('Source class', d['Source_Class'])
         ss += '{:<20s} : {}\n'.format('Associated object', d['Associated_Object'])
@@ -139,12 +139,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '\n'
         return ss
 
-    def _get_paper_id_gamma_cat(self, name):
+    # TODO: this is very inefficient, to always reload gamma-cat from disk
+    # Is this really needed or can we get rid of it?
+    def _get_reference_id_gamma_cat(self, name):
         try:
             gamma_cat = SourceCatalogGammaCat()
             source = gamma_cat[name]
-            paper_id = source.data['paper_id']
-            return 'N.A.' if paper_id == '' else paper_id
+            reference_id = source.data['reference_id']
+            return 'N.A.' if reference_id == '' else reference_id
         except GammaCatNotFoundError:
             return 'N.A.'
 
