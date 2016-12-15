@@ -125,30 +125,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
-        # ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
+        ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
         ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
 
-        ref = d['Analysis_Reference']
-        if ref == 'EXTERN':
-            reference_id = self._get_reference_id_gamma_cat(d['Source_Name'])
-            ref += ' ({})'.format(reference_id)
-        ss += '{:<20s} : {}\n'.format('Analysis reference', ref)
+        ss += '{:<20s} : {}\n'.format('Analysis reference', d['Analysis_Reference'])
         ss += '{:<20s} : {}\n'.format('Source class', d['Source_Class'])
         ss += '{:<20s} : {}\n'.format('Associated object', d['Associated_Object'])
         ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
         return ss
-
-    # TODO: this is very inefficient, to always reload gamma-cat from disk
-    # Is this really needed or can we get rid of it?
-    def _get_reference_id_gamma_cat(self, name):
-        try:
-            gamma_cat = SourceCatalogGammaCat()
-            source = gamma_cat[name]
-            reference_id = source.data['reference_id']
-            return 'N.A.' if reference_id == '' else reference_id
-        except GammaCatNotFoundError:
-            return 'N.A.'
 
     def _info_map(self):
         """Print info from map analysis."""
@@ -320,8 +305,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         flux_points = flux_points[['e_ref', 'dnde', 'dnde_errn', 'dnde_errp']]
         flux_points['e_ref'].format = '.3f'
 
-
-        flux_unit = Unit('1E-12 ph cm-2 s-1 TeV-1')
+        flux_unit = Unit('1e-12 cm-2 s-1 TeV-1')
         for _ in ['dnde', 'dnde_errp', 'dnde_errn']:
             flux_points[_] = flux_points[_].to(flux_unit)
             flux_points[_].format = '.3f'
@@ -418,14 +402,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table = Table()
         table.meta['SED_TYPE'] = 'dnde'
         mask = ~np.isnan(self.data['Flux_Points_Energy'])
-        e_ref = Quantity(self.data['Flux_Points_Energy'][mask], 'TeV')
-        table['e_ref'] = e_ref
-        table['e_min'] = e_ref - Quantity(self.data['Flux_Points_Energy_Err_Lo'][mask], 'TeV')
-        table['e_max'] = e_ref + Quantity(self.data['Flux_Points_Energy_Err_Hi'][mask], 'TeV')
-        table['dnde'] = Quantity(self.data['Flux_Points_Flux'][mask], 'ph s-1 cm-2 TeV-1')
-        table['dnde_errp'] = Quantity(self.data['Flux_Points_Flux_Err_Hi'][mask], 'ph s-1 cm-2 TeV-1')
-        table['dnde_errn'] = Quantity(self.data['Flux_Points_Flux_Err_Lo'][mask], 'ph s-1 cm-2 TeV-1')
-        table['dnde_ul'] = Quantity(self.data['Flux_Points_Flux_UL'][mask], 'ph s-1 cm-2 TeV-1')
+
+        table['e_ref'] = Quantity(self.data['Flux_Points_Energy'][mask], 'TeV')
+        table['e_min'] = Quantity(self.data['Flux_Points_Energy_Min'][mask], 'TeV')
+        table['e_max'] = Quantity(self.data['Flux_Points_Energy_Max'][mask], 'TeV')
+
+        table['dnde'] = Quantity(self.data['Flux_Points_Flux'][mask], 'cm-2 s-1 TeV-1')
+        table['dnde_errp'] = Quantity(self.data['Flux_Points_Flux_Err_Hi'][mask], 'cm-2 s-1 TeV-1')
+        table['dnde_errn'] = Quantity(self.data['Flux_Points_Flux_Err_Lo'][mask], 'cm-2 s-1 TeV-1')
+        table['dnde_ul'] = Quantity(self.data['Flux_Points_Flux_UL'][mask], 'cm-2 s-1 TeV-1')
         return FluxPoints(table)
 
 

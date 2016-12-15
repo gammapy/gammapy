@@ -338,7 +338,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             covar_axis=par_names,
         )
 
-    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
 
@@ -385,7 +385,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         return ss
 
-    def _get_flux_values(self, prefix='Flux', unit='ph cm-2 s-1'):
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
 

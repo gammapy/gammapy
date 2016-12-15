@@ -35,8 +35,8 @@ OPTIONAL_COLUMNS = {'dnde': ['dnde_err', 'dnde_errp', 'dnde_errn',
                     'eflux': ['eflux_err', 'eflux_errp', 'eflux_errn',
                               'eflux_ul', 'is_ul']}
 
-DEFAULT_UNIT = {'dnde': u.Unit('ph cm-2 s-1 TeV-1'),
-                'flux': u.Unit('ph cm-2 s-1'),
+DEFAULT_UNIT = {'dnde': u.Unit('cm-2 s-1 TeV-1'),
+                'flux': u.Unit('cm-2 s-1'),
                 'eflux': u.Unit('erg cm-2 s-1')}
 
 
@@ -68,6 +68,20 @@ class FluxPoints(object):
     def __init__(self, table):
         # validate that the table is a valid representation of the given
         # flux point sed type
+
+        # TODO: this is a temp solution
+        # Make sure we don't have "ph" in units
+        # Should we use a unit equivalency?
+        unit_changes = [
+            ('ph cm-2 s-1', 'cm-2 s-1'),
+            ('ph cm-2 s-1 TeV-1', 'cm-2 s-1 TeV-1'),
+            ('ph cm-2 s-1 MeV-1', 'cm-2 s-1 MeV-1'),
+        ]
+        for colname in table.colnames:
+            for unit_old, unit_new in unit_changes:
+                if (table[colname].unit is not None) and (u.Unit(table[colname].unit) == u.Unit(unit_old)):
+                    table[colname].unit = u.Unit(unit_new)
+
         self.table = self._validate_table(table)
 
     @property
