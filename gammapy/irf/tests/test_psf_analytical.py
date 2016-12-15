@@ -53,7 +53,7 @@ def test_to_table_psf(energy):
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='PSF_2D_GAUSS')
     theta = Angle(0, 'deg')
 
-    table_psf = psf.to_table_psf(theta)
+    table_psf = psf.to_energy_dependent_table_psf(theta)
     interpol_param = dict(method='nearest', bounds_error=False)
     table_psf_at_energy = table_psf.table_psf_at_energy(energy, interpol_param)
     psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)

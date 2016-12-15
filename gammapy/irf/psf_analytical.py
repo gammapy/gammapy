@@ -21,7 +21,7 @@ class EnergyDependentMultiGaussPSF(object):
     """
     Triple Gauss analytical PSF depending on energy and theta.
 
-    To evaluate the PSF call the ``to_table_psf`` or ``psf_at_energy_and_theta`` methods.
+    To evaluate the PSF call the ``to_energy_dependent_table_psf`` or ``psf_at_energy_and_theta`` methods.
 
     Parameters
     ----------
@@ -362,7 +362,7 @@ class EnergyDependentMultiGaussPSF(object):
                            "".format(100 * fraction, theta, energy, radius))
         return ss
 
-    def to_table_psf(self, theta=None, offset=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, offset=None, exposure=None):
         """
         Convert triple Gaussian PSF ot table PSF.
 

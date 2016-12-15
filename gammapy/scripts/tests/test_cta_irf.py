@@ -25,7 +25,7 @@ def test_cta_irf():
 
     # TODO: clean up these PSF classes, e.g. to return quantities.
     # Also: add an `evaluate(energy, offset, theta)` to the loaded PSF class.
-    # psf = irf.psf.to_table_psf(offset=offset)
+    # psf = irf.psf.to_energy_dependent_table_psf(offset=offset)
     psf = irf.psf.psf_at_energy_and_theta(energy=energy, theta=offset)
     val = psf(Quantity(0.1, 'deg'))
     assert_quantity_allclose(val, 5.423486126591272)

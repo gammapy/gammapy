@@ -32,8 +32,8 @@ def test_psf_king_evaluate(psf_king):
 def test_psf_king_to_table(psf_king):
     theta1 = Angle(0, "deg")
     theta2 = Angle(1, "deg")
-    psf_king_table_off1 = psf_king.to_table_psf(theta=theta1)
-    psf_king_table_off2 = psf_king.to_table_psf(theta=theta2)
+    psf_king_table_off1 = psf_king.to_energy_dependent_table_psf(theta=theta1)
+    psf_king_table_off2 = psf_king.to_energy_dependent_table_psf(theta=theta2)
     offset = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table

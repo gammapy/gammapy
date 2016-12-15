@@ -156,9 +156,9 @@ See the complete `Gammapy 0.5 merged pull requests list on Github <https://githu
 - [#530] Update readthedocs links from .org to .io (Brigitta Sipocz)
 - [#529] Add data_summary method to DataStore (Johannes King)
 - [#527] Add n-dim data base class for gammapy.irf (Johannes King)
-- [#526] Add King PSF evaluate and to_table_psf methods (Léa Jouvin)
+- [#526] Add King PSF evaluate and to_energy_dependent_table_psf methods (Léa Jouvin)
 - [#524] Improve image pipe class (Léa Jouvin)
-- [#523] Add Gauss PSF to_table_psf method (Axel Donath)
+- [#523] Add Gauss PSF to_energy_dependent_table_psf method (Axel Donath)
 - [#521] Fix image pipe class (Léa Jouvin)
 
 .. _gammapy_0p4_release:
