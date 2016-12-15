@@ -214,19 +214,16 @@ class FluxPoints(object):
             y_ul = self.table[sed_type + '_ul'].quantity
             y_ul = (y_ul * np.power(x, energy_power)).to(y_unit)
 
-            # set ul plotting defaults
-            ul_kwargs = {'marker': 'v',
-                         'label': None}
+            y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
 
-            kwargs.setdefault('ms', 10)
-            kwargs.setdefault('mec', 'None')
             kwargs.setdefault('c', ebar[0].get_color())
-            kwargs.update(ul_kwargs)
-
-            ax.errorbar(x[is_ul].value, y_ul[is_ul].value, xerr=x_err, **kwargs)
+            ax.errorbar(x[is_ul].value, y_ul[is_ul].value, xerr=x_err, yerr=y_err,
+                        uplims=True, **kwargs)
 
         ax.set_xscale('log', nonposx='clip')
         ax.set_yscale('log', nonposy='clip')
+        ax.set_xlabel('Energy ({})'.format(energy_unit))
+        ax.set_ylabel('{0} ({1})'.format(self.sed_type, y_unit))
         return ax
 
     def _plot_get_x_err(self, sed_type):
