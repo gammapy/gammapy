@@ -125,7 +125,10 @@ def make_test_array(empty=True):
         multi_array.counts.data.value[:] = 1
         multi_array.livetime.data.value[:] = 2
         multi_array.bg_rate.data.value[:] = 3
-
+        multi_array.counts.data_err = Quantity(np.ones(multi_array.counts.data.value.shape),
+                                               multi_array.counts.data.unit)
+        multi_array.bg_rate.data_err = Quantity(5 * np.ones(multi_array.counts.data.value.shape),
+                                                multi_array.bg_rate.data.unit)
     return multi_array
 
 
@@ -217,6 +220,20 @@ class TestEnergyOffsetBackgroundModel:
     def test_read_write(self, tmpdir):
         multi_array = make_test_array(empty=False)
         filename = str(tmpdir / 'multidata.fits')
+        multi_array.write(filename)
+        multi_array2 = EnergyOffsetBackgroundModel.read(filename)
+
+        assert_quantity_allclose(multi_array.counts.data, multi_array2.counts.data)
+        assert_quantity_allclose(multi_array.livetime.data, multi_array2.livetime.data)
+        assert_quantity_allclose(multi_array.bg_rate.data, multi_array2.bg_rate.data)
+        assert_quantity_allclose(multi_array.counts.energy, multi_array2.counts.energy)
+        assert_quantity_allclose(multi_array.counts.offset, multi_array2.counts.offset)
+        assert_quantity_allclose(multi_array.counts.data_err, multi_array2.counts.data_err)
+        assert_quantity_allclose(multi_array.bg_rate.data_err, multi_array2.bg_rate.data_err)
+
+        # Test without any error on the counts or the bg_rate
+        multi_array = make_test_array(empty=True)
+        filename = str(tmpdir / 'multidata2.fits')
         multi_array.write(filename)
         multi_array2 = EnergyOffsetBackgroundModel.read(filename)
 

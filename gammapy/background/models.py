@@ -364,7 +364,7 @@ class FOVCubeBackgroundModel(object):
                               coordy_edges=dety_edges,
                               energy_edges=energy_edges,
                               data=Quantity(empty_cube_data, ''),  # counts
-                           scheme='bg_counts_cube')
+                              scheme='bg_counts_cube')
 
         livetime_cube = FOVCube(coordx_edges=detx_edges,
                                 coordy_edges=dety_edges,
@@ -578,12 +578,16 @@ class EnergyOffsetBackgroundModel(object):
         data array (2D): store livetime correction
     bg_rate : `~numpy.ndarray`, optional
         data array (2D): store background model
+    counts_err : `~numpy.ndarray`, optional
+        data array (2D): store errors on the counts.
+    bg_rate_err : `~numpy.ndarray`, optional
+        data array (2D): store errors on the background model
     """
 
-    def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None):
-        self.counts = EnergyOffsetArray(energy, offset, counts)
+    def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None, counts_err=None, bg_rate_err=None):
+        self.counts = EnergyOffsetArray(energy, offset, counts, data_err=counts_err)
         self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
-        self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
+        self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1", data_err=bg_rate_err)
 
     def write(self, filename, **kwargs):
         """Write `EnergyOffsetBackgroundModel` to FITS file.
@@ -609,8 +613,12 @@ class EnergyOffsetBackgroundModel(object):
         table['ENERG_LO'] = Quantity([self.counts.energy[:-1]], unit=self.counts.energy.unit)
         table['ENERG_HI'] = Quantity([self.counts.energy[1:]], unit=self.counts.energy.unit)
         table['counts'] = self.counts.to_table()['data']
+        if self.counts.data_err is not None:
+            table['counts_err'] = self.counts.to_table()['data_err']
         table['livetime'] = self.livetime.to_table()['data']
         table['bkg'] = self.bg_rate.to_table()['data']
+        if self.bg_rate.data_err is not None:
+            table['bkg_err'] = self.bg_rate.to_table()['data_err']
         table.meta['HDUNAME'] = "bkg_2d"
         return table
 
@@ -639,9 +647,18 @@ class EnergyOffsetBackgroundModel(object):
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
         counts = Quantity(table['counts'].squeeze(), table['counts'].unit)
+        if "counts_err" in table.colnames:
+            counts_err = Quantity(table['counts_err'].squeeze(), table['counts_err'].unit)
+        else:
+            counts_err = None
         livetime = Quantity(table['livetime'].squeeze(), table['livetime'].unit)
         bg_rate = Quantity(table['bkg'].squeeze(), table['bkg'].unit)
-        return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
+        if "bkg_err" in table.colnames:
+            bg_rate_err = Quantity(table['bkg_err'].squeeze(), table['bkg_err'].unit)
+        else:
+            bg_rate_err = None
+        return cls(energy_edges, offset_edges, counts, livetime, bg_rate, counts_err=counts_err,
+                   bg_rate_err=bg_rate_err)
 
     def fill_obs(self, obs_ids, data_store, excluded_sources=None, fov_radius=Angle(2.5, "deg")):
         """Fill events and compute corresponding livetime.
@@ -672,7 +689,6 @@ class EnergyOffsetBackgroundModel(object):
                 events = EventList(events.table[idx])
             else:
                 pie_fraction = 0
-
             self.counts.fill_events([events])
             self.livetime.data += obs.observation_live_time_duration * (1 - pie_fraction)
 
@@ -686,6 +702,8 @@ class EnergyOffsetBackgroundModel(object):
         bg_rate = bg_rate.to('MeV-1 sr-1 s-1')
 
         self.bg_rate.data = bg_rate
+        self.bg_rate.data_err = (np.sqrt(self.counts.data) / (self.counts.bin_volume * self.livetime.data)).to(
+            'MeV-1 sr-1 s-1')
 
     def smooth(self):
         """Smooth the bkg rate with a gaussian 1D kernel.

@@ -26,15 +26,21 @@ class EnergyOffsetArray(object):
         Offset vector (1D)
     data : `~numpy.ndarray`, optional
         Data array (2D)
+    data_err : `~numpy.ndarray`, optional
+        Data array (2D) containing the errors on the data
     """
 
-    def __init__(self, energy, offset, data=None, data_units=""):
+    def __init__(self, energy, offset, data=None, data_units="", data_err=None):
         self.energy = EnergyBounds(energy)
         self.offset = Angle(offset)
         if data is None:
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), data_units)
         else:
             self.data = Quantity(data, data_units)
+        if data_err is None:
+            self.data_err = None
+        else:
+            self.data_err = Quantity(data_err, data_units)
 
     def fill_events(self, event_lists):
         """Fill events histogram.
@@ -49,6 +55,7 @@ class EnergyOffsetArray(object):
         for event_list in event_lists:
             counts = self._fill_one_event_list(event_list)
             self.data += Quantity(counts, unit=self.data.unit)
+        self.data_err = np.sqrt(self.data)
 
     def _fill_one_event_list(self, events):
         """Histogram the counts of an EventList object in 2D (energy,offset)
@@ -136,7 +143,12 @@ class EnergyOffsetArray(object):
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
         data = Quantity(table[data_name].squeeze(), table[data_name].unit)
-        return cls(energy_edges, offset_edges, data, data_units=str(data.unit))
+        if data_name + "_err" in table.colnames:
+            data_err = Quantity(table[data_name + "_err"].squeeze(), table[data_name + "_err"].unit)
+        else:
+            data_err = None
+
+        return cls(energy_edges, offset_edges, data, data_units=str(data.unit), data_err=data_err)
 
     def write(self, filename, data_name="data", **kwargs):
         """ Write `EnergyOffsetArray` to FITS file.
@@ -169,6 +181,8 @@ class EnergyOffsetArray(object):
         table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
         table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
         table[data_name] = Quantity([self.data], unit=self.data.unit)
+        if self.data_err is not None:
+            table[data_name + "_err"] = Quantity([self.data_err], unit=self.data_err.unit)
 
         return table
 
@@ -202,7 +216,7 @@ class EnergyOffsetArray(object):
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
 
-        energy_bin = self.energy.log_centers
+        energy_bin = self.energy.to('TeV').log_centers
         offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interp_kwargs)
