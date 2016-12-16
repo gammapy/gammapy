@@ -666,7 +666,7 @@ class DataStoreObservation(object):
         if not theta:
             theta = self.psf.to_energy_dependent_table_psf(theta=offset).offset
 
-        #TODO: make axis names consistent
+        # TODO: make axis names consistent
         if isinstance(self.psf, PSF3D):
             psf_value = self.psf.to_energy_dependent_table_psf(theta=offset) \
                 .evaluate(energy)
