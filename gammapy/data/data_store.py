@@ -16,7 +16,7 @@ from ..utils.energy import Energy
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
-from ..irf import EnergyDependentTablePSF, IRFStacker
+from ..irf import EnergyDependentTablePSF, IRFStacker, PSF3D
 
 __all__ = [
     'DataStore',
@@ -662,12 +662,17 @@ class DataStoreObservation(object):
 
         offset = position.separation(self.pointing_radec)
         if not energy:
-            energy = self.psf.to_table_psf(theta=offset).energy
+            energy = self.psf.to_energy_dependent_table_psf(theta=offset).energy
         if not theta:
-            theta = self.psf.to_table_psf(theta=offset).offset
+            theta = self.psf.to_energy_dependent_table_psf(theta=offset).offset
 
-        psf_value = self.psf.to_table_psf(theta=offset, offset=theta)\
-            .evaluate(energy)
+        # TODO: make axis names consistent
+        if isinstance(self.psf, PSF3D):
+            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset) \
+                .evaluate(energy)
+        else:
+            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset, offset=theta) \
+                .evaluate(energy)
         arf = self.aeff.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
 

@@ -211,7 +211,7 @@ class PSFKing(object):
         param["gamma"] = gamma
         return param
 
-    def to_table_psf(self, theta=None, offset=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, offset=None, exposure=None):
         """
         Convert king PSF in table PSF.
 

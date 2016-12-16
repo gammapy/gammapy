@@ -65,7 +65,7 @@ class FitsProductionTester:
     def test_psf(self):
         psf = self.obs.load(hdu_type='psf', hdu_class=self.ref_dict['psf_type'])
         print(psf)
-        table_psf = psf.to_table_psf(offset=self.ref_offset, theta=self.ref_theta)
+        table_psf = psf.to_energy_dependent_table_psf(offset=self.ref_offset, theta=self.ref_theta)
         actual = table_psf.evaluate(energy=self.ref_energy)
         desired = self.ref_dict['psf_ref']
         assert_quantity_allclose(actual[0][4], desired)
