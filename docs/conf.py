@@ -187,42 +187,64 @@ if on_rtd:
     os.environ['GAMMAPY_EXTRA'] = os.path.join(path, 'gammapy-extra-master')
 
 
-def copy_gp_extra_file(source, target):
-    """Copy file from `gammapy-extra` to `gammapy/docs` folder."""
-    cmd = 'cp $GAMMAPY_EXTRA/{} {}'.format(source, target)
-    print('Executing command: {}'.format(cmd))
-    os.system(cmd)
 
+# check if gammapy-extra is available
+from gammapy.extern.pathlib import Path
 try:
-    gammapy_extra_path = os.environ['GAMMAPY_EXTRA'] + '/figures'
+    gammapy_extra_path = Path(os.environ['GAMMAPY_EXTRA'])
+    HAS_GP_EXTRA = True
     print('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
     print('*** Nice!')
-    html_static_path.append(gammapy_extra_path)
-
-    copy_gp_extra_file('figures/detect/fermi_ts_image.png', 'detect')
-    copy_gp_extra_file('figures/background/adaptive_ring_bkg.png', 'background')
 
 except KeyError:
+    HAS_GP_EXTRA = False
     print('*** gammapy-extra *not* found.')
     print('*** Set the GAMMAPY_EXTRA environment variable!')
     print('*** Docs build will be incomplete.')
     print('*** Notebook links will not be verified.')
 
+# define directive to include figures from gammapy-extra
+# see http://docutils.sourceforge.net/docs/howto/rst-directives.html
+# TODO: move to gammapy.utils
+from docutils.parsers.rst import directives
+
+class ExtraImage(directives.images.Image):
+    """Directive to add optional images from gammapy-extra"""
+    def run(self):
+        if HAS_GP_EXTRA:
+            path = gammapy_extra_path / 'figures'
+            filename = self.arguments[0]
+            current_source = self.state_machine.document.current_source
+            module = current_source.split('/')[-2]
+            new_filename = path / module / filename
+            if not new_filename.is_file():
+                msg = inliner.reporter.error('Gammapy-extra file not found:'
+                                             ' {}'.format(new_filename),
+                                             line=lineno)
+                prb = inliner.problematic(rawtext, rawtext, msg)
+                return [prb], [msg]
+            self.arguments[0] = '/' + str(new_filename)
+        else:
+            self.options['alt'] = self.argument[1]
+
+        return super(ExtraImage, self).run()
+
+directives.register_directive('gp-extra-image', ExtraImage)
+
 
 # define role to generate notebook links
+# see https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
+# TODO: move to gammapy.utils
 from docutils.parsers.rst import roles
 from docutils import nodes
 from gammapy.utils.scripts import read_yaml
 
-# see https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
-
-
 def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook on gammapy-extra"""
-    try:
+    if HAS_GP_EXTRA:
         available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
         exists = notebook in [_['name'] for _ in available_notebooks]
-    except IOError:
+    else:
         exists = True
 
     if not exists:
@@ -237,6 +259,7 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
 
 
 def make_link_node(rawtext, app, notebook, options):
+
     base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
     full_name = notebook + '.ipynb'
     ref = base + full_name
@@ -246,8 +269,6 @@ def make_link_node(rawtext, app, notebook, options):
 
 roles.register_local_role('gp-extra-notebook', notebook_role)
 
-
-# print(html_static_path); 1/0
 
 html_style = 'gammapy.css'
 

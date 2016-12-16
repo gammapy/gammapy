@@ -1003,3 +1003,24 @@ you want) you have to add it to ``gammapy-extra/notebooks/notebooks.yaml``.
 Note that there is also the command ``make test-notebooks`` which is used for
 continuous integration on travis CI. It is not recommended to use this locally,
 since it overwrides your gammapy installation (see issue 727).
+
+Link to a notebook in gammapy-extra from the docs
+-------------------------------------------------
+
+Gammapy has the sphinx role ``gp-extra-notebook`` defined. For more info on
+sphinx roles see for example `this page
+<http://www.sphinx-doc.org/en/1.4.9/markup/inline.html>`__. Thus, you can link
+to the notebook ``awesome-demonstration.ipynb`` like this
+
+``:gp-extra-notebook:`awesome_demonstration```
+
+Note that the notebook must be in ``gammapy-extra/notebooks``
+
+
+Include images from gammapy-extra into the docs
+-----------------------------------------------
+
+Similar to the ``gp-extra-notebook`` role, gammapy has a ``gp-extra-notebook``
+directive. To include an image from ``gammapy-extra/figures/<current_module>``
+just use ``.. gp-extra-image`` instead of ``.. image``
+
