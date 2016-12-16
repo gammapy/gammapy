@@ -1007,20 +1007,30 @@ since it overwrides your gammapy installation (see issue 727).
 Link to a notebook in gammapy-extra from the docs
 -------------------------------------------------
 
-Gammapy has the sphinx role ``gp-extra-notebook`` defined. For more info on
-sphinx roles see for example `this page
-<http://www.sphinx-doc.org/en/1.4.9/markup/inline.html>`__. Thus, you can link
-to the notebook ``awesome-demonstration.ipynb`` like this
+From docstrings and high-level docs in Gammapy, you can use the ``gp-extra-notebook``
+Sphinx role to link to notebooks in ``gammapy-extra/notebooks`` on NBViewer, by using the filename.
 
-``:gp-extra-notebook:`awesome_demonstration```
+Example: :gp-extra-notebook:`image_analysis`
 
-Note that the notebook must be in ``gammapy-extra/notebooks``
+Sphinx directive to generate that link::
 
+    :gp-extra-notebook:`image_analysis`
+
+
+More info on sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------
 
-Similar to the ``gp-extra-notebook`` role, gammapy has a ``gp-extra-notebook``
-directive. To include an image from ``gammapy-extra/figures/<current_module>``
-just use ``.. gp-extra-image`` instead of ``.. image``
+Similar to the ``gp-extra-notebook`` role, Gammapy has a ``gp-extra-image`` directive.
 
+To include an image from ``gammapy-extra/figures/``, use the ``gp-extra-image`` directive
+instead of the usual Sphinx ``image`` directive like this:
+
+
+.. code-block:: rst
+
+    .. gp-extra-image:: fermi_ts_image.png
+        :scale: 100%
+
+More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__

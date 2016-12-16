@@ -30,7 +30,7 @@ class SpectrumExtraction(object):
     containement' IRFs, a correction for PSF leakage out of the circular ON
     region can be applied.  For more info see :ref:`spectral_fitting`.
 
-    for a usage example see :gp-extra-notebook`spectrum_analysis`
+    For a usage example see :gp-extra-notebook:`spectrum_analysis`
 
     Parameters
     ----------

@@ -33,7 +33,7 @@ class DataStore(object):
     The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
 
-    See :ref:`data_store` or :gp-extra-notebook`data_iact` for usage examples.
+    See :ref:`data_store` or :gp-extra-notebook:`data_iact` for usage examples.
 
     Parameters
     ----------

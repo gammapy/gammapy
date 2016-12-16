@@ -5,7 +5,6 @@ from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
-from functools import wraps
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
 from astropy.io import fits
@@ -33,7 +32,7 @@ class SkyImage(object):
     """
     Sky image.
 
-    for a usage example see :gp-extra-notebook`image_analysis`
+    For a usage example see :gp-extra-notebook:`image_analysis`
 
     Parameters
     ----------
@@ -894,7 +893,7 @@ class SkyImage(object):
         This is a copy of this function that will be available in Astropy 1.3:
         `astropy.visualization.mpl_normalize.simple_norm`
 
-        Seet the parameter description there!
+        See the parameter description there!
 
         Examples
         --------

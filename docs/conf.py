@@ -260,7 +260,8 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
 
 def make_link_node(rawtext, app, notebook, options):
 
-    base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
+    # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
+    base = 'http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
     full_name = notebook + '.ipynb'
     ref = base + full_name
     roles.set_classes(options)
