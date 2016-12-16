@@ -205,6 +205,7 @@ except KeyError:
 
 # define directive to include figures from gammapy-extra
 # see http://docutils.sourceforge.net/docs/howto/rst-directives.html
+# TODO: move to gammapy.utils
 from docutils.parsers.rst import directives
 
 class ExtraImage(directives.images.Image):
@@ -233,6 +234,7 @@ directives.register_directive('gp-extra-image', ExtraImage)
 
 # define role to generate notebook links
 # see https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
+# TODO: move to gammapy.utils
 from docutils.parsers.rst import roles
 from docutils import nodes
 from gammapy.utils.scripts import read_yaml
