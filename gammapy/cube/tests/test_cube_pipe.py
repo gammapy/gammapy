@@ -79,19 +79,23 @@ def test_cube_pipe(tmpdir):
     ref_cube_images = make_empty_cube(image_size=250, energy=[Energy(0.5, "TeV"), Energy(100, "TeV"), 5], center=center)
     ref_cube_exposure = make_empty_cube(image_size=250, energy=[Energy(0.1, "TeV"), Energy(120, "TeV"), 80],
                                         center=center, data_unit="m2 s")
+    ref_cube_skymask = make_empty_cube(image_size=250, energy=[Energy(0.5, "TeV"), Energy(100, "TeV"), 5], center=center)
 
     data_store = DataStore.from_dir(tmpdir)
 
     refheader = ref_cube_images.sky_image_ref.to_image_hdu().header
     exclusion_mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
-
+    ref_cube_skymask.data=np.tile(exclusion_mask.data,(5, 1, 1))
     # Pb with the load psftable for one of the run that is not implemented yet...
     data_store.hdu_table.remove_row(14)
 
+    #cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
+    #                                 offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
+    #                                 exclusion_mask=exclusion_mask, save_bkg_scale=True)
     cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
                                      offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
-                                     exclusion_mask=exclusion_mask, save_bkg_scale=True)
+                                     exclusion_mask=ref_cube_skymask, save_bkg_scale=True)
     cube_maker.make_images(make_background_image=True, radius=10.)
 
     assert_allclose(cube_maker.counts_cube.data.sum(), 4898.0, atol=3)
