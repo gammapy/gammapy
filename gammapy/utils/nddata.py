@@ -20,60 +20,37 @@ __all__ = [
     'BinnedDataAxis',
 ]
 
-# Note: test for this class are implemented in
-# gammapy/irf/tests/test_effective_area2.py.
 
-six.add_metaclass(abc.ABCMeta)
 class NDDataArray(object):
     """ND Data Array Base class
 
-    This is an abstract base class for n-dimensional data arrays. It handles
-    interpolation and I/O. See :ref:`use-nddata`.
+    Parameters
+    ----------
+    axes : list
+        List of `~gammapy.utils.nddata.DataAxis`
+    data : `~astropy.units.Quantity`
+        Data
+    meta : dict
+        Meta info
+    interp_kwargs : dict
+        TODO
     """
-    axis_names = ()
-    """Axis names. This specifies the axis order"""
-
-    interp_kwargs = dict(bounds_error=False)
-    """Interpolation kwargs used to initialize the
+    default_interp_kwargs = dict(bounds_error=False)
+    """Default interpolation kwargs used to initialize the
     `scipy.interpolate.RegularGridInterpolator`.  The interpolation behaviour
     of an individual axis ('log', 'linear') can be passed to the axis on
     initialization."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, axes, data=None, meta=None,
+                 interp_kwargs=None):
 
-        # TODO : Dynamically generate function signature
-        # https://github.com/astropy/astropy/blob/ffc0a89b2c42fd440eb19bcb2f93db90cab3c98b/astropy/utils/codegen.py#L30
-        data = kwargs.pop('data', None)
-
-        # Extract meta dict
-        meta = kwargs.pop('meta', None)
-        if meta is not None:
-            self.meta = Bunch(meta)
-
-        # Set axes
-        self._axes = list()
-        for axis_name in self.axis_names:
-            value = kwargs.pop(axis_name, None)
-            if value is None:
-                raise ValueError('No input for axis "{}"'.format(axis_name))
-            elif isinstance(value, DataAxis):
-                value = value.data
-            elif not isinstance(value, Quantity):
-                raise ValueError('No unit for axis "{}"'.format(axis_name))
-            # This is needed to transform the class level axis attribute to an
-            # instance level attribute
-            template_axis = getattr(self, axis_name)
-            axis = copy.deepcopy(template_axis)
-            axis.data = value
-            setattr(self, axis_name, axis)
-            self._axes.append(axis)
-
-        # Set remaining kwargs as attributes
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
+        self._axes = axes
         if data is not None:
             self.data = data
+        if meta is not None:
+            self.meta = Bunch(meta)
+        self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
+
         self._regular_grid_interp = None
 
     @property
@@ -109,8 +86,9 @@ class NDDataArray(object):
             if axis.nbins != data.shape[dim]:
                 msg = 'Data shape does not match in dimension {d}\n'
                 msg += 'Axis {n} : {sa}, Data {sd}'
-                raise ValueError(msg.format(d=dim, n=self.axis_names[dim],
-                                            sa=axis.nbins, sd=data.shape[dim]))
+                raise ValueError(msg.format(d=dim, n=axis.name,
+                                            sa=axis.nbins,
+                                            sd=data.shape[dim]))
         self._regular_grid_interp = None
         self._data = data
 
@@ -119,66 +97,28 @@ class NDDataArray(object):
         """Dimension (number of axes)"""
         return len(self.axes)
 
-    def to_table(self):
-        raise NotImplementedError('This must be implemented by subclasses')
-
-    def to_hdulist(self):
-        """Convert to HDUList
-
-        Default: One extension containing the output of ``to_table``
-
-        Returns
-        -------
-        hdulist : `~astropy.io.fits.HDUList`
-            HDU list
-        """
-        hdu = table_to_fits_table(self.to_table())
-        prim_hdu = fits.PrimaryHDU()
-        return fits.HDUList([prim_hdu, hdu])
-
-    def write(self, *args, **kwargs):
-        """Write to disk
-
-        Calling astropy I/O interface
-        see http://docs.astropy.org/en/stable/io/unified.html
-        """
-        temp = list(args)
-        temp[0] = str(make_path(args[0]))
-        self.to_hdulist().writeto(*temp, **kwargs)
-
-    @classmethod
-    def from_table(cls, table):
-        raise NotImplementedError('This must be implemented by subclasses')
-
-    @classmethod
-    def from_hdulist(cls, hdulist):
-        """Read from disk
-
-        Default: Read first extension as BinTableHDU
-        """
-        table = fits_table_to_table(hdulist[1])
-        return cls.from_table(table)
-
-    @classmethod
-    def read(cls, *args, **kwargs):
-        """Read from disk
-
-        Calling astropy I/O interface
-        see http://docs.astropy.org/en/stable/io/unified.html
-        """
-        # Support Path input
-        temp = list(args)
-        temp[0] = str(make_path(args[0]))
-        hdulist  = fits.open(*temp, **kwargs)
-        return cls.from_hdulist(hdulist)
-
     def __str__(self):
         """String representation"""
-        ss = '{} summary info\n'.format(type(self).__name__)
-        for axis, axname in zip(self.axes, self.axis_names):
-            ss += array_stats_str(axis.data, axname)
+        ss = 'NDDataArray summary info\n'
+        for axis in self.axes:
+            ss += array_stats_str(axis.data, axis.name)
         ss += array_stats_str(self.data, 'Data')
         return ss
+
+    def find_node(self, **kwargs):
+        """Find next node
+
+        Parameters
+        ----------
+        kwargs : dict
+            Keys are the axis names, Values the evaluation points
+        """
+        node = list()
+        for axis in self.axes:
+            lookup_val = Quantity(kwargs.pop(axis.name))
+            temp = axis.find_node(lookup_val)
+            node.append(temp)
+        return node
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
@@ -203,9 +143,9 @@ class NDDataArray(object):
         """
 
         values = list()
-        for axname, axis in zip(self.axis_names, self.axes):
+        for axis in self.axes:
             # Extract values for each axis, default: nodes
-            temp = kwargs.pop(axname, axis.nodes)
+            temp = Quantity(kwargs.pop(axis.name, axis.nodes))
             # Transform to correct unit
             temp = temp.to(axis.unit).value
             # Transform to match interpolation behaviour of axis
@@ -280,8 +220,10 @@ class DataAxis(object):
 
     Axis values are interpreted as nodes.
     """
-    def __init__(self, data=None, interpolation_mode='linear'):
-        self.data = data
+
+    def __init__(self, data, name='Default', interpolation_mode='linear'):
+        self.data = Quantity(data)
+        self.name = name
         self._interpolation_mode = interpolation_mode
 
     @property
@@ -290,10 +232,11 @@ class DataAxis(object):
         return self.data.unit
 
     @classmethod
-    def logspace(cls, vmin, vmax, nbins, unit=None):
+    def logspace(cls, vmin, vmax, nbins, unit=None, **kwargs):
         """Create axis with equally log-spaced nodes
 
-        if no unit is given, it will be taken from vmax
+        if no unit is given, it will be taken from vmax,
+        log interpolation is enable by default.
 
         Parameters
         ----------
@@ -306,6 +249,7 @@ class DataAxis(object):
         unit : `~astropy.units.UnitBase`, str
             Unit
         """
+        kwargs.setdefault('interpolation_mode', 'log')
 
         if unit is not None:
             vmin = Quantity(vmin, unit)
@@ -319,7 +263,7 @@ class DataAxis(object):
         x_min, x_max = np.log10([vmin.value, vmax.value])
         vals = np.logspace(x_min, x_max, nbins)
 
-        return cls(vals * unit, interpolation_mode='log')
+        return cls(vals * unit, **kwargs)
 
     def find_node(self, val):
         """Find next node
@@ -380,9 +324,9 @@ class BinnedDataAxis(DataAxis):
     Axis values are interpreted as bin edges
     """
     @classmethod
-    def logspace(cls, emin, emax, nbins, unit=None):
+    def logspace(cls, emin, emax, nbins, unit=None, **kwargs):
         return super(BinnedDataAxis, cls).logspace(
-            emin, emax, nbins + 1, unit)
+            emin, emax, nbins + 1, unit, **kwargs)
 
     @property
     def nbins(self):
