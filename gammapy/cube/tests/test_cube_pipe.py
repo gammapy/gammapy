@@ -1,4 +1,6 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Example how to make a Cube analysis from a 2D background model.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
@@ -16,12 +18,14 @@ from ...utils.energy import Energy
 
 def make_empty_cube(image_size, energy, center, data_unit=None):
     """
+    Make an empty `SkyCube` from a given `SkyMask` and an energy binning.
+
     Parameters
     ----------
     image_size:int, Total number of pixel of the 2D map
     energy: Tuple for the energy axis: (Emin,Emax,nbins)
     center: SkyCoord of the source
-    unit : str, Data unit.
+    data_unit : str, Data unit.
     """
     def_image = dict()
     def_image["nxpix"] = image_size
@@ -54,6 +58,7 @@ def test_cube_pipe(tmpdir):
     ds.copy_obs(ds.obs_table, tmpdir)
     data_store = DataStore.from_dir(tmpdir)
 
+    # Create the background model from the 4 Crab observations
     bgmaker = OffDataBackgroundMaker(data_store, outdir=outdir2)
 
     bgmaker.select_observations(selection='all')
@@ -63,6 +68,7 @@ def test_cube_pipe(tmpdir):
 
     fn = outdir2 + '/group-def.fits'
 
+    # New hdu table that contains the link to the background model
     hdu_index_table = bgmaker.make_total_index_table(
         data_store=data_store,
         modeltype='2D',
@@ -79,20 +85,19 @@ def test_cube_pipe(tmpdir):
     ref_cube_images = make_empty_cube(image_size=250, energy=[Energy(0.5, "TeV"), Energy(100, "TeV"), 5], center=center)
     ref_cube_exposure = make_empty_cube(image_size=250, energy=[Energy(0.1, "TeV"), Energy(120, "TeV"), 80],
                                         center=center, data_unit="m2 s")
-    ref_cube_skymask = make_empty_cube(image_size=250, energy=[Energy(0.5, "TeV"), Energy(100, "TeV"), 5], center=center)
+    ref_cube_skymask = make_empty_cube(image_size=250, energy=[Energy(0.5, "TeV"), Energy(100, "TeV"), 5],
+                                       center=center)
 
     data_store = DataStore.from_dir(tmpdir)
 
     refheader = ref_cube_images.sky_image_ref.to_image_hdu().header
     exclusion_mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
-    ref_cube_skymask.data=np.tile(exclusion_mask.data,(5, 1, 1))
+    ref_cube_skymask.data = np.tile(exclusion_mask.data, (5, 1, 1))
     # Pb with the load psftable for one of the run that is not implemented yet...
     data_store.hdu_table.remove_row(14)
 
-    #cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
-    #                                 offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
-    #                                 exclusion_mask=exclusion_mask, save_bkg_scale=True)
+    # Cube Analysis
     cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
                                      offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
                                      exclusion_mask=ref_cube_skymask, save_bkg_scale=True)
@@ -105,8 +110,8 @@ def test_cube_pipe(tmpdir):
     assert_allclose(cube_maker.significance_cube.data.sum(), 57442.86760518042, atol=3)
     assert_allclose(cube_maker.excess_cube.data.sum(), 638.1813782608283, atol=3)
     cube_maker.exposure_cube.data[np.where(np.isnan(cube_maker.exposure_cube.data))] = 0
-    assert_quantity_allclose(cube_maker.exposure_cube.data.sum(), Quantity(4891844242766714.0,"m2 s"),
-                             atol=Quantity(3,"m2 s"))
+    assert_quantity_allclose(cube_maker.exposure_cube.data.sum(), Quantity(4891844242766714.0, "m2 s"),
+                             atol=Quantity(3, "m2 s"))
     assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 1.2631250488423862)
 
     assert len(cube_maker.counts_cube.energies()) == 5

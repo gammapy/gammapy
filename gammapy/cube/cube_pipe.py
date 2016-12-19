@@ -20,14 +20,13 @@ log = logging.getLogger(__name__)
 class SingleObsCubeMaker(object):
     """Compute '~gammapy.cube.SkyCube' images for one observation.
 
-    The computed images are stored in a ``images`` attribute of
-    type `~gammapy.image.SkyImageList` with the following keys:
+    The computed cubes are stored in a `~gammapy.image.SkyCube` with the following name:
 
-    * ``counts`` : Counts
-    * ``bkg`` : Background model
-    * ``exposure`` : Exposure
-    * ``excess`` : Excess
-    * ``significance`` : Significance
+    * ``counts_cube`` : Counts
+    * ``bkg_cube`` : Background model
+    * ``exposure_cube`` : Exposure
+    * ``excess_cube`` : Excess
+    * ``significance_cube`` : Significance
 
     Parameters
     ----------
@@ -42,11 +41,11 @@ class SingleObsCubeMaker(object):
     exclusion_mask : `~gammapy.image.SkyCube`
         Cube of `~gammapy.image.SkyMask`
     save_bkg_scale: bool
-        True if you want to save the normalisation of the bkg computed outside the exlusion region in a Table
+        True if you want to save the normalisation of the bkg computed outside the exclusion region in a Table
     """
 
-    def __init__(self, obs, empty_cube_images, empty_exposure_cube,
-                 offset_band, exclusion_mask=None, save_bkg_scale=True):
+    def __init__(self, obs, empty_cube_images, empty_exposure_cube, offset_band, exclusion_mask=None,
+                 save_bkg_scale=True):
         self.energy_reco = empty_cube_images.energies()
         self.offset_band = offset_band
         self.counts_cube = SkyCube.empty_like(empty_cube_images)
@@ -60,7 +59,7 @@ class SingleObsCubeMaker(object):
         self.events = events.select_offset(self.offset_band)
 
         self.header = empty_cube_images.sky_image_ref.to_image_hdu().header
-        self.cube_exclusion_mask=exclusion_mask
+        self.cube_exclusion_mask = exclusion_mask
         self.aeff = obs.aeff
         self.edisp = obs.edisp
         self.psf = obs.psf
@@ -72,7 +71,7 @@ class SingleObsCubeMaker(object):
             self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
     def make_counts_cube(self):
-        """Fill the counts image for the events of one observation."""
+        """Fill the counts cube for the events of one observation."""
         self.counts_cube.fill_events(self.events)
 
     def make_bkg_cube(self, bkg_norm=True):
@@ -101,16 +100,15 @@ class SingleObsCubeMaker(object):
             self.bkg_cube.data[i_E, :, :] = bkg_image.decompose().value
 
         if bkg_norm:
-            scale = self.background_norm_factor(self.counts_cube,
-                                                self.bkg_cube)
+            scale = self.background_norm_factor()
             self.bkg_cube.data = scale * self.bkg_cube.data
             if self.save_bkg_scale:
                 self.table_bkg_scale.add_row([self.obs_id, scale])
 
-    def background_norm_factor(self, counts, bkg):
-        """Determine the scaling factor to apply to the background image.
+    def background_norm_factor(self):
+        """Determine the scaling factor to apply to the background images on the whole reco energy range.
 
-        Compares the events in the counts images and the bkg image outside the exclusion images.
+        Compares the events in the counts cube and the bkg cube outside the exclusion regions.
 
         Parameters
         ----------
@@ -142,7 +140,7 @@ class SingleObsCubeMaker(object):
                                            offset_max=self.offset_band[1])
 
     def make_significance_cube(self, radius):
-        """Make the significance image from the counts and bkg images.
+        """Make the significance cube from the counts and bkg cubes.
 
         Parameters
         ----------
@@ -157,21 +155,20 @@ class SingleObsCubeMaker(object):
         self.significance_cube.data = significance(counts.data, bkg.data)
 
     def make_excess_cube(self):
-        """Compute excess between counts and bkg image."""
+        """Compute excess cube between counts and bkg cubes."""
         self.excess_cube.data = self.counts_cube - self.bkg_cube
 
 
 class StackedObsCubeMaker(object):
-    """Compute stacked images for many observations.
+    """Compute stacked cubes for many observations.
 
-    The computed images are stored in a ``images`` attribute of
-    type `~gammapy.image.SkyImageList` with the following keys:
+    The computed cubes are stored in a `~gammapy.cube.SkyCube` with the following name:
 
-    * ``counts`` : Counts
-    * ``bkg`` : Background model
-    * ``exposure`` : Exposure
-    * ``excess`` : Excess
-    * ``significance`` : Significance
+    * ``counts_cube`` : Counts
+    * ``bkg_cube`` : Background model
+    * ``exposure_cube`` : Exposure
+    * ``excess_cube`` : Excess
+    * ``significance_cube`` : Significance
 
     Parameters
     ----------
@@ -180,22 +177,20 @@ class StackedObsCubeMaker(object):
     empty_exposure_cube : `~gammapy.cube.SkyCube`
         Reference Cube for exposure in true energy
     offset_band : `astropy.coordinates.Angle`
-        Offset band selection
+        Offset band selection of the events to fill the cubes
     data_store : `~gammapy.data.DataStore`
         Data store
     obs_table : `~astropy.table.Table`
         Required columns: OBS_ID
-    exclusion_mask : `~gammapy.image.SkyCube`
+    exclusion_mask : `~gammapy.cube.SkyCube`
         Cube of `~gammapy.image.SkyMask`
     save_bkg_scale: bool
         True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm with two columns:
          "OBS_ID" and "bkg_scale"
     """
 
-    def __init__(self, empty_cube_images, empty_exposure_cube=None,
-                 offset_band=None,
-                 data_store=None, obs_table=None, exclusion_mask=None,
-                 ncounts_min=0, save_bkg_scale=True):
+    def __init__(self, empty_cube_images, empty_exposure_cube=None, offset_band=None, data_store=None, obs_table=None,
+                 exclusion_mask=None, save_bkg_scale=True):
 
         self.empty_cube_images = empty_cube_images
         if not empty_exposure_cube:
@@ -221,7 +216,7 @@ class StackedObsCubeMaker(object):
             self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
     def make_images(self, make_background_image=False, bkg_norm=True, radius=10):
-        """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
+        """Compute the total counts, bkg, exposure, excess and significance cubes for a set of observation.
 
         Parameters
         ----------
@@ -229,10 +224,6 @@ class StackedObsCubeMaker(object):
             True if you want to compute the background and exposure images
         bkg_norm : bool
             If true, apply the scaling factor to the bkg image
-        spectral_index : float
-            Assumed power-law spectral index
-        for_integral_flux : bool
-            True if you want that the total excess / exposure gives the integrated flux
         radius : float
             Disk radius in pixels for the significance image
         """
@@ -260,7 +251,7 @@ class StackedObsCubeMaker(object):
             self.make_excess_cube()
 
     def make_significance_cube(self, radius):
-        """Make the significance image from the counts and bkg images.
+        """Make the significance cube from the counts and bkg cubes.
 
         Parameters
         ----------
@@ -275,5 +266,5 @@ class StackedObsCubeMaker(object):
         self.significance_cube.data = significance(counts.data, bkg.data)
 
     def make_excess_cube(self):
-        """Compute excess between counts and bkg image."""
+        """Compute excess cube between counts and bkg cube."""
         self.excess_cube.data = self.counts_cube.data - self.bkg_cube.data
