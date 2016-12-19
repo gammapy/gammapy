@@ -10,125 +10,27 @@ from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 
 @requires_dependency('scipy')
-def test_EffectiveAreaTable2D_generic():
-    # This tests NDData subclassing. Not needed for other IRF classes
-
-    # Exercise __init__  method
-    energy = np.logspace(0, 1, 4) * u.TeV
-    offset = [0.2, 0.3] * u.deg
-    effective_area = np.arange(6).reshape(3, 2) * u.cm * u.cm
-    meta = dict(name='example')
-    aeff = EffectiveAreaTable2D(offset=offset, energy=energy, data=effective_area,
-                                meta=meta)
-    assert (aeff.axes[0].data == energy).all()
-    assert (aeff.axes[1].data == offset).all()
-    assert (aeff.data == effective_area).all()
-    assert aeff.meta.name == 'example'
-
-    wrong_data = np.arange(8).reshape(4, 2) * u.cm * u.cm
-
-    with pytest.raises(ValueError):
-        aeff.data = wrong_data
-        aeff = EffectiveAreaTable(offset=offset, energy=energy, data=wrong_data)
-
-    # Test evaluate function
-    # Check that nodes are evaluated correctly
-    e_node = 1
-    off_node = 0
-    offset = aeff.offset.nodes[off_node]
-    energy = aeff.energy.nodes[e_node]
-    actual = aeff.evaluate(offset=offset, energy=energy, method='nearest')
-    desired = aeff.data[e_node, off_node]
-    assert_allclose(actual, desired)
-
-    actual = aeff.evaluate(offset=offset, energy=energy, method='linear')
-    desired = aeff.data[e_node, off_node]
-    assert_allclose(actual, desired)
-
-    # Check that values between node make sense
-    energy2 = aeff.energy.nodes[e_node + 1]
-    upper = aeff.evaluate(offset=offset, energy=energy)
-    lower = aeff.evaluate(offset=offset, energy=energy2)
-    e_val = (energy + energy2) / 2
-    actual = aeff.evaluate(offset=offset, energy=e_val)
-    assert_equal(lower > actual and actual > upper, True)
-
-    # Test return shape
-    # Case 0; offset = scalar, energy = scalar, done
-
-    # Case 1: offset = scalar, energy = None
-    offset = 0.234 * u.deg
-    actual = aeff.evaluate(offset=offset).shape
-    desired = aeff.energy.nodes.shape
-    assert_equal(actual, desired)
-
-    # Case 2: offset = scalar, energy = 1Darray
-
-    offset = 0.564 * u.deg
-    nbins = 10
-    energy = np.logspace(3, 4, nbins) * u.GeV
-    actual = aeff.evaluate(offset=offset, energy=energy).shape
-    desired = np.zeros(nbins).shape
-    assert_equal(actual, desired)
-
-    # Case 3: offset = None, energy = scalar
-    energy = 1.1 * u.TeV
-    actual = aeff.evaluate(energy=energy).shape
-    desired = tuple([aeff.offset.nbins])
-    assert_equal(actual, desired)
-
-    # Case 4: offset = 1Darray, energy = scalar
-    energy = 1.5 * u.TeV
-    nbins = 4
-    offset = np.linspace(0, 1, nbins) * u.deg
-    actual = aeff.evaluate(offset=offset, energy=energy).shape
-    desired = np.zeros(nbins).shape
-    assert_equal(actual, desired)
-
-    # case 5: offset = 1Darray, energy = 1Darray
-    nbinse = 5
-    nbinso = 3
-    offset = np.linspace(0.2, 0.3, nbinso) * u.deg
-    energy = np.logspace(0, 1, nbinse) * u.TeV
-    actual = aeff.evaluate(offset=offset, energy=energy).shape
-    desired = np.zeros([nbinse, nbinso]).shape
-    assert_equal(actual, desired)
-
-    # case 6: offset = 2Darray, energy = 1Darray
-    nbinse = 4
-    nx, ny = (12, 3)
-    offset = np.linspace(0.2, 0.3, nx * ny).reshape(nx, ny) * u.deg
-    energy = np.logspace(0, 1, nbinse) * u.TeV
-    actual = aeff.evaluate(offset=offset, energy=energy).shape
-    desired = np.zeros([nbinse, nx, ny]).shape
-    assert_equal(actual, desired)
-
-    # Misc functions
-    assert 'EffectiveAreaTable2D' in str(aeff)
-
-
-@requires_dependency('scipy')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_EffectiveAreaTable2D(tmpdir):
     filename = gammapy_extra.filename(
         'datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
-    aeff = EffectiveAreaTable2D.read(filename)
+    aeff = EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
 
-    assert aeff.energy.nbins == 73
-    assert aeff.offset.nbins == 6
-    assert aeff.data.shape == (73, 6)
+    assert aeff.data.axis('energy').nbins == 73
+    assert aeff.data.axis('offset').nbins == 6
+    assert aeff.data.data.shape == (73, 6)
 
-    assert aeff.energy.unit == 'TeV'
-    assert aeff.offset.unit == 'deg'
-    assert aeff.data.unit == 'm2'
+    assert aeff.data.axis('energy').unit == 'TeV'
+    assert aeff.data.axis('offset').unit == 'deg'
+    assert aeff.data.data.unit == 'm2'
 
-    assert_allclose(aeff.high_threshold.value, 99.083, atol=1e-2)
-    assert_allclose(aeff.low_threshold.value, 0.603, atol=1e-2)
+    assert_quantity_allclose(aeff.high_threshold, 99.083 * u.TeV, rtol=1e-3)
+    assert_quantity_allclose(aeff.low_threshold, 0.603 * u.TeV, rtol=1e-3)
 
     test_e = 14 * u.TeV
     test_o = 0.2 * u.deg
-    test_val = aeff.evaluate(energy=test_e, offset=test_o)
+    test_val = aeff.data.evaluate(energy=test_e, offset=test_o)
     assert_allclose(test_val.value, 740929.645, atol=1e-2)
 
     aeff.plot_image()
@@ -141,19 +43,19 @@ def test_EffectiveAreaTable2D(tmpdir):
     effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
 
     energy = np.sqrt(e_axis[:-1] * e_axis[1:])
-    area = aeff.evaluate(offset=offset, energy=energy)
+    area = aeff.data.evaluate(offset=offset, energy=energy)
     effarea1d = EffectiveAreaTable(energy=e_axis, data=area)
 
     test_energy = 2.34 * u.TeV
-    actual = effareafrom2d.evaluate(energy=test_energy)
-    desired = effarea1d.evaluate(energy=test_energy)
+    actual = effareafrom2d.data.evaluate(energy=test_energy)
+    desired = effarea1d.data.evaluate(energy=test_energy)
     assert_equal(actual, desired)
 
     # Test ARF export #2
     offset = 1.2 * u.deg
     effareafrom2dv2 = aeff.to_effective_area_table(offset=offset)
-    actual = effareafrom2dv2.data
-    desired = aeff.evaluate(offset=offset)
+    actual = effareafrom2dv2.data.data
+    desired = aeff.data.evaluate(offset=offset)
     assert_equal(actual, desired)
 
 
@@ -165,7 +67,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     aeff = store.obs(obs_id=23523).aeff
     arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
-    assert (arf.evaluate() == arf.data).all()
+    assert_quantity_allclose(arf.data.evaluate(), arf.data.data)
 
     arf.plot()
 
@@ -174,12 +76,13 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
 
     arf2 = EffectiveAreaTable.read(filename)
 
-    assert (arf.evaluate() == arf2.evaluate()).all()
+    assert_quantity_allclose(arf.data.evaluate(), arf2.data.evaluate())
 
     test_aeff = 0.6 * arf.max_area
-    node_above = np.where(arf.data > test_aeff)[0][0]
-    ener_above = arf.energy.nodes[node_above]
-    ener_below = arf.energy.nodes[node_above - 1]
+    node_above = np.where(arf.data.data > test_aeff)[0][0]
+    energy = arf.data.axis('energy')
+    ener_above = energy.nodes[node_above]
+    ener_below = energy.nodes[node_above - 1]
     test_ener = arf.find_energy(test_aeff)
 
     assert ener_below < test_ener and test_ener < ener_above
@@ -191,7 +94,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
     energy = np.logspace(0, 10, 10) * u.TeV
     aeff = EffectiveAreaTable(data=data, energy=energy)
-    vals = aeff.evaluate(fill_nan=True)
+    vals = aeff.evaluate_fill_nan()
     assert vals[1] == 0
     assert vals[-1] == 3
 
@@ -202,15 +105,15 @@ def test_EffectiveAreaTableParametrization():
     area_ref = 1.65469579e+07 * u.cm * u.cm
 
     area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
-    assert_allclose(area.data, area_ref)
-    assert area.data.unit == area_ref.unit
+    assert_allclose(area.data.data, area_ref)
+    assert area.data.data.unit == area_ref.unit
 
     # Log center of this is 0.1, 2 TeV
     energy = [0.08, 0.125, 32] * u.TeV
     area_ref = [1.65469579e+07, 1.46451957e+09] * u.cm * u.cm
 
     area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
-    assert_allclose(area.data, area_ref)
-    assert area.data.unit == area_ref.unit
+    assert_allclose(area.data.data, area_ref)
+    assert area.data.data.unit == area_ref.unit
 
     # TODO: Use this to test interpolation behaviour etc.
