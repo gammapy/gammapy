@@ -5,7 +5,7 @@ from gammapy.utils.energy import EnergyBounds
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola, TableModel)
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
 
 
 def table_model():
@@ -159,3 +159,12 @@ def test_to_sherpa(spectrum):
     # test plot
     energy_range = [1, 10] * u.TeV
     model.plot(energy_range=energy_range)
+
+
+@requires_dependency('matplotlib')
+@requires_data('gammapy-extra')
+def test_table_model_from_file():
+    filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+    absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
+    absorption_z03.plot(energy_range=(0.03, 10),
+                        energy_unit=u.TeV)

@@ -4,9 +4,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
+from astropy.table import Table
+
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from .utils import integrate_spectrum
+from ..utils.scripts import make_path
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
@@ -55,7 +58,7 @@ class SpectralModel(object):
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
 
         kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum`.
-        
+
         If array input for ``emin`` and ``emax`` is given you have to set
         ``intervals=True`` if you want the integral in each energy bin.
 
@@ -191,7 +194,7 @@ class SpectralModel(object):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
-    def inverse(self, value, emin=0.1*u.TeV, emax=100*u.TeV):
+    def inverse(self, value, emin=0.1 * u.TeV, emax=100 * u.TeV):
         """
         Return energy for a given function value of the spectral model.
 
@@ -574,30 +577,134 @@ class TableModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     amplitude : float
         Model amplitude that is multiplied to the supplied arrays. Defaults to 1.
+    scale_logy : boolean
+        interpolation can be done linearly or in logarithm
     """
 
-    def __init__(self, energy, values, amplitude=1):
+    def __init__(self, energy, values, amplitude=1, scale_logy=True):
         from scipy.interpolate import interp1d
         self.parameters = Bunch(amplitude=amplitude)
         self.energy = energy
         self.values = values
+        self.scale_logy = scale_logy
 
         loge = np.log10(self.energy.to('eV').value)
         try:
             self.unit = self.values.unit
-            logy = np.log10(self.values.value)
+            if scale_logy is True:
+                y = np.log10(self.values.value)
+            else:
+                y = self.values.value
         except AttributeError:
             self.unit = u.Unit('')
-            logy = np.log10(self.values)
+            if scale_logy is True:
+                y = np.log10(self.values)
+            else:
+                y = self.values
+        self.interpy = interp1d(loge,
+                                y,
+                                fill_value=-np.Inf,
+                                bounds_error=False,
+                                kind='cubic')
 
-        self.interplogy = interp1d(loge,
-                                   logy,
-                                   fill_value=-np.Inf,
-                                   bounds_error=False,
-                                   kind='cubic')
+    @classmethod
+    def read_xspec_model(cls, filename, param):
+        """A Table containing absorbed values from a XSPEC model
+        as a function of energy.
+        Todo:
+        Format of the file should be described and discussed in
+        https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
+
+        Parameters
+        ----------
+        filename : `str`
+            File containing the XSPEC model
+        param : float
+            Model parameter value
+
+        Examples
+        --------
+        Fill table from an EBL model (Franceschini, 2008)
+
+        >>> from gammapy.spectrum.models import TableModel
+        >>> filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+        >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
+        """
+        filename = str(make_path(filename))
+
+        # Check if parameter value is in range
+        table_param = Table.read(filename, hdu='PARAMETERS')
+        param_min = table_param['MINIMUM']
+        param_max = table_param['MAXIMUM']
+        if param < param_min or param > param_max:
+            err = 'Parameter out of range, param={0}, param_min={1}, param_max={2}'.format(
+                param, param_min, param_max)
+            raise ValueError(err)
+
+        # Get energy values
+        table_energy = Table.read(filename, hdu='ENERGIES')
+        energy_lo = table_energy['ENERG_LO']
+        energy_hi = table_energy['ENERG_HI']
+
+        # Hack while format is not fixed, energy values are in keV
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
+                                                                 upper=energy_hi,
+                                                                 unit=u.keV)
+        energy = energy_bounds.log_centers
+
+        # Get spectrum values (no interpolation, take closest value for param)
+        table_spectra = Table.read(filename, hdu='SPECTRA')
+        idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
+        values = table_spectra[idx][1] * u.Unit('')  # no dimension
+
+        return cls(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, amplitude):
-        interpy = np.power(10, self.interplogy(
-            np.log10(energy.to('eV').value))
-        )
+        interpy = self.interpy(np.log10(energy.to('eV').value))
+        if self.scale_logy:
+            interpy = np.power(10, interpy)
         return amplitude * interpy * self.unit
+
+    def plot(self, energy_range, ax=None, energy_unit='TeV',
+             n_points=100, **kwargs):
+        """Plot `~gammapy.spectrum.TableModel`
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        Parameters
+        ----------
+        energy_range : `~astropy.units.Quantity`
+            Plot range
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        n_points : int, optional
+            Number of evaluation nodes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        emin, emax = energy_range
+        energy = EnergyBounds.equal_log_spacing(
+            emin, emax, n_points, energy_unit)
+
+        y = self.interpy(
+            np.log10(energy.to('eV').value)) * self.parameters.amplitude
+        if self.scale_logy:
+            y = np.power(10, y)
+
+        ax.plot(energy.value, y, **kwargs)
+        ax.set_xlabel('Energy [{}]'.format(energy.unit))
+
+        ax.set_ylabel('Table model')
+        ax.set_xscale("log", nonposx='clip')
+        if self.scale_logy:
+            ax.set_yscale("log", nonposy='clip')
+        return ax
