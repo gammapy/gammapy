@@ -165,8 +165,6 @@ def test_to_sherpa(spectrum):
 @requires_data('gammapy-extra')
 def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
-    energy_range = (0.03, 10)
-    energy_unit = u.TeV
-    absorption_z001 = TableModel.from_file(filename=filename, param=0.3)
-    absorption_z001.plot(energy_range=energy_range,
-                         energy_unit=energy_unit)
+    absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
+    absorption_z03.plot(energy_range=(0.03, 10),
+                        energy_unit=u.TeV)

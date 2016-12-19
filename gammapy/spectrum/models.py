@@ -608,8 +608,8 @@ class TableModel(SpectralModel):
                                 kind='cubic')
 
     @classmethod
-    def from_file(cls, filename, param):
-        """A Table containing aborbed values from a XSPEC model
+    def read_xspec_model(cls, filename, param):
+        """A Table containing absorbed values from a XSPEC model
         as a function of energy.
         Todo:
         Format of the file should be described and discussed in
@@ -621,12 +621,14 @@ class TableModel(SpectralModel):
             File containing the XSPEC model
         param : float
             Model parameter value
+
         Examples
         --------
         Fill table from an EBL model (Franceschini, 2008)
-            from gammapy.spectrum.models import TableModel
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
-            table_model = TableModel.from_file(filename=filename, param=0.3)
+
+        >>> from gammapy.spectrum.models import TableModel
+        >>> filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+        >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
         """
         filename = str(make_path(filename))
 
@@ -634,10 +636,11 @@ class TableModel(SpectralModel):
         table_param = Table.read(filename, hdu='PARAMETERS')
         param_min = table_param['MINIMUM']
         param_max = table_param['MAXIMUM']
-        assert(param >= param_min and param <= param_max), "Parameter\
- out of range, param={0}, param_min={1}, param_max={2}".format(param,
-                                                               param_min,
-                                                               param_max)
+        if param < param_min or param > param_max:
+            err = 'Parameter out of range, param={0}, param_min={1}, param_max={2}'.format(
+                param, param_min, param_max)
+            raise ValueError(err)
+
         # Get energy values
         table_energy = Table.read(filename, hdu='ENERGIES')
         energy_lo = table_energy['ENERG_LO']
