@@ -215,7 +215,7 @@ class StackedObsCubeMaker(object):
         if self.save_bkg_scale:
             self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
-    def make_images(self, make_background_image=False, bkg_norm=True, radius=10):
+    def make_cubes(self, make_background_image=False, bkg_norm=True, radius=10):
         """Compute the total counts, bkg, exposure, excess and significance cubes for a set of observation.
 
         Parameters

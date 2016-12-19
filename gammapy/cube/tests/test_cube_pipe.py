@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord, Angle
 from astropy.units import Quantity
+from gammapy.extern.pathlib import Path
 from ...data import DataStore
 from ...utils.testing import requires_dependency, requires_data
 from ...image import SkyMask
@@ -46,13 +47,9 @@ def make_empty_cube(image_size, energy, center, data_unit=None):
 @requires_data('gammapy-extra')
 def test_cube_pipe(tmpdir):
     tmpdir = str(tmpdir)
-    from subprocess import call
     outdir = tmpdir
     outdir2 = outdir + '/background'
-
-    cmd = 'mkdir -p {}'.format(outdir2)
-    print('Executing: {}'.format(cmd))
-    call(cmd, shell=True)
+    Path(outdir2).mkdir()
 
     ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2")
     ds.copy_obs(ds.obs_table, tmpdir)
@@ -101,16 +98,14 @@ def test_cube_pipe(tmpdir):
     cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
                                      offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
                                      exclusion_mask=ref_cube_skymask, save_bkg_scale=True)
-    cube_maker.make_images(make_background_image=True, radius=10.)
+    cube_maker.make_cubes(make_background_image=True, radius=10.)
 
     assert_allclose(cube_maker.counts_cube.data.sum(), 4898.0, atol=3)
     assert_allclose(cube_maker.bkg_cube.data.sum(), 4259.818621739171, atol=3)
-    cube_maker.significance_cube.data[np.where(np.isnan(cube_maker.significance_cube.data))] = 0
     cube_maker.significance_cube.data[np.where(np.isinf(cube_maker.significance_cube.data))] = 0
-    assert_allclose(cube_maker.significance_cube.data.sum(), 57442.86760518042, atol=3)
+    assert_allclose(np.nansum(cube_maker.significance_cube.data), 57442.86760518042, atol=3)
     assert_allclose(cube_maker.excess_cube.data.sum(), 638.1813782608283, atol=3)
-    cube_maker.exposure_cube.data[np.where(np.isnan(cube_maker.exposure_cube.data))] = 0
-    assert_quantity_allclose(cube_maker.exposure_cube.data.sum(), Quantity(4891844242766714.0, "m2 s"),
+    assert_quantity_allclose(np.nansum(cube_maker.exposure_cube.data), Quantity(4891844242766714.0, "m2 s"),
                              atol=Quantity(3, "m2 s"))
     assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 1.2631250488423862)
 
