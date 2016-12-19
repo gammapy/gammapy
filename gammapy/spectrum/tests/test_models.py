@@ -167,7 +167,6 @@ def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
     energy_range = (0.03, 10)
     energy_unit = u.TeV
-    absorption_z001 = TableModel.from_file(filename=filename, param=0.001)
+    absorption_z001 = TableModel.from_file(filename=filename, param=0.3)
     absorption_z001.plot(energy_range=energy_range,
-                         energy_unit=energy_unit,
-                         y_label='Absorption')
+                         energy_unit=energy_unit)

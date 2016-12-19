@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from astropy.io import fits
+from astropy.table import Table
 
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
@@ -577,7 +577,7 @@ class TableModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     amplitude : float
         Model amplitude that is multiplied to the supplied arrays. Defaults to 1.
-    intery : boolean
+    scale_logy : boolean
         interpolation can be done linearly or in logarithm
     """
 
@@ -587,7 +587,7 @@ class TableModel(SpectralModel):
         self.energy = energy
         self.values = values
         self.scale_logy = scale_logy
-        
+
         loge = np.log10(self.energy.to('eV').value)
         try:
             self.unit = self.values.unit
@@ -602,42 +602,46 @@ class TableModel(SpectralModel):
             else:
                 y = self.values
         self.interpy = interp1d(loge,
-                                   y,
-                                   fill_value=-np.Inf,
-                                   bounds_error=False,
-                                   kind='cubic')
+                                y,
+                                fill_value=-np.Inf,
+                                bounds_error=False,
+                                kind='cubic')
 
     @classmethod
     def from_file(cls, filename, param):
         """A Table containing aborbed values from a XSPEC model
         as a function of energy.
         Todo:
-        Format of the file should be describes and discussed in
+        Format of the file should be described and discussed in
         https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
 
+        Parameters
+        ----------
+        filename : `str`
+            File containing the XSPEC model
+        param : float
+            Model parameter value
         Examples
         --------
-        Fill table from a model
-        from gammapy.spectrum.models import TableModel
-        filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
-        table_model = TableModel.from_file(filename=filename, param=0.3)
+        Fill table from an EBL model (Franceschini, 2008)
+            from gammapy.spectrum.models import TableModel
+            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+            table_model = TableModel.from_file(filename=filename, param=0.3)
         """
-        energy_col = 'ENERG'
-
         filename = str(make_path(filename))
 
         # Check if parameter value is in range
-        table_param = fits.open(filename)['PARAMETERS']
-        param_min = table_param.data['MINIMUM'][0]
-        param_max = table_param.data['MAXIMUM'][0]
+        table_param = Table.read(filename, hdu='PARAMETERS')
+        param_min = table_param['MINIMUM']
+        param_max = table_param['MAXIMUM']
         assert(param >= param_min and param <= param_max), "Parameter\
  out of range, param={0}, param_min={1}, param_max={2}".format(param,
                                                                param_min,
                                                                param_max)
         # Get energy values
-        table_energy = fits.open(filename)['ENERGIES']
-        energy_lo = table_energy.data['{}_LO'.format(energy_col)]
-        energy_hi = table_energy.data['{}_HI'.format(energy_col)]
+        table_energy = Table.read(filename, hdu='ENERGIES')
+        energy_lo = table_energy['ENERG_LO']
+        energy_hi = table_energy['ENERG_HI']
 
         # Hack while format is not fixed, energy values are in keV
         energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
@@ -646,9 +650,9 @@ class TableModel(SpectralModel):
         energy = energy_bounds.log_centers
 
         # Get spectrum values (no interpolation, take closest value for param)
-        table_spectra = fits.open(filename)['SPECTRA']
-        idx = np.abs(table_spectra.data['PARAMVAL'] - param).argmin()
-        values = table_spectra.data[idx][1] * u.Unit('')  # no dimension
+        table_spectra = Table.read(filename, hdu='SPECTRA')
+        idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
+        values = table_spectra[idx][1] * u.Unit('')  # no dimension
 
         return cls(energy=energy, values=values, scale_logy=False)
 
@@ -658,22 +662,20 @@ class TableModel(SpectralModel):
             interpy = np.power(10, interpy)
         return amplitude * interpy * self.unit
 
-    def plot(self, energy_range, ax=None, y_label='Table model',
-             energy_unit='TeV', n_points=100, **kwargs):
-        """Plot `~gammapy.spectrum.SpectralModel`
+    def plot(self, energy_range, ax=None, energy_unit='TeV',
+             n_points=100, **kwargs):
+        """Plot `~gammapy.spectrum.TableModel`
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
         energy_range : `~astropy.units.Quantity`
             Plot range
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         n_points : int, optional
             Number of evaluation nodes
 
@@ -694,11 +696,11 @@ class TableModel(SpectralModel):
             np.log10(energy.to('eV').value)) * self.parameters.amplitude
         if self.scale_logy:
             y = np.power(10, y)
-        
+
         ax.plot(energy.value, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy.unit))
 
-        ax.set_ylabel(y_label)
+        ax.set_ylabel('Table model')
         ax.set_xscale("log", nonposx='clip')
         if self.scale_logy:
             ax.set_yscale("log", nonposy='clip')
