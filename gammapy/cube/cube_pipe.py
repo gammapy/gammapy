@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 class SingleObsCubeMaker(object):
     """Compute '~gammapy.cube.SkyCube' images for one observation.
 
-    The computed cubes are stored in a `~gammapy.image.SkyCube` with the following name:
+    The computed cubes are stored in a `~gammapy.cube.SkyCube` with the following name:
 
     * ``counts_cube`` : Counts
     * ``bkg_cube`` : Background model
@@ -38,7 +38,7 @@ class SingleObsCubeMaker(object):
         Reference Cube for exposure in true energy
     offset_band : `astropy.coordinates.Angle`
         Offset band selection
-    exclusion_mask : `~gammapy.image.SkyCube`
+    exclusion_mask : `~gammapy.cube.SkyCube`
         Cube of `~gammapy.image.SkyMask`
     save_bkg_scale: bool
         True if you want to save the normalisation of the bkg computed outside the exclusion region in a Table
