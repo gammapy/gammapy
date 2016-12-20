@@ -27,6 +27,7 @@ __all__ = [
     'ExponentialCutoffPowerLaw3FGL',
     'LogParabola',
     'TableModel',
+    'AbsorbedSpectralModel',
 ]
 
 
@@ -708,3 +709,33 @@ class TableModel(SpectralModel):
         if self.scale_logy:
             ax.set_yscale("log", nonposy='clip')
         return ax
+
+
+class AbsorbedSpectralModel(SpectralModel):
+
+    def __init__(self, spectral_model, table_model):
+        """Absorbed spectral model
+
+        Parameters
+        ---------
+        spectral_model : `~gammapy.spectrum.models.SpectralModel`
+            spectral model
+        table_model : `~gammapy.spectrum.models.TableModel`
+            table model
+        """
+        self.spectral_model = spectral_model
+        self.table_model = table_model
+        # Will be implemented later for sherpa fit
+        self.parameters = {}
+
+    def evaluate(self, energy):
+        flux = self.spectral_model.__call__(energy)
+        absorption = self.table_model.__call__(energy)
+        return flux * absorption
+
+    def to_sherpa(self, name='default'):
+        """Convert to Sherpa model
+
+        To be implemented by subclasses
+        """
+        raise NotImplementedError('{}'.format(self.__class__.__name__))
