@@ -22,9 +22,12 @@ Contributors
 ++++++++++++
 
 - Axel Donath
+- Christoph Deil
 - Dirk Lennarz
 - Johannes King
+- Julien Lefaucheur
 - Léa Jouvin
+- Nachiketa Chakraborty
 
 Pull requests
 +++++++++++++
@@ -33,12 +36,15 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
-- [#820] Add morphology method to gammacat (Axel Donath)
+- [#824] Add XSPEC table absorption model to spectral table model (Julien Lefaucheur)
+- [#820] Add morphology models for gamma-cat sources (Axel Donath)
+- [#816] Add class to access CTA point-like responses (Julien Lefaucheur)
 - [#814] Remove old flux point classes (Axel Donath)
 - [#813] Improve Feldman Cousins code (Dirk Lennarz)
 - [#812] Improve differential flux point computation code (Axel Donath)
 - [#811] Adapt catalogs to new flux point class (Axel Donath)
 - [#810] Add new flux point class (Axel Donath)
+- [#798] Add Fvar variability measure for light curves (Nachiketa Chakraborty)
 - [#796] Improve LogEnergyAxis object (Axel Donath)
 - [#797] Improve WStat implementation (Johannes King)
 - [#793] Add GammaCat source catalog (Axel Donath)
