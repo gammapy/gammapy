@@ -17,7 +17,11 @@ def test_lightcurve_fvar():
     lc = LightCurve.simulate_example()
     fvar, fvar_err = lc.compute_fvar()
     assert_allclose(fvar, 0.6565905201197404)
-    assert_allclose(fvar_err, 0.057795285237677206, rtol=1e-3)
+    # Note: the following tolerance is very low in the next assert,
+    # because results differ by ~ 1e-3 :
+    # travis-ci result: 0.05773502691896258
+    # Christoph's Macbook: 0.057795285237677206
+    assert_allclose(fvar_err, 0.057795285237677206, rtol=1e-2)
 
 
 @requires_dependency('matplotlib')
