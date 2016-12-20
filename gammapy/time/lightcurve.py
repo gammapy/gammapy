@@ -15,9 +15,9 @@ __all__ = [
 class LightCurve(QTable):
     """LightCurve class.
 
-    Contains all data in the tabular form with columns 
-    tstart, tstop, flux, flux error, time bin (opt). 
-    Possesses functions allowing plotting data, saving as txt 
+    Contains all data in the tabular form with columns
+    tstart, tstop, flux, flux error, time bin (opt).
+    Possesses functions allowing plotting data, saving as txt
     and elementary stats like mean & std dev.
 
     TODO: specification of format is work in progress
@@ -72,54 +72,43 @@ class LightCurve(QTable):
         return lc
 
     def compute_fvar(self):
-        """Calculate the fractional excess variance (Fvar) of `LightCurve`.
-       
-        The fractional excess variance :`Fvar` is given by
+        r"""Calculate the fractional excess variance.
 
-        .. math :: 
-	    Fvar = \sqrt{\frac{S^{2} - \bar{\sigma^{2}}}{\bar{x}^{2}}}
-	
-	Fvar is an intrinsic variability estimator. It is excess variance 
-	after accounting for the measurement errors on the light curve 
-	:math: `\sigma`. S is the variance. 
+        This method accesses the the ``FLUX`` and ``FLUX_ERR`` columns
+        from the lightcurve data.
 
-	Parameters
-	----------
-        time_min : array_like
-	    Start time for bin
-        time_max : array_like
-	    Stop time for bin
-        flux : array_like
-	    Flux values with units explicitly specified
-        fluxerr : array_like
-	    Flux error values with units explicitly specified
-	
-	Returns
-	-------
-	Fvar : array_like
+        The fractional excess variance :math:`F_{var}`, an intrinsic
+        variability estimator, is given by
 
-        Reference 
-	---------
-	
-	.. [1] On characterizing the variability properties of X-ray light curves from active galaxiesVaughan et al.,2003 
-        http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
+        .. math::
+            F_{var} = \sqrt{\frac{S^{2} - \bar{\sigma^{2}}}{\bar{x}^{2}}}.
+
+        It is the excess variance after accounting for the measurement errors
+        on the light curve :math:`\sigma`. :math:`S` is the variance.
+
+        Returns
+        -------
+        fvar, fvar_err : `numpy.array`
+            Fractional excess variance.
+
+        References
+        ----------
+        .. [Vaughan2003] "On characterizing the variability properties of X-ray light
+           curves from active galaxies", Vaughan et al. (2003)
+           http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
-        time_min = self['TIME_MIN']
-        time_max = self['TIME_MAX']
-        time = (time_min + time_max) / 2.0
-        flux = self['FLUX'].value
-        fluxerr = self['FLUX_ERR'].value
-        nptsperbin = len(flux)
-        phisum = np.sum(flux)
-        phimean = phisum / nptsperbin
-        Ssq = (np.sum((flux - phimean )**2)
-               ) / (nptsperbin - 1.0)
-        S = np.sqrt(Ssq)
-        Sigsq = np.nansum(fluxerr**2) / nptsperbin
-        fvar = np.sqrt(np.abs(Ssq - Sigsq)) / phimean
-        fluxerrT = np.transpose(fluxerr)
-        sigxserrA = np.sqrt(2.0 / nptsperbin) * (Sigsq / phimean)**2
-        sigxserrB = np.sqrt(Sigsq / nptsperbin) * (2.0 * fvar / phimean)
-        sigxserr = np.sqrt(sigxserrA**2 + sigxserrB**2)
-        fvarerr = sigxserr / (2.0 * fvar)
-        return fvar, fvarerr
+        flux = self['FLUX'].value.astype('float64')
+        flux_err = self['FLUX_ERR'].value.astype('float64')
+        flux_mean = np.mean(flux)
+        n_points = len(flux)
+
+        s_square = np.sum((flux - flux_mean) ** 2) / (n_points - 1)
+        sig_square = np.nansum(flux_err ** 2) / n_points
+        fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
+
+        sigxserr_a = np.sqrt(2 / n_points) * (sig_square / flux_mean) ** 2
+        sigxserr_b = np.sqrt(sig_square / n_points) * (2 * fvar / flux_mean)
+        sigxserr = np.sqrt(sigxserr_a ** 2 + sigxserr_b ** 2)
+        fvar_err = sigxserr / (2 * fvar)
+
+        return fvar, fvar_err
