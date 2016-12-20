@@ -15,9 +15,9 @@ def test_lightcurve():
 
 def test_lightcurve_fvar():
     lc = LightCurve.simulate_example()
-    fvar, fvarerr = lc.compute_fvar()
+    fvar, fvar_err = lc.compute_fvar()
     assert_allclose(fvar, 0.6565905201197404)
-    assert_allclose(fvarerr, 0.057795285237677206)
+    assert_allclose(fvar_err, 0.057795285237677206, rtol=1e-3)
 
 
 @requires_dependency('matplotlib')
