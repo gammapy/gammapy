@@ -22,6 +22,7 @@ Contributors
 ++++++++++++
 
 - Axel Donath
+- Brigitta Sipocz
 - Christoph Deil
 - Dirk Lennarz
 - Johannes King
@@ -36,6 +37,9 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#830] Add gammapy.utils.modeling and GammaCat to XML (Christoph Deil)
+- [#826] Add sky cube computation for IACT data (Léa Jouvin)
+- [#825] Update astropy-helpers to v1.3 (Brigitta Sipocz)
 - [#824] Add XSPEC table absorption model to spectral table model (Julien Lefaucheur)
 - [#820] Add morphology models for gamma-cat sources (Axel Donath)
 - [#816] Add class to access CTA point-like responses (Julien Lefaucheur)
