@@ -140,8 +140,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         d = self.data
         ss = '\n*** Info from map analysis ***\n\n'
 
-        ra_str = Angle(d['RAJ2000'], 'deg').to_string(unit='hour', precision=0)
-        dec_str = Angle(d['DEJ2000'], 'deg').to_string(unit='deg', precision=0)
+        try:
+            ra_str = Angle(d['RAJ2000'], 'deg').to_string(unit='hour', precision=0)
+            dec_str = Angle(d['DEJ2000'], 'deg').to_string(unit='deg', precision=0)
+        except ValueError:
+            ra_str = dec_str = ''
         ss += '{:<20s} : {:8.3f} deg = {}\n'.format('RA', d['RAJ2000'], ra_str)
         ss += '{:<20s} : {:8.3f} deg = {}\n'.format('DEC', d['DEJ2000'], dec_str)
 
