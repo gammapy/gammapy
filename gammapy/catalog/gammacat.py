@@ -7,12 +7,14 @@ Gammacat open TeV source catalog
 https://github.com/gammapy/gamma-cat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import os
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, QTable
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
+from ..utils.modeling import SourceModel, SourceLibrary
 from ..spectrum import FluxPoints, SpectrumFitResult
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import Shell2D, Delta2D
@@ -23,6 +25,8 @@ __all__ = [
     'SourceCatalogGammaCat',
     'SourceCatalogObjectGammaCat',
 ]
+
+log = logging.getLogger(__name__)
 
 
 class NoDataAvailableError(LookupError):
@@ -277,3 +281,20 @@ class SourceCatalogGammaCat(SourceCatalog):
         """
         row = self.table[index]
         return row
+
+    def to_source_library(self):
+        """
+        TODO: add an option whether to skip or raise on missing models or data.
+        """
+        source_list = []
+
+        for source_idx in range(len(self.table)):
+            source = self[source_idx]
+            try:
+                source_model = SourceModel.from_gammacat(source)
+            except NoDataAvailableError:
+                log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
+                continue
+            source_list.append(source_model)
+
+        return SourceLibrary(source_list=source_list)
