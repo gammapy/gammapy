@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
@@ -73,6 +74,15 @@ class TestSourceCatalogGammaCat:
         self.cat.table.sort(key)
         after = str(self.cat[name])
         assert before == after
+
+    def test_to_source_library(self):
+        sources = self.cat.to_source_library()
+
+        assert len(sources.source_list) == 48
+
+        source = sources.source_list[0]
+        assert source.source_name == 'CTB 37B'
+        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.6500000953674316)
 
 
 @requires_data('gamma-cat')
