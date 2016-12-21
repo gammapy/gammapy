@@ -729,8 +729,8 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameters = {}
 
     def evaluate(self, energy):
-        flux = self.spectral_model.__call__(energy)
-        absorption = self.table_model.__call__(energy)
+        flux = self.spectral_model(energy)
+        absorption = self.table_model(energy)
         return flux * absorption
 
     def to_sherpa(self, name='default'):
