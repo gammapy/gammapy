@@ -200,7 +200,7 @@ class CombinedModel3D(ArithmeticModel):
 
 class CombinedModel3DInt(ArithmeticModel):
     """
-    Combined spatial and spectral 3D model with the possibility to convolve the spatial model*exposure by the PSF
+    Combined spatial and spectral 3D model with the possibility to convolve the spatial model*exposure by the PSF.
 
     Parameters
     ----------
@@ -266,7 +266,7 @@ class CombinedModel3DInt(ArithmeticModel):
 class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
     """
     Combined spatial and spectral 3D model taking into account the energy resolution
-     with the possibility to convolve the spatial model*exposure by the PSF
+     with the possibility to convolve the spatial model*exposure by the PSF.
 
     Parameters
     ----------
