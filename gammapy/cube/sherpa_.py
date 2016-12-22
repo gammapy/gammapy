@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from ..utils.energy import EnergyBounds
 from sherpa.models import ArithmeticModel, Parameter, modelCacher1d
 from sherpa.data import DataND, BaseData
 from sherpa.utils.err import DataErr, NotImplementedErr
@@ -247,6 +248,7 @@ class CombinedModel3DInt(ArithmeticModel):
             ee_hi = ehi.reshape(shape)[:, 0, 0]
             a = self.spatial_model.calc(pars[self._spatial_pars], xx_lo.ravel(), xx_hi.ravel(),
                                         yy_lo.ravel(), yy_hi.ravel()).reshape(xx_lo.shape)
+            # Convolve the spatial model * exposure by the psf
             for ind_E in range(shape[0]):
                 result_convol[ind_E, :, :] = signal.fftconvolve(a * self.exposure.data[ind_E, :, :],
                                                                 self.psf.data[ind_E, :, :] /
@@ -323,6 +325,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         yy_hi = yhi.reshape(self.shape_data)[0, :, :]
         etrue_centers = self.true_energy.log_centers
         if self.use_psf:
+            # Convolve the spatial model * exposure by the psf in etrue
             spatial = np.zeros((self.dim_Etrue, self.dim_x, self.dim_y))
             a = self.spatial_model.calc(pars[self._spatial_pars], xx_lo.ravel(), xx_hi.ravel(),
                                         yy_lo.ravel(), yy_hi.ravel()).reshape(xx_lo.shape)
@@ -335,6 +338,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
             spatial_2d = self.spatial_model.calc(pars[self._spatial_pars], xx_lo.ravel(), xx_hi.ravel(),
                                                  yy_lo.ravel(), yy_hi.ravel()).reshape(xx_lo.shape)
             spatial = np.tile(spatial_2d, (len(etrue_centers), 1, 1))
+        # Calculate the spectral model in etrue
         spectral_1d = self.spectral_model.calc(pars[self._spectral_pars], etrue_centers)
         spectral = spectral_1d.reshape(len(etrue_centers), 1, 1) * np.ones_like(xx_lo)
 
@@ -343,8 +347,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         for ireco in range(self.dim_Ereco):
             self.convolve_edisp[:, :, :, ireco] = np.moveaxis(spatial, 0, -1) * np.moveaxis(spectral, 0, -1) * \
                                                   self.edisp[:, ireco] * etrue_band
-        # On somme sur etrue qui est en dim=2 pour l instant
+        # Integration in etrue
         model = np.moveaxis(np.sum(self.convolve_edisp, axis=2), -1, 0)
 
         return model.ravel()
-
