@@ -15,7 +15,8 @@ __all__ = [
     'CTAIrf',
     'BgRateTable',
     'Psf68Table',
-    'CTAPerf'
+    'SensitivityTable',
+    'CTAPerf',
 ]
 
 
@@ -233,6 +234,70 @@ class Psf68Table(NDDataArray):
         return ax
 
 
+class SensitivityTable(NDDataArray):
+    """Sensitivity Table
+
+    The IRF format should be compliant with the one discussed
+    at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
+    Work will be done to fix this.
+
+    Parameters
+    -----------
+    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        Bin edges of energy axis
+    data : `~astropy.units.Quantity`
+        Background rate
+    """
+    energy = BinnedDataAxis(interpolation_mode='log')
+    """Energy Axis"""
+    axis_names = ['energy']
+
+    @classmethod
+    def from_table(cls, table):
+        """Sensitivity reader"""
+        energy_col = 'ENERG'
+        data_col = 'SENSITIVITY'
+
+        energy_lo = table['{}_LO'.format(energy_col)].quantity
+        energy_hi = table['{}_HI'.format(energy_col)].quantity
+        energy = np.append(energy_lo.value,
+                           energy_hi[-1].value) * energy_lo.unit
+        data = table['{}'.format(data_col)].quantity
+        return cls(energy=energy, data=data)
+
+    def plot(self, ax=None, energy=None, **kwargs):
+        """Plot sensitivity
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        energy : `~astropy.units.Quantity`
+            Energy nodes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        if energy is None:
+            energy = self.energy.nodes
+        values = self.evaluate(energy=energy)
+        xerr = (energy.value - self.energy.data[:-1].value,
+                self.energy.data[1:].value - energy.value)
+        ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_ylabel('Sensitivity [{}]'.format(self.data.unit))
+
+        return ax
+
+
 class CTAPerf(object):
     """CTA instrument response function container.
 
@@ -259,13 +324,16 @@ class CTAPerf(object):
         Point spread function
     bkg : `~gammapy.scripts.BgRateTable`
         Background rate
+    sens : `~gammapy.scripts.SensitivityTable`
+        Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None):
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
+        self.sens = sens
 
     @classmethod
     def read(cls, filename):
@@ -295,25 +363,81 @@ class CTAPerf(object):
             fits.HDUList([hdu_list[0], hdu_list['POINT SPREAD FUNCTION']])
         )
 
+        sens = SensitivityTable.from_hdulist(
+            fits.HDUList([hdu_list[0], hdu_list['SENSITIVITY']])
+        )
+
         return cls(
             aeff=aeff,
             bkg=bkg,
             edisp=edisp,
             psf=psf,
+            sens=sens
         )
 
-    def peek(self, figsize=(10, 10)):
+    def peek(self, figsize=(15, 8)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
 
-        self.bkg.plot(ax=axes[0][0])
-        aeff = self.aeff.plot(ax=axes[0][1])
-        aeff.set_yscale('log')
+        fig = plt.figure(figsize=(15, 8))
+        ax_bkg = plt.subplot2grid((2, 4), (0, 0))
+        ax_area = plt.subplot2grid((2, 4), (0, 1))
+        ax_sens = plt.subplot2grid((2, 4), (0, 2), colspan=2, rowspan=2)
+        ax_psf = plt.subplot2grid((2, 4), (1, 0))
+        ax_resol = plt.subplot2grid((2, 4), (1, 1))
 
-        self.psf.plot(ax=axes[1][0])
+        self.bkg.plot(ax=ax_bkg)
+        self.aeff.plot(ax=ax_area).set_yscale('log')
+        self.aeff.plot(ax=ax_area)
+        self.sens.plot(ax=ax_sens)
+        self.psf.plot(ax=ax_psf)
+        self.edisp.plot_matrix(ax=ax_resol)
 
-        self.edisp.plot_matrix(ax=axes[1][1])
+        ax_bkg.grid(which='both')
+        ax_area.grid(which='both')
+        ax_sens.grid(which='both')
+        ax_psf.grid(which='both')
+        ax_resol.grid(which='both')
+        plt.tight_layout()
+        plt.show()
+        return fig
+
+    @staticmethod
+    def superpose_perf(cta_perf, labels):
+        """
+        Superpose performance plot
+
+        Parameters
+        ----------
+        cta_perf : `list` of `~gammapy.scripts.CTAPerf`
+           List of performance
+        labels : `list` of `str`
+           List of labels
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=(10, 8))
+        ax_bkg = plt.subplot2grid((2, 2), (0, 0))
+        ax_area = plt.subplot2grid((2, 2), (0, 1))
+        ax_psf = plt.subplot2grid((2, 2), (1, 0))
+        ax_sens = plt.subplot2grid((2, 2), (1, 1))
+
+        for index, (perf, label) in enumerate(zip(cta_perf, labels)):
+            plot_label = {'label': label}
+            perf.bkg.plot(ax=ax_bkg, **plot_label)
+            perf.aeff.plot(ax=ax_area, **plot_label).set_yscale('log')
+            perf.sens.plot(ax=ax_sens, **plot_label)
+            perf.psf.plot(ax=ax_psf, **plot_label)
+
+        ax_bkg.legend(loc='best')
+        ax_area.legend(loc='best')
+        ax_psf.legend(loc='best')
+        ax_sens.legend(loc='best')
+
+        ax_bkg.grid(which='both')
+        ax_area.grid(which='both')
+        ax_psf.grid(which='both')
+        ax_sens.grid(which='both')
 
         plt.tight_layout()
         plt.show()
