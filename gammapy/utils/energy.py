@@ -6,7 +6,6 @@ from astropy.io import fits
 from astropy import log
 from astropy.table import Table
 from astropy.extern import six
-from ..utils.fits import table_to_fits_table
 
 
 __all__ = [
@@ -358,50 +357,6 @@ class EnergyBounds(Energy):
             Array of energies to test
         """
         return (energy > self[0]) & (energy < self[-1])
-
-
-    def to_table(self, unit=None):
-        """Convert to `~astropy.table.Table`.
-        """
-        if unit is None:
-            unit = self.unit
-
-        table = Table()
-
-        table['CHANNEL'] = np.arange(self.nbins, dtype=np.int16)
-        table['E_MIN'] = Quantity(self.lower_bounds, unit=unit, dtype=np.float32)
-        table['E_MAX'] = Quantity(self.upper_bounds, unit=unit, dtype=np.float32)
-
-        return table
-
-    def to_ebounds(self, unit=None, **kwargs):
-        """Write EBOUNDS fits extension
-
-        Returns
-        -------
-        hdu: `~astropy.io.fits.BinTableHDU`
-            EBOUNDS fits extension
-        """
-
-        hdu = table_to_fits_table(self.to_table(unit))
-        header = hdu.header
-        header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
-        header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
-        header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
-        header['FILTER'] = '', 'Filter information'
-        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = self.nbins, 'Total number of detector PHA channels'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
-        header['HDUVERS'] = '1.2.0', 'Version of file format'
-
-        # Obsolet EBOUNDS headers, included for the benefit of old software
-        header['RMFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.0.0', 'Obsolete'
-        header['HDUVERS2'] = '1.1.0', 'Obsolete'
-
-        return hdu
 
     def to_dict(self):
         """Construct dict representing an energy range"""
