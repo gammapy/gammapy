@@ -193,7 +193,7 @@ class SpectrumExtraction(object):
                 counts_kwargs.update(zen_pnt=obs.pointing_zen)
             except KeyError:
                 pass
-
+            
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
             off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True,
                                         **counts_kwargs)
@@ -223,7 +223,7 @@ class SpectrumExtraction(object):
                         # TODO: Why is this necessary?
                         correction = np.nan
 
-                    arf.data[index] = arf.data[index] * correction
+                    arf.data.data[index] = arf.data.data[index] * correction
 
             temp = SpectrumObservation(on_vector=on_vec,
                                        aeff=arf,

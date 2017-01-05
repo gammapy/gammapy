@@ -85,7 +85,7 @@ class TestSpectrumExtraction:
         extraction.estimate_background(extraction.background)
         extraction.extract_spectrum()
         obs = extraction.observations[0]
-        aeff_actual = obs.aeff.evaluate(energy=5 * u.TeV)
+        aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
 
         # TODO: Introduce assert_stats_allclose
         n_on_actual = obs.total_stats.n_on
@@ -99,10 +99,10 @@ class TestSpectrumExtraction:
         """Test the run method and check if files are written correctly"""
         extraction.run(outdir=tmpdir)
         testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
-        assert_quantity_allclose(testobs.aeff.data,
-                                 extraction.observations[0].aeff.data)
-        assert_quantity_allclose(testobs.on_vector.data,
-                                 extraction.observations[0].on_vector.data)
+        assert_quantity_allclose(testobs.aeff.data.data,
+                                 extraction.observations[0].aeff.data.data)
+        assert_quantity_allclose(testobs.on_vector.data.data,
+                                 extraction.observations[0].on_vector.data.data)
         assert_quantity_allclose(testobs.on_vector.energy.nodes,
                                  extraction.observations[0].on_vector.energy.nodes)
 

@@ -17,7 +17,7 @@ def test_cta_irf():
     offset = Quantity(3, 'deg')
     migra = 1
 
-    val = irf.aeff.evaluate(energy=energy, offset=offset)
+    val = irf.aeff.data.evaluate(energy=energy, offset=offset)
     assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
 
     val = irf.edisp.evaluate(offset=offset, e_true=energy, migra=migra)
@@ -43,7 +43,8 @@ CTA-Performance-South-20150511/CTA-Performance-South-50h_20150511.fits'
     cta_perf = CTAPerf.read(filename)
     cta_perf.peek()
     
-    
+ 
+# TODO: Remove?
 if __name__ == '__main__':
     test_cta_irf()
     test_point_like_perf()

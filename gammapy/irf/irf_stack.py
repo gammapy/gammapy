@@ -72,13 +72,15 @@ class IRFStacker(object):
         livetime_tot = np.sum(self.list_livetime)
 
         for i, aeff in enumerate(self.list_aeff):
-            aeff_data = aeff.evaluate(fill_nan=True)
+            aeff_data = aeff.evaluate_fill_nan()
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
 
         stacked_data = aefft / livetime_tot
-        self.stacked_aeff = EffectiveAreaTable(energy=self.list_aeff[0].energy,
-                                               data=stacked_data.to('cm2'))
+        self.stacked_aeff = EffectiveAreaTable(
+            energy=self.list_aeff[0].energy.data,
+            data=stacked_data.to('cm2')
+        )
 
     def stack_edisp(self):
         """
@@ -92,7 +94,7 @@ class IRFStacker(object):
         aefftedisp = Quantity(temp, 'cm2 s')
 
         for i, edisp in enumerate(self.list_edisp):
-            aeff_data = self.list_aeff[i].evaluate(fill_nan=True)
+            aeff_data = self.list_aeff[i].evaluate_fill_nan()
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
             edisp_data = edisp.pdf_in_safe_range(self.list_low_threshold[i],
@@ -101,6 +103,7 @@ class IRFStacker(object):
             aefftedisp += edisp_data.transpose() * aefft_current
 
         stacked_edisp = np.nan_to_num(aefftedisp / aefft)
-        self.stacked_edisp = EnergyDispersion(e_true=self.list_edisp[0].e_true,
-                                              e_reco=self.list_edisp[0].e_reco,
-                                              data=stacked_edisp.transpose())
+        self.stacked_edisp = EnergyDispersion(
+            e_true=self.list_edisp[0].e_true.data,
+            e_reco=self.list_edisp[0].e_reco.data,
+            data=stacked_edisp.transpose())

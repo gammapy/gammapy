@@ -59,7 +59,7 @@ class TestSpectralFit:
         assert_allclose(par_errors.amplitude.s, 2.2154024177186417e-08)
 
     def test_npred(self):
-        actual = self.result.obs.predicted_counts(self.result.model).data.value
+        actual = self.result.obs.predicted_counts(self.result.model).data.data.value
         desired = self.result.npred
         assert_allclose(actual, desired)
 

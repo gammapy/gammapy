@@ -126,7 +126,6 @@ class NDDataArrayTester:
             return
 
         # Case 1: axis1 = scalar, axis2 = array
-
         kwargs = {self.axes[0].name: self.axes[0].data[1] * 0.75,
                   self.axes[1].name: self.axes[1].data[0:-1] * 1.1}
         actual = self.nddata.evaluate(**kwargs).shape
@@ -140,11 +139,13 @@ class NDDataArrayTester:
         desired = (2, 3)
         assert actual == desired
 
-        # Case 6: axis1 array, axis2 = 2Darray
+        # Case 3: axis1 array, axis2 = 2Darray
         nx, ny = (12, 3)
-        eval_field = np.linspace(self.axes[1].data[1],
-                                 self.axes[1].data[2],
-                                 nx * ny).reshape(nx, ny)
+
+        # NOTE:  np.linspace does not work with Quantities and numpy 1.10
+        eval_field = np.linspace(self.axes[1].data[1].value,
+                                 self.axes[1].data[2].value,
+                                 nx * ny).reshape(nx, ny) * self.axes[1].unit
         kwargs = {self.axes[0].name: self.axes[0].data[0:2],
                   self.axes[1].name: eval_field}
         actual = self.nddata.evaluate(**kwargs).shape

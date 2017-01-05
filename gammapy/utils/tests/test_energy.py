@@ -140,35 +140,3 @@ def test_EnergyBounds():
     actual = bands[0]
     desired = energy[1] - energy[0]
     assert_equal(actual, desired)
-
-
-@requires_data('gammapy-extra')
-def test_EnergyBounds_read():
-    # read EBOUNDS extension
-    filename = gammapy_extra.filename('test_datasets/irf/hess/ogip/run_rmf60741.fits')
-
-    hdulist = fits.open(filename)
-    ebounds = EnergyBounds.from_ebounds(hdulist['EBOUNDS'])
-    desired = hdulist['EBOUNDS'].data['E_MAX'][-1]
-    actual = ebounds[-1].value
-    assert_equal(actual, desired)
-
-    # read MATRIX extension
-    ebounds = EnergyBounds.from_rmf_matrix(hdulist['MATRIX'])
-    desired = hdulist['MATRIX'].data['ENERG_LO'][3]
-    actual = ebounds[3].value
-    assert_equal(actual, desired)
-
-
-def test_EnergyBounds_write(tmpdir):
-    ebounds = EnergyBounds.equal_log_spacing(1 * u.TeV, 10 * u.TeV, 10)
-    writename = str(tmpdir / 'ebounds_test.fits')
-    hdu = ebounds.to_ebounds()
-    prim_hdu = fits.PrimaryHDU()
-    hdulist = fits.HDUList([prim_hdu, hdu])
-    hdulist.writeto(writename)
-
-    ebounds2 = EnergyBounds.from_ebounds(hdulist[1])
-    actual = ebounds2
-    desired = ebounds
-    assert_allclose(actual, desired)

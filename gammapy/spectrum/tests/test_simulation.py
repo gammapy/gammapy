@@ -66,6 +66,6 @@ class TestSpectrumSimulation:
         self.sim.simulate_obs(seed=23, obs_id=23)
         assert self.sim.obs.on_vector.total_counts == 160 * u.ct
         # The test value is taken from the test with edisp
-        assert_allclose(np.sum(self.sim.npred_source.data.value),
+        assert_allclose(np.sum(self.sim.npred_source.data.data.value),
                         167.467572145, rtol=0.01)
 

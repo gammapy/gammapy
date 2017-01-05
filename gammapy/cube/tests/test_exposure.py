@@ -22,7 +22,7 @@ def test_exposure_cube():
 
     pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
-    aeff2d = EffectiveAreaTable2D.read(aeff_filename)
+    aeff2d = EffectiveAreaTable2D.read(aeff_filename, hdu='AEFF_2D')
     count_cube = SkyCube.read(ccube_filename, format='fermi-counts')
     offset_max = Angle(2.2, 'deg')
     exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube,

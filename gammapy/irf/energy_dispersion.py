@@ -54,6 +54,14 @@ class EnergyDispersion(object):
             self.meta=Bunch(meta)
 
     @property
+    def e_reco(self):
+        return self.data.axis('e_reco')
+
+    @property
+    def e_true(self):
+        return self.data.axis('e_true')
+
+    @property
     def pdf_matrix(self):
         """PDF matrix `~numpy.ndarray`
 
@@ -73,8 +81,8 @@ class EnergyDispersion(object):
             High reco energy threshold
         """
         data=self.pdf_matrix.copy()
-        idx=np.where((self.data.axis('e_reco').data[:-1] < lo_threshold) |
-                       (self.data.axis('e_reco').data[1:] > hi_threshold))
+        idx=np.where((self.e_reco.data[:-1] < lo_threshold) |
+                       (self.e_reco.data[1:] > hi_threshold))
         data[:, idx]=0
         return data
 
@@ -219,7 +227,7 @@ class EnergyDispersion(object):
         hdu=fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5],
                                             header=header, name=name)
 
-        ebounds=energy_axis_to_ebounds(self.data.axis('e_reco'))
+        ebounds=energy_axis_to_ebounds(self.e_reco.data)
         prim_hdu=fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds])
@@ -257,8 +265,8 @@ class EnergyDispersion(object):
             n_chan[i]=n_chan_temp
             matrix[i]=row[pos]
 
-        table['ENERG_LO']=self.data.axis('e_true').data[:-1]
-        table['ENERG_HI']=self.data.axis('e_true').data[1:]
+        table['ENERG_LO']=self.e_true.data[:-1]
+        table['ENERG_HI']=self.e_true.data[1:]
         table['N_GRP']=np.asarray(n_grp, dtype=np.int16)
         table['F_CHAN']=f_chan
         table['N_CHAN']=n_chan
@@ -275,7 +283,7 @@ class EnergyDispersion(object):
                     hduclass='OGIP',
                     hduclas1='RESPONSE',
                     hduclas2='RSP_MATRIX',
-                    detchans=self.data.axis('e_reco').nbins,
+                    detchans=self.e_reco.nbins,
                     numgrp=numgrp,
                     numelt=numelt,
                     tlmin4=0,
@@ -301,7 +309,7 @@ class EnergyDispersion(object):
         # Variance is 2nd moment of PDF
         pdf=self.data.evaluate(e_true=e_true)
         mean=self._get_mean(e_true)
-        temp=(self.data.axis('e_reco')._interp_nodes() - mean) ** 2
+        temp=(self.e_reco._interp_nodes() - mean) ** 2
         var=np.sum(temp * pdf)
         return np.sqrt(var)
 
@@ -320,7 +328,7 @@ class EnergyDispersion(object):
             True energy
         """
         mean=self._get_mean(e_true)
-        e_reco=(10 ** mean) * self.data.axis('e_reco').unit
+        e_reco=(10 ** mean) * self.e_reco.unit
         bias=(e_true - e_reco) / e_true
         return bias
 
@@ -330,7 +338,7 @@ class EnergyDispersion(object):
         # Reconstructed energy is 1st moment of PDF
         pdf=self.data.evaluate(e_true=e_true)
         norm=np.sum(pdf)
-        temp=np.sum(pdf * self.data.axis('e_reco')._interp_nodes())
+        temp=np.sum(pdf * self.e_reco._interp_nodes())
         return temp / norm
 
     def apply(self, data, e_reco=None):
@@ -355,7 +363,7 @@ class EnergyDispersion(object):
             1-dim data array after multiplication with the energy dispersion matrix
         """
         if e_reco is None:
-            e_reco=self.data.axis('e_reco').nodes
+            e_reco=self.e_reco.nodes
         else:
             e_reco=np.sqrt(e_reco[:-1] * e_reco[1:])
         edisp_pdf=self.data.evaluate(e_reco=e_reco)
@@ -366,8 +374,8 @@ class EnergyDispersion(object):
 
         x stands for true energy and y for reconstructed energy
         """
-        x=self.data.axis('e_true').data[[0, -1]].value
-        y=self.data.axis('e_reco').data[[0, -1]].value
+        x=self.e_true.data[[0, -1]].value
+        y=self.e_reco.data[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, show_energy=None, **kwargs):
@@ -423,8 +431,8 @@ class EnergyDispersion(object):
 
         ax=plt.gca() if ax is None else ax
 
-        x=self.data.axis('e_true').nodes.to('TeV').value
-        y=self.get_bias(self.data.axis('e_true').nodes)
+        x=self.e_true.nodes.to('TeV').value
+        y=self.get_bias(self.e_true.nodes)
 
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('True energy [TeV]')
@@ -484,9 +492,9 @@ class EnergyDispersion(object):
             n_grp=n_grp,
             n_chan=n_chan,
             f_chan=f_chan,
-            detchans=self.data.axis('e_reco').nbins,
-            e_min=self.data.axis('e_reco').data[:-1].to('keV').value,
-            e_max=self.data.axis('e_reco').data[1:].to('keV').value,
+            detchans=self.e_reco.nbins,
+            e_min=self.e_reco.data[:-1].to('keV').value,
+            e_max=self.e_reco.data[1:].to('keV').value,
             offset=0,
         )
 

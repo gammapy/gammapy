@@ -72,6 +72,10 @@ class EffectiveAreaTable(object):
         if meta is not None:
             self.meta = Bunch(meta)
 
+    @property
+    def energy(self):
+        return self.data.axis('energy')
+
     def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
         """Plot effective area
 
@@ -96,17 +100,17 @@ class EffectiveAreaTable(object):
         kwargs.setdefault('lw', 2)
 
         if energy is None:
-            energy = self.data.axis('energy').nodes
+            energy = self.energy.nodes
         eff_area = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.data.axis('energy').data[:-1].value,
-                self.data.axis('energy').data[1:].value - energy.value)
+        xerr = (energy.value - self.energy.data[:-1].value,
+                self.energy.data[1:].value - energy.value)
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(self.energy.unit).value
             ax.vlines(ener_val, 0, 1.1 * self.max_area.value,
                       linestyles='dashed')
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.data.axis('energy').unit))
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
 
         return ax
@@ -189,7 +193,7 @@ class EffectiveAreaTable(object):
 
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
         """
-        energy = self.data.axis('energy').data
+        energy = self.energy.data
         ener_lo = energy[:-1]
         ener_hi = energy[1:]
         data = self.evaluate_fill_nan()
@@ -252,8 +256,8 @@ class EffectiveAreaTable(object):
         # Linear interpolation between two energy nodes
         energy = np.interp(aeff.value,
                            (self.data.data[[idx - 1, idx]].value),
-                           (self.data.axis('energy').nodes[[idx - 1, idx]].value))
-        return energy * self.data.axis('energy').unit
+                           (self.energy.nodes[[idx - 1, idx]].value))
+        return energy * self.energy.unit
 
     def to_sherpa(self, name):
         """Return `~sherpa.astro.data.DataARF`
@@ -326,6 +330,14 @@ class EffectiveAreaTable2D(object):
             self.meta = Bunch(meta)
 
     @property
+    def energy(self):
+        return self.data.axis('energy')
+
+    @property
+    def offset(self):
+        return self.data.axis('offset')
+
+    @property
     def low_threshold(self):
         """Low energy threshold"""
         return self.meta.LO_THRES * u.TeV
@@ -380,7 +392,7 @@ class EffectiveAreaTable2D(object):
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.data.axis('energy')
+            energy = self.energy
         else:
             energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
@@ -416,7 +428,7 @@ class EffectiveAreaTable2D(object):
             offset = np.linspace(off_min, off_max, 4) * self.data.axis('offset').unit
 
         if energy is None:
-            energy = self.data.axis('energy').nodes
+            energy = self.energy.nodes
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
@@ -424,7 +436,7 @@ class EffectiveAreaTable2D(object):
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{0}]'.format(self.data.axis('energy').unit))
+        ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
         ax.set_ylabel('Effective Area [{0}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
@@ -453,8 +465,8 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis('energy').nodes[[0, -1]].value)
-            energy = np.logspace(e_min, e_max, 4) * self.data.axis('energy').unit
+            e_min, e_max = np.log10(self.energy.nodes[[0, -1]].value)
+            energy = np.logspace(e_min, e_max, 4) * self.energy.unit
 
         if offset is None:
             off_lo, off_hi = self.data.axis('offset').nodes[[0, -1]].to('deg').value
@@ -492,9 +504,9 @@ class EffectiveAreaTable2D(object):
             offset = offset * self.data.axis('offset').unit
 
         if energy is None:
-            vals = np.log10(self.data.axis('energy').nodes.value)
+            vals = np.log10(self.energy.nodes.value)
             energy = np.logspace(
-                vals.min(), vals.max(), 100) * self.data.axis('energy').unit
+                vals.min(), vals.max(), 100) * self.energy.unit
 
         aeff = self.data.evaluate(offset=offset, energy=energy)
         extent = [

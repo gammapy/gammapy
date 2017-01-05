@@ -230,6 +230,8 @@ class DataAxis(object):
     """
 
     def __init__(self, data, name='Default', interpolation_mode='linear'):
+        if isinstance(data, self.__class__):
+            data = data.data
         self.data = Quantity(data)
         self.name = name
         self._interpolation_mode = interpolation_mode

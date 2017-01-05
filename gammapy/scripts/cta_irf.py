@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..irf import EffectiveAreaTable2D, EffectiveAreaTable
@@ -105,7 +106,7 @@ class CTAIrf(object):
         )
 
 
-class BgRateTable(NDDataArray):
+class BgRateTable(object):
     """Background rate Table
 
     The IRF format should be compliant with the one discussed
@@ -119,9 +120,13 @@ class BgRateTable(NDDataArray):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+    def __init__(self, energy, data):
+        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axes[0]
 
     @classmethod
     def from_table(cls, table):
@@ -135,6 +140,23 @@ class BgRateTable(NDDataArray):
                            energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
         return cls(energy=energy, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='BACKGROUND', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot background rate
@@ -157,19 +179,19 @@ class BgRateTable(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        values = self.evaluate(energy=energy)
+        values = self.data.evaluate(energy=energy)
         xerr = (energy.value - self.energy.data[:-1].value,
                 self.energy.data[1:].value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Background rate [{}]'.format(self.data.unit))
+        ax.set_ylabel('Background rate [{}]'.format(self.data.data.unit))
 
         return ax
 
 
-class Psf68Table(NDDataArray):
+class Psf68Table(object):
     """Background rate Table
 
     The IRF format should be compliant with the one discussed
@@ -183,9 +205,13 @@ class Psf68Table(NDDataArray):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+    def __init__(self, energy, data):
+        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axes[0]
 
     @classmethod
     def from_table(cls, table):
@@ -199,6 +225,23 @@ class Psf68Table(NDDataArray):
             energy_lo.value, energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
         return cls(energy=energy, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='POINT SPREAD FUNCTION'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='POINT SPREAD FUNCTION', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot point spread function
@@ -221,14 +264,14 @@ class Psf68Table(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        values = self.evaluate(energy=energy)
+        values = self.data.evaluate(energy=energy)
         xerr = (energy.value - self.energy.data[:-1].value,
                 self.energy.data[1:].value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel(
-            'Angular resolution 68 % containment [{}]'.format(self.data.unit)
+            'Angular resolution 68 % containment [{}]'.format(self.data.data.unit)
         )
 
         return ax
@@ -347,21 +390,11 @@ class CTAPerf(object):
         """
         filename = str(make_path(filename))
 
-        aeff = EffectiveAreaTable.read(filename, hdu='SPECRESP')
-
-        # Get EnergyDispersion from HDUList
-        hdu_list = fits.open(filename)
-        edisp = EnergyDispersion.from_hdulist(hdu_list=hdu_list)
-
-        # Do not work, can't understand why, see BgRateTable and Psf68Table class
-        # bkg = BgRateTable.read(filename, hdu='BACKGROUND')
-        bkg = BgRateTable.from_hdulist(
-            fits.HDUList([hdu_list[0], hdu_list['BACKGROUND']])
-        )
-
-        psf = Psf68Table.from_hdulist(
-            fits.HDUList([hdu_list[0], hdu_list['POINT SPREAD FUNCTION']])
-        )
+        hdulist = fits.open(filename)
+        aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
+        edisp = EnergyDispersion.from_hdulist(hdulist=hdulist)
+        bkg = BgRateTable.from_hdulist(hdulist=hdulist)
+        psf = Psf68Table.from_hdulist(hdulist=hdulist)
 
         sens = SensitivityTable.from_hdulist(
             fits.HDUList([hdu_list[0], hdu_list['SENSITIVITY']])

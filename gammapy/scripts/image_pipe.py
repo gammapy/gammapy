@@ -131,7 +131,7 @@ class SingleObsImageMaker(object):
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
         offset = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        arf = self.aeff.evaluate(offset=offset, energy=energy_bin).T
+        arf = self.aeff.data.evaluate(offset=offset, energy=energy_bin).T
         npred = np.sum(arf * spectrum * energy_band, axis=1)
         npred *= self.livetime
 

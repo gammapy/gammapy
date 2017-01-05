@@ -17,11 +17,11 @@ def test_EffectiveAreaTable2D(tmpdir):
         'datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
     aeff = EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
 
-    assert aeff.data.axis('energy').nbins == 73
+    assert aeff.energy.nbins == 73
     assert aeff.data.axis('offset').nbins == 6
     assert aeff.data.data.shape == (73, 6)
 
-    assert aeff.data.axis('energy').unit == 'TeV'
+    assert aeff.energy.unit == 'TeV'
     assert aeff.data.axis('offset').unit == 'deg'
     assert aeff.data.data.unit == 'm2'
 
@@ -80,7 +80,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
 
     test_aeff = 0.6 * arf.max_area
     node_above = np.where(arf.data.data > test_aeff)[0][0]
-    energy = arf.data.axis('energy')
+    energy = arf.energy
     ener_above = energy.nodes[node_above]
     ener_below = energy.nodes[node_above - 1]
     test_ener = arf.find_energy(test_aeff)

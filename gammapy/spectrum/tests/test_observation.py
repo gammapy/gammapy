@@ -161,12 +161,12 @@ class TestSpectrumObservationStacker:
         npred1=self.obs_list[0].predicted_counts(model=pwl)
         npred2=self.obs_list[1].predicted_counts(model=pwl)
         # Set npred outside safe range to 0
-        npred1.data[np.nonzero(self.obs_list[0].on_vector.quality)]=0
-        npred2.data[np.nonzero(self.obs_list[1].on_vector.quality)]=0
+        npred1.data.data[np.nonzero(self.obs_list[0].on_vector.quality)]=0
+        npred2.data.data[np.nonzero(self.obs_list[1].on_vector.quality)]=0
 
-        npred_summed=npred1.data + npred2.data
+        npred_summed=npred1.data.data + npred2.data.data
 
-        assert_allclose(npred_stacked.data, npred_summed)
+        assert_allclose(npred_stacked.data.data, npred_summed)
 
 
 @requires_dependency('scipy')
@@ -180,8 +180,10 @@ class TestSpectrumObservationList:
         stacked_obs=self.obs_list.stack()
         assert 'Observation summary report' in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
-        assert_quantity_allclose(stacked_obs.aeff.data[10], 86443352.23037884 * u.cm ** 2)
-        assert_quantity_allclose(stacked_obs.edisp.data[50, 52], 0.029627067949207702)
+        assert_quantity_allclose(stacked_obs.aeff.data.data[10],
+                                 86443352.23037884 * u.cm ** 2)
+        assert_quantity_allclose(stacked_obs.edisp.data.data[50, 52],
+                                 0.029627067949207702)
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)

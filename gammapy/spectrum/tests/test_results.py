@@ -17,7 +17,7 @@ class TestSpectrumFitResult:
         self.best_fit_model = PowerLaw(index=2 * u.Unit(''),
                                        amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
                                        reference=1 * u.TeV)
-        self.npred = self.obs.predicted_counts(self.best_fit_model).data.value
+        self.npred = self.obs.predicted_counts(self.best_fit_model).data.data.value
         self.covar_axis = ['index', 'amplitude']
         self.covar = np.diag([0.1 ** 2, 1e-12 ** 2])
         self.fit_range = [0.1, 50] * u.TeV

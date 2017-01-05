@@ -46,11 +46,11 @@ class TestCountsSpectrum:
         filename = tmpdir / 'test.fits'
         self.spec.write(filename)
         spec2 = CountsSpectrum.read(filename)
-        assert_quantity_allclose(spec2.data.axis('energy').data, self.bins)
+        assert_quantity_allclose(spec2.energy.data, self.bins)
 
     def test_rebin(self):
         rebinned_spec = self.spec.rebin(2)
-        assert rebinned_spec.data.axis('energy').nbins == self.spec.data.axis('energy').nbins / 2
+        assert rebinned_spec.energy.nbins == self.spec.energy.nbins / 2
         assert rebinned_spec.data.data.shape[0] == self.spec.data.data.shape[0] / 2
         assert rebinned_spec.total_counts == self.spec.total_counts
 
@@ -72,9 +72,9 @@ class TestPHACountsSpectrum:
         self.spec = PHACountsSpectrum(data=counts,
                                       energy=self.binning,
                                       quality=quality)
-        self.spec.backscal = 0.3
+        self.spec.meta.backscal = 0.3
         self.spec.obs_id = 42
-        self.spec.livetime = 3 * u.h
+        self.spec.meta.livetime = 3 * u.h
 
     def test_init_wo_unit(self):
         counts = [2, 5]
@@ -94,7 +94,7 @@ class TestPHACountsSpectrum:
                                  self.binning[5])
 
     def test_thresholds(self):
-        self.spec.quality = np.zeros(self.spec.data.axis('energy').nbins, dtype=int)
+        self.spec.quality = np.zeros(self.spec.energy.nbins, dtype=int)
         self.spec.lo_threshold = 1.5 * u.TeV
         self.spec.hi_threshold = 4.5 * u.TeV
         assert (self.spec.quality == [1, 1, 0, 0, 0, 1, 1, 1]).all()
@@ -105,11 +105,11 @@ class TestPHACountsSpectrum:
         filename = tmpdir / 'test2.fits'
         self.spec.write(filename)
         spec2 = PHACountsSpectrum.read(filename)
-        assert_quantity_allclose(spec2.data.axis('energy').data,
-                                 self.spec.data.axis('energy').data)
+        assert_quantity_allclose(spec2.energy.data,
+                                 self.spec.energy.data)
 
     def test_backscal_array(self, tmpdir):
-        self.spec.backscal = np.arange(self.spec.data.axis('energy').nbins)
+        self.spec.meta.backscal = np.arange(self.spec.energy.nbins)
         table = self.spec.to_table()
         assert table['BACKSCAL'][2] == 2
 
