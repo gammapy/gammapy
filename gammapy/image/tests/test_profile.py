@@ -2,10 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.table import Table
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import SkyImage
-from ..profile import compute_binning, image_profile
+from ..profile import compute_binning, image_profile, ImageProfile
 
 
 @requires_dependency('pandas')
@@ -98,3 +101,32 @@ def test_image_lon_profile():
                                  mask_array, errors=True)
 
     assert_allclose(lon_profile3.table['profile'].data, np.zeros(79))
+
+
+class TestImageProfile(object):
+    def setup(self):
+        table = Table()
+        table['x_ref'] = np.arange(-90, 90, 10) * u.deg
+        table['profile'] = np.cos(table['x_ref'].to('rad')) * u.Unit('cm-2 s-1')
+        table['profile_err'] = 0.1 * table['profile']
+        self.profile = ImageProfile(table)
+
+    def test_normalize(self):
+        normalized = self.profile.normalize(mode='integral')
+        profile = normalized.profile
+        assert_quantity_allclose(profile.sum(), 1 * u.Unit('cm-2 s-1'))
+
+        normalized = self.profile.normalize(mode='peak')
+        profile = normalized.profile
+        assert_quantity_allclose(profile.max(), 1 * u.Unit('cm-2 s-1'))
+
+
+    @requires_dependency('scipy')
+    def test_smooth(self):
+        desired = self.profile.profile.sum()
+        smoothed = self.profile.smooth()
+        assert_quantity_allclose(smoothed.profile.sum(), desired)
+
+    @requires_dependency('matplotlib')
+    def test_peek(self):
+        self.profile.peek()

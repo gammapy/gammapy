@@ -256,7 +256,7 @@ class ImageProfile(object):
         if kernel == 'box':
             smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
             # renormalize data
-            if table['profile'].unit.isequivalent('counts'):
+            if table['profile'].unit.is_equivalent('counts'):
                 smoothed *= int(width)
                 smoothed_err = np.sqrt(smoothed)
             else:
@@ -293,11 +293,12 @@ class ImageProfile(object):
             Axes object
         """
         import matplotlib.pyplot as plt
+        
         if ax is None:
             ax = plt.gca()
 
-        y = self.table['profile']
-        x = self.x_ref
+        y = self.table['profile'].data
+        x = self.x_ref.value
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('lon')
         ax.set_ylabel('profile')
@@ -321,15 +322,17 @@ class ImageProfile(object):
             Axes object
         """
         import matplotlib.pyplot as plt
+        
         if ax is None:
             ax = plt.gca()
-        y = self.table['profile']
-        ymin = y - self.table['profile_err']
-        ymax = y + self.table['profile_err']
-        x = self.x_ref
+        
+        y = self.table['profile'].data
+        ymin = y - self.table['profile_err'].data
+        ymax = y + self.table['profile_err'].data
+        x = self.x_ref.value
 
         # plotting defaults
-        kwargs.set_default('alpha', 0.5)
+        kwargs.setdefault('alpha', 0.5)
 
         ax.fill_between(x, ymin, ymax, **kwargs)
         ax.set_xlabel('x (deg)')
@@ -356,6 +359,20 @@ class ImageProfile(object):
         Max. x coordinates.
         """
         return self.table['x_max'].quantity
+
+    @property
+    def profile(self):
+        """
+        Image profile quantity.
+        """
+        return self.table['profile'].quantity
+
+    @property
+    def profile_err(self):
+        """
+        Image profile error quantity.
+        """
+        return self.table['profile'].quantity
 
     def peek(self, figsize=(8, 4.5), **kwargs):
         """
