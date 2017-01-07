@@ -194,6 +194,225 @@ class FluxProfile(object):
         raise NotImplementedError
 
 
+class ImageProfile(object):
+    """
+    Image profile class.
+
+    The image profile data is stored in `~astropy.table.Table` object, with the
+    following columns:
+
+        * `x_ref` Coordinate bin center (required). 
+        * `x_min` Coordinate bin minimum (optional).
+        * `x_max` Coordinate bin maximum (optional).
+        * `profile` Image profile data (required).
+        * `profile_err` Image profile data error (optional).
+
+    """
+    def __init__(self, table):
+        self.table = table
+
+    def smooth(self, kernel='box', radius=0.1 * u.deg, **kwargs):
+        """
+        Smooth profile with error propagation.
+
+        Smoothing is described by a convolution:
+
+        .. math::
+
+                x_j = \sum_i x_{(j - i)} h_i
+
+        Where :math:h_i are coefficients of the convolution kernel.
+
+        Parameters
+        ----------
+        kernel : {'gauss', 'box'}
+            Kernel shape
+        radius : `~astropy.units.Quantity` or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels.
+        kwargs : dict
+            Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
+            ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss').
+
+        Returns
+        -------
+        profile : `ImageProfile`
+            Smoothed image profile.
+        """
+        from scipy.ndimage.filters import uniform_filter, gaussian_filter
+        from scipy.ndimage import convolve
+        from astropy.convolution import Gaussian1DKernel
+
+        table = self.table.copy()
+        profile = table['profile']
+        profile_err = table['profile_err']
+
+        radius = np.abs(radius / np.diff(self.x_ref))[0]
+
+        width = 2 * radius.value + 1
+        if kernel == 'box':
+            smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
+            # renormalize data
+            if tanle['profile'].unit.isequivalent('counts'):
+                smoothed *= int(width)
+                smoothed_err = np.sqrt(smoothed)
+            else:
+                # use gaussian error propagation
+                smoothed_err = np.sqrt(uniform_filter(profile_err ** 2, width))
+        elif kernel == 'gauss':
+            smoothed = gaussian_filter(profile.astype('float'), width, **kwargs)
+            # use gaussian error propagation
+
+            gauss = Gaussian1DKernel(width)
+            err_sum = convolve(profile_err ** 2, gauss.array ** 2)
+            smoothed_err = np.sqrt(err_sum)
+        else:
+            raise ValueError("Not valid kernel choose either 'box' or 'gauss'")
+
+        table['profile'] = smoothed
+        table['profile_err'] = smoothed_err
+        return self.__class__(table)
+
+    def plot(self, ax=None, **kwargs):
+        """
+        Plot image profile.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes object
+        **kwargs : dict
+            Keyword arguments passed to plt.plot()
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object
+        """
+        import matplotlib.pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+
+        y = self.table['profile']
+        x = self.x_ref
+        ax.plot(x, y, **kwargs)
+        ax.set_xlabel('lon')
+        ax.set_ylabel('profile')
+        ax.set_xlim(x.max(), x.min())
+        return ax
+
+    def plot_err(self, ax=None, **kwargs):
+        """
+        Plot image profile error as band.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes object
+        **kwargs : dict
+            Keyword arguments passed to plt.fill_between()
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object
+        """
+        import matplotlib.pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+        y = self.table['profile']
+        ymin = y - self.table['profile_err']
+        ymax = y + self.table['profile_err']
+        x = self.x_ref
+
+        # plotting defaults
+        kwargs.set_default('alpha', 0.5)
+
+        ax.fill_between(x, ymin, ymax, **kwargs)
+        ax.set_xlabel('x (deg)')
+        ax.set_ylabel('profile')
+        return ax
+
+    @property
+    def x_ref(self):
+        """
+        Reference x coordinates.
+        """
+        return self.table['x_ref'].quantity
+
+    @property
+    def x_min(self):
+        """
+        Min. x coordinates.
+        """
+        return self.table['x_min'].quantity
+
+    @property
+    def x_max(self):
+        """
+        Max. x coordinates.
+        """
+        return self.table['x_max'].quantity
+
+    def peek(self, figsize=(8, 4.5), **kwargs):
+        """
+        Show image profile and error.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments passed to plt.plot()
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object
+        """
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        ax = self.plot(ax, **kwargs)
+
+        opts = {}
+        opts['color'] = kwargs.get('c')
+        ax = self.plot_err(ax, **opts)
+        return ax
+
+    def normalize(self, mode='peak'):
+        """
+        Normalize profile to peak value or integral.
+
+        Parameters
+        ----------
+        mode : ['integral', 'peak']
+            Normalize image profile so that it integrates to unity ('integral')
+            or the maximum value corresponds to one ('peak').
+
+        Returns
+        -------
+        profile : `ImageProfile`
+            Normalized image profile.
+        """
+        table = self.table.copy()
+        profile = self.table['profile']
+        if mode == 'peak':
+            norm = np.nanmax(profile)
+        elif mode == 'integral':
+            norm = np.nansum(profile)
+        else:
+            raise ValueError("Not a valid normalization mode. Choose either"
+                             " 'peak' or 'integral'")
+
+        table['profile'] /= norm
+
+        if 'profile_err' in table.colnames:
+            table['profile_err'] /= norm            
+
+        return self.__class__(table)
+
+
+
 def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
                   mask=None, errors=False, standard_error=0.1):
     """Creates a latitude or longitude profile from input flux image HDU.
