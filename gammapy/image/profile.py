@@ -272,8 +272,8 @@ class ImageProfile(object):
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")
 
-        table['profile'] = smoothed
-        table['profile_err'] = smoothed_err
+        table['profile'] = smoothed * self.table['profile'].unit
+        table['profile_err'] = smoothed_err * self.table['profile'].unit
         return self.__class__(table)
 
     def plot(self, ax=None, **kwargs):
