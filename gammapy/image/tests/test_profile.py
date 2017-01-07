@@ -40,21 +40,21 @@ def test_image_lat_profile():
     # Test output
     lat_profile1 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile1['BIN_VALUE'].data.astype(float),
+    assert_allclose(lat_profile1.table['profile'].data.astype(float),
                     2000 * np.ones(39), rtol=1, atol=0.1)
-    assert_allclose(lat_profile1['BIN_ERR'].data,
-                    0.1 * lat_profile1['BIN_VALUE'].data)
+    assert_allclose(lat_profile1.table['profile_err'].data,
+                    0.1 * lat_profile1.table['profile'].data)
 
     lat_profile2 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
                                  counts.to_image_hdu(), errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile2['BIN_ERR'].data,
+    assert_allclose(lat_profile2.table['profile_err'].data,
                     44.721359549995796 * np.ones(39), rtol=1, atol=0.1)
 
     lat_profile3 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
                                  counts.to_image_hdu(), mask_array, errors=True)
 
-    assert_allclose(lat_profile3['BIN_VALUE'].data, np.zeros(39))
+    assert_allclose(lat_profile3.table['profile'].data, np.zeros(39))
 
 
 @requires_data('gammapy-extra')
@@ -83,18 +83,18 @@ def test_image_lon_profile():
     lon_profile1 = image_profile('lon', image, lat, lon, binsz,
                                  errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile1['BIN_VALUE'].data.astype(float),
+    assert_allclose(lon_profile1.table['profile'].data.astype(float),
                     1000 * np.ones(79), rtol=1, atol=0.1)
-    assert_allclose(lon_profile1['BIN_ERR'].data,
-                    0.1 * lon_profile1['BIN_VALUE'].data)
+    assert_allclose(lon_profile1.table['profile_err'].data,
+                    0.1 * lon_profile1.table['profile'].data)
 
     lon_profile2 = image_profile('lon', image, lat, lon, binsz,
                                  counts, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile2['BIN_ERR'].data,
+    assert_allclose(lon_profile2.table['profile_err'].data,
                     31.622776601683793 * np.ones(79), rtol=1, atol=0.1)
 
     lon_profile3 = image_profile('lon', image, lat, lon, binsz, counts,
                                  mask_array, errors=True)
 
-    assert_allclose(lon_profile3['BIN_VALUE'].data, np.zeros(79))
+    assert_allclose(lon_profile3.table['profile'].data, np.zeros(79))

@@ -4,10 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
+from astropy import units as u
 from .core import SkyImage
 
 __all__ = [
     'FluxProfile',
+    'ImageProfile',
     'image_profile',
 ]
 
@@ -254,7 +256,7 @@ class ImageProfile(object):
         if kernel == 'box':
             smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
             # renormalize data
-            if tanle['profile'].unit.isequivalent('counts'):
+            if table['profile'].unit.isequivalent('counts'):
                 smoothed *= int(width)
                 smoothed_err = np.sqrt(smoothed)
             else:
@@ -412,7 +414,6 @@ class ImageProfile(object):
         return self.__class__(table)
 
 
-
 def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
                   mask=None, errors=False, standard_error=0.1):
     """Creates a latitude or longitude profile from input flux image HDU.
@@ -527,13 +528,13 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
                        Quantity(glats_max, 'deg'),
                        values,
                        error_vals],
-                      names=('GLAT_MIN', 'GLAT_MAX', 'BIN_VALUE', 'BIN_ERR'))
+                      names=('x_min', 'x_max', 'profile', 'profile_err'))
 
     elif profile_axis == 'lon':
         table = Table([Quantity(glons_min, 'deg'),
                        Quantity(glons_max, 'deg'),
                        values,
                        error_vals],
-                      names=('GLON_MIN', 'GLON_MAX', 'BIN_VALUE', 'BIN_ERR'))
+                      names=('x_min', 'x_max', 'profile', 'profile_err'))
 
-    return table
+    return ImageProfile(table)
