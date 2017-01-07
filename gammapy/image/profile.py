@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy import units as u
+
 from .core import SkyImage
 
 __all__ = [
@@ -221,8 +223,7 @@ class ImageProfileEstimator(object):
         if axis not in ['lon', 'lat']:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        self.parameters = OrderedDict(method=method, axis=axis, quantity=quantity,
-                                      apply_mask=apply_mask)
+        self.parameters = OrderedDict(method=method, axis=axis, apply_mask=apply_mask)
 
     def _get_x_ref(self, image):
         """
@@ -235,10 +236,10 @@ class ImageProfileEstimator(object):
         coordinates = image.coordinates()
 
         if p['axis'] == 'lat':
-            x_ref = coordinates[:, 0].data.lat.degree
+            x_ref = coordinates[:, 0].data.lat
         elif p['axis'] == 'lon':
             lon = coordinates[0, :].data.lon
-            x_ref = lon.wrap_at('180d').degree
+            x_ref = lon.wrap_at('180d')
         return x_ref
 
     def _estimate_profile(self, image, image_err):
@@ -246,20 +247,20 @@ class ImageProfileEstimator(object):
         Estimate image profile.
         """
         from scipy import ndimage
-        
+
         p = self.parameters
         labels = self._label_image(image)
-        
+
         profile_err = None
 
         index = np.arange(1, len(self._get_x_ref(image)))
-        
+
         if p['method'] == 'sum':
             profile = ndimage.sum(image.data, labels.data, index)
 
             if image.unit.is_equivalent('counts'):
                 profile_err = np.sqrt(profile)
-            else:
+            elif image_err:
                 # gaussian error propagation
                 err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
                 profile_err = np.sqrt(err_sum)
@@ -267,9 +268,10 @@ class ImageProfileEstimator(object):
         elif p['method'] == 'mean':
             # gaussian error propagation
             profile = ndimage.mean(image.data, labels.data, index)
-            N = ndimage.sum(~np.isnan(image_err.data), labels.data, index)
-            err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
-            profile_err = np.sqrt(err_sum) / N
+            if image_err:
+                N = ndimage.sum(~np.isnan(image_err.data), labels.data, index)
+                err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
+                profile_err = np.sqrt(err_sum) / N
 
         return profile, profile_err
 
@@ -278,16 +280,17 @@ class ImageProfileEstimator(object):
         Compute label image.
         """
         p = self.parameters
-        
+
         label_image = SkyImage.empty_like(image)
         coordinates = image.coordinates()
+        x_ref = self._get_x_ref(image)
 
         if p['axis'] == 'lon':
             lon = coordinates.data.lon.wrap_at('180d')
             data = np.digitize(lon.degree, x_ref.deg)
-        
+
         elif p['axis'] == 'lat':
-            lat = coordinates.data.lat.degree    
+            lat = coordinates.data.lat.degree
             data = np.digitize(lat.degree, x_ref.deg)
 
         label_image.data = data
@@ -313,25 +316,28 @@ class ImageProfileEstimator(object):
         p = self.parameters
         image = image.copy()
 
-        if image.unit.is_equivalent('counts'):
+        if image.unit.is_equivalent('count'):
             image_err = SkyImage.empty_like(image)
             image_err.data = np.sqrt(image.data)
-        
+
         if image_err:
-            image_err = images_err.copy()
-        
+            image_err = image_err.copy()
+
         if mask:
             image.data *= mask
             image_err.data *= mask
 
         profile, profile_err = self._estimate_profile(image, image_err)
-        
-        result = Table()
-        result['x_ref'] = self._get_x_ref(image)
-        result['profile'] = profile
 
-        if profile_err:
-            result['profile_err'] = profile_err
+        result = Table()
+        x_ref = self._get_x_ref(image)
+        result['x_min'] = x_ref[:-1]
+        result['x_max'] = x_ref[1:]
+        result['x_ref'] = (x_ref[:-1] + x_ref[1:]) / 2
+        result['profile'] = profile * u.Unit(image.unit)
+
+        if profile_err is not None:
+            result['profile_err'] = profile_err * u.Unit(image.unit)
 
         result.meta['PROFILE_TYPE'] = p['axis']
         return ImageProfile(result)
@@ -403,7 +409,6 @@ class ImageProfile(object):
 
         table = self.table.copy()
         profile = table['profile']
-        profile_err = table['profile_err']
 
         radius = np.abs(radius / np.diff(self.x_ref))[0]
         width = 2 * radius.value + 1
@@ -411,10 +416,10 @@ class ImageProfile(object):
         if kernel == 'box':
             smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
             # renormalize data
-            if table['profile'].unit.is_equivalent('counts'):
+            if table['profile'].unit.is_equivalent('count'):
                 smoothed *= int(width)
                 smoothed_err = np.sqrt(smoothed)
-            else:
+            elif 'profile_err' in table.colnames:
                 # use gaussian error propagation
                 box = Box1DKernel(width)
                 err_sum = convolve(profile_err ** 2, box.array ** 2)
@@ -422,15 +427,17 @@ class ImageProfile(object):
         elif kernel == 'gauss':
             smoothed = gaussian_filter(profile.astype('float'), width, **kwargs)
             # use gaussian error propagation
-
-            gauss = Gaussian1DKernel(width)
-            err_sum = convolve(profile_err ** 2, gauss.array ** 2)
-            smoothed_err = np.sqrt(err_sum)
+            if 'profile_err' in table.colnames:
+                profile_err = table['profile_err']
+                gauss = Gaussian1DKernel(width)
+                err_sum = convolve(profile_err ** 2, gauss.array ** 2)
+                smoothed_err = np.sqrt(err_sum)
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")
 
         table['profile'] = smoothed * self.table['profile'].unit
-        table['profile_err'] = smoothed_err * self.table['profile'].unit
+        if 'profile_err' in table.colnames:
+            table['profile_err'] = smoothed_err * self.table['profile'].unit
         return self.__class__(table)
 
     def plot(self, ax=None, **kwargs):
@@ -529,7 +536,10 @@ class ImageProfile(object):
         """
         Image profile error quantity.
         """
-        return self.table['profile_err'].quantity
+        try:
+            return self.table['profile_err'].quantity
+        except KeyError:
+            return None
 
     def peek(self, figsize=(8, 4.5), **kwargs):
         """
@@ -550,9 +560,10 @@ class ImageProfile(object):
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         ax = self.plot(ax, **kwargs)
 
-        opts = {}
-        opts['color'] = kwargs.get('c')
-        ax = self.plot_err(ax, **opts)
+        if 'profile_err' in self.table.colnames:
+            opts = {}
+            opts['color'] = kwargs.get('c')
+            ax = self.plot_err(ax, **opts)
         return ax
 
     def normalize(self, mode='peak'):
