@@ -196,6 +196,147 @@ class FluxProfile(object):
         raise NotImplementedError
 
 
+# TODO: implement measuring profile along arbitrary directions
+# TODO: think better about error handling
+class ImageProfileEstimator(object):
+    """
+    Estimate profile from image.
+
+    Parameters
+    ----------
+    x_ref : `~astropy.coordinates.Angle`
+        Reference coordinates to define the measument grid.
+    method : ['sum', 'mean']
+        Compute sum or mean within profile bins.
+    axis : ['lon', 'lat']
+        Along which axis to make the profile.
+    """
+    def __init__(self, x_ref=None, method='sum', axis='lon', apply_mask=False):
+
+        self._x_ref = x_ref
+
+        if method not in ['sum', 'mean']:
+            raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
+
+        if axis not in ['lon', 'lat']:
+            raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
+
+        self.parameters = OrderedDict(method=method, axis=axis, quantity=quantity,
+                                      apply_mask=apply_mask)
+
+    def _get_x_ref(self, image):
+        """
+        Get x_ref coordinate array.
+        """
+        if self._x_ref:
+            return self._x_ref
+
+        p = self.parameters
+        coordinates = image.coordinates()
+
+        if p['axis'] == 'lat':
+            x_ref = coordinates[:, 0].data.lat.degree
+        elif p['axis'] == 'lon':
+            lon = coordinates[0, :].data.lon
+            x_ref = lon.wrap_at('180d').degree
+        return x_ref
+
+    def _estimate_profile(self, image, image_err):
+        """
+        Estimate image profile.
+        """
+        from scipy import ndimage
+        
+        p = self.parameters
+        labels = self._label_image(image)
+        
+        profile_err = None
+
+        index = np.arange(1, len(self._get_x_ref(image)))
+        
+        if p['method'] == 'sum':
+            profile = ndimage.sum(image.data, labels.data, index)
+
+            if image.unit.is_equivalent('counts'):
+                profile_err = np.sqrt(profile)
+            else:
+                # gaussian error propagation
+                err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
+                profile_err = np.sqrt(err_sum)
+
+        elif p['method'] == 'mean':
+            # gaussian error propagation
+            profile = ndimage.mean(image.data, labels.data, index)
+            N = ndimage.sum(~np.isnan(image_err.data), labels.data, index)
+            err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
+            profile_err = np.sqrt(err_sum) / N
+
+        return profile, profile_err
+
+    def _label_image(self, image):
+        """
+        Compute label image.
+        """
+        p = self.parameters
+        
+        label_image = SkyImage.empty_like(image)
+        coordinates = image.coordinates()
+
+        if p['axis'] == 'lon':
+            lon = coordinates.data.lon.wrap_at('180d')
+            data = np.digitize(lon.degree, x_ref.deg)
+        
+        elif p['axis'] == 'lat':
+            lat = coordinates.data.lat.degree    
+            data = np.digitize(lat.degree, x_ref.deg)
+
+        label_image.data = data
+        return label_image
+
+
+    def run(self, image, image_err=None, mask=None):
+        """
+        Run image profile estimator.
+
+        Parameters
+        ----------
+        image : `~gammapy.image.SkyImageList`
+            Input image to run profile estimator on.
+        image_err : `~gammapy.image.SkyImageList`
+            Input error image to run profile estimator on.
+
+        Returns
+        -------
+        profile : `~astropy.table.Table`
+            Result table with profile values.
+        """
+        p = self.parameters
+        image = image.copy()
+
+        if image.unit.is_equivalent('counts'):
+            image_err = SkyImage.empty_like(image)
+            image_err.data = np.sqrt(image.data)
+        
+        if image_err:
+            image_err = images_err.copy()
+        
+        if mask:
+            image.data *= mask
+            image_err.data *= mask
+
+        profile, profile_err = self._estimate_profile(image, image_err)
+        
+        result = Table()
+        result['x_ref'] = self._get_x_ref(image)
+        result['profile'] = profile
+
+        if profile_err:
+            result['profile_err'] = profile_err
+
+        result.meta['PROFILE_TYPE'] = p['axis']
+        return ImageProfile(result)
+
+
 class ImageProfile(object):
     """
     Image profile class.
