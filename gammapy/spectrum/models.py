@@ -582,12 +582,16 @@ class TableModel(SpectralModel):
         interpolation can be done linearly or in logarithm
     """
 
-    def __init__(self, energy, values, amplitude=1, scale_logy=True):
+    def __init__(self, energy, values, amplitude=1,
+                 scale_logy=True):
         from scipy.interpolate import interp1d
         self.parameters = Bunch(amplitude=amplitude)
         self.energy = energy
         self.values = values
         self.scale_logy = scale_logy
+
+        self.lo_threshold = energy[0]
+        self.hi_threshold = energy[-1]
 
         loge = np.log10(self.energy.to('eV').value)
         try:
@@ -661,10 +665,37 @@ class TableModel(SpectralModel):
         return cls(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, amplitude):
-        interpy = self.interpy(np.log10(energy.to('eV').value))
+
+        is_array = True
+        try:
+            len(energy)
+        except:
+            is_array = False
+
+        # Not working for astropy.units.quantity.Quantity
+        # if isinstance(energy, (np.ndarray, np.generic)):
+        if is_array:  # Test if array
+            # initialise array value to zero (dim energy)
+            values = np.zeros(len(energy), dtype=float)
+            # mask for energy range
+            mask = (energy >= self.lo_threshold) & (
+                energy <= self.hi_threshold)
+            # apply interpolation for masked values
+            values[mask] = self.interpy(np.log10(energy[mask].to('eV').value))
+            # Get rid of negative values (due to interpolation)
+            # Needed because of the rand.poisson used in SpectrumSimulation class
+            # Should be fixed in the class itself ?
+            values[values < 0] = 0.
+        else:  # if not array
+            # test if energy is in range
+            if (energy >= self.lo_threshold or energy <= self.hi_threshold):
+                values = self.interpy(np.log10(energy.to('eV').value))
+            else:
+                values = 0
+
         if self.scale_logy:
-            interpy = np.power(10, interpy)
-        return amplitude * interpy * self.unit
+            values = np.power(10, values)
+        return amplitude * values * self.unit
 
     def plot(self, energy_range, ax=None, energy_unit='TeV',
              n_points=100, **kwargs):
