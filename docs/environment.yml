@@ -4,8 +4,10 @@ channels:
   - astropy
 
 dependencies:
+  - python=3
   - cython
   - numpy
+  - sphinx
   - scipy
   - scikit-image
   - matplotlib
