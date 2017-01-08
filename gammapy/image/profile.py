@@ -211,7 +211,7 @@ class ImageProfileEstimator(object):
     method : ['sum', 'mean']
         Compute sum or mean within profile bins.
     axis : ['lon', 'lat']
-        Along which axis to make the profile.
+        Along which axis to estimate the profile.
     """
     def __init__(self, x_edges=None, method='sum', axis='lon', apply_mask=False):
 
@@ -570,7 +570,7 @@ class ImageProfile(object):
         Parameters
         ----------
         **kwargs : dict
-            Keyword arguments passed to plt.plot()
+            Keyword arguments passed to `ImageProfile.plot_profile()`
 
         Returns
         -------
