@@ -213,9 +213,9 @@ class ImageProfileEstimator(object):
     axis : ['lon', 'lat']
         Along which axis to make the profile.
     """
-    def __init__(self, x_ref=None, method='sum', axis='lon', apply_mask=False):
+    def __init__(self, x_edges=None, method='sum', axis='lon', apply_mask=False):
 
-        self._x_ref = x_ref
+        self._x_edges = x_edges
 
         if method not in ['sum', 'mean']:
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
@@ -225,22 +225,43 @@ class ImageProfileEstimator(object):
 
         self.parameters = OrderedDict(method=method, axis=axis, apply_mask=apply_mask)
 
-    def _get_x_ref(self, image):
+    def _get_x_edges(self, image):
         """
         Get x_ref coordinate array.
         """
-        if self._x_ref:
-            return self._x_ref
+        if self._x_edges:
+            return self._x_edges
 
         p = self.parameters
-        coordinates = image.coordinates()
+        coordinates = image.coordinates(mode='edges')
 
         if p['axis'] == 'lat':
-            x_ref = coordinates[:, 0].data.lat
+            x_edges = coordinates[:, 0].data.lat
         elif p['axis'] == 'lon':
             lon = coordinates[0, :].data.lon
-            x_ref = lon.wrap_at('180d')
-        return x_ref
+            x_edges = lon.wrap_at('180d')
+        return x_edges
+
+    def _label_image(self, image):
+        """
+        Compute label image.
+        """
+        p = self.parameters
+
+        label_image = SkyImage.empty_like(image)
+        coordinates = image.coordinates(mode='edges')
+        x_edges = self._get_x_edges(image)
+
+        if p['axis'] == 'lon':
+            lon = coordinates.data.lon.wrap_at('180d')
+            data = np.digitize(lon.degree, x_edges.deg)
+
+        elif p['axis'] == 'lat':
+            lat = coordinates.data.lat.degree
+            data = np.digitize(lat.degree, x_edges.deg)
+
+        label_image.data = data
+        return label_image
 
     def _estimate_profile(self, image, image_err):
         """
@@ -253,7 +274,7 @@ class ImageProfileEstimator(object):
 
         profile_err = None
 
-        index = np.arange(1, len(self._get_x_ref(image)))
+        index = np.arange(1, len(self._get_x_edges(image)))
 
         if p['method'] == 'sum':
             profile = ndimage.sum(image.data, labels.data, index)
@@ -323,17 +344,18 @@ class ImageProfileEstimator(object):
         if image_err:
             image_err = image_err.copy()
 
-        if mask:
+        if mask is not None:
+            # TODO: handle nan values with the mask
             image.data *= mask
             image_err.data *= mask
 
         profile, profile_err = self._estimate_profile(image, image_err)
 
         result = Table()
-        x_ref = self._get_x_ref(image)
-        result['x_min'] = x_ref[:-1]
-        result['x_max'] = x_ref[1:]
-        result['x_ref'] = (x_ref[:-1] + x_ref[1:]) / 2
+        x_edges = self._get_x_edges(image)
+        result['x_min'] = x_edges[:-1]
+        result['x_max'] = x_edges[1:]
+        result['x_ref'] = (x_edges[:-1] + x_edges[1:]) / 2
         result['profile'] = profile * u.Unit(image.unit)
 
         if profile_err is not None:
