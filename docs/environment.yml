@@ -1,6 +1,7 @@
 name: astropy
 
 channels:
+  - conda-forge
   - astropy
 
 dependencies:
