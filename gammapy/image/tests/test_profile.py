@@ -5,10 +5,11 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import SkyImage
-from ..profile import compute_binning, image_profile, ImageProfile
+from ..profile import compute_binning, image_profile, ImageProfile, ImageProfileEstimator
 
 
 @requires_dependency('pandas')
@@ -22,10 +23,76 @@ def test_compute_binning():
     assert_allclose(bin_edges, [1, 2, 2.66666667, 4])
 
 
+@requires_dependency('scipy')
+class TestImageProfileEstimator(object):
+
+    def setup(self):
+        unit = u.Unit('cm-2 s-1')
+        nxpix, nypix = 10, 6
+
+        # set up data as a checkerboard of 0.5 and 1.5, so that the mean and sum
+        # are not compeletely trivial to compute
+        data = 1.5 * np.ones((nypix, nxpix))
+        data[slice(0, nypix + 1, 2), slice(0, nxpix + 1, 2)] = 0.5
+        data[slice(1, nypix + 1, 2), slice(1, nxpix + 1, 2)] = 0.5
+
+        self.image = SkyImage.empty(nxpix=nxpix, nypix=nypix, unit=unit)
+        self.image.data = data
+        self.image_err = SkyImage.empty(nxpix=nxpix, nypix=nypix, unit=unit)
+        self.image_err.data = 0.1 * data
+
+    def test_lat_profile_sum(self):
+        p = ImageProfileEstimator(axis='lat', method='sum')
+        profile = p.run(self.image)
+
+        desired = 10 * np.ones(6) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+    def test_lon_profile_sum(self):
+        p = ImageProfileEstimator(axis='lon', method='sum')
+        profile = p.run(self.image)
+
+        desired = 6 * np.ones(10) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+    def test_lat_profile_mean(self):
+        p = ImageProfileEstimator(axis='lat', method='mean')
+        profile = p.run(self.image)
+
+        desired = np.ones(6) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+    def test_lon_profile_mean(self):
+        p = ImageProfileEstimator(axis='lon', method='mean')
+        profile = p.run(self.image)
+
+        desired = np.ones(10) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+    def test_x_edges_lat(self):
+        x_edges = Angle(np.linspace(-0.06, 0.06, 4), 'deg')
+
+        p = ImageProfileEstimator(x_edges=x_edges, axis='lat', method='sum')
+        profile = p.run(self.image)
+
+        desired = 20 * np.ones(3) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+    def test_x_edges_lon(self):
+        x_edges = Angle(np.linspace(-0.1, 0.1, 6), 'deg')
+
+        p = ImageProfileEstimator(x_edges=x_edges, axis='lon', method='sum')
+        profile = p.run(self.image)
+
+        desired = 12 * np.ones(5) * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(profile.profile, desired)
+
+
 @requires_data('gammapy-extra')
 def test_image_lat_profile():
     """Tests GLAT profile with image of 1s of known size and shape."""
     image = SkyImage.empty_like(FermiGalacticCenter.counts(), fill=1.)
+
     coordinates = image.coordinates()
     l = coordinates.data.lon
     b = coordinates.data.lat
@@ -43,6 +110,7 @@ def test_image_lat_profile():
     # Test output
     lat_profile1 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
+
     assert_allclose(lat_profile1.table['profile'].data.astype(float),
                     2000 * np.ones(39), rtol=1, atol=0.1)
     assert_allclose(lat_profile1.table['profile_err'].data,
@@ -106,7 +174,11 @@ def test_image_lon_profile():
 class TestImageProfile(object):
     def setup(self):
         table = Table()
+<<<<<<< HEAD
         table['x_ref'] = np.linspace(-90, 90, 10) * u.deg
+=======
+        table['x_ref'] = np.linspace(-90, 90, 11) * u.deg
+>>>>>>> Add TestImageProfileEstimator test class
         table['profile'] = np.cos(table['x_ref'].to('rad')) * u.Unit('cm-2 s-1')
         table['profile_err'] = 0.1 * table['profile']
         self.profile = ImageProfile(table)
@@ -120,6 +192,12 @@ class TestImageProfile(object):
         profile = normalized.profile
         assert_quantity_allclose(profile.max(), 1 * u.Unit('cm-2 s-1'))
 
+<<<<<<< HEAD
+=======
+    def test_profile_x_edges(self):
+        assert_quantity_allclose(self.profile.x_ref.sum(), 0 * u.deg)
+
+>>>>>>> Add TestImageProfileEstimator test class
     @requires_dependency('scipy')
     @pytest.mark.parametrize('kernel', ['gauss', 'box'])
     def test_smooth(self, kernel):

@@ -199,15 +199,15 @@ class FluxProfile(object):
 
 
 # TODO: implement measuring profile along arbitrary directions
-# TODO: think better about error handling
+# TODO: think better about error handling. e.g. MC based methods
 class ImageProfileEstimator(object):
     """
     Estimate profile from image.
 
     Parameters
     ----------
-    x_ref : `~astropy.coordinates.Angle`
-        Reference coordinates to define the measument grid.
+    x_edges : `~astropy.coordinates.Angle`
+        Coordinate edges to define the measument grid.
     method : ['sum', 'mean']
         Compute sum or mean within profile bins.
     axis : ['lon', 'lat']
@@ -229,7 +229,7 @@ class ImageProfileEstimator(object):
         """
         Get x_ref coordinate array.
         """
-        if self._x_edges:
+        if self._x_edges is not None:
             return self._x_edges
 
         p = self.parameters
@@ -249,7 +249,7 @@ class ImageProfileEstimator(object):
         p = self.parameters
 
         label_image = SkyImage.empty_like(image)
-        coordinates = image.coordinates(mode='edges')
+        coordinates = image.coordinates()
         x_edges = self._get_x_edges(image)
 
         if p['axis'] == 'lon':
@@ -257,7 +257,7 @@ class ImageProfileEstimator(object):
             data = np.digitize(lon.degree, x_edges.deg)
 
         elif p['axis'] == 'lat':
-            lat = coordinates.data.lat.degree
+            lat = coordinates.data.lat
             data = np.digitize(lat.degree, x_edges.deg)
 
         label_image.data = data
