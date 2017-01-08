@@ -16,7 +16,6 @@
 .. _photutils: http://photutils.readthedocs.io
 .. _astroplan: http://astroplan.readthedocs.io
 .. _gwcs: http://gwcs.readthedocs.io
-.. _wcsaxes: https://github.com/astrofrog/wcsaxes
 .. _iminuit: https://github.com/iminuit/iminuit
 .. _probfit: https://github.com/iminuit/probfit
 .. _h5py: http://www.h5py.org/

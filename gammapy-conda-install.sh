@@ -46,11 +46,10 @@ conda install gammapy naima \
 # Nice to have extras
 conda install \
     scikit-image scikit-learn h5py pandas \
-    aplpy wcsaxes photutils
+    aplpy photutils
 # Disk space now: 747 MB
 
 pip install reproject
 pip install iminuit
 
-# This will only work on Python 2:
 conda install sherpa

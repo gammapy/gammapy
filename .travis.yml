@@ -26,13 +26,13 @@ env:
     global:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
-        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa libgfortran regions reproject'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa regions reproject'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes regions reproject'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy sherpa libgfortran regions reproject'
-        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy regions reproject'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy sherpa libgfortran runipy regions reproject'
-        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes aplpy libgfortran runipy regions reproject'
+        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa regions reproject'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils regions reproject'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy sherpa libgfortran regions reproject'
+        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy sherpa libgfortran runipy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy libgfortran runipy regions reproject'
         - PIP_DEPENDENCIES='uncertainties'
         - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true

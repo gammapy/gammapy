@@ -9,9 +9,7 @@ dependencies:
   - scipy
   - scikit-image
   - matplotlib
-  - astropy-helpers
   - astropy
   - regions
   - reproject
-  - wcsaxes
   - aplpy
