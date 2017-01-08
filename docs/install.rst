@@ -46,7 +46,7 @@ functionality available:
 
     conda install \
         scikit-image scikit-learn h5py pandas \
-        aplpy wcsaxes photutils reproject
+        aplpy photutils reproject
 
     pip install iminuit
 
@@ -170,7 +170,7 @@ The following packages have to be installed with pip:
 .. code-block:: bash
 
     pip3 install --user \
-        gammapy naima photutils reproject wcsaxes gwcs astroplan \
+        gammapy naima photutils reproject gwcs astroplan \
         iminuit emcee healpy
 
 Sherpa currently doesn't work on Python 3.
@@ -213,7 +213,7 @@ Having multiple Python versions simultaneously works well, but is only really us
 .. code-block:: bash
 
     pip install --user \
-        gammapy naima photutils reproject wcsaxes gwcs astroplan \
+        gammapy naima photutils reproject gwcs astroplan \
         iminuit
 
 
@@ -314,7 +314,6 @@ Currently optional dependencies that are being considered as core dependencies:
 Allowed optional dependencies:
 
 * `matplotlib`_ for plotting
-* `wcsaxes`_ for sky image plotting (provides a low-level API)
 * `aplpy`_ for sky image plotting (provides a high-level API)
 * `pandas`_ CSV read / write; DataFrame
 * `scikit-learn`_ for some data analysis tasks

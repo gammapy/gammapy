@@ -105,7 +105,7 @@ setup(
     # To find out if everything works run the Gammapy tests.
     install_requires=[
       'numpy>=1.8',
-      'astropy>=1.2',
+      'astropy>=1.3',
       'regions',
       'click',
     ],
@@ -124,7 +124,6 @@ setup(
       ],
       plotting=[
           'matplotlib>=1.4',
-          'wcsaxes>=0.3',
           'aplpy>=0.9',
       ],
       gui=[
@@ -150,6 +149,7 @@ setup(
       'Programming Language :: Python :: 3',
       'Programming Language :: Python :: 3.4',
       'Programming Language :: Python :: 3.5',
+      'Programming Language :: Python :: 3.6',
       'Programming Language :: Python :: Implementation :: CPython',
       'Topic :: Scientific/Engineering :: Astronomy',
       'Development Status :: 3 - Alpha',

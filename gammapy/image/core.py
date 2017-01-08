@@ -840,7 +840,7 @@ class SkyImage(object):
 
         Parameters
         ----------
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
         fig : `~matplotlib.figure.Figure`, optional
             Figure
@@ -849,7 +849,7 @@ class SkyImage(object):
         -------
         fig : `~matplotlib.figure.Figure`, optional
             Figure
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object
         cbar : ?
             Colorbar object (if ``add_cbar=True`` was set)

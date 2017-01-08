@@ -18,6 +18,9 @@ Summary
 
 For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
 
+- Requires Astropy 1.3 or later. (Almost everything will probably still work with older Astropy versions,
+  but we don't test against older versions.)
+
 Contributors
 ++++++++++++
 

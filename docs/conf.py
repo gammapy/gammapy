@@ -75,7 +75,6 @@ intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/',
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['sklearn'] = ('http://scikit-learn.org/stable/', None)
 intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/', None)
-intersphinx_mapping['wcsaxes'] = ('http://wcsaxes.readthedocs.io/en/latest/', None)
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
