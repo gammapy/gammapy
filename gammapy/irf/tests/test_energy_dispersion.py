@@ -21,7 +21,7 @@ def test_EnergyDispersion():
 
     test_e = 3.34 * u.TeV
     # Check for correct normalization
-    test_pdf = edisp.evaluate(e_true=test_e)
+    test_pdf = edisp.data.evaluate(e_true=test_e)
     assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
     # Check bias
     assert_allclose(edisp.get_bias(test_e), 0, atol=1e-4)

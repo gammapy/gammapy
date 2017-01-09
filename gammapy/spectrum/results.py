@@ -305,10 +305,10 @@ class SpectrumFitResult(object):
         fit_range : bool, optional
             Set bins outside the fitted range to 0, default: True
         """
-        n_on = self.obs.on_vector.data.value
-        n_off = self.obs.off_vector.data.value
+        n_on = self.obs.on_vector.data.data.value
+        n_off = self.obs.off_vector.data.data.value
         alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.value
+        mu_sig = self.expected_source_counts.data.data.value
         stat = stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
         if fit_range:
             # TODO: make active bins during the fit available more easily
@@ -335,10 +335,10 @@ class SpectrumFitResult(object):
         According to profile likelihood, see :ref:`wstat`.
         """
         energy = self.obs.e_reco
-        n_on = self.obs.on_vector.data.value
-        n_off = self.obs.off_vector.data.value
+        n_on = self.obs.on_vector.data.data.value
+        n_off = self.obs.off_vector.data.data.value
         alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.value
+        mu_sig = self.expected_source_counts.data.data.value
         data = stats.get_wstat_mu_bkg(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
         return CountsSpectrum(data=data, energy=energy)
 
@@ -347,7 +347,7 @@ class SpectrumFitResult(object):
         """`~gammapy.spectrum.CountsSpectrum` of predicted on counts
         """
         mu_on = self.expected_source_counts.copy()
-        mu_on.data += self.expected_background_counts.data
+        mu_on.data.data += self.expected_background_counts.data.data
         return mu_on
 
     @property
@@ -357,7 +357,7 @@ class SpectrumFitResult(object):
         Prediced on counts - expected on counts
         """
         resspec = self.expected_on_counts.copy()
-        resspec.data -= self.obs.on_vector.data
+        resspec.data.data -= self.obs.on_vector.data.data
         return resspec
 
     def plot(self):
@@ -403,7 +403,7 @@ class SpectrumFitResult(object):
         yy = [0, 0]
         ax.plot(xx, yy, color='black')
 
-        ymax = 1.4 * max(self.residuals.data.value)
+        ymax = 1.4 * max(self.residuals.data.data.value)
         ax.set_ylim(-ymax, ymax)
 
         xmin = self.fit_range.to('TeV').value[0] * 0.8

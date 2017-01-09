@@ -2,8 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
+from astropy.io import fits
 from astropy.table import Table
+from ..extern.bunch import Bunch
 from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
+from ..utils.energy import EnergyBounds
+from ..utils.scripts import make_path
+from ..utils.fits import fits_table_to_table, table_to_fits_table
 
 __all__ = [
     'EffectiveAreaTable',
@@ -11,14 +16,14 @@ __all__ = [
 ]
 
 
-class EffectiveAreaTable(NDDataArray):
+class EffectiveAreaTable(object):
     """Effective Area Table
 
     TODO: Document
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+    energy : `~astropy.units.Quantity`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Effective area
@@ -60,9 +65,16 @@ class EffectiveAreaTable(NDDataArray):
     >>> print(ener)
     0.185368478744 TeV
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+
+    def __init__(self, energy, data, meta=None):
+        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+        if meta is not None:
+            self.meta = Bunch(meta)
+
+    @property
+    def energy(self):
+        return self.data.axis('energy')
 
     def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
         """Plot effective area
@@ -89,7 +101,7 @@ class EffectiveAreaTable(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        eff_area = self.evaluate(energy=energy)
+        eff_area = self.data.evaluate(energy=energy)
         xerr = (energy.value - self.energy.data[:-1].value,
                 self.energy.data[1:].value - energy.value)
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
@@ -99,7 +111,7 @@ class EffectiveAreaTable(NDDataArray):
                       linestyles='dashed')
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Effective Area [{}]'.format(self.data.unit))
+        ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
 
         return ax
 
@@ -121,6 +133,7 @@ class EffectiveAreaTable(NDDataArray):
         instrument : {'HESS', 'HESS2', 'CTA'}
             Instrument name
         """
+        energy = EnergyBounds(energy)
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         # Note that whereas in the paper the parameter index is 1-based,
@@ -134,8 +147,7 @@ class EffectiveAreaTable(NDDataArray):
             ss += 'Valid instruments: HESS, HESS2, CTA'
             raise ValueError(ss)
 
-        ret = cls(energy=energy)
-        xx = ret.energy.nodes.to('MeV').value
+        xx = energy.log_centers.to('MeV').value
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -143,9 +155,9 @@ class EffectiveAreaTable(NDDataArray):
 
         value = g1 * xx ** (-g2) * np.exp(g3 / xx)
 
-        ret.data = value * u.cm ** 2
+        data = value * u.cm ** 2
 
-        return ret
+        return cls(data=data, energy=energy)
 
     @classmethod
     def from_table(cls, table):
@@ -159,7 +171,47 @@ class EffectiveAreaTable(NDDataArray):
         data = table['{}'.format(data_col)].quantity
         return cls(energy=energy, data=data)
 
-    def evaluate(self, fill_nan=False, **kwargs):
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='SPECRESP'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='SPECRESP', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`
+
+        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
+        """
+        energy = self.energy.data
+        ener_lo = energy[:-1]
+        ener_hi = energy[1:]
+        data = self.evaluate_fill_nan()
+        names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
+        meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
+                    hduclas2='SPECRESP')
+        return Table([ener_lo, ener_hi, data], names=names, meta=meta)
+
+    def to_hdulist(self):
+        hdu = table_to_fits_table(self.to_table())
+        prim_hdu = fits.PrimaryHDU()
+        return fits.HDUList([prim_hdu, hdu])
+
+    def write(self, filename, **kwargs):
+        filename = make_path(filename)
+        self.to_hdulist().writeto(str(filename), **kwargs)
+
+    def evaluate_fill_nan(self, **kwargs):
         """Modified evalute function
 
         Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
@@ -168,42 +220,26 @@ class EffectiveAreaTable(NDDataArray):
         other Sofwares, e.g. sherpa, don't like nan values in FITS files. Make
         sure that the replacement happens outside of the energy range, where
         the `~gammapy.irf.EffectiveAreaTable` is used.
-
-        Parameters
-        ----------
-        fill_nan : bool, optional
-            Replace nan values after evaluation
         """
-        retval = super(EffectiveAreaTable, self).evaluate(**kwargs)
-        if fill_nan:
-            idx = np.where(np.isfinite(retval))[0]
-            retval[np.arange(idx[0])] = 0
-            retval[np.arange(idx[-1], len(retval))] = retval[idx[-1]]
+        retval = self.data.evaluate(**kwargs)
+        idx = np.where(np.isfinite(retval))[0]
+        retval[np.arange(idx[0])] = 0
+        retval[np.arange(idx[-1], len(retval))] = retval[idx[-1]]
         return retval
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`
-
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
-        """
-        ener_lo = self.energy.data[:-1]
-        ener_hi = self.energy.data[1:]
-        data = self.evaluate(fill_nan=True)
-        names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
-        meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
-                    hduclas2='SPECRESP')
-        return Table([ener_lo, ener_hi, data], names=names, meta=meta)
 
     @property
     def max_area(self):
         """Maximum effective area"""
-        return self.data[np.where(~np.isnan(self.data))].max()
+        cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
+        return cleaned_data.max()
 
     def find_energy(self, aeff):
         """Find energy for given effective area
 
         A linear interpolation is performed between the two nodes closest to
         the desired effective area value.
+
+        TODO: Move to `~gammapy.utils.nddata.NDDataArray`
 
         Parameters
         ----------
@@ -215,12 +251,11 @@ class EffectiveAreaTable(NDDataArray):
         energy: `~astropy.units.Quantity`
             Energy corresponing to aeff
         """
-        # TODO: Move to base class?
-        idx = np.where(self.data > aeff)[0][0]
+        idx = np.where(self.data.data > aeff)[0][0]
 
         # Linear interpolation between two energy nodes
         energy = np.interp(aeff.value,
-                           (self.data[[idx - 1, idx]].value),
+                           (self.data.data[[idx - 1, idx]].value),
                            (self.energy.nodes[[idx - 1, idx]].value))
         return energy * self.energy.unit
 
@@ -245,20 +280,21 @@ class EffectiveAreaTable(NDDataArray):
         return DataARF(**kwargs)
 
 
-class EffectiveAreaTable2D(NDDataArray):
+class EffectiveAreaTable2D(object):
     """2D Effective Area Table
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+    energy : `~astropy.units.Quantity`
         Bin edges of energy axis
-    offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.DataAxis`
+    offset : `~astropy.units.Quantity`
         Nodes of Offset axis
     data : `~astropy.units.Quantity`
         Effective area
-    meta : dict
-        Optional meta information, TODO: Replace with real arguments
-        supported: ``low_threshold``, ``high_threshold``
+    low_threshold : `~astropy.units.Quantity`, optional 
+        Low energy threshold
+    high_threshold : `~astropy.units.Quantity`, optional 
+        High energy threshold
 
     Examples
     --------
@@ -278,11 +314,28 @@ class EffectiveAreaTable2D(NDDataArray):
     Data           : size =    40, min =  1.000 cm2, max =  1.000 cm2
     """
 
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Primary axis: Energy"""
-    offset = DataAxis()
-    """Secondary axis: Offset from pointing position"""
-    axis_names = ['energy', 'offset']
+    def __init__(self, energy, offset, data, meta=None):
+        axes = [
+            BinnedDataAxis(
+                energy,
+                interpolation_mode='log',
+                name='energy'),
+            DataAxis(
+                offset,
+                interpolation_mode='linear',
+                name='offset')
+        ]
+        self.data = NDDataArray(axes=axes, data=data)
+        if meta is not None:
+            self.meta = Bunch(meta)
+
+    @property
+    def energy(self):
+        return self.data.axis('energy')
+
+    @property
+    def offset(self):
+        return self.data.axis('offset')
 
     @property
     def low_threshold(self):
@@ -311,6 +364,23 @@ class EffectiveAreaTable2D(NDDataArray):
         data = table['{}'.format(data_col)].quantity[0].transpose()
         return cls(offset=offset, energy=energy, data=data, meta=table.meta)
 
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='EFFECTIVE AREA'):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename))
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
+
     def to_effective_area_table(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`
 
@@ -326,7 +396,7 @@ class EffectiveAreaTable2D(NDDataArray):
         else:
             energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
-        area = self.evaluate(offset=offset, energy=energy.nodes)
+        area = self.data.evaluate(offset=offset, energy=energy.nodes)
         return EffectiveAreaTable(energy=energy.data, data=area)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
@@ -354,20 +424,20 @@ class EffectiveAreaTable2D(NDDataArray):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.offset.nodes[[0, -1]].value
-            offset = np.linspace(off_min, off_max, 4) * self.offset.unit
+            off_min, off_max = self.data.axis('offset').nodes[[0, -1]].value
+            offset = np.linspace(off_min, off_max, 4) * self.data.axis('offset').unit
 
         if energy is None:
             energy = self.energy.nodes
 
         for off in offset:
-            area = self.evaluate(offset=off, energy=energy)
+            area = self.data.evaluate(offset=off, energy=energy)
             label = 'offset = {:.1f}'.format(off)
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
-        ax.set_ylabel('Effective Area [{0}]'.format(self.data.unit))
+        ax.set_ylabel('Effective Area [{0}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
 
@@ -399,11 +469,11 @@ class EffectiveAreaTable2D(NDDataArray):
             energy = np.logspace(e_min, e_max, 4) * self.energy.unit
 
         if offset is None:
-            off_lo, off_hi = self.offset.nodes[[0, -1]].to('deg').value
+            off_lo, off_hi = self.data.axis('offset').nodes[[0, -1]].to('deg').value
             offset = np.linspace(off_lo, off_hi, 100) * u.deg
 
         for ee in energy:
-            area = self.evaluate(offset=offset, energy=ee)
+            area = self.data.evaluate(offset=offset, energy=ee)
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
@@ -411,7 +481,7 @@ class EffectiveAreaTable2D(NDDataArray):
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel('Offset ({0})'.format(self.offset.unit))
+        ax.set_xlabel('Offset ({0})'.format(self.data.axis('offset').unit))
         ax.set_ylabel('Relative Effective Area')
         ax.legend(loc='best')
 
@@ -429,15 +499,16 @@ class EffectiveAreaTable2D(NDDataArray):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            vals = self.offset.nodes.value
+            vals = self.data.axis('offset').nodes.value
             offset = np.linspace(vals.min(), vals.max(), 100)
-            offset = offset * self.offset.unit
+            offset = offset * self.data.axis('offset').unit
 
         if energy is None:
             vals = np.log10(self.energy.nodes.value)
-            energy = np.logspace(vals.min(), vals.max(), 100) * self.energy.unit
+            energy = np.logspace(
+                vals.min(), vals.max(), 100) * self.energy.unit
 
-        aeff = self.evaluate(offset=offset, energy=energy)
+        aeff = self.data.evaluate(offset=offset, energy=energy)
         extent = [
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),

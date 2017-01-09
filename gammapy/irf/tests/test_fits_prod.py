@@ -50,7 +50,7 @@ class FitsProductionTester:
 
     def test_aeff(self):
         aeff = self.obs.load(hdu_type='aeff', hdu_class='aeff_2d')
-        actual = aeff.evaluate(energy=self.ref_energy, offset=self.ref_theta)
+        actual = aeff.data.evaluate(energy=self.ref_energy, offset=self.ref_theta)
         desired = self.ref_dict['aeff_ref']
         assert_quantity_allclose(actual, desired)
 

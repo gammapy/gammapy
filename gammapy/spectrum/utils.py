@@ -157,13 +157,12 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
         # Need to fill nan values in aeff due to matrix multiplication with RMF
-        counts = flux * livetime * aeff.evaluate(fill_nan=True)
+        counts = flux * livetime * aeff.evaluate_fill_nan()
         counts = counts.to('')
         reco_counts = edisp.apply(counts, e_reco=e_reco)
     else:
         flux = model.integral(emin=e_reco[:-1], emax=e_reco[1:], intervals=True)
-        reco_counts = flux * livetime * aeff.evaluate(energy=e_reco.log_centers,
-                                                      fill_nan=True)
+        reco_counts = flux * livetime * aeff.evaluate_fill_nan(energy=e_reco.log_centers)
         reco_counts = reco_counts.to('')
 
     return CountsSpectrum(data=reco_counts, energy=e_reco)

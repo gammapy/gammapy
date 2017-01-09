@@ -6,6 +6,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table, QTable
+from .energy import EnergyBounds
 
 __all__ = [
     'table_from_row_data',
@@ -153,17 +154,17 @@ def fits_table_to_table(tbhdu):
 
 
 def energy_axis_to_ebounds(energy):
-    """Convert energy `~gammapy.utils.nddata.BinnedEnergyAxis` to OGIP
-    ``EBOUNDS`` extension
+    """Convert `~gammapy.utils.energy.EnergyBounds` to OGIP ``EBOUNDS`` extension
 
     see
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
     """
+    energy = EnergyBounds(energy)
     table = Table()
 
     table['CHANNEL'] = np.arange(energy.nbins, dtype=np.int16)
-    table['E_MIN'] = energy.data[:-1]
-    table['E_MAX'] = energy.data[1:]
+    table['E_MIN'] = energy[:-1]
+    table['E_MAX'] = energy[1:]
 
     hdu = table_to_fits_table(table)
 
@@ -183,12 +184,11 @@ def energy_axis_to_ebounds(energy):
 
 
 def ebounds_to_energy_axis(ebounds):
-    """Convert ``EBOUNDS`` extension to energy
-    `~gammapy.utils.nddata.BinnedEnergyAxis`
+    """Convert ``EBOUNDS`` extension to `~gammapy.utils.energy.EnergyBounds`
     """
     from .nddata import BinnedDataAxis
     table = fits_table_to_table(ebounds)
     emin = table['E_MIN'].quantity
     emax = table['E_MAX'].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit
-    return BinnedDataAxis(data=energy)
+    return EnergyBounds(energy)

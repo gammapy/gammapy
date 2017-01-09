@@ -21,11 +21,11 @@ class TestCountsSpectrum:
         counts = [2, 5]
         energy = [1, 2, 3] * u.TeV
         spec = CountsSpectrum(data=counts, energy=energy)
-        assert spec.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent(u.ct)
 
         counts = u.Quantity([2, 5])
         spec = CountsSpectrum(data=counts, energy=energy)
-        assert spec.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent(u.ct)
 
     def test_wrong_init(self):
         bins = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
@@ -34,7 +34,7 @@ class TestCountsSpectrum:
 
     def test_evaluate(self):
         test_e = self.bins[2] + 0.1 * u.TeV
-        test_eval = self.spec.evaluate(energy=test_e)
+        test_eval = self.spec.data.evaluate(energy=test_e)
         assert_allclose(test_eval, self.counts[2])
 
     @requires_dependency('matplotlib')
@@ -51,13 +51,13 @@ class TestCountsSpectrum:
     def test_rebin(self):
         rebinned_spec = self.spec.rebin(2)
         assert rebinned_spec.energy.nbins == self.spec.energy.nbins / 2
-        assert rebinned_spec.data.shape[0] == self.spec.data.shape[0] / 2
+        assert rebinned_spec.data.data.shape[0] == self.spec.data.data.shape[0] / 2
         assert rebinned_spec.total_counts == self.spec.total_counts
 
         with pytest.raises(ValueError):
             rebinned_spec = self.spec.rebin(4)
 
-        actual = rebinned_spec.evaluate(energy = [2, 3, 5] * u.TeV)
+        actual = rebinned_spec.data.evaluate(energy = [2, 3, 5] * u.TeV)
         desired = [0, 7, 20] * u.ct
         assert (actual == desired).all()
 
@@ -72,19 +72,19 @@ class TestPHACountsSpectrum:
         self.spec = PHACountsSpectrum(data=counts,
                                       energy=self.binning,
                                       quality=quality)
-        self.spec.backscal = 0.3
+        self.spec.meta.backscal = 0.3
         self.spec.obs_id = 42
-        self.spec.livetime = 3 * u.h
+        self.spec.meta.livetime = 3 * u.h
 
     def test_init_wo_unit(self):
         counts = [2, 5]
         energy = [1, 2, 3] * u.TeV
         spec = PHACountsSpectrum(data=counts, energy=energy)
-        assert spec.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent(u.ct)
 
         counts = u.Quantity([2, 5])
         spec = PHACountsSpectrum(data=counts, energy=energy)
-        assert spec.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent(u.ct)
 
     def test_basic(self):
         assert 'PHACountsSpectrum' in str(self.spec)
@@ -105,10 +105,11 @@ class TestPHACountsSpectrum:
         filename = tmpdir / 'test2.fits'
         self.spec.write(filename)
         spec2 = PHACountsSpectrum.read(filename)
-        assert_quantity_allclose(spec2.energy.data, self.spec.energy.data)
+        assert_quantity_allclose(spec2.energy.data,
+                                 self.spec.energy.data)
 
     def test_backscal_array(self, tmpdir):
-        self.spec.backscal = np.arange(self.spec.energy.nbins)
+        self.spec.meta.backscal = np.arange(self.spec.energy.nbins)
         table = self.spec.to_table()
         assert table['BACKSCAL'][2] == 2
 

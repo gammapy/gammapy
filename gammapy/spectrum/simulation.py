@@ -139,7 +139,7 @@ class SpectrumSimulation(object):
         rand: `~numpy.random.RandomState`
             random state
         """
-        on_counts = rand.poisson(self.npred_source.data.value)
+        on_counts = rand.poisson(self.npred_source.data.data.value)
 
         counts_kwargs = dict(energy=self.e_reco,
                              livetime=self.livetime,
@@ -165,11 +165,11 @@ class SpectrumSimulation(object):
         rand: `~numpy.random.RandomState`
             random state
         """
-        bkg_counts = rand.poisson(self.npred_background.data.value)
-        off_counts = rand.poisson(self.npred_background.data.value / self.alpha)
+        bkg_counts = rand.poisson(self.npred_background.data.data.value)
+        off_counts = rand.poisson(self.npred_background.data.data.value / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data += bkg_counts * u.ct
+        self.on_vector.data.data += bkg_counts * u.ct
 
         # Create off vector
         off_vector = PHACountsSpectrum(energy=self.e_reco,

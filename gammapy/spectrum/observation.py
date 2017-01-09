@@ -153,7 +153,7 @@ class SpectrumObservation(object):
         average value for alpha.
         """
         energy = self.off_vector.energy
-        data = self.off_vector.data * self.alpha
+        data = self.off_vector.data.data * self.alpha
         return CountsSpectrum(data=data, energy=energy)
 
     @property
@@ -205,7 +205,7 @@ class SpectrumObservation(object):
             Stats
         """ 
         if self.off_vector is not None:
-            n_off = int(self.off_vector.data.value[idx])
+            n_off = int(self.off_vector.data.data.value[idx])
             a_off = self.off_vector._backscal_array[idx]
         else:
             n_off = 0
@@ -214,7 +214,7 @@ class SpectrumObservation(object):
         return SpectrumStats(
             energy_min=self.e_reco[idx],
             energy_max=self.e_reco[idx + 1],
-            n_on=int(self.on_vector.data.value[idx]),
+            n_on=int(self.on_vector.data.data.value[idx]),
             n_off=n_off,
             a_on=self.on_vector._backscal_array[idx],
             a_off=a_off,
@@ -654,7 +654,7 @@ class SpectrumObservationStacker(object):
                                             spec.quality)
 
         stacked_spectrum = PHACountsSpectrum(data=stacked_data,
-                                             energy=energy,
+                                             energy=energy.data,
                                              quality=stacked_quality)
         return stacked_spectrum
 
@@ -672,13 +672,13 @@ class SpectrumObservationStacker(object):
             bkscal_off_data = o.off_vector._backscal_array.copy()
             bkscal_off += bkscal_off_data * o.off_vector.counts_in_safe_range
 
-        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.value
-        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.value
+        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.data.value
+        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.data.value
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
         alpha_correction = - 1
-        idx = np.where(self.stacked_off_vector.data == 0)[0]
+        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
         stacked_bkscal_on[idx] = alpha_correction
         stacked_bkscal_off[idx] = alpha_correction
 
@@ -688,10 +688,10 @@ class SpectrumObservationStacker(object):
     def setup_counts_vectors(self):
         """Add correct attributes to stacked counts vectors"""
         total_livetime = self.obs_list.total_livetime
-        self.stacked_on_vector.livetime = total_livetime
-        self.stacked_off_vector.livetime = total_livetime
-        self.stacked_on_vector.backscal = self.stacked_bkscal_on
-        self.stacked_off_vector.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.meta.livetime = total_livetime
+        self.stacked_off_vector.meta.livetime = total_livetime
+        self.stacked_on_vector.meta.backscal = self.stacked_bkscal_on
+        self.stacked_off_vector.meta.backscal = self.stacked_bkscal_off
         self.stacked_on_vector.obs_id = self.obs_list.obs_id
         self.stacked_off_vector.obs_id = self.obs_list.obs_id
 
