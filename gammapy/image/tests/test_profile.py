@@ -2,10 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.table import Table
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import SkyImage
-from ..profile import compute_binning, image_profile
+from ..profile import compute_binning, image_profile, ImageProfile
 
 
 @requires_dependency('pandas')
@@ -40,21 +43,21 @@ def test_image_lat_profile():
     # Test output
     lat_profile1 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile1['BIN_VALUE'].data.astype(float),
+    assert_allclose(lat_profile1.table['profile'].data.astype(float),
                     2000 * np.ones(39), rtol=1, atol=0.1)
-    assert_allclose(lat_profile1['BIN_ERR'].data,
-                    0.1 * lat_profile1['BIN_VALUE'].data)
+    assert_allclose(lat_profile1.table['profile_err'].data,
+                    0.1 * lat_profile1.table['profile'].data)
 
     lat_profile2 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
                                  counts.to_image_hdu(), errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile2['BIN_ERR'].data,
+    assert_allclose(lat_profile2.table['profile_err'].data,
                     44.721359549995796 * np.ones(39), rtol=1, atol=0.1)
 
     lat_profile3 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
                                  counts.to_image_hdu(), mask_array, errors=True)
 
-    assert_allclose(lat_profile3['BIN_VALUE'].data, np.zeros(39))
+    assert_allclose(lat_profile3.table['profile'].data, np.zeros(39))
 
 
 @requires_data('gammapy-extra')
@@ -83,18 +86,52 @@ def test_image_lon_profile():
     lon_profile1 = image_profile('lon', image, lat, lon, binsz,
                                  errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile1['BIN_VALUE'].data.astype(float),
+    assert_allclose(lon_profile1.table['profile'].data.astype(float),
                     1000 * np.ones(79), rtol=1, atol=0.1)
-    assert_allclose(lon_profile1['BIN_ERR'].data,
-                    0.1 * lon_profile1['BIN_VALUE'].data)
+    assert_allclose(lon_profile1.table['profile_err'].data,
+                    0.1 * lon_profile1.table['profile'].data)
 
     lon_profile2 = image_profile('lon', image, lat, lon, binsz,
                                  counts, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile2['BIN_ERR'].data,
+    assert_allclose(lon_profile2.table['profile_err'].data,
                     31.622776601683793 * np.ones(79), rtol=1, atol=0.1)
 
     lon_profile3 = image_profile('lon', image, lat, lon, binsz, counts,
                                  mask_array, errors=True)
 
-    assert_allclose(lon_profile3['BIN_VALUE'].data, np.zeros(79))
+    assert_allclose(lon_profile3.table['profile'].data, np.zeros(79))
+
+
+class TestImageProfile(object):
+    def setup(self):
+        table = Table()
+        table['x_ref'] = np.linspace(-90, 90, 10) * u.deg
+        table['profile'] = np.cos(table['x_ref'].to('rad')) * u.Unit('cm-2 s-1')
+        table['profile_err'] = 0.1 * table['profile']
+        self.profile = ImageProfile(table)
+
+    def test_normalize(self):
+        normalized = self.profile.normalize(mode='integral')
+        profile = normalized.profile
+        assert_quantity_allclose(profile.sum(), 1 * u.Unit('cm-2 s-1'))
+
+        normalized = self.profile.normalize(mode='peak')
+        profile = normalized.profile
+        assert_quantity_allclose(profile.max(), 1 * u.Unit('cm-2 s-1'))
+
+    @requires_dependency('scipy')
+    @pytest.mark.parametrize('kernel', ['gauss', 'box'])
+    def test_smooth(self, kernel):
+        # smoothing should preserve the mean
+        desired_mean = self.profile.profile.mean()
+        smoothed = self.profile.smooth(kernel, radius=3)
+
+        assert_quantity_allclose(smoothed.profile.mean(), desired_mean)
+
+        # smoothing should decrease errors
+        assert smoothed.profile_err.mean() < self.profile.profile_err.mean()
+
+    @requires_dependency('matplotlib')
+    def test_peek(self):
+        self.profile.peek()

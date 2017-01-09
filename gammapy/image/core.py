@@ -1172,8 +1172,8 @@ class SkyImage(object):
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using `SkyImage.wcs_pixel_scale()`.
         kwargs : dict
-            Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
-            ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss') or
+            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
+            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
             `~scipy.ndimage.convolve` ('disk').
 
         Returns
