@@ -203,11 +203,16 @@ class ImageProfile(object):
     The image profile data is stored in `~astropy.table.Table` object, with the
     following columns:
 
-        * `x_ref` Coordinate bin center (required). 
+        * `x_ref` Coordinate bin center (required).
         * `x_min` Coordinate bin minimum (optional).
         * `x_max` Coordinate bin maximum (optional).
         * `profile` Image profile data (required).
         * `profile_err` Image profile data error (optional).
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table instance with the columns specified as above.
 
     """
     def __init__(self, table):
@@ -223,7 +228,16 @@ class ImageProfile(object):
 
                 x_j = \sum_i x_{(j - i)} h_i
 
-        Where :math:h_i are coefficients of the convolution kernel.
+        Where :math:`h_i` are the coefficients of the convolution kernel.
+
+        The corresponding error on :math:`x_j` is then estimated using Gaussian
+        error propagation, neglecting correlations between the individual
+        :math:`x_{(j - i)}`:
+
+        .. math::
+
+                \Delta x_j = \sqrt{\sum_i \Delta x^{2}_{(j - i)} h^{2}_i}
+
 
         Parameters
         ----------
@@ -293,7 +307,7 @@ class ImageProfile(object):
             Axes object
         """
         import matplotlib.pyplot as plt
-        
+
         if ax is None:
             ax = plt.gca()
 
@@ -322,10 +336,10 @@ class ImageProfile(object):
             Axes object
         """
         import matplotlib.pyplot as plt
-        
+
         if ax is None:
             ax = plt.gca()
-        
+
         y = self.table['profile'].data
         ymin = y - self.table['profile_err'].data
         ymax = y + self.table['profile_err'].data
@@ -426,7 +440,7 @@ class ImageProfile(object):
         table['profile'] /= norm
 
         if 'profile_err' in table.colnames:
-            table['profile_err'] /= norm            
+            table['profile_err'] /= norm
 
         return self.__class__(table)
 
