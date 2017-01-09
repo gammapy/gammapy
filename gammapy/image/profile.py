@@ -386,7 +386,7 @@ class ImageProfile(object):
         """
         Image profile error quantity.
         """
-        return self.table['profile'].quantity
+        return self.table['profile_err'].quantity
 
     def peek(self, figsize=(8, 4.5), **kwargs):
         """
