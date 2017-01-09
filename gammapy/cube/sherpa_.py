@@ -2,9 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..utils.energy import EnergyBounds
-import sherpa.astro.ui as sau
 from sherpa.astro.ui import erf
-import astropy.wcs as pywcs
+import astropy.wcs as WCS
 from sherpa.models import ArithmeticModel, Parameter, modelCacher1d
 from sherpa.data import DataND, BaseData
 from sherpa.utils.err import DataErr, NotImplementedErr
@@ -22,9 +21,10 @@ fwhm_to_sigma_erf = np.sqrt(2) * fwhm_to_sigma
 class NormGauss2DInt(ArithmeticModel):
     """Integrated 2D gaussian for sherpa models
     """
+
     def __init__(self, name='normgauss2dint'):
         # Gauss source parameters
-        self.wcs = pywcs.WCS()
+        self.wcs = WCS.WCS()
         self.coordsys = "galactic"  # default
         self.binsize = 1.0
         self.xpos = Parameter(name, 'xpos', 0)  # p[0]
@@ -34,16 +34,6 @@ class NormGauss2DInt(ArithmeticModel):
         self.shape = None
         self.n_ebins = None
         ArithmeticModel.__init__(self, name, (self.xpos, self.ypos, self.ampl, self.fwhm))
-
-    def set_wcs(self, wcs):
-        self.wcs = wcs
-        # We assume bins have the same size along x and y axis
-        self.binsize = np.abs(self.wcs.wcs.cdelt[0])
-        if self.wcs.wcs.ctype[0][0:4] == 'GLON':
-            self.coordsys = 'galactic'
-        elif self.wcs.wcs.ctype[0][0:2] == 'RA':
-            self.coordsys = 'fk5'
-            #        print self.coordsys
 
     def calc(self, p, xlo, xhi, ylo, yhi, *args, **kwargs):
         """
@@ -59,9 +49,6 @@ class NormGauss2DInt(ArithmeticModel):
                              - erf.calc.calc([1, p[0], sigma_erf], xlo))
                             * (erf.calc.calc([1, p[1], sigma_erf], yhi)
                                - erf.calc.calc([1, p[1], sigma_erf], ylo)))
-
-
-sau.add_model(NormGauss2DInt)
 
 
 # This class was copy pasted from sherpa.data.Data2D and modified to account
@@ -269,11 +256,13 @@ class CombinedModel3DInt(ArithmeticModel):
 
     def __init__(self, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
                  spectral_model=None):
+        from scipy import signal
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         self.use_psf = use_psf
         self.exposure = exposure
         self.psf = psf
+        self._fftconvolve = signal.fftconvolve
 
         # Fix spectral ampl parameter
         spectral_model.ampl = 1
@@ -289,7 +278,6 @@ class CombinedModel3DInt(ArithmeticModel):
         ArithmeticModel.__init__(self, name, pars)
 
     def calc(self, pars, elo, xlo, ylo, ehi, xhi, yhi):
-        from scipy import signal
 
         if self.use_psf:
             shape = self.exposure.data.shape
@@ -304,9 +292,9 @@ class CombinedModel3DInt(ArithmeticModel):
                                         yy_lo.ravel(), yy_hi.ravel()).reshape(xx_lo.shape)
             # Convolve the spatial model * exposure by the psf
             for ind_E in range(shape[0]):
-                result_convol[ind_E, :, :] = signal.fftconvolve(a * self.exposure.data[ind_E, :, :],
-                                                                self.psf.data[ind_E, :, :] /
-                                                                (self.psf.data[ind_E, :, :].sum()), mode='same')
+                result_convol[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
+                                                               self.psf.data[ind_E, :, :] /
+                                                               (self.psf.data[ind_E, :, :].sum()), mode='same')
 
             _spatial = result_convol.ravel()
             spectral_1d = self.spectral_model.calc(pars[self._spectral_pars], ee_lo, ee_hi)
@@ -343,6 +331,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
 
     def __init__(self, dimensions, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
                  spectral_model=None, edisp=None):
+        from scipy import signal
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         self.dim_x, self.dim_y, self.dim_Ereco, self.dim_Etrue = dimensions
@@ -351,7 +340,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         self.psf = psf
         self.edisp = edisp
         self.true_energy = EnergyBounds(self.exposure.energies("edges"))
-
+        self._fftconvolve = signal.fftconvolve
         # The shape of the counts cube in (Ereco,x,y)
         self.shape_data = (self.dim_Ereco, self.dim_x, self.dim_y)
         # Array that will store the result after multipliying by the energy resolution in (x,y,Etrue,Ereco)
@@ -372,7 +361,6 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         ArithmeticModel.__init__(self, name, pars)
 
     def calc(self, pars, elo, xlo, ylo, ehi, xhi, yhi):
-        from scipy import signal
         xx_lo = xlo.reshape(self.shape_data)[0, :, :]
         xx_hi = xhi.reshape(self.shape_data)[0, :, :]
         yy_lo = ylo.reshape(self.shape_data)[0, :, :]
@@ -384,9 +372,9 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
             a = self.spatial_model.calc(pars[self._spatial_pars], xx_lo.ravel(), xx_hi.ravel(),
                                         yy_lo.ravel(), yy_hi.ravel()).reshape(xx_lo.shape)
             for ind_E in range(self.dim_Etrue):
-                spatial[ind_E, :, :] = signal.fftconvolve(a * self.exposure.data[ind_E, :, :],
-                                                          self.psf.data[ind_E, :, :] /
-                                                          (self.psf.data[ind_E, :, :].sum()), mode='same')
+                spatial[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
+                                                         self.psf.data[ind_E, :, :] /
+                                                         (self.psf.data[ind_E, :, :].sum()), mode='same')
                 spatial[np.isnan(spatial)] = 0
         else:
             spatial_2d = self.spatial_model.calc(pars[self._spatial_pars], xx_lo.ravel(), xx_hi.ravel(),

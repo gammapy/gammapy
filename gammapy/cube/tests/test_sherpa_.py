@@ -103,7 +103,7 @@ def testCombinedModel3DInt():
                                       spatial_model=spatial_model, spectral_model=spectral_model)
 
     # Set starting values
-    center = SkyCoord.from_name("Crab").galactic
+    center = SkyCoord(83.633083, 22.0145, unit="deg").galactic
     source_model.gamma = 2.2
     source_model.xpos = center.l.value
     source_model.ypos = center.b.value
@@ -174,7 +174,7 @@ def testCombinedModel3DIntConvolveEdisp():
                                                    edisp=rmf.data)
 
     # Set starting values
-    center = SkyCoord.from_name("Crab").galactic
+    center = SkyCoord(83.633083, 22.0145, unit="deg").galactic
     source_model.gamma = 2.2
     source_model.xpos = center.l.value
     source_model.ypos = center.b.value
