@@ -303,15 +303,15 @@ class ImageProfileEstimator(object):
 
         label_image = SkyImage.empty_like(image)
         coordinates = image.coordinates()
-        x_ref = self._get_x_ref(image)
+        x_edges = self._get_x_edges(image)
 
         if p['axis'] == 'lon':
             lon = coordinates.data.lon.wrap_at('180d')
-            data = np.digitize(lon.degree, x_ref.deg)
+            data = np.digitize(lon.degree, x_edges.deg)
 
         elif p['axis'] == 'lat':
-            lat = coordinates.data.lat.degree
-            data = np.digitize(lat.degree, x_ref.deg)
+            lat = coordinates.data.lat
+            data = np.digitize(lat.degree, x_edges.deg)
 
         label_image.data = data
         return label_image
@@ -441,6 +441,7 @@ class ImageProfile(object):
                 smoothed *= int(width)
                 smoothed_err = np.sqrt(smoothed)
             elif 'profile_err' in table.colnames:
+                profile_err = table['profile_err']
                 # use gaussian error propagation
                 box = Box1DKernel(width)
                 err_sum = convolve(profile_err ** 2, box.array ** 2)
