@@ -245,11 +245,11 @@ class ImageProfile(object):
             Kernel shape
         radius : `~astropy.units.Quantity` or float
             Smoothing width given as quantity or float. If a float is given it
-            interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it converted to pixels.
+            is interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it is converted to pixels using `xref[1] - x_ref[0]`.
         kwargs : dict
             Keyword arguments passed to `~scipy.ndimage.uniform_filter`
-            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss').
+            ('box') and `~scipy.ndimage.gaussian_filter` ('gauss').
 
         Returns
         -------
@@ -265,8 +265,8 @@ class ImageProfile(object):
         profile_err = table['profile_err']
 
         radius = np.abs(radius / np.diff(self.x_ref))[0]
-
         width = 2 * radius.value + 1
+
         if kernel == 'box':
             smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
             # renormalize data
