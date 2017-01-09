@@ -290,14 +290,14 @@ class ImageProfileEstimator(object):
         label_image.data = data
         return label_image
 
-    def _estimate_profile(self, image, image_err):
+    def _estimate_profile(self, image, image_err, mask):
         """
         Estimate image profile.
         """
         from scipy import ndimage
 
         p = self.parameters
-        labels = self._label_image(image)
+        labels = self._label_image(image, mask)
 
         profile_err = None
 
@@ -323,7 +323,7 @@ class ImageProfileEstimator(object):
 
         return profile, profile_err
 
-    def _label_image(self, image):
+    def _label_image(self, image, mask=None):
         """
         Compute label image.
         """
@@ -340,6 +340,10 @@ class ImageProfileEstimator(object):
         elif p['axis'] == 'lat':
             lat = coordinates.data.lat
             data = np.digitize(lat.degree, x_edges.deg)
+
+        if mask is not None:
+            # assign masked values to background
+            data[mask.data] = 0
 
         label_image.data = data
         return label_image
@@ -373,12 +377,7 @@ class ImageProfileEstimator(object):
         if image_err:
             image_err = image_err.copy()
 
-        if mask is not None:
-            # TODO: handle nan values with the mask
-            image.data *= mask
-            image_err.data *= mask
-
-        profile, profile_err = self._estimate_profile(image, image_err)
+        profile, profile_err = self._estimate_profile(image, image_err, mask)
 
         result = Table()
         x_edges = self._get_x_edges(image)
