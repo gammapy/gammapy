@@ -248,8 +248,8 @@ class ImageProfile(object):
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels.
         kwargs : dict
-            Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
-            ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss').
+            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
+            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss').
 
         Returns
         -------
@@ -301,7 +301,7 @@ class ImageProfile(object):
         ax : `~matplotlib.axes.Axes`
             Axes object
         **kwargs : dict
-            Keyword arguments passed to plt.plot()
+            Keyword arguments passed to `~matplotlib.axes.Axes.plot`
 
         Returns
         -------
