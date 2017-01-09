@@ -167,11 +167,12 @@ def testCombinedModel3DIntConvolveEdisp():
     # Setup combined spatial and spectral model
     spatial_model = NormGauss2DInt('spatial-model')
     spectral_model = PowLaw1D('spectral-model')
-    dimensions = [exposure_3d.data.shape[1], exposure_3d.data.shape[2], rmf.data.shape[1], exposure_3d.data.shape[0]]
+    dimensions = [exposure_3d.data.shape[1], exposure_3d.data.shape[2], rmf.data.data.shape[1],
+                  exposure_3d.data.shape[0]]
     source_model = CombinedModel3DIntConvolveEdisp(dimensions=dimensions, use_psf=True, exposure=exposure_3d,
                                                    psf=psf_3d,
                                                    spatial_model=spatial_model, spectral_model=spectral_model,
-                                                   edisp=rmf.data)
+                                                   edisp=rmf.data.data)
 
     # Set starting values
     center = SkyCoord(83.633083, 22.0145, unit="deg").galactic
