@@ -174,11 +174,7 @@ def test_image_lon_profile():
 class TestImageProfile(object):
     def setup(self):
         table = Table()
-<<<<<<< HEAD
-        table['x_ref'] = np.linspace(-90, 90, 10) * u.deg
-=======
         table['x_ref'] = np.linspace(-90, 90, 11) * u.deg
->>>>>>> Add TestImageProfileEstimator test class
         table['profile'] = np.cos(table['x_ref'].to('rad')) * u.Unit('cm-2 s-1')
         table['profile_err'] = 0.1 * table['profile']
         self.profile = ImageProfile(table)
@@ -192,12 +188,9 @@ class TestImageProfile(object):
         profile = normalized.profile
         assert_quantity_allclose(profile.max(), 1 * u.Unit('cm-2 s-1'))
 
-<<<<<<< HEAD
-=======
     def test_profile_x_edges(self):
         assert_quantity_allclose(self.profile.x_ref.sum(), 0 * u.deg)
 
->>>>>>> Add TestImageProfileEstimator test class
     @requires_dependency('scipy')
     @pytest.mark.parametrize('kernel', ['gauss', 'box'])
     def test_smooth(self, kernel):
