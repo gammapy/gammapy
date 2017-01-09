@@ -10,9 +10,8 @@ from astropy import units as u
 from .core import SkyImage
 
 __all__ = [
-    'FluxProfile',
     'ImageProfile',
-    'image_profile',
+    'ImageProfileEstimator'
 ]
 
 
