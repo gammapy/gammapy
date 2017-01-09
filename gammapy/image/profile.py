@@ -206,13 +206,41 @@ class ImageProfileEstimator(object):
     Parameters
     ----------
     x_edges : `~astropy.coordinates.Angle`
-        Coordinate edges to define the measument grid.
+        Coordinate edges to define a custom measument grid (optional).
     method : ['sum', 'mean']
         Compute sum or mean within profile bins.
     axis : ['lon', 'lat']
         Along which axis to estimate the profile.
+
+    Examples
+    --------
+    This example shows how to compute a counts profile for the Fermi galactic
+    center region:
+
+    .. code::
+
+        import matplotlib.pyplot as plt
+        from gammapy.datasets import FermiGalacticCenter
+        from gammapy.image import ImageProfile, ImageProfileEstimator
+        from gammapy.image import SkyImage
+        from astropy import units as u
+
+        # load example data
+        fermi_cts = SkyImage.from_image_hdu(FermiGalacticCenter.counts())
+        fermi_cts.unit = u.count
+
+        # set up profile estimator and run
+        p = ImageProfileEstimator(axis='lon', method='sum')
+        profile = p.run(fermi_cts)
+
+        # smooth profile and plot
+        smoothed = profile.smooth(kernel='gauss')
+        smoothed.peek()
+
+        plt.show()
+
     """
-    def __init__(self, x_edges=None, method='sum', axis='lon', apply_mask=False):
+    def __init__(self, x_edges=None, method='sum', axis='lon'):
 
         self._x_edges = x_edges
 
@@ -222,7 +250,7 @@ class ImageProfileEstimator(object):
         if axis not in ['lon', 'lat']:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        self.parameters = OrderedDict(method=method, axis=axis, apply_mask=apply_mask)
+        self.parameters = OrderedDict(method=method, axis=axis)
 
     def _get_x_edges(self, image):
         """
@@ -323,15 +351,17 @@ class ImageProfileEstimator(object):
 
         Parameters
         ----------
-        image : `~gammapy.image.SkyImageList`
+        image : `~gammapy.image.SkyImage`
             Input image to run profile estimator on.
-        image_err : `~gammapy.image.SkyImageList`
+        image_err : `~gammapy.image.SkyImage`
             Input error image to run profile estimator on.
+        mask : `~gammapy.image.SkyMask`
+            Optional mask to exclude regions from the measurement.
 
         Returns
         -------
-        profile : `~astropy.table.Table`
-            Result table with profile values.
+        profile : `ImageProfile`
+            Result image profile object.
         """
         p = self.parameters
         image = image.copy()
