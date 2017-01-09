@@ -277,7 +277,7 @@ class Psf68Table(object):
         return ax
 
 
-class SensitivityTable(NDDataArray):
+class SensitivityTable(object):
     """Sensitivity Table
 
     The IRF format should be compliant with the one discussed
@@ -291,9 +291,13 @@ class SensitivityTable(NDDataArray):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+    def __init__(self, energy, data):
+        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axis('energy')
 
     @classmethod
     def from_table(cls, table):
@@ -307,6 +311,23 @@ class SensitivityTable(NDDataArray):
                            energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
         return cls(energy=energy, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='SENSITIVITY'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='SENSITVITY', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot sensitivity
@@ -329,14 +350,14 @@ class SensitivityTable(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        values = self.evaluate(energy=energy)
+        values = self.data.evaluate(energy=energy)
         xerr = (energy.value - self.energy.data[:-1].value,
                 self.energy.data[1:].value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Sensitivity [{}]'.format(self.data.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.energy.data.unit))
+        ax.set_ylabel('Sensitivity [{}]'.format(self.data.data.unit))
 
         return ax
 
@@ -395,10 +416,7 @@ class CTAPerf(object):
         edisp = EnergyDispersion.from_hdulist(hdulist=hdulist)
         bkg = BgRateTable.from_hdulist(hdulist=hdulist)
         psf = Psf68Table.from_hdulist(hdulist=hdulist)
-
-        sens = SensitivityTable.from_hdulist(
-            fits.HDUList([hdu_list[0], hdu_list['SENSITIVITY']])
-        )
+        sens = SensitivityTable.from_hdulist(hdulist=hdulist)
 
         return cls(
             aeff=aeff,

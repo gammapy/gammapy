@@ -24,6 +24,8 @@ __all__ = [
 class NDDataArray(object):
     """ND Data Array Base class
 
+    for usage examples see :gp-extra-notebook:`nddata_demo`
+
     Parameters
     ----------
     axes : list
@@ -235,6 +237,15 @@ class DataAxis(object):
         self.data = Quantity(data)
         self.name = name
         self._interpolation_mode = interpolation_mode
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\nName: {}'.format(self.name)
+        ss += '\nUnit: {}'.format(self.unit)
+        ss += '\nNodes: {}'.format(self.nbins)
+        ss += '\nInterpolation mode: {}'.format(self.interpolation_mode)
+
+        return ss
 
     @property
     def unit(self):
