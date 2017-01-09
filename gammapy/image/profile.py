@@ -258,7 +258,7 @@ class ImageProfile(object):
         """
         from scipy.ndimage.filters import uniform_filter, gaussian_filter
         from scipy.ndimage import convolve
-        from astropy.convolution import Gaussian1DKernel
+        from astropy.convolution import Gaussian1DKernel, Box1DKernel
 
         table = self.table.copy()
         profile = table['profile']
@@ -275,7 +275,9 @@ class ImageProfile(object):
                 smoothed_err = np.sqrt(smoothed)
             else:
                 # use gaussian error propagation
-                smoothed_err = np.sqrt(uniform_filter(profile_err ** 2, width))
+                box = Box1DKernel(width)
+                err_sum = convolve(profile_err ** 2, box.array ** 2)
+                smoothed_err = np.sqrt(err_sum)
         elif kernel == 'gauss':
             smoothed = gaussian_filter(profile.astype('float'), width, **kwargs)
             # use gaussian error propagation

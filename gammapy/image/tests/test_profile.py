@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import SkyImage
@@ -106,7 +106,7 @@ def test_image_lon_profile():
 class TestImageProfile(object):
     def setup(self):
         table = Table()
-        table['x_ref'] = np.arange(-90, 90, 10) * u.deg
+        table['x_ref'] = np.linspace(-90, 90, 10) * u.deg
         table['profile'] = np.cos(table['x_ref'].to('rad')) * u.Unit('cm-2 s-1')
         table['profile_err'] = 0.1 * table['profile']
         self.profile = ImageProfile(table)
@@ -120,12 +120,17 @@ class TestImageProfile(object):
         profile = normalized.profile
         assert_quantity_allclose(profile.max(), 1 * u.Unit('cm-2 s-1'))
 
-
     @requires_dependency('scipy')
-    def test_smooth(self):
-        desired = self.profile.profile.sum()
-        smoothed = self.profile.smooth()
-        assert_quantity_allclose(smoothed.profile.sum(), desired)
+    @pytest.mark.parametrize('kernel', ['gauss', 'box'])
+    def test_smooth(self, kernel):
+        # smoothing should preserve the mean
+        desired_mean = self.profile.profile.mean()
+        smoothed = self.profile.smooth(kernel, radius=3)
+
+        assert_quantity_allclose(smoothed.profile.mean(), desired_mean)
+
+        # smoothing should decrease errors
+        assert smoothed.profile_err.mean() < self.profile.profile_err.mean()
 
     @requires_dependency('matplotlib')
     def test_peek(self):
