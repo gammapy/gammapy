@@ -40,7 +40,12 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#834] Bump to require Astropy v1.3 (Christoph Deil)
+- [#833] Add image profile class (Axel Donath)
+- [#832] Improve NDDataArray (use composition, not inheritance) (Johannes King)
+- [#831] Add CTA Sensitivity class and plot improvements (Julien Lefaucheur)
 - [#830] Add gammapy.utils.modeling and GammaCat to XML (Christoph Deil)
+- [#827] Add energy dispersion for 3D spectral analysis (Léa Jouvin)
 - [#826] Add sky cube computation for IACT data (Léa Jouvin)
 - [#825] Update astropy-helpers to v1.3 (Brigitta Sipocz)
 - [#824] Add XSPEC table absorption model to spectral table model (Julien Lefaucheur)
