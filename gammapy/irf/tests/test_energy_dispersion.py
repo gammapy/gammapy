@@ -10,6 +10,7 @@ from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
 
+@requires_dependency('scipy')
 class TestEnergyDispersion:
     def setup(self):
         e_true = np.logspace(0, 1, 101) * u.TeV
@@ -97,20 +98,23 @@ class TestEnergyDispersion2D():
         desired = 1
         assert_allclose(actual, desired, rtol=1e-1)
 
+        # Check value
+        response2 = self.edisp.get_response(offset=0.2 * u.deg,
+                                            e_true=1.2 * u.TeV)
+        assert_allclose(response2[20], 9.2941217306683827e-05) 
+
     def test_exporter(self):
         # Check RMF exporter
         offset = Angle(0.612, 'deg')
         e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
         e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, 'TeV')
         rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
+        assert_allclose(rmf.data.data[2,3], 0.10531216786)
         actual = rmf.pdf_matrix[2]
         e_val = np.sqrt(e_true[2] * e_true[3])
         desired = self.edisp.get_response(offset, e_val, e_reco)
-
         assert_equal(actual, desired)
 
-    def test_to_energy_dispersion(self):
-        pass
-        #dispersion1d = self.edisp.to_energy_dispersion()
-        #print(dispersion1d)
-
+    @requires_dependency('matplotlib')
+    def test_plot(self):
+        self.edisp.peek()

@@ -565,13 +565,19 @@ class EnergyDispersion2D(object):
         plt.loglog()
 
     """
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0)
+    """Default Interpolation kwargs for `~NDDataArray`"""
+
     def __init__(self, e_true, migra, offset, data, interp_kwargs=None):
+        if interp_kwargs is None:
+            interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(e_true, interpolation_mode='log', name='e_true'),
             BinnedDataAxis(migra, interpolation_mode='linear', name='migra'),
             DataAxis(offset, interpolation_mode='linear', name='offset')
         ]
-        self.data = NDDataArray(axes=axes, data=data)                       
+        self.data = NDDataArray(axes=axes, data=data,
+                                interp_kwargs=interp_kwargs)                       
 
     @property
     def e_true(self):
@@ -644,8 +650,10 @@ class EnergyDispersion2D(object):
             Energy disperion matrix
         """
         offset=Angle(offset)
-        e_true=self.ebounds if e_true is None else EnergyBounds(e_true)
-        e_reco=self.ebounds if e_reco is None else EnergyBounds(e_reco)
+        e_true=self.e_true.data if e_true is None else e_true
+        e_reco=self.e_true.data if e_reco is None else e_reco
+        e_true = EnergyBounds(e_true)
+        e_reco = EnergyBounds(e_reco)
 
         rm=[]
 
@@ -660,7 +668,8 @@ class EnergyDispersion2D(object):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
-        energy band. In each reco bin, you integrate with a riemann sum over the default migra bin of your analysis.
+        energy band. In each reco bin, you integrate with a riemann sum over
+        the default migra bin of your analysis.
 
         Parameters
         ----------
@@ -676,16 +685,14 @@ class EnergyDispersion2D(object):
         rv : `~numpy.ndarray`
             Redistribution vector
         """
-        # NOTE: This is to make the code below work, restructuring needed
-        migra_lo = self.migra.data[:-1]
-        migra_hi = self.migra.data[1:]
 
         e_true=Energy(e_true)
 
         # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
-            e_reco=EnergyBounds(self.migra.nodes * e_true)
-            migra=self.migra
+            e_reco=EnergyBounds.from_lower_and_upper_bounds(
+                self.migra.lo * e_true, self.migra.hi * e_true)
+            migra=self.migra.nodes
 
         # Translate given e_reco binning to migra at bin center
         else:
@@ -694,11 +701,11 @@ class EnergyDispersion2D(object):
             migra=center / e_true
 
         # ensure to have a normalized edisp
-        migra_bin=migra_hi - migra_lo
+        migra_bin=self.migra.hi - self.migra.lo
         if (migra_bin[0] == migra_bin[1]):
-            migra_mean=1 / 2. * (migra_hi + migra_lo)
+            migra_mean=1 / 2. * (self.migra.hi + self.migra.lo)
         else:
-            migra_mean=np.sqrt(migra_hi * migra_lo)
+            migra_mean=np.sqrt(self.migra.hi * self.migra.lo)
         val_norm=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
         norm=np.sum(val_norm * migra_bin)
 
@@ -740,6 +747,7 @@ class EnergyDispersion2D(object):
                     integral[i]=np.sum(val * migra_bin_reco) / norm
         return integral
 
+
     def plot_migration(self, ax=None, offset=None, e_true=None,
                        migra=None, **kwargs):
         """Plot energy dispersion for given offset and true energy.
@@ -772,11 +780,11 @@ class EnergyDispersion2D(object):
             e_true=Energy([0.1, 1, 10], 'TeV')
         else:
             e_true=np.atleast_1d(Energy(e_true))
-        migra=self.migra if migra is None else migra
+        migra=self.migra.nodes if migra is None else migra
 
         for ener in e_true:
             for off in offset:
-                disp=self.evaluate(offset=off, e_true=ener, migra=migra)
+                disp=self.data.evaluate(offset=off, e_true=ener, migra=migra)
                 label='offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
                 ax.plot(migra, disp, label=label, **kwargs)
 
@@ -817,13 +825,13 @@ class EnergyDispersion2D(object):
         if offset is None:
             offset=Angle([1], 'deg')
         if e_true is None:
-            e_true=self.energy
+            e_true=self.e_true.nodes
         if migra is None:
-            migra=self.migra
+            migra=self.migra.nodes
 
-        z=self.evaluate(offset=offset, e_true=e_true, migra=migra)
-        x=e_true.value
-        y=migra
+        z=self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
+        y=e_true.value
+        x=migra
 
         ax.pcolor(x, y, z, **kwargs)
         ax.semilogx()
@@ -853,17 +861,6 @@ class EnergyDispersion2D(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += array_stats_str(self.energy, 'energy')
-        ss += array_stats_str(self.offset, 'offset')
-        ss += array_stats_str(self.migra, 'migra')
-        ss += array_stats_str(self.dispersion, 'dispersion')
-
-        energy=Energy('1 TeV')
-        e_reco=EnergyBounds([0.8, 1.2], 'TeV')
-        offset=Angle('0.5 deg')
-        p=self.get_response(offset, energy, e_reco)[0]
-
-        ss += 'Probability to reconstruct a {} photon in the range {} at {}' \
-              ' offset: {:.2f}'.format(energy, e_reco, offset, p)
+        ss += '\n{}'.format(self.data)
 
         return ss

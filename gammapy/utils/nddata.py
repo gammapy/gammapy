@@ -362,7 +362,15 @@ class BinnedDataAxis(DataAxis):
     @property
     def bin_width(self):
         """Bin width"""
-        return self.data[1:] - self.data[:-1]
+        return self.hi - self.lo
+
+    @property
+    def lo(self):
+        return self.data[:-1]
+
+    @property
+    def hi(self):
+        return self.data[1:]
 
     @property
     def nodes(self):
