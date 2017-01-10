@@ -8,7 +8,6 @@ from ...datasets import gammapy_extra
 from ...irf import EnergyDispersion
 from ...utils.testing import requires_dependency, requires_data
 from .. import SkyCube
-from ..sherpa_ import NormGauss2DInt
 
 
 @requires_dependency('sherpa')
@@ -69,7 +68,7 @@ def testCombinedModel3DInt():
     from sherpa.optmethods import NelderMead
     from sherpa.stats import Cash
     from sherpa.fit import Fit
-    from ..sherpa_ import CombinedModel3DInt
+    from ..sherpa_ import CombinedModel3DInt, NormGauss2DInt
 
     # Set the counts
     filename = gammapy_extra.filename('test_datasets/cube/counts_cube.fits')
@@ -133,7 +132,7 @@ def testCombinedModel3DIntConvolveEdisp():
     from sherpa.optmethods import NelderMead
     from sherpa.stats import Cash
     from sherpa.fit import Fit
-    from ..sherpa_ import CombinedModel3DIntConvolveEdisp
+    from ..sherpa_ import CombinedModel3DIntConvolveEdisp, NormGauss2DInt
 
     # Set the counts
     filename = gammapy_extra.filename('test_datasets/cube/counts_cube.fits')
