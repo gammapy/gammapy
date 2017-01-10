@@ -50,46 +50,67 @@ class TestEnergyDispersion:
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_EnergyDispersion2D():
-    filename = gammapy_extra.filename(
-        'test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
-    edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+class TestEnergyDispersion2D():
+    def setup(self):
+        filename = gammapy_extra.filename(
+            'test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
+        self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
-    # Check that nodes are evaluated correctly
-    e_node = 12
-    off_node = 3
-    m_node = 5
-    offset = edisp.offset[off_node]
-    energy = edisp.energy[e_node]
-    migra = edisp.migra[m_node]
-    actual = edisp.evaluate(offset, energy, migra)
-    desired = edisp.dispersion[off_node, m_node, e_node]
-    assert_allclose(actual, desired, rtol=1e-06)
+    def test_evaluation(self):
+        # TODO: Move to tests for NDDataArray
+        # Check that nodes are evaluated correctly
+        e_node = 12
+        off_node = 3
+        m_node = 5
+        offset = self.edisp.offset.nodes[off_node]
+        energy = self.edisp.e_true.nodes[e_node]
+        migra = self.edisp.migra.nodes[m_node]
+        actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
+        desired = self.edisp.data.data[e_node, m_node, off_node]
+        assert_allclose(actual, desired, rtol=1e-06)
+        assert_allclose(actual, 0.09388659149, rtol=1e-06)
 
-    # Check evaluation at all nodes
-    actual = edisp.evaluate().shape
-    desired = (len(edisp.offset), len(edisp.migra), len(edisp.energy))
-    assert_equal(actual, desired)
+        # Check output shape
+        energy = [1,2] * u.TeV
+        migra = [0.98, 0.97, 0.7]
+        offset = [0.1, 0.2] * u.deg
+        actual = self.edisp.data.evaluate(e_true=energy, migra=migra, offset=offset)
+        assert_allclose(actual.shape, (2,3,2))
 
-    # Get response
-    e_reco = EnergyBounds.equal_log_spacing(1 * u.GeV, 100 * u.TeV, 100)
-    response = edisp.get_response('1 deg', '1 TeV', e_reco)
-    actual = len(response)
-    desired = e_reco.nbins
-    assert_equal(actual, desired)
-    assert_equal(response[60], 0.35626163699061753)
+        # Check evaluation at all nodes
+        actual = self.edisp.data.evaluate().shape
+        desired = (self.edisp.e_true.nbins,
+                   self.edisp.migra.nbins,
+                   self.edisp.offset.nbins)
+        assert_equal(actual, desired)
 
-    # Check normalization
-    actual = np.sum(response)
-    desired = 1
-    assert_allclose(actual, desired, rtol=1e-1)
+    def test_get_response(self):
+        # Get response
+        e_reco = EnergyBounds.equal_log_spacing(1 * u.GeV, 100 * u.TeV, 100)
+        response = self.edisp.get_response(1 * u.deg, 1 * u.TeV, e_reco)
+        actual = len(response)
+        desired = e_reco.nbins
+        assert_equal(actual, desired)
 
-    # Check RMF exporter
-    offset = Angle([0.612], 'deg')
-    e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
-    e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, 'TeV')
-    rmf = edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
-    actual = rmf.pdf_matrix[2]
-    e_val = np.sqrt(e_true[2] * e_true[3])
-    desired = edisp.get_response(offset, e_val, e_reco)
-    assert_equal(actual, desired)
+        # Check normalization
+        actual = np.sum(response)
+        desired = 1
+        assert_allclose(actual, desired, rtol=1e-1)
+
+    def test_exporter(self):
+        # Check RMF exporter
+        offset = Angle(0.612, 'deg')
+        e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
+        e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, 'TeV')
+        rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
+        actual = rmf.pdf_matrix[2]
+        e_val = np.sqrt(e_true[2] * e_true[3])
+        desired = self.edisp.get_response(offset, e_val, e_reco)
+
+        assert_equal(actual, desired)
+
+    def test_to_energy_dispersion(self):
+        pass
+        #dispersion1d = self.edisp.to_energy_dispersion()
+        #print(dispersion1d)
+

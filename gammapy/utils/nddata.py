@@ -161,6 +161,10 @@ class NDDataArray(object):
             # Transform to match interpolation behaviour of axis
             values.append(np.atleast_1d(axis._interp_values(temp)))
 
+        # This is to catch e.g. typos in axis names
+        if kwargs != {}:
+            raise ValueError("Input given for unknown axis: {}".format(kwargs))
+
         if method is None:
             return self._eval_regular_grid_interp(
                 values) * self.data.unit
@@ -183,7 +187,8 @@ class NDDataArray(object):
 
         # This is necessary since np.append does not support the 1D case
         if self.dim > 1:
-            shapes = np.append(*[np.shape(_) for _ in values])
+            shapes = np.concatenate([np.shape(_) for _ in values])
+
         else:
             shapes = values[0].shape
         # Flatten in order to support 2D array input
@@ -353,6 +358,11 @@ class BinnedDataAxis(DataAxis):
     def nbins(self):
         """Number of bins"""
         return self.data.size - 1
+
+    @property
+    def bin_width(self):
+        """Bin width"""
+        return self.data[1:] - self.data[:-1]
 
     @property
     def nodes(self):
