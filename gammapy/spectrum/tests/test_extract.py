@@ -105,6 +105,15 @@ class TestSpectrumExtraction:
                                  extraction.observations[0].on_vector.data.data)
         assert_quantity_allclose(testobs.on_vector.energy.nodes,
                                  extraction.observations[0].on_vector.energy.nodes)
+        # Test if use_sherpa = True
+        extraction.run(outdir=tmpdir, use_sherpa=True)
+        testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
+        assert_quantity_allclose(testobs.aeff.data.data,
+                                 extraction.observations[0].aeff.data.data)
+        assert_quantity_allclose(testobs.on_vector.data.data,
+                                 extraction.observations[0].on_vector.data.data)
+        assert_quantity_allclose(testobs.on_vector.energy.nodes,
+                                 extraction.observations[0].on_vector.energy.nodes)
 
     def test_define_energy_threshold(self, extraction):
         # TODO: Find better API for this

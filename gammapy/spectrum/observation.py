@@ -203,13 +203,13 @@ class SpectrumObservation(object):
         -------
         stats : `~gammapy.spectrum.SpectrumStats`
             Stats
-        """ 
+        """
         if self.off_vector is not None:
             n_off = int(self.off_vector.data.data.value[idx])
             a_off = self.off_vector._backscal_array[idx]
         else:
             n_off = 0
-            a_off = 1 # avoid zero division error
+            a_off = 1  # avoid zero division error
 
         return SpectrumStats(
             energy_min=self.e_reco[idx],
@@ -314,7 +314,7 @@ class SpectrumObservation(object):
         if use_sherpa:
             self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
             self.aeff.energy.data = self.aeff.energy.data.to('keV')
-            self.aeff.data = self.aeff.data.to('cm2')
+            self.aeff.data.data = self.aeff.data.data.to('cm2')
             if self.off_vector is not None:
                 self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
             if self.edisp is not None:
@@ -322,7 +322,7 @@ class SpectrumObservation(object):
                 self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
                 # Set data to itself to trigger reset of the interpolator
                 # TODO: Make NDData notice change of axis
-                self.edisp.data = self.edisp.data
+                self.edisp.data.data = self.edisp.data.data
 
         self.on_vector.write(outdir / phafile, clobber=overwrite)
         self.aeff.write(outdir / arffile, clobber=overwrite)

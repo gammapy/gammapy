@@ -89,7 +89,7 @@ class SpectrumExtraction(object):
             self.extract_spectrum()
         return self._observations
 
-    def run(self, outdir=None):
+    def run(self, outdir=None, use_sherpa=False):
         """Run all steps
 
         Extract spectrum, update observation table, filter observations,
@@ -99,14 +99,16 @@ class SpectrumExtraction(object):
         ----------
         outdir : Path, str
             directory to write results files to
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
         """
-        outdir = make_path(outdir) 
+        outdir = make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background(self.background)
         self.extract_spectrum()
-        self.write(outdir)
+        self.write(outdir, use_sherpa=use_sherpa)
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
@@ -193,7 +195,7 @@ class SpectrumExtraction(object):
                 counts_kwargs.update(zen_pnt=obs.pointing_zen)
             except KeyError:
                 pass
-            
+
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
             off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True,
                                         **counts_kwargs)
@@ -271,7 +273,7 @@ class SpectrumExtraction(object):
                 raise ValueError('Undefine method for low threshold: {}'.format(
                     method_lo_threshold))
 
-    def write(self, outdir, ogipdir='ogip_data'):
+    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk
         
         Parameters
@@ -280,7 +282,9 @@ class SpectrumExtraction(object):
             Output folder
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
         """
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
-        self.observations.write(outdir / ogipdir)
+        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
         # TODO : add more debug plots etc. here
