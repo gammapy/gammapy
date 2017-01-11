@@ -388,7 +388,8 @@ class EventList(object):
         TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
         """
         from ..catalog import select_sky_box
-        return select_sky_box(self, lon_lim, lat_lim, frame)
+        selected = select_sky_box(self.table, lon_lim, lat_lim, frame)
+        return self.__class__(selected)
 
     def select_circular_region(self, region):
         """Select events in circular regions
