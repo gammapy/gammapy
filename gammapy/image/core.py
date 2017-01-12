@@ -50,7 +50,7 @@ class SkyImage(object):
     _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
     _ax_idx = _AxisIndex(x=1, y=0)
 
-    def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, unit=u.Unit(''), meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
