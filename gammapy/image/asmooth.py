@@ -193,5 +193,5 @@ class ASmooth(object):
             for key in ['counts', 'background']:
                 smoothed[key][mask] = cubes[key][slice_][mask] / norm
             if 'flux' in cubes:
-                smoothed['flux'][mask] = cubes[flux][slice_][mask] / norm
+                smoothed['flux'][mask] = cubes['flux'][slice_][mask] / norm
         return smoothed
