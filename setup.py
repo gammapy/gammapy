@@ -111,6 +111,7 @@ setup(
     ],
     extras_require=dict(
       analysis=[
+          'pyyaml',
           'scipy>=0.15',
           'scikit-image>=0.10',
           'photutils',
