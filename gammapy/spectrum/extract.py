@@ -11,6 +11,7 @@ from ..data import Target
 from ..background import ReflectedRegionsBackgroundEstimator
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
+from ..irf import PSF3D
 
 __all__ = [
     'SpectrumExtraction',
@@ -213,7 +214,10 @@ class SpectrumExtraction(object):
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg
-                psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
+                if isinstance(obs.psf, PSF3D):
+                    psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
+                else:
+                    psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
 
                 center_energies = arf.energy.nodes
                 for index, energy in enumerate(center_energies):
