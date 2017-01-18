@@ -71,7 +71,7 @@ class SkyImageHealpix(object):
         reference : `~astropy.io.fits.Header`, or `~gammapy.image.SkyImage`
             Reference image specification to reproject the data on.
         **kwargs : dict
-            Keyword arguments passed to `~reproject.reproject_from_helapix`.
+            Keyword arguments passed to `~reproject.reproject_from_healpix`.
 
         Returns
         -------
@@ -114,7 +114,7 @@ class SkyImageHealpix(object):
 
 class WCSHealpix(object):
     """
-    Healpix projection that behave WCS object like.
+    Healpix transformation that behave WCS object like.
 
     TODO: check if this can be handled by `~astropy.wcs.WCS` as well and if this
     class is needed at all.
