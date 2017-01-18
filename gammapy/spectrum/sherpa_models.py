@@ -23,7 +23,8 @@ class SherpaExponentialCutoffPowerLaw(ArithmeticModel):
         self.gamma = Parameter(name, 'gamma', 2, min=-10, max=10)
         self.ref = Parameter(name, 'ref', 1, frozen=True)
         self.ampl = Parameter(name, 'ampl', 1, min=0)
-        self.cutoff = Parameter(name, 'cutoff', 1, min=0, units='1/TeV')
+        #self.cutoff = Parameter(name, 'cutoff', 1, min=0, units='1/TeV')
+        self.cutoff = Parameter(name, 'cutoff', 1, units='1/TeV')
         ArithmeticModel.__init__(self, name, (self.gamma, self.ref, self.ampl,
                                               self.cutoff))
         self._use_caching = True
