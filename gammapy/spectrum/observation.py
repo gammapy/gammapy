@@ -78,7 +78,7 @@ class SpectrumObservation(object):
         print(obs)
     """
 
-    def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
+    def __init__(self, on_vector, aeff=None, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
         self.off_vector = off_vector
@@ -379,7 +379,10 @@ class SpectrumObservation(object):
         objects and appended to the PHA instance
         """
         pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id))
-        arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        if self.aeff is not None:
+            arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        else:
+            arf = None
         if self.edisp is not None:
             rmf = self.edisp.to_sherpa(name='rmf_obs{}'.format(self.obs_id))
         else:
@@ -431,7 +434,8 @@ class SpectrumObservationList(UserList):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.obs_id)
+        ss = 'number of observations: {}'.format(len(self))
+        #ss += '\n{}'.format(self.obs_id)
         return ss
 
     @property

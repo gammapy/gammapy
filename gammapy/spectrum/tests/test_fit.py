@@ -7,6 +7,7 @@ from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from ...datasets import gammapy_extra
 from ...spectrum import (
+    CountsSpectrum,
     SpectrumObservationList,
     SpectrumObservation,
     SpectrumFit,
@@ -18,6 +19,45 @@ from ...utils.testing import (
     requires_data,
     SHERPA_LT_4_8,
 )
+from ...utils.random import get_random_state
+
+@requires_data('gammapy-extra')
+class TestFit:
+    """Test fitter on counts spectra without any IRFs"""
+
+    def setup(self):
+        self.nbins = 30
+        binning = np.logspace(-1,1, self.nbins+1) * u.TeV
+        self.source_model = models.PowerLaw(index=2 * u.Unit(''),
+                                            amplitude = 1e5 / u.TeV,
+                                            reference = 0.1 * u.TeV)
+        npred = self.source_model.integral(binning[:-1], binning[1:]) 
+        random_state = get_random_state(23)
+        source_counts = random_state.poisson(npred)
+        print(source_counts)
+        on_counts = CountsSpectrum(energy=binning, data=source_counts)
+        obs = SpectrumObservation(on_vector=on_counts)
+        self.obs_list = SpectrumObservationList([obs])
+        bkg_counts = None
+
+    def test_cash(self):
+        """Simple CASH fit to the on vector"""
+        fit = SpectrumFit(obs_list=self.obs_list, model=self.source_model,
+                          stat='cash', forward_folded=False)
+        assert 'Spectrum' in str(fit)
+
+        fit.predict_counts()
+        assert_allclose(fit.predicted_counts[0][5], 660.5171280778071)
+        
+        fit.calc_statval()
+        assert_allclose(fit.statval[0], -107346.5291329714)
+
+        fit.fit()
+        # These values are check with sherpa fits, do not change
+        assert_allclose(fit.model.parameters.index,
+                        1.9955563477414806)
+        assert_allclose(fit.model.parameters.amplitude.value,
+                        100250.33102108649)
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
@@ -25,6 +65,7 @@ from ...utils.testing import (
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
+    """Test fitter in astrophysical scenario"""
 
     def setup(self):
         self.obs_list = SpectrumObservationList.read(

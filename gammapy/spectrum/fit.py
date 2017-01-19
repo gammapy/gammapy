@@ -7,11 +7,13 @@ import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
+from collections import OrderedDict
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
     models,
 )
+import gammapy.stats as stats
 
 __all__ = [
     'SpectrumFit',
@@ -24,6 +26,8 @@ class SpectrumFit(object):
     """
     Spectral Fit using Sherpa
 
+    TODO: Outdated - update!
+
     This is a wrapper around `~sherpa.fit.Fit` that takes care about
     translating gammapy classes to sherpa classes and handling various aspects
     of the fitting correctly. For usage examples see :ref:`spectral_fitting`
@@ -31,7 +35,7 @@ class SpectrumFit(object):
     Parameters
     ----------
     obs_list : SpectrumObservationList
-        Observations to fit
+        Observations to fit, TODO: rename to data
     model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
         Model to be fit
     stat : str, `~sherpa.stats.Stat`
@@ -39,107 +43,193 @@ class SpectrumFit(object):
     method : str, `~sherpa.optmethods.OptMethod`
         Fit statistic to be used
     """
-    FLUX_FACTOR = 1e-20
-    """Numerical constant to make model amplitude O(1) during the fit"""
-    DEFAULT_STAT = 'wstat'
-    """Default statistic to be used for the fit"""
-    DEFAULT_METHOD = 'simplex'
-    """Default method to be used for the fit"""
+    def __init__(self, obs_list, model, stat='wstat', method='sherpa',
+                 forward_folded=True, fit_range=None):
+        # For internal coherence accept only SpectrumObservationList
+        # TODO: add fancy converters to accept also e.g. CountsSpectrum
+        if not isinstance(obs_list, SpectrumObservationList):
+            raise ValueError('obs_list is not a SpectrumObservationList')
 
-    def __init__(self, obs_list, model, stat=DEFAULT_STAT, method=DEFAULT_METHOD):
-        if isinstance(obs_list, SpectrumObservation):
-            obs_list = [obs_list]
-
-        self.obs_list = SpectrumObservationList(obs_list)
+        self.obs_list = obs_list
         self.model = model
-        self.statistic = stat
-        self.method_fit = method
-        self._fit_range = None
-        self._result = list()
-        self._global_result = list()
+        self.stat = stat
+        self.method = method
+        self.forward_folded = forward_folded
+        self.fit_range=fit_range
 
-    @property
-    def result(self):
-        """List of `~gammapy.spectrum.SpectrumFitResult` for each observation"""
-        return self._result
-
-    @property
-    def global_result(self):
-        """Global `~gammapy.spectrum.SpectrumFitResult`
-
-        Contains only model and fitrange over all observations
-        """
-        return self._global_result
-
-    @property
-    def statistic(self):
-        """Sherpa `~sherpa.stats.Stat` to be used for the fit"""
-
-        return self._stat
-
-    @statistic.setter
-    def statistic(self, stat):
-        import sherpa.stats as s
-
-        if isinstance(stat, six.string_types):
-            if stat.lower() == 'cstat':
-                stat = s.CStat()
-            elif stat.lower() == 'wstat':
-                stat = s.WStat()
-            else:
-                raise ValueError("Undefined stat string: {}".format(stat))
-
-        if not isinstance(stat, s.Stat):
-            raise ValueError("Only sherpa statistics are supported")
-
-        self._stat = stat
-
-    @property
-    def method_fit(self):
-        """Sherpa `~sherpa.optmethods.OptMethod` to be used for the fit"""
-
-        return self._method
-
-    @method_fit.setter
-    def method_fit(self, method):
-        import sherpa.optmethods as optmethod
-        if isinstance(method, six.string_types):
-            if method == 'simplex':
-                method = optmethod.NelderMead()
-            elif method == 'moncar':
-                method = optmethod.MonCar()
-            elif method == 'levmar':
-                method = optmethod.LevMar()
-            else:
-                raise ValueError("Undefined method string: {}".format(method))
-
-        if not isinstance(method, optmethod.OptMethod):
-            raise ValueError("Only sherpa method are supported")
-
-        self._method = method
-
-    @property
-    def fit_range(self):
-        """
-        Tuple of `~astropy.units.Quantity`, energy range of the fit
-        """
-        return self._fit_range
-
-    @fit_range.setter
-    def fit_range(self, fit_range):
-        self._fit_range = u.Quantity(fit_range)
+        # TODO: Reexpose as properties to import docs
+        self.predicted_counts = None
+        self.statval = None
+        self.result = list()
+        self.global_result = list()
 
     def __str__(self):
         """String repr"""
-        ss = 'Model\n'
-        ss += str(self.model)
+        ss = self.__class__.__name__
+        ss += '\nData {}'.format(self.obs_list)
+        ss += '\nSource model {}'.format(self.model)
+        ss += '\nStat {}'.format(self.stat)
+        ss += '\nMethod {}'.format(self.method)
+        ss += '\nForward Folded {}'.format(self.forward_folded)
+        ss += '\nFit range {}'.format(self.fit_range)
+
         return ss
 
-    def fit(self):
+    def predict_counts(self, **kwargs):
+        """Predict counts for all observations
+        """
+        predicted_counts = list()
+        for data_ in self.obs_list:
+            binning = data_.e_reco
+            temp = self._predict_counts_helper(binning,
+                                               forward_folded=self.forward_folded,
+                                               **kwargs)
+            predicted_counts.append(temp)
+        self.predicted_counts = predicted_counts
+
+    def _predict_counts_helper(self, binning, forward_folded=True, **kwargs):
+        """Predict counts for one observation
+        
+        TODO: Take model as input to reuse for background model
+
+        Returns
+        ------
+        predicted_counts: `np.array`
+            Predicted counts for one observation
+        """
+        if forward_folded:
+            raise NotImplementedError()
+        else:
+            counts = self.model.integral(binning[:-1], binning[1:])
+
+        # TODO: Check that counts has correct unit ('' or 'ct')
+        return counts
+
+    def calc_statval(self):
+        """Calc statistic for all observations"""
+        statval = list()
+        for data_, npred in zip(self.obs_list, self.predicted_counts):
+            temp = self._calc_statval_helper(data_, npred)
+            statval.append(temp)
+        self.statval = statval
+
+    def _calc_statval_helper(self, data, prediction):
+        if self.stat == 'wstat':
+            raise NotImplementedError()
+        elif self.stat == 'cash':
+            statsval = stats.cash(n_on=data.on_vector.data.data.value,
+                                  mu_on=prediction)
+        else:
+            raise NotImplementedError('{}'.format(self.stat))
+        return np.sum(statsval)
+
+    def fit(self, **kwargs):
+        """Run the fit""" 
+        if self.method == 'sherpa':
+            self._fit_sherpa(**kwargs)
+        else:
+            raise NotImplementedError('{}'.format(self.method))
+
+    def _fit_sherpa(self):
+        """Wrapper around sherpa minimizer
+        
+        The sherpa data and model call the corresponding methods on
+        `~gammapy.spectrum.SpectrumFit`` 
+        """
+        from sherpa.fit import Fit
+        from sherpa.data import Data1DInt
+        from sherpa.stats import Likelihood
+        from sherpa.optmethods import NelderMead
+        from sherpa.models import ArithmeticModel, Parameter, modelCacher1d
+
+
+        class SherpaModel(ArithmeticModel):
+            """Dummy sherpa model for the `~gammapy.spectrum.SpectrumFit`
+            
+            Parameters
+            ----------
+            fit : `~gammapy.spectrum.SpectrumFit`
+                Fit instance
+            """
+
+            def __init__(self, fit):
+                # TODO: add Parameter and ParameterList class
+                self.fit = fit
+                self.sorted_pars = OrderedDict(**self.fit.model.parameters)
+                sherpa_name = 'sherpa_model'
+                par_list = list()
+                for name, par in self.sorted_pars.items():
+                    sherpa_par = Parameter(sherpa_name,
+                                           name,
+                                           par.value,
+                                           units=str(par.unit))
+                    setattr(self, name, sherpa_par)
+                    par_list.append(sherpa_par)
+
+                ArithmeticModel.__init__(self, sherpa_name, par_list)
+                self._use_caching = True
+                self.cache = 10
+                # TODO: Remove after introduction of proper parameter class
+                self.reference.freeze()
+
+            @modelCacher1d
+            def calc(self, p, x, xhi=None):
+                # Adjust model parameters
+                for par, parval in zip(self.sorted_pars, p):
+                    par_unit = self.sorted_pars[par].unit
+                    self.fit.model.parameters[par] = parval * par_unit
+                self.fit.predict_counts(folded=False)
+                # Return ones since sherpa does some check on the shape
+                return np.ones_like(self.fit.obs_list[0].e_reco)
+
+
+        class SherpaStat(Likelihood):
+            """Dummy sherpa stat for the `~gammapy.spectrum.SpectrumFit`
+
+            Parameters
+            ----------
+            fit : `~gammapy.spectrum.SpectrumFit`
+                Fit instance
+            """
+            def __init__(self, fit):
+                sherpa_name = 'sherpa_stat'
+                self.fit = fit
+                Likelihood.__init__(self, sherpa_name)
+
+            def _calc(self, data, model, *args, **kwargs):
+                self.fit.calc_statval()
+                # Sum likelihood over all observations
+                total_stat = np.sum(self.fit.statval)
+                # sherpa return pattern: total stat, fvec
+                return total_stat, None
+
+        binning = self.obs_list[0].e_reco 
+        # The data is in principle not used but is still set to the correct
+        # value for debugging purposes
+        data = self.obs_list[0].on_vector.data.data.value
+        data = Data1DInt('Dummy data', binning[:-1].value,
+                         binning[1:].value, data)
+        # DEBUG
+        #from sherpa.models import PowLaw1D
+        #from sherpa.stats import Cash
+        #model = PowLaw1D('sherpa')
+        #model.ref = 0.1
+        #fit = Fit(data, model, Cash(), NelderMead())
+
+        # NOTE: We cannot use the Levenbergr-Marquart optimizer in Sherpa
+        # because it relies on the fvec return value of the fit statistic (we
+        # return None). The computation of fvec is not straightforwad, not just
+        # stats per bin. E.g. for a cash fit the sherpa stat computes it
+        # according to cstat
+        # see https://github.com/sherpa/sherpa/blob/master/sherpa/include/sherpa/stats.hh#L122
+
+        fit = Fit(data, SherpaModel(self), SherpaStat(self), NelderMead())
+        print(fit.fit())
+
+    def fit_sherpa(self):
         """Fit spectrum"""
         from sherpa.fit import Fit
         from sherpa.models import ArithmeticModel, SimulFitModel
-        from sherpa.astro.instrument import Response1D
         from sherpa.data import DataSimulFit
 
         # Reset results
@@ -149,6 +239,7 @@ class SpectrumFit(object):
         if isinstance(self.model, models.SpectralModel):
             model = self.model.to_sherpa()
         else:
+
             model = self.model
 
         if not isinstance(model, ArithmeticModel):
@@ -192,7 +283,7 @@ class SpectrumFit(object):
         fitmodel = SimulFitModel('simul fit model', folded_model)
         log.debug(fitmodel)
 
-        fit = Fit(data, fitmodel, self.statistic, method=self.method_fit)
+        fit = Fit(data, fitmodel, self.stat, method=self.method_fit)
 
         fitresult = fit.fit()
         log.debug(fitresult)
@@ -340,3 +431,5 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
                              statval=statval,
                              npred=npred
                              )
+
+
