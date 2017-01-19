@@ -151,12 +151,21 @@ class ASmooth(object):
         cubes['significance'] = self._significance_cube(cubes)
 
         smoothed = self._reduce_cubes(cubes, kernels)
-        self.cubes = cubes
         result = SkyImageList()
         for key in ['counts', 'background', 'scale', 'significance']:
-            result[key] = SkyImage(data=smoothed[key], wcs=wcs)
+            data = smoothed[key]
+
+            # set remaining pixels with significance < threshold to mean value
+            if key in ['counts', 'background']:
+                mask = np.isnan(data)
+                data[mask] = np.mean(images[key].data[mask])
+            result[key] = SkyImage(data=data, wcs=wcs)
+
         if 'exposure' in images.names:
-            result['flux'] = SkyImage(data=smoothed['flux'], wcs=wcs)
+            data = smoothed['flux']
+            mask = np.isnan(data)
+            data[mask] = np.mean(flux[mask])
+            result['flux'] = SkyImage(data=data, wcs=wcs)
         return result
 
 
@@ -182,8 +191,7 @@ class ASmooth(object):
             slice_ = np.s_[:, :, idx]
 
             mask = np.isnan(smoothed['counts'])
-            if idx < (len(p['scales']) - 1):
-                mask = (cubes['significance'][slice_] > p['threshold']) & mask
+            mask = (cubes['significance'][slice_] > p['threshold']) & mask
 
             smoothed['scale'][mask] = scale
             smoothed['significance'][mask] = cubes['significance'][slice_][mask]
