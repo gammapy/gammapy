@@ -8,6 +8,7 @@ from astropy.extern import six
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from collections import OrderedDict
+from .utils import calculate_predicted_counts
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
@@ -63,6 +64,62 @@ class SpectrumFit(object):
         self.result = list()
         self.global_result = list()
 
+    @property
+    def fit_range(self):
+        """Fit range"""
+        return self._fit_range
+
+    @fit_range.setter
+    def fit_range(self, fit_range):
+        self._fit_range = fit_range
+        self._apply_fit_range()
+
+    def _apply_fit_range(self):
+        """Mark bins within desired fit range for each observation
+        
+        TODO: Split into smaller functions
+        TODO: Could reuse code from PHACountsSpectrum
+        TODO: Use True (not 0) to mark good bins
+        TODO: Add to EnergyBounds
+        """
+        self._bins_in_fit_range = list()
+        for obs in self.obs_list:
+            # Take into account fit range
+            energy = obs.e_reco
+            valid_range = np.zeros(energy.nbins)
+
+            if self.fit_range is not None:
+                idx_lo = np.where(energy < self.fit_range[0])[0]
+                valid_range[idx_lo] = 1
+                
+                idx_hi = np.where(energy[:-1] > self.fit_range[1])[0]
+                if len(idx_hi) != 0:
+                    idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
+                valid_range[idx_hi] = 1
+
+            # Take into account thresholds
+            try:
+                quality = obs.on_vector.quality
+            except AttributeError:
+                quality = np.zeros(obs.e_reco.nbins)
+            
+            # Convolve (see TODO above)
+            convolved = np.logical_and(1 - quality, 1 - valid_range)
+
+            self._bins_in_fit_range.append(convolved)
+
+    @property
+    def true_fit_range(self):
+        """True fit range for each observation"""
+        true_range = list()
+        for binrange, obs in zip(self._bins_in_fit_range, self.obs_list):
+            idx = np.where(binrange)[0]
+            e_min = obs.e_reco[idx[0]]
+            e_max = obs.e_reco[idx[-1] + 1]
+            fit_range = u.Quantity((e_min, e_max))
+            true_range.append(fit_range)
+        return true_range
+            
     def __str__(self):
         """String repr"""
         ss = self.__class__.__name__
@@ -80,14 +137,11 @@ class SpectrumFit(object):
         """
         predicted_counts = list()
         for data_ in self.obs_list:
-            binning = data_.e_reco
-            temp = self._predict_counts_helper(binning,
-                                               forward_folded=self.forward_folded,
-                                               **kwargs)
+            temp = self._predict_counts_helper(data_)
             predicted_counts.append(temp)
         self.predicted_counts = predicted_counts
 
-    def _predict_counts_helper(self, binning, forward_folded=True, **kwargs):
+    def _predict_counts_helper(self, obs):
         """Predict counts for one observation
         
         TODO: Take model as input to reuse for background model
@@ -97,12 +151,25 @@ class SpectrumFit(object):
         predicted_counts: `np.array`
             Predicted counts for one observation
         """
-        if forward_folded:
-            raise NotImplementedError()
+        binning = obs.e_reco
+        if self.forward_folded:
+            temp = calculate_predicted_counts(model=self.model,
+                                              livetime=obs.livetime,
+                                              aeff=obs.aeff,
+                                              edisp=obs.edisp,
+                                              e_reco=binning)
+            counts = temp.data.data
         else:
+            # TODO: This could also be part of calculate predicted counts
             counts = self.model.integral(binning[:-1], binning[1:])
 
-        # TODO: Check that counts has correct unit ('' or 'ct')
+        # Check count unit (~unit of model amplitude)
+        cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')
+        if cond:
+            counts = counts.value
+        else:
+            raise ValueError('Predicted counts {}'.format(counts))
+
         return counts
 
     def calc_statval(self):
@@ -112,16 +179,31 @@ class SpectrumFit(object):
             temp = self._calc_statval_helper(data_, npred)
             statval.append(temp)
         self.statval = statval
+        self._restrict_statval()
 
-    def _calc_statval_helper(self, data, prediction):
-        if self.stat == 'wstat':
-            raise NotImplementedError()
-        elif self.stat == 'cash':
-            statsval = stats.cash(n_on=data.on_vector.data.data.value,
+    def _calc_statval_helper(self, obs, prediction):
+        if self.stat == 'cash':
+            statsval = stats.cash(n_on=obs.on_vector.data.data.value,
                                   mu_on=prediction)
+        elif self.stat == 'wstat':
+            kwargs = dict(n_on= obs.on_vector.data.data.value,
+                          n_off= obs.off_vector.data.data.value,
+                          alpha = obs.alpha,
+                          mu_sig=prediction)
+            statsval = stats.wstat(**kwargs)
         else:
             raise NotImplementedError('{}'.format(self.stat))
-        return np.sum(statsval)
+
+        return statsval
+
+    def _restrict_statval(self):
+        """Apply valid range to statval
+        """
+        restricted_statval = list()
+        for statval, valid_range in zip(self.statval, self._bins_in_fit_range):
+            val = np.where(valid_range, statval, 0)
+            restricted_statval.append(val)
+        self.statval = restricted_statval
 
     def fit(self, **kwargs):
         """Run the fit""" 
@@ -129,6 +211,7 @@ class SpectrumFit(object):
             self._fit_sherpa(**kwargs)
         else:
             raise NotImplementedError('{}'.format(self.method))
+        self._make_fit_result()
 
     def _fit_sherpa(self):
         """Wrapper around sherpa minimizer
@@ -178,7 +261,7 @@ class SpectrumFit(object):
                 for par, parval in zip(self.sorted_pars, p):
                     par_unit = self.sorted_pars[par].unit
                     self.fit.model.parameters[par] = parval * par_unit
-                self.fit.predict_counts(folded=False)
+                self.fit.predict_counts()
                 # Return ones since sherpa does some check on the shape
                 return np.ones_like(self.fit.obs_list[0].e_reco)
 
@@ -226,91 +309,29 @@ class SpectrumFit(object):
         fit = Fit(data, SherpaModel(self), SherpaStat(self), NelderMead())
         print(fit.fit())
 
-    def fit_sherpa(self):
-        """Fit spectrum"""
-        from sherpa.fit import Fit
-        from sherpa.models import ArithmeticModel, SimulFitModel
-        from sherpa.data import DataSimulFit
+    def _make_fit_result(self):
+        """Bunde fit result into `~gammapy.spectrum.SpectrumFitResult`"""
+        from . import SpectrumFitResult
+        for idx, obs in enumerate(self.obs_list):
+            model = self.model.copy()
+            covariance = None
+            covar_axis = None
 
-        # Reset results
-        self._result = list()
+            fit_range = self.true_fit_range[idx]
+            statname = self.stat
+            statval = np.sum(self.statval[idx])
+            npred = self.predicted_counts[idx]
+            self.result.append(SpectrumFitResult(
+                model=model,
+                covariance=covariance,
+                covar_axis=covar_axis,
+                fit_range=fit_range,
+                statname=statname,
+                statval=statval,
+                npred=npred,
+                obs=obs
+            ))
 
-        # Translate model to sherpa model if necessary
-        if isinstance(self.model, models.SpectralModel):
-            model = self.model.to_sherpa()
-        else:
-
-            model = self.model
-
-        if not isinstance(model, ArithmeticModel):
-            raise ValueError('Model not understood: {}'.format(model))
-
-        # Make model amplitude O(1e0)
-        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
-        model.ampl = val
-
-        if self.fit_range is not None:
-            log.info('Restricting fit range to {}'.format(self.fit_range))
-            fitmin = self.fit_range[0].to('keV').value
-            fitmax = self.fit_range[1].to('keV').value
-
-        # Loop over observations
-        pha = list()
-        folded_model = list()
-        nobs = len(self.obs_list)
-        for ii in range(nobs):
-            temp = self.obs_list[ii].to_sherpa()
-            if self.fit_range is not None:
-                temp.notice(fitmin, fitmax)
-                if temp.get_background() is not None:
-                    temp.get_background().notice(fitmin, fitmax)
-            temp.ignore_bad()
-            if temp.get_background() is not None:
-                temp.get_background().ignore_bad()
-            pha.append(temp)
-            log.debug('Noticed channels obs {}: {}'.format(
-                ii, temp.get_noticed_channels()))
-            # Forward folding
-            resp = Response1D(pha[ii])
-            folded_model.append(resp(model) * self.FLUX_FACTOR)
-
-        if (len(pha) == 1 and len(pha[0].get_noticed_channels()) == 1):
-            raise ValueError('You are trying to fit one observation in only '
-                             'one bin, error estimation will fail')
-
-        data = DataSimulFit('simul fit data', pha)
-        log.debug(data)
-        fitmodel = SimulFitModel('simul fit model', folded_model)
-        log.debug(fitmodel)
-
-        fit = Fit(data, fitmodel, self.stat, method=self.method_fit)
-
-        fitresult = fit.fit()
-        log.debug(fitresult)
-        # The model instance passed to the Fit now holds the best fit values
-        covar = fit.est_errors()
-        log.debug(covar)
-
-        for ii in range(nobs):
-            efilter = pha[ii].get_filter()
-            # Skip observations not participating in the fit
-            if efilter != '':
-                shmodel = fitmodel.parts[ii]
-                result = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
-                result.obs = self.obs_list[ii]
-            else:
-                result = None
-            self._result.append(result)
-
-        valid_result = np.nonzero(self.result)[0][0]
-        global_result = copy.deepcopy(self.result[valid_result])
-        global_result.npred = None
-        global_result.obs = None
-        all_fitranges = [_.fit_range for _ in self._result if _ is not None]
-        fit_range_min = min([_[0] for _ in all_fitranges])
-        fit_range_max = max([_[1] for _ in all_fitranges])
-        global_result.fit_range = u.Quantity((fit_range_min, fit_range_max))
-        self._global_result = global_result
 
     def compute_fluxpoints(self, binning):
         """Compute `~DifferentialFluxPoints` for best fit model
@@ -328,15 +349,7 @@ class SpectrumFit(object):
         -------
         result : `~gammapy.spectrum.SpectrumResult`
         """
-        from . import SpectrumResult
-        obs_list = self.obs_list
-        model = self.result[0].model
-        #TODO: doesn't work .compute() never existed, remove whole method?
         raise NotImplementedError
-        points = DifferentialFluxPoints.compute(model=model,
-                                                binning=binning,
-                                                obs_list=obs_list)
-        return SpectrumResult(fit=self.result[0], points=points)
 
     def run(self, outdir=None):
         """Run all steps
@@ -368,7 +381,6 @@ class SpectrumFit(object):
 def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     """Create `~gammapy.spectrum.SpectrumFitResult` from Sherpa objects"""
 
-    from . import SpectrumFitResult
 
     # Translate sherpa model to GP model
     # Units will be transformed to TeV, s, and m to avoid numerical issues

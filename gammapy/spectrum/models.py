@@ -3,6 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import copy
 import astropy.units as u
 from astropy.table import Table
 
@@ -221,6 +222,9 @@ class SpectralModel(object):
             energy = brentq(f, emin.to('TeV').value, emax.to('TeV').value)
             energies.append(energy)
         return energies * u.TeV
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class PowerLaw(SpectralModel):
