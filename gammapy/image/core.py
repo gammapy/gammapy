@@ -401,8 +401,8 @@ class SkyImage(object):
         bounds_ref = image_ref.wcs.wcs_world2pix(bounds[0], bounds[1], _DEFAULT_WCS_ORIGIN)
 
         # round to nearest integer and clip at the boundaries
-        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
-        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
+        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref)).astype('int')
+        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref)).astype('int')
 
         if wcs_check:
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
