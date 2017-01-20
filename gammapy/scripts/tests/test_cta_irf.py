@@ -20,7 +20,7 @@ def test_cta_irf():
     val = irf.aeff.data.evaluate(energy=energy, offset=offset)
     assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
 
-    val = irf.edisp.evaluate(offset=offset, e_true=energy, migra=migra)
+    val = irf.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
     assert_quantity_allclose(val, 0.13111834249544874)
 
     # TODO: clean up these PSF classes, e.g. to return quantities.

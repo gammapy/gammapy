@@ -243,11 +243,12 @@ class EnergyBounds(Energy):
         # np.append renders Quantities dimensionless
         # http://docs.astropy.org/en/latest/known_issues.html#quantity-issues
 
+        if unit is None:
+            unit = upper.unit
         lower = cls(lower, unit)
         upper = cls(upper, unit)
-        unit = upper.unit
-        energy = np.hstack((lower, upper[-1]))
-        return cls(energy.value, unit)
+        energy = np.append(lower.value, upper.value[-1])
+        return cls(energy, unit)
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):

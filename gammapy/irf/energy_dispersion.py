@@ -8,8 +8,8 @@ from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.array import array_stats_str
 from ..utils.scripts import make_path
-from ..utils.nddata import NDDataArray, BinnedDataAxis
-from ..utils.fits import energy_axis_to_ebounds
+from ..utils.nddata import NDDataArray, BinnedDataAxis, DataAxis
+from ..utils.fits import energy_axis_to_ebounds, fits_table_to_table
 
 __all__ = [
     'EnergyDispersion',
@@ -506,27 +506,17 @@ class EnergyDispersion2D(object):
 
     Parameters
     ----------
-    etrue_lo : `~gammapy.utils.energy.Energy`
-        True energy lower bounds
-    etrue_hi : `~gammapy.utils.energy.Energy`
-        True energy upper bounds
-    migra_lo : `~numpy.ndarray`, list
-        Migration lower bounds
-    migra_hi : `~numpy.ndarray`, list
-        Migration upper bounds
-    offset_lo : `~astropy.coordinates.Angle`
-        Offset lower bounds
-    offset_hi : `~astropy.coordinates.Angle`
-        Offset lower bounds
-    dispersion : `~numpy.ndarray`
+    e_true : `~gammapy.utils.energy.Energy`
+        True energy axis bounds
+    migra : `~numpy.ndarray`, list
+        Migration axis bounds
+    offset : `~astropy.coordinates.Angle`
+        Offset axis nodes
+    data : `~numpy.ndarray`
         PDF matrix
-    interp_kwargs : dict or None
-        Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
-        If you pass ``None``, the default ``interp_params=dict(bounds_error=False, fill_value=0)`` is used.
 
     Examples
     --------
-
     Plot migration histogram for a given offset and true energy
 
     .. plot::
@@ -575,52 +565,54 @@ class EnergyDispersion2D(object):
         plt.loglog()
 
     """
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0)
+    """Default Interpolation kwargs for `~NDDataArray`"""
 
-    def __init__(self, etrue_lo, etrue_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, dispersion, interp_kwargs=None):
+    def __init__(self, e_true, migra, offset, data, interp_kwargs=None):
+        if interp_kwargs is None:
+            interp_kwargs = self.default_interp_kwargs
+        axes = [
+            BinnedDataAxis(e_true, interpolation_mode='log', name='e_true'),
+            BinnedDataAxis(migra, interpolation_mode='linear', name='migra'),
+            DataAxis(offset, interpolation_mode='linear', name='offset')
+        ]
+        self.data = NDDataArray(axes=axes, data=data,
+                                interp_kwargs=interp_kwargs)                       
 
-        if not isinstance(etrue_lo, Quantity) or not isinstance(etrue_hi, Quantity):
-            raise ValueError("Energies must be Quantity objects.")
-        if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
-            raise ValueError("Offsets must be Angle objects.")
+    @property
+    def e_true(self):
+        return self.data.axis('e_true')
 
-        self.migra_lo=migra_lo
-        self.migra_hi=migra_hi
-        self.offset_lo=offset_lo
-        self.offset_hi=offset_hi
-        self.dispersion=dispersion
+    @property
+    def migra(self):
+        return self.data.axis('migra')
 
-        self.ebounds=EnergyBounds.from_lower_and_upper_bounds(etrue_lo, etrue_hi)
-        self.energy=self.ebounds.log_centers
-        self.offset=(offset_hi + offset_lo) / 2
-        self.migra=(migra_hi + migra_lo) / 2
-
-        if not interp_kwargs:
-            interp_kwargs=dict(bounds_error=False, fill_value=0)
-
-        self._prepare_linear_interpolator(interp_kwargs)
+    @property
+    def offset(self):
+        return self.data.axis('offset')
 
     @classmethod
-    def from_fits(cls, hdu):
-        """Create from a FITS HDU.
-
-        Parameters
-        ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
-            ``ENERGY DISPERSION`` extension.
-
+    def from_table(cls, table):
+        """Create from `~astropy.table.Table`
         """
-        data=hdu.data
-        header=hdu.header
-        e_lo=EnergyBounds(data['ETRUE_LO'].squeeze(), header['TUNIT1'])
-        e_hi=EnergyBounds(data['ETRUE_HI'].squeeze(), header['TUNIT2'])
-        o_lo=Angle(data['THETA_LO'].squeeze(), header['TUNIT5'])
-        o_hi=Angle(data['THETA_HI'].squeeze(), header['TUNIT6'])
-        m_lo=data['MIGRA_LO'].squeeze()
-        m_hi=data['MIGRA_HI'].squeeze()
-        matrix=data['MATRIX'].squeeze()
+        e_lo=table['ETRUE_LO'].quantity.squeeze()
+        e_hi=table['ETRUE_HI'].quantity.squeeze()
+        etrue = EnergyBounds.from_lower_and_upper_bounds(e_lo, e_hi)
+        o_lo=table['THETA_LO'].quantity.squeeze()
+        o_hi=table['THETA_HI'].quantity.squeeze()
+        offset = (o_lo + o_hi) / 2
+        m_lo=table['MIGRA_LO'].data.squeeze()
+        m_hi=table['MIGRA_HI'].data.squeeze()
+        migra = np.append(m_lo, m_hi[-1])
 
-        return cls(e_lo, e_hi, m_lo, m_hi, o_lo, o_hi, matrix)
+        matrix=table['MATRIX'].squeeze().transpose()
+        return cls(e_true=etrue, offset=offset, migra=migra, data=matrix)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='edisp_2d'):
+        hdu = hdulist[hdu]
+        table = fits_table_to_table(hdu)
+        return cls.from_table(table)
 
     @classmethod
     def read(cls, filename, hdu='edisp_2d'):
@@ -635,44 +627,7 @@ class EnergyDispersion2D(object):
         """
         filename=make_path(filename)
         hdulist=fits.open(str(filename))
-        hdu=hdulist[hdu]
-        return cls.from_fits(hdu)
-
-    def evaluate(self, offset=None, e_true=None, migra=None):
-        """Probability for a given offset, true energy, and migration
-
-        Parameters
-        ----------
-        e_true : `~gammapy.utils.energy.Energy`, optional
-            True energy
-        migra : `~numpy.ndarray`, optional
-            Energy migration e_reco/e_true
-        offset : `~astropy.coordinates.Angle`, optional
-            Offset
-        """
-
-        offset=self.offset if offset is None else Angle(offset)
-        e_true=self.energy if e_true is None else Energy(e_true)
-        migra=self.migra if migra is None else migra
-
-        offset=offset.to('deg')
-        e_true=e_true.to('TeV')
-
-        val=self._eval(offset=offset, e_true=e_true, migra=migra)
-
-        return val
-
-    def _eval(self, offset=None, e_true=None, migra=None):
-
-        x=np.atleast_1d(offset.value)
-        y=np.atleast_1d(migra)
-        z=np.atleast_1d(np.log10(e_true.value))
-        in_shape=(x.size, y.size, z.size)
-
-        pts=[[xx, yy, zz] for xx in x for yy in y for zz in z]
-        val_array=self._linear(pts)
-
-        return val_array.reshape(in_shape).squeeze()
+        return cls.from_hdulist(hdulist, hdu)
 
     def to_energy_dispersion(self, offset, e_true=None, e_reco=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -695,8 +650,10 @@ class EnergyDispersion2D(object):
             Energy disperion matrix
         """
         offset=Angle(offset)
-        e_true=self.ebounds if e_true is None else EnergyBounds(e_true)
-        e_reco=self.ebounds if e_reco is None else EnergyBounds(e_reco)
+        e_true=self.e_true.data if e_true is None else e_true
+        e_reco=self.e_true.data if e_reco is None else e_reco
+        e_true = EnergyBounds(e_true)
+        e_reco = EnergyBounds(e_reco)
 
         rm=[]
 
@@ -711,7 +668,8 @@ class EnergyDispersion2D(object):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
-        energy band. In each reco bin, you integrate with a riemann sum over the default migra bin of your analysis.
+        energy band. In each reco bin, you integrate with a riemann sum over
+        the default migra bin of your analysis.
 
         Parameters
         ----------
@@ -733,8 +691,8 @@ class EnergyDispersion2D(object):
         # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
             e_reco=EnergyBounds.from_lower_and_upper_bounds(
-                self.migra_lo * e_true, self.migra_hi * e_true)
-            migra=self.migra
+                self.migra.lo * e_true, self.migra.hi * e_true)
+            migra=self.migra.nodes
 
         # Translate given e_reco binning to migra at bin center
         else:
@@ -743,12 +701,12 @@ class EnergyDispersion2D(object):
             migra=center / e_true
 
         # ensure to have a normalized edisp
-        migra_bin=self.migra_hi - self.migra_lo
+        migra_bin=self.migra.hi - self.migra.lo
         if (migra_bin[0] == migra_bin[1]):
-            migra_mean=1 / 2. * (self.migra_hi + self.migra_lo)
+            migra_mean=1 / 2. * (self.migra.hi + self.migra.lo)
         else:
-            migra_mean=np.sqrt(self.migra_hi * self.migra_lo)
-        val_norm=self.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
+            migra_mean=np.sqrt(self.migra.hi * self.migra.lo)
+        val_norm=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
         norm=np.sum(val_norm * migra_bin)
 
         migra_e_reco=e_reco / e_true
@@ -785,9 +743,10 @@ class EnergyDispersion2D(object):
                         index=np.arange(i_min, i_max + 1, 1)
                         migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
                         migra_bin_reco=np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
-                    val=self.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
+                    val=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
                     integral[i]=np.sum(val * migra_bin_reco) / norm
         return integral
+
 
     def plot_migration(self, ax=None, offset=None, e_true=None,
                        migra=None, **kwargs):
@@ -821,11 +780,11 @@ class EnergyDispersion2D(object):
             e_true=Energy([0.1, 1, 10], 'TeV')
         else:
             e_true=np.atleast_1d(Energy(e_true))
-        migra=self.migra if migra is None else migra
+        migra=self.migra.nodes if migra is None else migra
 
         for ener in e_true:
             for off in offset:
-                disp=self.evaluate(offset=off, e_true=ener, migra=migra)
+                disp=self.data.evaluate(offset=off, e_true=ener, migra=migra)
                 label='offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
                 ax.plot(migra, disp, label=label, **kwargs)
 
@@ -866,13 +825,13 @@ class EnergyDispersion2D(object):
         if offset is None:
             offset=Angle([1], 'deg')
         if e_true is None:
-            e_true=self.energy
+            e_true=self.e_true.nodes
         if migra is None:
-            migra=self.migra
+            migra=self.migra.nodes
 
-        z=self.evaluate(offset=offset, e_true=e_true, migra=migra)
-        x=e_true.value
-        y=migra
+        z=self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
+        y=e_true.value
+        x=migra
 
         ax.pcolor(x, y, z, **kwargs)
         ax.semilogx()
@@ -900,34 +859,8 @@ class EnergyDispersion2D(object):
         plt.show()
         return fig
 
-    def _prepare_linear_interpolator(self, interp_kwargs):
-        from scipy.interpolate import RegularGridInterpolator
-
-        x=self.offset
-        y=self.migra
-        z=np.log10(self.energy.value)
-        points=(x, y, z)
-        values=self.dispersion
-
-        self._linear=RegularGridInterpolator(points, values, **interp_kwargs)
-
-    def info(self):
-        """Print some basic info.
-        """
-        ss="\nSummary EnergyDispersion2D info\n"
-        ss += "--------------------------------\n"
-        # Summarise data members
-        ss += array_stats_str(self.energy, 'energy')
-        ss += array_stats_str(self.offset, 'offset')
-        ss += array_stats_str(self.migra, 'migra')
-        ss += array_stats_str(self.dispersion, 'dispersion')
-
-        energy=Energy('1 TeV')
-        e_reco=EnergyBounds([0.8, 1.2], 'TeV')
-        offset=Angle('0.5 deg')
-        p=self.get_response(offset, energy, e_reco)[0]
-
-        ss += 'Probability to reconstruct a {} photon in the range {} at {}' \
-              ' offset: {:.2f}'.format(energy, e_reco, offset, p)
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.data)
 
         return ss
