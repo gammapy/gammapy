@@ -21,33 +21,33 @@ from ...utils.testing import (
 )
 from ...utils.random import get_random_state
 
-@requires_data('gammapy-extra')
+
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
     def setup(self):
         self.nbins = 30
-        binning = np.logspace(-1,1, self.nbins+1) * u.TeV
+        binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
         self.source_model = models.PowerLaw(index=2 * u.Unit(''),
-                                            amplitude = 1e5 / u.TeV,
-                                            reference = 0.1 * u.TeV)
+                                            amplitude=1e5 / u.TeV,
+                                            reference=0.1 * u.TeV)
         self.bkg_model = models.PowerLaw(index=3 * u.Unit(''),
-                                        amplitude = 1e4 / u.TeV,
-                                        reference = 0.1 * u.TeV)
+                                         amplitude=1e4 / u.TeV,
+                                         reference=0.1 * u.TeV)
 
         self.alpha = 0.1
         random_state = get_random_state(23)
-        npred = self.source_model.integral(binning[:-1], binning[1:]) 
+        npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
         self.src = PHACountsSpectrum(energy=binning, data=source_counts,
                                      backscal=1)
 
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
         bkg_counts = random_state.poisson(npred_bkg)
-        off_counts = random_state.poisson(npred_bkg * 1./self.alpha)
+        off_counts = random_state.poisson(npred_bkg * 1. / self.alpha)
         self.bkg = PHACountsSpectrum(energy=binning, data=bkg_counts)
         self.off = PHACountsSpectrum(energy=binning, data=off_counts,
-                                     backscal=1./self.alpha)
+                                     backscal=1. / self.alpha)
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
@@ -60,7 +60,7 @@ class TestFit:
 
         fit.predict_counts()
         assert_allclose(fit.predicted_counts[0][5], 660.5171280778071)
-        
+
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291329714)
 
@@ -78,7 +78,7 @@ class TestFit:
         on_vector.data.data += self.bkg.data.data
         obs = SpectrumObservation(on_vector=on_vector, off_vector=self.off)
         obs_list = SpectrumObservationList([obs])
-        
+
         self.source_model.parameters.index = 1.12 * u.Unit('')
         fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
                           stat='wstat', forward_folded=False)
@@ -128,28 +128,35 @@ class TestSpectralFit:
 
         # Example fit for one observation
         self.fit = SpectrumFit(self.obs_list[0:1], self.pwl)
-        self.fit.fit()
-        self.result = self.fit.result[0]
 
     def test_basic_results(self):
+        self.fit.fit()
+        result = self.fit.result[0]
         assert self.fit.method == 'sherpa'
-        assert_allclose(self.result.statval, 34.19706702533566)
-        pars = self.result.model.parameters
+        assert_allclose(result.statval, 34.19706702533566)
+        pars = result.model.parameters
         assert_quantity_allclose(pars.index,
                                  2.23957544167327)
         assert_quantity_allclose(pars.amplitude,
                                  2.018513315748709e-07 * u.Unit('m-2 s-1 TeV-1'))
-        par_errors = self.result.model_with_uncertainties.parameters
-        assert_allclose(par_errors.index.s, 0.09558428890966723)
-        assert_allclose(par_errors.amplitude.s, 2.2154024177186417e-08)
+        assert_allclose(result.npred[60], 0.5888275206035011)
 
-    @pytest.mark.skipif(True)
+    def test_basic_errors(self):
+        self.fit.fit()
+        self.fit.est_errors()
+        result = self.fit.result[0]
+        par_errors = result.model_with_uncertainties.parameters
+        assert_allclose(par_errors.index.s, 0.09558428890966723)
+        assert_allclose(par_errors.amplitude.s, 2.2154024177186417e-12)
+
     def test_npred(self):
-        actual = self.result.obs.predicted_counts(self.result.model).data.data.value
-        desired = self.result.npred
+        self.fit.fit()
+        actual = self.fit.obs_list[0].predicted_counts(
+            self.fit.result[0].model).data.data.value
+        desired = self.fit.result[0].npred
         assert_allclose(actual, desired)
 
-    @pytest.mark.skipif(True)
+    @pytest.mark.xfail(reason='add stat per bin to fitresult in fit')
     def test_stats(self):
         stats = self.result.stats_per_bin()
         actual = np.sum(stats)
@@ -158,9 +165,9 @@ class TestSpectralFit:
 
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
-        obs = self.result.obs
+        obs = self.fit.obs_list[0]
         desired = obs.on_vector.lo_threshold
-        actual = self.result.fit_range[0]
+        actual = self.fit.true_fit_range[0][0]
         assert_quantity_allclose(actual, desired)
 
         # Restrict fit range
@@ -176,7 +183,7 @@ class TestSpectralFit:
         fit_range = [0.001, 10] * u.TeV
         self.fit.fit_range = fit_range
         desired = obs.on_vector.lo_threshold
-        actual = self.fit.result[0].fit_range[0]
+        actual = self.fit.true_fit_range[0][0]
         assert_quantity_allclose(actual, desired)
 
     @pytest.mark.xfail(reason='only simplex supported at the moment')
@@ -187,14 +194,13 @@ class TestSpectralFit:
         result = self.fit.result[0]
         assert_quantity_allclose(result.model.parameters.index,
                                  2.2395184727047788)
-    @pytest.mark.skipif(True)
+
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0:1], self.ecpl)
         fit.fit()
         assert_quantity_allclose(fit.result[0].model.parameters.lambda_,
-                                 0.028606845248390498 / u.TeV)
+                                 0.0286068410937353 / u.TeV)
 
-    @pytest.mark.skipif(True)
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
@@ -203,7 +209,6 @@ class TestSpectralFit:
         assert_quantity_allclose(fit.model.parameters.amplitude,
                                  2.3755942722352085e-07 * u.Unit('m-2 s-1 TeV-1'))
 
-    @pytest.mark.skipif(True)
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
         obs_list = SpectrumObservationList([stacked_obs])
