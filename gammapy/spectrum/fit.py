@@ -48,6 +48,8 @@ class SpectrumFit(object):
                  err_method='sherpa', forward_folded=True, fit_range=None):
         # For internal coherence accept only SpectrumObservationList
         # TODO: add fancy converters to accept also e.g. CountsSpectrum
+        if isinstance(obs_list, SpectrumObservation):
+            obs_list = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
             raise ValueError('obs_list is not a SpectrumObservationList')
 
@@ -230,7 +232,7 @@ class SpectrumFit(object):
         from sherpa.data import Data1DInt
         from sherpa.optmethods import NelderMead
 
-        from .sherpa import SherpaModel, SherpaStat
+        from .sherpa_utils import SherpaModel, SherpaStat
 
         binning = self.obs_list[0].e_reco
         # The data is in principle not used but is still set to the correct

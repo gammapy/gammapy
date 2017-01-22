@@ -21,7 +21,7 @@ from ...utils.testing import (
 )
 from ...utils.random import get_random_state
 
-
+@requires_dependency('sherpa')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
