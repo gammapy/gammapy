@@ -221,6 +221,10 @@ class TestSpectralFit:
         assert_quantity_allclose(pars.amplitude,
                                  2.5160334568171844e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
+    def test_run(self, tmpdir):
+        fit = SpectrumFit(obs_list, self.pwl)
+        fit.run(outdir = tmpdir)
+
 
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
