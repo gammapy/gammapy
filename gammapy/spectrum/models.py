@@ -15,7 +15,7 @@ from ..utils.scripts import make_path
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
 try:
-    from .sherpa_models import SherpaExponentialCutoffPowerLaw
+    from .sherpa_utils import SherpaExponentialCutoffPowerLaw
 except ImportError:
     pass
 

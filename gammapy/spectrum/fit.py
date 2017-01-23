@@ -13,7 +13,14 @@ from . import (
     SpectrumObservation,
     models,
 )
-import gammapy.stats as stats
+from .. import stats
+
+# This cannot be made a delayed import because the pytest matrix fails if it is
+# https://travis-ci.org/gammapy/gammapy/jobs/194204926#L1915
+#try:
+from .sherpa_utils import SherpaModel, SherpaStat
+#except ImportError:
+#    pass
 
 __all__ = [
     'SpectrumFit',
@@ -24,42 +31,44 @@ log = logging.getLogger(__name__)
 
 class SpectrumFit(object):
     """
-    Spectral Fit using Sherpa
+    Spectral Fit
 
-    TODO: Outdated - update!
-
-    This is a wrapper around `~sherpa.fit.Fit` that takes care about
-    translating gammapy classes to sherpa classes and handling various aspects
-    of the fitting correctly. For usage examples see :ref:`spectral_fitting`
+    For usage examples see :ref:`spectral_fitting`
 
     Parameters
     ----------
-    obs_list : SpectrumObservationList
-        Observations to fit, TODO: rename to data
-    model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
-        Model to be fit
-    stat : str, `~sherpa.stats.Stat`
-        Fit statistic to be used
-    method : str, `~sherpa.optmethods.OptMethod`
-        Fit statistic to be used
+    obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
+        Observation(s) to fit
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Source model 
+    stat : {'wstat', 'cash'} 
+        Fit statistic 
+    forward_folded : bool, default: True
+        Fold ``model`` with the IRFs given in ``obs_list``
+    fit_range : tuple of `~astropy.units.Quantity``, optional
+        Fit range
+    method : {'sherpa'}
+        Optimization backend for the fit
+    err_method : {'sherpa'}
+        Optimization backend for error estimation
     """
 
-    def __init__(self, obs_list, model, stat='wstat', method='sherpa',
-                 err_method='sherpa', forward_folded=True, fit_range=None):
-        # For internal coherence accept only SpectrumObservationList
+    def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
+                 fit_range=None, method='sherpa', err_method='sherpa'):
         # TODO: add fancy converters to accept also e.g. CountsSpectrum
         if isinstance(obs_list, SpectrumObservation):
             obs_list = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
-            raise ValueError('obs_list is not a SpectrumObservationList')
+            raise ValueError('Invalid input for parameter obs_list'.format(
+                obs_list))
 
         self.obs_list = obs_list
         self.model = model
         self.stat = stat
-        self.method = method
-        self.err_method = method
         self.forward_folded = forward_folded
         self.fit_range = fit_range
+        self.method = method
+        self.err_method = method
 
         # TODO: Reexpose as properties to improve docs
         self.predicted_counts = None
@@ -75,9 +84,10 @@ class SpectrumFit(object):
         ss += '\nData {}'.format(self.obs_list)
         ss += '\nSource model {}'.format(self.model)
         ss += '\nStat {}'.format(self.stat)
-        ss += '\nMethod {}'.format(self.method)
         ss += '\nForward Folded {}'.format(self.forward_folded)
         ss += '\nFit range {}'.format(self.fit_range)
+        ss += '\nBackend {}'.format(self.method)
+        ss += '\nError Backend {}'.format(self.err_method)
 
         return ss
 
@@ -130,7 +140,7 @@ class SpectrumFit(object):
         """True fit range for each observation
 
         True fit range is the fit range set in the
-        `~gammapy.spectrum.SpectrumFit with observation threshold taken into
+        `~gammapy.spectrum.SpectrumFit` with observation threshold taken into
         account.
         """
         true_range = list()
@@ -144,6 +154,8 @@ class SpectrumFit(object):
 
     def predict_counts(self, **kwargs):
         """Predict counts for all observations
+
+        The result is stored as ``predicted_counts`` attribute
         """
         predicted_counts = list()
         for data_ in self.obs_list:
@@ -183,7 +195,11 @@ class SpectrumFit(object):
         return counts
 
     def calc_statval(self):
-        """Calc statistic for all observations"""
+        """Calc statistic for all observations
+        
+        The result is stored as attribute ``statval``, bin outside the fit
+        range are set to 0.
+        """
         statval = list()
         for data_, npred in zip(self.obs_list, self.predicted_counts):
             temp = self._calc_statval_helper(data_, npred)
@@ -192,6 +208,13 @@ class SpectrumFit(object):
         self._restrict_statval()
 
     def _calc_statval_helper(self, obs, prediction):
+        """Calculate statval one observation
+
+        Returns
+        ------
+        statsval: `np.array`
+            Statval for on observation
+        """
         if self.stat == 'cash':
             statsval = stats.cash(n_on=obs.on_vector.data.data.value,
                                   mu_on=prediction)
@@ -205,6 +228,7 @@ class SpectrumFit(object):
             raise NotImplementedError('{}'.format(self.stat))
 
         return statsval
+
 
     def _restrict_statval(self):
         """Apply valid fit range to statval
@@ -224,19 +248,14 @@ class SpectrumFit(object):
 
     def _fit_sherpa(self):
         """Wrapper around sherpa minimizer
-
-        The sherpa data and model call the corresponding methods on
-        `~gammapy.spectrum.SpectrumFit`` 
         """
         from sherpa.fit import Fit
         from sherpa.data import Data1DInt
         from sherpa.optmethods import NelderMead
 
-        from .sherpa_utils import SherpaModel, SherpaStat
-
         binning = self.obs_list[0].e_reco
-        # The data is in principle not used but is still set to the correct
-        # value for debugging purposes
+        # The sherpa data object is not usued in the fit. It is set to the
+        # first observation for debugging purposes, see below
         data = self.obs_list[0].on_vector.data.data.value
         data = Data1DInt('Dummy data', binning[:-1].value,
                          binning[1:].value, data)
@@ -260,7 +279,7 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        print(fitresult)
+        log.debug(fitresult)
         self._make_fit_result()
 
     def _make_fit_result(self):
@@ -301,6 +320,7 @@ class SpectrumFit(object):
             res.covariance = self.covariance
 
     def _est_errors_sherpa(self):
+        """Wrapper around Sherpa error estimator"""
         covar = self._sherpa_fit.est_errors()
         covar_axis = list()
         for idx, par in enumerate(covar.parnames):
@@ -312,7 +332,7 @@ class SpectrumFit(object):
     def compute_fluxpoints(self, binning):
         """Compute `~DifferentialFluxPoints` for best fit model
 
-        Calls :func:`~gammapy.spectrum.DifferentialFluxPoints.compute`.
+        TODO: Implement
 
         Parameters
         ----------
@@ -328,7 +348,7 @@ class SpectrumFit(object):
         raise NotImplementedError
 
     def run(self, outdir=None):
-        """Run all steps
+        """Run all steps and write result to disk
 
         Parameters
         ----------
