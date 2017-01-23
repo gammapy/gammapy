@@ -21,6 +21,7 @@ from ...utils.testing import (
 )
 from ...utils.random import get_random_state
 
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
@@ -106,6 +107,7 @@ class TestFit:
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 class TestSpectralFit:

@@ -17,10 +17,10 @@ from .. import stats
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/194204926#L1915
-#try:
-from .sherpa_utils import SherpaModel, SherpaStat
-#except ImportError:
-#    pass
+try:
+    from .sherpa_utils import SherpaModel, SherpaStat
+except ImportError:
+    pass
 
 __all__ = [
     'SpectrumFit',
@@ -61,6 +61,8 @@ class SpectrumFit(object):
         if not isinstance(obs_list, SpectrumObservationList):
             raise ValueError('Invalid input for parameter obs_list'.format(
                 obs_list))
+
+        # TODO: Check if IRFs are given for forward folding
 
         self.obs_list = obs_list
         self.model = model

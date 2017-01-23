@@ -214,6 +214,7 @@ class TestFluxEstimator:
 
         self.groups = self.seg.groups
 
+    @pytest.mark.xfail(reason='Cannot freeze parameters at the moment')
     def test_with_power_law(self):
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
