@@ -65,7 +65,7 @@ class TestFit:
         assert 'Spectrum' in str(fit)
 
         fit.predict_counts()
-        assert_allclose(fit.predicted_counts[0][5], 660.5171280778071)
+        assert_allclose(fit.predicted_counts[0][0][5], 660.5171280778071)
 
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291329714)
@@ -77,6 +77,28 @@ class TestFit:
                         1.9955563477414806)
         assert_allclose(fit.model.parameters.amplitude.value,
                         100250.33102108649)
+
+    def test_cash_with_bkg(self):
+        """Cash fit taking into account background model"""
+        on_vector = self.src.copy()
+        on_vector.data.data += self.bkg.data.data
+        obs = SpectrumObservation(on_vector=on_vector, off_vector=self.off)
+        obs_list = SpectrumObservationList([obs])
+
+        self.source_model.parameters.index = 1 * u.Unit('')
+        self.bkg_model.parameters.index = 1 * u.Unit('')
+        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+                          stat='cash', forward_folded=False,
+                          background_model=self.bkg_model)
+        assert 'Background' in str(fit)
+
+        fit.fit()
+        print('\nSOURCE\n {}'.format(fit.model))
+        print('\nBKG\n {}'.format(fit.background_model))
+        assert_allclose(fit.result[0].model.parameters.index,
+                        1.996272386763962)
+        assert_allclose(fit.background_model.parameters.index,
+                        2.9926225268193418)
 
     def test_wstat(self):
         """WStat with on source and background spectrum"""
