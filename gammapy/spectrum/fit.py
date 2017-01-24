@@ -354,10 +354,7 @@ class SpectrumFit(object):
 
         Parameters
         ----------
-        method : str {sherpa}
-            Fit method to use
         outdir : Path, str
-
             directory to write results files to
         """
         cwd = Path.cwd()
@@ -366,7 +363,7 @@ class SpectrumFit(object):
         os.chdir(str(outdir))
 
         self.fit()
-        log.info(self.global_result)
+        self.est_errors()
 
         # Assume only one model is fit to all data
         modelname = self.result[0].model.__class__.__name__

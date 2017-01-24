@@ -17,12 +17,16 @@ from ...spectrum import (
 from ...utils.testing import (
     requires_dependency,
     requires_data,
-    SHERPA_LT_4_8,
 )
 from ...utils.random import get_random_state
 
-@pytest.mark.skipif('SHERPA_LT_4_8')
-@requires_dependency('sherpa')
+try:
+    import sherpa
+    SHERPA_LT_4_9 = not '4.9' in sherpa.__version__
+except ImportError:
+    SHERPA_LT_4_9 = True
+
+@pytest.mark.skipif('SHERPA_LT_4_9')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
@@ -44,6 +48,7 @@ class TestFit:
                                      backscal=1)
 
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
+
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1. / self.alpha)
         self.bkg = PHACountsSpectrum(energy=binning, data=bkg_counts)
@@ -107,8 +112,7 @@ class TestFit:
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_LT_4_8')
-@requires_dependency('sherpa')
+@pytest.mark.skipif('SHERPA_LT_4_9')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
@@ -222,7 +226,7 @@ class TestSpectralFit:
                                  2.5160334568171844e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_run(self, tmpdir):
-        fit = SpectrumFit(obs_list, self.pwl)
+        fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir = tmpdir)
 
 
