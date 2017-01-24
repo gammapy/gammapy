@@ -37,8 +37,10 @@ class SpectrumFitResult(object):
         Statistic used for the fit
     statval : float, optional
         Final fit statistic
-    npred : array-like, optional
-        On counts predicted by the fit
+    npred_src : array-like, optional
+        source counts predicted by the fit 
+    npred_bkg : array-like, optional
+        background counts predicted by the fit 
     flux_at_1TeV : dict, optional
         Flux for the fitted model at 1 TeV
     flux_at_1TeV_err : dict, optional
@@ -48,8 +50,8 @@ class SpectrumFitResult(object):
     """
 
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
-                 statname=None, statval=None, npred=None, fluxes=None,
-                 flux_errors=None, obs=None):
+                 statname=None, statval=None, npred_src=None, npred_bkg=None,
+                 fluxes=None, flux_errors=None, obs=None):
 
         self.model = model
         self.covariance = covariance
@@ -57,7 +59,8 @@ class SpectrumFitResult(object):
         self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
-        self.npred = npred
+        self.npred_src = npred_src
+        self.npred_bkg = npred_bkg
         self.fluxes = fluxes
         self.flux_errors = flux_errors
         self.obs = obs

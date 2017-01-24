@@ -167,18 +167,16 @@ class SpectrumFit(object):
         """
         predicted_counts = list()
         for obs in self.obs_list:
-            on_counts = self._predict_counts_helper(obs,
-                                                    self.model,
-                                                    self.forward_folded)
-            off_counts = None
+            mu_sig = self._predict_counts_helper(obs,
+                                                 self.model,
+                                                 self.forward_folded)
+            mu_bkg = None
             if self.background_model is not None:
                 # For now, never fold background model with IRFs
-                bkg_counts = self._predict_counts_helper(obs,
-                                                         self.background_model,
-                                                         False)
-                on_counts += bkg_counts
-                off_counts = bkg_counts * 1. / obs.alpha
-            counts = (on_counts, off_counts) 
+                mu_bkg = self._predict_counts_helper(obs,
+                                                     self.background_model,
+                                                     False)
+            counts = [mu_sig, mu_bkg]
             predicted_counts.append(counts)
         self.predicted_counts = predicted_counts
 
@@ -252,17 +250,30 @@ class SpectrumFit(object):
         # Off stat = 0 by default
         off_stat = np.zeros(obs.e_reco.nbins)
         if self.stat == 'cash':
-            on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
-                                 mu_on=prediction[0])
             if self.background_model is not None:
+                mu_on = prediction[0] + prediction[1]
+                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
+                                     mu_on=mu_on)
+                mu_off = prediction[1] / obs.alpha
                 off_stat = stats.cash(n_on=obs.off_vector.data.data.value,
-                                     mu_on=prediction[1])
+                                      mu_on=mu_off)
+            else:
+                mu_on = prediction[0]
+                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
+                                     mu_on=mu_on)
+                off_stat = np.zeros_like(on_stat)
+
+
         elif self.stat == 'wstat':
             kwargs = dict(n_on=obs.on_vector.data.data.value,
                           n_off=obs.off_vector.data.data.value,
                           alpha=obs.alpha,
                           mu_sig=prediction[0])
+            # Store the result of the profile likelihood as bkg prediction
+            mu_bkg = stats.get_wstat_mu_bkg(**kwargs)
+            prediction[1] = mu_bkg
             on_stat = stats.wstat(**kwargs)
+            off_stat = np.zeros_like(on_stat)
         else:
             raise NotImplementedError('{}'.format(self.stat))
 
@@ -335,8 +346,8 @@ class SpectrumFit(object):
             fit_range = self.true_fit_range[idx]
             statname = self.stat
             statval = np.sum(self.statval[idx])
-            npred = copy.deepcopy(self.predicted_counts[idx][0])
-            # TODO: Add npred background
+            npred_src = copy.deepcopy(self.predicted_counts[idx][0])
+            npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
             self.result.append(SpectrumFitResult(
                 model=model,
                 covariance=covariance,
@@ -344,7 +355,8 @@ class SpectrumFit(object):
                 fit_range=fit_range,
                 statname=statname,
                 statval=statval,
-                npred=npred,
+                npred_src=npred_src,
+                npred_bkg=npred_bkg,
                 obs=obs
             ))
 
