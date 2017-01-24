@@ -748,7 +748,7 @@ class AbsorbedSpectralModel(SpectralModel):
         """Absorbed spectral model
 
         Parameters
-        ---------
+        ----------
         spectral_model : `~gammapy.spectrum.models.SpectralModel`
             spectral model
         table_model : `~gammapy.spectrum.models.TableModel`
