@@ -14,7 +14,7 @@ from ..datasets import gammapy_extra
 __all__ = [
     'requires_dependency',
     'requires_data',
-    'SHERPA_LT_4_8',
+#    'SHERPA_LT_4_8',
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
 ]

@@ -281,7 +281,6 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        log.debug(fitresult)
         self._make_fit_result()
 
     def _make_fit_result(self):
@@ -347,8 +346,6 @@ class SpectrumFit(object):
         -------
         result : `~gammapy.spectrum.SpectrumResult`
         """
-        raise NotImplementedError
-
     def run(self, outdir=None):
         """Run all steps and write result to disk
 
