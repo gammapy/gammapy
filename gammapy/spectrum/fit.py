@@ -396,6 +396,8 @@ class SpectrumFit(object):
         -------
         result : `~gammapy.spectrum.SpectrumResult`
         """
+        raise NotImplementedError()
+
     def run(self, outdir=None):
         """Run all steps and write result to disk
 
