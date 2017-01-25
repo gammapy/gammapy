@@ -392,9 +392,9 @@ class CTAPerf(object):
         Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp_2d=None, psf=None, bkg=None, sens=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None):
         self.aeff = aeff
-        self.edisp_2d = edisp_2d
+        self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
         self.sens = sens
@@ -413,7 +413,7 @@ class CTAPerf(object):
 
         hdulist = fits.open(filename)
         aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
-        edisp_2d = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         bkg = BgRateTable.from_hdulist(hdulist=hdulist)
         psf = Psf68Table.from_hdulist(hdulist=hdulist)
         sens = SensitivityTable.from_hdulist(hdulist=hdulist)
@@ -421,7 +421,7 @@ class CTAPerf(object):
         return cls(
             aeff=aeff,
             bkg=bkg,
-            edisp_2d=edisp_2d,
+            edisp=edisp,
             psf=psf,
             sens=sens
         )
@@ -441,13 +441,13 @@ class CTAPerf(object):
         self.aeff.plot(ax=ax_area).set_yscale('log')
         self.sens.plot(ax=ax_sens)
         self.psf.plot(ax=ax_psf)
-        self.edisp_2d.plot_bias(ax=ax_resol,
-                                offset=0.5 * u.degree,  # hacked for now
-                                e_true=EnergyBounds.equal_log_spacing(0.02,
-                                                                      300,
-                                                                      100,
-                                                                      'TeV'),
-                                migra=np.linspace(0., 3, 80))
+        self.edisp.plot_bias(ax=ax_resol,
+                             offset=0.5 * u.degree,  # hacked for now
+                             e_true=EnergyBounds.equal_log_spacing(0.02,
+                                                                   300,
+                                                                   100,
+                                                                   'TeV'),
+                             migra=np.linspace(0., 3, 80))
 
         ax_bkg.grid(which='both')
         ax_area.grid(which='both')
