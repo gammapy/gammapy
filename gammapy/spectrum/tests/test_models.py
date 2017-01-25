@@ -171,6 +171,7 @@ def test_table_model_from_file():
                         energy_unit=u.TeV)
 
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_absorbed_spectral_model():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
