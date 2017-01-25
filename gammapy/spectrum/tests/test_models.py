@@ -4,7 +4,8 @@ import astropy.units as u
 from gammapy.utils.energy import EnergyBounds
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
-                      ExponentialCutoffPowerLaw3FGL, LogParabola, TableModel)
+                      ExponentialCutoffPowerLaw3FGL, LogParabola,
+                      TableModel, AbsorbedSpectralModel)
 from ...utils.testing import requires_dependency, requires_data
 
 
@@ -168,3 +169,32 @@ def test_table_model_from_file():
     absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
     absorption_z03.plot(energy_range=(0.03, 10),
                         energy_unit=u.TeV)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_absorbed_spectral_model():
+    filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+    # absorption values for given redshift
+    redshift = 0.117
+    absorption = TableModel.read_xspec_model(filename, redshift)
+    # Spectral model corresponding to PKS 2155-304 (quiescent state)
+    index = 3.53
+    amplitude = 1.81 * 1e-12 * u.Unit('cm-2 s-1 TeV-1')
+    reference = 1 * u.TeV
+    pwl = PowerLaw(index=index, amplitude=amplitude, reference=reference)
+    # EBL + PWL model
+    model = AbsorbedSpectralModel(spectral_model=pwl, table_model=absorption)
+
+    # Test if the absorption factor at the reference energy
+    # corresponds to the ratio of the absorbed flux
+    # divided by the flux of the spectral model
+    model_ref_energy = model.evaluate(energy=reference)
+    pwl_ref_energy = pwl.evaluate(energy=reference,
+                                  index=index,
+                                  amplitude=amplitude,
+                                  reference=reference)
+
+    desired = absorption.evaluate(energy=reference, amplitude=1.)
+    actual = model_ref_energy/pwl_ref_energy
+    assert_quantity_allclose(actual, desired)
