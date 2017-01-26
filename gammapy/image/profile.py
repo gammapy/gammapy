@@ -240,6 +240,7 @@ class ImageProfileEstimator(object):
         plt.show()
 
     """
+
     def __init__(self, x_edges=None, method='sum', axis='lon'):
 
         self._x_edges = x_edges
@@ -348,7 +349,6 @@ class ImageProfileEstimator(object):
         label_image.data = data
         return label_image
 
-
     def run(self, image, image_err=None, mask=None):
         """
         Run image profile estimator.
@@ -412,6 +412,7 @@ class ImageProfile(object):
         Table instance with the columns specified as above.
 
     """
+
     def __init__(self, table):
         self.table = table
 
@@ -702,14 +703,14 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
     lat = coordinates.data.lat.degree
     mask_init = (lats[0] <= lat) & (lat < lats[1])
     mask_bounds = mask_init & (lons[0] <= lon) & (lon < lons[1])
-    if mask != None:
+    if mask is not None:
         mask = mask_bounds & mask
     else:
         mask = mask_bounds
 
     # Need to preserve shape here so use multiply
     cut_image = image.data * mask
-    if counts != None:
+    if counts is not None:
         cut_counts = counts.data * mask
     values = []
     count_vals = []
@@ -726,7 +727,7 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
             lat_mask = (bounds['GLAT_MIN'][bin] <= lat) & (lat < bounds['GLAT_MAX'][bin])
             lat_band = cut_image[lat_mask]
             values.append(lat_band.sum())
-            if counts != None:
+            if counts is not None:
                 count_band = cut_counts[lat_mask]
                 count_vals.append(count_band.sum())
             else:
@@ -744,14 +745,14 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
             lon_mask = (bounds['GLON_MIN'][bin] <= lon) & (lon < bounds['GLON_MAX'][bin])
             lon_band = cut_image[lon_mask]
             values.append(lon_band.sum())
-            if counts != None:
+            if counts is not None:
                 count_band = cut_counts[lon_mask]
                 count_vals.append(count_band.sum())
             else:
                 count_vals.append(0)
 
-    if errors == True:
-        if counts != None:
+    if errors is True:
+        if counts is not None:
             rel_errors = 1. / np.sqrt(count_vals)
             error_vals = values * rel_errors
         else:
