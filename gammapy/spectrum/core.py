@@ -335,7 +335,7 @@ class PHACountsSpectrum(CountsSpectrum):
         super(PHACountsSpectrum, self).__init__(energy, data)
         self.obs_id=obs_id
         if quality is None:
-            quality = np.zeros(self.energy.nbins, dtype=int)
+            quality = np.zeros(self.energy.nbins, dtype='i2')
         self.quality = quality
         self.is_bkg = is_bkg
         self.meta = Bunch(kwargs)

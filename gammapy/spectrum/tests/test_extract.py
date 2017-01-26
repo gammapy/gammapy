@@ -105,15 +105,18 @@ class TestSpectrumExtraction:
                                  extraction.observations[0].on_vector.data.data)
         assert_quantity_allclose(testobs.on_vector.energy.nodes,
                                  extraction.observations[0].on_vector.energy.nodes)
-        # Test if use_sherpa = True
+
+    @requires_dependency('sherpa')
+    def test_sherpa(self, tmpdir, extraction):
+        """Same as above for files to be used with sherpa"""
         extraction.run(outdir=tmpdir, use_sherpa=True)
-        testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
-        assert_quantity_allclose(testobs.aeff.data.data,
-                                 extraction.observations[0].aeff.data.data)
-        assert_quantity_allclose(testobs.on_vector.data.data,
-                                 extraction.observations[0].on_vector.data.data)
-        assert_quantity_allclose(testobs.on_vector.energy.nodes,
-                                 extraction.observations[0].on_vector.energy.nodes)
+
+        import sherpa.astro.ui as sau
+        sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
+        arf = sau.get_arf()
+        actual = arf._arf._specresp
+        desired = extraction.observations[0].aeff.data.data.value
+        assert_allclose(actual, desired)
 
     def test_define_energy_threshold(self, extraction):
         # TODO: Find better API for this
