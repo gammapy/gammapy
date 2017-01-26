@@ -133,18 +133,11 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
-    # You can move builds that temporarily fail because of some non-Gammapy
-    # issue here
+
+    # You can move builds that temporarily fail because of some non-Gammapy here.
     # Please add a link to a GH issue that tracks the upstream issue.
-    allow_failures:
-        # see https://github.com/gammapy/gammapy/issues/439
-        - os: linux
-          env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
-        # this halts at the moment and thus allowing it to fail, to be able to go
-        # ahead with the release
-        - os: linux
-          env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
+#    allow_failures:
+#        # copy the part from the `include` section above here.
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
