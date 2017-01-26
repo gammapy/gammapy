@@ -211,6 +211,8 @@ class SpectrumFitResult(object):
         --------
         TODO
         """
+        if self.covariance is None:
+            raise ValueError('covariance matrix not set')
         import uncertainties
         pars = self.model.parameters
 

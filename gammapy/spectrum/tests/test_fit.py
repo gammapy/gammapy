@@ -147,6 +147,9 @@ class TestSpectralFit:
                                  2.018513315748709e-07 * u.Unit('m-2 s-1 TeV-1'))
         assert_allclose(result.npred[60], 0.5888275206035011)
 
+        with pytest.raises(ValueError):
+            t = self.fit.result[0].to_table()
+
     def test_basic_errors(self):
         self.fit.fit()
         self.fit.est_errors()
@@ -154,6 +157,9 @@ class TestSpectralFit:
         par_errors = result.model_with_uncertainties.parameters
         assert_allclose(par_errors.index.s, 0.09558428890966723)
         assert_allclose(par_errors.amplitude.s, 2.2154024177186417e-12)
+
+        t = self.fit.result[0].to_table()
+        assert t['index_err'].data[0] == 0.095584289015574586
 
     def test_npred(self):
         self.fit.fit()
