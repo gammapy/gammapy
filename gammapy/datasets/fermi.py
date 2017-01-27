@@ -243,11 +243,11 @@ class FermiLATDataset(object):
 
     Parameters
     ----------
-    path : str
-        Path to the parent data folder. Must contain a 'config.yaml' file.
+    filename : str
+        Filename of the yaml file that specifies the data filenames.
     """
 
-    def __init__(self, filename='$FERMI_LAT_DATA/config.yaml'):
+    def __init__(self, filename):
         import yaml
         filename = make_path(filename)
         self._path = filename.parents[0].resolve()
