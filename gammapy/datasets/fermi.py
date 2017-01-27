@@ -419,6 +419,7 @@ class FermiLATDataset(object):
         """
         Summary info string about the dataset.
         """
+        import yaml
         info =  'Fermi dataset\n'
         info += '=============\n'
         info += yaml.dump(self.config, default_flow_style=False)
