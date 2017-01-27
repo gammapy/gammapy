@@ -123,6 +123,7 @@ def test_load_lat_psf_performance():
 
 @requires_data('fermi-lat')
 @requires_dependency('healpy')
+@requires_dependency('yaml')
 class TestFermiLATDataset:
     def setup(self):
         filename = '$FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
