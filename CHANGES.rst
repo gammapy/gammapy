@@ -32,6 +32,7 @@ Contributors
 - Julien Lefaucheur
 - Léa Jouvin
 - Nachiketa Chakraborty
+- Régis Terrier
 
 Pull requests
 +++++++++++++
@@ -40,6 +41,13 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#851] Write Macports install docs (Christoph Deil)
+- [#847] Fix Sherpa spectrum OGIP file issue (Régis Terrier and Johannes King)
+- [#842] Add AbsorbedSpectralModel and improve CTA IRF class (Julien Lefaucheur)
+- [#840] Fix energy binning issue in cube pipe (Léa Jouvin)
+- [#837] Fix containment fraction issue for table PSF (Léa Jouvin)
+- [#836] Fix spectrum observation write issue (Léa Jouvin)
+- [#835] Add image profile estimator class (Axel Donath)
 - [#834] Bump to require Astropy v1.3 (Christoph Deil)
 - [#833] Add image profile class (Axel Donath)
 - [#832] Improve NDDataArray (use composition, not inheritance) (Johannes King)
