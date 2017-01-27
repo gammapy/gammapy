@@ -88,8 +88,10 @@
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
-.. _Slack: https://slack.com/
 .. _Gammapy on Slack: https://gammapy.slack.com
+
+.. _Slack: https://slack.com
+.. _PyPI: https://pypi.python.org
 
 .. _scientific Python stack: http://www.scipy.org/about.html
 
