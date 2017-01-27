@@ -2,13 +2,23 @@
 """Fermi datasets.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
+
+from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
+from astropy.utils import lazyproperty
+
 from .core import gammapy_extra
+from ..data import EventList
+from ..cube import SkyCube
+from ..irf import EnergyDependentTablePSF
+from ..utils.scripts import make_path
+from ..spectrum.models import TableModel
 
 __all__ = [
-    'FermiLATDataset'
+    'FermiLATDataset',
     'FermiGalacticCenter',
     'FermiVelaRegion',
     'fetch_fermi_diffuse_background_model',
@@ -238,6 +248,7 @@ class FermiLATDataset(object):
     """
 
     def __init__(self, filename='$FERMI_LAT_DATA/config.yaml'):
+        import yaml
         filename = make_path(filename)
         self._path = filename.parents[0].resolve()
         self.config = yaml.load(open(str(filename), 'r'))
@@ -272,9 +283,10 @@ class FermiLATDataset(object):
         """
         filename = self.filenames['exposure']
         try:
-            cube = SkyCube.read(, format='fermi-exposure')
-        except:
-            cube = SkyCubeHealpix.read(, format='fermi-exposure')
+            cube = SkyCube.read(filename, format='fermi-exposure')
+        except ValueError:
+            from ..cube.healpix import SkyCubeHealpix
+            cube = SkyCubeHealpix.read(filename, format='fermi-exposure')
         cube.name = 'exposure'
         #TODO: check why fixing the unit is needed
         cube.data = u.Quantity(cube.data.value, 'cm2 s')
@@ -297,7 +309,8 @@ class FermiLATDataset(object):
 
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
-        except:
+        except ValueError:
+            from ..cube.healpix import SkyCubeHealpix
             cube = SkyCubeHealpix.read(filename, format='fermi-counts')
 
         cube.name = 'counts'
