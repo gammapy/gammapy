@@ -18,7 +18,6 @@ def test_extended_image():
     # TODO: implement me
     pass
 
-@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_source_image():
@@ -40,7 +39,6 @@ def test_source_image():
     expected = 1.6098631760996795e-07
     assert_allclose(actual, expected)
 
-@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_catalog_image():

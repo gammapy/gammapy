@@ -65,7 +65,9 @@ class SkyCube(object):
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
-        if not data.ndim == 3:
+        # TODO: In gammapy SkyCube is used sometimes with ndim = 2 for cubes
+        # with a single energy band
+        if not data.ndim > 1:
             raise ValueError('Dimension of the data must be ndim = 3, but is '
                              'ndim = {}'.format(data.ndim))
         self.data = data
