@@ -214,6 +214,7 @@ class Data3DInt(DataND):
 class CombinedModel3D(ArithmeticModel):
     """
     Combined spatial and spectral 3D model.
+    If you ask for a selected region, it will only compare the data and the Combined model on the selected region
     """
 
     def __init__(self, name='cube-model', spatial_model=None, spectral_model=None):
@@ -242,6 +243,7 @@ class CombinedModel3D(ArithmeticModel):
 class CombinedModel3DInt(ArithmeticModel):
     """
     Combined spatial and spectral 3D model with the possibility to convolve the spatial model*exposure by the PSF.
+    If you ask for a selected region, it will only compare the data and the Combined model on the selected region
 
     Parameters
     ----------
@@ -255,7 +257,10 @@ class CombinedModel3DInt(ArithmeticModel):
         Exposure cube
     psf: `~gammapy.cube.SkyCube`
         Psf cube
-
+    select_region: True
+        If True select only the points of the region of interest for the fit
+    index_selected_region: tuple
+        tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
     """
 
     def __init__(self, coord, energies, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
@@ -343,6 +348,11 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         spectral sherpa model
     edisp: `~numpy.array`
         2D array in (Ereco,Etrue) for the energy dispersion
+    select_region: True
+        If True select only the points of the region of interest for the fit
+    index_selected_region: tuple
+        tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
+
     """
 
     def __init__(self,coord, energies, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,

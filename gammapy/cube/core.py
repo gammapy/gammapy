@@ -327,7 +327,7 @@ class SkyCube(object):
         energy = self.energy_axis.wcs_pix2world(z)
         return (position, energy)
 
-    def to_sherpa_data3d(self, dstype='Data3D', select_region= False, index_selected_region= None):
+    def to_sherpa_data3d(self, dstype='Data3D', select_region=False, index_selected_region=None):
         """
         Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
 
@@ -335,6 +335,10 @@ class SkyCube(object):
         ----------
         dstype : {'Data3D', 'Data3DInt'}
             Sherpa data type.
+        select_region: True
+            If True select only the points of the region of interest for the fit
+        index_selected_region: tuple
+            tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
         """
         from .sherpa_ import Data3D, Data3DInt
         energies = self.energies(mode='edges').to("TeV").value
@@ -354,12 +358,14 @@ class SkyCube(object):
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             if not select_region:
                 return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
-                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
-                             self.data.value.ravel().shape)
+                                 ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+                                 self.data.value.ravel().shape)
             else:
-                return Data3DInt('', elo_cube[index_selected_region].ravel(), ra_cube_lo[index_selected_region].ravel(), dec_cube_lo[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(),
-                             ra_cube_hi[index_selected_region].ravel(), dec_cube_hi[index_selected_region].ravel(), self.data.value[index_selected_region].ravel(),
-                             self.data.value[index_selected_region].ravel().shape)
+                return Data3DInt('', elo_cube[index_selected_region].ravel(), ra_cube_lo[index_selected_region].ravel(),
+                                 dec_cube_lo[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(),
+                                 ra_cube_hi[index_selected_region].ravel(), dec_cube_hi[index_selected_region].ravel(),
+                                 self.data.value[index_selected_region].ravel(),
+                                 self.data.value[index_selected_region].ravel().shape)
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
             ra = coordinates.data.lon.degree
@@ -370,12 +376,13 @@ class SkyCube(object):
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             if not select_region:
                 return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                          dec_cube.ravel(), self.data.value.ravel(),
-                          self.data.value.ravel().shape)
+                              dec_cube.ravel(), self.data.value.ravel(),
+                              self.data.value.ravel().shape)
             else:
-                return Data3D('', elo_cube[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(), ra_cube[index_selected_region].ravel(),
-                          dec_cube[index_selected_region].ravel(), self.data.value[index_selected_region].ravel(),
-                          self.data.value[index_selected_region].ravel().shape)
+                return Data3D('', elo_cube[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(),
+                              ra_cube[index_selected_region].ravel(),
+                              dec_cube[index_selected_region].ravel(), self.data.value[index_selected_region].ravel(),
+                              self.data.value[index_selected_region].ravel().shape)
 
         else:
             raise ValueError('Invalid sherpa data type.')

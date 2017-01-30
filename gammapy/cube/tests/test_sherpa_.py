@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing.utils import assert_allclose
 import numpy as np
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from ...datasets import gammapy_extra
 from ...irf import EnergyDispersion
 from ...utils.testing import requires_dependency, requires_data
@@ -98,7 +98,10 @@ def testCombinedModel3DInt():
     # Setup combined spatial and spectral model
     spatial_model = NormGauss2DInt('spatial-model')
     spectral_model = PowLaw1D('spectral-model')
-    source_model = CombinedModel3DInt(use_psf=True, exposure=exposure_3d, psf=psf_3d,
+
+    coord = counts_3d.sky_image_ref.coordinates(mode="edges")
+    energies = counts_3d.energies(mode='edges').to("TeV")
+    source_model = CombinedModel3DInt(coord=coord, energies=energies, use_psf=True, exposure=exposure_3d, psf=psf_3d,
                                       spatial_model=spatial_model, spectral_model=spectral_model)
 
     # Set starting values
@@ -122,6 +125,54 @@ def testCombinedModel3DInt():
                  2.2778084618363268]
 
     assert_allclose(result.parvals, reference, rtol=1E-5)
+
+    # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
+    # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
+    # First you define the coord of your cube that you want to use for the fit
+    center_excluded_region = SkyCoord(83.60, 21.88, unit='deg')
+    radius_excluded_region = Angle(0.1, "deg")
+    coord_center_pix = counts_3d.sky_image_ref.coordinates(mode="center").icrs
+    lon = np.tile(coord_center_pix.data.lon.degree, (len(energies) - 1, 1, 1))
+    lat = np.tile(coord_center_pix.data.lat.degree, (len(energies) - 1, 1, 1))
+    coord_3d_center_pix = SkyCoord(lon, lat, unit="deg")
+    index_region_selected_3d = np.where(center_excluded_region.separation(coord_3d_center_pix) > radius_excluded_region)
+
+    # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
+    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
+                                      index_selected_region=index_region_selected_3d)
+    size_remove_index = len(
+        np.where(center_excluded_region.separation(coord_3d_center_pix) < radius_excluded_region)[0])
+    assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
+
+    # Set the bkg and select only the data points of the selected region
+    bkg = TableModel('bkg')
+    bkg.load(None, bkg_3d.data.value[index_region_selected_3d].ravel())
+    bkg.ampl = 1
+    bkg.ampl.freeze()
+
+    # The model is evaluated on all the points then it is compared with the data only on the selected_region
+    source_model = CombinedModel3DInt(coord=coord, energies=energies, use_psf=True, exposure=exposure_3d, psf=psf_3d,
+                                      spatial_model=spatial_model, spectral_model=spectral_model, select_region=True,
+                                      index_selected_region=index_region_selected_3d)
+    # Set starting values
+    source_model.gamma = 2.2
+    source_model.xpos = center.l.value
+    source_model.ypos = center.b.value
+    source_model.fwhm = 0.12
+    source_model.ampl = 1.0
+
+    # Fit
+    model = bkg + 1E-11 * (source_model)
+    fit = Fit(data=cube, model=model, stat=Cash(), method=NelderMead(), estmethod=Covariance())
+    result2 = fit.fit()
+
+    # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
+    reference2 = [184.22346441407106,
+                  -6.1592342773707793,
+                  4.3461848656422708,
+                  0.098021362279522989,
+                  2.2705231557633394]
+    assert_allclose(result2.parvals, reference2, rtol=1E-5)
 
 
 @requires_dependency('sherpa')
@@ -166,9 +217,11 @@ def testCombinedModel3DIntConvolveEdisp():
     # Setup combined spatial and spectral model
     spatial_model = NormGauss2DInt('spatial-model')
     spectral_model = PowLaw1D('spectral-model')
-    dimensions = [exposure_3d.data.shape[1], exposure_3d.data.shape[2], rmf.data.data.shape[1],
-                  exposure_3d.data.shape[0]]
-    source_model = CombinedModel3DIntConvolveEdisp(dimensions=dimensions, use_psf=True, exposure=exposure_3d,
+    # dimensions = [exposure_3d.data.shape[1], exposure_3d.data.shape[2], rmf.data.data.shape[1],
+    #              exposure_3d.data.shape[0]]
+    coord = counts_3d.sky_image_ref.coordinates(mode="edges")
+    energies = counts_3d.energies(mode='edges').to("TeV")
+    source_model = CombinedModel3DIntConvolveEdisp(coord=coord, energies=energies, use_psf=True, exposure=exposure_3d,
                                                    psf=psf_3d,
                                                    spatial_model=spatial_model, spectral_model=spectral_model,
                                                    edisp=rmf.data.data)
@@ -194,3 +247,56 @@ def testCombinedModel3DIntConvolveEdisp():
                  2.2288775690653875]
 
     assert_allclose(result.parvals, reference, rtol=1E-5)
+
+    # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
+    # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
+    # First you define the coord of your cube that you want to use for the fit
+    center_excluded_region = SkyCoord(83.60, 21.88, unit='deg')
+    radius_excluded_region = Angle(0.1, "deg")
+    coord_center_pix = counts_3d.sky_image_ref.coordinates(mode="center").icrs
+    lon = np.tile(coord_center_pix.data.lon.degree, (len(energies) - 1, 1, 1))
+    lat = np.tile(coord_center_pix.data.lat.degree, (len(energies) - 1, 1, 1))
+    coord_3d_center_pix = SkyCoord(lon, lat, unit="deg")
+    index_region_selected_3d = np.where(center_excluded_region.separation(coord_3d_center_pix) > radius_excluded_region)
+
+    # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
+    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
+                                      index_selected_region=index_region_selected_3d)
+    size_remove_index = len(
+        np.where(center_excluded_region.separation(coord_3d_center_pix) < radius_excluded_region)[0])
+    assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
+
+    # Set the bkg and select only the data points of the selected region
+    bkg = TableModel('bkg')
+    bkg.load(None, bkg_3d.data.value[index_region_selected_3d].ravel())
+    bkg.ampl = 1
+    bkg.ampl.freeze()
+
+    # The model is evaluated on all the points then it is compared with the data only on the selected_region
+    source_model = CombinedModel3DIntConvolveEdisp(coord=coord, energies=energies, use_psf=True, exposure=exposure_3d,
+                                                   psf=psf_3d, spatial_model=spatial_model,
+                                                   spectral_model=spectral_model,
+                                                   edisp=rmf.data.data, select_region=True,
+                                                   index_selected_region=index_region_selected_3d)
+
+    # Set starting values
+    source_model.gamma = 2.2
+    source_model.xpos = center.l.value
+    source_model.ypos = center.b.value
+    source_model.fwhm = 0.12
+    source_model.ampl = 1.0
+
+    # Fit
+    model = bkg + 1E-11 * (source_model)
+    fit = Fit(data=cube, model=model, stat=Cash(), method=NelderMead(), estmethod=Covariance())
+    result2 = fit.fit()
+
+    # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
+    reference2 = [181.74121965012066,
+                  -11.394859829167892,
+                  23691.982850052769,
+                  4.3353099316360773,
+                  2.1965569221451813]
+    import pdb;
+    pdb.set_trace()
+    assert_allclose(result2.parvals, reference2, rtol=1E-5)
