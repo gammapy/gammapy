@@ -441,7 +441,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         covariance = np.diag([
             data['Unc_Spectral_Index'] ** 2,
             data['Unc_Flux50'] ** 2,
-            0,
         ])
 
         covar_axis = ['index', 'amplitude']
@@ -588,7 +587,6 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         covariance = np.diag([
             data['Unc_Spectral_Index'] ** 2,
             data['Unc_Flux'] ** 2,
-            0,
         ])
 
         covar_axis = ['index', 'amplitude']
