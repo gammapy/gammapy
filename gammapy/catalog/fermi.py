@@ -22,8 +22,10 @@ from .core import SourceCatalog, SourceCatalogObject
 __all__ = [
     'fetch_fermi_catalog',
     'fetch_fermi_extended_sources',
+    'SourceCatalog1FHL',
     'SourceCatalog2FHL',
     'SourceCatalog3FGL',
+    'SourceCatalogObject1FHL',
     'SourceCatalogObject2FHL',
     'SourceCatalogObject3FGL',
 ]
@@ -212,7 +214,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     One source from the Fermi-LAT 3FGL catalog.
     """
     _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
-    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000']
+    _ebounds_suffix = ['100_300', '300_1000',
+                       '1000_3000', '3000_10000', '10000_100000']
     energy_range = Quantity([100, 100000], 'MeV')
     """Energy range of the catalog.
 
@@ -246,7 +249,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """
         spec_type = self.data['SpectrumType'].strip()
         pars = {}
-        pars['amplitude'] = Quantity(self.data['Flux_Density'], 'MeV-1 cm-2 s-1')
+        pars['amplitude'] = Quantity(
+            self.data['Flux_Density'], 'MeV-1 cm-2 s-1')
         pars['reference'] = Quantity(self.data['Pivot_Energy'], 'MeV')
 
         if spec_type == 'PowerLaw':
@@ -261,14 +265,15 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         elif spec_type == 'LogParabola':
             pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
             pars['beta'] = Quantity(self.data['beta'], '')
-            return  LogParabola(**pars)
+            return LogParabola(**pars)
 
         elif spec_type == "PLSuperExpCutoff":
             # TODO Implement super exponential cut off
             raise NotImplementedError
 
         else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
+            raise ValueError(
+                'Spectral model {} not available'.format(spec_type))
 
     @property
     def flux_points(self):
@@ -296,7 +301,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         # TODO: check if nuFnu is maybe integral flux
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
-
 
     @property
     def spectrum(self):
@@ -327,7 +331,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             # TODO Implement super exponential cut off
             raise NotImplementedError
         else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
+            raise ValueError(
+                'Spectral model {} not available'.format(spec_type))
 
         covariance = np.diag(par_errs) ** 2
 
@@ -340,11 +345,11 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
-            raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
+            raise ValueError(
+                "Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
 
         values = [self.data[prefix + _] for _ in self._ebounds_suffix]
         return Quantity(values, unit)
-
 
     def plot_lightcurve(self, ax=None):
         """Plot lightcurve.
@@ -387,7 +392,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux']:
-            raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
+            raise ValueError(
+                "Must be one of the following: 'Flux', 'Unc_Flux'")
 
         values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
         return Quantity(values, unit)
@@ -407,7 +413,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         table['flux_errp'] = flux_err[:, 1]
         flux_points = FluxPoints(table)
 
-        flux_points_dnde = compute_flux_points_dnde(flux_points, model=self.spectral_model)
+        flux_points_dnde = compute_flux_points_dnde(
+            flux_points, model=self.spectral_model)
         return flux_points_dnde
 
     @property
@@ -458,20 +465,22 @@ class SourceCatalog3FGL(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = gammapy_extra.filename('datasets/catalogs/fermi/gll_psc_v16.fit.gz')
+            filename = gammapy_extra.filename(
+                'datasets/catalogs/fermi/gll_psc_v16.fit.gz')
 
         self.hdu_list = fits.open(filename)
-        self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
+        self.extended_sources_table = Table(
+            self.hdu_list['ExtendedSources'].data)
 
         table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
 
-        source_name_key='Source_Name'
+        source_name_key = 'Source_Name'
         source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
                              '2FGL_Name', '1FHL_Name', 'ASSOC_TEV', 'ASSOC1',
                              'ASSOC2')
         super(SourceCatalog3FGL, self).__init__(table=table,
-                                source_name_key=source_name_key,
-                                source_name_alias=source_name_alias)
+                                                source_name_key=source_name_key,
+                                                source_name_alias=source_name_alias)
 
 
 class SourceCatalog2FHL(SourceCatalog):
@@ -483,16 +492,136 @@ class SourceCatalog2FHL(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = gammapy_extra.filename('datasets/catalogs/fermi/gll_psch_v08.fit.gz')
+            filename = gammapy_extra.filename(
+                'datasets/catalogs/fermi/gll_psch_v08.fit.gz')
 
         self.hdu_list = fits.open(filename)
         self.count_map_hdu = self.hdu_list['Count Map']
-        self.extended_sources_table = Table(self.hdu_list['Extended Sources'].data)
+        self.extended_sources_table = Table(
+            self.hdu_list['Extended Sources'].data)
         self.rois = Table(self.hdu_list['ROIs'].data)
         table = Table(self.hdu_list['2FHL Source Catalog'].data)
 
-        source_name_key='Source_Name'
+        source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC', '3FGL_Name', '1FHL_Name', 'TeVCat_Name')
         super(SourceCatalog2FHL, self).__init__(table=table,
-                                source_name_key=source_name_key,
-                                source_name_alias=source_name_alias)
+                                                source_name_key=source_name_key,
+                                                source_name_alias=source_name_alias)
+
+
+class SourceCatalogObject1FHL(SourceCatalogObject):
+    """One source from the Fermi-LAT 1FHL catalog.
+    """
+    _ebounds = EnergyBounds([10, 30, 100, 500], 'GeV')
+    _ebounds_suffix = ['10_30', '30_100', '100_500']
+    energy_range = Quantity([0.01, 0.5], 'TeV')
+    """Energy range of the Fermi 1FHL source catalog"""
+
+    def __str__(self):
+        """Print summary info."""
+        # TODO: can we share code with 3FGL summary funtion?
+        d = self.data
+
+        ss = 'Source: {}\n'.format(d['Source_Name'])
+        ss += '\n'
+
+        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
+        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
+        ss += 'GLON        : {}\n'.format(d['GLON'])
+        ss += 'GLAT        : {}\n'.format(d['GLAT'])
+        ss += '\n'
+
+        # val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
+        # ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
+        # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+
+        return ss
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux']:
+            raise ValueError(
+                "Must be one of the following: 'Flux', 'Unc_Flux'")
+
+        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+    @property
+    def flux_points(self):
+        """
+        Integral flux points (`~gammapy.spectrum.FluxPoints`).
+        """
+        table = Table()
+        table.meta['SED_TYPE'] = 'flux'
+        table['e_min'] = self._ebounds.lower_bounds
+        table['e_max'] = self._ebounds.upper_bounds
+        table['flux'] = self._get_flux_values()
+        flux_err = self._get_flux_values('Unc_Flux')
+        table['flux_errn'] = np.abs(flux_err[:, 0])
+        table['flux_errp'] = flux_err[:, 1]
+        flux_points = FluxPoints(table)
+
+        flux_points_dnde = compute_flux_points_dnde(
+            flux_points, model=self.spectral_model)
+        return flux_points_dnde
+
+    @property
+    def spectral_model(self):
+        """
+        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
+        """
+        emin, emax = self.energy_range
+        g = Quantity(self.data['Spectral_Index'], '')
+
+        pars = {}
+        pars['amplitude'] = Quantity(self.data['Flux'], 'cm-2 s-1')
+        pars['emin'], pars['emax'] = self.energy_range
+        pars['index'] = g
+        return PowerLaw2(**pars)
+
+    @property
+    def spectrum(self):
+        """Spectrum information (`~gammapy.spectrum.SpectrumFitResult`)
+        """
+        data = self.data
+        model = self.spectral_model
+
+        covariance = np.diag([
+            data['Unc_Spectral_Index'] ** 2,
+            data['Unc_Flux'] ** 2,
+            0,
+        ])
+
+        covar_axis = ['index', 'amplitude']
+
+        fit = SpectrumFitResult(
+            model=model,
+            fit_range=self.energy_range,
+            covariance=covariance,
+            covar_axis=covar_axis,
+        )
+
+        return fit
+
+
+class SourceCatalog1FHL(SourceCatalog):
+    """Fermi-LAT 1FHL source catalog."""
+    name = '1fhl'
+    description = 'First Fermi-LAT Catalog of Sources above 10 GeV'
+    source_object_class = SourceCatalogObject1FHL
+
+    def __init__(self, filename=None):
+        if not filename:
+            filename = gammapy_extra.filename(
+                'datasets/catalogs/fermi/gll_psch_v07.fit.gz')
+
+        self.hdu_list = fits.open(filename)
+        # self.count_map_hdu = self.hdu_list['Count Map']
+        self.extended_sources_table = Table(
+            self.hdu_list['ExtendedSources'].data)
+        table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+
+        source_name_key = 'Source_Name'
+        source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
+        super(SourceCatalog1FHL, self).__init__(table=table,
+                                                source_name_key=source_name_key,
+                                                source_name_alias=source_name_alias)

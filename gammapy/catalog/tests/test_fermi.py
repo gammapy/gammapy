@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
-from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
+from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL
 from ...spectrum.models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL
 from ...utils.testing import requires_data, requires_dependency
 
@@ -15,7 +15,8 @@ CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
                    '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201']
 CRAB_NAMES_2FHL = ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201',
                    'TeV J0534+2200']
-
+CRAB_NAMES_1FHL = ['Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+2200',
+                   'Crab']
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
@@ -112,6 +113,46 @@ class TestFermi2FHLObject:
         model = self.source.spectral_model
         energy = Quantity(100, 'GeV')
         desired = Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
+        assert_quantity_allclose(model(energy), desired)
+
+    @requires_dependency('uncertainties')
+    def test_spectrum(self):
+        spectrum = self.source.spectrum
+        assert "Fit result info" in str(spectrum)
+
+
+@requires_data('gammapy-extra')
+class TestSourceCatalog1FHL:
+    def setup(self):
+        self.cat = SourceCatalog1FHL()
+
+    def test_main_table(self):
+        assert len(self.cat.table) == 514
+
+    def test_extended_sources(self):
+        table = self.cat.extended_sources_table
+        assert len(table) == 18
+
+    @pytest.mark.parametrize('name', CRAB_NAMES_1FHL)
+    def test_crab_alias(self, name):
+        assert str(self.cat['Crab']) == str(self.cat[name])
+
+
+@requires_data('gammapy-extra')
+class TestFermi1FHLObject:
+    def setup(self):
+        cat = SourceCatalog1FHL()
+        # Use 1FHL J0534.5+2201 (Crab) as a test source
+        self.source_name = '1FHL J0534.5+2201'
+        self.source = cat[self.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_spectral_model(self):
+        model = self.source.spectral_model
+        energy = Quantity(100, 'GeV')
+        desired = Quantity(4.7717464131e-12, 'cm-2 GeV-1 s-1')
         assert_quantity_allclose(model(energy), desired)
 
     @requires_dependency('uncertainties')
