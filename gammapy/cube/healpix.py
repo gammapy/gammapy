@@ -8,6 +8,7 @@ from astropy import units as u
 from .core import SkyCube
 from ..image.healpix import SkyImageHealpix, WCSHealpix
 from ..spectrum.utils import LogEnergyAxis
+from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
 __all__ = ['SkyCubeHealpix']
@@ -57,8 +58,19 @@ class SkyCubeHealpix(object):
             nside = header['NSIDE']
             scheme = header.get('ORDERING', 'ring').lower()
             wcs = WCSHealpix(nside, scheme=scheme)
+        elif format == 'fermi-counts':
+            energy = EnergyBounds.from_ebounds(hdulist['EBOUNDS'], unit='keV')
+            energy_axis = LogEnergyAxis(energy, mode='edges')
+            data = hdulist['SKYMAP'].data
+            data = np.vstack([data[energy] for energy in data.columns.names])
+            data = u.Quantity(data, 'count')
+            name = 'counts'
+            header = hdulist['SKYMAP'].header
+            nside = header['NSIDE']
+            scheme = header.get('ORDERING', 'ring').lower()
+            wcs = WCSHealpix(nside, scheme=scheme)
         else:
-            raise ValueError('Not a valid cube fits format')
+            raise ValueError('Not a valid healpix cube fits format')
 
         return cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis)
 

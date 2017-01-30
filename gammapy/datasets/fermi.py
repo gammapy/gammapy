@@ -2,12 +2,23 @@
 """Fermi datasets.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
+
+from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
+from astropy.utils import lazyproperty
+
 from .core import gammapy_extra
+from ..data import EventList
+from ..cube import SkyCube
+from ..irf import EnergyDependentTablePSF
+from ..utils.scripts import make_path
+from ..spectrum.models import TableModel
 
 __all__ = [
+    'FermiLATDataset',
     'FermiGalacticCenter',
     'FermiVelaRegion',
     'fetch_fermi_diffuse_background_model',
@@ -32,7 +43,6 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
 
     url = BASE_URL + filename
     filename = download_file(url, cache=True)
-
     return filename
 
 
@@ -225,3 +235,192 @@ def load_lat_psf_performance(performance_file):
     table['containment_angle'].unit = 'deg'
 
     return table
+
+
+class FermiLATDataset(object):
+    """
+    Fermi dataset container class, with lazy data access.
+
+    Parameters
+    ----------
+    filename : str
+        Filename of the yaml file that specifies the data filenames.
+    """
+
+    def __init__(self, filename):
+        import yaml
+        filename = make_path(filename)
+        self._path = filename.parents[0].resolve()
+        self.config = yaml.load(open(str(filename), 'r'))
+
+    def validate(self):
+        raise NotImplementedError
+
+    @lazyproperty
+    def filenames(self):
+        """
+        Absolut path filenames.
+        """
+        filenames = OrderedDict()
+        filenames_config = self.config['filenames']
+
+        # merge with base path
+        for _ in filenames_config:
+            filenames[_] = str(self._path / filenames_config[_])
+
+        filenames['galdiff'] = str(make_path('$FERMI_DIFFUSE_DIR/gll_iem_v06.fits'))
+        return filenames
+
+    @lazyproperty
+    def exposure(self):
+        """
+        Exposure cube.
+
+        Returns
+        -------
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.cube.SkyCubeHealpix`
+            Exposure cube.
+        """
+        filename = self.filenames['exposure']
+        try:
+            cube = SkyCube.read(filename, format='fermi-exposure')
+        except ValueError:
+            from ..cube.healpix import SkyCubeHealpix
+            cube = SkyCubeHealpix.read(filename, format='fermi-exposure')
+        cube.name = 'exposure'
+        #TODO: check why fixing the unit is needed
+        cube.data = u.Quantity(cube.data.value, 'cm2 s')
+        return cube
+
+    @lazyproperty
+    def counts(self):
+        """
+        Counts cube.
+
+        Returns
+        -------
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.cube.SkyCubeHealpix`
+            Counts cube.
+        """
+        try:
+            filename = self.filenames['counts']
+        except KeyError:
+            raise NoDataAvailableError('Counts cube not available.')
+
+        try:
+            cube = SkyCube.read(filename, format='fermi-counts')
+        except ValueError:
+            from ..cube.healpix import SkyCubeHealpix
+            cube = SkyCubeHealpix.read(filename, format='fermi-counts')
+
+        cube.name = 'counts'
+        return cube
+
+    @lazyproperty
+    def background(self):
+        """
+        Predicted total background counts cube.
+
+        Returns
+        -------
+        cube : `~gammapy.cube.SkyCube`
+            Predicted total background counts cube.
+        """
+        try:
+            filename = self.filenames['background']
+        except KeyError:
+            raise NoDataAvailableError('Predicted background counts cube not available.')
+
+        cube = SkyCube.read(filename, format='fermi-counts')
+        cube.name = 'background'
+        return cube
+
+    @lazyproperty
+    def galactic_diffuse(self):
+        """
+        Diffuse galactic background model flux cube.
+
+        Returns
+        -------
+        cube : `~gammapy.cube.SkyCube`
+            Diffuse galactic background cube.
+        """
+        try:
+            filename = self.filenames['galdiff']
+            cube = SkyCube.read(filename, format='fermi-background')
+            cube.name = 'galactic diffuse'
+            return cube
+        except IOError:
+            raise NoDataAvailableError('Fermi galactic diffuse model cube not available. '
+                                       'Please set $FERMI_DIFFUSE_DIR environment variable')
+
+    @lazyproperty
+    def isotropic_diffuse(self):
+        """
+        Isotropic diffuse background model table.
+
+        Returns
+        -------
+        spectral_model : `~gammapy.spectrum.models.TabelModel`
+            Isotropic diffuse background model.
+        """
+        table = self._read_iso_diffuse_table()
+
+        background_isotropic = TableModel(table['Energy'].quantity,
+                                          table['Flux'].quantity)
+
+        return background_isotropic
+
+    def _read_iso_diffuse_table(self):
+        filename = self.filenames['isodiff']
+        table = Table.read(filename, format='ascii')
+
+        table.rename_column('col1', 'Energy')
+        table['Energy'].unit = 'MeV'
+
+        table.rename_column('col2', 'Flux')
+        table['Flux'].unit = '1 / (cm2 MeV s sr)'
+
+        table.rename_column('col3', 'Flux_Err')
+        table['Flux_Err'].unit = '1 / (cm2 MeV s sr)'
+        return table
+
+    @property
+    def events(self):
+        """
+        Event list.
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list.
+        """
+        return EventList.read(self.filenames['events'])
+
+    @property
+    def psf(self):
+        """
+        PSF info.
+
+        Returns
+        -------
+        psf : `~gammapy.irf.EnergyDependentTablePSF`
+            PSF model.
+        """
+        return EnergyDependentTablePSF.read(self.filenames['psf'])
+
+    def info(self):
+        """
+        Print Summary info about the dataset.
+        """
+        print(self)
+
+    def __str__(self):
+        """
+        Summary info string about the dataset.
+        """
+        import yaml
+        info =  'Fermi dataset\n'
+        info += '=============\n'
+        info += yaml.dump(self.config, default_flow_style=False)
+        return info

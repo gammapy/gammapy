@@ -18,7 +18,6 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
-from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
@@ -66,6 +65,11 @@ class SkyCube(object):
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
+        # TODO: In gammapy SkyCube is used sometimes with ndim = 2 for cubes
+        # with a single energy band
+        if not data.ndim > 1:
+            raise ValueError('Dimension of the data must be ndim = 3, but is '
+                             'ndim = {}'.format(data.ndim))
         self.data = data
         self.wcs = wcs
         self.meta = meta
@@ -696,6 +700,7 @@ class SkyCube(object):
 
     @staticmethod
     def assert_allclose(cube1, cube2):
+        from ..utils.testing import assert_wcs_allclose
         assert cube1.name == cube2.name
         assert_allclose(cube1.data, cube2.data)
         assert_wcs_allclose(cube1.wcs, cube2.wcs)

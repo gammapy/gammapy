@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
+from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data
 from .. import catalog
 from ...image import SkyImage
@@ -37,7 +38,6 @@ def test_source_image():
     # Flux of sources within a 10x10 deg region about Galactic Center
     expected = 1.6098631760996795e-07
     assert_allclose(actual, expected)
-
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
