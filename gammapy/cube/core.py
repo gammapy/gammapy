@@ -327,7 +327,7 @@ class SkyCube(object):
         energy = self.energy_axis.wcs_pix2world(z)
         return (position, energy)
 
-    def to_sherpa_data3d(self, dstype='Data3D'):
+    def to_sherpa_data3d(self, dstype='Data3D', select_region= False, index_selected_region= None):
         """
         Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
 
@@ -342,6 +342,7 @@ class SkyCube(object):
         ehi = energies[1:]
         n_ebins = len(elo)
         if dstype == 'Data3DInt':
+
             coordinates = self.sky_image_ref.coordinates(mode="edges")
             ra = coordinates.data.lon.degree
             dec = coordinates.data.lat.degree
@@ -351,9 +352,14 @@ class SkyCube(object):
             dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
-            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
+            if not select_region:
+                return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
                              ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
-                             self.data.value.shape)
+                             self.data.value.ravel().shape)
+            else:
+                return Data3DInt('', elo_cube[index_selected_region].ravel(), ra_cube_lo[index_selected_region].ravel(), dec_cube_lo[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(),
+                             ra_cube_hi[index_selected_region].ravel(), dec_cube_hi[index_selected_region].ravel(), self.data.value[index_selected_region].ravel(),
+                             self.data.value[index_selected_region].ravel().shape)
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
             ra = coordinates.data.lon.degree
@@ -362,9 +368,14 @@ class SkyCube(object):
             dec_cube = np.tile(dec, (n_ebins, 1, 1))
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
-            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
+            if not select_region:
+                return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
                           dec_cube.ravel(), self.data.value.ravel(),
-                          self.data.value.shape)
+                          self.data.value.ravel().shape)
+            else:
+                return Data3D('', elo_cube[index_selected_region].ravel(), ehi_cube[index_selected_region].ravel(), ra_cube[index_selected_region].ravel(),
+                          dec_cube[index_selected_region].ravel(), self.data.value[index_selected_region].ravel(),
+                          self.data.value[index_selected_region].ravel().shape)
 
         else:
             raise ValueError('Invalid sherpa data type.')
