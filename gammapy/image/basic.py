@@ -15,12 +15,13 @@ from ..spectrum.models import PowerLaw2
 SPECTRAL_INDEX = 2.3
 
 
-class FermiLATImageEstimator(object):
+class FermiLATBasicImageEstimator(object):
     """
-    Make basic Fermi sky images in given energy band.
+    Make basic (counts, exposure and background) Fermi sky images in given
+    energy band.
 
     TODO: allow different background estimation methods
-    
+
     Parameters
     ----------
     reference : `~gammapy.image.SkyImage`
