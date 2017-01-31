@@ -297,5 +297,5 @@ def testCombinedModel3DIntConvolveEdisp():
                   23691.982850052769,
                   4.3353099316360773,
                   2.1965569221451813]
-    
+
     assert_allclose(result2.parvals, reference2, rtol=1E-5)
