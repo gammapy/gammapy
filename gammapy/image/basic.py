@@ -8,7 +8,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 
-from .core import SkyImage, SkyImageList
+from . import SkyImage, SkyImageList
 from ..cube import SkyCube, compute_npred_cube
 from ..spectrum.models import PowerLaw2
 
@@ -21,6 +21,7 @@ class FermiLATBasicImageEstimator(object):
     energy band.
 
     TODO: allow different background estimation methods
+    TODO: add examples
 
     Parameters
     ----------
@@ -68,49 +69,57 @@ class FermiLATBasicImageEstimator(object):
         counts.fill_events(events)
         return counts
 
+    def _background_total_cube(self, dataset):
+        """
+        Compute total background compute for reference region.
+        """
+        galactic_diffuse = dataset.galactic_diffuse
+        margin = galactic_diffuse.sky_image_ref.wcs_pixel_scale()
+        center = self.reference.center
+        width = self.reference.width + margin[1]
+        height = self.reference.height + margin[0]
+
+        background_total = galactic_diffuse.cutout(position=center, size=(height, width))
+
+        # evaluate and add isotropic diffuse model
+        energies = background_total.energies()
+        flux = dataset.isotropic_diffuse(energies)
+        background_total.data += flux.reshape(-1, 1, 1)
+        return background_total
+
     #TODO: move this method to a separate GalacticDiffuseBackgroundEstimator?
-    def _background_image(self, dataset):
+    def _background_image(self, background_cube, exposure_cube, psf):
         """
         Compute predicted counts background image in energy band.
         """
         p = self.parameters
         erange = u.Quantity([p['emin'], p['emax']])
 
-        exposure_cube = dataset.exposure
-
-        background_total = dataset.galactic_diffuse.reproject(exposure_cube)
-
-        # evaluate and add isotropic diffuse model
-        energies = background_total.energies()
-        flux = dataset.isotropic_diffuse(energies)
-        background_total.data += flux.reshape(-1, 1, 1)
-
         # compute npred cube
-        npred_cube = compute_npred_cube(background_total, exposure_cube, energy_bins=erange)
+        npred_cube = compute_npred_cube(background_cube, exposure_cube, energy_bins=erange)
 
         # extract the only image from the npred_cube
         npred_total = npred_cube.sky_image_idx(0)
 
-        psf_mean = dataset.psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
-
-        # convolve with PSF kernel
-        kernel = psf_mean.kernel(npred_total)
-        npred_total = npred_total.convolve(kernel)
-
-        # reproject to reference image and renormalize
+        # reproject to reference image and renormalize data
+        # TODO: use solid angle image
         norm = (npred_total.wcs_pixel_scale() / self.reference.wcs_pixel_scale())
         npred_total = npred_total.reproject(self.reference)
-
         npred_total.data /= (norm.mean()) ** 2
+
+        # convolve with PSF kernel
+        psf_mean = psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
+        kernel = psf_mean.kernel(npred_total)
+        print(kernel.shape)
+        npred_total = npred_total.convolve(kernel)
         return npred_total
 
-    def _exposure_image(self, dataset):
+    def _exposure_image(self, exposure_cube):
         """
         Compute a powerlaw weighted exposure image from an exposure cube.
         """
         p = self.parameters
 
-        exposure_cube = dataset.exposure
         exposure_weighted = SkyCube.empty_like(exposure_cube)
         energies = exposure_weighted.energies('center')
 
@@ -170,10 +179,13 @@ class FermiLATBasicImageEstimator(object):
         counts = self._counts_image(dataset)
         images['counts'] = counts
 
-        background = self._background_image(dataset)
+        background_cube = self._background_total_cube(dataset)
+        exposure_cube = dataset.exposure.reproject(background_cube)
+
+        background = self._background_image(background_cube, exposure_cube, dataset.psf)
         images['background'] = background
 
-        exposure = self._exposure_image(dataset)
+        exposure = self._exposure_image(exposure_cube)
         images['exposure'] = exposure
 
         images['excess'] = self._get_empty_skyimage('excess')

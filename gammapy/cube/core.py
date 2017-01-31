@@ -270,6 +270,22 @@ class SkyCube(object):
             z = np.arange(self.data.shape[0] + 1) - 0.5
         return self.energy_axis.wcs_pix2world(z)
 
+    def cutout(self, position, size):
+        """
+        Cut out rectangular piece of a cube. See `~gammapy.image.SkyImage.cutout()`
+        for details.
+        """
+        out = []
+        for energy in self.energies():
+            image = self.sky_image(energy)
+            cutout = image.cutout(position=position, size=size)
+            out.append(cutout.data)
+
+        data = Quantity(np.stack(out, axis=0), self.data.unit)
+        wcs = cutout.wcs.copy()
+        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
+                              energy_axis=self.energy_axis)
+
     def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
 

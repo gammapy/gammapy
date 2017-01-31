@@ -386,6 +386,27 @@ class SkyImage(object):
 
         return coordinates
 
+    @property
+    def width(self):
+        """
+        Width of the image (`~astropy.coordinates.Angle`).
+        """
+        footprint = self.footprint(mode='corner')
+        width_low = footprint['lower left'].separation(footprint['lower right'])
+        width_up = footprint['upper left'].separation(footprint['upper right'])
+
+        return Angle([width_low, width_up]).max()
+
+    @property
+    def height(self):
+        """
+        Height of the image (`~astropy.coordinates.Angle`).
+        """
+        footprint = self.footprint(mode='corner')
+        height_left = footprint['lower left'].separation(footprint['upper left'])
+        height_right = footprint['lower right'].separation(footprint['upper right'])
+        return Angle([height_right, height_left]).max()
+
     def _get_boundaries(self, image_ref, image, wcs_check):
         """
         Get boundary coordinates of one image in the pixel coordinate system
@@ -1152,7 +1173,7 @@ class SkyImage(object):
             Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """
         from scipy.ndimage import convolve
-        data = convolve(self.data, kernel, **kwargs)
+        data = convolve(self.data.copy(), kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=data, wcs=wcs)
 
