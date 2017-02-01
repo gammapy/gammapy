@@ -344,13 +344,13 @@ class SkyImage(object):
         x, y = self.wcs_skycoord_to_pixel(coords=position)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
-    def footprint(self, mode='corner'):
+    def footprint(self, mode='edges'):
         """
         Footprint of the image on the sky.
 
         Parameters
         ----------
-        mode : {'center', 'corner'}
+        mode : {'center', 'edges'}
             Use corner pixel centers or corners?
 
         Returns
@@ -373,39 +373,27 @@ class SkyImage(object):
 
         if mode == 'center':
             pixcoord = [(0, 0), (0, naxis2), (naxis1, naxis2), (naxis1, 0)]
-        elif mode == 'corner':
+        elif mode == 'edges':
             pixcoord = [(-0.5, -0.5), (-0.5, naxis2 + 0.5),
                         (naxis1 + 0.5, naxis2 + 0.5), (naxis1 + 0.5, -0.5)]
         else:
             raise ValueError('Invalid mode: {}'.format(mode))
 
-        coordinates = OrderedDict()
+        footprint = OrderedDict()
         keys = ['lower left', 'upper left', 'upper right', 'lower right']
         for key, (x, y) in zip(keys, pixcoord):
-            coordinates[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
+            footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        return coordinates
-
-    @property
-    def width(self):
-        """
-        Width of the image (`~astropy.coordinates.Angle`).
-        """
-        footprint = self.footprint(mode='corner')
         width_low = footprint['lower left'].separation(footprint['lower right'])
         width_up = footprint['upper left'].separation(footprint['upper right'])
+        footprint['width'] = Angle([width_low, width_up]).max()
 
-        return Angle([width_low, width_up]).max()
-
-    @property
-    def height(self):
-        """
-        Height of the image (`~astropy.coordinates.Angle`).
-        """
-        footprint = self.footprint(mode='corner')
         height_left = footprint['lower left'].separation(footprint['upper left'])
         height_right = footprint['lower right'].separation(footprint['upper right'])
-        return Angle([height_right, height_left]).max()
+        footprint['height'] = Angle([height_right, height_left]).max()
+
+        footprint['center'] = self.center
+        return footprint
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """
@@ -1173,7 +1161,7 @@ class SkyImage(object):
             Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """
         from scipy.ndimage import convolve
-        data = convolve(self.data.copy(), kernel, **kwargs)
+        data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=data, wcs=wcs)
 
