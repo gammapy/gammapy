@@ -159,7 +159,7 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
         # Need to fill nan values in aeff due to matrix multiplication with RMF
         counts = flux * livetime * aeff.evaluate_fill_nan()
         counts = counts.to('')
-        reco_counts = edisp.apply(counts, e_reco=e_reco)
+        reco_counts = edisp.apply(counts, e_reco=e_reco, e_true=aeff.energy.data)
     else:
         flux = model.integral(emin=e_reco[:-1], emax=e_reco[1:], intervals=True)
         reco_counts = flux * livetime * aeff.evaluate_fill_nan(energy=e_reco.log_centers)
