@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
+from astropy import units as u
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL
 from ...spectrum.models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL
 from ...utils.testing import requires_data, requires_dependency
 
-MODEL_TEST_DATA = [(0, PowerLaw, Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
-                   (4, LogParabola, Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
-                   (55, ExponentialCutoffPowerLaw3FGL, Quantity(1.8666925e-09, 'GeV-1 s-1 cm-2'))]
+MODEL_TEST_DATA = [(0, PowerLaw, u.Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
+                   (4, LogParabola, u.Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
+                   (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'GeV-1 s-1 cm-2'))]
 
 CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
                    '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201']
@@ -61,7 +62,7 @@ class TestFermi3FGLObject:
 
     @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA)
     def test_spectral_model(self, index, model_type, desired):
-        energy = Quantity(1, 'GeV')
+        energy = u.Quantity(1, 'GeV')
         model = self.cat[index].spectral_model
         assert isinstance(model, model_type)
         actual = model(energy)
@@ -71,6 +72,7 @@ class TestFermi3FGLObject:
         flux_points = self.source.flux_points
 
         assert len(flux_points.table) == 5
+        assert 'flux_ul' in flux_points.table.colnames
 
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06,
                    1.308784e-08]
@@ -101,19 +103,31 @@ class TestSourceCatalog2FHL:
 @requires_data('gammapy-extra')
 class TestFermi2FHLObject:
     def setup(self):
-        cat = SourceCatalog2FHL()
+        self.cat = SourceCatalog2FHL()
         # Use 2FHL J0534.5+2201 (Crab) as a test source
         self.source_name = '2FHL J0534.5+2201'
-        self.source = cat[self.source_name]
+        self.source = self.cat[self.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
 
     def test_spectral_model(self):
         model = self.source.spectral_model
-        energy = Quantity(100, 'GeV')
-        desired = Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
+        energy = u.Quantity(100, 'GeV')
+        desired = u.Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
         assert_quantity_allclose(model(energy), desired)
+
+    def test_flux_points(self):
+        # test flux point on  PKS 2155-304
+        src = self.cat['PKS 2155-304']
+        flux_points = src.flux_points
+        actual = flux_points.table['flux']
+        desired = [2.866363e-10, 6.118736e-11, np.nan] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired)
+
+        actual = flux_points.table['flux_ul']
+        desired = [np.nan, np.nan, 6.470300e-12] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired)
 
     @requires_dependency('uncertainties')
     def test_spectrum(self):
@@ -141,19 +155,31 @@ class TestSourceCatalog1FHL:
 @requires_data('gammapy-extra')
 class TestFermi1FHLObject:
     def setup(self):
-        cat = SourceCatalog1FHL()
+        self.cat = SourceCatalog1FHL()
         # Use 1FHL J0534.5+2201 (Crab) as a test source
         self.source_name = '1FHL J0534.5+2201'
-        self.source = cat[self.source_name]
+        self.source = self.cat[self.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
 
     def test_spectral_model(self):
         model = self.source.spectral_model
-        energy = Quantity(100, 'GeV')
-        desired = Quantity(4.7717464131e-12, 'cm-2 GeV-1 s-1')
+        energy = u.Quantity(100, 'GeV')
+        desired = u.Quantity(4.7717464131e-12, 'cm-2 GeV-1 s-1')
         assert_quantity_allclose(model(energy), desired)
+
+    def test_flux_points(self):
+        # test flux point on  PKS 2155-304
+        src = self.cat['1FHL J0153.1+7515']
+        flux_points = src.flux_points
+        actual = flux_points.table['flux']
+        desired = [5.523017e-11, np.nan, np.nan] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired)
+
+        actual = flux_points.table['flux_ul']
+        desired = [np.nan, 2.081589e-11, 1.299698e-11] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired, rtol=1E-5)
 
     @requires_dependency('uncertainties')
     def test_spectrum(self):

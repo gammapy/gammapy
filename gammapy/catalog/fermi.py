@@ -298,6 +298,23 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['eflux_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
         table['eflux_errp'] = nuFnu * flux_err[:, 1] / flux
 
+        is_ul = np.isnan(table['flux_errn'])
+        table['is_ul'] = is_ul
+
+        # handle upper limits
+        table['flux_ul'] = np.nan * flux_err.unit
+        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
+
+        for column in ['flux', 'flux_errp', 'flux_errn']:
+            table[column][is_ul] = np.nan
+
+        # handle upper limits
+        table['eflux_ul'] = np.nan * nuFnu.unit
+        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
+
+        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
+            table[column][is_ul] = np.nan
+
         # TODO: check if nuFnu is maybe integral flux
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
@@ -411,6 +428,16 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         flux_err = self._get_flux_values('Unc_Flux')
         table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
+
+        # handle upper limits
+        is_ul = np.isnan(table['flux_errn'])
+        table['is_ul'] = is_ul
+        table['flux_ul'] = np.nan * flux_err.unit
+        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
+
+        for column in ['flux', 'flux_errp', 'flux_errn']:
+            table[column][is_ul] = np.nan
+
         flux_points = FluxPoints(table)
 
         flux_points_dnde = compute_flux_points_dnde(
@@ -441,7 +468,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         covariance = np.diag([
             data['Unc_Spectral_Index'] ** 2,
             data['Unc_Flux50'] ** 2,
-            0,
         ])
 
         covar_axis = ['index', 'amplitude']
@@ -558,6 +584,16 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         flux_err = self._get_flux_values('Unc_Flux')
         table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
+
+        # handle upper limits
+        is_ul = np.isnan(table['flux_errn'])
+        table['is_ul'] = is_ul
+        table['flux_ul'] = np.nan * flux_err.unit
+        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
+
+        for column in ['flux', 'flux_errp', 'flux_errn']:
+            table[column][is_ul] = np.nan
+
         flux_points = FluxPoints(table)
 
         flux_points_dnde = compute_flux_points_dnde(
@@ -588,7 +624,6 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         covariance = np.diag([
             data['Unc_Spectral_Index'] ** 2,
             data['Unc_Flux'] ** 2,
-            0,
         ])
 
         covar_axis = ['index', 'amplitude']
