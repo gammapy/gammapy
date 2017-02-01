@@ -28,6 +28,6 @@ class TestFermiLATBasicImageEstimator:
     def test_run(self):
         result = self.estimator.run(self.dataset)
         desired = [155.0, 1294.44777903, 7.16714933731e+13, -1139.44777903,
-                  -3.67226151181e-09, 1.0]
+                  -3.67226151181e-09, 1.]
         for image, value in zip(result, desired):
             assert_allclose(image.data.sum(), value)

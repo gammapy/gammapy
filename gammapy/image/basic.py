@@ -8,9 +8,10 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 
-from . import SkyImage, SkyImageList
-from ..cube import SkyCube, compute_npred_cube
-from ..spectrum.models import PowerLaw2
+from .core import SkyImage
+from .lists import SkyImageList
+
+__all__ = ['FermiLATBasicImageEstimator']
 
 SPECTRAL_INDEX = 2.3
 
@@ -33,9 +34,35 @@ class FermiLATBasicImageEstimator(object):
         Upper bound of energy range.
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf images.
+
+    Examples
+    --------
+    This example shows how to compute a set of basic images for the galactic
+    center region using a prepared 2FHL dataset:
+
+    .. code::
+
+        from astropy import unit as u
+        from gammapy.image import SkyImage, FermiLATBasicImageEstimator
+        from gammapy.datasets import FermiLATDataset
+
+        kwargs = {}
+        kwargs['reference'] = SkyImage.empty(nxpix=201, nypix=101, binsz=0.05)
+        kwargs['emin'] = 50 * u.GeV
+        kwargs['emax'] = 3000 * u.GeV
+        image_estimator = FermiLATBasicImageEstimator(**kwargs)
+
+        filename = '$FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
+        dataset = FermiLATDataset(filename)
+
+        result = image_estimator.run(dataset)
+        result['counts'].show()
+
     """
 
     def __init__(self, reference, emin, emax, spectral_model=None):
+        from ..spectrum.models import PowerLaw2
+
         self.reference = reference
 
         if spectral_model is None:
@@ -58,9 +85,19 @@ class FermiLATBasicImageEstimator(object):
         image.name
         return image
 
-    def _counts_image(self, dataset):
+    def counts(self, dataset):
         """
-        Compute counts image in energy band
+        Estimate counts image in energy band
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
+            Fermi basic dataset to compute images for.
+
+        Returns
+        -------
+        counts : `~gammapy.images.SkyImage`
+            Counts sky image.
         """
         p = self.parameters
         events = dataset.events.select_energy((p['emin'], p['emax']))
@@ -69,17 +106,47 @@ class FermiLATBasicImageEstimator(object):
         counts.fill_events(events)
         return counts
 
-    def _background_total_cube(self, dataset):
+    def _cutout_background_cube(self, dataset):
         """
-        Compute total background compute for reference region.
+        Cutout reference region from galactic diffuse background model.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
+            Fermi basic dataset to compute images for.
+
+        Returns
+        -------
+        counts : `~gammapy.images.SkyImage`
+            Counts sky image.
         """
         galactic_diffuse = dataset.galactic_diffuse
+
+        # add margin of 1 pixel
         margin = galactic_diffuse.sky_image_ref.wcs_pixel_scale()
-        center = self.reference.center
+
         width = self.reference.width + margin[1]
         height = self.reference.height + margin[0]
 
-        background_total = galactic_diffuse.cutout(position=center, size=(height, width))
+        cutout = galactic_diffuse.cutout(position=self.reference.center,
+                                         size=(height, width))
+        return cutout
+
+    def _total_background_cube(self, dataset):
+        """
+        Compute total background compute for reference region.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
+            Fermi basic dataset to compute images for.
+
+        Returns
+        -------
+        counts : `~gammapy.images.SkyImage`
+            Counts sky image.
+        """
+        background_total = self._cutout_background_cube(dataset)
 
         # evaluate and add isotropic diffuse model
         energies = background_total.energies()
@@ -88,12 +155,31 @@ class FermiLATBasicImageEstimator(object):
         return background_total
 
     #TODO: move this method to a separate GalacticDiffuseBackgroundEstimator?
-    def _background_image(self, background_cube, exposure_cube, psf):
+    def background(self, dataset):
         """
-        Compute predicted counts background image in energy band.
+        Estimate predicted counts background image in energy band.
+
+        The background estimati is based on the Fermi-LAT galactic and
+        isotropic diffuse models.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
+            Fermi basic dataset to compute images for.
+
+        Returns
+        -------
+        background : `~gammapy.images.SkyImage`
+            Predicated number of background counts sky image.
         """
+        from ..cube import compute_npred_cube
+
         p = self.parameters
         erange = u.Quantity([p['emin'], p['emax']])
+
+        background_cube = self._total_background_cube(dataset)
+        exposure_cube = dataset.exposure.reproject(background_cube)
+        psf = dataset.psf
 
         # compute npred cube
         npred_cube = compute_npred_cube(background_cube, exposure_cube, energy_bins=erange)
@@ -110,15 +196,29 @@ class FermiLATBasicImageEstimator(object):
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
         kernel = psf_mean.kernel(npred_total)
-        print(kernel.shape)
         npred_total = npred_total.convolve(kernel)
         return npred_total
 
-    def _exposure_image(self, exposure_cube):
+    def exposure(self, dataset):
         """
-        Compute a powerlaw weighted exposure image from an exposure cube.
+        Estimate a spectral model weighted exposure image from an exposure cube.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
+            Fermi basic dataset to compute images for.
+
+        Returns
+        -------
+        exposure : `~gammapy.images.SkyImage`
+            Exposure sky image.
         """
+        from ..cube import SkyCube
+
         p = self.parameters
+
+        ref_cube = self._cutout_background_cube(dataset)
+        exposure_cube = dataset.exposure.reproject(ref_cube)
 
         exposure_weighted = SkyCube.empty_like(exposure_cube)
         energies = exposure_weighted.energies('center')
@@ -127,6 +227,7 @@ class FermiLATBasicImageEstimator(object):
         exposure_weighted.data = exposure_cube.data * weights.reshape(-1, 1, 1)
 
         exposure = exposure_weighted.sky_image_integral(emin=p['emin'], emax=p['emax'])
+        # TODO: check why fixing the unit is needed
         exposure.data = exposure.data.to('cm2 s').value
         exposure.unit = u.Unit('cm2 s')
         exposure.name = 'exposure'
@@ -137,12 +238,11 @@ class FermiLATBasicImageEstimator(object):
         Compute fermi PSF image.
         """
         p = self.parameters
-        psf = dataset.psf
+        psf_image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=binsz)
 
+        psf = dataset.psf
         erange = u.Quantity((p['emin'], p['emax']))
         psf_mean = psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
-
-        psf_image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=binsz)
 
         coordinates = psf_image.coordinates()
         offset = coordinates.separation(psf_image.center)
@@ -152,23 +252,72 @@ class FermiLATBasicImageEstimator(object):
         psf_image.data = (psf_image.data / psf_image.data.sum()).value
         return psf_image
 
-    def run(self, dataset):
+    @staticmethod
+    def excess(images):
         """
-        Make sky images.
+        Estimate excess image.
 
-        The following images will be computed:
-
-            * counts
-            * background (predicted counts)
-            * exposure
-            * excess
-            * flux
-            * psf
+        Requires 'counts' and 'background' image.
 
         Parameters
         ----------
-        dataset : `FermiDataset`
+        images : `~gammapy.images.SkyImageList`
+            List of sky images.
+
+        Returns
+        -------
+        excess : `~gammapy.images.SkyImage`
+            Excess sky image.
+        """
+        images.check_required(['counts', 'background'])
+        excess = SkyImage.empty_like(images['counts'], name='excess')
+        excess.data = images['counts'].data - images['background'].data
+        return excess
+
+    @staticmethod
+    def flux(images):
+        """
+        Estimate flux image.
+
+        Requires 'counts', 'background' and 'exposure' image.
+
+        Parameters
+        ----------
+        images : `~gammapy.images.SkyImageList`
+            List of sky images.
+
+        Returns
+        -------
+        flux : `~gammapy.images.SkyImage`
+            Flux sky image.
+        """
+        #TODO: differentiate between flux (integral flux) and dnde (differential flux)
+        images.check_required(['counts', 'background', 'exposure'])
+        flux = SkyImage.empty_like(images['counts'], name='flux')
+        excess = images['counts'].data - images['background'].data
+        flux.data = excess / images['exposure']
+        return flux
+
+    def run(self, dataset, which='all'):
+        """
+        Estimate sky images.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.FermiLATDataset`
             Fermi basic dataset to compute images for.
+        which : str or list of str
+            Which images to compute. Can be:
+
+                * 'all'
+                * 'counts'
+                * 'background'
+                * 'exposure'
+                * 'excess'
+                * 'flux'
+                * 'psf'
+
+            Or a list containing any subset of the images listed above.
 
         Returns
         -------
@@ -176,23 +325,26 @@ class FermiLATBasicImageEstimator(object):
             List of sky images.
         """
         images = SkyImageList()
-        counts = self._counts_image(dataset)
-        images['counts'] = counts
+        which = np.atleast_1d(which)
 
-        background_cube = self._background_total_cube(dataset)
-        exposure_cube = dataset.exposure.reproject(background_cube)
+        if 'all' in which:
+            which = ['counts', 'exposure', 'background', 'excess', 'flux', 'psf']
 
-        background = self._background_image(background_cube, exposure_cube, dataset.psf)
-        images['background'] = background
+        if 'counts' in which:
+            images['counts'] = self.counts(dataset)
 
-        exposure = self._exposure_image(exposure_cube)
-        images['exposure'] = exposure
+        if 'background' in which:
+            images['background'] = self.background(dataset)
 
-        images['excess'] = self._get_empty_skyimage('excess')
-        images['excess'].data = counts.data - background.data
+        if 'exposure' in which:
+            images['exposure'] = self.exposure(dataset)
 
-        images['flux'] = self._get_empty_skyimage('flux')
-        images['flux'].data = images['excess'].data / exposure.data
+        if 'excess' in which:
+            images['excess'] = self.excess(images)
 
-        images['psf'] = self._psf_image(dataset)
+        if 'flux' in which:
+            images['flux'] = self.flux(images)
+
+        if 'psf' in which:
+            images['psf'] = self._psf_image(dataset)
         return images

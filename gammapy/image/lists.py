@@ -6,8 +6,8 @@ from astropy.extern import six
 from astropy.extern.six.moves import UserList
 from astropy.io import fits
 from astropy.io.fits import HDUList
+from .core import SkyImage
 from ..utils.scripts import make_path
-from ..image import SkyImage
 
 __all__ = ['SkyImageList']
 
