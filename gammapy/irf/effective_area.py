@@ -288,7 +288,7 @@ class EffectiveAreaTable2D(object):
     energy : `~astropy.units.Quantity`
         Bin edges of energy axis
     offset : `~astropy.units.Quantity`
-        Nodes of Offset axis
+        Bin edges of offset axis
     data : `~astropy.units.Quantity`
         Effective area
     low_threshold : `~astropy.units.Quantity`, optional 
@@ -320,7 +320,7 @@ class EffectiveAreaTable2D(object):
                 energy,
                 interpolation_mode='log',
                 name='energy'),
-            DataAxis(
+            BinnedDataAxis(
                 offset,
                 interpolation_mode='linear',
                 name='offset')
@@ -358,8 +358,10 @@ class EffectiveAreaTable2D(object):
 
         energy_lo = table['{}_LO'.format(energy_col)].quantity[0]
         energy_hi = table['{}_HI'.format(energy_col)].quantity[0]
-        energy = np.append(energy_lo.value, energy_hi[-1].value) * energy_lo.unit
-        offset = table['{}_HI'.format(offset_col)].quantity[0]
+        energy = BinnedDataAxis.from_lower_and_upper_bounds(energy_lo, energy_hi)
+        o_lo = table['{}_HI'.format(offset_col)].quantity[0]
+        o_hi = table['{}_HI'.format(offset_col)].quantity[0]
+        offset = BinnedDataAxis.from_lower_and_upper_bounds(o_lo, o_hi)
         # see https://github.com/gammasky/hess-host-analyses/issues/32
         data = table['{}'.format(data_col)].quantity[0].transpose()
         return cls(offset=offset, energy=energy, data=data, meta=table.meta)

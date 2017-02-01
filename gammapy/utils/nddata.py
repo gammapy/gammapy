@@ -111,7 +111,7 @@ class NDDataArray(object):
         """String representation"""
         ss = 'NDDataArray summary info\n'
         for axis in self.axes:
-            ss += array_stats_str(axis.data, axis.name)
+            ss += array_stats_str(axis.nodes, axis.name)
         ss += array_stats_str(self.data, 'Data')
         return ss
 
@@ -233,13 +233,23 @@ class NDDataArray(object):
 class DataAxis(object):
     """Data axis to be used with NDDataArray
 
-    Axis values are interpreted as nodes.
+    Axis values are interpreted as nodes. For binned data see
+    `~gammapy.utils.ndddata.BinnedDataAxis`.
+
+    Parameters
+    ----------
+    nodes : `~astropy.units.Quantity`
+        Interpolation nodes
+    name : str, optional
+        Axis name, default: 'Default'
+    interpolation_mode : str {'linear', 'log'}
+        Interpolation behaviour, default: 'linear'
     """
 
-    def __init__(self, data, name='Default', interpolation_mode='linear'):
-        if isinstance(data, self.__class__):
-            data = data.data
-        self.data = Quantity(data)
+    def __init__(self, nodes, name='Default', interpolation_mode='linear'):
+        # Need this for subclassing (see BinnedDataAxis)
+        if nodes is not None:
+            self._data = Quantity(nodes)
         self.name = name
         self._interpolation_mode = interpolation_mode
 
@@ -255,7 +265,7 @@ class DataAxis(object):
     @property
     def unit(self):
         """Axis unit"""
-        return self.data.unit
+        return self.nodes.unit
 
     @classmethod
     def logspace(cls, vmin, vmax, nbins, unit=None, **kwargs):
@@ -305,7 +315,7 @@ class DataAxis(object):
             raise ValueError('Units {} and {} do not match'.format(
                 val.unit, self.unit))
 
-        val = val.to(self.data.unit)
+        val = val.to(self.nodes.unit)
         val = np.atleast_1d(val)
         x1 = np.array([val] * self.nbins).transpose()
         x2 = np.array([self.nodes] * len(val))
@@ -316,12 +326,12 @@ class DataAxis(object):
     @property
     def nbins(self):
         """Number of bins"""
-        return self.data.size
+        return len(self.nodes)
 
     @property
     def nodes(self):
         """Evaluation nodes"""
-        return self.data
+        return self._data
 
     @property
     def interpolation_mode(self):
@@ -345,32 +355,48 @@ class DataAxis(object):
 
 
 class BinnedDataAxis(DataAxis):
-    """Data axis for binned axis
+    """Data axis for binned data
 
-    Axis values are interpreted as bin edges
+    Parameters
+    ----------
+    lo : `~astropy.units.Quantity`
+        Lower bin edges
+    hi : `~astropy.units.Quantity`
+        Upper bin edges
+    name : str, optional
+        Axis name, default: 'Default'
+    interpolation_mode : str {'linear', 'log'}
+        Interpolation behaviour, default: 'linear'
     """
+    def __init__(self, lo, hi, **kwargs):
+        self.lo = Quantity(lo)
+        self.hi = Quantity(hi)
+        super(BinnedDataAxis, self).__init__(None, **kwargs)    
+
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None, **kwargs):
-        return super(BinnedDataAxis, cls).logspace(
-            emin, emax, nbins + 1, unit, **kwargs)
+        # TODO: splitout log space into a helper function
+        vals = DataAxis.logspace(emin, emax, nbins + 1, unit)._data
+        return cls(vals[:-1], vals[1:], **kwargs)
+
+    def __str__(self):
+        ss = super(BinnedDataAxis, self).__str__()
+        ss += '\nLower bounds {}'.format(self.lo)
+        ss += '\nUpper bounds {}'.format(self.hi)
+
+        return ss
 
     @property
-    def nbins(self):
-        """Number of bins"""
-        return self.data.size - 1
+    def bins(self):
+        """Bin edges"""
+        unit = self.lo.unit
+        val = np.append(self.lo.value, self.hi.value[-1])
+        return val * unit
 
     @property
     def bin_width(self):
         """Bin width"""
         return self.hi - self.lo
-
-    @property
-    def lo(self):
-        return self.data[:-1]
-
-    @property
-    def hi(self):
-        return self.data[1:]
 
     @property
     def nodes(self):
@@ -386,8 +412,9 @@ class BinnedDataAxis(DataAxis):
 
     def lin_center(self):
         """Linear bin centers"""
-        return (self.data[:-1] + self.data[1:]) / 2
+        return (self.lo  + self.hi) / 2
 
     def log_center(self):
         """Logarithmic bin centers"""
-        return np.sqrt(self.data[:-1] * self.data[1:])
+        return np.sqrt(self.lo * self.hi)
+

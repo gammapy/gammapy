@@ -31,6 +31,7 @@ def test_EffectiveAreaTable2D(tmpdir):
     test_e = 14 * u.TeV
     test_o = 0.2 * u.deg
     test_val = aeff.data.evaluate(energy=test_e, offset=test_o)
+    import pdb; pdb.set_trace()
     assert_allclose(test_val.value, 740929.645, atol=1e-2)
 
     aeff.plot_image()
@@ -88,7 +89,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     assert ener_below < test_ener and test_ener < ener_above
 
     elo_threshold = arf.find_energy(0.1 * arf.max_area)
-    assert_quantity_allclose(elo_threshold, 0.4367 * u.TeV, rtol=1e-3)
+    assert_quantity_allclose(elo_threshold, 0.4378992335005205 * u.TeV, rtol=1e-3)
 
     # Test evaluation outside safe range
     data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
