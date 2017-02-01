@@ -278,8 +278,8 @@ class CombinedModel3DInt(ArithmeticModel):
         self.xx_hi = xx[0:-1, 0:-1]
         self.yy_lo = yy[0:-1, 0:-1]
         self.yy_hi = yy[1:, 0:-1]
-        self.ee_lo = energies[:-1].value
-        self.ee_hi = energies[1:].value
+        self.ee_lo = energies[:-1]
+        self.ee_hi = energies[1:]
         self.select_region=select_region
         self.index_selected_region=index_selected_region
 
@@ -366,8 +366,8 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         self.xx_hi = xx[0:-1, 0:-1]
         self.yy_lo = yy[0:-1, 0:-1]
         self.yy_hi = yy[1:, 0:-1]
-        self.ee_lo = energies[:-1].value
-        self.ee_hi = energies[1:].value
+        self.ee_lo = energies[:-1]
+        self.ee_hi = energies[1:]
         self.use_psf = use_psf
         self.exposure = exposure
         self.psf = psf
