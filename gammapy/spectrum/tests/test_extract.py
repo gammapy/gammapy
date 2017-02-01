@@ -66,12 +66,14 @@ class TestSpectrumExtraction:
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
-                                                  aeff=549861.8 * u.m ** 2
-                                                  )),
+                                                  aeff=549861.8 * u.m ** 2,
+                                                  edisp=0.238038708012650
+                                                 )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
-                                                 aeff=412731.8043631101 * u.m ** 2
-                                                 ))
+                                                 aeff=412731.8043631101 * u.m ** 2,
+                                                 edisp=0.2380387080126506
+                                                ))
     ])
     def test_extract(self, pars, results, target, obs, bkg, tmpdir):
         """Test quantitative output for various configs"""
@@ -81,17 +83,21 @@ class TestSpectrumExtraction:
                                         **pars)
 
         # TODO: Improve API
-        print(extraction.background)
         extraction.estimate_background(extraction.background)
         extraction.extract_spectrum()
         obs = extraction.observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
+        edisp_actual = obs.edisp.data.evaluate(e_true=5 * u.TeV,
+                                               e_reco=5.2 * u.TeV)
+
+        assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
+        assert_quantity_allclose(edisp_actual, results['edisp'], rtol=1e-3)
+
 
         # TODO: Introduce assert_stats_allclose
         n_on_actual = obs.total_stats.n_on
         sigma_actual = obs.total_stats.sigma
 
-        assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
         assert n_on_actual == results['n_on']
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
 
