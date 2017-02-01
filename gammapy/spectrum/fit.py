@@ -7,11 +7,20 @@ import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
+from .utils import calculate_predicted_counts
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
     models,
 )
+from .. import stats
+
+# This cannot be made a delayed import because the pytest matrix fails if it is
+# https://travis-ci.org/gammapy/gammapy/jobs/194204926#L1915
+try:
+    from .sherpa_utils import SherpaModel, SherpaStat
+except ImportError:
+    pass
 
 __all__ = [
     'SpectrumFit',
@@ -22,209 +31,309 @@ log = logging.getLogger(__name__)
 
 class SpectrumFit(object):
     """
-    Spectral Fit using Sherpa
+    Spectral Fit
 
-    This is a wrapper around `~sherpa.fit.Fit` that takes care about
-    translating gammapy classes to sherpa classes and handling various aspects
-    of the fitting correctly. For usage examples see :ref:`spectral_fitting`
+    For usage examples see :ref:`spectral_fitting`
 
     Parameters
     ----------
-    obs_list : SpectrumObservationList
-        Observations to fit
-    model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
-        Model to be fit
-    stat : str, `~sherpa.stats.Stat`
-        Fit statistic to be used
-    method : str, `~sherpa.optmethods.OptMethod`
-        Fit statistic to be used
+    obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
+        Observation(s) to fit
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Source model 
+    stat : {'wstat', 'cash'} 
+        Fit statistic 
+    forward_folded : bool, default: True
+        Fold ``model`` with the IRFs given in ``obs_list``
+    fit_range : tuple of `~astropy.units.Quantity``, optional
+        Fit range
+    method : {'sherpa'}
+        Optimization backend for the fit
+    err_method : {'sherpa'}
+        Optimization backend for error estimation
     """
-    FLUX_FACTOR = 1e-20
-    """Numerical constant to make model amplitude O(1) during the fit"""
-    DEFAULT_STAT = 'wstat'
-    """Default statistic to be used for the fit"""
-    DEFAULT_METHOD = 'simplex'
-    """Default method to be used for the fit"""
 
-    def __init__(self, obs_list, model, stat=DEFAULT_STAT, method=DEFAULT_METHOD):
+    def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
+                 fit_range=None, method='sherpa', err_method='sherpa'):
+        # TODO: add fancy converters to accept also e.g. CountsSpectrum
         if isinstance(obs_list, SpectrumObservation):
-            obs_list = [obs_list]
+            obs_list = SpectrumObservationList([obs_list])
+        if not isinstance(obs_list, SpectrumObservationList):
+            raise ValueError('Invalid input for parameter obs_list'.format(
+                obs_list))
 
-        self.obs_list = SpectrumObservationList(obs_list)
+        # TODO: Check if IRFs are given for forward folding
+
+        self.obs_list = obs_list
         self.model = model
-        self.statistic = stat
-        self.method_fit = method
-        self._fit_range = None
-        self._result = list()
-        self._global_result = list()
+        self.stat = stat
+        self.forward_folded = forward_folded
+        self.fit_range = fit_range
+        self.method = method
+        self.err_method = method
 
-    @property
-    def result(self):
-        """List of `~gammapy.spectrum.SpectrumFitResult` for each observation"""
-        return self._result
+        # TODO: Reexpose as properties to improve docs
+        self.predicted_counts = None
+        self.statval = None
+        # TODO: Remove once there is a Parameter class
+        self.covar_axis = None
+        self.covariance = None
+        self.result = list()
 
-    @property
-    def global_result(self):
-        """Global `~gammapy.spectrum.SpectrumFitResult`
+    def __str__(self):
+        """String repr"""
+        ss = self.__class__.__name__
+        ss += '\nData {}'.format(self.obs_list)
+        ss += '\nSource model {}'.format(self.model)
+        ss += '\nStat {}'.format(self.stat)
+        ss += '\nForward Folded {}'.format(self.forward_folded)
+        ss += '\nFit range {}'.format(self.fit_range)
+        ss += '\nBackend {}'.format(self.method)
+        ss += '\nError Backend {}'.format(self.err_method)
 
-        Contains only model and fitrange over all observations
-        """
-        return self._global_result
-
-    @property
-    def statistic(self):
-        """Sherpa `~sherpa.stats.Stat` to be used for the fit"""
-
-        return self._stat
-
-    @statistic.setter
-    def statistic(self, stat):
-        import sherpa.stats as s
-
-        if isinstance(stat, six.string_types):
-            if stat.lower() == 'cstat':
-                stat = s.CStat()
-            elif stat.lower() == 'wstat':
-                stat = s.WStat()
-            else:
-                raise ValueError("Undefined stat string: {}".format(stat))
-
-        if not isinstance(stat, s.Stat):
-            raise ValueError("Only sherpa statistics are supported")
-
-        self._stat = stat
-
-    @property
-    def method_fit(self):
-        """Sherpa `~sherpa.optmethods.OptMethod` to be used for the fit"""
-
-        return self._method
-
-    @method_fit.setter
-    def method_fit(self, method):
-        import sherpa.optmethods as optmethod
-        if isinstance(method, six.string_types):
-            if method == 'simplex':
-                method = optmethod.NelderMead()
-            elif method == 'moncar':
-                method = optmethod.MonCar()
-            elif method == 'levmar':
-                method = optmethod.LevMar()
-            else:
-                raise ValueError("Undefined method string: {}".format(method))
-
-        if not isinstance(method, optmethod.OptMethod):
-            raise ValueError("Only sherpa method are supported")
-
-        self._method = method
+        return ss
 
     @property
     def fit_range(self):
-        """
-        Tuple of `~astropy.units.Quantity`, energy range of the fit
-        """
+        """Fit range"""
         return self._fit_range
 
     @fit_range.setter
     def fit_range(self, fit_range):
-        self._fit_range = u.Quantity(fit_range)
+        self._fit_range = fit_range
+        self._apply_fit_range()
 
-    def __str__(self):
-        """String repr"""
-        ss = 'Model\n'
-        ss += str(self.model)
-        return ss
+    def _apply_fit_range(self):
+        """Mark bins within desired fit range for each observation
+
+        TODO: Split into smaller functions
+        TODO: Could reuse code from PHACountsSpectrum
+        TODO: Use True (not 0) to mark good bins
+        TODO: Add to EnergyBounds
+        """
+        self._bins_in_fit_range = list()
+        for obs in self.obs_list:
+            # Take into account fit range
+            energy = obs.e_reco
+            valid_range = np.zeros(energy.nbins)
+
+            if self.fit_range is not None:
+                idx_lo = np.where(energy < self.fit_range[0])[0]
+                valid_range[idx_lo] = 1
+
+                idx_hi = np.where(energy[:-1] > self.fit_range[1])[0]
+                if len(idx_hi) != 0:
+                    idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
+                valid_range[idx_hi] = 1
+
+            # Take into account thresholds
+            try:
+                quality = obs.on_vector.quality
+            except AttributeError:
+                quality = np.zeros(obs.e_reco.nbins)
+
+            # Convolve (see TODO above)
+            convolved = np.logical_and(1 - quality, 1 - valid_range)
+
+            self._bins_in_fit_range.append(convolved)
+
+    @property
+    def true_fit_range(self):
+        """True fit range for each observation
+
+        True fit range is the fit range set in the
+        `~gammapy.spectrum.SpectrumFit` with observation threshold taken into
+        account.
+        """
+        true_range = list()
+        for binrange, obs in zip(self._bins_in_fit_range, self.obs_list):
+            idx = np.where(binrange)[0]
+            e_min = obs.e_reco[idx[0]]
+            e_max = obs.e_reco[idx[-1] + 1]
+            fit_range = u.Quantity((e_min, e_max))
+            true_range.append(fit_range)
+        return true_range
+
+    def predict_counts(self, **kwargs):
+        """Predict counts for all observations
+
+        The result is stored as ``predicted_counts`` attribute
+        """
+        predicted_counts = list()
+        for data_ in self.obs_list:
+            temp = self._predict_counts_helper(data_)
+            predicted_counts.append(temp)
+        self.predicted_counts = predicted_counts
+
+    def _predict_counts_helper(self, obs):
+        """Predict counts for one observation
+
+        TODO: Take model as input to reuse for background model
+
+        Returns
+        ------
+        predicted_counts: `np.array`
+            Predicted counts for one observation
+        """
+        binning = obs.e_reco
+        if self.forward_folded:
+            temp = calculate_predicted_counts(model=self.model,
+                                              livetime=obs.livetime,
+                                              aeff=obs.aeff,
+                                              edisp=obs.edisp,
+                                              e_reco=binning)
+            counts = temp.data.data
+        else:
+            # TODO: This could also be part of calculate predicted counts
+            counts = self.model.integral(binning[:-1], binning[1:])
+
+        # Check count unit (~unit of model amplitude)
+        cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')
+        if cond:
+            counts = counts.value
+        else:
+            raise ValueError('Predicted counts {}'.format(counts))
+
+        return counts
+
+    def calc_statval(self):
+        """Calc statistic for all observations
+        
+        The result is stored as attribute ``statval``, bin outside the fit
+        range are set to 0.
+        """
+        statval = list()
+        for data_, npred in zip(self.obs_list, self.predicted_counts):
+            temp = self._calc_statval_helper(data_, npred)
+            statval.append(temp)
+        self.statval = statval
+        self._restrict_statval()
+
+    def _calc_statval_helper(self, obs, prediction):
+        """Calculate statval one observation
+
+        Returns
+        ------
+        statsval: `np.array`
+            Statval for on observation
+        """
+        if self.stat == 'cash':
+            statsval = stats.cash(n_on=obs.on_vector.data.data.value,
+                                  mu_on=prediction)
+        elif self.stat == 'wstat':
+            kwargs = dict(n_on=obs.on_vector.data.data.value,
+                          n_off=obs.off_vector.data.data.value,
+                          alpha=obs.alpha,
+                          mu_sig=prediction)
+            statsval = stats.wstat(**kwargs)
+        else:
+            raise NotImplementedError('{}'.format(self.stat))
+
+        return statsval
+
+
+    def _restrict_statval(self):
+        """Apply valid fit range to statval
+        """
+        restricted_statval = list()
+        for statval, valid_range in zip(self.statval, self._bins_in_fit_range):
+            val = np.where(valid_range, statval, 0)
+            restricted_statval.append(val)
+        self.statval = restricted_statval
 
     def fit(self):
-        """Fit spectrum"""
-        from sherpa.fit import Fit
-        from sherpa.models import ArithmeticModel, SimulFitModel
-        from sherpa.astro.instrument import Response1D
-        from sherpa.data import DataSimulFit
-
-        # Reset results
-        self._result = list()
-
-        # Translate model to sherpa model if necessary
-        if isinstance(self.model, models.SpectralModel):
-            model = self.model.to_sherpa()
+        """Run the fit"""
+        if self.method == 'sherpa':
+            self._fit_sherpa()
         else:
-            model = self.model
+            raise NotImplementedError('{}'.format(self.method))
 
-        if not isinstance(model, ArithmeticModel):
-            raise ValueError('Model not understood: {}'.format(model))
+    def _fit_sherpa(self):
+        """Wrapper around sherpa minimizer
+        """
+        from sherpa.fit import Fit
+        from sherpa.data import Data1DInt
+        from sherpa.optmethods import NelderMead
 
-        # Make model amplitude O(1e0)
-        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
-        model.ampl = val
+        binning = self.obs_list[0].e_reco
+        # The sherpa data object is not usued in the fit. It is set to the
+        # first observation for debugging purposes, see below
+        data = self.obs_list[0].on_vector.data.data.value
+        data = Data1DInt('Dummy data', binning[:-1].value,
+                         binning[1:].value, data)
+        # DEBUG
+        #from sherpa.models import PowLaw1D
+        #from sherpa.stats import Cash
+        #model = PowLaw1D('sherpa')
+        #model.ref = 0.1
+        #fit = Fit(data, model, Cash(), NelderMead())
 
-        if self.fit_range is not None:
-            log.info('Restricting fit range to {}'.format(self.fit_range))
-            fitmin = self.fit_range[0].to('keV').value
-            fitmax = self.fit_range[1].to('keV').value
+        # NOTE: We cannot use the Levenbergr-Marquart optimizer in Sherpa
+        # because it relies on the fvec return value of the fit statistic (we
+        # return None). The computation of fvec is not straightforwad, not just
+        # stats per bin. E.g. for a cash fit the sherpa stat computes it
+        # according to cstat
+        # see https://github.com/sherpa/sherpa/blob/master/sherpa/include/sherpa/stats.hh#L122
 
-        # Loop over observations
-        pha = list()
-        folded_model = list()
-        nobs = len(self.obs_list)
-        for ii in range(nobs):
-            temp = self.obs_list[ii].to_sherpa()
-            if self.fit_range is not None:
-                temp.notice(fitmin, fitmax)
-                if temp.get_background() is not None:
-                    temp.get_background().notice(fitmin, fitmax)
-            temp.ignore_bad()
-            if temp.get_background() is not None:
-                temp.get_background().ignore_bad()
-            pha.append(temp)
-            log.debug('Noticed channels obs {}: {}'.format(
-                ii, temp.get_noticed_channels()))
-            # Forward folding
-            resp = Response1D(pha[ii])
-            folded_model.append(resp(model) * self.FLUX_FACTOR)
-
-        if (len(pha) == 1 and len(pha[0].get_noticed_channels()) == 1):
-            raise ValueError('You are trying to fit one observation in only '
-                             'one bin, error estimation will fail')
-
-        data = DataSimulFit('simul fit data', pha)
-        log.debug(data)
-        fitmodel = SimulFitModel('simul fit model', folded_model)
-        log.debug(fitmodel)
-
-        fit = Fit(data, fitmodel, self.statistic, method=self.method_fit)
-
-        fitresult = fit.fit()
+        self._sherpa_fit = Fit(data,
+                               SherpaModel(self),
+                               SherpaStat(self),
+                               NelderMead())
+        fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        # The model instance passed to the Fit now holds the best fit values
-        covar = fit.est_errors()
-        log.debug(covar)
+        self._make_fit_result()
 
-        for ii in range(nobs):
-            efilter = pha[ii].get_filter()
-            # Skip observations not participating in the fit
-            if efilter != '':
-                shmodel = fitmodel.parts[ii]
-                result = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
-                result.obs = self.obs_list[ii]
-            else:
-                result = None
-            self._result.append(result)
+    def _make_fit_result(self):
+        """Bunde fit results into `~gammapy.spectrum.SpectrumFitResult`
 
-        valid_result = np.nonzero(self.result)[0][0]
-        global_result = copy.deepcopy(self.result[valid_result])
-        global_result.npred = None
-        global_result.obs = None
-        all_fitranges = [_.fit_range for _ in self._result if _ is not None]
-        fit_range_min = min([_[0] for _ in all_fitranges])
-        fit_range_max = max([_[1] for _ in all_fitranges])
-        global_result.fit_range = u.Quantity((fit_range_min, fit_range_max))
-        self._global_result = global_result
+        It is important to copy best fit values, because the error estimation
+        will change the model parameters and statval again
+        """
+        from . import SpectrumFitResult
+        for idx, obs in enumerate(self.obs_list):
+            model = self.model.copy()
+            covariance = None
+            covar_axis = None
+
+            fit_range = self.true_fit_range[idx]
+            statname = self.stat
+            statval = np.sum(self.statval[idx])
+            npred = copy.deepcopy(self.predicted_counts[idx])
+            self.result.append(SpectrumFitResult(
+                model=model,
+                covariance=covariance,
+                covar_axis=covar_axis,
+                fit_range=fit_range,
+                statname=statname,
+                statval=statval,
+                npred=npred,
+                obs=obs
+            ))
+
+    def est_errors(self):
+        """Estimate errors"""
+        if self.err_method == 'sherpa':
+            self._est_errors_sherpa()
+        else:
+            raise NotImplementedError('{}'.format(self.err_method))
+        for res in self.result:
+            res.covar_axis = self.covar_axis
+            res.covariance = self.covariance
+
+    def _est_errors_sherpa(self):
+        """Wrapper around Sherpa error estimator"""
+        covar = self._sherpa_fit.est_errors()
+        covar_axis = list()
+        for idx, par in enumerate(covar.parnames):
+            name = par.split('.')[-1]
+            covar_axis.append(name)
+        self.covar_axis = covar_axis
+        self.covariance = copy.deepcopy(covar.extra_output)
 
     def compute_fluxpoints(self, binning):
         """Compute `~DifferentialFluxPoints` for best fit model
 
-        Calls :func:`~gammapy.spectrum.DifferentialFluxPoints.compute`.
+        TODO: Implement
 
         Parameters
         ----------
@@ -237,25 +346,12 @@ class SpectrumFit(object):
         -------
         result : `~gammapy.spectrum.SpectrumResult`
         """
-        from . import SpectrumResult
-        obs_list = self.obs_list
-        model = self.result[0].model
-        #TODO: doesn't work .compute() never existed, remove whole method?
-        raise NotImplementedError
-        points = DifferentialFluxPoints.compute(model=model,
-                                                binning=binning,
-                                                obs_list=obs_list)
-        return SpectrumResult(fit=self.result[0], points=points)
-
     def run(self, outdir=None):
-        """Run all steps
+        """Run all steps and write result to disk
 
         Parameters
         ----------
-        method : str {sherpa}
-            Fit method to use
         outdir : Path, str
-
             directory to write results files to
         """
         cwd = Path.cwd()
@@ -264,7 +360,7 @@ class SpectrumFit(object):
         os.chdir(str(outdir))
 
         self.fit()
-        log.info(self.global_result)
+        self.est_errors()
 
         # Assume only one model is fit to all data
         modelname = self.result[0].model.__class__.__name__
@@ -272,71 +368,3 @@ class SpectrumFit(object):
         log.info('Writing {}'.format(filename))
         self.result[0].to_yaml(filename)
         os.chdir(str(cwd))
-
-
-def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
-    """Create `~gammapy.spectrum.SpectrumFitResult` from Sherpa objects"""
-
-    from . import SpectrumFitResult
-
-    # Translate sherpa model to GP model
-    # Units will be transformed to TeV, s, and m to avoid numerical issues
-    # e.g. a flux error of O(-13) results in a covariance entry of O(-45) due
-    # to the sqrt and unit keV which kills the uncertainties package
-    amplfact = SpectrumFit.FLUX_FACTOR
-    pardict = dict(gamma=['index', u.Unit('')],
-                   ref=['reference',
-                        (1 * u.keV).to('TeV')],
-                   ampl=['amplitude',
-                         (amplfact * u.Unit('cm-2 s-1 keV-1')).to('m-2 s-1 TeV-1')],
-                   cutoff=['lambda_',
-                           u.Unit('TeV-1')])
-    kwargs = dict()
-
-    for par in shmodel.pars:
-        name = par.name
-        kwargs[pardict[name][0]] = par.val * pardict[name][1]
-
-    if 'powlaw1d' in shmodel.name:
-        model = models.PowerLaw(**kwargs)
-    elif 'ecpl' in shmodel.name:
-        model = models.ExponentialCutoffPowerLaw(**kwargs)
-    else:
-        raise NotImplementedError(str(shmodel))
-
-    # Adjust parameters in covariance matrix
-    covariance = copy.deepcopy(covar.extra_output)
-    covar_axis = list()
-    for idx, par in enumerate(covar.parnames):
-        name = par.split('.')[-1]
-        covar_axis.append(pardict[name][0])
-        temp = covariance[idx] * pardict[name][1]
-        covariance[idx] = temp
-        temp2 = covariance[:, idx] * pardict[name][1]
-        covariance[:, idx] = temp2
-
-    # Efilter sometimes contains ','
-    if ':' in efilter:
-        temp = efilter.split(':')
-    else:
-        temp = efilter.split(',')
-
-    # Special case only one noticed bin
-    if len(temp) == 1:
-        fit_range = ([float(temp[0]), float(temp[0])] * u.keV).to('TeV')
-    else:
-        fit_range = ([float(temp[0]), float(temp[1])] * u.keV).to('TeV')
-
-    npred = shmodel(1)
-    statname = fitresult.statname
-    statval = fitresult.statval
-
-    # TODO: Calc Flux@1TeV + Error
-    return SpectrumFitResult(model=model,
-                             covariance=covariance,
-                             covar_axis=covar_axis,
-                             fit_range=fit_range,
-                             statname=statname,
-                             statval=statval,
-                             npred=npred
-                             )

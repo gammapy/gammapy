@@ -305,7 +305,7 @@ class PHACountsSpectrum(CountsSpectrum):
     energy : `~astropy.units.Quantity`
         Bin edges of energy axis
     obs_id : int, optional
-    Unique identifier, default: 0
+        Unique identifier, default: 0
     quality : int, array-lik
         Mask bins in safe energy range (1 = bad, 0 = good)
     is_bkg : bool, optional

@@ -594,9 +594,12 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref):
         from gammapy.spectrum import SpectrumFit
 
-        sherpa_model = model.to_sherpa()
-        sherpa_model.gamma.freeze()
-        fit = SpectrumFit(self.obs, sherpa_model)
+        # TODO: The code below won't work because SpectrumFit only accepts
+        # gammapy models. Add Parameter class to freeze index
+        # sherpa_model = model.to_sherpa()
+        # sherpa_model.gamma.freeze()
+        #fit = SpectrumFit(self.obs, sherpa_model)
+        fit = SpectrumFit(self.obs, model)
 
         erange = energy_group.energy_range
         # TODO: Notice channels contained in energy_group
@@ -608,8 +611,10 @@ class FluxPointEstimator(object):
         )
 
         fit.fit()
+        fit.est_errors()
 
-        res = fit.global_result
+        # First result contain correct model
+        res = fit.result[0]
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min

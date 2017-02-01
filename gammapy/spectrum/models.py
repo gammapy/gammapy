@@ -3,6 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import copy
 import astropy.units as u
 from astropy.table import Table
 
@@ -14,7 +15,7 @@ from ..utils.scripts import make_path
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
 try:
-    from .sherpa_models import SherpaExponentialCutoffPowerLaw
+    from .sherpa_utils import SherpaExponentialCutoffPowerLaw
 except ImportError:
     pass
 
@@ -222,6 +223,9 @@ class SpectralModel(object):
             energy = brentq(f, emin.to('TeV').value, emax.to('TeV').value)
             energies.append(energy)
         return energies * u.TeV
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class PowerLaw(SpectralModel):

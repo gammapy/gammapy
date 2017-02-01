@@ -160,14 +160,12 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
     # Handle n_on == 0
-    # Need additional condtion that mu_sig + alpha * mu_bkg >= 0
-    # Otherwise 'correct' nan values are overwritten
-    condition = (n_on == 0) & ((mu_sig + alpha * mu_bkg) > 0)
+    condition = (n_on == 0) 
     term2 = np.where(condition, 0, term2_)
 
     term3_ = - n_off * np.log(mu_bkg)
     # Handle n_off == 0
-    condition = (n_off == 0) & ((mu_sig + alpha * mu_bkg) > 0)
+    condition = (n_off == 0) 
     term3 = np.where(condition, 0, term3_)
 
     stat = 2 * (term1 + term2 + term3)

@@ -102,7 +102,7 @@ class SpectrumFitResult(object):
                                     max=self.fit_range[1].value,
                                     unit=str(self.fit_range.unit))
         if self.statval is not None:
-            val['statval'] = self.statval
+            val['statval'] = float(self.statval)
         if self.statname is not None:
             val['statname'] = self.statname
         if self.covariance is not None:
@@ -211,6 +211,8 @@ class SpectrumFitResult(object):
         --------
         TODO
         """
+        if self.covariance is None:
+            raise ValueError('covariance matrix not set')
         import uncertainties
         pars = self.model.parameters
 
