@@ -341,7 +341,7 @@ class EnergyDispersion(object):
         temp=np.sum(pdf * self.e_reco._interp_nodes())
         return temp / norm
 
-    def apply(self, data, e_reco=None):
+    def apply(self, data, e_reco=None, e_true=None):
         """Apply energy dispersion.
 
         Computes the matrix product of ``data``
@@ -356,6 +356,8 @@ class EnergyDispersion(object):
             Desired energy binning of the convolved data, if provided the
             `~gammapy.irf.EnergyDispersion` is evaluated at the log centers of
             the energy axis.
+        e_true : true energy binning of ``data``. Has to be provided if it
+            differs from the true energy binning of the energy dispersion matrix
 
         Returns
         -------
@@ -363,10 +365,20 @@ class EnergyDispersion(object):
             1-dim data array after multiplication with the energy dispersion matrix
         """
         if e_reco is None:
-            e_reco=self.e_reco.nodes
+            reco_nodes=self.e_reco.nodes
         else:
-            e_reco=np.sqrt(e_reco[:-1] * e_reco[1:])
-        edisp_pdf=self.data.evaluate(e_reco=e_reco)
+            e_reco=EnergyBounds(e_reco)
+            reco_nodes=e_reco.log_centers
+        if e_true is None:
+            true_nodes = self.e_true.nodes 
+        else:
+            e_true = EnergyBounds(e_true)
+            true_nodes = e_true.log_centers
+
+        edisp_pdf=self.data.evaluate(e_reco=reco_nodes, e_true=true_nodes)
+        if len(data) != len(true_nodes):
+            raise ValueError("Input size {} does not match true energy axis {}".format(
+                len(data), len(true_nodes)))
         return np.dot(data, edisp_pdf)
 
     def _extent(self):
