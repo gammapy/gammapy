@@ -13,11 +13,11 @@ from ...utils.energy import EnergyBounds
 @requires_dependency('scipy')
 class TestEnergyDispersion:
     def setup(self):
-        e_true = np.logspace(0, 1, 101) * u.TeV
-        e_reco = e_true
+        self.e_true = np.logspace(0, 1, 101) * u.TeV
+        self.e_reco = self.e_true
         self.resolution = 0.1
-        self.edisp = EnergyDispersion.from_gauss(e_true=e_true,
-                                                 e_reco=e_reco,
+        self.edisp = EnergyDispersion.from_gauss(e_true=self.e_true,
+                                                 e_reco=self.e_reco,
                                                  pdf_threshold=1e-7,
                                                  sigma=self.resolution)
 
@@ -48,6 +48,13 @@ class TestEnergyDispersion:
         actual = edisp2.pdf_matrix[indices]
         assert_allclose(actual, desired)
 
+    def test_apply(self):
+        counts = np.arange(len(self.e_true) - 1)
+        actual = self.edisp.apply(counts)
+        assert_allclose(actual[0], 3.9877484855864265)
+        
+        actual = self.edisp.apply(counts, e_true=self.e_true)
+        assert_allclose(actual[0], 3.9877484855864265)
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
