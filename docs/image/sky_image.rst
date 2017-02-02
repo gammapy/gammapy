@@ -70,7 +70,8 @@ The image can be easily displayed with an image viewer, by calling ``image.show(
 Cutout and paste
 ----------------
 
-The `~gammapy.image.SkyImage` class offers `.paste()` and `.cutout()`
+The `~gammapy.image.SkyImage` class offers `~gammapy.image.SkyImage.paste()` and
+`~gammapy.image.SkyImage.cutout()`
 methods, that can be used to cut out smaller parts of a image.
 Here we cut out a 5 deg x 5 deg patch out of an example image:
 
@@ -90,7 +91,7 @@ Here we cut out a 5 deg x 5 deg patch out of an example image:
 
 `cutout` is again a `~gammapy.image.SkyImage` object.
 
-Here's a more complicated example, that uses `.paste()` and `.cutout()`
+Here's a more complicated example, that uses `.paste()` and `~gammapy.image.SkyImage.cutout()`
 to evaluate Gaussian model images on small cut out patches and paste
 them again into a larger image. This offer a very efficient way
 of computing large model sky images:
