@@ -842,10 +842,15 @@ class EnergyDispersion2D(object):
             migra=self.migra.nodes
 
         z=self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
-        y=e_true.value
-        x=migra
+        #y=e_true.value
+        #x=migra
+        #ax.pcolor(x, y, z, **kwargs)
 
-        ax.pcolor(x, y, z, **kwargs)
+        extent = [
+            e_true.value.min(), e_true.value.max(),
+            migra.min(), migra.max(),
+        ]
+        ax.imshow(z.transpose(), extent=extent, origin='bottom', **kwargs)
         ax.semilogx()
         ax.set_xlabel('Energy (TeV)')
         ax.set_ylabel('E_Reco / E_true')
@@ -856,6 +861,7 @@ class EnergyDispersion2D(object):
         """Quick-look summary plots.
 
         Parameters
+
         ----------
         figsize : (float, float)
             Size of the resulting plot
