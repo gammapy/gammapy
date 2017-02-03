@@ -27,7 +27,7 @@ def seg(obs):
     seg.compute_groups_fixed(ebounds=ebounds)
     return seg
 
-
+@pytest.mark.xfail(reason='see #867')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestSpectrumEnergyGrouping:

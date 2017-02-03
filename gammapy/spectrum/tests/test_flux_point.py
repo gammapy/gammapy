@@ -150,6 +150,7 @@ def test_compute_flux_points_dnde_exp(method):
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
+@pytest.mark.xfail(reason='Cannot freeze parameters at the moment')
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
 @requires_dependency('scipy')
@@ -171,7 +172,6 @@ class TestFluxEstimator:
 
         self.groups = self.seg.groups
 
-    @pytest.mark.xfail(reason='Cannot freeze parameters at the moment')
     def test_with_power_law(self):
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
