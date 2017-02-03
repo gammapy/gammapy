@@ -314,9 +314,9 @@ class PowerLaw(SpectralModel):
         val = -1 * pars.index + 2
 
         try:
-            val_zero = (val.n == 0)
+            val_zero = np.isclose(val.n, 0)
         except AttributeError:
-            val_zero = (val == 0)
+            val_zero = np.isclose(val, 0)
 
         if val_zero:
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)

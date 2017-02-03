@@ -67,6 +67,9 @@ class SpectrumFit(object):
 
         # TODO: Check if IRFs are given for forward folding
 
+        if stat == 'wstat' and obs_list[0].off_vector is None:
+            raise ValueError('Off vector required for WStat fit')
+
         self.obs_list = obs_list
         self.model = model
         self.stat = stat
@@ -337,13 +340,19 @@ class SpectrumFit(object):
         will change the model parameters and statval again
         """
         from . import SpectrumFitResult
-        for idx, obs in enumerate(self.obs_list):
-            model = self.model.copy()
-            covariance = None
-            covar_axis = None
 
+        model = self.model.copy()
+        if self.background_model is not None:
+            bkg_model = self.background_model.copy()
+        else:
+            bkg_model = None
+
+        covariance = None
+        covar_axis = None
+        statname = self.stat
+
+        for idx, obs in enumerate(self.obs_list):
             fit_range = self.true_fit_range[idx]
-            statname = self.stat
             statval = np.sum(self.statval[idx])
             npred_src = copy.deepcopy(self.predicted_counts[idx][0])
             npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
@@ -356,6 +365,7 @@ class SpectrumFit(object):
                 statval=statval,
                 npred_src=npred_src,
                 npred_bkg=npred_bkg,
+                background_model = bkg_model,
                 obs=obs
             ))
 
