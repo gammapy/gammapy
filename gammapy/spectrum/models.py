@@ -277,11 +277,19 @@ class PowerLaw(SpectralModel):
         # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
 
-        val = -1 * pars.index + 1
-        prefactor = pars.amplitude * pars.reference / val
-        upper = np.power((emax / pars.reference), val)
-        lower = np.power((emin / pars.reference), val)
-        return prefactor * (upper - lower)
+        if np.isclose(pars.index, 1):
+            e_unit = emin.unit
+            prefactor = pars.amplitude * pars.reference.to(e_unit)
+            upper = np.log(emax.to(e_unit).value)
+            lower = np.log(emin.value)
+        else:
+            val = -1 * pars.index + 1
+            prefactor = pars.amplitude * pars.reference / val
+            upper = np.power((emax / pars.reference), val)
+            lower = np.power((emin / pars.reference), val)
+
+        integral = prefactor * (upper - lower)
+        return integral
 
     def energy_flux(self, emin, emax):
         r"""

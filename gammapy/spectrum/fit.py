@@ -263,7 +263,6 @@ class SpectrumFit(object):
                                      mu_on=mu_on)
                 off_stat = np.zeros_like(on_stat)
 
-
         elif self.stat == 'wstat':
             kwargs = dict(n_on=obs.on_vector.data.data.value,
                           n_off=obs.off_vector.data.data.value,
