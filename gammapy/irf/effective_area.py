@@ -23,8 +23,10 @@ class EffectiveAreaTable(object):
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`
-        Bin edges of energy axis
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
     data : `~astropy.units.Quantity`
         Effective area
 
@@ -65,9 +67,9 @@ class EffectiveAreaTable(object):
     >>> print(ener)
     0.185368478744 TeV
     """
-
-    def __init__(self, energy, data, meta=None):
-        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+    def __init__(self, energy_lo, energy_hi, data, meta=None):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
         self.data = NDDataArray(axes=axes, data=data)
         if meta is not None:
             self.meta = Bunch(meta)
@@ -102,8 +104,8 @@ class EffectiveAreaTable(object):
         if energy is None:
             energy = self.energy.nodes
         eff_area = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(self.energy.unit).value
@@ -157,7 +159,8 @@ class EffectiveAreaTable(object):
 
         data = value * u.cm ** 2
 
-        return cls(data=data, energy=energy)
+        return cls(energy_lo=energy.lower_bounds,
+                   energy_hi = energy.upper_bounds, data=data)
 
     @classmethod
     def from_table(cls, table):
@@ -167,9 +170,8 @@ class EffectiveAreaTable(object):
 
         energy_lo = table['{}_LO'.format(energy_col)].quantity
         energy_hi = table['{}_HI'.format(energy_col)].quantity
-        energy = np.append(energy_lo.value, energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='SPECRESP'):
@@ -193,9 +195,8 @@ class EffectiveAreaTable(object):
 
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
         """
-        energy = self.energy.data
-        ener_lo = energy[:-1]
-        ener_hi = energy[1:]
+        ener_lo = self.energy.lo
+        ener_hi = self.energy.hi
         data = self.evaluate_fill_nan()
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
         meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
@@ -285,10 +286,14 @@ class EffectiveAreaTable2D(object):
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`
-        Bin edges of energy axis
-    offset : `~astropy.units.Quantity`
-        Bin edges of offset axis
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
+    offset_lo : `~astropy.units.Quantity`
+        Lower bin edges of offset axis
+    offset_hi : `~astropy.units.Quantity`
+        Upper bin edges of offset axis
     data : `~astropy.units.Quantity`
         Effective area
     low_threshold : `~astropy.units.Quantity`, optional 
@@ -314,16 +319,14 @@ class EffectiveAreaTable2D(object):
     Data           : size =    40, min =  1.000 cm2, max =  1.000 cm2
     """
 
-    def __init__(self, energy, offset, data, meta=None):
+    def __init__(self, energy_lo, energy_hi, offset_lo, offset_hi, data, meta=None):
         axes = [
             BinnedDataAxis(
-                energy,
-                interpolation_mode='log',
-                name='energy'),
+                energy_lo, energy_hi, 
+                interpolation_mode='log', name='energy'),
             BinnedDataAxis(
-                offset,
-                interpolation_mode='linear',
-                name='offset')
+                offset_lo, offset_hi,
+                interpolation_mode='linear', name='offset')
         ]
         self.data = NDDataArray(axes=axes, data=data)
         if meta is not None:
@@ -358,13 +361,12 @@ class EffectiveAreaTable2D(object):
 
         energy_lo = table['{}_LO'.format(energy_col)].quantity[0]
         energy_hi = table['{}_HI'.format(energy_col)].quantity[0]
-        energy = BinnedDataAxis.from_lower_and_upper_bounds(energy_lo, energy_hi)
         o_lo = table['{}_HI'.format(offset_col)].quantity[0]
         o_hi = table['{}_HI'.format(offset_col)].quantity[0]
-        offset = BinnedDataAxis.from_lower_and_upper_bounds(o_lo, o_hi)
-        # see https://github.com/gammasky/hess-host-analyses/issues/32
         data = table['{}'.format(data_col)].quantity[0].transpose()
-        return cls(offset=offset, energy=energy, data=data, meta=table.meta)
+        return cls(offset_lo=o_lo, offset_hi=o_hi,
+                   energy_lo=energy_lo, energy_hi=energy_hi, 
+                   data=data, meta=table.meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):
@@ -394,12 +396,14 @@ class EffectiveAreaTable2D(object):
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.energy
-        else:
-            energy = BinnedDataAxis(data=energy, interpolation_mode='log')
+            energy = self.energy.bins
+       
+        energy = EnergyBounds(energy)
 
-        area = self.data.evaluate(offset=offset, energy=energy.nodes)
-        return EffectiveAreaTable(energy=energy.data, data=area)
+        area = self.data.evaluate(offset=offset, energy=energy.log_centers)
+        return EffectiveAreaTable(energy_lo=energy.lower_bounds,
+                                  energy_hi=energy.upper_bounds,
+                                  data=area)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.
