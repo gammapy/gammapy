@@ -324,8 +324,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spectrum(self):
         """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        TODO: remove!???
         """
         data = self.data
         model = self.spectral_model
@@ -675,7 +673,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     def __str__(self):
         """Print summary info."""
-        # TODO: can we share code with 3FGL summary funtion?
         d = self.data
 
         ss = 'Source: {}\n'.format(d['Source_Name'])
@@ -686,10 +683,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += 'GLON        : {}\n'.format(d['GLON'])
         ss += 'GLAT        : {}\n'.format(d['GLAT'])
         ss += '\n'
-
-        # val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
-        # ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
-        # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
 
         return ss
 
@@ -773,8 +767,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     @property
     def spectrum(self):
         """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        TODO: remove!???
         """
         data = self.data
         model = self.spectral_model
