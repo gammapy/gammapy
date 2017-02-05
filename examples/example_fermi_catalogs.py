@@ -51,7 +51,6 @@ butterfly_2fhl.plot(src_2fhl.energy_range, ax=ax, energy_power=2, color='g',
 src_2fhl.flux_points.plot(ax=ax, sed_type='dnde', energy_power=2, color='g',
                           flux_unit='cm-2 s-1 erg-1')
 
-
 # 1FHL
 src_1fhl.spectral_model.plot(src_1fhl.energy_range, ax=ax, energy_power=2,
                              c='c', label='Fermi 1FHL',
@@ -67,7 +66,6 @@ butterfly_1fhl.plot(src_1fhl.energy_range, ax=ax, energy_power=2, color='c',
                     flux_unit='erg-1 cm-2 s-1', facecolor='c')
 src_1fhl.flux_points.plot(ax=ax, sed_type='dnde', energy_power=2, color='c',
                           flux_unit='cm-2 s-1 erg-1')
-
 
 # 3FHL
 src_3fhl.spectral_model.plot(src_3fhl.energy_range, ax=ax, energy_power=2,
@@ -85,7 +83,6 @@ butterfly_3fhl.plot(src_3fhl.energy_range, ax=ax, energy_power=2, color='b',
 
 src_3fhl.flux_points.plot(ax=ax, sed_type='eflux', color='b',
                           flux_unit='erg cm-2 s-1')
-
 
 ax.set_ylim(1.e-12, 7.e-11)
 ax.set_xlim(1.e-4, 2.)

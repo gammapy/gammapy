@@ -40,6 +40,8 @@ __all__ = [
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """
     One source from the Fermi-LAT 3FGL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
     _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
     _ebounds_suffix = ['100_300', '300_1000',
@@ -199,6 +201,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
 class SourceCatalogObject1FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 1FHL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog1FHL`.
     """
     _ebounds = EnergyBounds([10, 30, 100, 500], 'GeV')
     _ebounds_suffix = ['10_30', '30_100', '100_500']
@@ -299,6 +303,8 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog2FHL`.
     """
     _ebounds = EnergyBounds([50, 171, 585, 2000], 'GeV')
     _ebounds_suffix = ['50_171', '171_585', '585_2000']
@@ -400,6 +406,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
 class SourceCatalogObject3FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FHL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
     _ebounds_suffix = ['10_20', '20_50', '50_150', '150_500', '500_2000']
@@ -527,6 +535,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
     name = '3fgl'
     description = 'LAT 4-year point source catalog'
@@ -551,7 +561,10 @@ class SourceCatalog3FGL(SourceCatalog):
 
 
 class SourceCatalog1FHL(SourceCatalog):
-    """Fermi-LAT 1FHL source catalog."""
+    """Fermi-LAT 1FHL source catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
+    """
     name = '1fhl'
     description = 'First Fermi-LAT Catalog of Sources above 10 GeV'
     source_object_class = SourceCatalogObject1FHL
@@ -574,6 +587,8 @@ class SourceCatalog1FHL(SourceCatalog):
 
 class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
     name = '2fhl'
     description = 'LAT second high-energy source catalog'
@@ -598,6 +613,8 @@ class SourceCatalog2FHL(SourceCatalog):
 
 class SourceCatalog3FHL(SourceCatalog):
     """Fermi-LAT 3FHL source catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
     name = '3fhl'
     description = 'LAT third high-energy source catalog'
