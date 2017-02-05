@@ -8,21 +8,67 @@ Summary
 
 For plans and progress for Gammapy 1.0, see https://github.com/gammapy/gammapy/milestones/1.0
 
-.. _gammapy_0p6_release:
+.. _gammapy_0p7_release:
 
-0.6 (unreleased)
+0.7 (unreleased)
 ----------------
 
 Summary
 +++++++
 
-For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
+For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/milestones/0.7
 
-- Requires Astropy 1.3 or later. (Almost everything will probably still work with older Astropy versions,
-  but we don't test against older versions.)
 
-Contributors
-++++++++++++
+.. _gammapy_0p6_release:
+
+0.6 (Feb 13, 2017)
+------------------
+
+Summary
++++++++
+
+- Not released yet. For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
+- XXX contributors (XXX new)
+- 3 months of work (from November 22, 2016 to February 13, 2017)
+- XXX pull requests (not all listed below)
+
+**What's new?**
+
+- Release and installation
+    - Until now, we had a roughly bi-yearly release cycle for Gammapy.
+      Starting now, we will make stable releases more often, to ship features and fixes to Gammapy users more quickly.
+    - Gammapy 0.6 requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.3+, Sherpa 4.9.0+
+      (most things will still work with older Astropy and Sherpa, but we dropped testing
+      for older versions from our continuous integration)
+    - Gammapy now available via Macports (``port install py35-gammapy``)
+- Documentation
+    - Misc docs improvements and new getting started notebooks
+    - Separate section added for developer documentation, and extended developer documentation
+- **CTA**
+    - tbd: point out docs and examples
+    - better support for CTA IRFs
+- **Fermi-LAT**
+    - reference dataset: https://github.com/gammapy/gammapy-fermi-lat-data
+    - data access and first analysis example (tbd)
+- ``gammapy.catalog``
+    - Access to ``gamma-cat``
+    - Access to more Fermi-LAT catalogs (1FHL, 2FHL, 3FHL)
+- ``gammapy.spectrum``
+    - much improved flux point class
+    - EBL-absorbed spectral models
+    - Improved spectrum simulation class
+    - Misc fixes and improvements (e.g. for energy dispersion)
+- ``gammapy.image``
+    - image radial and box profiles
+- ``gammapy.time``
+    - tbd: improved documentation using Fermi-LAT and gamma-cat lightcurves
+- ``gammapy.irf``:
+    - Many IRF classes now rewritten to use the generic ``NDDataArray`` and axis classes
+- ``gammapy.utils``:
+    - Add ``gammapy.utils.modeling`` with support for XML models (work in progress)
+
+
+**Contributors:**
 
 - Axel Donath
 - Brigitta Sipocz
@@ -41,6 +87,13 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#868] Add Fermi-LAT 3FHL catalogue (Julien Lefaucheur)
+- [#865] Add Fermi basic image estimator (Axel Donath)
+- [#864] Improve edisp.apply to support different true energy axes (Johannes King)
+- [#859] Remove old image_profile function (Axel Donath)
+- [#858] Fix Fermi catalog flux point upper limits (Axel Donath)
+- [#855] Add Fermi-LAT 1FHL catalogue (Julien Lefaucheur)
+- [#854] Add Fermi-LAT dataset class (Axel Donath)
 - [#851] Write Macports install docs (Christoph Deil)
 - [#847] Fix Sherpa spectrum OGIP file issue (Régis Terrier and Johannes King)
 - [#842] Add AbsorbedSpectralModel and improve CTA IRF class (Julien Lefaucheur)
@@ -85,7 +138,7 @@ Summary
 - 184 pull requests (not all listed below)
 - Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.2+, Sherpa 4.8.2+
 
-Highlights:
+**What's new?**
 
 - Tutorial-style getting started documentation as Jupyter notebooks
 - Removed ``gammapy.regions`` and have switched to the move complete
@@ -98,8 +151,7 @@ Highlights:
 - ``gammapy.irf`` - Many improvements to IRF classes, especially the PSF classes.
 - Many improved tests and test coverage
 
-Contributors
-++++++++++++
+**Contributors:**
 
 - Axel Donath
 - Brigitta Sipocz
@@ -200,20 +252,19 @@ Summary
 - 8 months of work (from August 13, 2015 to April 20, 2016)
 - 108 pull requests (not all listed below)
 - Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.0+, Sherpa 4.8+
-- Support for Windows added (testing on AppVeyor)
 
-Highlights:
+**What's new?**
 
-- New: Women are hacking on Gammapy!
-- New: IACT data access via DataStore and HDU index tables
-- New: Radially-symmetric background modeling
-- Improved: 2-dim image analysis
-- New: 1-dim spectral analysis
-- New: Add sub-package gammapy.cube and start working on 3-dim cube analysis
+- Women are hacking on Gammapy!
+- IACT data access via DataStore and HDU index tables
+- Radially-symmetric background modeling
+- Improved 2-dim image analysis
+- 1-dim spectral analysis
+- Add sub-package ``gammapy.cube`` and start working on 3-dim cube analysis
+- Continuous integration testing for Windows on Appveyor added
+  (Windows support for Gammapy is preliminary and incomplete)
 
-
-Contributors
-++++++++++++
+**Contributors:**
 
 - Axel Donath
 - Brigitta Sipocz (new)
@@ -309,8 +360,7 @@ Summary
   It will be refactored and is thus not part of the public API.
 - The Gammapy 0.3 release is the basis for an `ICRC 2015 poster contribution <https://indico.cern.ch/event/344485/session/142/contribution/695>`__
 
-Contributors
-++++++++++++
+**Contributors:**
 
 - Manuel Paz Arribas
 - Christoph Deil
@@ -366,8 +416,7 @@ Summary
 - Gammapy now uses `Cython <http://cython.org/>`__,
   i.e. requires a C compiler for end-users and in addition Cython for developers.
 
-Contributors
-++++++++++++
+**Contributors:**
 
 - Manuel Paz Arribas (new)
 - Christoph Deil
@@ -417,8 +466,7 @@ Summary
 - 82 pull requests
 - Requires Astropy version 0.4 or later.
 
-Contributors
-++++++++++++
+**Contributors:**
 
 - Rolf Bühler
 - Christoph Deil
