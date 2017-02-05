@@ -1,8 +1,5 @@
 """ Example to show how to plot spectrum of Fermi/LAT sources
 """
-
-"""Example how to plot Fermi-LAT catalog spectra.
-"""
 import matplotlib.pyplot as plt
 
 from gammapy.catalog import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL

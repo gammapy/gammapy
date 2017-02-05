@@ -317,7 +317,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         for column in ['eflux', 'eflux_errp', 'eflux_errn']:
             table[column][is_ul] = np.nan
 
-        # TODO: check if nuFnu is maybe integral flux
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
 
@@ -760,7 +759,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         for column in ['eflux', 'eflux_errp', 'eflux_errn']:
             table[column][is_ul] = np.nan
 
-        # TODO: check if nuFnu is maybe integral flux
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
     
