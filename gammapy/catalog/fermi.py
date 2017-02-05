@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import tarfile
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
@@ -25,9 +25,11 @@ __all__ = [
     'SourceCatalog1FHL',
     'SourceCatalog2FHL',
     'SourceCatalog3FGL',
+    'SourceCatalog3FHL',
     'SourceCatalogObject1FHL',
     'SourceCatalogObject2FHL',
     'SourceCatalogObject3FGL',
+    'SourceCatalogObject3FHL',
 ]
 
 
@@ -315,15 +317,12 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         for column in ['eflux', 'eflux_errp', 'eflux_errn']:
             table[column][is_ul] = np.nan
 
-        # TODO: check if nuFnu is maybe integral flux
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
 
     @property
     def spectrum(self):
         """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        TODO: remove!???
         """
         data = self.data
         model = self.spectral_model
@@ -658,5 +657,195 @@ class SourceCatalog1FHL(SourceCatalog):
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
         super(SourceCatalog1FHL, self).__init__(table=table,
+                                                source_name_key=source_name_key,
+                                                source_name_alias=source_name_alias)
+
+
+
+class SourceCatalogObject3FHL(SourceCatalogObject):
+    """One source from the Fermi-LAT 3FHL catalog.
+    """
+    _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
+    _ebounds_suffix = ['10_20', '20_50', '50_150', '150_500', '500_2000']
+    energy_range = Quantity([0.01, 2], 'TeV')
+    """Energy range of the Fermi 1FHL source catalog"""
+
+    def __str__(self):
+        """Print summary info."""
+        d = self.data
+
+        ss = 'Source: {}\n'.format(d['Source_Name'])
+        ss += '\n'
+
+        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
+        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
+        ss += 'GLON        : {}\n'.format(d['GLON'])
+        ss += 'GLAT        : {}\n'.format(d['GLAT'])
+        ss += '\n'
+        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+
+        return ss
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux']:
+            raise ValueError(
+                "Must be one of the following: 'Flux', 'Unc_Flux'")
+
+        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+
+    @property
+    def spectral_model(self):
+        """
+        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
+        """
+        spec_type = self.data['SpectrumType'].strip()
+        pars = {}
+        pars['amplitude'] = Quantity(
+            self.data['Flux_Density'], 'GeV-1 cm-2 s-1')
+        pars['reference'] = Quantity(self.data['Pivot_Energy'], 'GeV')
+
+        if spec_type == 'PowerLaw':
+            pars['index'] = Quantity(self.data['Spectral_Index'], '')
+            return PowerLaw(**pars)
+
+        elif spec_type == 'LogParabola':
+            pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
+            pars['beta'] = Quantity(self.data['beta'], '')
+            return LogParabola(**pars)
+
+        else:
+            raise ValueError(
+                'Spectral model {} not available'.format(spec_type))
+
+    @property
+    def flux_points(self):
+        """
+        Differential flux points (`~gammapy.spectrum.FluxPoints`).
+        """
+        table = Table()
+        table.meta['SED_TYPE'] = 'flux'
+        e_ref = self._ebounds.log_centers
+        table['e_ref'] = e_ref
+        table['e_min'] = self._ebounds.lower_bounds
+        table['e_max'] = self._ebounds.upper_bounds
+
+        flux = self._get_flux_values()
+        flux_err = self._get_flux_values('Unc_Flux')
+        table['flux'] = flux
+        table['flux_errn'] = np.abs(flux_err[:, 0])
+        table['flux_errp'] = flux_err[:, 1]
+
+        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
+        table['eflux'] = nuFnu
+        table['eflux_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table['eflux_errp'] = nuFnu * flux_err[:, 1] / flux
+
+        is_ul = np.isnan(table['flux_errn'])
+        table['is_ul'] = is_ul
+
+        # handle upper limits
+        table['flux_ul'] = np.nan * flux_err.unit
+        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
+
+        for column in ['flux', 'flux_errp', 'flux_errn']:
+            table[column][is_ul] = np.nan
+
+        # handle upper limits
+        table['eflux_ul'] = np.nan * nuFnu.unit
+        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
+
+        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
+            table[column][is_ul] = np.nan
+
+        table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
+        return FluxPoints(table)
+    
+    @property
+    def spectrum(self):
+        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
+        """
+        data = self.data
+        model = self.spectral_model
+
+        spec_type = self.data['SpectrumType'].strip()
+
+        if spec_type == 'PowerLaw':
+            par_names = ['index', 'amplitude']
+            par_errs = [data['Unc_Spectral_Index'],
+                        data['Unc_Flux_Density']]
+        elif spec_type == 'LogParabola':
+            par_names = ['amplitude', 'alpha', 'beta']
+            par_errs = [data['Unc_Flux_Density'],
+                        data['Unc_Spectral_Index'],
+                        data['Unc_beta']]
+        else:
+            raise ValueError(
+                'Spectral model {} not available'.format(spec_type))
+
+        covariance = np.diag(par_errs) ** 2
+
+        return SpectrumFitResult(
+            model=model,
+            fit_range=self.energy_range,
+            covariance=covariance,
+            covar_axis=par_names,
+        )
+
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
+            raise ValueError(
+                "Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
+
+        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+
+class SourceCatalog3FHL(SourceCatalog):
+    """Fermi-LAT 3FHL source catalog.
+    """
+    name = '3fhl'
+    description = 'LAT third high-energy source catalog'
+    source_object_class = SourceCatalogObject3FHL
+
+    def __init__(self, filename=None):
+        if not filename:
+            filename = gammapy_extra.filename(
+                'datasets/catalogs/fermi/gll_psch_v11.fit.gz')
+
+        self.hdu_list = fits.open(filename)
+        self.extended_sources_table = Table(
+            self.hdu_list['ExtendedSources'].data)
+        self.rois = Table(self.hdu_list['ROIs'].data)
+        table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+        # Definition of energy bounds
+        self.energy_bounds_table = Table(self.hdu_list['EnergyBounds'].data)
+
+        # Add integrated flux columns (defined in the same way as in the
+        # other Fermi catalogs (e.g. FluxY_ZGeV))
+        for i, band in enumerate(self.energy_bounds_table):
+            col_flux_name = 'Flux{:d}_{:d}GeV'.format(int(band['LowerEnergy']),
+                                                      int(band['UpperEnergy']))
+            col_flux_value = table['Flux_Band'][:,i].data
+            col_flux = Column(col_flux_value, name=col_flux_name)
+
+            col_unc_flux_name = 'Unc_' + col_flux_name
+            col_unc_flux_value = table['Unc_Flux_Band'][:,i].data
+            col_unc_flux = Column(col_unc_flux_value, name=col_unc_flux_name)
+
+            col_nufnu_name = 'nuFnu{:d}_{:d}GeV'.format(int(band['LowerEnergy']),
+                                                        int(band['UpperEnergy']))
+            col_nufnu_value = table['nuFnu'][:,i].data
+            col_nufnu = Column(col_nufnu_value, name=col_nufnu_name)
+
+            table.add_column(col_flux)
+            table.add_column(col_unc_flux)
+            table.add_column(col_nufnu)
+            
+        source_name_key = 'Source_Name'
+        source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
+        super(SourceCatalog3FHL, self).__init__(table=table,
                                                 source_name_key=source_name_key,
                                                 source_name_alias=source_name_alias)
