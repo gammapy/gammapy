@@ -133,12 +133,9 @@ def testCombinedModel3DInt():
     cube_mask = SkyCube.read(filename_mask)
     index_region_selected_3d = np.where(cube_mask.data.value == 1)
 
-    # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
-    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
-                                      index_selected_region=index_region_selected_3d)
-
-    size_remove_index = len(np.where(cube_mask.data.value == 0)[0])
-    assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
+    # Set the counts and create a gammapy Data3DInt object on which we apply a mask for the region we don't want to use in the fit
+    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt')
+    cube.mask = cube_mask.data.value.ravel()
 
     # Set the bkg and select only the data points of the selected region
     bkg = TableModel('bkg')
@@ -251,11 +248,9 @@ def testCombinedModel3DIntConvolveEdisp():
     cube_mask = SkyCube.read(filename_mask)
     index_region_selected_3d = np.where(cube_mask.data.value == 1)
 
-    # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
-    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
-                                      index_selected_region=index_region_selected_3d)
-    size_remove_index = len(np.where(cube_mask.data.value == 0)[0])
-    assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
+    # Set the counts and create a gammapy Data3DInt object on which we apply a mask for the region we don't want to use in the fit
+    cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt')
+    cube.mask = cube_mask.data.value.ravel()
 
     # Set the bkg and select only the data points of the selected region
     bkg = TableModel('bkg')
