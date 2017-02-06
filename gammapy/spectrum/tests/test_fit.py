@@ -26,6 +26,7 @@ try:
 except ImportError:
     SHERPA_LT_4_9 = True
 
+
 @pytest.mark.skipif('SHERPA_LT_4_9')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
@@ -132,6 +133,30 @@ class TestFit:
         assert_allclose(fit.true_fit_range[0][0], 0.21544347 * u.TeV)
         assert_allclose(fit.true_fit_range[0][-1], 541.1695265464 * u.GeV)
 
+    def test_likelihood_profile(self):
+        obs = SpectrumObservation(on_vector=self.src)
+        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
+                          forward_folded=False)
+        fit.fit()
+        true_idx = fit.result[0].model.parameters.index
+        scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
+        profile = fit.likelihood_1d(model=fit.result[0].model, parname='index',
+                                    parvals=scan_idx)
+        argmin = np.argmin(profile)
+        actual = scan_idx[argmin]
+        assert_allclose(actual, true_idx, rtol=0.01)
+
+    @requires_dependency('matplotlib')
+    def test_plot(self):
+        obs = SpectrumObservation(on_vector=self.src)
+        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
+                          forward_folded=False)
+
+        scan_idx = np.linspace(1, 3, 20)
+        fit.plot_likelihood_1d(model=self.source_model, parname='index',
+                               parvals=scan_idx)
+        # TODO: add assert, see issue 294
+
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_9')
@@ -164,10 +189,10 @@ class TestSpectralFit:
         assert_allclose(result.statval, 33.05275834445061)
         pars = result.model.parameters
         assert_quantity_allclose(pars.index,
-                                2.250351624575645) 
+                                 2.250351624575645)
         assert_quantity_allclose(pars.amplitude,
                                  1.969532381153556e-7 * u.Unit('m-2 s-1 TeV-1'))
-        assert_allclose(result.npred[60], 0.5847962614432303) 
+        assert_allclose(result.npred_src[60], 0.5847962614432303)
 
         with pytest.raises(ValueError):
             t = self.fit.result[0].to_table()
@@ -181,13 +206,13 @@ class TestSpectralFit:
         assert_allclose(par_errors.amplitude.s, 2.133509118228815e-12)
 
         t = self.fit.result[0].to_table()
-        assert_allclose(t['index_err'].data[0],0.09773507974970663) 
+        assert_allclose(t['index_err'].data[0], 0.09773507974970663)
 
     def test_npred(self):
         self.fit.fit()
         actual = self.fit.obs_list[0].predicted_counts(
             self.fit.result[0].model).data.data.value
-        desired = self.fit.result[0].npred
+        desired = self.fit.result[0].npred_src
         assert_allclose(actual, desired)
 
     @pytest.mark.xfail(reason='add stat per bin to fitresult in fit')
@@ -249,13 +274,13 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.model.parameters
-        assert_quantity_allclose(pars.index, 2.244456667160672) 
+        assert_quantity_allclose(pars.index, 2.244456667160672)
         assert_quantity_allclose(pars.amplitude,
                                  2.444750171621798e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run(outdir = tmpdir)
+        fit.run(outdir=tmpdir)
 
 
 @requires_dependency('sherpa')

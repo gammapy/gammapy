@@ -56,7 +56,7 @@ class SpectrumFit(object):
     """
 
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
-                 fit_range=None, background_model=None, 
+                 fit_range=None, background_model=None,
                  method='sherpa', err_method='sherpa'):
         # TODO: add fancy converters to accept also e.g. CountsSpectrum
         if isinstance(obs_list, SpectrumObservation):
@@ -64,11 +64,6 @@ class SpectrumFit(object):
         if not isinstance(obs_list, SpectrumObservationList):
             raise ValueError('Invalid input for parameter obs_list'.format(
                 obs_list))
-
-        # TODO: Check if IRFs are given for forward folding
-
-        if stat == 'wstat' and obs_list[0].off_vector is None:
-            raise ValueError('Off vector required for WStat fit')
 
         self.obs_list = obs_list
         self.model = model
@@ -223,7 +218,7 @@ class SpectrumFit(object):
 
     def calc_statval(self):
         """Calc statistic for all observations
-        
+
         The result is stored as attribute ``statval``, bin outside the fit
         range are set to 0.
         """
@@ -281,6 +276,15 @@ class SpectrumFit(object):
 
         return on_stat, off_stat
 
+    @property
+    def total_stat(self):
+        """Statistic summed over all bins and all observations
+
+        This is what is used for the fit
+        """
+        total_stat = np.sum(self.statval, dtype=np.float64)
+        return total_stat
+
     def _restrict_statval(self):
         """Apply valid fit range to statval
         """
@@ -291,8 +295,50 @@ class SpectrumFit(object):
             statval[0][idx] = 0
             statval[1][idx] = 0
 
+    def _check_valid_fit(self):
+        """Helper function to give usefull error messages"""
+        # TODO: Check if IRFs are given for forward folding
+        if self.stat == 'wstat' and self.obs_list[0].off_vector is None:
+            raise ValueError('Off vector required for WStat fit')
+
+    def likelihood_1d(self, model, parname, parvals):
+        """Compute likelihood profile
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Model to draw likelihood profile for
+        parname : str
+            Parameter to calculate profile for
+        parvals : `~astropy.units.Quantity`
+            Parameter values
+        """
+        likelihood = list()
+        self.model = model
+        for val in parvals:
+            self.model.parameters[parname] = val
+            self.predict_counts()
+            self.calc_statval()
+            likelihood.append(self.total_stat)
+        return np.array(likelihood)
+
+    def plot_likelihood_1d(self, ax=None, **kwargs):
+        """Plot 1D likelihood profile
+
+        see :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax 
+
+        yy = self.likelihood_1d(**kwargs)
+        ax.plot(kwargs['parvals'], yy)
+        ax.set_xlabel(kwargs['parname'])
+        
+        return ax
+
     def fit(self):
         """Run the fit"""
+        self._check_valid_fit()
         if self.method == 'sherpa':
             self._fit_sherpa()
         else:
@@ -365,7 +411,7 @@ class SpectrumFit(object):
                 statval=statval,
                 npred_src=npred_src,
                 npred_bkg=npred_bkg,
-                background_model = bkg_model,
+                background_model=bkg_model,
                 obs=obs
             ))
 
