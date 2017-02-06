@@ -153,14 +153,10 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
         e_reco = EnergyBounds(temp)
 
     if edisp is not None:
-        # True energy is converted to TeV. If this is not done a really strange
-        # bug occures on counts.to('') that I cannot reproduce
-        # *** UnitConversionError: 'TeV(13/10) / keV(13/10)' and ''
-        # (dimensionless) are not convertible
-        true_energy = aeff.energy.data.to('TeV')
-
+        # TODO: True energy is converted to TeV. See issue 869 
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
+
         # Need to fill nan values in aeff due to matrix multiplication with RMF
         counts = flux * livetime * aeff.evaluate_fill_nan()
         counts = counts.to('')
