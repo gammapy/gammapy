@@ -21,6 +21,8 @@ except ImportError:
 
 
 __all__ = [
+    'Parameter',
+    'ParameterList',
     'SpectralModel',
     'PowerLaw',
     'PowerLaw2',
@@ -31,24 +33,85 @@ __all__ = [
     'AbsorbedSpectralModel',
 ]
 
+class Parameter(object):
+    """Parameter for a `~gammapy.spectrum.model.SpectralModel`
+
+    Parameters
+    ----------
+    TODO
+    """
+    def __init__(self, name, value, parmin=None, parmax=None, is_fixed=False):
+        self.name = name
+        self.value = value
+        self.parmin = parmin
+        self.parmax = parmax
+        self.is_fixed = is_fixed
+
+    @property
+    def unit(self):
+        return self.value.unit
+
+    def __str__(self):
+        ss = self.name
+        ss += ': {}'.format(self.value)
+
+        return ss
+
+    def to_sherpa(self):
+        """Convert to sherpa parameter"""
+        from sherpa.models import Parameter
+        modelname = 'None'
+        par = Parameter(modelname=modelname, name=self.name,
+                        val=self.value.value, units=self.unit, 
+                        min=self.parmin, max=self.parmax,
+                        frozen=self.is_fixed)
+
+        return par
+
+
+class ParameterList(object):
+    """List of `~gammapy.spectrum.models.Parameters`
+    
+    Holds covariance matrix
+    """
+    def __init__(self, data, covar=None):
+        self.data = data
+        self.covar = covar
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        for par in self.data:
+            ss += '\n{}'.format(par)
+        ss += '\nCovariance: {}'.format(self.covar)
+        return ss
+
+    def __getitem__(self, name):
+        """Access parameter by name"""
+        for par in self.data:
+            if name == par.name:
+                return par
+
+        raise IndexError('Parameter {} not found for : {}'.format(name, self))
+
 
 class SpectralModel(object):
     """Spectral model base class.
 
-    Derived classes should store their parameters as ``Bunch`` in an instance
-    attribute called ``parameters``, see for example
+    Derived classes should store their parameters as
+    `~gammapy.spectrum.models.ParameterList`, see for example return pardict
     `~gammapy.spectrum.models.PowerLaw`.
     """
-
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
-        return self.evaluate(energy, **self.parameters)
+        kwargs = dict()
+        for par in self.parameters.data:
+            kwargs[par.name] = par.value
+        return self.evaluate(energy, **kwargs)
 
     def __str__(self):
         """String representation"""
         ss = self.__class__.__name__
-        for parname, parval in self.parameters.items():
-            ss += '\n{parname} : {parval:.3g}'.format(**locals())
+        ss += str(self.parameters)
         return ss
 
     def integral(self, emin, emax, **kwargs):
@@ -246,9 +309,10 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(self, index, amplitude, reference):
-        self.parameters = Bunch(index=index,
-                                amplitude=amplitude,
-                                reference=reference)
+        index_ = Parameter(name='index', value=index, parmin=0, parmax=20)
+        amplitude_ = Parameter(name='amplitude', value=amplitude, parmin=0)
+        reference_ = Parameter(name='reference', value=reference, is_fixed=True)
+        self.parameters = ParameterList([index_, amplitude_, reference_])
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
@@ -277,16 +341,16 @@ class PowerLaw(SpectralModel):
         # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
 
-        if np.isclose(pars.index, 1):
+        if np.isclose(pars['index'].value.value, 1):
             e_unit = emin.unit
-            prefactor = pars.amplitude * pars.reference.to(e_unit)
+            prefactor = pars['amplitude'].value * pars['reference'].value.to(e_unit)
             upper = np.log(emax.to(e_unit).value)
             lower = np.log(emin.value)
         else:
-            val = -1 * pars.index + 1
-            prefactor = pars.amplitude * pars.reference / val
-            upper = np.power((emax / pars.reference), val)
-            lower = np.power((emin / pars.reference), val)
+            val = -1 * pars['index'].value + 1
+            prefactor = pars['amplitude'].value * pars['reference'].value / val
+            upper = np.power((emax / pars['reference'].value), val)
+            lower = np.power((emin / pars['reference'].value), val)
 
         integral = prefactor * (upper - lower)
         return integral
@@ -338,9 +402,9 @@ class PowerLaw(SpectralModel):
         """
         import sherpa.models as m
         model = m.PowLaw1D('powlaw1d.' + name)
-        model.gamma = self.parameters.index.value
-        model.ref = self.parameters.reference.to('keV').value
-        model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
+        model.gamma = self.parameters['index'].value
+        model.ref = self.parameters['reference'].to('keV').value
+        model.ampl = self.parameters['amplitude'].to('cm-2 s-1 keV-1').value
         return model
 
     def inverse(self, value):
