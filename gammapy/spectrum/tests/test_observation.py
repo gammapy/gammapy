@@ -34,9 +34,9 @@ def get_test_obs():
         obs=obs_1,
         total_on=172,
         livetime = 1581.73681640625 * u.second,
-        npred =  210.86182536480652,
-        excess = 166.428,
-        excess_safe_range = 135.428)
+        npred = 212.35910231742795,
+        excess = 167.36363636363637,
+        excess_safe_range = 135)
     )
     # 2 : Simulated obs without background
     energy = np.logspace(-2, 2, 100) * u.TeV
@@ -183,7 +183,7 @@ class TestSpectrumObservationList:
         assert_quantity_allclose(stacked_obs.aeff.data.data[10],
                                  86443352.23037884 * u.cm ** 2)
         assert_quantity_allclose(stacked_obs.edisp.data.data[50, 52],
-                                 0.029627067949207702)
+                                 0.024019396113124782)
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)
