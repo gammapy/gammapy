@@ -154,6 +154,8 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
 
     if edisp is not None:
         # TODO: True energy is converted to TeV. See issue 869 
+        true_energy = aeff.energy.data.to('TeV')
+
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
 
