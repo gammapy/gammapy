@@ -128,20 +128,16 @@ def testCombinedModel3DInt():
 
     # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
     # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
-    # First you define the coord of your cube that you want to use for the fit
-    center_excluded_region = SkyCoord(83.60, 21.88, unit='deg')
-    radius_excluded_region = Angle(0.1, "deg")
-    coord_center_pix = counts_3d.sky_image_ref.coordinates(mode="center").icrs
-    lon = np.tile(coord_center_pix.data.lon.degree, (len(energies) - 1, 1, 1))
-    lat = np.tile(coord_center_pix.data.lat.degree, (len(energies) - 1, 1, 1))
-    coord_3d_center_pix = SkyCoord(lon, lat, unit="deg")
-    index_region_selected_3d = np.where(center_excluded_region.separation(coord_3d_center_pix) > radius_excluded_region)
+    # Read the mask for the exclude region
+    filename_mask = gammapy_extra.filename('test_datasets/cube/mask.fits')
+    cube_mask = SkyCube.read(filename_mask)
+    index_region_selected_3d = np.where(cube_mask.data.value == 1)
 
     # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
     cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
                                       index_selected_region=index_region_selected_3d)
-    size_remove_index = len(
-        np.where(center_excluded_region.separation(coord_3d_center_pix) < radius_excluded_region)[0])
+
+    size_remove_index = len(np.where(cube_mask.data.value == 0)[0])
     assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
 
     # Set the bkg and select only the data points of the selected region
@@ -250,20 +246,15 @@ def testCombinedModel3DIntConvolveEdisp():
 
     # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
     # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
-    # First you define the coord of your cube that you want to use for the fit
-    center_excluded_region = SkyCoord(83.60, 21.88, unit='deg')
-    radius_excluded_region = Angle(0.1, "deg")
-    coord_center_pix = counts_3d.sky_image_ref.coordinates(mode="center").icrs
-    lon = np.tile(coord_center_pix.data.lon.degree, (len(energies) - 1, 1, 1))
-    lat = np.tile(coord_center_pix.data.lat.degree, (len(energies) - 1, 1, 1))
-    coord_3d_center_pix = SkyCoord(lon, lat, unit="deg")
-    index_region_selected_3d = np.where(center_excluded_region.separation(coord_3d_center_pix) > radius_excluded_region)
+    # Read the mask for the exclude region
+    filename_mask = gammapy_extra.filename('test_datasets/cube/mask.fits')
+    cube_mask = SkyCube.read(filename_mask)
+    index_region_selected_3d = np.where(cube_mask.data.value == 1)
 
     # Set the counts and create a gammapy Data3DInt object used by sherpa only on the selected region
     cube = counts_3d.to_sherpa_data3d(dstype='Data3DInt', select_region=True,
                                       index_selected_region=index_region_selected_3d)
-    size_remove_index = len(
-        np.where(center_excluded_region.separation(coord_3d_center_pix) < radius_excluded_region)[0])
+    size_remove_index = len(np.where(cube_mask.data.value == 0)[0])
     assert len(cube.x0lo) == len(counts_3d.data.ravel()) - size_remove_index
 
     # Set the bkg and select only the data points of the selected region
