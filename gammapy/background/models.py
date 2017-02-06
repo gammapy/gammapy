@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Background models.
-"""
+"""Background models."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
@@ -23,7 +22,7 @@ DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 def _add_column_and_sort_table(sources, pointing_position):
-    """Sort the table and add the column separation (offset from the source) and phi (position angle from the source)
+    """Sort the table and add the column separation (offset from the source) and phi (position angle from the source).
 
     Parameters
     ----------
@@ -179,13 +178,11 @@ class GaussianBand2D(object):
         self._par_model = s
 
     def _evaluate_y(self, y, pars):
-        """Evaluate Gaussian model at a given ``y`` position.
-        """
+        """Evaluate Gaussian model at a given ``y`` position."""
         return Gaussian1D.evaluate(y, **pars)
 
     def parvals(self, x):
-        """Interpolated parameter values at a given ``x``.
-        """
+        """Interpolated parameter values at a given ``x``."""
         x = np.asanyarray(x, dtype=float)
         parvals = dict()
         for parname in self.parnames:
@@ -196,15 +193,13 @@ class GaussianBand2D(object):
         return parvals
 
     def y_model(self, x):
-        """Create model at a given ``x`` position.
-        """
+        """Create model at a given ``x`` position."""
         x = np.asanyarray(x, dtype=float)
         parvals = self.parvals(x)
         return Gaussian1D(**parvals)
 
     def evaluate(self, x, y):
-        """Evaluate model at a given position ``(x, y)`` position.
-        """
+        """Evaluate model at a given position ``(x, y)`` position."""
         x = np.asanyarray(x, dtype=float)
         y = np.asanyarray(y, dtype=float)
         parvals = self.parvals(x)
@@ -547,8 +542,7 @@ class FOVCubeBackgroundModel(object):
             self.background_cube.data[i_energy] *= (integral_images / integral_images_smooth)[i_energy]
 
     def compute_rate(self):
-        """Compute background_cube from count_cube and livetime_cube.
-        """
+        """Compute background_cube from count_cube and livetime_cube."""
         bg_rate = self.counts_cube.data / self.livetime_cube.data
 
         bg_rate /= self.counts_cube.bin_volume
@@ -693,8 +687,7 @@ class EnergyOffsetBackgroundModel(object):
             self.livetime.data += obs.observation_live_time_duration * (1 - pie_fraction)
 
     def compute_rate(self):
-        """Compute background rate cube from count_cube and livetime_cube.
-        """
+        """Compute background rate cube from count_cube and livetime_cube."""
         bg_rate = self.counts.data / self.livetime.data
 
         bg_rate /= self.counts.bin_volume

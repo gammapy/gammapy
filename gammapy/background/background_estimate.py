@@ -10,7 +10,7 @@ __all__ = [
 
 
 class BackgroundEstimate(object):
-    """Container class for background estimate
+    """Container class for background estimate.
 
     This container holds the result from a region based background estimation
     for one observation. Currently, it is filled by the functions
@@ -40,7 +40,7 @@ class BackgroundEstimate(object):
 
 
 def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
-    """Simple ring background estimate
+    """Simple ring background estimate.
 
     No acceptance correction is applied
 
