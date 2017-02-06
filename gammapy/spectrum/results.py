@@ -331,24 +331,19 @@ class SpectrumFitResult(object):
         """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
         energy = self.obs.on_vector.energy
-        data = self.npred * u.ct
-        idx = np.isnan(data)
-        data[idx] = 0
+        data = self.npred_src * u.ct
         return CountsSpectrum(data=data, energy=energy)
 
     @property
     def expected_background_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted background counts
-
-        According to profile likelihood, see :ref:`wstat`.
         """
-        energy = self.obs.e_reco
-        n_on = self.obs.on_vector.data.data.value
-        n_off = self.obs.off_vector.data.data.value
-        alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.data.value
-        data = stats.get_wstat_mu_bkg(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
-        return CountsSpectrum(data=data, energy=energy)
+        try:
+            energy = self.obs.e_reco
+            data = self.npred_bkg * u.ct
+            return CountsSpectrum(data=data, energy=energy)
+        except TypeError:
+            return None 
 
     @property
     def expected_on_counts(self):
