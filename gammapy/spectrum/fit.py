@@ -316,7 +316,7 @@ class SpectrumFit(object):
         likelihood = list()
         self.model = model
         for val in parvals:
-            self.model.parameters[parname] = val
+            self.model.parameters[parname].value = val
             self.predict_counts()
             self.calc_statval()
             likelihood.append(self.total_stat)
