@@ -37,8 +37,12 @@ class SpectrumFitResult(object):
         Statistic used for the fit
     statval : float, optional
         Final fit statistic
-    npred : array-like, optional
-        On counts predicted by the fit
+    npred_src : array-like, optional
+        Source counts predicted by the fit 
+    npred_bkg : array-like, optional
+        Background counts predicted by the fit 
+    background_model : `~gammapy.spectrum.SpectralModel`
+        Best-fit background model
     flux_at_1TeV : dict, optional
         Flux for the fitted model at 1 TeV
     flux_at_1TeV_err : dict, optional
@@ -48,8 +52,8 @@ class SpectrumFitResult(object):
     """
 
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
-                 statname=None, statval=None, npred=None, fluxes=None,
-                 flux_errors=None, obs=None):
+                 statname=None, statval=None, npred_src=None, npred_bkg=None,
+                 background_model=None, fluxes=None, flux_errors=None, obs=None):
 
         self.model = model
         self.covariance = covariance
@@ -57,7 +61,9 @@ class SpectrumFitResult(object):
         self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
-        self.npred = npred
+        self.npred_src = npred_src
+        self.npred_bkg = npred_bkg
+        self.background_model = background_model
         self.fluxes = fluxes
         self.flux_errors = flux_errors
         self.obs = obs
@@ -325,24 +331,19 @@ class SpectrumFitResult(object):
         """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
         energy = self.obs.on_vector.energy
-        data = self.npred * u.ct
-        idx = np.isnan(data)
-        data[idx] = 0
+        data = self.npred_src * u.ct
         return CountsSpectrum(data=data, energy=energy)
 
     @property
     def expected_background_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted background counts
-
-        According to profile likelihood, see :ref:`wstat`.
         """
-        energy = self.obs.e_reco
-        n_on = self.obs.on_vector.data.data.value
-        n_off = self.obs.off_vector.data.data.value
-        alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.data.value
-        data = stats.get_wstat_mu_bkg(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
-        return CountsSpectrum(data=data, energy=energy)
+        try:
+            energy = self.obs.e_reco
+            data = self.npred_bkg * u.ct
+            return CountsSpectrum(data=data, energy=energy)
+        except TypeError:
+            return None 
 
     @property
     def expected_on_counts(self):

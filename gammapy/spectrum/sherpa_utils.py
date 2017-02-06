@@ -28,7 +28,20 @@ class SherpaModel(ArithmeticModel):
     def __init__(self, fit):
         # TODO: add Parameter and ParameterList class
         self.fit = fit
-        self.sorted_pars = OrderedDict(**self.fit.model.parameters)
+        source_pars = OrderedDict(**self.fit.model.parameters)
+        # "Freeze reference by removing it from fit parameters
+        # TODO: Add proper
+        source_pars.pop('reference')
+        self.sorted_pars = source_pars
+        
+        # Add background model pars if needed
+        if self.fit.background_model is not None:
+            bkg_pars = OrderedDict(**self.fit.background_model.parameters)
+            bkg_pars.pop('reference')
+            for par in bkg_pars:
+                # TODO: Find better way do mark background parameters
+                self.sorted_pars['bkg_{}'.format(par)] = bkg_pars[par]
+
         sherpa_name = 'sherpa_model'
         par_list = list()
         for name, par in self.sorted_pars.items():
@@ -42,15 +55,17 @@ class SherpaModel(ArithmeticModel):
         ArithmeticModel.__init__(self, sherpa_name, par_list)
         self._use_caching = True
         self.cache = 10
-        # TODO: Remove after introduction of proper parameter class
-        self.reference.freeze()
 
     @modelCacher1d
     def calc(self, p, x, xhi=None):
         # Adjust model parameters
         for par, parval in zip(self.sorted_pars, p):
             par_unit = self.sorted_pars[par].unit
-            self.fit.model.parameters[par] = parval * par_unit
+            if 'bkg' in par:
+                self.fit.background_model.parameters[par[4:]] = parval * par_unit
+            else:
+                self.fit.model.parameters[par] = parval * par_unit
+
         self.fit.predict_counts()
         # Return ones since sherpa does some check on the shape
         return np.ones_like(self.fit.obs_list[0].e_reco)
@@ -73,7 +88,7 @@ class SherpaStat(Likelihood):
     def _calc(self, data, model, *args, **kwargs):
         self.fit.calc_statval()
         # Sum likelihood over all observations
-        total_stat = np.sum(self.fit.statval)
+        total_stat = np.sum(self.fit.statval, dtype=np.float64)
         # sherpa return pattern: total stat, fvec
         return total_stat, None
 

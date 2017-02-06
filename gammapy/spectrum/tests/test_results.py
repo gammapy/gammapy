@@ -28,7 +28,8 @@ class TestSpectrumFitResult:
             fit_range=self.fit_range,
             statname='wstat',
             statval=42,
-            npred=self.npred,
+            npred_src=self.npred,
+            npred_bkg=self.npred * 0.5,
             obs=self.obs,
         )
 
