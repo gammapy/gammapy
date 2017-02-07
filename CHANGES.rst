@@ -70,6 +70,7 @@ Summary
 
 **Contributors:**
 
+- Arpit Gogia
 - Axel Donath
 - Brigitta Sipocz
 - Christoph Deil
@@ -87,6 +88,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#870] Clean up docstrings in background sub-package (Arpit Gogia)
 - [#868] Add Fermi-LAT 3FHL catalogue (Julien Lefaucheur)
 - [#865] Add Fermi basic image estimator (Axel Donath)
 - [#864] Improve edisp.apply to support different true energy axes (Johannes King)

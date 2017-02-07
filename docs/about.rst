@@ -77,6 +77,7 @@ Contributors
 
 The following people have contributed to Gammapy (first name alphabetical order):
 
+- Arpit Gogia (`@arpitgogia <https://github.com/arpitgogia>`__)
 - Axel Donath (`@adonath <https://github.com/adonath>`__)
 - Brigitta Sipocz (`@bsipocz <https://github.com/bsipocz>`__)
 - Christoph Deil (`@cdeil <https://github.com/cdeil>`__)
