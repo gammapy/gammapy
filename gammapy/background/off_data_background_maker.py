@@ -114,7 +114,6 @@ class OffDataBackgroundMaker(object):
 
         For now we'll just use the zenith binning from HAP.
         """
-
         obs_table = self.define_obs_table()
 
         # Define observation groups
@@ -151,7 +150,6 @@ class OffDataBackgroundMaker(object):
         offset : `~astropy.coordinates.Angle`
             Offset vector (1D)
         """
-
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
@@ -233,7 +231,7 @@ class OffDataBackgroundMaker(object):
             self.save_model(modeltype, ngroup, smooth)
 
     def smooth_models(self, modeltype):
-        """Smooth the bkg model for each group
+        """Smooth the bkg model for each group.
 
         Parameters
         ----------
@@ -244,7 +242,7 @@ class OffDataBackgroundMaker(object):
             self.smooth_model(modeltype, ngroup)
 
     def smooth_model(self, modeltype, ngroup):
-        """Smooth the bkg model for one group
+        """Smooth the bkg model for one group.
 
         Parameters
         ----------
@@ -344,7 +342,6 @@ class OffDataBackgroundMaker(object):
         index_table_new : `~astropy.table.Table`
             Index hdu table with a background row
         """
-
         index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
                                                     filename_obs_group_table, smooth)
         index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == "bkg_3d")[0].tolist()

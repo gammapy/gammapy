@@ -98,7 +98,7 @@ def find_reflected_regions(region, center, exclusion_mask=None,
 
 
 def _compute_xy(pix_center, offset, angle):
-    """Compute x, y position for a given position angle and offset
+    """Compute x, y position for a given position angle and offset.
 
     # TODO: replace by calculation using `astropy.coordinates`
     """
@@ -119,7 +119,7 @@ def _is_inside_exclusion(pixreg, exclusion):
 
 
 class ReflectedRegionsBackgroundEstimator(object):
-    """Reflected Regions background estimator
+    """Reflected Regions background estimator.
 
     Parameters
     ----------
@@ -141,6 +141,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         self.config = config
 
     def __str__(self):
+        """String representation of the class."""
         s = self.__class__.__name__ + '\n'
         s += str(self.on_region)
         s += '\n'.format(self.config)
@@ -148,7 +149,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     @staticmethod
     def process(on_region, obs, exclusion, **kwargs):
-        """Estimate background for one observation
+        """Estimate background for one observation.
 
         kwargs are forwaded to :func:`gammapy.background.find_reflected_regions`
 
@@ -177,7 +178,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='reflected')
 
     def run(self):
-        """Process all observations"""
+        """Process all observations."""
         result = []
         for obs in self.obs_list:
             temp = self.process(on_region=self.on_region,
