@@ -31,3 +31,4 @@ from .catalog_browser import *
 # from .catalog_query import *
 
 from .cta_irf import *
+from .cta_utils import *
