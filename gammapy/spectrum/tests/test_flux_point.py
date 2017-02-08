@@ -231,6 +231,7 @@ class TestFluxPoints:
         import matplotlib.pyplot as plt
         ax = plt.gca()
         flux_points.plot(ax=ax)
+        flux_points.peek()
 
     def test_info(self, flux_points):
         info = str(flux_points)

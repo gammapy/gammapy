@@ -25,17 +25,21 @@ log = logging.getLogger(__name__)
 
 
 REQUIRED_COLUMNS = {'dnde': ['e_ref', 'dnde'],
+                    'e2dnde': ['e_ref', 'e2dnde'],
                     'flux': ['e_min', 'e_max', 'flux'],
                     'eflux': ['e_min', 'e_max', 'eflux']}
 
 OPTIONAL_COLUMNS = {'dnde': ['dnde_err', 'dnde_errp', 'dnde_errn',
                              'dnde_ul', 'is_ul'],
+                    'e2dnde': ['e2dnde_err', 'e2dnde_errp', 'e2dnde_errn',
+                               'e2dnde_ul', 'is_ul'],
                     'flux': ['flux_err', 'flux_errp', 'flux_errn',
                              'flux_ul', 'is_ul'],
                     'eflux': ['eflux_err', 'eflux_errp', 'eflux_errn',
                               'eflux_ul', 'is_ul']}
 
 DEFAULT_UNIT = {'dnde': u.Unit('cm-2 s-1 TeV-1'),
+                'e2dnde' : u.Unit('erg cm-2 s-1'),
                 'flux': u.Unit('cm-2 s-1'),
                 'eflux': u.Unit('erg cm-2 s-1')}
 
@@ -53,8 +57,8 @@ class FluxPoints(object):
         Input data table, with the following minimal required columns:
 
         * Format `'dnde'`: `'dnde'` and `'e_ref'`
-        * Format `'flux'`: `'flux'` and `'e_ref'`
-        * Format `'eflux'`: `'eflux'` and `'e_ref'`
+        * Format `'flux'`: `'flux'`, `'e_min'`, `'e_max'`
+        * Format `'eflux'`: `'eflux'`, `'e_min'`, `'e_max'`
 
     Examples
     --------
@@ -92,7 +96,7 @@ class FluxPoints(object):
         Returns
         -------
         sed_type : str
-            Can be either 'dnde', 'flux' or 'eflux'.
+            Can be either 'dnde', 'e2dnde', 'flux' or 'eflux'.
         """
         return self.table.meta['SED_TYPE']
 
@@ -199,7 +203,7 @@ class FluxPoints(object):
                      x_errp[~is_ul].to(energy_unit).value)
 
         # set flux points plotting defaults
-        kwargs.setdefault('marker', 'None')
+        kwargs.setdefault('marker', '+')
         kwargs.setdefault('ls', 'None')
 
         ebar = ax.errorbar(x[~is_ul].value, y[~is_ul].value, yerr=y_err,
@@ -259,7 +263,7 @@ class FluxPoints(object):
         except KeyError:
             return np.isnan(self.table[self.sed_type])
 
-    def show(self, figsize=(8, 5), **kwargs):
+    def peek(self, figsize=(8, 5), **kwargs):
         """
         Show flux points.
 
