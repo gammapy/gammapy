@@ -268,7 +268,7 @@ class SpectrumFit(object):
                           mu_sig=prediction[0])
             # Store the result of the profile likelihood as bkg prediction
             mu_bkg = stats.get_wstat_mu_bkg(**kwargs)
-            prediction[1] = mu_bkg
+            prediction[1] = mu_bkg * obs.alpha
             on_stat = stats.wstat(**kwargs)
             off_stat = np.zeros_like(on_stat)
         else:

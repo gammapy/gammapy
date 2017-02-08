@@ -36,7 +36,7 @@ class SherpaModel(ArithmeticModel):
             #setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
 
-        if self.fit.background_model is not None:
+        if fit.stat != 'wstat' and self.fit.background_model is not None:
             for par in self.fit.background_model.parameters.data:
                 sherpa_par = par.to_sherpa()
                 sherpa_par.modelname = 'background'
