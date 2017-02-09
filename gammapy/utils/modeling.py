@@ -30,7 +30,7 @@ from .scripts import make_path
 
 __all__ = [
     'Parameter',
-    'ParameterSet',
+    'ParameterList',
     'SourceLibrary',
     'SourceModel',
 
@@ -61,7 +61,11 @@ class Parameter(object):
         if isinstance(value, u.Quantity):
             self.quantity = value
         else:
-            self.value = value
+            # Temp hack for uncertainties to work
+            try:
+                self.value = float(value)
+            except TypeError:
+                self.value = value
             self.unit = unit
 
         self.parmin = parmin
@@ -166,7 +170,7 @@ class ParameterList(object):
         return cls([Parameter.from_dict_xml(_) for _ in data])
 
     def to_xml(self):
-        xml = [_.to_xml() for _ in self.data]
+        xml = [_.to_xml() for _ in self.parameters]
         return '\n'.join(xml)
 
 
@@ -295,12 +299,12 @@ class BaseModel(object):
         pass
 
     def __init__(self, parameters):
-        if isinstance(parameters, ParameterSet):
+        if isinstance(parameters, ParameterList):
             pass
         elif isinstance(parameters, list):
-            parameters = ParameterSet(parameters)
+            parameters = ParameterList(parameters)
         else:
-            raise ValueError('Need list of Parameter or ParameterSet. '
+            raise ValueError('Need list of Parameter or ParameterList. '
                              'Invalid input: {}'.format(parameters))
 
         self.parameters = parameters
@@ -315,7 +319,7 @@ class SpectralModel(BaseModel):
     @classmethod
     def from_xml_dict(cls, data):
         model_type = data['@type']
-        parameters = ParameterSet.from_list_of_dict_xml(data['parameter'])
+        parameters = ParameterList.from_list_of_dict_xml(data['parameter'])
 
         if model_type == SpectralModelPowerLaw.xml_type:
             model = SpectralModelPowerLaw(parameters=parameters)
@@ -336,7 +340,7 @@ class SpectralModel(BaseModel):
             from ..catalog.gammacat import NoDataAvailableError
             raise NoDataAvailableError(source)
 
-        pset = ParameterSet.from_list_of_dict_gammacat(data['parameters'])
+        pset = ParameterList.from_list_of_dict_gammacat(data['parameters'])
         if data['name'] == 'PowerLaw':
             model = SpectralModelPowerLaw.from_pset(pset)
         elif data['name'] == 'PowerLaw2':
