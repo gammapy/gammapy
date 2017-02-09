@@ -158,7 +158,6 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
 
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
-
         # Need to fill nan values in aeff due to matrix multiplication with RMF
         counts = flux * livetime * aeff.evaluate_fill_nan()
         counts = counts.to('')

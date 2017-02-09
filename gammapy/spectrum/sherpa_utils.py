@@ -5,7 +5,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from sherpa.models import ArithmeticModel, modelCacher1d
+from sherpa.models import ArithmeticModel, modelCacher1d, Parameter
 from sherpa.stats import Likelihood
 
 
@@ -30,14 +30,14 @@ class SherpaModel(ArithmeticModel):
         
         sherpa_name = 'sherpa_model'
         par_list = list()
-        for par in self.fit.model.parameters.data:
+        for par in self.fit.model.parameters.parameters:
             sherpa_par = par.to_sherpa()
             sherpa_par.modelname = 'source'
             #setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
 
         if fit.stat != 'wstat' and self.fit.background_model is not None:
-            for par in self.fit.background_model.parameters.data:
+            for par in self.fit.background_model.parameters.parameters:
                 sherpa_par = par.to_sherpa()
                 sherpa_par.modelname = 'background'
                 #setattr(self, name, sherpa_par)
@@ -50,15 +50,13 @@ class SherpaModel(ArithmeticModel):
     @modelCacher1d
     def calc(self, p, x, xhi=None):
         # Adjust model parameters
-        n_src = len(self.fit.model.parameters.data)
+        n_src = len(self.fit.model.parameters.parameters)
         for idx, par in enumerate(p):
             # Special case background model
             if idx >= n_src:
-                unit = self.fit.model.parameters.data[idx-n_src].unit
-                self.fit.background_model.parameters.data[idx-n_src].value = par * unit
+                self.fit.background_model.parameters.parameters[idx-n_src].value = par
             else:
-                unit = self.fit.model.parameters.data[idx].unit
-                self.fit.model.parameters.data[idx].value  = par * unit
+                self.fit.model.parameters.parameters[idx].value = par
 
         self.fit.predict_counts()
         # Return ones since sherpa does some check on the shape

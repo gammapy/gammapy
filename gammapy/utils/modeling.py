@@ -24,6 +24,7 @@ For XML model format definitions, see here:
 import abc
 from ..extern import xmltodict
 from astropy.extern import six
+import astropy.units as u
 
 from .scripts import make_path
 
@@ -54,16 +55,40 @@ class UnknownModelError(ValueError):
 
 
 class Parameter(object):
-    def __init__(self, name, value, unit=''):
+    def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
-        self.value = float(value)
-        self.unit = unit
 
-    def __repr__(self):
+        if isinstance(value, u.Quantity):
+            self.quantity = value
+        else:
+            self.value = value
+            self.unit = unit
+
+        self.parmin = parmin
+        self.parmax = parmax
+        self.frozen = frozen
+
+    @property
+    def quantity(self):
+        # Temp hack for uncertainties to work
+        try:
+            retval = self.value * u.Unit(self.unit)
+        except TypeError:
+            retval = self.value
+        # retval = self.value * u.Unit(self.unit)
+        return retval 
+
+    @quantity.setter
+    def quantity(self, par):
+        self.value = par.value
+        self.unit = par.unit
+
+    def __str__(self):
         return 'Parameter(name={name!r}, value={value!r}, unit={unit!r})'.format(**self.__dict__)
 
     @classmethod
     def from_dict(cls, data):
+        import astropy.units as u
         return cls(
             name=data['name'],
             value=data['val'],
@@ -91,16 +116,46 @@ class Parameter(object):
     def to_xml(self):
         return '        <parameter name="{name}" value="{value}" unit="{unit}"/>'.format(**self.__dict__)
 
+    def to_sherpa(self):
+        """Convert to sherpa parameter"""
+        from sherpa.models import Parameter
+        modelname = 'None'
+        par = Parameter(modelname=modelname, name=self.name,
+                        val=self.value, units=self.unit, 
+                        min=self.parmin, max=self.parmax,
+                        frozen=self.frozen)
 
-class ParameterSet(object):
-    def __init__(self, data):
-        """
-        data : list of Parameter
-        """
-        self.data = data
+        return par
 
-    def __repr__(self):
-        return 'ParameterSet(data={!r})'.format(self.data)
+
+class ParameterList(object):
+    """List of `~gammapy.spectrum.models.Parameters`
+    
+    Holds covariance matrix
+
+    Parameters
+    ----------
+    parameters : list of `Parameter`
+        List of parameters
+    """
+    def __init__(self, parameters, covar=None):
+        self.parameters = parameters
+        self.covar = covar
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        for par in self.parameters:
+            ss += '\n{}'.format(par)
+        ss += '\nCovariance: {}'.format(self.covar)
+        return ss
+
+    def __getitem__(self, name):
+        """Access parameter by name"""
+        for par in self.parameters:
+            if name == par.name:
+                return par
+
+        raise IndexError('Parameter {} not found for : {}'.format(name, self))
 
     @classmethod
     def from_list_of_dict_gammacat(cls, data):
@@ -109,14 +164,6 @@ class ParameterSet(object):
     @classmethod
     def from_list_of_dict_xml(cls, data):
         return cls([Parameter.from_dict_xml(_) for _ in data])
-
-    def par(self, name):
-        """Access parameter by name"""
-        for par in self.data:
-            if name == par.name:
-                return par
-
-        raise IndexError('Parameter {} not found for pset: {}'.format(name, self))
 
     def to_xml(self):
         xml = [_.to_xml() for _ in self.data]
