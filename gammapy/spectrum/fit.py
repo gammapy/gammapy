@@ -204,8 +204,11 @@ class SpectrumFit(object):
                                               e_reco=binning)
             counts = temp.data.data
         else:
-            # TODO: This could also be part of calculate predicted counts
-            counts = model.integral(binning[:-1], binning[1:])
+            temp = calculate_predicted_counts(model=model,
+                                              livetime=obs.livetime,
+                                              aeff=obs.aeff,
+                                              e_reco=binning)
+            counts = temp.data.data
 
         # Check count unit (~unit of model amplitude)
         cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')
