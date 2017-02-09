@@ -861,7 +861,6 @@ class EnergyDispersion2D(object):
         """Quick-look summary plots.
 
         Parameters
-
         ----------
         figsize : (float, float)
             Size of the resulting plot
