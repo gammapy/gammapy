@@ -287,9 +287,9 @@ class SpectrumFitResult(object):
         umodel = self.model_with_uncertainties
 
         if self.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = self.model.parameters.emin.unit
+            energy_unit = self.model.parameters['emin'].unit
         else:
-            energy_unit = self.model.parameters.reference.unit
+            energy_unit = self.model.parameters['reference'].unit
 
         values = umodel(energy.to(energy_unit).value)
 
