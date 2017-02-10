@@ -77,7 +77,7 @@ class Parameter(object):
         Parameter value maximum. Used as minimum boundary value
         in a model fit.
     frozen : bool
-        Whether the parameter is free to be varied in a model fit.    
+        Whether the parameter is free to be varied in a model fit.
 
     """
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
@@ -105,8 +105,8 @@ class Parameter(object):
 
     def __str__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
-        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})' 
-        
+        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})'
+
         return ss.format(**self.__dict__)
 
     # TODO: I thin kthis method is not very useful, because the same can be just
@@ -162,7 +162,7 @@ class ParameterList(object):
         List of parameters
     covariance : `~numpy.ndarray`
         Parameters covariance matrix. Order of values as specified by
-        `parameters`. 
+        `parameters`.
 
     """
     def __init__(self, parameters, covariance=None):
@@ -216,7 +216,7 @@ class ParameterList(object):
         return upars
 
     # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class 
+    # to handle covariance matrices via a class
     def set_parameter_errors(self, errors):
         """
         Set uncorrelated parameters errors.
@@ -224,14 +224,13 @@ class ParameterList(object):
         Parameters
         ----------
         errors : dict of `~astropy.units.Quantity`
-            Dict of parameter errors. 
+            Dict of parameter errors.
         """
         values = []
         for par in self.parameters:
             quantity = errors.get(par.name, 0 * u.Unit(par.unit))
             values.append(quantity.to(par.unit).value)
         self.covariance = np.diag(values) ** 2
-        
 
 
 class SourceLibrary(object):

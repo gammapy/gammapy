@@ -95,7 +95,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             pars['reference'] = d['spec_ref']
             pars['lambda_'] = 1. / d['spec_ecut']
             errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
-            errs['lambda_'] = d['spec_ecut_err'] * u.TeV / d['spec_ecut'] ** 2  
+            errs['lambda_'] = d['spec_ecut_err'] * u.TeV / d['spec_ecut'] ** 2
             model = ExponentialCutoffPowerLaw(**pars)
 
         elif spec_type == 'pl2':
@@ -107,7 +107,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             model = PowerLaw2(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
-        
+
         model.parameters.set_parameter_errors(errs)
         return model
 
