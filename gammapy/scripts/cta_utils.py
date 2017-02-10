@@ -102,12 +102,14 @@ class ObservationParameters(object):
     def __str__(self):
         """Observation summary report (`str`)."""
         ss = '*** Observation parameters summary ***\n'
-        ss += 'alpha={} [{}]\n'.format(self.alpha.value, alpha.unit)
-        ss += 'livetime={} [{}]\n'.format(self.livetime.value, livetime.unit)
-        ss += 'offset={} [{}]\n'.format(self.offset.value, offset.unit)
-        ss += 'zenith={} [{}]\n'.format(self.zenith.value, zenith.unit)
-        ss += 'emin={} [{}]\n'.format(self.emin.value, emin.unit)
-        ss += 'emax={} [{}]\n'.format(self.emax.value, emax.unit)
+        ss += 'alpha={} [{}]\n'.format(self.alpha.value, self.alpha.unit)
+        ss += 'livetime={} [{}]\n'.format(self.livetime.value, self.livetime.unit)
+        if self.offset is not None:
+            ss += 'offset={} [{}]\n'.format(self.offset.value, self.offset.unit)
+        if self.zenith is not None:
+            ss += 'zenith={} [{}]\n'.format(self.zenith.value, self.zenith.unit)
+        ss += 'emin={} [{}]\n'.format(self.emin.value, self.emin.unit)
+        ss += 'emax={} [{}]\n'.format(self.emax.value, self.emax.unit)
         return ss
 
 
