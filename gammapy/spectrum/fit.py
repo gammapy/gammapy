@@ -40,7 +40,7 @@ class SpectrumFit(object):
     obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
         Observation(s) to fit
     model : `~gammapy.spectrum.models.SpectralModel`
-        Source model 
+        Source model. Should return counts if ``forward_folded`` is False and a flux otherwise
     stat : {'wstat', 'cash'} 
         Fit statistic 
     forward_folded : bool, default: True
@@ -204,11 +204,8 @@ class SpectrumFit(object):
                                               e_reco=binning)
             counts = temp.data.data
         else:
-            temp = calculate_predicted_counts(model=model,
-                                              livetime=obs.livetime,
-                                              aeff=obs.aeff,
-                                              e_reco=binning)
-            counts = temp.data.data
+            # TODO: This could also be part of calculate predicted counts
+            counts = model.integral(binning[:-1], binning[1:])
 
         # Check count unit (~unit of model amplitude)
         cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')
