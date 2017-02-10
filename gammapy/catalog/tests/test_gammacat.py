@@ -54,11 +54,13 @@ W28_NAMES = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1', 'SNR G006.4-00.1',
 
 SORT_KEYS = ['ra', 'dec', 'reference_id']
 
+filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
 
-@requires_data('gamma-cat')
+
+@requires_data('gammapy-extra')
 class TestSourceCatalogGammaCat:
     def setup(self):
-        self.cat = SourceCatalogGammaCat()
+        self.cat = SourceCatalogGammaCat(filename=filename)
 
     def test_source_table(self):
         assert self.cat.name == 'gamma-cat'
@@ -78,17 +80,17 @@ class TestSourceCatalogGammaCat:
     def test_to_source_library(self):
         sources = self.cat.to_source_library()
 
-        assert len(sources.source_list) == 48
+        assert len(sources.source_list) == 60
 
         source = sources.source_list[0]
-        assert source.source_name == 'CTB 37B'
-        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.6500000953674316)
+        assert source.source_name == 'CTA 1'
+        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.2)
 
 
-@requires_data('gamma-cat')
+@requires_data('gammapy-extra')
 class TestSourceCatalogObjectGammaCat:
     def setup(self):
-        self.cat = SourceCatalogGammaCat()
+        self.cat = SourceCatalogGammaCat(filename=filename)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
     def test_spectral_model(self, name, desired):
