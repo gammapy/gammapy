@@ -22,7 +22,10 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 import abc
+<<<<<<< HEAD
 import numpy as np
+=======
+>>>>>>> Add SpectralModel error methods
 from numpy.linalg import LinAlgError
 
 from astropy.extern import six
@@ -95,7 +98,16 @@ class Parameter(object):
 
     @property
     def quantity(self):
+<<<<<<< HEAD
         retval = self.value * u.Unit(self.unit)
+=======
+        # Temp hack for uncertainties to work
+        try:
+            retval = self.value * u.Unit(self.unit)
+        except TypeError:
+            retval = self.value
+        # retval = self.value * u.Unit(self.unit)
+>>>>>>> Add SpectralModel error methods
         return retval
 
     @quantity.setter
@@ -161,9 +173,13 @@ class ParameterList(object):
     parameters : list of `Parameter`
         List of parameters
     covariance : `~numpy.ndarray`
+<<<<<<< HEAD
         Parameters covariance matrix. Order of values as specified by
         `parameters`.
 
+=======
+        Parameters covariance matrix.
+>>>>>>> Add SpectralModel error methods
     """
     def __init__(self, parameters, covariance=None):
         self.parameters = parameters
