@@ -50,7 +50,7 @@ class SpectralModel(object):
     def __str__(self):
         """String representation"""
         ss = self.__class__.__name__
-        ss += str(self.parameters)
+        ss += '\n{}'.format(self.parameters)
         return ss
 
     def integral(self, emin, emax, **kwargs):
@@ -251,7 +251,7 @@ class PowerLaw(SpectralModel):
     def __init__(self, index, amplitude, reference):
         self.parameters = ParameterList([
             Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude),
+            Parameter('amplitude', amplitude, parmin=0),
             Parameter('reference', reference, frozen=True)
         ])
 

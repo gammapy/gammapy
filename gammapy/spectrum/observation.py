@@ -434,7 +434,7 @@ class SpectrumObservationList(UserList):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss = 'number of observations: {}'.format(len(self))
+        ss += '\nNumber of observations: {}'.format(len(self))
         #ss += '\n{}'.format(self.obs_id)
         return ss
 
