@@ -7,6 +7,7 @@ import sys
 from pprint import pprint
 from astropy.extern import six
 from astropy.utils import lazyproperty
+from astropy.units import Quantity
 
 __all__ = [
     'SourceCatalog',
@@ -191,28 +192,47 @@ class SourceCatalog(object):
         source = self.source_object_class(data)
         return source
 
-    def _make_source_dict(self, index):
+    def _make_source_dict(self, idx):
         """Make one source data dict.
 
         Parameters
         ----------
-        index : int
+        idx : int
             Row index
 
         Returns
         -------
-        data : dict
-            Source data dict
+        data : `~collections.OrderedDict`
+            Source data
         """
-        row = self.table[index]
+
+        data = OrderedDict()
+        self.table.info()
+        for colname in self.table.colnames:
+            col = self.table[colname]
+
+            if isinstance(col, Quantity):
+                val = col[idx]
+            else:
+                val = col.data[idx]
+                if col.unit:
+                    val = Quantity(val, col.unit)
+
+            data[colname] = val
+
+        data[self._source_index_key] = idx
+        return data
+
+        # TODO: this is the old implementation; remove once the new one is working properly!
+        # row = self.table[idx]
         # Note: calling `filled()` on `row.as_void()` here was needed to avoid a ValueError
         # from Numpy masked array code for array-valued columns in one application.
-        row_data = row.as_void()
-        if hasattr(row_data, 'filled'):
-            row_data = row_data.filled()
-        data = OrderedDict(zip(row.colnames, row_data))
-        data[self._source_index_key] = index
-        return data
+        # row_data = row.as_void()
+        # if hasattr(row_data, 'filled'):
+        #     row_data = row_data.filled()
+        # data = OrderedDict(zip(row.colnames, row_data))
+        # data[self._source_index_key] = idx
+        # return data
 
     def info(self):
         """
