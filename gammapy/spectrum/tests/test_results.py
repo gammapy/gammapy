@@ -49,7 +49,7 @@ class TestSpectrumFitResult:
 
     @requires_dependency('uncertainties')
     def test_model_with_uncertainties(self):
-        actual = self.fit_result.model_with_uncertainties.parameters.index.s
+        actual = self.fit_result.model_with_uncertainties.parameters['index'].value.s
         desired = np.sqrt(self.covar[0][0])
         assert actual == desired
 
