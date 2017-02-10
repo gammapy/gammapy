@@ -88,7 +88,10 @@ class Parameter(object):
         self.unit = par.unit
 
     def __str__(self):
-        return 'Parameter(name={name!r}, value={value!r}, unit={unit!r})'.format(**self.__dict__)
+        ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
+        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})' 
+        
+        return ss.format(**self.__dict__)
 
     @classmethod
     def from_dict(cls, data):
