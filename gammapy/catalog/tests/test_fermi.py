@@ -31,11 +31,12 @@ CRAB_NAMES_3FHL = ['Crab Pulsar', '3FHL J0534.5+2201', 'PSR J0534+2200',
 
 @requires_data('gammapy-extra')
 class TestFermi3FGLObject:
-    def setup(self):
-        self.cat = SourceCatalog3FGL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3FGL()
         # Use 3FGL J0534.5+2201 (Crab) as a test source
-        self.source_name = '3FGL J0534.5+2201'
-        self.source = self.cat[self.source_name]
+        cls.source_name = '3FGL J0534.5+2201'
+        cls.source = cls.cat[cls.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
@@ -47,6 +48,7 @@ class TestFermi3FGLObject:
         assert_allclose(self.source.data['Signif_Avg'], 30.669872283935547)
 
     def test_pprint(self):
+        # TODO: add assert on output
         self.source.pprint()
 
     @pytest.mark.xfail
@@ -72,8 +74,7 @@ class TestFermi3FGLObject:
         assert len(flux_points.table) == 5
         assert 'flux_ul' in flux_points.table.colnames
 
-        desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06,
-                   1.308784e-08]
+        desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
@@ -83,11 +84,12 @@ class TestFermi3FGLObject:
 
 @requires_data('gammapy-extra')
 class TestFermi1FHLObject:
-    def setup(self):
-        self.cat = SourceCatalog1FHL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog1FHL()
         # Use 1FHL J0534.5+2201 (Crab) as a test source
-        self.source_name = '1FHL J0534.5+2201'
-        self.source = self.cat[self.source_name]
+        cls.source_name = '1FHL J0534.5+2201'
+        cls.source = cls.cat[cls.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
@@ -118,11 +120,12 @@ class TestFermi1FHLObject:
 
 @requires_data('gammapy-extra')
 class TestFermi2FHLObject:
-    def setup(self):
-        self.cat = SourceCatalog2FHL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog2FHL()
         # Use 2FHL J0534.5+2201 (Crab) as a test source
-        self.source_name = '2FHL J0534.5+2201'
-        self.source = self.cat[self.source_name]
+        cls.source_name = '2FHL J0534.5+2201'
+        cls.source = cls.cat[cls.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
@@ -153,11 +156,12 @@ class TestFermi2FHLObject:
 
 @requires_data('gammapy-extra')
 class TestFermi3FHLObject:
-    def setup(self):
-        self.cat = SourceCatalog3FHL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3FHL()
         # Use 3FHL J0534.5+2201 (Crab) as a test source
-        self.source_name = '3FHL J0534.5+2201'
-        self.source = self.cat[self.source_name]
+        cls.source_name = '3FHL J0534.5+2201'
+        cls.source = cls.cat[cls.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
@@ -190,8 +194,7 @@ class TestFermi3FHLObject:
         assert len(flux_points.table) == 5
         assert 'flux_ul' in flux_points.table.colnames
 
-        desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10,
-                   4.30737078315e-11]
+        desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10, 4.30737078315e-11]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FHL)
@@ -201,20 +204,23 @@ class TestFermi3FHLObject:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3FGL()
+
     def test_main_table(self):
-        cat = SourceCatalog3FGL()
-        assert len(cat.table) == 3034
+        assert len(self.cat.table) == 3034
 
     def test_extended_sources(self):
-        cat = SourceCatalog3FGL()
-        table = cat.extended_sources_table
+        table = self.cat.extended_sources_table
         assert len(table) == 25
 
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog1FHL:
-    def setup(self):
-        self.cat = SourceCatalog1FHL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog1FHL()
 
     def test_main_table(self):
         assert len(self.cat.table) == 514
@@ -230,8 +236,9 @@ class TestSourceCatalog1FHL:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog2FHL:
-    def setup(self):
-        self.cat = SourceCatalog2FHL()
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog2FHL()
 
     def test_main_table(self):
         assert len(self.cat.table) == 360
@@ -247,11 +254,13 @@ class TestSourceCatalog2FHL:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FHL:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3FHL()
+
     def test_main_table(self):
-        cat = SourceCatalog3FHL()
-        assert len(cat.table) == 1558
+        assert len(self.cat.table) == 1558
 
     def test_extended_sources(self):
-        cat = SourceCatalog3FHL()
-        table = cat.extended_sources_table
+        table = self.cat.extended_sources_table
         assert len(table) == 55
