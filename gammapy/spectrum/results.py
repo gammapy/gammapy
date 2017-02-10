@@ -158,17 +158,17 @@ class SpectrumFitResult(object):
         """
         t = Table()
         t['model'] = [self.model.__class__.__name__]
-        for parname, par in self.model_with_uncertainties.parameters.items():
+        for par in self.model_with_uncertainties.parameters.parameters:
             try:
-                val = par.n
-                err = par.s
+                val = par.value.n
+                err = par.value.s
             except AttributeError:
-                val = par
+                val = par.value
                 err = 0
 
             # Apply correction factor for units
             # TODO: Refactor
-            current_unit = self.model.parameters[parname].unit
+            current_unit = self.model.parameters[par.name].unit
             if current_unit.is_equivalent(energy_unit):
                 factor = current_unit.to(energy_unit)
                 col_unit = energy_unit
@@ -184,11 +184,11 @@ class SpectrumFitResult(object):
             else:
                 raise ValueError(current_unit)
 
-            t[parname] = Column(
+            t[par.name] = Column(
                 data=np.atleast_1d(val * factor),
                 unit=col_unit,
                 **kwargs)
-            t['{}_err'.format(parname)] = Column(
+            t['{}_err'.format(par.name)] = Column(
                 data=np.atleast_1d(err * factor),
                 unit=col_unit,
                 **kwargs)
@@ -228,8 +228,8 @@ class SpectrumFitResult(object):
         upars = dict(zip(self.covar_axis, ufloats))
 
         # add parameters missing in covariance
-        for name in pars:
-            upars.setdefault(name, pars[name].value)
+        for par in pars.parameters:
+            upars.setdefault(par.name, par.value)
 
         return self.model.__class__(**upars)
 

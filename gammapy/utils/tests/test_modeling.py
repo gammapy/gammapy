@@ -21,7 +21,7 @@ def test_source_library_old_xml_file():
 
     source = sources.source_list[0]
     assert source.source_name == 'CrabShell'
-    assert_allclose(source.spectral_model.parameters.par('Index').value, 2.48)
+    assert_allclose(source.spectral_model.parameters['Index'].value, 2.48)
 
     xml = sources.to_xml()
     assert 'sources' in xml
@@ -36,7 +36,7 @@ def test_source_library_new_xml_file():
 
     source = sources.source_list[0]
     assert source.source_name == 'HESS J0632+057'
-    assert_allclose(source.spectral_model.parameters.par('Index').value, -2.5299999713897705)
+    assert_allclose(source.spectral_model.parameters['Index'].value, -2.5299999713897705)
 
     xml = sources.to_xml()
     assert 'sources' in xml

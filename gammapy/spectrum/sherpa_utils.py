@@ -5,7 +5,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from sherpa.models import ArithmeticModel, Parameter, modelCacher1d
+from sherpa.models import ArithmeticModel, modelCacher1d, Parameter
 from sherpa.stats import Likelihood
 
 
@@ -26,31 +26,22 @@ class SherpaModel(ArithmeticModel):
     """
 
     def __init__(self, fit):
-        # TODO: add Parameter and ParameterList class
         self.fit = fit
-        source_pars = OrderedDict(**self.fit.model.parameters)
-        # "Freeze reference by removing it from fit parameters
-        # TODO: Add proper
-        source_pars.pop('reference')
-        self.sorted_pars = source_pars
         
-        # Add background model pars if needed
-        if self.fit.background_model is not None:
-            bkg_pars = OrderedDict(**self.fit.background_model.parameters)
-            bkg_pars.pop('reference')
-            for par in bkg_pars:
-                # TODO: Find better way do mark background parameters
-                self.sorted_pars['bkg_{}'.format(par)] = bkg_pars[par]
-
         sherpa_name = 'sherpa_model'
         par_list = list()
-        for name, par in self.sorted_pars.items():
-            sherpa_par = Parameter(sherpa_name,
-                                   name,
-                                   par.value,
-                                   units=str(par.unit))
-            setattr(self, name, sherpa_par)
+        for par in self.fit.model.parameters.parameters:
+            sherpa_par = par.to_sherpa()
+            sherpa_par.modelname = 'source'
+            #setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
+
+        if fit.stat != 'wstat' and self.fit.background_model is not None:
+            for par in self.fit.background_model.parameters.parameters:
+                sherpa_par = par.to_sherpa()
+                sherpa_par.modelname = 'background'
+                #setattr(self, name, sherpa_par)
+                par_list.append(sherpa_par)
 
         ArithmeticModel.__init__(self, sherpa_name, par_list)
         self._use_caching = True
@@ -59,12 +50,13 @@ class SherpaModel(ArithmeticModel):
     @modelCacher1d
     def calc(self, p, x, xhi=None):
         # Adjust model parameters
-        for par, parval in zip(self.sorted_pars, p):
-            par_unit = self.sorted_pars[par].unit
-            if 'bkg' in par:
-                self.fit.background_model.parameters[par[4:]] = parval * par_unit
+        n_src = len(self.fit.model.parameters.parameters)
+        for idx, par in enumerate(p):
+            # Special case background model
+            if idx >= n_src:
+                self.fit.background_model.parameters.parameters[idx-n_src].value = par
             else:
-                self.fit.model.parameters[par] = parval * par_unit
+                self.fit.model.parameters.parameters[idx].value = par
 
         self.fit.predict_counts()
         # Return ones since sherpa does some check on the shape

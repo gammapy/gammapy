@@ -3,8 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 import numpy as np
 from astropy.units import Quantity
-from gammapy.spectrum import SpectrumObservation, SpectrumEnergyGroupMaker
-from gammapy.spectrum.models import PowerLaw
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.table import Table
@@ -15,7 +13,9 @@ from ..flux_point import (_e_ref_lafferty, _dnde_from_flux,
                           FluxPointEstimator, FluxPoints)
 from ..flux_point import SEDLikelihoodProfile
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
-from ...spectrum.models import SpectralModel
+from ...spectrum import SpectrumObservation, SpectrumEnergyGroupMaker
+from ...spectrum.models import PowerLaw, SpectralModel
+from ...utils.modeling import ParameterList
 
 E_REF_METHODS = ['table', 'lafferty', 'log_center']
 indices = [0, 1, 2, 3]
@@ -25,9 +25,8 @@ FLUX_POINTS_FILES = ['diff_flux_points.ecsv',
                      'flux_points.ecsv',
                      'flux_points.fits']
 
-
 class LWTestModel(SpectralModel):
-    parameters = {}
+    parameters = ParameterList([])
 
     @staticmethod
     def evaluate(x):
@@ -41,7 +40,7 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    parameters = {}
+    parameters = ParameterList([]) 
 
     @staticmethod
     def evaluate(x):
@@ -55,7 +54,7 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    parameters = {}
+    parameters = ParameterList([]) 
 
     @staticmethod
     def evaluate(x):
