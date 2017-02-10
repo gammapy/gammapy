@@ -96,11 +96,9 @@ class TestSourceCatalogObjectGammaCat:
 
     def test_data(self, gammacat):
         source = gammacat[0]
-        # TODO: change the implementation and activate the following assert
-        # assert isinstance(source.data, OrderedDict)
-        # source.pprint()
+        assert isinstance(source.data, OrderedDict)
         assert source.data['common_name'] == 'CTA 1'
-        assert_allclose(source.data['dec'].value, 72.782997)
+        assert_quantity_allclose(source.data['dec'], 72.782997 * u.deg)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
     def test_spectral_model(self, gammacat, name, desired):
