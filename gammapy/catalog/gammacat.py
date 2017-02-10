@@ -266,22 +266,6 @@ class SourceCatalogGammaCat(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-    def _make_source_dict(self, index):
-        """Make one source data dict.
-
-        Parameters
-        ----------
-        index : int
-            Row index
-
-        Returns
-        -------
-        data : dict
-            Source data dict
-        """
-        row = self.table[index]
-        return row
-
     def to_source_library(self):
         """
         TODO: add an option whether to skip or raise on missing models or data.

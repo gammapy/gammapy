@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
-from astropy.table import Table
+from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.table import Table, Column
+from astropy.units import Quantity
 from ..core import SourceCatalog
 
 
 def make_test_catalog():
     table = Table()
     table['Source_Name'] = ['a', 'bb', 'ccc']
-    table['RA'] = [42.2, 43.3, 44.4]
-    table['DEC'] = [1, 2, 3]
+    table['RA'] = Column([42.2, 43.3, 44.4])
+    table['DEC'] = Column([1, 2, 3], unit='deg')
 
     catalog = SourceCatalog(table)
 
@@ -64,13 +66,23 @@ class TestSourceCatalog:
 class TestSourceCatalogObject:
     def setup(self):
         self.cat = make_test_catalog()
-        self.source = self.cat['a']
+        self.source = self.cat['bb']
 
     def test_name(self):
-        assert self.source.name == 'a'
+        assert self.source.name == 'bb'
 
     def test_index(self):
-        assert self.source.index == 0
+        assert self.source.index == 1
+
+    def test_data(self):
+        d = self.source.data
+        print(d)
+        assert isinstance(d, OrderedDict)
+        assert isinstance(d['RA'], float)
+        assert_allclose(d['RA'], 43.3)
+
+        assert isinstance(d['DEC'], Quantity)
+        assert_quantity_allclose(d['DEC'], Quantity(2, 'deg'))
 
     def test_pprint(self):
         # TODO: capture output and assert that it contains some substring

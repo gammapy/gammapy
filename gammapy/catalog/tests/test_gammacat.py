@@ -1,5 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from collections import OrderedDict
+
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
@@ -55,44 +58,51 @@ W28_NAMES = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1', 'SNR G006.4-00.1',
 SORT_KEYS = ['ra', 'dec', 'reference_id']
 
 
-@requires_data('gamma-cat')
-class TestSourceCatalogGammaCat:
-    def setup(self):
-        self.cat = SourceCatalogGammaCat()
+@pytest.fixture(scope='session')
+def gammacat():
+    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
+    return SourceCatalogGammaCat(filename=filename)
 
-    def test_source_table(self):
-        assert self.cat.name == 'gamma-cat'
-        assert len(self.cat.table) == 162
+
+@requires_data('gammapy-extra')
+class TestSourceCatalogGammaCat:
+    def test_source_table(self, gammacat):
+        assert gammacat.name == 'gamma-cat'
+        assert len(gammacat.table) == 162
 
     @pytest.mark.parametrize('name', W28_NAMES)
-    def test_w28_alias_names(self, name):
-        assert str(self.cat[name]) == str(self.cat['W28'])
+    def test_w28_alias_names(self, gammacat, name):
+        assert str(gammacat[name]) == str(gammacat['W28'])
 
     @pytest.mark.parametrize(['name', 'key'], zip(SOURCES, SORT_KEYS))
     def test_sort_table(self, name, key):
-        before = str(self.cat[name])
-        self.cat.table.sort(key)
-        after = str(self.cat[name])
+        # this test modifies the catalog, so we make a copy
+        cat = gammacat()
+        before = str(cat[name])
+        cat.table.sort(key)
+        after = str(cat[name])
         assert before == after
 
-    def test_to_source_library(self):
-        sources = self.cat.to_source_library()
-
-        assert len(sources.source_list) == 48
-
+    def test_to_source_library(self, gammacat):
+        sources = gammacat.to_source_library()
         source = sources.source_list[0]
-        assert source.source_name == 'CTB 37B'
-        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.6500000953674316)
+        assert len(sources.source_list) == 60
+        assert source.source_name == 'CTA 1'
+        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.2)
 
 
-@requires_data('gamma-cat')
+@requires_data('gammapy-extra')
 class TestSourceCatalogObjectGammaCat:
-    def setup(self):
-        self.cat = SourceCatalogGammaCat()
+
+    def test_data(self, gammacat):
+        source = gammacat[0]
+        assert isinstance(source.data, OrderedDict)
+        assert source.data['common_name'] == 'CTA 1'
+        assert_quantity_allclose(source.data['dec'], 72.782997 * u.deg)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
-    def test_spectral_model(self, name, desired):
-        source = self.cat[name]
+    def test_spectral_model(self, gammacat, name, desired):
+        source = gammacat[name]
         spectral_model = source.spectral_model
 
         emin, emax = [1, 10] * u.TeV
@@ -106,8 +116,8 @@ class TestSourceCatalogObjectGammaCat:
         assert_quantity_allclose(eflux_1_10TeV, desired['eflux_1_10TeV'], rtol=1E-3)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_FP))
-    def test_flux_points(self, name, desired):
-        source = self.cat[name]
+    def test_flux_points(self, gammacat, name, desired):
+        source = gammacat[name]
 
         assert name == source.name
         flux_points = source.flux_points
@@ -115,8 +125,8 @@ class TestSourceCatalogObjectGammaCat:
 
     @requires_dependency('uncertainties')
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_BF))
-    def test_butterfly(self, name, desired):
-        source = self.cat[name]
+    def test_butterfly(self, gammacat, name, desired):
+        source = gammacat[name]
         emin, emax = [1, 10] * u.TeV
         energies = Energy.equal_log_spacing(emin, emax, 10)
 
