@@ -53,6 +53,26 @@ class SpectralModel(object):
         ss += '\n{}'.format(self.parameters)
         return ss
 
+    def _parse_uarray(self, uarray):
+        from uncertainties import unumpy
+        values = unumpy.nominal_values(uarray)
+        errors = unumpy.std_devs(uarray)
+        return values, errors
+
+    def evaluate_error(self, energy):
+        """
+        Evaluate spectral model with error propagation.
+
+        Paramaters
+        ----------
+        energy : `~astropy.units.quantity`
+            Energy at which to evaluate.
+        """
+        unit = self(energy).unit
+        upars = self.parameters._upars
+        uarray = self.evaluate(energy.value, **upars)
+        return self._parse_uarray(uarray) * unit
+
     def integral(self, emin, emax, **kwargs):
         """
         Integrate spectral model numerically.
@@ -75,6 +95,26 @@ class SpectralModel(object):
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
+    def integral_error(self, emin, emax, **kwargs):
+        """
+        Integrate spectral model numerically with error propagation.
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+
+        """
+        unit = self.integral(emin, emax, **kwargs).unit
+        upars = self.parameters._upars
+
+        def f(x):
+            return self.evaluate(x, **upars)
+        uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
+        return self._parse_uarray(uarray) * unit
+
     def energy_flux(self, emin, emax, **kwargs):
         """
         Compute energy flux in given energy range.
@@ -93,8 +133,31 @@ class SpectralModel(object):
 
         def f(x):
             return x * self(x)
-
         return integrate_spectrum(f, emin, emax, **kwargs)
+
+    def energy_flux_error(self, emin, emax, **kwargs):
+        """
+        Compute energy flux in given energy range with error propagation.
+
+        .. math::
+
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+        """
+
+        unit = self.energy_flux(emin, emax, **kwargs).unit
+        upars = self.parameters._upars
+
+        def f(x):
+            return x * self.evaluate(x, **upars)
+        uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
+        return self._parse_uarray(uarray) * unit
 
     def to_dict(self):
         """Serialize to dict"""
@@ -421,7 +484,7 @@ class PowerLaw2(SpectralModel):
 
         """
         pars = self.parameters
-        temp1 = np.power(emax, -pars['index'].value + 1) 
+        temp1 = np.power(emax, -pars['index'].value + 1)
         temp2 = np.power(emin, -pars['index'].value + 1)
         top = temp1 - temp2
         temp1 = np.power(pars['emax'].quantity, -pars['index'].value + 1)
@@ -484,6 +547,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
+
 
     def to_sherpa(self, name='default'):
         """Return Sherpa `~sherpa.models.Arithmetic model`
@@ -622,7 +686,7 @@ class TableModel(SpectralModel):
 
         self.lo_threshold = energy[0]
         self.hi_threshold = energy[-1]
-        
+
         loge = np.log10(self.energy.to('eV').value)
         try:
             self.unit = self.values.unit

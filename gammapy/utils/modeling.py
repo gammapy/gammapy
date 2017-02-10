@@ -22,11 +22,14 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 import abc
-from ..extern import xmltodict
+from numpy.linalg import LinAlgError
+
 from astropy.extern import six
-import astropy.units as u
+from astropy import units as u
 
 from .scripts import make_path
+from ..extern import xmltodict
+
 
 __all__ = [
     'Parameter',
@@ -80,7 +83,7 @@ class Parameter(object):
         except TypeError:
             retval = self.value
         # retval = self.value * u.Unit(self.unit)
-        return retval 
+        return retval
 
     @quantity.setter
     def quantity(self, par):
@@ -128,7 +131,7 @@ class Parameter(object):
         from sherpa.models import Parameter
         modelname = 'None'
         par = Parameter(modelname=modelname, name=self.name,
-                        val=self.value, units=self.unit, 
+                        val=self.value, units=self.unit,
                         min=self.parmin, max=self.parmax,
                         frozen=self.frozen)
 
@@ -137,17 +140,19 @@ class Parameter(object):
 
 class ParameterList(object):
     """List of `~gammapy.spectrum.models.Parameters`
-    
+
     Holds covariance matrix
 
     Parameters
     ----------
     parameters : list of `Parameter`
         List of parameters
+    covariance : `~numpy.ndarray`
+        Parameters covariance matrix.
     """
-    def __init__(self, parameters, covar=None):
+    def __init__(self, parameters, covariance=None):
         self.parameters = parameters
-        self.covar = covar
+        self.covariance = covariance
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -175,6 +180,25 @@ class ParameterList(object):
     def to_xml(self):
         xml = [_.to_xml() for _ in self.parameters]
         return '\n'.join(xml)
+
+    @property
+    def _upars(self):
+        """
+        Return
+        """
+        from uncertainties import correlated_values
+        values = [_.value for _ in self.parameters]
+
+        try:
+            # convert existing parameters to ufloats
+            uarray = correlated_values(values, self.covar)
+        except LinAlgError:
+            raise ValueError('Covariance matrix not set.')
+
+        upars = {}
+        for par, upar in zip(self.parameters, uarray):
+            upars[par.name] = upar
+        return upars
 
 
 class SourceLibrary(object):
