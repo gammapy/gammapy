@@ -1,5 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from collections import OrderedDict
+
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
@@ -90,6 +93,15 @@ class TestSourceCatalogGammaCat:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObjectGammaCat:
+
+    def test_data(self, gammacat):
+        source = gammacat[0]
+        # TODO: change the implementation and activate the following assert
+        # assert isinstance(source.data, OrderedDict)
+        # source.pprint()
+        assert source.data['common_name'] == 'CTA 1'
+        assert_allclose(source.data['dec'].value, 72.782997)
+
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
     def test_spectral_model(self, gammacat, name, desired):
         source = gammacat[name]
