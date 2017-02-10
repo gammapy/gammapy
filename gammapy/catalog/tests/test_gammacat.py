@@ -54,47 +54,45 @@ W28_NAMES = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1', 'SNR G006.4-00.1',
 
 SORT_KEYS = ['ra', 'dec', 'reference_id']
 
-filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
+
+@pytest.fixture(scope='session')
+def gammacat():
+    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
+    return SourceCatalogGammaCat(filename=filename)
 
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogGammaCat:
-    def setup(self):
-        self.cat = SourceCatalogGammaCat(filename=filename)
-
-    def test_source_table(self):
-        assert self.cat.name == 'gamma-cat'
-        assert len(self.cat.table) == 162
+    def test_source_table(self, gammacat):
+        assert gammacat.name == 'gamma-cat'
+        assert len(gammacat.table) == 162
 
     @pytest.mark.parametrize('name', W28_NAMES)
-    def test_w28_alias_names(self, name):
-        assert str(self.cat[name]) == str(self.cat['W28'])
+    def test_w28_alias_names(self, gammacat, name):
+        assert str(gammacat[name]) == str(gammacat['W28'])
 
     @pytest.mark.parametrize(['name', 'key'], zip(SOURCES, SORT_KEYS))
     def test_sort_table(self, name, key):
-        before = str(self.cat[name])
-        self.cat.table.sort(key)
-        after = str(self.cat[name])
+        # this test modifies the catalog, so we make a copy
+        cat = gammacat()
+        before = str(cat[name])
+        cat.table.sort(key)
+        after = str(cat[name])
         assert before == after
 
-    def test_to_source_library(self):
-        sources = self.cat.to_source_library()
-
-        assert len(sources.source_list) == 60
-
+    def test_to_source_library(self, gammacat):
+        sources = gammacat.to_source_library()
         source = sources.source_list[0]
+        assert len(sources.source_list) == 60
         assert source.source_name == 'CTA 1'
         assert_allclose(source.spectral_model.parameters.par('Index').value, -2.2)
 
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObjectGammaCat:
-    def setup(self):
-        self.cat = SourceCatalogGammaCat(filename=filename)
-
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
-    def test_spectral_model(self, name, desired):
-        source = self.cat[name]
+    def test_spectral_model(self, gammacat, name, desired):
+        source = gammacat[name]
         spectral_model = source.spectral_model
 
         emin, emax = [1, 10] * u.TeV
@@ -108,8 +106,8 @@ class TestSourceCatalogObjectGammaCat:
         assert_quantity_allclose(eflux_1_10TeV, desired['eflux_1_10TeV'], rtol=1E-3)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_FP))
-    def test_flux_points(self, name, desired):
-        source = self.cat[name]
+    def test_flux_points(self, gammacat, name, desired):
+        source = gammacat[name]
 
         assert name == source.name
         flux_points = source.flux_points
@@ -117,8 +115,8 @@ class TestSourceCatalogObjectGammaCat:
 
     @requires_dependency('uncertainties')
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_BF))
-    def test_butterfly(self, name, desired):
-        source = self.cat[name]
+    def test_butterfly(self, gammacat, name, desired):
+        source = gammacat[name]
         emin, emax = [1, 10] * u.TeV
         energies = Energy.equal_log_spacing(emin, emax, 10)
 
