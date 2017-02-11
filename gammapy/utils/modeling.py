@@ -58,17 +58,33 @@ class UnknownModelError(ValueError):
 
 
 class Parameter(object):
+    """
+    Class representing model parameters.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameter.
+    value : float or `~astropy.units.quantity`
+        Value of the parameter.
+    unit : str
+        Unit of the parameter.
+    parmin : float
+        Parameter value minimum. Used as minimum boundary value
+        in a model fit.
+    parmax : float
+        Parameter value maximum. Used as minimum boundary value
+        in a model fit.
+    frozen : bool
+        Whether the parameter is free to be varied in a model fit.    
+    """
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
         if isinstance(value, u.Quantity):
             self.quantity = value
         else:
-            # Temp hack for uncertainties to work
-            try:
-                self.value = float(value)
-            except TypeError:
-                self.value = value
+            self.value = value
             self.unit = unit
 
         self.parmin = parmin
@@ -77,12 +93,7 @@ class Parameter(object):
 
     @property
     def quantity(self):
-        # Temp hack for uncertainties to work
-        try:
-            retval = self.value * u.Unit(self.unit)
-        except TypeError:
-            retval = self.value
-        # retval = self.value * u.Unit(self.unit)
+        retval = self.value * u.Unit(self.unit)
         return retval
 
     @quantity.setter
@@ -98,7 +109,6 @@ class Parameter(object):
 
     @classmethod
     def from_dict(cls, data):
-        import astropy.units as u
         return cls(
             name=data['name'],
             value=data['val'],
@@ -148,7 +158,8 @@ class ParameterList(object):
     parameters : list of `Parameter`
         List of parameters
     covariance : `~numpy.ndarray`
-        Parameters covariance matrix.
+        Parameters covariance matrix. Order of values as specified by
+        `parameters`. 
     """
     def __init__(self, parameters, covariance=None):
         self.parameters = parameters
@@ -200,7 +211,8 @@ class ParameterList(object):
             upars[par.name] = upar
         return upars
 
-    # TODO: check if the API with a setter makes sense
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices
     def set_parameter_errors(self, errors):
         """
         Set uncorrelated parameters errors.
