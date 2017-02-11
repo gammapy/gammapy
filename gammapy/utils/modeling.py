@@ -182,16 +182,16 @@ class ParameterList(object):
         return '\n'.join(xml)
 
     @property
-    def _upars(self):
+    def _ufloats(self):
         """
-        Return
+        Return dict of ufloats with covariance
         """
         from uncertainties import correlated_values
         values = [_.value for _ in self.parameters]
 
         try:
             # convert existing parameters to ufloats
-            uarray = correlated_values(values, self.covar)
+            uarray = correlated_values(values, self.covariance)
         except LinAlgError:
             raise ValueError('Covariance matrix not set.')
 
@@ -199,6 +199,23 @@ class ParameterList(object):
         for par, upar in zip(self.parameters, uarray):
             upars[par.name] = upar
         return upars
+
+    # TODO: check if the API with a setter makes sense
+    def set_parameter_errors(self, errors):
+        """
+        Set uncorrelated parameters errors.
+
+        Parameters
+        ----------
+        errors : dict
+            Dict of parameter errors defined as `~astropy.units.quantity`
+        """
+        values = []
+        for par self.parameters:
+            quantity = errors.get(par.name, 0 * u.Unit(par.unit))
+            values.append(quantity.to(par.unit).value)
+        self.covariance = np.diag(values) ** 2
+        
 
 
 class SourceLibrary(object):

@@ -38,9 +38,9 @@ class SpectrumFitResult(object):
     statval : float, optional
         Final fit statistic
     npred_src : array-like, optional
-        Source counts predicted by the fit
+        Source counts predicted by the fit 
     npred_bkg : array-like, optional
-        Background counts predicted by the fit
+        Background counts predicted by the fit 
     background_model : `~gammapy.spectrum.SpectralModel`
         Best-fit background model
     flux_at_1TeV : dict, optional
@@ -277,8 +277,7 @@ class SpectrumFitResult(object):
             energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
                                                     self.fit_range[1],
                                                     100)
-
-        flux, flux_err = self.model.evaluate_error(energy)
+        flux = self.model(energy)
 
         butterfly = SpectrumButterfly()
         butterfly['energy'] = energy
@@ -346,7 +345,7 @@ class SpectrumFitResult(object):
             return CountsSpectrum(data=data, energy_hi=energy.upper_bounds,
                                   energy_lo=energy.lower_bounds)
         except TypeError:
-            return None
+            return None 
 
     @property
     def expected_on_counts(self):

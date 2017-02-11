@@ -69,7 +69,7 @@ class SpectralModel(object):
             Energy at which to evaluate.
         """
         unit = self(energy).unit
-        upars = self.parameters._upars
+        upars = self.parameters._ufloats
         uarray = self.evaluate(energy.value, **upars)
         return self._parse_uarray(uarray) * unit
 
@@ -108,10 +108,11 @@ class SpectralModel(object):
 
         """
         unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._upars
+        upars = self.parameters._ufloats
 
         def f(x):
             return self.evaluate(x, **upars)
+        
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
 
@@ -152,10 +153,11 @@ class SpectralModel(object):
         """
 
         unit = self.energy_flux(emin, emax, **kwargs).unit
-        upars = self.parameters._upars
+        upars = self.parameters._ufloats
 
         def f(x):
             return x * self.evaluate(x, **upars)
+        
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
 
