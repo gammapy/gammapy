@@ -6,7 +6,7 @@ from ..modeling import Parameter, SourceLibrary
 
 
 def test_parameter():
-    data = dict(name='spam', val=99, unit='ham')
+    data = dict(name='spam', val=99., unit='ham')
     par = Parameter.from_dict(data)
     xml = par.to_xml()
     assert xml == '        <parameter name="spam" value="99.0" unit="ham"/>'
