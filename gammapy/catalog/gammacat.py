@@ -81,16 +81,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
         spec_type = d['spec_type']
         pars = {}
-        errs = {}
         pars['index'] = u.Quantity(d['spec_index'])
-        errs['index'] = d['spec_index_err']
 
         if spec_type == 'pl':
             pars['reference'] = d['spec_ref']
             pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
-            errs['reference'] = 0
-            errs['amplitude'] = d['spec_norm_err']
-
             return PowerLaw(**pars)
 
         elif spec_type == 'ecpl':
@@ -107,11 +102,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             return PowerLaw2(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
-
-        for name in model.parameters.names:
-
-        model.parameters.covariance = np.diag(errs)
-        return model
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """

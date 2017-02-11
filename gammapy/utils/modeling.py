@@ -107,6 +107,8 @@ class Parameter(object):
         
         return ss.format(**self.__dict__)
 
+    # TODO: I thin kthis method is not very useful, because the same can be just
+    # achieved with `Parameter(**data)`. Why duplicate?
     @classmethod
     def from_dict(cls, data):
         return cls(
@@ -223,7 +225,7 @@ class ParameterList(object):
             Dict of parameter errors defined as `~astropy.units.quantity`
         """
         values = []
-        for par self.parameters:
+        for par in self.parameters:
             quantity = errors.get(par.name, 0 * u.Unit(par.unit))
             values.append(quantity.to(par.unit).value)
         self.covariance = np.diag(values) ** 2
