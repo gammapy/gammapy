@@ -221,12 +221,38 @@ class SpectralModel(object):
         # evaluate model
         flux = self(energy).to(flux_unit)
 
-        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
-
-        y = (flux * np.power(energy, energy_power)
-             ).to(flux.unit * eunit ** energy_power)
-
+        y = self._plot_scale_flux(energy, flux, energy_power)
+        
         ax.plot(energy.value, y.value, **kwargs)
+        self._plot_format_ax(ax, energy, y, energy_power)
+        return ax
+
+    def plot_error(self, energy_range, ax=None,
+             energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
+             energy_power=0, n_points=100, **kwargs):
+
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault('facecolor', 'black')
+        kwargs.setdefault('alpha', 0.2)
+        kwargs.setdefault('linewidth', 0)
+        
+        emin, emax = energy_range
+        energy = EnergyBounds.equal_log_spacing(
+            emin, emax, n_points, energy_unit)
+
+        flux, flux_err = self.evaluate_error(energy)
+
+        y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
+        y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
+
+        where = (y_hi > 0) & (energy >= energy_range[0]) & (energy <= energy_range[1])
+        ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
+        self._plot_format_ax(ax, energy, y_lo, energy_power)
+        return ax
+
+    def _plot_format_ax(self, ax, energy, y, energy_power):
         ax.set_xlabel('Energy [{}]'.format(energy.unit))
         if energy_power > 0:
             ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, y.unit))
@@ -234,7 +260,13 @@ class SpectralModel(object):
             ax.set_ylabel('Flux [{}]'.format(y.unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
-        return ax
+        
+    def _plot_scale_flux(self, energy, flux, energy_power):
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+
+        y = (flux * np.power(energy, energy_power)
+             ).to(flux.unit * eunit ** energy_power)
+        return y
 
     def to_sherpa(self, name='default'):
         """Convert to Sherpa model
