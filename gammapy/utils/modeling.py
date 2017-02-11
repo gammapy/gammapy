@@ -22,6 +22,7 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 import abc
+import numpy as np
 from numpy.linalg import LinAlgError
 
 from astropy.extern import six
@@ -171,7 +172,7 @@ class ParameterList(object):
         ss = self.__class__.__name__
         for par in self.parameters:
             ss += '\n{}'.format(par)
-        ss += '\nCovariance: {}'.format(self.covar)
+        ss += '\n\nCovariance: {}'.format(self.covariance)
         return ss
 
     def __getitem__(self, name):
@@ -420,11 +421,11 @@ class SpectralModelPowerLaw(SpectralModel):
 
     @classmethod
     def from_pset(cls, pset):
-        par = pset.par('amplitude')
+        par = pset['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = pset['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset.par('reference')
+        par = pset['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, scale]
@@ -437,13 +438,13 @@ class SpectralModelPowerLaw2(SpectralModel):
 
     @classmethod
     def from_pset(cls, pset):
-        par = pset.par('amplitude')
+        par = pset['amplitude']
         integral = Parameter(name='Integral', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = pset['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset.par('emin')
+        par = pset['emin']
         lower_limit = Parameter(name='LowerLimit', value=par.value, unit=par.unit)
-        par = pset.par('emax')
+        par = pset['emax']
         upper_limit = Parameter(name='UpperLimit', value=par.value, unit=par.unit)
 
         parameters = [integral, index, lower_limit, upper_limit]
@@ -456,13 +457,13 @@ class SpectralModelExpCutoff(SpectralModel):
 
     @classmethod
     def from_pset(cls, pset):
-        par = pset.par('amplitude')
+        par = pset['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = pset['index']
         index = Parameter(name='Index', value=par.value, unit=par.unit)
-        par = pset.par('lambda_')
+        par = pset['lambda_']
         cutoff = Parameter(name='Cutoff', value=1 / par.value, unit=par.unit)
-        par = pset.par('reference')
+        par = pset['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, cutoff, scale]
