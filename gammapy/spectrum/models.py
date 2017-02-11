@@ -63,10 +63,15 @@ class SpectralModel(object):
         """
         Evaluate spectral model with error propagation.
 
-        Paramaters
+        Parameters
         ----------
         energy : `~astropy.units.quantity`
             Energy at which to evaluate.
+
+        Returns
+        -------
+        flux, flux_error : tuple of `~astropy.units.Quantity`
+            Tuple of flux and flux error.
         """
         unit = self(energy).unit
         upars = self.parameters._ufloats
@@ -88,9 +93,9 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
@@ -101,11 +106,15 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
 
+        Returns
+        -------
+        integral, integral_error : tuple of `~astropy.units.Quantity`
+            Tuple of integral flux and integral flux error.
         """
         unit = self.integral(emin, emax, **kwargs).unit
         upars = self.parameters._ufloats
@@ -126,9 +135,9 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
         """
 
@@ -146,10 +155,16 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
+        
+        Returns
+        -------
+        energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
+            Tuple of energy flux and energy flux error.
+
         """
 
         unit = self.energy_flux(emin, emax, **kwargs).unit
@@ -230,7 +245,30 @@ class SpectralModel(object):
     def plot_error(self, energy_range, ax=None,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, n_points=100, **kwargs):
+        """Plot error `~gammapy.spectrum.SpectralModel`
 
+        kwargs are forwarded to :func:`~matplotlib.pyplot.fill_between`
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        energy_range : `~astropy.units.Quantity`
+            Plot range
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        energy_power : int, optional
+            Power of energy to multiply flux axis with
+        n_points : int, optional
+            Number of evaluation nodes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
@@ -337,11 +375,11 @@ class PowerLaw(SpectralModel):
 
     Parameters
     ----------
-    index : float, `~astropy.units.Quantity`
+    index : `~astropy.units.Quantity`
         :math:`\Gamma`
-    amplitude : float, `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         :math:`Phi_0`
-    reference : float, `~astropy.units.Quantity`
+    reference : `~astropy.units.Quantity`
         :math:`E_0`
     """
 
@@ -369,9 +407,9 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range.
 
         """
@@ -407,9 +445,9 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
         """
         pars = self.parameters
@@ -474,13 +512,13 @@ class PowerLaw2(SpectralModel):
 
     Parameters
     ----------
-    index : float, `~astropy.units.Quantity`
+    index : `~astropy.units.Quantity`
         Spectral index :math:`\Gamma`
-    amplitude : float, `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         Integral flux :math:`F_0`.
-    emin : float, `~astropy.units.Quantity`
+    emin : `~astropy.units.Quantity`
         Lower energy limit :math:`E_{0, min}`.
-    emax : float, `~astropy.units.Quantity`
+    emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
 
     """
@@ -511,9 +549,9 @@ class PowerLaw2(SpectralModel):
 
         Parameters
         ----------
-        emin : float, `~astropy.units.Quantity`
+        emin : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : float, `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
             Upper bound of integration range
 
         """
@@ -554,13 +592,13 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     Parameters
     ----------
-    index : float, `~astropy.units.Quantity`
+    index : `~astropy.units.Quantity`
         :math:`\Gamma`
-    amplitude : float, `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
-    reference : float, `~astropy.units.Quantity`
+    reference : `~astropy.units.Quantity`
         :math:`E_0`
-    lambda : float, `~astropy.units.Quantity`
+    lambda : `~astropy.units.Quantity`
         :math:`\lambda`
     """
 
@@ -614,13 +652,13 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     Parameters
     ----------
-    index : float, `~astropy.units.Quantity`
+    index : `~astropy.units.Quantity`
         :math:`\Gamma`
-    amplitude : float, `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
-    reference : float, `~astropy.units.Quantity`
+    reference : `~astropy.units.Quantity`
         :math:`E_0`
-    ecut : float, `~astropy.units.Quantity`
+    ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
     """
 
@@ -654,13 +692,13 @@ class LogParabola(SpectralModel):
 
     Parameters
     ----------
-    amplitude : float, `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         :math:`Phi_0`
-    reference : float, `~astropy.units.Quantity`
+    reference : `~astropy.units.Quantity`
         :math:`E_0`
-    alpha : float, `~astropy.units.Quantity`
+    alpha : `~astropy.units.Quantity`
         :math:`\alpha`
-    beta : float, `~astropy.units.Quantity`
+    beta : `~astropy.units.Quantity`
         :math:`\beta`
     """
 

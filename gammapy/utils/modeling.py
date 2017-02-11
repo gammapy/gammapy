@@ -14,7 +14,7 @@ TODO (needs a bit of experimentation / discussion / thought and a few days of co
 - implement spatial and spectral mode registries instead of `if-elif` set on type to make SourceLibrary extensible.
 - write test and docs
 - Once modeling setup OK, ask new people to add missing models (see Gammalib, Fermi ST, naima, Sherpa, HESS)
-  (it's one of the simplest and nicest things to get started with.
+(it's one of the simplest and nicest things to get started with.
 
 For XML model format definitions, see here:
 
@@ -78,6 +78,7 @@ class Parameter(object):
         in a model fit.
     frozen : bool
         Whether the parameter is free to be varied in a model fit.    
+
     """
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
@@ -163,6 +164,7 @@ class ParameterList(object):
     covariance : `~numpy.ndarray`
         Parameters covariance matrix. Order of values as specified by
         `parameters`. 
+
     """
     def __init__(self, parameters, covariance=None):
         self.parameters = parameters
@@ -215,15 +217,15 @@ class ParameterList(object):
         return upars
 
     # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices
+    # to handle covariance matrices via a class 
     def set_parameter_errors(self, errors):
         """
         Set uncorrelated parameters errors.
 
         Parameters
         ----------
-        errors : dict
-            Dict of parameter errors defined as `~astropy.units.quantity`
+        errors : dict of `~astropy.units.Quantity`
+            Dict of parameter errors. 
         """
         values = []
         for par in self.parameters:

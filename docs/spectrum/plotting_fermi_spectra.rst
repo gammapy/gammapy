@@ -90,5 +90,5 @@ The same can be done with the 2FHL best fit model:
 
 The final plot looks as following:
 
-.. plot:: spectrum/plot_fermi_spectra.py
-   :include-source:
+#.. plot:: spectrum/plot_fermi_spectra.py
+#   :include-source:
