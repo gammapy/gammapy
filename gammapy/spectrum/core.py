@@ -28,8 +28,10 @@ class CountsSpectrum(object):
 
     Parameters
     ----------
-    energy : `~gammapy.utils.energy.EnergyBounds`
-        Bin edges of energy axis
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
     data : `~astropy.units.Quantity`, array-like
         Counts
 
@@ -50,8 +52,9 @@ class CountsSpectrum(object):
     default_interp_kwargs = dict(bounds_error=False, method='nearest')
     """Default interpolation kwargs"""
 
-    def __init__(self, energy, data=None, interp_kwargs=None):
-        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+    def __init__(self, energy_lo, energy_hi, data=None, interp_kwargs=None):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
         # Set data unit to counts for coherence
         if data is not None:
             if isinstance(data, u.Quantity):
@@ -302,8 +305,10 @@ class PHACountsSpectrum(CountsSpectrum):
     ----------
     data : `~numpy.array`, list
         Counts
-    energy : `~astropy.units.Quantity`
-        Bin edges of energy axis
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
     obs_id : int, optional
         Unique identifier, default: 0
     quality : int, array-lik
@@ -330,9 +335,10 @@ class PHACountsSpectrum(CountsSpectrum):
         Zenith Angle
     """
 
-    def __init__(self, energy, data=None, obs_id=0, quality=None, is_bkg=False,
+    def __init__(self, energy_lo, energy_hi, data=None,
+                 obs_id=0, quality=None, is_bkg=False,
                  **kwargs):
-        super(PHACountsSpectrum, self).__init__(energy, data)
+        super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
         self.obs_id=obs_id
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
