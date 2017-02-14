@@ -40,7 +40,7 @@ class SpectrumFit(object):
     obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
         Observation(s) to fit
     model : `~gammapy.spectrum.models.SpectralModel`
-        Source model 
+        Source model. Should return counts if ``forward_folded`` is False and a flux otherwise
     stat : {'wstat', 'cash'} 
         Fit statistic 
     forward_folded : bool, default: True

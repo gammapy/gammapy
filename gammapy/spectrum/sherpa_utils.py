@@ -80,7 +80,7 @@ class SherpaStat(Likelihood):
     def _calc(self, data, model, *args, **kwargs):
         self.fit.calc_statval()
         # Sum likelihood over all observations
-        total_stat = np.sum(self.fit.statval, dtype=np.float64)
+        total_stat = np.sum([np.sum(v) for v in self.fit.statval], dtype=np.float64)
         # sherpa return pattern: total stat, fvec
         return total_stat, None
 

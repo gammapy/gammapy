@@ -274,6 +274,22 @@ class TestSpectralFit:
         assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
                                  2.32727036907038e-7 * u.Unit('m-2 s-1 TeV-1'))
 
+        # Change energy binnig of one observation
+        # TODO: Add Rebin method to SpectrumObservation
+        on_vector = self.obs_list[0].on_vector.rebin(2)
+        off_vector = self.obs_list[0].off_vector.rebin(2)
+        self.obs_list[0].on_vector = on_vector
+        self.obs_list[0].off_vector = off_vector
+        fit = SpectrumFit(self.obs_list, self.pwl)
+        fit.fit()
+
+        # TODO: Check if such a large deviation makes sense
+        assert_quantity_allclose(fit.model.parameters.index,
+                                 2.170167464415323)
+        assert_quantity_allclose(fit.model.parameters.amplitude,
+                                 3.165490768576638e-11 * u.Unit('m-2 s-1 TeV-1'))
+
+
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
         obs_list = SpectrumObservationList([stacked_obs])

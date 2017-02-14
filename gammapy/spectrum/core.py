@@ -431,6 +431,14 @@ class PHACountsSpectrum(CountsSpectrum):
                                     np.ones(len(retval.data.data)),
                                     np.zeros(len(retval.data.data)))
         retval.quality = np.array(quality_rebinned, dtype=int)
+
+        # if backscal is not the same in all channels cannot merge
+        if not np.isscalar(retval.backscal):
+            if not np.isclose(np.diff(retval.backscal), 0).all():
+                raise ValueError('Cannot merge energy dependent backscal')
+            else:
+                retval.meta.backscal = retval.backscal[0] * np.ones(retval.energy.nbins)
+
         return retval
 
     @property
