@@ -174,7 +174,8 @@ class SpectrumExtraction(object):
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events.select_row_subset(idx)
 
-            counts_kwargs = dict(energy=self.e_reco,
+            counts_kwargs = dict(energy_lo=self.e_reco[:-1],
+                                 energy_hi=self.e_reco[1:],
                                  livetime=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id)
 

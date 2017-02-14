@@ -88,8 +88,8 @@ class EnergyDispersion(object):
             High reco energy threshold
         """
         data=self.pdf_matrix.copy()
-        idx=np.where((self.e_reco.data[:-1] < lo_threshold) |
-                       (self.e_reco.data[1:] > hi_threshold))
+        idx=np.where((self.e_reco.lo < lo_threshold) |
+                       (self.e_reco.hi > hi_threshold))
         data[:, idx]=0
         return data
 

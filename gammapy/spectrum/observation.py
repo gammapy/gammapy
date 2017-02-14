@@ -108,12 +108,12 @@ class SpectrumObservation(object):
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.data)
+        return EnergyBounds(self.on_vector.energy.bins)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.data)
+        return EnergyBounds(self.aeff.energy.bins)
 
     @property
     def nbins(self):
@@ -154,7 +154,8 @@ class SpectrumObservation(object):
         """
         energy = self.off_vector.energy
         data = self.off_vector.data.data * self.alpha
-        return CountsSpectrum(data=data, energy=energy)
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
 
     @property
     def total_stats(self):
@@ -312,14 +313,19 @@ class SpectrumObservation(object):
 
         # Write in keV and cm2 for sherpa
         if use_sherpa:
-            self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
-            self.aeff.energy.data = self.aeff.energy.data.to('keV')
+            self.on_vector.energy.lo = self.on_vector.energy.lo.to('keV')
+            self.on_vector.energy.hi = self.on_vector.energy.hi.to('keV')
+            self.aeff.energy.lo = self.aeff.energy.lo.to('keV')
+            self.aeff.energy.hi = self.aeff.energy.hi.to('keV')
             self.aeff.data.data = self.aeff.data.data.to('cm2')
             if self.off_vector is not None:
-                self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+                self.off_vector.energy.lo = self.off_vector.energy.lo.to('keV')
+                self.off_vector.energy.hi = self.off_vector.energy.hi.to('keV')
             if self.edisp is not None:
-                self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
-                self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+                self.edisp.e_reco.lo = self.edisp.e_reco.lo.to('keV')
+                self.edisp.e_reco.hi = self.edisp.e_reco.hi.to('keV')
+                self.edisp.e_true.lo = self.edisp.e_true.lo.to('keV')
+                self.edisp.e_true.hi = self.edisp.e_true.hi.to('keV')
                 # Set data to itself to trigger reset of the interpolator
                 # TODO: Make NDData notice change of axis
                 self.edisp.data.data = self.edisp.data.data
@@ -658,7 +664,8 @@ class SpectrumObservationStacker(object):
                                             spec.quality)
 
         stacked_spectrum = PHACountsSpectrum(data=stacked_data,
-                                             energy=energy.data,
+                                             energy_lo=energy.lo,
+                                             energy_hi=energy.hi,
                                              quality=stacked_quality)
         return stacked_spectrum
 

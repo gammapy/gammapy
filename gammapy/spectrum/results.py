@@ -332,7 +332,8 @@ class SpectrumFitResult(object):
         """
         energy = self.obs.on_vector.energy
         data = self.npred_src * u.ct
-        return CountsSpectrum(data=data, energy=energy)
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
 
     @property
     def expected_background_counts(self):
@@ -341,7 +342,8 @@ class SpectrumFitResult(object):
         try:
             energy = self.obs.e_reco
             data = self.npred_bkg * u.ct
-            return CountsSpectrum(data=data, energy=energy)
+            return CountsSpectrum(data=data, energy_hi=energy.upper_bounds,
+                                  energy_lo=energy.lower_bounds)
         except TypeError:
             return None 
 
