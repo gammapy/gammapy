@@ -401,13 +401,13 @@ class SpectralModel(BaseModel):
             from ..catalog.gammacat import NoDataAvailableError
             raise NoDataAvailableError(source)
 
-        pset = ParameterList.from_list_of_dict_gammacat(data['parameters'])
+        plist = ParameterList.from_list_of_dict_gammacat(data['parameters'])
         if data['name'] == 'PowerLaw':
-            model = SpectralModelPowerLaw.from_pset(pset)
+            model = SpectralModelPowerLaw.from_plist(plist)
         elif data['name'] == 'PowerLaw2':
-            model = SpectralModelPowerLaw2.from_pset(pset)
+            model = SpectralModelPowerLaw2.from_plist(plist)
         elif data['name'] == 'ExponentialCutoffPowerLaw':
-            model = SpectralModelExpCutoff.from_pset(pset)
+            model = SpectralModelExpCutoff.from_plist(plist)
         else:
             raise UnknownModelError('Unknown spectral model: {}'.format(data))
 
@@ -422,12 +422,12 @@ class SpectralModelPowerLaw(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset['amplitude']
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset['index']
+        par = plist['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset['reference']
+        par = plist['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, scale]
@@ -439,14 +439,14 @@ class SpectralModelPowerLaw2(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset['amplitude']
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         integral = Parameter(name='Integral', value=par.value, unit=par.unit)
-        par = pset['index']
+        par = plist['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset['emin']
+        par = plist['emin']
         lower_limit = Parameter(name='LowerLimit', value=par.value, unit=par.unit)
-        par = pset['emax']
+        par = plist['emax']
         upper_limit = Parameter(name='UpperLimit', value=par.value, unit=par.unit)
 
         parameters = [integral, index, lower_limit, upper_limit]
@@ -458,14 +458,14 @@ class SpectralModelExpCutoff(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset['amplitude']
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset['index']
+        par = plist['index']
         index = Parameter(name='Index', value=par.value, unit=par.unit)
-        par = pset['lambda_']
+        par = plist['lambda_']
         cutoff = Parameter(name='Cutoff', value=1 / par.value, unit=par.unit)
-        par = pset['reference']
+        par = plist['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, cutoff, scale]
