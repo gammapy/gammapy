@@ -154,7 +154,7 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
 
     if edisp is not None:
         # TODO: True energy is converted to TeV. See issue 869 
-        true_energy = aeff.energy.data.to('TeV')
+        true_energy = aeff.energy.bins.to('TeV')
 
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
@@ -167,7 +167,8 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
         reco_counts = flux * livetime * aeff.evaluate_fill_nan(energy=e_reco.log_centers)
         reco_counts = reco_counts.to('')
 
-    return CountsSpectrum(data=reco_counts, energy=e_reco)
+    return CountsSpectrum(data=reco_counts, energy_lo=e_reco.lower_bounds,
+                          energy_hi=e_reco.upper_bounds)
 
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):

@@ -61,12 +61,14 @@ def get_test_obs():
     # 3 : obs without edisp
     energy = np.logspace(-1,1, 20) * u.TeV
     livetime = 2 * u.h
-    on_vector = PHACountsSpectrum(energy=energy,
+    on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
+                                  energy_hi=energy[1:],
                                   data=np.arange(19),
                                   obs_id=2,
                                   backscal=1,
                                   livetime=livetime)
-    aeff = EffectiveAreaTable(energy=energy,
+    aeff = EffectiveAreaTable(energy_lo=energy[:-1],
+                              energy_hi=energy[1:],
                               data=np.ones(19) * 1e5 * u.m**2)
     obs_3 = SpectrumObservation(on_vector=on_vector, aeff=aeff)
     test_obs.append(dict(

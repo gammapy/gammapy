@@ -45,15 +45,21 @@ class TestFit:
         random_state = get_random_state(23)
         npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
-        self.src = PHACountsSpectrum(energy=binning, data=source_counts,
+        self.src = PHACountsSpectrum(energy_lo=binning[:-1],
+                                     energy_hi=binning[1:],
+                                     data=source_counts,
                                      backscal=1)
 
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
 
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1. / self.alpha)
-        self.bkg = PHACountsSpectrum(energy=binning, data=bkg_counts)
-        self.off = PHACountsSpectrum(energy=binning, data=off_counts,
+        self.bkg = PHACountsSpectrum(energy_lo=binning[:-1],
+                                     energy_hi=binning[1:],
+                                     data=bkg_counts)
+        self.off = PHACountsSpectrum(energy_lo=binning[:-1],
+                                     energy_hi=binning[1:],
+                                     data=off_counts,
                                      backscal=1. / self.alpha)
 
     def test_cash(self):
@@ -234,7 +240,7 @@ class TestSpectralFit:
         self.fit.fit_range = fit_range
 
         range_bin = obs.on_vector.energy.find_node(fit_range[1])
-        desired = obs.on_vector.energy.data[range_bin]
+        desired = obs.on_vector.energy.lo[range_bin]
         actual = self.fit.true_fit_range[0][1]
         assert_quantity_allclose(actual, desired)
 

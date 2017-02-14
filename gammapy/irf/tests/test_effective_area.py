@@ -44,7 +44,9 @@ def test_EffectiveAreaTable2D(tmpdir):
 
     energy = np.sqrt(e_axis[:-1] * e_axis[1:])
     area = aeff.data.evaluate(offset=offset, energy=energy)
-    effarea1d = EffectiveAreaTable(energy=e_axis, data=area)
+    effarea1d = EffectiveAreaTable(energy_lo=e_axis[:-1],
+                                   energy_hi=e_axis[1:],
+                                   data=area)
 
     test_energy = 2.34 * u.TeV
     actual = effareafrom2d.data.evaluate(energy=test_energy)
@@ -88,12 +90,14 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     assert ener_below < test_ener and test_ener < ener_above
 
     elo_threshold = arf.find_energy(0.1 * arf.max_area)
-    assert_quantity_allclose(elo_threshold, 0.4367 * u.TeV, rtol=1e-3)
+    assert_quantity_allclose(elo_threshold, 0.43669092057562997 * u.TeV)
 
     # Test evaluation outside safe range
     data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
     energy = np.logspace(0, 10, 10) * u.TeV
-    aeff = EffectiveAreaTable(data=data, energy=energy)
+    aeff = EffectiveAreaTable(data=data,
+                              energy_lo=energy[:-1],
+                              energy_hi=energy[1:])
     vals = aeff.evaluate_fill_nan()
     assert vals[1] == 0
     assert vals[-1] == 3

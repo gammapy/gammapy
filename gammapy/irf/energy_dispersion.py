@@ -31,22 +31,29 @@ class EnergyDispersion(object):
 
     Parameters
     ----------
-    e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
-        Bin edges of true energy axis
-    e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
-        Bin edges of reconstruced energy axis
+    e_true_lo : `~astropy.units.Quantity`
+        Lower bin edges of true energy axis
+    e_true_hi : `~astropy.units.Quantity`
+        Upper bin edges of true energy axis
+    e_reco_lo : `~astropy.units.Quantity`
+        Lower bin edges of reconstruced energy axis
+    e_reco_hi : `~astropy.units.Quantity`
+        Upper bin edges of reconstruced energy axis
     data : array_like
         2-dim energy dispersion matrix (probability density).
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=0)
     """Default Interpolation kwargs for `~NDDataArray`"""
 
-    def __init__(self, e_true, e_reco, data, interp_kwargs=None, meta=None):
+    def __init__(self, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi,  data,
+                 interp_kwargs=None, meta=None):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
-            BinnedDataAxis(e_true, interpolation_mode='log', name='e_true'),
-            BinnedDataAxis(e_reco, interpolation_mode='log', name='e_reco')
+            BinnedDataAxis(e_true_lo, e_true_hi,
+                           interpolation_mode='log', name='e_true'),
+            BinnedDataAxis(e_reco_lo, e_reco_hi,
+                           interpolation_mode='log', name='e_reco')
         ]
         self.data=NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
@@ -81,8 +88,8 @@ class EnergyDispersion(object):
             High reco energy threshold
         """
         data=self.pdf_matrix.copy()
-        idx=np.where((self.e_reco.data[:-1] < lo_threshold) |
-                       (self.e_reco.data[1:] > hi_threshold))
+        idx=np.where((self.e_reco.lo < lo_threshold) |
+                       (self.e_reco.hi > hi_threshold))
         data[:, idx]=0
         return data
 
@@ -124,7 +131,10 @@ class EnergyDispersion(object):
 
         pdf[np.where(pdf < pdf_threshold)]=0
 
-        return cls(e_true=e_true, e_reco=e_reco, data=pdf)
+        e_lo, e_hi = (e_true[:-1], e_true[1:])
+        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
+        return cls(e_true_lo=e_lo, e_true_hi=e_hi,
+                   e_reco_lo=ereco_lo, e_reco_hi=ereco_hi, data=pdf)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
@@ -159,7 +169,9 @@ class EnergyDispersion(object):
         e_reco=EnergyBounds.from_ebounds(ebounds_hdu)
         e_true=EnergyBounds.from_rmf_matrix(matrix_hdu)
 
-        return cls(data=pdf_matrix, e_true=e_true, e_reco=e_reco)
+        return cls(e_true_lo=e_true.lower_bounds, e_true_hi=e_true.upper_bounds,
+                   e_reco_lo=e_reco.lower_bounds, e_reco_hi=e_reco.upper_bounds,
+                   data=pdf_matrix)
 
     @classmethod
     def read(cls, filename, hdu1='MATRIX', hdu2='EBOUNDS', **kwargs):
@@ -227,7 +239,7 @@ class EnergyDispersion(object):
         hdu=fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5],
                                             header=header, name=name)
 
-        ebounds=energy_axis_to_ebounds(self.e_reco.data)
+        ebounds=energy_axis_to_ebounds(self.e_reco.bins)
         prim_hdu=fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds])
@@ -265,8 +277,8 @@ class EnergyDispersion(object):
             n_chan[i]=n_chan_temp
             matrix[i]=row[pos]
 
-        table['ENERG_LO']=self.e_true.data[:-1]
-        table['ENERG_HI']=self.e_true.data[1:]
+        table['ENERG_LO']=self.e_true.lo
+        table['ENERG_HI']=self.e_true.hi
         table['N_GRP']=np.asarray(n_grp, dtype=np.int16)
         table['F_CHAN']=f_chan
         table['N_CHAN']=n_chan
@@ -386,8 +398,8 @@ class EnergyDispersion(object):
 
         x stands for true energy and y for reconstructed energy
         """
-        x=self.e_true.data[[0, -1]].value
-        y=self.e_reco.data[[0, -1]].value
+        x=self.e_true.bins[[0, -1]].value
+        y=self.e_reco.bins[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, show_energy=None, **kwargs):
@@ -518,12 +530,18 @@ class EnergyDispersion2D(object):
 
     Parameters
     ----------
-    e_true : `~gammapy.utils.energy.Energy`
-        True energy axis bounds
-    migra : `~numpy.ndarray`, list
-        Migration axis bounds
-    offset : `~astropy.coordinates.Angle`
-        Offset axis nodes
+    e_true_lo : `~astropy.units.Quantity`
+        True energy axis lower bounds
+    e_true_hi : `~astropy.units.Quantity`
+        True energy axis upper bounds
+    migra_lo : `~numpy.ndarray`, list
+        Migration axis lower bounds
+    migra_hi : `~numpy.ndarray`, list
+        Migration axis upper bounds
+    offset_lo : `~astropy.coordinates.Angle`
+        Offset axis lower bounds
+    offset_hi : `~astropy.coordinates.Angle`
+        Offset axis upper bounds
     data : `~numpy.ndarray`
         PDF matrix
 
@@ -580,13 +598,17 @@ class EnergyDispersion2D(object):
     default_interp_kwargs = dict(bounds_error=False, fill_value=0)
     """Default Interpolation kwargs for `~NDDataArray`"""
 
-    def __init__(self, e_true, migra, offset, data, interp_kwargs=None):
+    def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
+                 offset_hi, data, interp_kwargs=None):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
-            BinnedDataAxis(e_true, interpolation_mode='log', name='e_true'),
-            BinnedDataAxis(migra, interpolation_mode='linear', name='migra'),
-            DataAxis(offset, interpolation_mode='linear', name='offset')
+            BinnedDataAxis(e_true_lo, e_true_hi,
+                           interpolation_mode='log', name='e_true'),
+            BinnedDataAxis(migra_lo, migra_hi,
+                           interpolation_mode='linear', name='migra'),
+            BinnedDataAxis(offset_lo, offset_hi,
+                           interpolation_mode='linear', name='offset')
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)                       
@@ -609,16 +631,15 @@ class EnergyDispersion2D(object):
         """
         e_lo=table['ETRUE_LO'].quantity.squeeze()
         e_hi=table['ETRUE_HI'].quantity.squeeze()
-        etrue = EnergyBounds.from_lower_and_upper_bounds(e_lo, e_hi)
         o_lo=table['THETA_LO'].quantity.squeeze()
         o_hi=table['THETA_HI'].quantity.squeeze()
-        offset = (o_lo + o_hi) / 2
-        m_lo=table['MIGRA_LO'].data.squeeze()
-        m_hi=table['MIGRA_HI'].data.squeeze()
-        migra = np.append(m_lo, m_hi[-1])
+        m_lo=table['MIGRA_LO'].quantity.squeeze()
+        m_hi=table['MIGRA_HI'].quantity.squeeze()
 
         matrix=table['MATRIX'].squeeze().transpose()
-        return cls(e_true=etrue, offset=offset, migra=migra, data=matrix)
+        return cls(e_true_lo=e_lo, e_true_hi=e_hi,
+                   offset_lo=o_lo, offset_hi=o_hi,
+                   migra_lo=m_lo, migra_hi=m_hi, data=matrix)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='edisp_2d'):
@@ -662,8 +683,8 @@ class EnergyDispersion2D(object):
             Energy disperion matrix
         """
         offset=Angle(offset)
-        e_true=self.e_true.data if e_true is None else e_true
-        e_reco=self.e_true.data if e_reco is None else e_reco
+        e_true=self.e_true.bins if e_true is None else e_true
+        e_reco=self.e_true.bins if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
@@ -674,7 +695,12 @@ class EnergyDispersion2D(object):
             rm.append(vec)
 
         rm=np.asarray(rm)
-        return EnergyDispersion(data=rm, e_true=e_true, e_reco=e_reco)
+        e_lo, e_hi = (e_true[:-1], e_true[1:])
+        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
+
+        return EnergyDispersion(e_true_lo=e_lo, e_true_hi=e_hi,
+                                e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
+                                data=rm)
 
     def get_response(self, offset, e_true, e_reco=None):
         """Detector response R(Delta E_reco, E_true)

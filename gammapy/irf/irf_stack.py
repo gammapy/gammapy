@@ -78,7 +78,8 @@ class IRFStacker(object):
 
         stacked_data = aefft / livetime_tot
         self.stacked_aeff = EffectiveAreaTable(
-            energy=self.list_aeff[0].energy.data,
+            energy_lo=self.list_aeff[0].energy.lo,
+            energy_hi=self.list_aeff[0].energy.hi,
             data=stacked_data.to('cm2')
         )
 
@@ -104,6 +105,8 @@ class IRFStacker(object):
 
         stacked_edisp = np.nan_to_num(aefftedisp / aefft)
         self.stacked_edisp = EnergyDispersion(
-            e_true=self.list_edisp[0].e_true.data,
-            e_reco=self.list_edisp[0].e_reco.data,
+            e_true_lo=self.list_edisp[0].e_true.lo,
+            e_true_hi=self.list_edisp[0].e_true.hi,
+            e_reco_lo=self.list_edisp[0].e_reco.lo,
+            e_reco_hi=self.list_edisp[0].e_reco.hi,
             data=stacked_edisp.transpose())
