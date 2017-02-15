@@ -58,6 +58,7 @@ class CTAIrf(object):
         self.psf = psf
         self.bkg = bkg
 
+        
     @classmethod
     def read(cls, filename):
         """
@@ -120,8 +121,9 @@ class BgRateTable(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    def __init__(self, energy, data):
-        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -139,7 +141,7 @@ class BgRateTable(object):
         energy = np.append(energy_lo.value,
                            energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
@@ -180,8 +182,8 @@ class BgRateTable(object):
         if energy is None:
             energy = self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -205,8 +207,9 @@ class Psf68Table(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    def __init__(self, energy, data):
-        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_lo,
+                               interpolation_mode='log', name='energy')]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -224,7 +227,7 @@ class Psf68Table(object):
         energy = np.append(
             energy_lo.value, energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='POINT SPREAD FUNCTION'):
@@ -265,8 +268,8 @@ class Psf68Table(object):
         if energy is None:
             energy = self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
@@ -291,8 +294,9 @@ class SensitivityTable(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    def __init__(self, energy, data):
-        axes = [BinnedDataAxis(energy, interpolation_mode='log', name='energy')]
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -310,7 +314,7 @@ class SensitivityTable(object):
         energy = np.append(energy_lo.value,
                            energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='SENSITIVITY'):
@@ -351,12 +355,12 @@ class SensitivityTable(object):
         if energy is None:
             energy = self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.data.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Sensitivity [{}]'.format(self.data.data.unit))
 
         return ax
@@ -392,17 +396,18 @@ class CTAPerf(object):
         Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None, rmf=None):
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
         self.sens = sens
-
+        self.rmf = rmf
+        
     @classmethod
     def read(cls, filename):
         """
-        Read from a FITS file.
+        Read from a FITS file. Build RMF on fly
 
         Parameters
         ----------
@@ -418,12 +423,34 @@ class CTAPerf(object):
         psf = Psf68Table.from_hdulist(hdulist=hdulist)
         sens = SensitivityTable.from_hdulist(hdulist=hdulist)
 
+        # Create rmf with appropriate dimensions (e_reco->bkg, e_true->area)
+        e_reco_min = bkg.energy.lo[0]
+        e_reco_max = bkg.energy.hi[-1]
+        e_reco_bin = bkg.energy.nbins
+        e_reco_axis = EnergyBounds.equal_log_spacing(e_reco_min,
+                                                     e_reco_max,
+                                                     e_reco_bin,
+                                                     'TeV')
+
+        e_true_min = aeff.energy.lo[0]
+        e_true_max = aeff.energy.hi[-1]
+        e_true_bin = aeff.energy.nbins
+        e_true_axis = EnergyBounds.equal_log_spacing(e_true_min,
+                                                     e_true_max,
+                                                     e_true_bin,
+                                                     'TeV')
+
+        rmf = edisp.to_energy_dispersion(offset=0.5 * u.degree,
+                                         e_reco=e_reco_axis,
+                                         e_true=e_true_axis)
+        
         return cls(
             aeff=aeff,
             bkg=bkg,
             edisp=edisp,
             psf=psf,
-            sens=sens
+            sens=sens,
+            rmf=rmf
         )
 
     def peek(self, figsize=(15, 8)):
