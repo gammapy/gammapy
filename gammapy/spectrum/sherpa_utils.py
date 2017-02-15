@@ -31,15 +31,13 @@ class SherpaModel(ArithmeticModel):
         sherpa_name = 'sherpa_model'
         par_list = list()
         for par in self.fit.model.parameters.parameters:
-            sherpa_par = par.to_sherpa()
-            sherpa_par.modelname = 'source'
+            sherpa_par = par.to_sherpa(modelname='source')
             #setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
 
         if fit.stat != 'wstat' and self.fit.background_model is not None:
             for par in self.fit.background_model.parameters.parameters:
-                sherpa_par = par.to_sherpa()
-                sherpa_par.modelname = 'background'
+                sherpa_par = par.to_sherpa(modelname='background')
                 #setattr(self, name, sherpa_par)
                 par_list.append(sherpa_par)
 
