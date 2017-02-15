@@ -213,9 +213,9 @@ def make_tevcat_exclusion_mask():
     tevcat = load_catalog_tevcat()
     all_sky_exclusion = SkyMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
                                       fill=1, dtype='int')
-    val_lon, val_lat = all_sky_exclusion.coordinates()
-    lons = Longitude(val_lon, 'deg')
-    lats = Latitude(val_lat, 'deg')
+    coord = all_sky_exclusion.coordinates()
+    lons = coord.l
+    lats = coord.b
 
     for source in tevcat:
         lon = Longitude(source['coord_gal_lon'], 'deg')
