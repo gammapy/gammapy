@@ -41,8 +41,8 @@ class SpectrumFit(object):
         Observation(s) to fit
     model : `~gammapy.spectrum.models.SpectralModel`
         Source model. Should return counts if ``forward_folded`` is False and a flux otherwise
-    stat : {'wstat', 'cash'} 
-        Fit statistic 
+    stat : {'wstat', 'cash'}
+        Fit statistic
     forward_folded : bool, default: True
         Fold ``model`` with the IRFs given in ``obs_list``
     fit_range : tuple of `~astropy.units.Quantity``, optional
@@ -62,8 +62,8 @@ class SpectrumFit(object):
         if isinstance(obs_list, SpectrumObservation):
             obs_list = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
-            raise ValueError('Invalid input for parameter obs_list'.format(
-                obs_list))
+            raise ValueError('Invalid input {} for parameter obs_list'.format(
+                type(obs_list)))
 
         self.obs_list = obs_list
         self.model = model
@@ -328,12 +328,12 @@ class SpectrumFit(object):
         see :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
         """
         import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax 
+        ax = plt.gca() if ax is None else ax
 
         yy = self.likelihood_1d(**kwargs)
         ax.plot(kwargs['parvals'], yy)
         ax.set_xlabel(kwargs['parname'])
-        
+
         return ax
 
     def fit(self):

@@ -14,7 +14,7 @@ TODO (needs a bit of experimentation / discussion / thought and a few days of co
 - implement spatial and spectral mode registries instead of `if-elif` set on type to make SourceLibrary extensible.
 - write test and docs
 - Once modeling setup OK, ask new people to add missing models (see Gammalib, Fermi ST, naima, Sherpa, HESS)
-  (it's one of the simplest and nicest things to get started with.
+(it's one of the simplest and nicest things to get started with.
 
 For XML model format definitions, see here:
 
@@ -22,11 +22,15 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 import abc
-from ..extern import xmltodict
+import numpy as np
+from numpy.linalg import LinAlgError
+
 from astropy.extern import six
-import astropy.units as u
+from astropy import units as u
 
 from .scripts import make_path
+from ..extern import xmltodict
+
 
 __all__ = [
     'Parameter',
@@ -55,17 +59,34 @@ class UnknownModelError(ValueError):
 
 
 class Parameter(object):
+    """
+    Class representing model parameters.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameter.
+    value : float
+        Value of the parameter.
+    unit : str
+        Unit of the parameter.
+    parmin : float
+        Parameter value minimum. Used as minimum boundary value
+        in a model fit.
+    parmax : float
+        Parameter value maximum. Used as minimum boundary value
+        in a model fit.
+    frozen : bool
+        Whether the parameter is free to be varied in a model fit.
+
+    """
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
         if isinstance(value, u.Quantity):
             self.quantity = value
         else:
-            # Temp hack for uncertainties to work
-            try:
-                self.value = float(value)
-            except TypeError:
-                self.value = value
+            self.value = value
             self.unit = unit
 
         self.parmin = parmin
@@ -74,13 +95,8 @@ class Parameter(object):
 
     @property
     def quantity(self):
-        # Temp hack for uncertainties to work
-        try:
-            retval = self.value * u.Unit(self.unit)
-        except TypeError:
-            retval = self.value
-        # retval = self.value * u.Unit(self.unit)
-        return retval 
+        retval = self.value * u.Unit(self.unit)
+        return retval
 
     @quantity.setter
     def quantity(self, par):
@@ -89,13 +105,14 @@ class Parameter(object):
 
     def __str__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
-        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})' 
-        
+        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})'
+
         return ss.format(**self.__dict__)
 
+    # TODO: I thin kthis method is not very useful, because the same can be just
+    # achieved with `Parameter(**data)`. Why duplicate?
     @classmethod
     def from_dict(cls, data):
-        import astropy.units as u
         return cls(
             name=data['name'],
             value=data['val'],
@@ -106,7 +123,7 @@ class Parameter(object):
     def from_dict_gammacat(cls, data):
         return cls(
             name=data['name'],
-            value=data['val'],
+            value=float(data['val']),
             unit=data['unit'],
         )
 
@@ -116,7 +133,7 @@ class Parameter(object):
 
         return cls(
             name=data['@name'],
-            value=data['@value'],
+            value=float(data['@value']),
             unit=unit,
         )
 
@@ -127,7 +144,7 @@ class Parameter(object):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
         par = Parameter(modelname=modelname, name=self.name,
-                        val=self.value, units=self.unit, 
+                        val=self.value, units=self.unit,
                         min=self.parmin, max=self.parmax,
                         frozen=self.frozen)
 
@@ -136,23 +153,27 @@ class Parameter(object):
 
 class ParameterList(object):
     """List of `~gammapy.spectrum.models.Parameters`
-    
+
     Holds covariance matrix
 
     Parameters
     ----------
     parameters : list of `Parameter`
         List of parameters
+    covariance : `~numpy.ndarray`
+        Parameters covariance matrix. Order of values as specified by
+        `parameters`.
+
     """
-    def __init__(self, parameters, covar=None):
+    def __init__(self, parameters, covariance=None):
         self.parameters = parameters
-        self.covar = covar
+        self.covariance = covariance
 
     def __str__(self):
         ss = self.__class__.__name__
         for par in self.parameters:
             ss += '\n{}'.format(par)
-        ss += '\nCovariance: {}'.format(self.covar)
+        ss += '\n\nCovariance: {}'.format(self.covariance)
         return ss
 
     def __getitem__(self, name):
@@ -174,6 +195,42 @@ class ParameterList(object):
     def to_xml(self):
         xml = [_.to_xml() for _ in self.parameters]
         return '\n'.join(xml)
+
+    @property
+    def _ufloats(self):
+        """
+        Return dict of ufloats with covariance
+        """
+        from uncertainties import correlated_values
+        values = [_.value for _ in self.parameters]
+
+        try:
+            # convert existing parameters to ufloats
+            uarray = correlated_values(values, self.covariance)
+        except LinAlgError:
+            raise ValueError('Covariance matrix not set.')
+
+        upars = {}
+        for par, upar in zip(self.parameters, uarray):
+            upars[par.name] = upar
+        return upars
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def set_parameter_errors(self, errors):
+        """
+        Set uncorrelated parameters errors.
+
+        Parameters
+        ----------
+        errors : dict of `~astropy.units.Quantity`
+            Dict of parameter errors.
+        """
+        values = []
+        for par in self.parameters:
+            quantity = errors.get(par.name, 0 * u.Unit(par.unit))
+            values.append(quantity.to(par.unit).value)
+        self.covariance = np.diag(values) ** 2
 
 
 class SourceLibrary(object):
@@ -342,13 +399,13 @@ class SpectralModel(BaseModel):
             from ..catalog.gammacat import NoDataAvailableError
             raise NoDataAvailableError(source)
 
-        pset = ParameterList.from_list_of_dict_gammacat(data['parameters'])
+        plist = ParameterList.from_list_of_dict_gammacat(data['parameters'])
         if data['name'] == 'PowerLaw':
-            model = SpectralModelPowerLaw.from_pset(pset)
+            model = SpectralModelPowerLaw.from_plist(plist)
         elif data['name'] == 'PowerLaw2':
-            model = SpectralModelPowerLaw2.from_pset(pset)
+            model = SpectralModelPowerLaw2.from_plist(plist)
         elif data['name'] == 'ExponentialCutoffPowerLaw':
-            model = SpectralModelExpCutoff.from_pset(pset)
+            model = SpectralModelExpCutoff.from_plist(plist)
         else:
             raise UnknownModelError('Unknown spectral model: {}'.format(data))
 
@@ -363,12 +420,12 @@ class SpectralModelPowerLaw(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset.par('amplitude')
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = plist['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset.par('reference')
+        par = plist['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, scale]
@@ -380,14 +437,14 @@ class SpectralModelPowerLaw2(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset.par('amplitude')
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         integral = Parameter(name='Integral', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = plist['index']
         index = Parameter(name='Index', value=-par.value, unit=par.unit)
-        par = pset.par('emin')
+        par = plist['emin']
         lower_limit = Parameter(name='LowerLimit', value=par.value, unit=par.unit)
-        par = pset.par('emax')
+        par = plist['emax']
         upper_limit = Parameter(name='UpperLimit', value=par.value, unit=par.unit)
 
         parameters = [integral, index, lower_limit, upper_limit]
@@ -399,14 +456,14 @@ class SpectralModelExpCutoff(SpectralModel):
     xml_types = [xml_type]
 
     @classmethod
-    def from_pset(cls, pset):
-        par = pset.par('amplitude')
+    def from_plist(cls, plist):
+        par = plist['amplitude']
         prefactor = Parameter(name='Prefactor', value=par.value, unit=par.unit)
-        par = pset.par('index')
+        par = plist['index']
         index = Parameter(name='Index', value=par.value, unit=par.unit)
-        par = pset.par('lambda_')
+        par = plist['lambda_']
         cutoff = Parameter(name='Cutoff', value=1 / par.value, unit=par.unit)
-        par = pset.par('reference')
+        par = plist['reference']
         scale = Parameter(name='Scale', value=par.value, unit=par.unit)
 
         parameters = [prefactor, index, cutoff, scale]

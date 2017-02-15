@@ -15,18 +15,27 @@ SOURCES = ['Vela X', 'HESS J1848-018', 'HESS J1813-178']
 DESIRED_SM = [
     {
         'flux_at_1TeV': 1.36e-11 * u.Unit('1 / (cm2 TeV s)'),
+        'flux_at_1TeV_err': 7.531e-13 * u.Unit('1 / (cm2 TeV s)'),
         'flux_above_1TeV': 2.104e-11 * u.Unit('1 / (cm2 s)'),
+        'flux_above_1TeV_err': 1.973e-12 * u.Unit('1 / (cm2 s)'),
         'eflux_1_10TeV': 5.783e-11 * u.Unit('TeV / (cm2 s)'),
+        'eflux_1_10TeV_err': 5.986e-12 * u.Unit('TeV / (cm2 s)'),
     },
     {
         'flux_at_1TeV': 3.7e-12 * u.Unit('1 / (cm2 TeV s)'),
+        'flux_at_1TeV_err': 4e-13 * u.Unit('1 / (cm2 TeV s)'),
         'flux_above_1TeV': 2.056e-12 * u.Unit('1 / (cm2 s)'),
+        'flux_above_1TeV_err': 3.187e-13 * u.Unit('1 / (cm2 s)'),
         'eflux_1_10TeV': 3.892e-12 * u.Unit('TeV / (cm2 s)'),
+        'eflux_1_10TeV_err': 7.621e-13 * u.Unit('TeV / (cm2 s)'),
     },
     {
         'flux_at_1TeV': 2.678e-12 * u.Unit('1 / (cm2 TeV s)'),
+        'flux_at_1TeV_err': 2.55e-13 * u.Unit('1 / (cm2 TeV s)'),
         'flux_above_1TeV': 2.457e-12 * u.Unit('1 / (cm2 s)'),
+        'flux_above_1TeV_err': 3.692e-13 * u.Unit('1 / (cm2 s)'),
         'eflux_1_10TeV': 5.5697e-12 * u.Unit('TeV / (cm2 s)'),
+        'eflux_1_10TeV_err': 9.121e-13 * u.Unit('TeV / (cm2 s)'),
     },
 ]
 
@@ -88,7 +97,7 @@ class TestSourceCatalogGammaCat:
         source = sources.source_list[0]
         assert len(sources.source_list) == 60
         assert source.source_name == 'CTA 1'
-        assert_allclose(source.spectral_model.parameters.par('Index').value, -2.2)
+        assert_allclose(source.spectral_model.parameters['Index'].value, -2.2)
 
 
 @requires_data('gammapy-extra')
@@ -114,6 +123,27 @@ class TestSourceCatalogObjectGammaCat:
         assert_quantity_allclose(flux_at_1TeV, desired['flux_at_1TeV'], rtol=1E-3)
         assert_quantity_allclose(flux_above_1TeV, desired['flux_above_1TeV'], rtol=1E-3)
         assert_quantity_allclose(eflux_1_10TeV, desired['eflux_1_10TeV'], rtol=1E-3)
+    
+    @requires_dependency('uncertainties')
+    @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
+    def test_spectral_model_err(self, gammacat, name, desired):
+        source = gammacat[name]
+        spectral_model = source.spectral_model
+
+        emin, emax = [1, 10] * u.TeV
+        einf = 1E10 * u.TeV
+        flux_at_1TeV = spectral_model.evaluate_error(emin)
+        flux_above_1TeV = spectral_model.integral_error(emin=emin, emax=einf)
+        eflux_1_10TeV = spectral_model.energy_flux_error(emin=emin, emax=emax)
+
+        assert_quantity_allclose(flux_at_1TeV[0], desired['flux_at_1TeV'], rtol=1E-3)
+        assert_quantity_allclose(flux_above_1TeV[0], desired['flux_above_1TeV'], rtol=1E-3)
+        assert_quantity_allclose(eflux_1_10TeV[0], desired['eflux_1_10TeV'], rtol=1E-3)
+
+        assert_quantity_allclose(flux_at_1TeV[1], desired['flux_at_1TeV_err'], rtol=1E-3)
+        assert_quantity_allclose(flux_above_1TeV[1], desired['flux_above_1TeV_err'], rtol=1E-3)
+        assert_quantity_allclose(eflux_1_10TeV[1], desired['eflux_1_10TeV_err'], rtol=1E-3)
+
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_FP))
     def test_flux_points(self, gammacat, name, desired):
@@ -130,8 +160,9 @@ class TestSourceCatalogObjectGammaCat:
         emin, emax = [1, 10] * u.TeV
         energies = Energy.equal_log_spacing(emin, emax, 10)
 
-        butterfly = source.spectrum.butterfly(energies)
-
-        assert_quantity_allclose(butterfly['energy'].sum(), desired['energy_sum'], rtol=1E-3)
-        assert_quantity_allclose(butterfly['flux_lo'].sum(), desired['flux_lo_sum'], rtol=1E-3)
-        assert_quantity_allclose(butterfly['flux_hi'].sum(), desired['flux_hi_sum'], rtol=1E-3)
+        flux, flux_err = source.spectral_model.evaluate_error(energies)
+        flux_lo = flux - flux_err
+        flux_hi = flux + flux_err
+        assert_quantity_allclose(energies.sum(), desired['energy_sum'], rtol=1E-3)
+        assert_quantity_allclose(flux_lo.sum(), desired['flux_lo_sum'], rtol=1E-3)
+        assert_quantity_allclose(flux_hi.sum(), desired['flux_hi_sum'], rtol=1E-3)

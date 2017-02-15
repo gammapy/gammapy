@@ -77,7 +77,7 @@ class TestFit:
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291329714)
 
-        self.source_model.parameters['index'].value = 1.12 
+        self.source_model.parameters['index'].value = 1.12
         fit.fit()
         # These values are check with sherpa fits, do not change
         assert_allclose(fit.model.parameters['index'].value,
@@ -186,7 +186,7 @@ class TestSpectralFit:
         )
 
         # Example fit for one observation
-        self.fit = SpectrumFit(self.obs_list[0:1], self.pwl)
+        self.fit = SpectrumFit(self.obs_list[0], self.pwl)
 
     def test_basic_results(self):
         self.fit.fit()
@@ -261,7 +261,7 @@ class TestSpectralFit:
                                  2.2395184727047788)
 
     def test_ecpl_fit(self):
-        fit = SpectrumFit(self.obs_list[0:1], self.ecpl)
+        fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
         assert_quantity_allclose(fit.result[0].model.parameters['lambda_'].quantity,
                                  0.03517869599246622 / u.TeV)
@@ -284,10 +284,10 @@ class TestSpectralFit:
         fit.fit()
 
         # TODO: Check if such a large deviation makes sense
-        assert_quantity_allclose(fit.model.parameters.index,
+        assert_quantity_allclose(fit.model.parameters['index'].quantity,
                                  2.170167464415323)
-        assert_quantity_allclose(fit.model.parameters.amplitude,
-                                 3.165490768576638e-11 * u.Unit('m-2 s-1 TeV-1'))
+        assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
+                                 3.165490768576638e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
 
     def test_stacked_fit(self):

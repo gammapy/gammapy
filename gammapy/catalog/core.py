@@ -207,7 +207,6 @@ class SourceCatalog(object):
         """
 
         data = OrderedDict()
-        self.table.info()
         for colname in self.table.colnames:
             col = self.table[colname]
 
@@ -222,17 +221,6 @@ class SourceCatalog(object):
 
         data[self._source_index_key] = idx
         return data
-
-        # TODO: this is the old implementation; remove once the new one is working properly!
-        # row = self.table[idx]
-        # Note: calling `filled()` on `row.as_void()` here was needed to avoid a ValueError
-        # from Numpy masked array code for array-valued columns in one application.
-        # row_data = row.as_void()
-        # if hasattr(row_data, 'filled'):
-        #     row_data = row_data.filled()
-        # data = OrderedDict(zip(row.colnames, row_data))
-        # data[self._source_index_key] = idx
-        # return data
 
     def info(self):
         """
