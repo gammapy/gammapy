@@ -1,35 +1,32 @@
 """
 Example script showing how to simulate expected counts
 in the CTA energy range
-
-TODO: should use `~gammapy.spectrum.SpectrumSimulation`
-
 """
-from gammapy.spectrum.models import PowerLaw
+from gammapy.spectrum.models import LogParabola
 from gammapy.scripts import CTAPerf
 from gammapy.scripts.cta_utils import CTASpectrumObservation, Target, ObservationParameters
 
 import astropy.units as u
+import time
 
 # Observation parameters
 alpha = 0.2 * u.Unit('')
 livetime = 5. * u.h
-offset = 0.5 * u.degree
-emin = 0.05 * u.TeV
+emin = 0.03 * u.TeV
 emax = 5 * u.TeV
-obs_params = ObservationParameters(alpha=alpha, livetime=livetime,
-                                   offset=offset,
-                                   emin=emin, emax=emax)
+obs_param = ObservationParameters(alpha=alpha, livetime=livetime,
+                                  emin=emin, emax=emax)
 
-# Target
-name = "golden_src"
-# model
-index = 3.5 * u.Unit('')
-amplitude = 6. * 1e-12 * u.Unit('cm-2 s-1 TeV-1')
-reference = 1 * u.TeV
-model = PowerLaw(index=index, amplitude=amplitude, reference=reference)
+# Target, PKS 2155-304 from 3FHL
+name = "2155"
+# model parameters
+alpha = 1.88 * u.Unit('')
+beta = 0.15 * u.Unit('')
+reference = 18.3 * u.GeV
+amplitude = 7.7e-11 * u.Unit('cm-2 s-1 GeV-1')
+model = LogParabola(alpha=alpha, beta=beta, reference=reference, amplitude=amplitude)
 # redshift
-redshift = 0.4
+redshift = 0.116
 # EBL model
 ebl_model_name = 'dominguez'
 target = Target(name=name, model=model,
@@ -37,13 +34,15 @@ target = Target(name=name, model=model,
                 ebl_model_name=ebl_model_name)
 
 # Performance
-filename = '$GAMMAPY_EXTRA/datasets/cta/irf/prod2/Prod2_Mars_IRFs/South_5h.fits'
+filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
 cta_perf = CTAPerf.read(filename)
 
 # Simulation
-obs = CTASpectrumObservation(perf=cta_perf, target=target)
-obs.simulate_obs(obs_params)
-print(obs.simu)
-obs.peek()
-simu = obs.simu
-
+t_start = time.clock()
+simu = CTASpectrumObservation.simulate_obs(perf=cta_perf,
+                                           target=target,
+                                           obs_param=obs_param)
+t_end = time.clock()
+print(simu)
+print('\nsimu done in {} s'.format(t_end-t_start))
+CTASpectrumObservation.plot_simu(simu, target)
