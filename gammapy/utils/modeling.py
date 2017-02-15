@@ -123,10 +123,9 @@ class Parameter(object):
     def to_xml(self):
         return '        <parameter name="{name}" value="{value}" unit="{unit}"/>'.format(**self.__dict__)
 
-    def to_sherpa(self):
+    def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
-        modelname = 'None'
         par = Parameter(modelname=modelname, name=self.name,
                         val=self.value, units=self.unit, 
                         min=self.parmin, max=self.parmax,
