@@ -354,15 +354,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pars, errs = {}, {}
 
         if spec_type == 'PL':
-            pars['index'] = Quantity(data['Index_Spec_PL'], '')
-            pars['amplitude'] = Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1')
-            pars['reference'] = Quantity(data['Energy_Spec_PL_Pivot'], 'TeV')
+            pars['index'] = data['Index_Spec_PL']
+            pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
+            pars['reference'] = data['Energy_Spec_PL_Pivot']
             model = PowerLaw(**pars)
         elif spec_type == 'ECPL':
-            pars['index'] = Quantity(data['Index_Spec_ECPL'], ''),
-            pars['amplitude'] = Quantity(data['Flux_Spec_ECPL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
-            pars['reference'] = Quantity(data['Energy_Spec_ECPL_Pivot'], 'TeV'),
-            pars['lambda_'] = Quantity(data['Lambda_Spec_ECPL'], 'TeV-1'),
+            pars['index'] = data['Index_Spec_ECPL']
+            pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
+            pars['reference'] = data['Energy_Spec_ECPL_Pivot']
+            pars['lambda_'] = data['Lambda_Spec_ECPL']
             model = ExponentialCutoffPowerLaw(**pars)
         else:
             raise ValueError('Invalid spectral model: {}'.format(spec_type))
