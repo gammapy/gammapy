@@ -75,6 +75,10 @@ class SpectralModel(object):
         """
         unit = self(energy).unit
         upars = self.parameters._ufloats
+        try:
+            energy = energy.to(self.parameters['reference'].unit)
+        except IndexError:
+            energy = energy.to(self.parameters['emin'].unit)
         uarray = self.evaluate(energy.value, **upars)
         return self._parse_uarray(uarray) * unit
 
@@ -121,7 +125,7 @@ class SpectralModel(object):
 
         def f(x):
             return self.evaluate(x, **upars)
-
+        
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
 
@@ -159,7 +163,7 @@ class SpectralModel(object):
             Lower bound of integration range.
         emax : `~astropy.units.Quantity`
             Upper bound of integration range
-
+        
         Returns
         -------
         energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
@@ -172,7 +176,7 @@ class SpectralModel(object):
 
         def f(x):
             return x * self.evaluate(x, **upars)
-
+        
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
 
@@ -237,7 +241,7 @@ class SpectralModel(object):
         flux = self(energy).to(flux_unit)
 
         y = self._plot_scale_flux(energy, flux, energy_power)
-
+        
         ax.plot(energy.value, y.value, **kwargs)
         self._plot_format_ax(ax, energy, y, energy_power)
         return ax
@@ -275,16 +279,16 @@ class SpectralModel(object):
         kwargs.setdefault('facecolor', 'black')
         kwargs.setdefault('alpha', 0.2)
         kwargs.setdefault('linewidth', 0)
-
+        
         emin, emax = energy_range
         energy = EnergyBounds.equal_log_spacing(
             emin, emax, n_points, energy_unit)
 
-        flux, flux_err = self.evaluate_error(energy)
+        flux, flux_err = self.evaluate_error(energy).to(flux_unit)
 
         y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
         y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
-
+        
         where = (y_hi > 0) & (energy >= energy_range[0]) & (energy <= energy_range[1])
         ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
         self._plot_format_ax(ax, energy, y_lo, energy_power)
@@ -298,7 +302,7 @@ class SpectralModel(object):
             ax.set_ylabel('Flux [{}]'.format(y.unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
-
+        
     def _plot_scale_flux(self, energy, flux, energy_power):
         eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
 
