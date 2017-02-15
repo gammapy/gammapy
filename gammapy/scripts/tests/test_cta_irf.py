@@ -35,10 +35,9 @@ def test_cta_irf():
     # assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
 
 
-# @requires_dependency('matplotlib')
-# @requires_data('gammapy-extra')
-# def test_point_like_perf():
-#     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/\
-# CTA-Performance-South-20150511/CTA-Performance-South-50h_20150511.fits'
-#     cta_perf = CTAPerf.read(filename)
-#     cta_perf.peek()
+@requires_dependency('matplotlib')
+@requires_data('gammapy-extra')
+def test_point_like_perf():
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
+    cta_perf = CTAPerf.read(filename)
+    cta_perf.peek()
