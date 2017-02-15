@@ -111,10 +111,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-        for name in model.parameters.names:
-
-        model.parameters.covariance = np.diag(errs)
-        return model
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
