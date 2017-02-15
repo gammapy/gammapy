@@ -124,11 +124,6 @@ class TestFermi1FHLObject:
         desired = [np.nan, 2.081589e-11, 1.299698e-11] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired, rtol=1E-5)
 
-    @requires_dependency('uncertainties')
-    def test_spectrum(self):
-        spectrum = self.source.spectrum
-        assert "Fit result info" in str(spectrum)
-
 
 @requires_data('gammapy-extra')
 class TestFermi2FHLObject:
@@ -159,11 +154,6 @@ class TestFermi2FHLObject:
         actual = flux_points.table['flux_ul']
         desired = [np.nan, np.nan, 6.470300e-12] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired)
-
-    @requires_dependency('uncertainties')
-    def test_spectrum(self):
-        spectrum = self.source.spectrum
-        assert "Fit result info" in str(spectrum)
 
 
 @requires_data('gammapy-extra')
