@@ -23,7 +23,6 @@ class TestSourceCatalogHGPS:
         assert len(self.cat.associations) == 223
 
 
-@requires_dependency('uncertainties')
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
     def setup(self):
@@ -65,10 +64,7 @@ class TestSourceCatalogObjectHGPS:
         assert 'Source name          : HESS J1825-137' in ss
         assert 'Component HGPSC 065:' in ss
 
-    def test_spectrum(self):
-        source = self.cat['HESS J1825-137']
-        assert 'Fit result info' in str(source.spectrum)
-
+    @requires_dependency('uncertainties')
     def test_ecut_error(self):
         import uncertainties
         val = float(self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL'].value)

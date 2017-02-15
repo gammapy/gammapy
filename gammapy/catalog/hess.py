@@ -351,52 +351,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         data = self.data
         spec_type = data['Spectral_Model'].strip()
 
+        pars, errs = {}, {}
+
         if spec_type == 'PL':
-            return PowerLaw(
-                index=Quantity(data['Index_Spec_PL'], ''),
-                amplitude=Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
-                reference=Quantity(data['Energy_Spec_PL_Pivot'], 'TeV'),
-            )
+            pars['index'] = Quantity(data['Index_Spec_PL'], '')
+            pars['amplitude'] = Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1')
+            pars['reference'] = Quantity(data['Energy_Spec_PL_Pivot'], 'TeV')
+            model = PowerLaw(**pars)
         elif spec_type == 'ECPL':
-            return ExponentialCutoffPowerLaw(
-                index=Quantity(data['Index_Spec_ECPL'], ''),
-                amplitude=Quantity(data['Flux_Spec_ECPL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
-                reference=Quantity(data['Energy_Spec_ECPL_Pivot'], 'TeV'),
-                lambda_=Quantity(data['Lambda_Spec_ECPL'], 'TeV-1'),
-            )
+            pars['index'] = Quantity(data['Index_Spec_ECPL'], ''),
+            pars['amplitude'] = Quantity(data['Flux_Spec_ECPL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
+            pars['reference'] = Quantity(data['Energy_Spec_ECPL_Pivot'], 'TeV'),
+            pars['lambda_'] = Quantity(data['Lambda_Spec_ECPL'], 'TeV-1'),
+            model = ExponentialCutoffPowerLaw(**pars)
         else:
             raise ValueError('Invalid spectral model: {}'.format(spec_type))
 
-    @property
-    def spectrum(self):
-        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        TODO: remove!???
-        """
-        data = self.data
-        model = self.spectral_model
-        spec_type = data['Spectral_Model'].strip()
-
-        if spec_type == 'PL':
-            par_names = ['index', 'amplitude']
-            par_errs = [data['Index_Spec_PL_Err'],
-                        data['Flux_Spec_PL_Diff_Pivot_Err']]
-        elif spec_type == 'ECPL':
-            par_names = ['index', 'amplitude', 'lambda_']
-            par_errs = [data['Index_Spec_ECPL_Err'],
-                        data['Flux_Spec_ECPL_Diff_Pivot_Err'],
-                        data['Lambda_Spec_ECPL_Err']]
-        else:
-            raise ValueError('Invalid spectral model: {}'.format(model))
-
-        covariance = np.diag(par_errs) ** 2
-
-        return SpectrumFitResult(
-            model=model,
-            fit_range=self.energy_range,
-            covariance=covariance,
-            covar_axis=par_names,
-        )
+        model.parameters.set_parameter_errors(errs)
+        return model
 
     @property
     def flux_points(self):
