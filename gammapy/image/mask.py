@@ -229,5 +229,6 @@ def make_tevcat_exclusion_mask():
 
         mask = lon_lat_circle_mask(lons, lats, lon, lat, rad)
         all_sky_exclusion.data[mask] = 0
+        all_sky_exclusion.meta["EXTNAME"] = "EXCLUSION"
 
     return all_sky_exclusion
