@@ -5,9 +5,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import tarfile
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table, Column
+from astropy.table import QTable, Table, Column
+from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.units import Quantity
+from ..time import LightCurve
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..spectrum import (
@@ -188,15 +190,43 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         values = [self.data[prefix + _] for _ in self._ebounds_suffix]
         return Quantity(values, unit)
 
-    def plot_lightcurve(self, ax=None):
-        """Plot lightcurve.
+    def get_lightcurve(self, ax=None):
+        """Get corresponding lightcurve object.
         """
-        # TODO: move that function here and change to method
-        # that returns a `gammapy.time.LightCurve` object
-        from gammapy.time import plot_fermi_3fgl_light_curve
+        flux = self.data['Flux_History']
 
-        ax = plot_fermi_3fgl_light_curve(self.name, ax=ax)
-        return ax
+        # Flux error is given as asymmetric high/low
+        flux_err_lo = self.data['Unc_Flux_History'][:, 0]
+        flux_err_hi = self.data['Unc_Flux_History'][:, 1]
+
+        # TODO: Change lightcurve class to support this,
+        # then fill appropriately here
+        # for now, we just use the mean
+        flux_err = 0.5 * (flux_err_lo + flux_err_hi)
+
+        # Really the time binning is stored in a separate HDU in the FITS
+        # catalog file called `Hist_Start`, with a single column `Hist_Start`
+        # giving the time binning in MET (mission elapsed time)
+        # This is not available here for now.
+        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
+        # `SourceCatalogObject3FGL` object somehow.
+
+        # For now, we just hard-code the start and stop time and assume
+        # equally-spaced time intervals. This is roughly correct,
+        # for plotting the difference doesn't matter, only for analysis
+        time_start = Time('2008-08-02T00:33:19')
+        time_end = Time('2012-07-31T22:45:47')
+
+        n_points = len(flux)
+        time_step = (time_end - time_start) / n_points
+        time_bounds = time_start + np.arange(n_points + 1) * time_step
+        table = QTable()
+        table['TIME_MIN'] = time_bounds[:-1]
+        table['TIME_MAX'] = time_bounds[1:]
+        table['FLUX'] = flux
+        table['FLUX_ERR'] = flux_err
+        lc = LightCurve(table)
+        return lc
 
 
 class SourceCatalogObject1FHL(SourceCatalogObject):
