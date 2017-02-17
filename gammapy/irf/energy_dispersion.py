@@ -735,12 +735,9 @@ class EnergyDispersion2D(object):
         # oversample migra
         migra_lo = migra[:-1]
         migra_hi = migra[1:]
-        #migra_range = np.column_stack([migra_lo, migra_hi]])
-        migra_grid = list()
-
-        # TODO: Get rid of this loop
-        for mlo, mhi in zip(migra_lo, migra_hi):
-            migra_grid.append(np.linspace(mlo, mhi, oversampling))
+        migra_range = migra_hi - migra_lo
+        migra_offset = np.linspace(0, 1, oversampling) * migra_range[:, np.newaxis]
+        migra_grid = migra_lo[:, np.newaxis] + migra_offset
 
         val = self.data.evaluate(offset=offset, e_true=e_true,
                                  migra=np.array(migra_grid))
