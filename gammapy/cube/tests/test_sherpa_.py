@@ -118,11 +118,11 @@ def testCombinedModel3DInt():
     result = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference = [184.2009249783969,
-                 -6.1708090667404374,
-                 5.1433080482386968,
-                 0.078883847523875297,
-                 2.2778084618363268]
+    reference = [184.19524957441664,
+                 -6.1693008203971562,
+                 6.1666646581766011,
+                 0.076340497278248376,
+                 2.305912037549]
 
     assert_allclose(result.parvals, reference, rtol=1E-5)
 
@@ -160,11 +160,11 @@ def testCombinedModel3DInt():
     result2 = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference2 = [184.22346441407106,
-                  -6.1592342773707793,
-                  4.3461848656422708,
-                  0.098021362279522989,
-                  2.2705231557633394]
+    reference2 = [184.20146538191321,
+                  -6.1600047997645975,
+                  5.4193056837212374,
+                  0.08635929788659219,
+                  2.2979723660330]
     assert_allclose(result2.parvals, reference2, rtol=1E-5)
 
 
@@ -233,12 +233,11 @@ def testCombinedModel3DIntConvolveEdisp():
     result = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion, flux and source size is due to the dummy psf
-    reference = [183.73086704623555,
-                 -11.426439339270253,
-                 35843.352273899836,
-                 3.7381063514549009,
-                 2.2288775690653875]
-
+    reference = [184.19189525423425,
+                 -6.1758238877562386,
+                 6.2283155506945755,
+                 0.071013932890499717,
+                 2.2685809241308674]
     assert_allclose(result.parvals, reference, rtol=1E-5)
 
     # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
@@ -278,10 +277,9 @@ def testCombinedModel3DIntConvolveEdisp():
     result2 = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference2 = [181.74121965012066,
-                  -11.394859829167892,
-                  23691.982850052769,
-                  4.3353099316360773,
-                  2.1965569221451813]
-
+    reference2 = [184.1919580251583,
+                  -6.1692775561065769,
+                  5.4976586957354581,
+                  0.074821281329729109,
+                  2.2504892463464699]
     assert_allclose(result2.parvals, reference2, rtol=1E-5)
