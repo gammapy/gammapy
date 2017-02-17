@@ -191,7 +191,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return Quantity(values, unit)
 
     @property
-    def get_lightcurve(self):
+    def lightcurve(self):
         """Get corresponding lightcurve object.
         """
         flux = self.data['Flux_History']
