@@ -190,6 +190,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         values = [self.data[prefix + _] for _ in self._ebounds_suffix]
         return Quantity(values, unit)
 
+    @property
     def get_lightcurve(self, ax=None):
         """Get corresponding lightcurve object.
         """
