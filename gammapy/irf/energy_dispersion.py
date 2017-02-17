@@ -666,15 +666,15 @@ class EnergyDispersion2D(object):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
-        in a given reconstructed energy band
+        in a given reconstructed energy band.
 
         Parameters
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset
-        e_true : `~gammapy.utils.energy.EnergyBounds`, None
-            True energy axis
-        e_reco : `~gammapy.utils.energy.EnergyBounds`
+        e_true : `~gammapy.utils.energy.EnergyBounds`, optional
+            True energy axis, default: 
+        e_reco : `~gammapy.utils.energy.EnergyBounds`, optional
             Reconstructed energy axis
 
         Returns
@@ -683,6 +683,7 @@ class EnergyDispersion2D(object):
             Energy disperion matrix
         """
         offset=Angle(offset)
+        # Set both energy axis to self.e_true by default
         e_true=self.e_true.bins if e_true is None else e_true
         e_reco=self.e_true.bins if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
@@ -702,13 +703,12 @@ class EnergyDispersion2D(object):
                                 e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
                                 data=rm)
 
-    def get_response(self, offset, e_true, e_reco=None):
+    def get_response(self, offset, e_true, e_reco, oversampling=100):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
-        energy band. In each reco bin, you integrate with a riemann sum over
-        the default migra bin of your analysis.
-
+        energy band.
+        
         Parameters
         ----------
         e_true : `~gammapy.utils.energy.Energy`
@@ -717,6 +717,8 @@ class EnergyDispersion2D(object):
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
+        oversampling : int, optiona;
+            Migra oversampling factor for each bin of e_reco, default=10
 
         Returns
         -------
@@ -726,65 +728,27 @@ class EnergyDispersion2D(object):
 
         e_true=Energy(e_true)
 
-        # Default: e_reco nodes = migra nodes * e_true nodes
-        if e_reco is None:
-            e_reco=EnergyBounds.from_lower_and_upper_bounds(
-                self.migra.lo * e_true, self.migra.hi * e_true)
-            migra=self.migra.nodes
+        # Translate given e_reco binning to migra binning
+        e_reco=EnergyBounds(e_reco)
+        migra= (e_reco / e_true).to('').value
 
-        # Translate given e_reco binning to migra at bin center
-        else:
-            e_reco=EnergyBounds(e_reco)
-            center=e_reco.log_centers
-            migra=center / e_true
+        # oversample migra
+        migra_lo = migra[:-1]
+        migra_hi = migra[1:]
+        #migra_range = np.column_stack([migra_lo, migra_hi]])
+        migra_grid = list()
 
-        # ensure to have a normalized edisp
-        migra_bin=self.migra.hi - self.migra.lo
-        if (migra_bin[0] == migra_bin[1]):
-            migra_mean=1 / 2. * (self.migra.hi + self.migra.lo)
-        else:
-            migra_mean=np.sqrt(self.migra.hi * self.migra.lo)
-        val_norm=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
-        norm=np.sum(val_norm * migra_bin)
+        # TODO: Get rid of this loop
+        for mlo, mhi in zip(migra_lo, migra_hi):
+            migra_grid.append(np.linspace(mlo, mhi, oversampling))
 
-        migra_e_reco=e_reco / e_true
-        integral=np.zeros(len(e_reco) - 1)
-        if norm != 0:
-            for i, migra_int in enumerate(migra_e_reco[:-1]):
-                # The migra_e_reco bin is inferior to the migra min in the dispersion fits file
-                if migra_e_reco[i + 1] < migra_mean[0]:
-                    continue
-                # The migra_e_reco bin is superior to the migra max in the dispersion fits file
-                elif migra_e_reco[i] > migra_mean[-1]:
-                    continue
-                else:
-                    if migra_e_reco[i] < migra_mean[0]:
-                        i_min=0
-                    else:
-                        i_min=np.where(migra_mean < migra_e_reco[i])[0][-1]
-                    i_max=np.where(migra_mean < migra_e_reco[i + 1])[0][-1]
+        val = self.data.evaluate(offset=offset, e_true=e_true,
+                                 migra=np.array(migra_grid))
 
-                    migra_bin_reco=migra_bin[i_min + 1:i_max]
-                    if migra_e_reco[i + 1] > migra_mean[-1]:
-                        index=np.arange(i_min, i_max, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
-                    elif migra_e_reco[i] < migra_mean[0]:
-                        if i_max == 0:
-                            index=np.arange(i_min, i_max + 1, 1)
-                        else:
-                            index=np.arange(i_min + 1, i_max + 1, 1)
-                        migra_bin_reco=np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
-                    elif i_min == i_max:
-                        index=np.arange(i_min, i_max + 1, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_e_reco[i + 1] - migra_e_reco[i]))
-                    else:
-                        index=np.arange(i_min, i_max + 1, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
-                        migra_bin_reco=np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
-                    val=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
-                    integral[i]=np.sum(val * migra_bin_reco) / norm
-        return integral
+        dx = migra_grid[0][1] -migra_grid[0][0]
+        response = np.trapz(val, dx=dx)
 
+        return response 
 
     def plot_migration(self, ax=None, offset=None, e_true=None,
                        migra=None, **kwargs):
