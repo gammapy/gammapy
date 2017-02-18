@@ -80,16 +80,14 @@ class TestFermi3FGLObject:
     def test_lightcurve(self):
         lc = self.source.lightcurve
         assert len(lc) == 48
-        assert 'TIME_MIN' in lc.colnames
-        assert 'TIME_MAX' in lc.colnames
-        assert 'FLUX' in lc.colnames
-        assert 'FLUX_ERR' in lc.colnames
-        flux_unit = u.Quantity(1, 'eV / ((cm ** 2) * s)')
-        actual = [lc['FLUX'][0], lc['FLUX'][-1],
-                  lc['FLUX_ERR'][0], lc['FLUX_ERR'][-1]]
-        desired = [2.38471262e-06, 2.57482816e-06,
-                   8.07127023e-08, 8.07989267e-08] * flux_unit
-        assert_quantity_allclose(actual, desired, rtol=1E-5)
+        assert set(['TIME_MIN', 'TIME_MAX', 'FLUX', 'FLUX_ERR']).issubset(lc.colnames)
+
+        point = lc[0]
+
+        assert point['TIME_MIN'].fits == '2008-08-02T00:33:19.000(UTC)'
+        assert point['TIME_MAX'].fits == '2008-09-01T10:31:04.625(UTC)'
+        assert_quantity_allclose(point['FLUX'], 2.38471262e-06 * u.Unit('cm-2 s-1'))
+        assert_quantity_allclose(point['FLUX_ERR'], 8.07127023e-08 * u.Unit('cm-2 s-1'))
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
     def test_crab_alias(self, name):

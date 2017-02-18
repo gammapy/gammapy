@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.table import QTable, Table, Column
 from astropy.time import Time
 from astropy.utils.data import download_file
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from ..time import LightCurve
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
@@ -192,7 +192,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def lightcurve(self):
-        """Get corresponding lightcurve object.
+        """Lightcurve (`~gammapy.time.LightCurve`).
         """
         flux = self.data['Flux_History']
 
@@ -204,7 +204,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         # then fill appropriately here
         # for now, we just use the mean
         flux_err = 0.5 * (-flux_err_lo + flux_err_hi)
-        flux_unit = Quantity(1, 'eV / ((cm ** 2) * s)')
+        flux_unit = Unit('cm-2 s-1')
+
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
         # giving the time binning in MET (mission elapsed time)
