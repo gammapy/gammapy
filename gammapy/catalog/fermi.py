@@ -203,7 +203,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         # TODO: Change lightcurve class to support this,
         # then fill appropriately here
         # for now, we just use the mean
-        flux_err = 0.5 * (flux_err_lo + flux_err_hi)
+        flux_err = 0.5 * (-flux_err_lo + flux_err_hi)
 
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
