@@ -77,6 +77,20 @@ class TestFermi3FGLObject:
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
 
+    def test_lightcurve(self):
+        lc = self.source.lightcurve
+        assert len(lc) == 48
+        assert 'TIME_MIN' in lc.colnames
+        assert 'TIME_MAX' in lc.colnames
+        assert 'FLUX' in lc.colnames
+        assert 'FLUX_ERR' in lc.colnames
+        flux_unit = u.Quantity(1, 'eV / ((cm ** 2) * s)')
+        actual = [lc['FLUX'][0], lc['FLUX'][-1],
+                  lc['FLUX_ERR'][0], lc['FLUX_ERR'][-1]]
+        desired = [2.38471262e-06, 2.57482816e-06,
+                   8.07127023e-08, 8.07989267e-08] * flux_unit
+        assert_quantity_allclose(actual, desired, rtol=1E-5)
+
     @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
