@@ -45,8 +45,12 @@ class CountsSpectrum(object):
         import astropy.units as u
 
         ebounds = np.logspace(0,1,11) * u.TeV
-        counts = np.arange(10) * u.ct
-        spec = CountsSpectrum(data=counts, energy=ebounds)
+        data = np.arange(10) * u.ct
+        spec = CountsSpectrum(
+            energy_lo=ebounds[:-1],
+            energy_hi=ebounds[1:],
+            data=data,
+        )
         spec.plot(show_poisson_errors=True)
     """
     default_interp_kwargs = dict(bounds_error=False, method='nearest')
