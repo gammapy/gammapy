@@ -42,6 +42,7 @@ Summary
       for older versions from our continuous integration)
     - Gammapy now available via Macports (``port install py35-gammapy``)
 - Documentation
+    - Many tutorial Jupyter notebooks added and existing ones improved
     - Misc docs improvements and new getting started notebooks
     - Separate section added for developer documentation, and extended developer documentation
 - **CTA**
@@ -67,16 +68,16 @@ Summary
 - ``gammapy.utils``:
     - Add ``gammapy.utils.modeling`` with support for XML models (work in progress)
 
-
 **Contributors:**
 
-- Arpit Gogia
+- Arpit Gogia (new)
 - Axel Donath
 - Brigitta Sipocz
 - Christoph Deil
 - Dirk Lennarz
 - Johannes King
 - Julien Lefaucheur
+- Lars Mohrmann (new)
 - Léa Jouvin
 - Nachiketa Chakraborty
 - Régis Terrier
@@ -88,6 +89,15 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#893] Add Fermi-LAT 3FGL catalog object lightcurve property (Arpit Gogia)
+- [#888] Improve CTA IRF and simulation classes (point-like analysis) (Julien Lefaucheur)
+- [#885] Improve spectral model uncertainty handling (Axel Donath)
+- [#884] Improve BinnedDataAxis handling of lo / hi binning (Johannes King)
+- [#883] Improve spectrum docs page (Johannes King)
+- [#881] Add support for observations with different energy binning in SpectrumFit (Lars Mohrmann)
+- [#875] Add CTA spectrum simulation example (Julien Lefaucheur)
+- [#872] Add SED type e2dnde to FluxPoints (Johannes King)
+- [#871] Add Parameter class to SpectralModel (Johannes King)
 - [#870] Clean up docstrings in background sub-package (Arpit Gogia)
 - [#868] Add Fermi-LAT 3FHL catalogue (Julien Lefaucheur)
 - [#865] Add Fermi basic image estimator (Axel Donath)
