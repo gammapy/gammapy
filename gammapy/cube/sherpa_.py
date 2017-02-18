@@ -11,6 +11,9 @@ from sherpa.utils import SherpaFloat, NoNewAttributesAfterInit, \
     print_fields, create_expr, calc_total_error, bool_cast, \
     filter_bins, interpolate, linear_interp
 
+
+__all__ = ['NormGauss2DInt','Data3D', 'Data3DInt', 'CombinedModel3DInt', 'CombinedModel3DIntConvolveEdisp']
+
 """
 Definition of the model NormGauss2DInt: Integrated 2D gaussian
 """
@@ -247,19 +250,23 @@ class CombinedModel3DInt(ArithmeticModel):
 
     Parameters
     ----------
-    coord: `~astropy.coordinates.SkyCoord`
+    coord : `~astropy.coordinates.SkyCoord`
         Position of the edges of the pixel on the sky.
     energies: `~astropy.units.Quantity`
         Reconstructed energy used for the counts cube
-    use_psf: bool
+    use_psf : bool
         if true will convolve the spatial model by the psf
-    exposure: `~gammapy.cube.SkyCube`
+    exposure : `~gammapy.cube.SkyCube`
         Exposure cube
-    psf: `~gammapy.cube.SkyCube`
+    psf : `~gammapy.cube.SkyCube`
         Psf cube
-    select_region: True
+    spatial_model: `~sherpa.models`
+        spatial sherpa model
+    spectral_model : `~sherpa.models`
+        spectral sherpa model
+    select_region : True
         If True select only the points of the region of interest for the fit
-    index_selected_region: tuple
+    index_selected_region : tuple
         tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
     """
 
@@ -331,25 +338,25 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
 
     Parameters
     ----------
-    coord: `~astropy.coordinates.SkyCoord`
+    coord : `~astropy.coordinates.SkyCoord`
         Position of the edges of the pixel on the sky.
-    energies: `~astropy.units.Quantity`
+    energies : `~astropy.units.Quantity`
         Reconstructed energy used for the counts cube
-    use_psf: bool
+    use_psf : bool
         if true will convolve the spatial model by the psf
-    exposure: `~gammapy.cube.SkyCube`
+    exposure : `~gammapy.cube.SkyCube`
         Exposure Cube
-    psf: `~gammapy.cube.SkyCube`
+    psf : `~gammapy.cube.SkyCube`
         Psf cube
-    spatial_model: `~sherpa.models`
+    spatial_model : `~sherpa.models`
         spatial sherpa model
-    spectral_model: `~sherpa.models`
+    spectral_model : `~sherpa.models`
         spectral sherpa model
-    edisp: `~numpy.array`
+    edisp : `~numpy.array`
         2D array in (Ereco,Etrue) for the energy dispersion
-    select_region: True
+    select_region : True
         If True select only the points of the region of interest for the fit
-    index_selected_region: tuple
+    index_selected_region : tuple
         tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
 
     """
