@@ -204,7 +204,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         # then fill appropriately here
         # for now, we just use the mean
         flux_err = 0.5 * (-flux_err_lo + flux_err_hi)
-
+        flux_unit = Quantity(1, 'eV / ((cm ** 2) * s)')
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
         # giving the time binning in MET (mission elapsed time)
@@ -224,8 +224,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table = QTable()
         table['TIME_MIN'] = time_bounds[:-1]
         table['TIME_MAX'] = time_bounds[1:]
-        table['FLUX'] = flux
-        table['FLUX_ERR'] = flux_err
+        table['FLUX'] = flux * flux_unit
+        table['FLUX_ERR'] = flux_err * flux_unit
         lc = LightCurve(table)
         return lc
 
