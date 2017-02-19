@@ -25,13 +25,8 @@ ax = src_3fgl.spectral_model.plot(src_3fgl.energy_range, energy_power=2,
                                   label='Fermi 3FGL', color='r',
                                   flux_unit='erg-1 cm-2 s-1')
 
-# set up an energy array to evaluate the butterfly
-emin, emax = src_3fgl.energy_range
-energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-butterfly_3fg = src_3fgl.spectrum.butterfly(energy)
-
-butterfly_3fg.plot(src_3fgl.energy_range, ax=ax, energy_power=2, color='r',
-                   flux_unit='erg-1 cm-2 s-1', facecolor='r')
+src_3fgl.spectral_model.plot_error(src_3fgl.energy_range, ax=ax, energy_power=2,
+                                  facecolor='r', flux_unit='erg-1 cm-2 s-1')
 
 src_3fgl.flux_points.plot(ax=ax, sed_type='eflux', color='r',
                           flux_unit='erg cm-2 s-1')
@@ -40,14 +35,9 @@ src_3fgl.flux_points.plot(ax=ax, sed_type='eflux', color='r',
 src_2fhl.spectral_model.plot(src_2fhl.energy_range, ax=ax, energy_power=2,
                              c='g', label='Fermi 2FHL', flux_unit='erg-1 cm-2 s-1')
 
-# set up an energy array to evaluate the butterfly
-emin, emax = src_2fhl.energy_range
-energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-butterfly_2fhl = src_2fhl.spectrum.butterfly(energy)
+src_2fhl.spectral_model.plot_error(src_2fhl.energy_range, ax=ax, energy_power=2,
+                                   facecolor='g', flux_unit='erg-1 cm-2 s-1')
 
-# plot butterfly and flux points
-butterfly_2fhl.plot(src_2fhl.energy_range, ax=ax, energy_power=2, color='g',
-                    flux_unit='erg-1 cm-2 s-1', facecolor='g')
 src_2fhl.flux_points.plot(ax=ax, sed_type='dnde', energy_power=2, color='g',
                           flux_unit='cm-2 s-1 erg-1')
 
@@ -56,14 +46,8 @@ src_1fhl.spectral_model.plot(src_1fhl.energy_range, ax=ax, energy_power=2,
                              c='c', label='Fermi 1FHL',
                              flux_unit='erg-1 cm-2 s-1')
 
-# set up an energy array to evaluate the butterfly 
-emin, emax = src_1fhl.energy_range
-energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-butterfly_1fhl = src_1fhl.spectrum.butterfly(energy)
-
-# plot butterfly and flux points
-butterfly_1fhl.plot(src_1fhl.energy_range, ax=ax, energy_power=2, color='c',
-                    flux_unit='erg-1 cm-2 s-1', facecolor='c')
+src_1fhl.spectral_model.plot_error(src_1fhl.energy_range, ax=ax, energy_power=2,
+                                   facecolor='c', flux_unit='erg-1 cm-2 s-1')
 src_1fhl.flux_points.plot(ax=ax, sed_type='dnde', energy_power=2, color='c',
                           flux_unit='cm-2 s-1 erg-1')
 
@@ -72,14 +56,8 @@ src_3fhl.spectral_model.plot(src_3fhl.energy_range, ax=ax, energy_power=2,
                              c='b', label='Fermi 3FHL',
                              flux_unit='erg-1 cm-2 s-1')
 
-# set up an energy array to evaluate the butterfly 
-emin, emax = src_3fhl.energy_range
-energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-butterfly_3fhl = src_3fhl.spectrum.butterfly(energy)
-
-# plot butterfly and flux points
-butterfly_3fhl.plot(src_3fhl.energy_range, ax=ax, energy_power=2, color='b',
-                    flux_unit='erg-1 cm-2 s-1', facecolor='b')
+src_3fhl.spectral_model.plot_error(src_3fhl.energy_range, ax=ax, energy_power=2,
+                                   facecolor='b', flux_unit='erg-1 cm-2 s-1')
 
 src_3fhl.flux_points.plot(ax=ax, sed_type='eflux', color='b',
                           flux_unit='erg cm-2 s-1')
