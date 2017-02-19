@@ -54,7 +54,10 @@ class SpectrumFitResult(object):
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
                  statname=None, statval=None, npred_src=None, npred_bkg=None,
                  background_model=None, fluxes=None, flux_errors=None, obs=None):
-
+        
+        #TODO: Set model covariance outside this class 
+        if covar_axis:
+            model.parameters.set_parameter_covariance(covariance, covar_axis)
         self.model = model
         self.covariance = covariance
         self.covar_axis = covar_axis
@@ -159,17 +162,13 @@ class SpectrumFitResult(object):
         """
         t = Table()
         t['model'] = [self.model.__class__.__name__]
-        for par in self.model_with_uncertainties.parameters.parameters:
-            try:
-                val = par.value.n
-                err = par.value.s
-            except AttributeError:
-                val = par.value
-                err = 0
-
+        for par_name, value in self.model.parameters._ufloats.items():
+            val = value.n
+            err = value.s
+        
             # Apply correction factor for units
             # TODO: Refactor
-            current_unit = self.model.parameters[par.name].unit
+            current_unit = self.model.parameters[par_name].unit
             if current_unit.is_equivalent(energy_unit):
                 factor = current_unit.to(energy_unit)
                 col_unit = energy_unit
@@ -185,11 +184,11 @@ class SpectrumFitResult(object):
             else:
                 raise ValueError(current_unit)
 
-            t[par.name] = Column(
+            t[par_name] = Column(
                 data=np.atleast_1d(val * factor),
                 unit=col_unit,
                 **kwargs)
-            t['{}_err'.format(par.name)] = Column(
+            t['{}_err'.format(par_name)] = Column(
                 data=np.atleast_1d(err * factor),
                 unit=col_unit,
                 **kwargs)
@@ -201,46 +200,13 @@ class SpectrumFitResult(object):
 
         return t
 
-    @lazyproperty
-    def model_with_uncertainties(self):
-        """Best fit model with uncertainties
-
-        The parameters on the model will have the units of the model attribute.
-        The covariance matrix passed on initialization must also have these
-        units.
-
-        TODO: Add to gammapy.spectrum.models
-
-        This function uses the uncertainties packages as explained here
-        https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
-
-        Examples
-        --------
-        TODO
-        """
-        if self.covariance is None:
-            raise ValueError('covariance matrix not set')
-        import uncertainties
-        pars = self.model.parameters
-
-        # convert existing parameters to ufloats
-        values = [pars[_].value for _ in self.covar_axis]
-        ufloats = uncertainties.correlated_values(values, self.covariance)
-        upars = dict(zip(self.covar_axis, ufloats))
-
-        # add parameters missing in covariance
-        for par in pars.parameters:
-            upars.setdefault(par.name, par.value)
-
-        return self.model.__class__(**upars)
-
     def __str__(self):
         """
         Summary info string.
         """
         info = '\nFit result info \n'
         info += '--------------- \n'
-        info += 'Model: {} \n'.format(self.model_with_uncertainties)
+        info += 'Model: {} \n'.format(self.model)
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
         if self.covariance is not None:
@@ -272,8 +238,6 @@ class SpectrumFitResult(object):
         butterfly : `~gammapy.spectrum.SpectrumButterfly`
             Butterfly object.
         """
-        self.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
-        
         flux, flux_err = self.model.evaluate_error(energy)
 
         butterfly = SpectrumButterfly()
@@ -450,7 +414,7 @@ class SpectrumResult(object):
         for val, err in zip(y.value, y_err.value):
             points.append(ufloat(val, err))
 
-        func = self.fit.model_with_uncertainties(x.value)
+        func, func_err = self.fit.model.evaluate_error(x)
         residuals = (points - func) / func
 
         return residuals

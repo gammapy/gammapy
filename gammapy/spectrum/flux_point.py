@@ -622,16 +622,13 @@ class FluxPointEstimator(object):
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
-        diff_flux = res.model(energy_ref).to('m-2 s-1 TeV-1')
-        err = res.model_with_uncertainties(energy_ref.to('TeV').value)
-        diff_flux_err = err.s * u.Unit('m-2 s-1 TeV-1')
-
+        diff_flux, diff_flux_err = res.model.evaluate_err(energy_ref)
         return OrderedDict(
             e_ref=energy_ref,
             e_min=e_min,
             e_max=e_max,
-            dnde=diff_flux,
-            dnde_err=diff_flux_err,
+            dnde=diff_flux.to('m-2 s-1 TeV-1'),
+            dnde_err=diff_flux_err.to('m-2 s-1 TeV-1'),
         )
 
 

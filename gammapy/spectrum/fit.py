@@ -424,6 +424,7 @@ class SpectrumFit(object):
         for res in self.result:
             res.covar_axis = self.covar_axis
             res.covariance = self.covariance
+            res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
 
     def _est_errors_sherpa(self):
         """Wrapper around Sherpa error estimator"""
