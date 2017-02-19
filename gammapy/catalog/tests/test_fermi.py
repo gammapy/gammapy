@@ -9,9 +9,12 @@ from ...spectrum.models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw3
 from ...utils.testing import requires_data, requires_dependency
 
 MODEL_TEST_DATA_3FGL = [
-    (0, PowerLaw, u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1')),
-    (4, LogParabola, u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1')),
-    (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1')),
+    (0, PowerLaw, u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1'),
+                  u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
+    (4, LogParabola, u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1'),
+                     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
+    (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
+                                        u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
 ]
 
 MODEL_TEST_DATA_3FHL = [
@@ -60,13 +63,21 @@ class TestFermi3FGLObject:
         assert 'Source: 3FGL J0534.5+2201' in ss
         assert 'RA (J2000)  : 83.63' in ss
 
-    @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FGL)
-    def test_spectral_model(self, index, model_type, desired):
+    @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
+    def test_spectral_model(self, index, model_type, desired, desired_err):
         energy = u.Quantity(1, 'GeV')
         model = self.cat[index].spectral_model
         assert isinstance(model, model_type)
         actual = model(energy)
         assert_quantity_allclose(actual, desired)
+
+    @requires_dependency('uncertainties')
+    @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
+    def test_spectral_model_error(self, index, model_type, desired, desired_err):
+        energy = u.Quantity(1, 'GeV')
+        model = self.cat[index].spectral_model
+        actual = model.evaluate_error(energy)
+        assert_quantity_allclose(actual[1], desired_err)
 
     def test_flux_points(self):
         flux_points = self.source.flux_points

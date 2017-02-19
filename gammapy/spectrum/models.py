@@ -59,6 +59,13 @@ class SpectralModel(object):
         errors = unumpy.std_devs(uarray)
         return values, errors
 
+    def _convert_energy(self, energy):
+        try:
+            energy = energy.to(self.parameters['reference'].unit)
+        except IndexError:
+            energy = energy.to(self.parameters['emin'].unit)
+        return energy
+
     def evaluate_error(self, energy):
         """
         Evaluate spectral model with error propagation.
@@ -73,12 +80,10 @@ class SpectralModel(object):
         flux, flux_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
+        energy = self._convert_energy(energy)
+        
         unit = self(energy).unit
         upars = self.parameters._ufloats
-        try:
-            energy = energy.to(self.parameters['reference'].unit)
-        except IndexError:
-            energy = energy.to(self.parameters['emin'].unit)
         uarray = self.evaluate(energy.value, **upars)
         return self._parse_uarray(uarray) * unit
 
@@ -120,6 +125,8 @@ class SpectralModel(object):
         integral, integral_error : tuple of `~astropy.units.Quantity`
             Tuple of integral flux and integral flux error.
         """
+        emin = self._convert_energy(emin)
+        emax = self._convert_energy(emax)
         unit = self.integral(emin, emax, **kwargs).unit
         upars = self.parameters._ufloats
 
@@ -170,7 +177,9 @@ class SpectralModel(object):
             Tuple of energy flux and energy flux error.
 
         """
-
+        emin = self._convert_energy(emin)
+        emax = self._convert_energy(emax)
+        
         unit = self.energy_flux(emin, emax, **kwargs).unit
         upars = self.parameters._ufloats
 
