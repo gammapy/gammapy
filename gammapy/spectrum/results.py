@@ -151,6 +151,7 @@ class SpectrumFitResult(object):
                    covar_axis=covar_axis,
                    covariance=covariance)
 
+    # TODO: rather add this to ParameterList?
     def to_table(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):
         """Convert to `~astropy.table.Table`
 
@@ -271,35 +272,15 @@ class SpectrumFitResult(object):
         butterfly : `~gammapy.spectrum.SpectrumButterfly`
             Butterfly object.
         """
-        from uncertainties import unumpy
-
-        if energy is None:
-            energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
-                                                    self.fit_range[1],
-                                                    100)
-
+        self.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
+        
         flux, flux_err = self.model.evaluate_error(energy)
 
         butterfly = SpectrumButterfly()
         butterfly['energy'] = energy
         butterfly['flux'] = flux.to(flux_unit)
-
-        # compute uncertainties
-        umodel = self.model_with_uncertainties
-
-        if self.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = self.model.parameters['emin'].unit
-        else:
-            energy_unit = self.model.parameters['reference'].unit
-
-        values = umodel(energy.to(energy_unit).value)
-
-        # unit conversion factor, in case it doesn't match
-        conversion_factor = flux.to(flux_unit).value / unumpy.nominal_values(values)
-        flux_err = u.Quantity(unumpy.std_devs(values), flux_unit) * conversion_factor
-
-        butterfly['flux_lo'] = flux - flux_err
-        butterfly['flux_hi'] = flux + flux_err
+        butterfly['flux_lo'] = flux - flux_err.to(flux_unit)
+        butterfly['flux_hi'] = flux + flux_err.to(flux_unit)
         return butterfly
 
     def stats_per_bin(self, fit_range=True):
