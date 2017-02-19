@@ -106,8 +106,13 @@ class TestEnergyDispersion2D():
         assert_allclose(actual, desired, rtol=1e-1)
 
         # Check value
-        response2 = self.edisp.get_response(offset=0.2 * u.deg,
-                                            e_true=1.2 * u.TeV)
+        offset = 0.2 * u.deg
+        e_true = 1.2 * u.TeV
+        e_reco = EnergyBounds.from_lower_and_upper_bounds(
+            self.edisp.migra.lo * e_true, self.edisp.migra.hi * e_true)
+        response2 = self.edisp.get_response(offset=offset,
+                                            e_true=e_true,
+                                            e_reco=e_reco)
         assert_allclose(response2[20], 9.2941217306683827e-05) 
 
     def test_exporter(self):

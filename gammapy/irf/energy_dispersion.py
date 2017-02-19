@@ -703,7 +703,8 @@ class EnergyDispersion2D(object):
                                 e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
                                 data=rm)
 
-    def get_response(self, offset, e_true, e_reco, oversampling=10):
+    def get_response(self, offset, e_true, e_reco, oversampling=10,
+                     normalize=True):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
@@ -719,6 +720,8 @@ class EnergyDispersion2D(object):
             Offset
         oversampling : int, optional
             Migra oversampling factor for each bin of e_reco
+        normalize : bool, optional
+            Normalize response to 1
 
         Returns
         -------
@@ -743,6 +746,10 @@ class EnergyDispersion2D(object):
 
         dx = migra_grid[0][1] - migra_grid[0][0]
         response = np.trapz(val, dx=dx)
+        
+        if normalize:
+            norm = np.sum(response)
+            response = np.nan_to_num(response / norm)
 
         return response
 
