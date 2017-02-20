@@ -225,7 +225,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Summary info string."""
         d = self.data
 
-        ss = 'Source: {}\n'.format(d['Source_Name'])
+        ss =  'Source : {}\n'.format(d['Source_Name'])
+        ss += 'Assoc  : {}\n'.format(d['ASSOC1'])
+        # Other names? 0/1/2FGL_Name? Assoc_GAM1/2/3?
+        ss += 'Class  : {}\n'.format(d['CLASS1'])
         ss += '\n'
 
         ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
@@ -234,9 +237,18 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += 'GLAT        : {}\n'.format(d['GLAT'])
         ss += '\n'
 
-        val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
-        ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
-        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+        ss += 'Semimajor      : {}\n'.format(d['Conf_68_SemiMajor'])
+        # Conf_68_SemiMajor or Conf_95_SemiMajor?
+        ss += 'Semiminor      : {}\n'.format(d['Conf_68_SemiMinor'])
+        ss += 'Rotation angle : {}\n'.format(d['Conf_68_PosAng'])
+        ss += '\n'
+
+        flux_val, flux_err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
+        ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(flux_val, flux_err)
+        ss += 'Detection significance          : {}\n'.format(d['Signif_Avg'])
+        idx_val, idx_err = d['Spectral_Index'], d['Unc_Spectral_Index']
+        ss += 'Spectral index                  : {} +- {}'.format(idx_val, idx_err)
+
         return ss
 
     @property
