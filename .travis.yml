@@ -34,7 +34,7 @@ env:
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy sherpa libgfortran runipy regions reproject'
         - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy libgfortran runipy regions reproject'
         - PIP_DEPENDENCIES='uncertainties'
-        - CONDA_CHANNELS='astropy sherpa'
+        - CONDA_CHANNELS='conda-forge astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
         - MAIN_CMD='python setup.py'
