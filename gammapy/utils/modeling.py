@@ -197,6 +197,11 @@ class ParameterList(object):
         return '\n'.join(xml)
 
     @property
+    def names(self):
+        """List of parameter names"""
+        return [par.name for par in self.parameters]
+    
+    @property
     def _ufloats(self):
         """
         Return dict of ufloats with covariance
@@ -231,6 +236,32 @@ class ParameterList(object):
             quantity = errors.get(par.name, 0 * u.Unit(par.unit))
             values.append(quantity.to(par.unit).value)
         self.covariance = np.diag(values) ** 2
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def set_parameter_covariance(self, covariance, covar_axis):
+        """
+        Set full correlated parameters errors.
+
+        Parameters
+        ----------
+        covariance : array-like
+            Covariance matrix
+        covar_axis : list
+            List of strings defining the parameter order in covariance
+        """
+        shape = (len(self.parameters), len(self.parameters))
+        covariance_new = np.zeros(shape)
+        idx_lookup = dict([(par.name, idx) for idx, par in enumerate(self.parameters)])
+        
+        #TODO: make use of covariance matrix symmetry
+        for i, par in enumerate(covar_axis):
+            i_new = idx_lookup[par]
+            for j, par_other in enumerate(covar_axis):
+                j_new = idx_lookup[par_other]
+                covariance_new[i_new, j_new] = covariance[i, j]
+        
+        self.covariance = covariance_new
 
 
 class SourceLibrary(object):

@@ -207,9 +207,9 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        par_errors = result.model_with_uncertainties.parameters
-        assert_allclose(par_errors['index'].value.s, 0.09773507974970663)
-        assert_allclose(par_errors['amplitude'].value.s, 2.133509118228815e-12)
+        par_errors = result.model.parameters._ufloats
+        assert_allclose(par_errors['index'].s, 0.09773507974970663)
+        assert_allclose(par_errors['amplitude'].s, 2.133509118228815e-12)
 
         t = self.fit.result[0].to_table()
         assert_allclose(t['index_err'].data[0], 0.09773507974970663)

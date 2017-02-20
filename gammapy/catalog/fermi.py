@@ -80,27 +80,36 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         Best fit spectral model `~gammapy.spectrum.SpectralModel`.
         """
         spec_type = self.data['SpectrumType'].strip()
-        pars = {}
+        pars, errs = {}, {}
         pars['amplitude'] = Quantity(self.data['Flux_Density'], 'cm-2 s-1 MeV-1')
+        errs['amplitude'] = Quantity(self.data['Unc_Flux_Density'], 'cm-2 s-1 MeV-1')
         pars['reference'] = Quantity(self.data['Pivot_Energy'], 'MeV')
 
         if spec_type == 'PowerLaw':
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
-            return PowerLaw(**pars)
+            errs['index'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            model = PowerLaw(**pars)
         elif spec_type == 'PLExpCutoff':
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
             pars['ecut'] = Quantity(self.data['Cutoff'], 'MeV')
-            return ExponentialCutoffPowerLaw3FGL(**pars)
+            errs['index'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            errs['ecut'] = Quantity(self.data['Unc_Cutoff'], 'MeV')
+            model = ExponentialCutoffPowerLaw3FGL(**pars)
         elif spec_type == 'LogParabola':
             pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
             pars['beta'] = Quantity(self.data['beta'], '')
-            return LogParabola(**pars)
+            errs['alpha'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            errs['beta'] = Quantity(self.data['Unc_beta'], '')
+            model = LogParabola(**pars)
         elif spec_type == "PLSuperExpCutoff":
             # TODO Implement super exponential cut off
             raise NotImplementedError
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
 
+        model.parameters.set_parameter_errors(errs)
+        return model
+    
     @property
     def flux_points(self):
         """
@@ -143,44 +152,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
-
-    @property
-    def spectrum(self):
-        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-        """
-        data = self.data
-        model = self.spectral_model
-
-        spec_type = self.data['SpectrumType'].strip()
-
-        if spec_type == 'PowerLaw':
-            par_names = ['index', 'amplitude']
-            par_errs = [data['Unc_Spectral_Index'],
-                        data['Unc_Flux_Density']]
-        elif spec_type == 'PLExpCutoff':
-            par_names = ['index', 'amplitude', 'ecut']
-            par_errs = [data['Unc_Spectral_Index'],
-                        data['Unc_Flux_Density'],
-                        data['Unc_Cutoff']]
-        elif spec_type == 'LogParabola':
-            par_names = ['amplitude', 'alpha', 'beta']
-            par_errs = [data['Unc_Flux_Density'],
-                        data['Unc_Spectral_Index'],
-                        data['Unc_beta']]
-        elif spec_type == "PLSuperExpCutoff":
-            # TODO Implement super exponential cut off
-            raise NotImplementedError
-        else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
-
-        covariance = np.diag(par_errs) ** 2
-
-        return SpectrumFitResult(
-            model=model,
-            fit_range=self.energy_range,
-            covariance=covariance,
-            covar_axis=par_names,
-        )
 
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
@@ -277,7 +248,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
-        table['e_max'] = self._ebounds.upper_bounds
+        table['e_max'] =    self._ebounds.upper_bounds
         table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
         table['flux_errn'] = np.abs(flux_err[:, 0])
@@ -303,34 +274,15 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         """
         Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
-        pars = {}
+        pars, errs = {}, {}
         pars['amplitude'] = Quantity(self.data['Flux'], 'cm-2 s-1')
         pars['emin'], pars['emax'] = self.energy_range
         pars['index'] = Quantity(self.data['Spectral_Index'], '')
-        return PowerLaw2(**pars)
-
-    @property
-    def spectrum(self):
-        """Spectrum information (`~gammapy.spectrum.SpectrumFitResult`)
-        """
-        data = self.data
-        model = self.spectral_model
-
-        covariance = np.diag([
-            data['Unc_Spectral_Index'] ** 2,
-            data['Unc_Flux'] ** 2,
-        ])
-
-        covar_axis = ['index', 'amplitude']
-
-        fit = SpectrumFitResult(
-            model=model,
-            fit_range=self.energy_range,
-            covariance=covariance,
-            covar_axis=covar_axis,
-        )
-
-        return fit
+        errs['amplitude'] = Quantity(self.data['Unc_Flux'], 'cm-2 s-1')
+        errs['index'] = Quantity(self.data['Unc_Spectral_Index'], '')
+        pwl = PowerLaw2(**pars)
+        pwl.parameters.set_parameter_errors(errs)
+        return pwl
 
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
@@ -404,36 +356,15 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         """
         Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
-        pars = dict(
-            amplitude=Quantity(self.data['Flux50'], 'cm-2 s-1'),
-            emin=self.energy_range[0],
-            emax=self.energy_range[1],
-            index=Quantity(self.data['Spectral_Index'], ''),
-        )
-        return PowerLaw2(**pars)
-
-    @property
-    def spectrum(self):
-        """Spectrum information (`~gammapy.spectrum.SpectrumFitResult`)
-        """
-        data = self.data
-        model = self.spectral_model
-
-        covariance = np.diag([
-            data['Unc_Spectral_Index'] ** 2,
-            data['Unc_Flux50'] ** 2,
-        ])
-
-        covar_axis = ['index', 'amplitude']
-
-        fit = SpectrumFitResult(
-            model=model,
-            fit_range=self.energy_range,
-            covariance=covariance,
-            covar_axis=covar_axis,
-        )
-
-        return fit
+        pars, errs = {}, {}
+        pars['amplitude'] = Quantity(self.data['Flux50'], 'cm-2 s-1')
+        pars['emin'], pars['emax'] = self.energy_range
+        pars['index'] = Quantity(self.data['Spectral_Index'], '')
+        errs['amplitude'] = Quantity(self.data['Unc_Flux50'], 'cm-2 s-1')
+        errs['index'] = Quantity(self.data['Unc_Spectral_Index'], '')
+        pwl = PowerLaw2(**pars)
+        pwl.parameters.set_parameter_errors(errs)
+        return pwl
 
 
 class SourceCatalogObject3FHL(SourceCatalogObject):
@@ -468,21 +399,28 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
         """
         spec_type = self.data['SpectrumType'].strip()
-        pars = {}
+        pars, errs = {}, {}
         pars['amplitude'] = Quantity(self.data['Flux_Density'], 'cm-2 s-1 GeV-1')
+        errs['amplitude'] = Quantity(self.data['Unc_Flux_Density'], 'cm-2 s-1 GeV-1')
         pars['reference'] = Quantity(self.data['Pivot_Energy'], 'GeV')
 
         if spec_type == 'PowerLaw':
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
-            return PowerLaw(**pars)
+            errs['index'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            model = PowerLaw(**pars)
 
         elif spec_type == 'LogParabola':
             pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
             pars['beta'] = Quantity(self.data['beta'], '')
-            return LogParabola(**pars)
+            errs['alpha'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            errs['beta'] = Quantity(self.data['Unc_beta'], '')
+            model = LogParabola(**pars)
 
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
+
+        model.parameters.set_parameter_errors(errs)
+        return model
 
     @property
     def flux_points(self):
@@ -526,36 +464,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
         return FluxPoints(table)
-
-    @property
-    def spectrum(self):
-        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-        """
-        data = self.data
-        model = self.spectral_model
-
-        spec_type = self.data['SpectrumType'].strip()
-
-        if spec_type == 'PowerLaw':
-            par_names = ['index', 'amplitude']
-            par_errs = [data['Unc_Spectral_Index'],
-                        data['Unc_Flux_Density']]
-        elif spec_type == 'LogParabola':
-            par_names = ['amplitude', 'alpha', 'beta']
-            par_errs = [data['Unc_Flux_Density'],
-                        data['Unc_Spectral_Index'],
-                        data['Unc_beta']]
-        else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
-
-        covariance = np.diag(par_errs) ** 2
-
-        return SpectrumFitResult(
-            model=model,
-            fit_range=self.energy_range,
-            covariance=covariance,
-            covar_axis=par_names,
-        )
 
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
