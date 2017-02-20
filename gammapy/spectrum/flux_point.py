@@ -622,7 +622,7 @@ class FluxPointEstimator(object):
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
-        diff_flux, diff_flux_err = res.model.evaluate_err(energy_ref)
+        diff_flux, diff_flux_err = res.model.evaluate_error(energy_ref)
         return OrderedDict(
             e_ref=energy_ref,
             e_min=e_min,

@@ -54,8 +54,8 @@ class SpectrumFitResult(object):
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
                  statname=None, statval=None, npred_src=None, npred_bkg=None,
                  background_model=None, fluxes=None, flux_errors=None, obs=None):
-        
-        #TODO: Set model covariance outside this class 
+
+        #TODO: Set model covariance outside this class
         if covar_axis:
             model.parameters.set_parameter_covariance(covariance, covar_axis)
         self.model = model
@@ -165,7 +165,7 @@ class SpectrumFitResult(object):
         for par_name, value in self.model.parameters._ufloats.items():
             val = value.n
             err = value.s
-        
+
             # Apply correction factor for units
             # TODO: Refactor
             current_unit = self.model.parameters[par_name].unit
@@ -209,8 +209,6 @@ class SpectrumFitResult(object):
         info += 'Model: {} \n'.format(self.model)
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
-        if self.covariance is not None:
-            info += '\nCovariance:\n{}\n{}'.format(self.covar_axis, self.covariance)
         if self.fit_range is not None:
             info += '\nFit Range: {}'.format(self.fit_range)
         info += '\n'
@@ -400,24 +398,20 @@ class SpectrumResult(object):
         # Get units right
         pars = self.fit.model.parameters
         if self.fit.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = pars.emin.unit
-            flux_unit = pars.amplitude.unit / energy_unit
+            energy_unit = pars['emin'].unit
+            flux_unit = pars['amplitude'].unit / energy_unit
         else:
-            energy_unit = pars.reference.unit
-            flux_unit = pars.amplitude.unit
+            energy_unit = pars['reference'].unit
+            flux_unit = pars['amplitude'].unit
 
-        x = self.points.table['e_ref'].quantity.to(energy_unit)
-        y = self.points.table['dnde'].quantity.to(flux_unit)
-        y_err = self.points.table['dnde_err'].quantity.to(flux_unit)
+        e_ref = self.points.table['e_ref'].quantity.to(energy_unit)
+        points = self.points.table['dnde'].quantity.to(flux_unit)
+        points_err = self.points.table['dnde_err'].quantity.to(flux_unit)
 
-        points = list()
-        for val, err in zip(y.value, y_err.value):
-            points.append(ufloat(val, err))
-
-        func, func_err = self.fit.model.evaluate_error(x)
-        residuals = (points - func) / func
-
-        return residuals
+        model = self.fit.model(e_ref)
+        residuals = (points - model) / model
+        residuals_err = (points_err - model) / model
+        return residuals, residuals_err
 
     def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, fit_kwargs=dict(),
@@ -513,12 +507,10 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        res = self.flux_point_residuals
-        y = [_.n for _ in res]
-        y_err = [_.s for _ in res]
+        y, y_err = self.flux_point_residuals
         x = self.points.e_ref
         x = x.to(energy_unit).value
-        ax.errorbar(x, y, yerr=y_err, **kwargs)
+        ax.errorbar(x, y.value, yerr=y_err.value, **kwargs)
 
         xx = ax.get_xlim()
         yy = [0, 0]
