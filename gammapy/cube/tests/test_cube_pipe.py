@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.units import Quantity
 from gammapy.extern.pathlib import Path
 from ...data import DataStore
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, pytest
 from ...image import SkyMask
 from .. import StackedObsCubeMaker
 from ...background import OffDataBackgroundMaker
@@ -43,6 +43,8 @@ def make_empty_cube(image_size, energy, center, data_unit=None):
     return empty_cube
 
 
+# Temp xfail for this: https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
+@pytest.mark.xfail
 @requires_dependency('reproject')
 @requires_data('gammapy-extra')
 def test_cube_pipe(tmpdir):
