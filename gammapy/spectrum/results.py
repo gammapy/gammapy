@@ -236,6 +236,10 @@ class SpectrumFitResult(object):
         butterfly : `~gammapy.spectrum.SpectrumButterfly`
             Butterfly object.
         """
+        if energy is None:
+            energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
+                                                    self.fit_range[1], 100)
+
         flux, flux_err = self.model.evaluate_error(energy)
 
         butterfly = SpectrumButterfly()
