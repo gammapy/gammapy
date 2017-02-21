@@ -137,3 +137,25 @@ class SkyCubeHealpix(object):
         elif mode == 'edges':
             z = np.arange(self.data.shape[0] + 1) - 0.5
         return self.energy_axis.wcs_pix2world(z)
+
+    def __str__(self):
+        # Copied from `spectral-cube` package
+        info = "Healpix sky cube {} with shape={}".format(self.name, self.data.shape)
+        if self.data.unit is u.dimensionless_unscaled:
+            info += ":\n"
+        else:
+            info += " and unit={}:\n".format(self.data.unit)
+
+        info += " n_pix:    {:5d}  coord_type:    {:15s}  coord_unit:    {}\n".format(
+            self.data.shape[1], self.wcs.coordsys, 'deg')
+        info += " n_energy: {:5d}  unit_energy: {}\n".format(
+            self.data.shape[0], self.energy_axis._eunit)
+
+        return info
+
+
+    def info(self):
+        """
+        Print summary info about the cube.
+        """
+        print(str(self))

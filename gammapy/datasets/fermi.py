@@ -3,6 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+import warnings
 
 from astropy import units as u
 from astropy.io import fits
@@ -253,6 +254,11 @@ class FermiLATDataset(object):
         self._path = filename.parents[0].resolve()
         self.config = yaml.load(open(str(filename), 'r'))
 
+    @property
+    def name(self):
+        """Name of the dataset"""
+        return self.config['name']
+
     def validate(self):
         raise NotImplementedError
 
@@ -283,7 +289,9 @@ class FermiLATDataset(object):
         """
         filename = self.filenames['exposure']
         try:
-            cube = SkyCube.read(filename, format='fermi-exposure')
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                cube = SkyCube.read(filename, format='fermi-exposure')
         except ValueError:
             from ..cube.healpix import SkyCubeHealpix
             cube = SkyCubeHealpix.read(filename, format='fermi-exposure')
@@ -420,7 +428,11 @@ class FermiLATDataset(object):
         Summary info string about the dataset.
         """
         import yaml
-        info =  'Fermi dataset\n'
-        info += '=============\n'
-        info += yaml.dump(self.config, default_flow_style=False)
+        info =  'Fermi-LAT {name} dataset'.format(name=self.name)
+        info += '\n' + len(info) * '=' + '\n'
+
+        info += 'Filenames:\n'
+        for name in sorted(self.config['filenames']):
+            filename = self.config['filenames'][name]
+            info += "  {name:8s}: {filename}\n".format(name=name, filename=filename)
         return info

@@ -490,6 +490,11 @@ class SkyCube(object):
                 energy = self.energy_axis.wcs_pix2world(idx)
                 image = self.sky_image(energy)
                 image.data = image.data.value
+                try:
+                    norm = kwargs['norm']
+                    norm.vmax = np.nanmax(image.data)
+                except KeyError:
+                    pass
                 image.show(**kwargs)
 
             return interact(show_image, idx=(0, max_, 1))
@@ -693,7 +698,7 @@ class SkyCube(object):
         filename = str(make_path(filename))
         self.to_fits(format).writeto(filename, **kwargs)
 
-    def __repr__(self):
+    def __str__(self):
         # Copied from `spectral-cube` package
         ss = "Sky cube {} with shape={}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:

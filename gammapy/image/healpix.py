@@ -148,3 +148,12 @@ class WCSHealpix(object):
     def npix(self):
         """Number of pixels corresponding to nside"""
         return hp.nside2npix(self.nside)
+
+    def __str__(self):
+        info = 'WCSHealpix\n'
+        info = '==========\n'
+        info += '  coordsys: {}\n'.format(self.coordsys)
+        info += '  nside   : {}\n'.format(self.nside)
+        info += '  npix    : {}\n'.format(self.npix)
+        info += '  nested  : {}\n'.format(self.nested)
+        return info
