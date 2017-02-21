@@ -227,12 +227,12 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'extension', 'spectral'}
+        info : {'all', 'basic', 'position', 'extension', 'spectral', 'other}
             Comma separated list of options
         """
 
         if info == 'all':
-            info = 'basic,position,extension,spectral'
+            info = 'basic,position,extension,spectral,other'
 
         ss = ''
         ops = info.split(',')
@@ -244,6 +244,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += self._info_extension()
         if 'spectral' in ops:
             ss += self._info_spectral()
+        if 'other' in ops:
+            ss += self._info_other()
         return ss
 
 
@@ -251,41 +253,41 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
-        ss += '{:<20s}                         : {}\n'.format('Source', d['Source_Name'])
+        ss += '{:<20s}           : {}\n'.format('Source', d['Source_Name'])
         ss += '{:<20s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
-        ss += '{:<20s}                  : {}\n'.format('Extended name', d['Extended_Source_Name'])
+        ss += '{:<20s}           : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
         associations = []
         if d['ASSOC1'].isspace() == False:
-            associations.append(d['ASSOC1'])
+            associations.append(d['ASSOC1'].rstrip())
         if d['ASSOC2'].isspace() == False:
-            associations.append(d['ASSOC2'])
+            associations.append(d['ASSOC2'].rstrip())
         if d['ASSOC_TEV'].isspace() == False:
-            associations.append(d['ASSOC_TEV'])
+            associations.append(d['ASSOC_TEV'].rstrip())
         if d['ASSOC_GAM1'].isspace() == False:
-            associations.append(d['ASSOC_GAM1'])
+            associations.append(d['ASSOC_GAM1'].rstrip())
         if d['ASSOC_GAM2'].isspace() == False:
-            associations.append(d['ASSOC_GAM2'])
+            associations.append(d['ASSOC_GAM2'].rstrip())
         if d['ASSOC_GAM3'].isspace() == False:
-            associations.append(d['ASSOC_GAM3'])
+            associations.append(d['ASSOC_GAM3'].rstrip())
 
         associations = ', '.join(associations)
-        ss += '{:<20s}                   : {}\n'.format('Associations', associations)
+        ss += '{:<20s}           : {}\n'.format('Associations', associations)
 
         otherNames = []
         if d['0FGL_Name'].isspace() == False:
-            otherNames.append(d['0FGL_Name'])
+            otherNames.append(d['0FGL_Name'].rstrip())
         if d['1FGL_Name'].isspace() == False:
-            otherNames.append(d['1FGL_Name'])
+            otherNames.append(d['1FGL_Name'].rstrip())
         if d['2FGL_Name'].isspace() == False:
-            otherNames.append(d['2FGL_Name'])
+            otherNames.append(d['2FGL_Name'].rstrip())
         if d['1FHL_Name'].isspace() == False:
-            otherNames.append(d['2FHL_Name'])
+            otherNames.append(d['1FHL_Name'].rstrip())
 
         otherNames = ', '.join(otherNames)
-        ss += '{:<20s}                    : {}\n'.format('Other names', otherNames)
+        ss += '{:<20s}           : {}\n'.format('Other names', otherNames)
 
-        ss += '{:<20s}                          : {}\n'.format('Class', d['CLASS1'])
+        ss += '{:<20s}           : {}\n'.format('Class', d['CLASS1'])
 
         return ss
 
@@ -293,10 +295,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print position info."""
         d = self.data
         ss = '\n*** Position info ***\n\n'
-        ss += '{:<20s}  : {:8.3f} deg\n'.format('RA (J2000)', d['RAJ2000'])
-        ss += '{:<20s} : {:8.3f} deg\n'.format('Dec (J2000)', d['DEJ2000'])
-        ss += '{:<20s}        : {:8.3f} deg\n'.format('GLON', d['GLON'])
-        ss += '{:<20s}        : {:8.3f} deg\n'.format('GLAT', d['GLAT'])
+        ss += '{:<20s} : {:.3f} deg\n'.format('RA (J2000)', d['RAJ2000'])
+        ss += '{:<20s} : {:.3f} deg\n'.format('Dec (J2000)', d['DEJ2000'])
+        ss += '{:<20s} : {:.3f} deg\n'.format('GLON', d['GLON'])
+        ss += '{:<20s} : {:.3f} deg\n'.format('GLAT', d['GLAT'])
 
         ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
 
@@ -306,13 +308,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print extension info."""
         d = self.data
         ss = '\n*** Extension info ***\n\n'
-        ss += '{:<20s}      : {:.4f}\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
-        ss += '{:<20s}      : {:.4f}\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
-        ss += '{:<20s} : {:.2f}\n'.format('Rotation angle (68%)', d['Conf_68_PosAng'])
-        ss += '\n'
-        ss += '{:<20s}      : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
-        ss += '{:<20s}      : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
-        ss += '{:<20s} : {:.2f}\n'.format('Rotation angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
+        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
+        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
+
+        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
+        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
+        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
 
         return ss
 
@@ -320,12 +322,53 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
-        flux_val, flux_err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
-        ss += '{:<20s} : {:.3f} +- {:.3f} erg cm^-2 s^-1\n'.format('Energy flux (100 MeV - 100 GeV)', flux_val, flux_err)
-        ss += '{:<20s}          : {:.3f} Sigma\n'.format('Significance', d['Signif_Avg'])
-        idx_val, idx_err = d['Spectral_Index'], d['Unc_Spectral_Index']
-        ss += '{:<20s}                  : {:.3f} +- {:.3f}\n'.format('Spectral index', idx_val, idx_err)
-        ss += '{:<20s}                    : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
+        ss += '{:<20s}   : {:.3} +- {:.3} erg cm^-2 s^-1 (100 MeV - 100 GeV)\n'.format('Energy flux',
+                                                                                       d['Energy_Flux100'],
+                                                                                       d['Unc_Energy_Flux100'])
+        ss += '{:<20s} : {:.3f} Sigma (100 MeV - 300 GeV)\n'.format('Detection significance', d['Signif_Avg'])
+        ss += '{:<20s}   : {:.3f} +- {:.3f}\n'.format('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+        ss += '{:<20s}   : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
+        ss += '{:<20s}   : {} +- {} phot cm^-2 MeV^-1 s^-1 (100 MeV - 100 GeV) \n'.format('Flux Density',
+                                                                                          d['Flux_Density'],
+                                                                                          d['Unc_Flux_Density'])
+        ss += '{:<20s}   : {:.3} +- {:.3} phot cm^-2 s^-1 (1 - 100 GeV)\n'.format('Integral flux',
+                                                                                  d['Flux1000'], d['Unc_Flux1000'])
+        ss += '{:<20s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
+        ss += '{:<20s}   : {}\n'.format('Spectrum type', d['SpectrumType'])
+        if d['SpectrumType'].rstrip() == 'LogParabola':
+            ss += '{:<20s}   : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
+        if d['SpectrumType'].rstrip() in ['PLExpCutoff', 'PlSuperExpCutoff']:
+            ss += '{:<20s}   : {:.0f} +- {:.0f} MeV\n'.format('Cutoff energy', d['Cutoff'], d['Unc_Cutoff'])
+        if d['SpectrumType'].rstrip() == 'PLSuperExpCutoff':
+            ss += '{:<20s}   : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
+        ss += '{:<20s}   : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
+
+
+        return ss
+
+    def _info_other(self):
+        """
+        Other items - I'm not sure if they belong in __str__ or not. Or I'm not sure what they are.
+        """
+        d = self.data
+        ss = '\n*** Other info (omitted) ***\n\n'
+
+        ss += 'Flux<energy range>\n'
+        ss += 'Unc_Flux<energy range>\n'
+        ss += 'nuFnu<energy range>\n'
+        ss += 'Sqrt_TS<energy range>\n'
+        # I think the above are all spectral points info? If so, they shouldn't be in __str__
+
+        ss += 'Variability_Index\n'
+        ss += 'Flux_Peak\n'
+        ss += 'Unc_Flux_Prak\n'
+        ss += 'Time_Peak\n'
+        ss += 'Peak_Interval\n'
+        ss += 'Flux_History\n'
+        ss += 'Unc_Flux_History\n'
+
+        ss += 'TEVCAT_FLAG\n'
+        ss += 'Flags\n'
 
         return ss
 
