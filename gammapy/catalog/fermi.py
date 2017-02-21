@@ -279,7 +279,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             otherNames.append(d['1FGL_Name'])
         if d['2FGL_Name'].isspace() == False:
             otherNames.append(d['2FGL_Name'])
-        if d['2FHL_Name'].isspace() == False:
+        if d['1FHL_Name'].isspace() == False:
             otherNames.append(d['2FHL_Name'])
 
         otherNames = ', '.join(otherNames)
