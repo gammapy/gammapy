@@ -227,12 +227,12 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'extension', 'spectral', 'other}
+        info : {'all', 'basic', 'position', 'spectral', 'other'}
             Comma separated list of options
         """
 
         if info == 'all':
-            info = 'basic,position,extension,spectral,other'
+            info = 'basic,position,spectral,other'
 
         ss = ''
         ops = info.split(',')
@@ -240,8 +240,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += self._info_basic()
         if 'position' in ops:
             ss += self._info_position()
-        if 'extension' in ops:
-            ss += self._info_extension()
         if 'spectral' in ops:
             ss += self._info_spectral()
         if 'other' in ops:
@@ -300,14 +298,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += '{:<20s} : {:.3f} deg\n'.format('GLON', d['GLON'])
         ss += '{:<20s} : {:.3f} deg\n'.format('GLAT', d['GLAT'])
 
+        ss += '\n'
         ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
-
-        return ss
-
-    def _info_extension(self):
-        """Print extension info."""
-        d = self.data
-        ss = '\n*** Extension info ***\n\n'
         ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
         ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
         ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
@@ -322,27 +314,30 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
-        ss += '{:<20s}   : {:.3} +- {:.3} erg cm^-2 s^-1 (100 MeV - 100 GeV)\n'.format('Energy flux',
+        ss += '{:<20s}            : {:.3} +- {:.3} erg cm^-2 s^-1\n'.format('Energy flux (100 MeV - 100 GeV)',
                                                                                        d['Energy_Flux100'],
                                                                                        d['Unc_Energy_Flux100'])
-        ss += '{:<20s} : {:.3f} Sigma (100 MeV - 300 GeV)\n'.format('Detection significance', d['Signif_Avg'])
-        ss += '{:<20s}   : {:.3f} +- {:.3f}\n'.format('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
-        ss += '{:<20s}   : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
-        ss += '{:<20s}   : {} +- {} phot cm^-2 MeV^-1 s^-1 (100 MeV - 100 GeV) \n'.format('Flux Density',
-                                                                                          d['Flux_Density'],
-                                                                                          d['Unc_Flux_Density'])
-        ss += '{:<20s}   : {:.3} +- {:.3} phot cm^-2 s^-1 (1 - 100 GeV)\n'.format('Integral flux',
-                                                                                  d['Flux1000'], d['Unc_Flux1000'])
-        ss += '{:<20s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
-        ss += '{:<20s}   : {}\n'.format('Spectrum type', d['SpectrumType'])
+        ss += '{:<20s} : {:.3f} Sigma\n'.format('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
+        ss += '{:<20s}                       : {}\n'.format('Spectrum type', d['SpectrumType'])
         if d['SpectrumType'].rstrip() == 'LogParabola':
-            ss += '{:<20s}   : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
+            ss += '{:<20s}                       : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         if d['SpectrumType'].rstrip() in ['PLExpCutoff', 'PlSuperExpCutoff']:
-            ss += '{:<20s}   : {:.0f} +- {:.0f} MeV\n'.format('Cutoff energy', d['Cutoff'], d['Unc_Cutoff'])
+            ss += '{:<20s}                       : {:.0f} +- {:.0f} MeV\n'.format('Cutoff energy',
+                                                                                 d['Cutoff'], d['Unc_Cutoff'])
         if d['SpectrumType'].rstrip() == 'PLSuperExpCutoff':
-            ss += '{:<20s}   : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
-        ss += '{:<20s}   : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
+            ss += '{:<20s}                       : {} +- {}\n'.format('Exponential index', d['Exp_Index'],
+                                                                      d['Unc_Exp_Index'])
+        ss += '{:<20s}                       : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
 
+        ss += '{:<20s}                       : {:.3f} +- {:.3f}\n'.format('Spectral index', d['Spectral_Index'],
+                                                                          d['Unc_Spectral_Index'])
+        ss += '{:<20s}                       : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
+        ss += '{:<20s}           : {:.3} +- {:.3} cm^-2 MeV^-1 s^-1\n'.format('Flux Density (100 MeV - 100 GeV)',
+                                                                              d['Flux_Density'],
+                                                                              d['Unc_Flux_Density'])
+        ss += '{:<20s}                : {:.3} +- {:.3} cm^-2 s^-1\n'.format('Integral flux (1 - 100 GeV)',
+                                                                             d['Flux1000'], d['Unc_Flux1000'])
+        ss += '{:<20s}                     : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
         return ss
 
@@ -361,7 +356,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         ss += 'Variability_Index\n'
         ss += 'Flux_Peak\n'
-        ss += 'Unc_Flux_Prak\n'
+        ss += 'Unc_Flux_Peak\n'
         ss += 'Time_Peak\n'
         ss += 'Peak_Interval\n'
         ss += 'Flux_History\n'
