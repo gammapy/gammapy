@@ -11,6 +11,7 @@ from ..data import Target
 from ..background import ReflectedRegionsBackgroundEstimator
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
+from ..irf import PSF3D
 
 __all__ = [
     'SpectrumExtraction',
@@ -89,7 +90,7 @@ class SpectrumExtraction(object):
             self.extract_spectrum()
         return self._observations
 
-    def run(self, outdir=None):
+    def run(self, outdir=None, use_sherpa=False):
         """Run all steps
 
         Extract spectrum, update observation table, filter observations,
@@ -99,14 +100,16 @@ class SpectrumExtraction(object):
         ----------
         outdir : Path, str
             directory to write results files to
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
         """
-        outdir = make_path(outdir) 
+        outdir = make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background(self.background)
         self.extract_spectrum()
-        self.write(outdir)
+        self.write(outdir, use_sherpa=use_sherpa)
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
@@ -171,7 +174,8 @@ class SpectrumExtraction(object):
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events.select_row_subset(idx)
 
-            counts_kwargs = dict(energy=self.e_reco,
+            counts_kwargs = dict(energy_lo=self.e_reco[:-1],
+                                 energy_hi=self.e_reco[1:],
                                  livetime=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id)
 
@@ -211,7 +215,10 @@ class SpectrumExtraction(object):
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg
-                psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
+                if isinstance(obs.psf, PSF3D):
+                    psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
+                else:
+                    psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
 
                 center_energies = arf.energy.nodes
                 for index, energy in enumerate(center_energies):
@@ -223,7 +230,7 @@ class SpectrumExtraction(object):
                         # TODO: Why is this necessary?
                         correction = np.nan
 
-                    arf.data[index] = arf.data[index] * correction
+                    arf.data.data[index] = arf.data.data[index] * correction
 
             temp = SpectrumObservation(on_vector=on_vec,
                                        aeff=arf,
@@ -271,7 +278,7 @@ class SpectrumExtraction(object):
                 raise ValueError('Undefine method for low threshold: {}'.format(
                     method_lo_threshold))
 
-    def write(self, outdir, ogipdir='ogip_data'):
+    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk
         
         Parameters
@@ -280,7 +287,9 @@ class SpectrumExtraction(object):
             Output folder
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
         """
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
-        self.observations.write(outdir / ogipdir)
+        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
         # TODO : add more debug plots etc. here

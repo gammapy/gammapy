@@ -18,7 +18,6 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
-from ..utils.testing import assert_wcs_allclose
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
@@ -66,6 +65,11 @@ class SkyCube(object):
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
+        # TODO: In gammapy SkyCube is used sometimes with ndim = 2 for cubes
+        # with a single energy band
+        if not data.ndim > 1:
+            raise ValueError('Dimension of the data must be ndim = 3, but is '
+                             'ndim = {}'.format(data.ndim))
         self.data = data
         self.wcs = wcs
         self.meta = meta
@@ -266,6 +270,22 @@ class SkyCube(object):
             z = np.arange(self.data.shape[0] + 1) - 0.5
         return self.energy_axis.wcs_pix2world(z)
 
+    def cutout(self, position, size):
+        """
+        Cut out rectangular piece of a cube. See `~gammapy.image.SkyImage.cutout()`
+        for details.
+        """
+        out = []
+        for energy in self.energies():
+            image = self.sky_image(energy)
+            cutout = image.cutout(position=position, size=size)
+            out.append(cutout.data)
+
+        data = Quantity(np.stack(out, axis=0), self.data.unit)
+        wcs = cutout.wcs.copy()
+        return self.__class__(name=self.name, data=data, wcs=wcs, meta=self.meta,
+                              energy_axis=self.energy_axis)
+
     def wcs_skycoord_to_pixel(self, position, energy):
         """Convert world to pixel coordinates.
 
@@ -322,6 +342,7 @@ class SkyCube(object):
         ehi = energies[1:]
         n_ebins = len(elo)
         if dstype == 'Data3DInt':
+
             coordinates = self.sky_image_ref.coordinates(mode="edges")
             ra = coordinates.data.lon.degree
             dec = coordinates.data.lat.degree
@@ -332,8 +353,9 @@ class SkyCube(object):
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
-                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
-                             self.data.value.shape)
+                                 ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+                                 self.data.value.ravel().shape)
+
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
             ra = coordinates.data.lon.degree
@@ -343,8 +365,8 @@ class SkyCube(object):
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                          dec_cube.ravel(), self.data.value.ravel(),
-                          self.data.value.shape)
+                              dec_cube.ravel(), self.data.value.ravel(),
+                              self.data.value.ravel().shape)
 
         else:
             raise ValueError('Invalid sherpa data type.')
@@ -468,6 +490,11 @@ class SkyCube(object):
                 energy = self.energy_axis.wcs_pix2world(idx)
                 image = self.sky_image(energy)
                 image.data = image.data.value
+                try:
+                    norm = kwargs['norm']
+                    norm.vmax = np.nanmax(image.data)
+                except KeyError:
+                    pass
                 image.show(**kwargs)
 
             return interact(show_image, idx=(0, max_, 1))
@@ -671,7 +698,7 @@ class SkyCube(object):
         filename = str(make_path(filename))
         self.to_fits(format).writeto(filename, **kwargs)
 
-    def __repr__(self):
+    def __str__(self):
         # Copied from `spectral-cube` package
         ss = "Sky cube {} with shape={}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
@@ -696,6 +723,7 @@ class SkyCube(object):
 
     @staticmethod
     def assert_allclose(cube1, cube2):
+        from ..utils.testing import assert_wcs_allclose
         assert cube1.name == cube2.name
         assert_allclose(cube1.data, cube2.data)
         assert_wcs_allclose(cube1.wcs, cube2.wcs)

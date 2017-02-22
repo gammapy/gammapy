@@ -66,12 +66,14 @@ class TestSpectrumExtraction:
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
-                                                  aeff=549861.8 * u.m ** 2
-                                                  )),
+                                                  aeff=549861.8 * u.m ** 2,
+                                                  edisp=0.238038708012650
+                                                 )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
-                                                 aeff=412731.8043631101 * u.m ** 2
-                                                 ))
+                                                 aeff=412731.8043631101 * u.m ** 2,
+                                                 edisp=0.2380387080126506
+                                                ))
     ])
     def test_extract(self, pars, results, target, obs, bkg, tmpdir):
         """Test quantitative output for various configs"""
@@ -81,17 +83,21 @@ class TestSpectrumExtraction:
                                         **pars)
 
         # TODO: Improve API
-        print(extraction.background)
         extraction.estimate_background(extraction.background)
         extraction.extract_spectrum()
         obs = extraction.observations[0]
-        aeff_actual = obs.aeff.evaluate(energy=5 * u.TeV)
+        aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
+        edisp_actual = obs.edisp.data.evaluate(e_true=5 * u.TeV,
+                                               e_reco=5.2 * u.TeV)
+
+        assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
+        assert_quantity_allclose(edisp_actual, results['edisp'], rtol=1e-3)
+
 
         # TODO: Introduce assert_stats_allclose
         n_on_actual = obs.total_stats.n_on
         sigma_actual = obs.total_stats.sigma
 
-        assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
         assert n_on_actual == results['n_on']
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
 
@@ -99,12 +105,24 @@ class TestSpectrumExtraction:
         """Test the run method and check if files are written correctly"""
         extraction.run(outdir=tmpdir)
         testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
-        assert_quantity_allclose(testobs.aeff.data,
-                                 extraction.observations[0].aeff.data)
-        assert_quantity_allclose(testobs.on_vector.data,
-                                 extraction.observations[0].on_vector.data)
+        assert_quantity_allclose(testobs.aeff.data.data,
+                                 extraction.observations[0].aeff.data.data)
+        assert_quantity_allclose(testobs.on_vector.data.data,
+                                 extraction.observations[0].on_vector.data.data)
         assert_quantity_allclose(testobs.on_vector.energy.nodes,
                                  extraction.observations[0].on_vector.energy.nodes)
+
+    @requires_dependency('sherpa')
+    def test_sherpa(self, tmpdir, extraction):
+        """Same as above for files to be used with sherpa"""
+        extraction.run(outdir=tmpdir, use_sherpa=True)
+
+        import sherpa.astro.ui as sau
+        sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
+        arf = sau.get_arf()
+        actual = arf._arf._specresp
+        desired = extraction.observations[0].aeff.data.data.value
+        assert_allclose(actual, desired)
 
     def test_define_energy_threshold(self, extraction):
         # TODO: Find better API for this

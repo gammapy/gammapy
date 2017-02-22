@@ -80,28 +80,37 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """
         d = self.data
         spec_type = d['spec_type']
-        pars = {}
+        pars, errs = {}, {}
         pars['index'] = u.Quantity(d['spec_index'])
+        errs['index'] = u.Quantity(d['spec_index_err'])
 
         if spec_type == 'pl':
             pars['reference'] = d['spec_ref']
             pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
-            return PowerLaw(**pars)
+            errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
+            model = PowerLaw(**pars)
 
         elif spec_type == 'ecpl':
             pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
             pars['reference'] = d['spec_ref']
             pars['lambda_'] = 1. / d['spec_ecut']
-            return ExponentialCutoffPowerLaw(**pars)
+            errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
+            errs['lambda_'] = d['spec_ecut_err'] * u.TeV / d['spec_ecut'] ** 2
+            model = ExponentialCutoffPowerLaw(**pars)
 
         elif spec_type == 'pl2':
             pars['emin'] = d['spec_ref']
             # TODO: I'd be better to put np.inf, but uncertainties can't handle it
             pars['emax'] = 1e10 * u.TeV
             pars['amplitude'] = d['spec_norm'] * u.Unit('cm-2 s-1')
-            return PowerLaw2(**pars)
+            errs['amplitude'] = d['spec_norm_err'] * u.Unit('cm-2 s-1')
+            model = PowerLaw2(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
+
+        model.parameters.set_parameter_errors(errs)
+        return model
+
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
@@ -171,46 +180,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return FluxPoints(table)
 
-    @property
-    def spectrum(self):
-        """
-        Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        At the moment this is needed to access the butterfly info.
-        TODO: remove!???
-        """
-        d = self.data
-        model = self.spectral_model
-
-        spec_type = d['spec_type']
-        erange = d['spec_erange_min'], d['spec_erange_max']
-
-        if spec_type == 'pl':
-            par_names = ['index', 'amplitude']
-            par_errs = [d['spec_index_err'], d['spec_norm_err']]
-        elif spec_type == 'ecpl':
-            par_names = ['index', 'amplitude', 'lambda_']
-            lambda_err = d['spec_ecut_err'] / d['spec_ecut'] ** 2
-            par_errs = [d['spec_index_err'],
-                        d['spec_norm_err'],
-                        lambda_err.value]
-        elif spec_type == 'pl2':
-            par_names = ['amplitude', 'index']
-            par_errs = [d['spec_norm_err'],
-                        d['spec_index_err'],
-                        ]
-        else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
-
-        covariance = np.diag(par_errs) ** 2
-
-        return SpectrumFitResult(
-            model=model,
-            fit_range=erange,
-            covariance=covariance,
-            covar_axis=par_names,
-        )
-
 
 class SourceCatalogGammaCat(SourceCatalog):
     """
@@ -265,22 +234,6 @@ class SourceCatalogGammaCat(SourceCatalog):
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,
         )
-
-    def _make_source_dict(self, index):
-        """Make one source data dict.
-
-        Parameters
-        ----------
-        index : int
-            Row index
-
-        Returns
-        -------
-        data : dict
-            Source data dict
-        """
-        row = self.table[index]
-        return row
 
     def to_source_library(self):
         """

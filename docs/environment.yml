@@ -1,17 +1,19 @@
 name: astropy
 
 channels:
+  - conda-forge
   - astropy
 
 dependencies:
+  - python=3
   - cython
   - numpy
+  - uncertainties
+  - sphinx
   - scipy
   - scikit-image
   - matplotlib
-  - astropy-helpers
   - astropy
   - regions
   - reproject
-  - wcsaxes
   - aplpy

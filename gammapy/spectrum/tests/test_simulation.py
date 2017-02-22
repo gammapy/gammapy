@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 import numpy as np
@@ -62,10 +61,15 @@ class TestSpectrumSimulation:
         assert self.sim.result[4].on_vector.total_counts == 185 * u.ct
 
     def test_without_edisp(self):
-        self.sim.edisp=None
-        self.sim.simulate_obs(seed=23, obs_id=23)
-        assert self.sim.obs.on_vector.total_counts == 160 * u.ct
+        sim = SpectrumSimulation(aeff=self.sim.aeff,
+                                 source_model=self.sim.source_model,
+                                 livetime=4*u.h,
+                                 e_reco=self.sim.edisp.e_reco.bins
+                                )
+        
+        sim.simulate_obs(seed=23, obs_id=23)
+        assert sim.obs.on_vector.total_counts == 160 * u.ct
         # The test value is taken from the test with edisp
-        assert_allclose(np.sum(self.sim.npred_source.data.value),
+        assert_allclose(np.sum(sim.npred_source.data.data.value),
                         167.467572145, rtol=0.01)
 

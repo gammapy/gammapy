@@ -153,20 +153,22 @@ def calculate_predicted_counts(model, aeff, livetime, edisp=None, e_reco=None):
         e_reco = EnergyBounds(temp)
 
     if edisp is not None:
-        true_energy = aeff.energy.data.to('TeV')
+        # TODO: True energy is converted to TeV. See issue 869 
+        true_energy = aeff.energy.bins.to('TeV')
+
         flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:],
                               intervals=True)
         # Need to fill nan values in aeff due to matrix multiplication with RMF
-        counts = flux * livetime * aeff.evaluate(fill_nan=True)
+        counts = flux * livetime * aeff.evaluate_fill_nan()
         counts = counts.to('')
-        reco_counts = edisp.apply(counts, e_reco=e_reco)
+        reco_counts = edisp.apply(counts, e_reco=e_reco, e_true=true_energy)
     else:
         flux = model.integral(emin=e_reco[:-1], emax=e_reco[1:], intervals=True)
-        reco_counts = flux * livetime * aeff.evaluate(energy=e_reco.log_centers,
-                                                      fill_nan=True)
+        reco_counts = flux * livetime * aeff.evaluate_fill_nan(energy=e_reco.log_centers)
         reco_counts = reco_counts.to('')
 
-    return CountsSpectrum(data=reco_counts, energy=e_reco)
+    return CountsSpectrum(data=reco_counts, energy_lo=e_reco.lower_bounds,
+                          energy_hi=e_reco.upper_bounds)
 
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):

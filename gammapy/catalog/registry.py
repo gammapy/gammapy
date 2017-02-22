@@ -32,12 +32,6 @@ class SourceCatalogRegistry(object):
         """
         source_catalogs = cls()
 
-        from .fermi import SourceCatalog3FGL
-        source_catalogs.register('3fgl', SourceCatalog3FGL)
-
-        from .fermi import SourceCatalog2FHL
-        source_catalogs.register('2fhl', SourceCatalog2FHL)
-
         import os
         if 'HGPS_ANALYSIS' in os.environ:
             from .hess import SourceCatalogHGPS
@@ -46,6 +40,18 @@ class SourceCatalogRegistry(object):
         if 'GAMMA_CAT' in os.environ:
             from .gammacat import SourceCatalogGammaCat
             source_catalogs.register('gamma-cat', SourceCatalogGammaCat)
+
+        from .fermi import SourceCatalog3FGL
+        source_catalogs.register('3fgl', SourceCatalog3FGL)
+
+        from .fermi import SourceCatalog1FHL
+        source_catalogs.register('1fhl', SourceCatalog1FHL)
+
+        from .fermi import SourceCatalog2FHL
+        source_catalogs.register('2fhl', SourceCatalog2FHL)
+
+        from .fermi import SourceCatalog3FHL
+        source_catalogs.register('3fhl', SourceCatalog3FHL)
 
         return source_catalogs
 

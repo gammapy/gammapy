@@ -58,7 +58,7 @@ class EnergyOffsetArray(object):
         self.data_err = np.sqrt(self.data)
 
     def _fill_one_event_list(self, events):
-        """Histogram the counts of an EventList object in 2D (energy,offset)
+        """Histogram the counts of an EventList object in 2D (energy,offset).
 
         Parameters
         ----------
@@ -151,7 +151,7 @@ class EnergyOffsetArray(object):
         return cls(energy_edges, offset_edges, data, data_units=str(data.unit), data_err=data_err)
 
     def write(self, filename, data_name="data", **kwargs):
-        """ Write `EnergyOffsetArray` to FITS file.
+        """Write `EnergyOffsetArray` to FITS file.
 
         Parameters
         ----------
@@ -265,7 +265,6 @@ class EnergyOffsetArray(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-
         table = Table()
         table["offset"] = self.offset_bin_center
         table["value"] = self.evaluate(energy, None, interp_kwargs)[0, :]

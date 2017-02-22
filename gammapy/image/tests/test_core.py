@@ -18,7 +18,7 @@ from ...datasets import load_poisson_stats_image
 from ..core import SkyImage
 
 
-class TestImage:
+class _TestImage:
     """A set of small test images.
 
     This class is used to group test images and reference results.
@@ -95,11 +95,11 @@ class TestImage:
 
 @pytest.fixture(
     scope="session",
-    params=TestImage.params,
-    ids=TestImage.params,
+    params=_TestImage.params,
+    ids=[str(x) for x in _TestImage.params],
 )
 def test_image(request):
-    return TestImage(*request.param)
+    return _TestImage(*request.param)
 
 
 @requires_data('gammapy-extra')

@@ -107,8 +107,8 @@ class TestSkyCube(object):
         expected = 0.05098313774120132 * u.Unit(unit)
         assert_allclose(actual, expected)
 
-    def test_repr(self):
-        actual = repr(self.sky_cube)
+    def test_str(self):
+        actual = str(self.sky_cube)
         expected = textwrap.dedent("""\
         Sky cube flux with shape=(30, 21, 61) and unit=1 / (cm2 MeV s sr):
          n_lon:       61  type_lon:    GLON-CAR         unit_lon:    deg

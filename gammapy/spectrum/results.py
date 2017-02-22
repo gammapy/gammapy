@@ -37,8 +37,12 @@ class SpectrumFitResult(object):
         Statistic used for the fit
     statval : float, optional
         Final fit statistic
-    npred : array-like, optional
-        On counts predicted by the fit
+    npred_src : array-like, optional
+        Source counts predicted by the fit
+    npred_bkg : array-like, optional
+        Background counts predicted by the fit
+    background_model : `~gammapy.spectrum.SpectralModel`
+        Best-fit background model
     flux_at_1TeV : dict, optional
         Flux for the fitted model at 1 TeV
     flux_at_1TeV_err : dict, optional
@@ -48,16 +52,21 @@ class SpectrumFitResult(object):
     """
 
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
-                 statname=None, statval=None, npred=None, fluxes=None,
-                 flux_errors=None, obs=None):
+                 statname=None, statval=None, npred_src=None, npred_bkg=None,
+                 background_model=None, fluxes=None, flux_errors=None, obs=None):
 
+        #TODO: Set model covariance outside this class
+        if covar_axis:
+            model.parameters.set_parameter_covariance(covariance, covar_axis)
         self.model = model
         self.covariance = covariance
         self.covar_axis = covar_axis
         self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
-        self.npred = npred
+        self.npred_src = npred_src
+        self.npred_bkg = npred_bkg
+        self.background_model = background_model
         self.fluxes = fluxes
         self.flux_errors = flux_errors
         self.obs = obs
@@ -102,7 +111,7 @@ class SpectrumFitResult(object):
                                     max=self.fit_range[1].value,
                                     unit=str(self.fit_range.unit))
         if self.statval is not None:
-            val['statval'] = self.statval
+            val['statval'] = float(self.statval)
         if self.statname is not None:
             val['statname'] = self.statname
         if self.covariance is not None:
@@ -145,6 +154,7 @@ class SpectrumFitResult(object):
                    covar_axis=covar_axis,
                    covariance=covariance)
 
+    # TODO: rather add this to ParameterList?
     def to_table(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):
         """Convert to `~astropy.table.Table`
 
@@ -152,17 +162,13 @@ class SpectrumFitResult(object):
         """
         t = Table()
         t['model'] = [self.model.__class__.__name__]
-        for parname, par in self.model_with_uncertainties.parameters.items():
-            try:
-                val = par.n
-                err = par.s
-            except AttributeError:
-                val = par
-                err = 0
+        for par_name, value in self.model.parameters._ufloats.items():
+            val = value.n
+            err = value.s
 
             # Apply correction factor for units
             # TODO: Refactor
-            current_unit = self.model.parameters[parname].unit
+            current_unit = self.model.parameters[par_name].unit
             if current_unit.is_equivalent(energy_unit):
                 factor = current_unit.to(energy_unit)
                 col_unit = energy_unit
@@ -178,11 +184,11 @@ class SpectrumFitResult(object):
             else:
                 raise ValueError(current_unit)
 
-            t[parname] = Column(
+            t[par_name] = Column(
                 data=np.atleast_1d(val * factor),
                 unit=col_unit,
                 **kwargs)
-            t['{}_err'.format(parname)] = Column(
+            t['{}_err'.format(par_name)] = Column(
                 data=np.atleast_1d(err * factor),
                 unit=col_unit,
                 **kwargs)
@@ -194,48 +200,15 @@ class SpectrumFitResult(object):
 
         return t
 
-    @lazyproperty
-    def model_with_uncertainties(self):
-        """Best fit model with uncertainties
-
-        The parameters on the model will have the units of the model attribute.
-        The covariance matrix passed on initialization must also have these
-        units.
-
-        TODO: Add to gammapy.spectrum.models
-
-        This function uses the uncertainties packages as explained here
-        https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
-
-        Examples
-        --------
-        TODO
-        """
-        import uncertainties
-        pars = self.model.parameters
-
-        # convert existing parameters to ufloats
-        values = [pars[_].value for _ in self.covar_axis]
-        ufloats = uncertainties.correlated_values(values, self.covariance)
-        upars = dict(zip(self.covar_axis, ufloats))
-
-        # add parameters missing in covariance
-        for name in pars:
-            upars.setdefault(name, pars[name].value)
-
-        return self.model.__class__(**upars)
-
     def __str__(self):
         """
         Summary info string.
         """
         info = '\nFit result info \n'
         info += '--------------- \n'
-        info += 'Model: {} \n'.format(self.model_with_uncertainties)
+        info += 'Model: {} \n'.format(self.model)
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
-        if self.covariance is not None:
-            info += '\nCovariance:\n{}\n{}'.format(self.covar_axis, self.covariance)
         if self.fit_range is not None:
             info += '\nFit Range: {}'.format(self.fit_range)
         info += '\n'
@@ -263,34 +236,17 @@ class SpectrumFitResult(object):
         butterfly : `~gammapy.spectrum.SpectrumButterfly`
             Butterfly object.
         """
-        from uncertainties import unumpy
-
         if energy is None:
             energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
-                                                    self.fit_range[1],
-                                                    100)
-        flux = self.model(energy)
+                                                    self.fit_range[1], 100)
+
+        flux, flux_err = self.model.evaluate_error(energy)
 
         butterfly = SpectrumButterfly()
         butterfly['energy'] = energy
         butterfly['flux'] = flux.to(flux_unit)
-
-        # compute uncertainties
-        umodel = self.model_with_uncertainties
-
-        if self.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = self.model.parameters.emin.unit
-        else:
-            energy_unit = self.model.parameters.reference.unit
-
-        values = umodel(energy.to(energy_unit).value)
-
-        # unit conversion factor, in case it doesn't match
-        conversion_factor = flux.to(flux_unit).value / unumpy.nominal_values(values)
-        flux_err = u.Quantity(unumpy.std_devs(values), flux_unit) * conversion_factor
-
-        butterfly['flux_lo'] = flux - flux_err
-        butterfly['flux_hi'] = flux + flux_err
+        butterfly['flux_lo'] = flux - flux_err.to(flux_unit)
+        butterfly['flux_hi'] = flux + flux_err.to(flux_unit)
         return butterfly
 
     def stats_per_bin(self, fit_range=True):
@@ -305,10 +261,10 @@ class SpectrumFitResult(object):
         fit_range : bool, optional
             Set bins outside the fitted range to 0, default: True
         """
-        n_on = self.obs.on_vector.data.value
-        n_off = self.obs.off_vector.data.value
+        n_on = self.obs.on_vector.data.data.value
+        n_off = self.obs.off_vector.data.data.value
         alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.value
+        mu_sig = self.expected_source_counts.data.data.value
         stat = stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
         if fit_range:
             # TODO: make active bins during the fit available more easily
@@ -323,31 +279,28 @@ class SpectrumFitResult(object):
         """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
         energy = self.obs.on_vector.energy
-        data = self.npred * u.ct
-        idx = np.isnan(data)
-        data[idx] = 0
-        return CountsSpectrum(data=data, energy=energy)
+        data = self.npred_src * u.ct
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
 
     @property
     def expected_background_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted background counts
-
-        According to profile likelihood, see :ref:`wstat`.
         """
-        energy = self.obs.e_reco
-        n_on = self.obs.on_vector.data.value
-        n_off = self.obs.off_vector.data.value
-        alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.value
-        data = stats.get_wstat_mu_bkg(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
-        return CountsSpectrum(data=data, energy=energy)
+        try:
+            energy = self.obs.e_reco
+            data = self.npred_bkg * u.ct
+            return CountsSpectrum(data=data, energy_hi=energy.upper_bounds,
+                                  energy_lo=energy.lower_bounds)
+        except TypeError:
+            return None
 
     @property
     def expected_on_counts(self):
         """`~gammapy.spectrum.CountsSpectrum` of predicted on counts
         """
         mu_on = self.expected_source_counts.copy()
-        mu_on.data += self.expected_background_counts.data
+        mu_on.data.data += self.expected_background_counts.data.data
         return mu_on
 
     @property
@@ -357,7 +310,7 @@ class SpectrumFitResult(object):
         Prediced on counts - expected on counts
         """
         resspec = self.expected_on_counts.copy()
-        resspec.data -= self.obs.on_vector.data
+        resspec.data.data -= self.obs.on_vector.data.data
         return resspec
 
     def plot(self):
@@ -403,7 +356,7 @@ class SpectrumFitResult(object):
         yy = [0, 0]
         ax.plot(xx, yy, color='black')
 
-        ymax = 1.4 * max(self.residuals.data.value)
+        ymax = 1.4 * max(self.residuals.data.data.value)
         ax.set_ylim(-ymax, ymax)
 
         xmin = self.fit_range.to('TeV').value[0] * 0.8
@@ -449,24 +402,20 @@ class SpectrumResult(object):
         # Get units right
         pars = self.fit.model.parameters
         if self.fit.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = pars.emin.unit
-            flux_unit = pars.amplitude.unit / energy_unit
+            energy_unit = pars['emin'].unit
+            flux_unit = pars['amplitude'].unit / energy_unit
         else:
-            energy_unit = pars.reference.unit
-            flux_unit = pars.amplitude.unit
+            energy_unit = pars['reference'].unit
+            flux_unit = pars['amplitude'].unit
 
-        x = self.points.table['e_ref'].quantity.to(energy_unit)
-        y = self.points.table['dnde'].quantity.to(flux_unit)
-        y_err = self.points.table['dnde_err'].quantity.to(flux_unit)
+        e_ref = self.points.table['e_ref'].quantity.to(energy_unit)
+        points = self.points.table['dnde'].quantity.to(flux_unit)
+        points_err = self.points.table['dnde_err'].quantity.to(flux_unit)
 
-        points = list()
-        for val, err in zip(y.value, y_err.value):
-            points.append(ufloat(val, err))
-
-        func = self.fit.model_with_uncertainties(x.value)
-        residuals = (points - func) / func
-
-        return residuals
+        model = self.fit.model(e_ref)
+        residuals = (points - model) / model
+        residuals_err = (points_err - model) / model
+        return residuals, residuals_err
 
     def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, fit_kwargs=dict(),
@@ -562,12 +511,10 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        res = self.flux_point_residuals
-        y = [_.n for _ in res]
-        y_err = [_.s for _ in res]
+        y, y_err = self.flux_point_residuals
         x = self.points.e_ref
         x = x.to(energy_unit).value
-        ax.errorbar(x, y, yerr=y_err, **kwargs)
+        ax.errorbar(x, y.value, yerr=y_err.value, **kwargs)
 
         xx = ax.get_xlim()
         yy = [0, 0]

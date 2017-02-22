@@ -14,12 +14,13 @@ from ..datasets import gammapy_extra
 __all__ = [
     'requires_dependency',
     'requires_data',
-    'SHERPA_LT_4_8',
+#    'SHERPA_LT_4_8',
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
 ]
 
-SHERPA_LT_4_8 = not minversion('sherpa', '4.8.2+81')
+# Does not work with current sherpa version string ('ciao4.9+1.g1ebebb7')
+#SHERPA_LT_4_8 = not minversion('sherpa', '4.8.2+81')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
@@ -82,6 +83,8 @@ def has_data(name):
         return ('HGPS_DATA' in os.environ) and ('HGPS_ANALYSIS' in os.environ)
     elif name == 'gamma-cat':
         return ('GAMMA_CAT' in os.environ)
+    elif name == 'fermi-lat':
+        return ('FERMI_LAT_DATA' in os.environ)
     else:
         raise ValueError('Invalid name: {}'.format(name))
 

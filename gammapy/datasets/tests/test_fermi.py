@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing.utils import assert_allclose
+from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import (
+    FermiLATDataset,
     FermiGalacticCenter,
     FermiVelaRegion,
     load_lat_psf_performance,
@@ -117,3 +120,35 @@ def test_load_lat_psf_performance():
     table_p7_95 = load_lat_psf_performance('P7SOURCEV6_95')
     assert table_p7_95['energy'][0] == 31.6227766017
     assert table_p7_95['containment_angle'][0] == 38.3847234362
+
+@requires_data('fermi-lat')
+@requires_dependency('healpy')
+@requires_dependency('yaml')
+class TestFermiLATDataset:
+    def setup(self):
+        filename = '$FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
+        self.data_2fhl = data = FermiLATDataset(filename)
+
+    def test_events(self):
+        events = self.data_2fhl.events
+        assert len(events.table) == 60275
+
+    def test_exposure(self):
+        exposure = self.data_2fhl.exposure
+        assert exposure.name == 'exposure'
+
+    def test_counts(self):
+        counts = self.data_2fhl.counts
+        assert_quantity_allclose(counts.data.sum(), 60275 * u.count)
+
+    def test_psf(self):
+        psf = self.data_2fhl.psf
+        actual = self.data_2fhl.psf.integral(100 * u.GeV, 0 * u.deg, 2 * u.deg)
+        desired = 1.00048
+        assert_allclose(actual, desired, rtol=1e-4)
+
+    def test_isodiff(self):
+        isodiff = self.data_2fhl.isotropic_diffuse
+        actual = isodiff(10 * u.GeV)
+        desired = 6.3191722098744606e-12 * u.Unit('1 / (cm2 MeV s sr)')
+        assert_quantity_allclose(actual, desired)

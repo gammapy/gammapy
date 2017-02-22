@@ -2,20 +2,22 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table
+from astropy import units as u
+from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..irf import EffectiveAreaTable2D, EffectiveAreaTable
 from ..background import FOVCube
-from ..irf import EnergyDispersion2D, EnergyDispersion
+from ..irf import EnergyDispersion2D
 from ..irf import EnergyDependentMultiGaussPSF
-
+from ..utils.energy import EnergyBounds
 
 __all__ = [
     'CTAIrf',
     'BgRateTable',
     'Psf68Table',
-    'CTAPerf'
+    'SensitivityTable',
+    'CTAPerf',
 ]
 
 
@@ -56,6 +58,7 @@ class CTAIrf(object):
         self.psf = psf
         self.bkg = bkg
 
+        
     @classmethod
     def read(cls, filename):
         """
@@ -104,7 +107,7 @@ class CTAIrf(object):
         )
 
 
-class BgRateTable(NDDataArray):
+class BgRateTable(object):
     """Background rate Table
 
     The IRF format should be compliant with the one discussed
@@ -118,9 +121,14 @@ class BgRateTable(NDDataArray):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axes[0]
 
     @classmethod
     def from_table(cls, table):
@@ -133,7 +141,24 @@ class BgRateTable(NDDataArray):
         energy = np.append(energy_lo.value,
                            energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='BACKGROUND', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot background rate
@@ -156,19 +181,19 @@ class BgRateTable(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        values = self.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        values = self.data.evaluate(energy=energy)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Background rate [{}]'.format(self.data.unit))
+        ax.set_ylabel('Background rate [{}]'.format(self.data.data.unit))
 
         return ax
 
 
-class Psf68Table(NDDataArray):
+class Psf68Table(object):
     """Background rate Table
 
     The IRF format should be compliant with the one discussed
@@ -182,9 +207,14 @@ class Psf68Table(NDDataArray):
     data : `~astropy.units.Quantity`
         Background rate
     """
-    energy = BinnedDataAxis(interpolation_mode='log')
-    """Energy Axis"""
-    axis_names = ['energy']
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_lo,
+                               interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axes[0]
 
     @classmethod
     def from_table(cls, table):
@@ -197,7 +227,24 @@ class Psf68Table(NDDataArray):
         energy = np.append(
             energy_lo.value, energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-        return cls(energy=energy, data=data)
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='POINT SPREAD FUNCTION'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='POINT SPREAD FUNCTION', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot point spread function
@@ -220,15 +267,101 @@ class Psf68Table(NDDataArray):
 
         if energy is None:
             energy = self.energy.nodes
-        values = self.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.data[:-1].value,
-                self.energy.data[1:].value - energy.value)
+        values = self.data.evaluate(energy=energy)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel(
-            'Angular resolution 68 % containment [{}]'.format(self.data.unit)
+            'Angular resolution 68 % containment [{}]'.format(self.data.data.unit)
         )
+
+        return ax
+
+
+class SensitivityTable(object):
+    """Sensitivity Table
+
+    The IRF format should be compliant with the one discussed
+    at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
+    Work will be done to fix this.
+
+    Parameters
+    -----------
+    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        Bin edges of energy axis
+    data : `~astropy.units.Quantity`
+        Background rate
+    """
+    def __init__(self, energy_lo, energy_hi, data):
+        axes = [BinnedDataAxis(energy_lo, energy_hi,
+                               interpolation_mode='log', name='energy')]
+        self.data = NDDataArray(axes=axes, data=data)
+
+    @property
+    def energy(self):
+        return self.data.axis('energy')
+
+    @classmethod
+    def from_table(cls, table):
+        """Sensitivity reader"""
+        energy_col = 'ENERG'
+        data_col = 'SENSITIVITY'
+
+        energy_lo = table['{}_LO'.format(energy_col)].quantity
+        energy_hi = table['{}_HI'.format(energy_col)].quantity
+        energy = np.append(energy_lo.value,
+                           energy_hi[-1].value) * energy_lo.unit
+        data = table['{}'.format(data_col)].quantity
+        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu='SENSITIVITY'):
+        fits_table = hdulist[hdu]
+        table = fits_table_to_table(fits_table)
+        return cls.from_table(table)
+
+    @classmethod
+    def read(cls, filename, hdu='SENSITVITY', **kwargs):
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename), **kwargs)
+        try:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+        except KeyError:
+            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
+            msg += '\n Available {}'.format([_.name for _ in hdulist])
+            raise ValueError(msg)
+
+    def plot(self, ax=None, energy=None, **kwargs):
+        """Plot sensitivity
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        energy : `~astropy.units.Quantity`
+            Energy nodes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        if energy is None:
+            energy = self.energy.nodes
+        values = self.data.evaluate(energy=energy)
+        xerr = (energy.value - self.energy.lo.value,
+                self.energy.hi.value - energy.value)
+        ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_ylabel('Sensitivity [{}]'.format(self.data.data.unit))
 
         return ax
 
@@ -253,24 +386,28 @@ class CTAPerf(object):
     ----------
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp_2d : `~gammapy.irf.EnergyDispersion2D`
         Energy dispersion
     psf : `~gammapy.scripts.Psf68Table`
         Point spread function
     bkg : `~gammapy.scripts.BgRateTable`
         Background rate
+    sens : `~gammapy.scripts.SensitivityTable`
+        Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None, rmf=None):
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-
+        self.sens = sens
+        self.rmf = rmf
+        
     @classmethod
     def read(cls, filename):
         """
-        Read from a FITS file.
+        Read from a FITS file. Build RMF on fly
 
         Parameters
         ----------
@@ -279,41 +416,110 @@ class CTAPerf(object):
         """
         filename = str(make_path(filename))
 
-        aeff = EffectiveAreaTable.read(filename, hdu='SPECRESP')
+        hdulist = fits.open(filename)
+        aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
+        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+        bkg = BgRateTable.from_hdulist(hdulist=hdulist)
+        psf = Psf68Table.from_hdulist(hdulist=hdulist)
+        sens = SensitivityTable.from_hdulist(hdulist=hdulist)
 
-        # Get EnergyDispersion from HDUList
-        hdu_list = fits.open(filename)
-        edisp = EnergyDispersion.from_hdulist(hdu_list=hdu_list)
+        # Create rmf with appropriate dimensions (e_reco->bkg, e_true->area)
+        e_reco_min = bkg.energy.lo[0]
+        e_reco_max = bkg.energy.hi[-1]
+        e_reco_bin = bkg.energy.nbins
+        e_reco_axis = EnergyBounds.equal_log_spacing(e_reco_min,
+                                                     e_reco_max,
+                                                     e_reco_bin,
+                                                     'TeV')
 
-        # Do not work, can't understand why, see BgRateTable and Psf68Table class
-        # bkg = BgRateTable.read(filename, hdu='BACKGROUND')
-        bkg = BgRateTable.from_hdulist(
-            fits.HDUList([hdu_list[0], hdu_list['BACKGROUND']])
-        )
+        e_true_min = aeff.energy.lo[0]
+        e_true_max = aeff.energy.hi[-1]
+        e_true_bin = aeff.energy.nbins
+        e_true_axis = EnergyBounds.equal_log_spacing(e_true_min,
+                                                     e_true_max,
+                                                     e_true_bin,
+                                                     'TeV')
 
-        psf = Psf68Table.from_hdulist(
-            fits.HDUList([hdu_list[0], hdu_list['POINT SPREAD FUNCTION']])
-        )
-
+        rmf = edisp.to_energy_dispersion(offset=0.5 * u.degree,
+                                         e_reco=e_reco_axis,
+                                         e_true=e_true_axis)
+        
         return cls(
             aeff=aeff,
             bkg=bkg,
             edisp=edisp,
             psf=psf,
+            sens=sens,
+            rmf=rmf
         )
 
-    def peek(self, figsize=(10, 10)):
+    def peek(self, figsize=(15, 8)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
 
-        self.bkg.plot(ax=axes[0][0])
-        aeff = self.aeff.plot(ax=axes[0][1])
-        aeff.set_yscale('log')
+        fig = plt.figure(figsize=(15, 8))
+        ax_bkg = plt.subplot2grid((2, 4), (0, 0))
+        ax_area = plt.subplot2grid((2, 4), (0, 1))
+        ax_sens = plt.subplot2grid((2, 4), (0, 2), colspan=2, rowspan=2)
+        ax_psf = plt.subplot2grid((2, 4), (1, 0))
+        ax_resol = plt.subplot2grid((2, 4), (1, 1))
 
-        self.psf.plot(ax=axes[1][0])
+        self.bkg.plot(ax=ax_bkg)
+        self.aeff.plot(ax=ax_area).set_yscale('log')
+        self.sens.plot(ax=ax_sens)
+        self.psf.plot(ax=ax_psf)
+        self.edisp.plot_bias(ax=ax_resol,
+                             offset=0.5 * u.degree,  # hacked for now
+                             e_true=EnergyBounds.equal_log_spacing(0.02,
+                                                                   300,
+                                                                   100,
+                                                                   'TeV'),
+                             migra=np.linspace(0., 3, 80))
 
-        self.edisp.plot_matrix(ax=axes[1][1])
+        ax_bkg.grid(which='both')
+        ax_area.grid(which='both')
+        ax_sens.grid(which='both')
+        ax_psf.grid(which='both')
+        plt.tight_layout()
+        plt.show()
+        return fig
+
+    @staticmethod
+    def superpose_perf(cta_perf, labels):
+        """
+        Superpose performance plot
+
+        Parameters
+        ----------
+        cta_perf : `list` of `~gammapy.scripts.CTAPerf`
+           List of performance
+        labels : `list` of `str`
+           List of labels
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=(10, 8))
+        ax_bkg = plt.subplot2grid((2, 2), (0, 0))
+        ax_area = plt.subplot2grid((2, 2), (0, 1))
+        ax_psf = plt.subplot2grid((2, 2), (1, 0))
+        ax_sens = plt.subplot2grid((2, 2), (1, 1))
+
+        for index, (perf, label) in enumerate(zip(cta_perf, labels)):
+            plot_label = {'label': label}
+            perf.bkg.plot(ax=ax_bkg, **plot_label)
+            perf.aeff.plot(ax=ax_area, **plot_label).set_yscale('log')
+            perf.sens.plot(ax=ax_sens, **plot_label)
+            perf.psf.plot(ax=ax_psf, **plot_label)
+
+        ax_bkg.legend(loc='best')
+        ax_area.legend(loc='best')
+        ax_psf.legend(loc='best')
+        ax_sens.legend(loc='best')
+
+        ax_bkg.grid(which='both')
+        ax_area.grid(which='both')
+        ax_psf.grid(which='both')
+        ax_sens.grid(which='both')
 
         plt.tight_layout()
         plt.show()

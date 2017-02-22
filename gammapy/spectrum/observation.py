@@ -78,7 +78,7 @@ class SpectrumObservation(object):
         print(obs)
     """
 
-    def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
+    def __init__(self, on_vector, aeff=None, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
         self.off_vector = off_vector
@@ -108,12 +108,12 @@ class SpectrumObservation(object):
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.data)
+        return EnergyBounds(self.on_vector.energy.bins)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.data)
+        return EnergyBounds(self.aeff.energy.bins)
 
     @property
     def nbins(self):
@@ -153,8 +153,9 @@ class SpectrumObservation(object):
         average value for alpha.
         """
         energy = self.off_vector.energy
-        data = self.off_vector.data * self.alpha
-        return CountsSpectrum(data=data, energy=energy)
+        data = self.off_vector.data.data * self.alpha
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
 
     @property
     def total_stats(self):
@@ -203,18 +204,18 @@ class SpectrumObservation(object):
         -------
         stats : `~gammapy.spectrum.SpectrumStats`
             Stats
-        """ 
+        """
         if self.off_vector is not None:
-            n_off = int(self.off_vector.data.value[idx])
+            n_off = int(self.off_vector.data.data.value[idx])
             a_off = self.off_vector._backscal_array[idx]
         else:
             n_off = 0
-            a_off = 1 # avoid zero division error
+            a_off = 1  # avoid zero division error
 
         return SpectrumStats(
             energy_min=self.e_reco[idx],
             energy_max=self.e_reco[idx + 1],
-            n_on=int(self.on_vector.data.value[idx]),
+            n_on=int(self.on_vector.data.data.value[idx]),
             n_off=n_off,
             a_on=self.on_vector._backscal_array[idx],
             a_off=a_off,
@@ -312,17 +313,22 @@ class SpectrumObservation(object):
 
         # Write in keV and cm2 for sherpa
         if use_sherpa:
-            self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
-            self.aeff.energy.data = self.aeff.energy.data.to('keV')
-            self.aeff.data = self.aeff.data.to('cm2')
+            self.on_vector.energy.lo = self.on_vector.energy.lo.to('keV')
+            self.on_vector.energy.hi = self.on_vector.energy.hi.to('keV')
+            self.aeff.energy.lo = self.aeff.energy.lo.to('keV')
+            self.aeff.energy.hi = self.aeff.energy.hi.to('keV')
+            self.aeff.data.data = self.aeff.data.data.to('cm2')
             if self.off_vector is not None:
-                self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+                self.off_vector.energy.lo = self.off_vector.energy.lo.to('keV')
+                self.off_vector.energy.hi = self.off_vector.energy.hi.to('keV')
             if self.edisp is not None:
-                self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
-                self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+                self.edisp.e_reco.lo = self.edisp.e_reco.lo.to('keV')
+                self.edisp.e_reco.hi = self.edisp.e_reco.hi.to('keV')
+                self.edisp.e_true.lo = self.edisp.e_true.lo.to('keV')
+                self.edisp.e_true.hi = self.edisp.e_true.hi.to('keV')
                 # Set data to itself to trigger reset of the interpolator
                 # TODO: Make NDData notice change of axis
-                self.edisp.data = self.edisp.data
+                self.edisp.data.data = self.edisp.data.data
 
         self.on_vector.write(outdir / phafile, clobber=overwrite)
         self.aeff.write(outdir / arffile, clobber=overwrite)
@@ -379,7 +385,10 @@ class SpectrumObservation(object):
         objects and appended to the PHA instance
         """
         pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id))
-        arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        if self.aeff is not None:
+            arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        else:
+            arf = None
         if self.edisp is not None:
             rmf = self.edisp.to_sherpa(name='rmf_obs{}'.format(self.obs_id))
         else:
@@ -431,7 +440,8 @@ class SpectrumObservationList(UserList):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.obs_id)
+        ss += '\nNumber of observations: {}'.format(len(self))
+        #ss += '\n{}'.format(self.obs_id)
         return ss
 
     @property
@@ -654,7 +664,8 @@ class SpectrumObservationStacker(object):
                                             spec.quality)
 
         stacked_spectrum = PHACountsSpectrum(data=stacked_data,
-                                             energy=energy,
+                                             energy_lo=energy.lo,
+                                             energy_hi=energy.hi,
                                              quality=stacked_quality)
         return stacked_spectrum
 
@@ -672,13 +683,13 @@ class SpectrumObservationStacker(object):
             bkscal_off_data = o.off_vector._backscal_array.copy()
             bkscal_off += bkscal_off_data * o.off_vector.counts_in_safe_range
 
-        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.value
-        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.value
+        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.data.value
+        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.data.value
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
         alpha_correction = - 1
-        idx = np.where(self.stacked_off_vector.data == 0)[0]
+        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
         stacked_bkscal_on[idx] = alpha_correction
         stacked_bkscal_off[idx] = alpha_correction
 
@@ -688,10 +699,10 @@ class SpectrumObservationStacker(object):
     def setup_counts_vectors(self):
         """Add correct attributes to stacked counts vectors"""
         total_livetime = self.obs_list.total_livetime
-        self.stacked_on_vector.livetime = total_livetime
-        self.stacked_off_vector.livetime = total_livetime
-        self.stacked_on_vector.backscal = self.stacked_bkscal_on
-        self.stacked_off_vector.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.meta.livetime = total_livetime
+        self.stacked_off_vector.meta.livetime = total_livetime
+        self.stacked_on_vector.meta.backscal = self.stacked_bkscal_on
+        self.stacked_off_vector.meta.backscal = self.stacked_bkscal_off
         self.stacked_on_vector.obs_id = self.obs_list.obs_id
         self.stacked_off_vector.obs_id = self.obs_list.obs_id
 

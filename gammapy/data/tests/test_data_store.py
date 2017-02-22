@@ -182,19 +182,19 @@ def test_make_mean_edisp(tmpdir):
 
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
-    assert_quantity_allclose(rmf.data[53, 8], 0.0559785805550798)
+    assert_quantity_allclose(rmf.data.data[53, 8], 0.0559785805550798)
 
     rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true,
                                    e_reco=e_reco,
                                    low_reco_threshold=Energy(1, "TeV"),
                                    high_reco_threshold=Energy(60, "TeV"))
-    i2 = np.where(rmf2.evaluate(e_reco=Energy(0.8, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(0.8, "TeV")) != 0)[0]
     assert len(i2) == 0
-    i2 = np.where(rmf2.evaluate(e_reco=Energy(61, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(61, "TeV")) != 0)[0]
     assert len(i2) == 0
-    i = np.where(rmf.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
-    i2 = np.where(rmf2.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    i = np.where(rmf.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
     assert_equal(i, i2)
-    i = np.where(rmf.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
-    i2 = np.where(rmf2.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    i = np.where(rmf.data.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
     assert_equal(i, i2)

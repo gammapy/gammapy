@@ -205,3 +205,6 @@ Reference/API
 
 .. automodapi:: gammapy.utils.time
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.utils.modeling
+    :no-inheritance-diagram:

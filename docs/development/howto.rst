@@ -969,21 +969,15 @@ If you want to compare the IRF files between two different datastores (to compar
 
 .. _use-nddata:
 
-Using the NDData base class
----------------------------
+Using the NDDataArray
+---------------------
 
-Gammapy has a base class for n-dimensional data arrays,
+Gammapy has a class for generic n-dimensional data arrays,
 `~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array
-should subclass this base class. The goal is to reuse code for interpolation
-and have an coherent I/O interface, mainly in `~gammapy.irf`. Below you
-find a list of  classes currently using the
-`~gammapy.utils.nddata.NDDataArray`.  If you want to add a new class using the
-`~gammapy.utils.nddata.NDDataArray` as base class, you can look at these
-examples.
+should use this class. The goal is to reuse code for interpolation
+and have an coherent I/O interface, mainly in `~gammapy.irf`.
 
-* `~gammapy.irf.EffectiveAreaTable`
-* `~gammapy.irf.EffectiveAreaTable2D`
-* `~gammapy.spectrum.CountsSpectrum`
+A usage example can be found in :gp-extra-notebooks:``nddata_demo``.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator. 
@@ -1001,6 +995,7 @@ to run ``test_notebooks.py`` until all notebooks run without raising an error.
 If you add a new notebook and want it to be under test (which of course is what
 you want) you have to add it to ``gammapy-extra/notebooks/notebooks.yaml``.
 Note that there is also the command ``make test-notebooks`` which is used for
+
 continuous integration on travis CI. It is not recommended to use this locally,
 since it overwrides your gammapy installation (see issue 727).
 

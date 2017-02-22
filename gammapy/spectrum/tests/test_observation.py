@@ -34,9 +34,9 @@ def get_test_obs():
         obs=obs_1,
         total_on=172,
         livetime = 1581.73681640625 * u.second,
-        npred =  210.86182536480652,
-        excess = 166.428,
-        excess_safe_range = 135.428)
+        npred = 212.35910231742795,
+        excess = 167.36363636363637,
+        excess_safe_range = 135)
     )
     # 2 : Simulated obs without background
     energy = np.logspace(-2, 2, 100) * u.TeV
@@ -61,12 +61,14 @@ def get_test_obs():
     # 3 : obs without edisp
     energy = np.logspace(-1,1, 20) * u.TeV
     livetime = 2 * u.h
-    on_vector = PHACountsSpectrum(energy=energy,
+    on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
+                                  energy_hi=energy[1:],
                                   data=np.arange(19),
                                   obs_id=2,
                                   backscal=1,
                                   livetime=livetime)
-    aeff = EffectiveAreaTable(energy=energy,
+    aeff = EffectiveAreaTable(energy_lo=energy[:-1],
+                              energy_hi=energy[1:],
                               data=np.ones(19) * 1e5 * u.m**2)
     obs_3 = SpectrumObservation(on_vector=on_vector, aeff=aeff)
     test_obs.append(dict(
@@ -161,12 +163,12 @@ class TestSpectrumObservationStacker:
         npred1=self.obs_list[0].predicted_counts(model=pwl)
         npred2=self.obs_list[1].predicted_counts(model=pwl)
         # Set npred outside safe range to 0
-        npred1.data[np.nonzero(self.obs_list[0].on_vector.quality)]=0
-        npred2.data[np.nonzero(self.obs_list[1].on_vector.quality)]=0
+        npred1.data.data[np.nonzero(self.obs_list[0].on_vector.quality)]=0
+        npred2.data.data[np.nonzero(self.obs_list[1].on_vector.quality)]=0
 
-        npred_summed=npred1.data + npred2.data
+        npred_summed=npred1.data.data + npred2.data.data
 
-        assert_allclose(npred_stacked.data, npred_summed)
+        assert_allclose(npred_stacked.data.data, npred_summed)
 
 
 @requires_dependency('scipy')
@@ -180,8 +182,10 @@ class TestSpectrumObservationList:
         stacked_obs=self.obs_list.stack()
         assert 'Observation summary report' in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
-        assert_quantity_allclose(stacked_obs.aeff.data[10], 86443352.23037884 * u.cm ** 2)
-        assert_quantity_allclose(stacked_obs.edisp.data[50, 52], 0.029627067949207702)
+        assert_quantity_allclose(stacked_obs.aeff.data.data[10],
+                                 86443352.23037884 * u.cm ** 2)
+        assert_quantity_allclose(stacked_obs.edisp.data.data[50, 52],
+                                 0.024019396113124782)
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)

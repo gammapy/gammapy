@@ -655,23 +655,30 @@ class EnergyDependentTablePSF(object):
         psf = self.table_psf_at_energy(energy)
         return psf.integral(offset_min, offset_max)
 
-    def info(self):
-        """Print basic info."""
-        # Summarise data members
-        ss = array_stats_str(self.offset.to('deg'), 'offset')
-        ss += array_stats_str(self.energy, 'energy')
-        ss += array_stats_str(self.exposure, 'exposure')
+    def __str__(self):
+        ss = 'EnergyDependentTablePSF\n'
+        ss += '-----------------------\n'
+        ss += '\nAxis info:\n'
+        ss += '  ' + array_stats_str(self.offset.to('deg'), 'offset')
+        ss += '  ' + array_stats_str(self.energy, 'energy')
+        ss += '  ' + array_stats_str(self.exposure, 'exposure')
 
         # ss += 'integral = {0}\n'.format(self.integral())
 
+        ss += '\nContainment info:\n'
         # Print some example containment radii
         fractions = [0.68, 0.95]
         energies = Quantity([10, 100], 'GeV')
-        for energy in energies:
-            for fraction in fractions:
-                radius = self.containment_radius(energy=energy, fraction=fraction)
-                ss += '{0}% containment radius at {1}: {2}\n'.format(100 * fraction, energy, radius)
+        for fraction in fractions:
+            radii = self.containment_radius(energies=energies, fraction=fraction)
+            for energy, radius in zip(energies, radii):
+                ss += '  ' + '{0}% containment radius at {1:3.0f}: {2:.2f}\n'.format(100 * fraction, energy, radius)
         return ss
+
+
+    def info(self):
+        """Print basic info"""
+        print(self.__str__)
 
     def plot_psf_vs_theta(self, filename=None, energies=[1e4, 1e5, 1e6]):
         """Plot PSF vs theta.

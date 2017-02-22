@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Ring background estimation.
-"""
+"""Ring background estimation."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from itertools import product
@@ -69,6 +68,7 @@ class AdaptiveRingBackgroundEstimator(object):
     RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
 
     """
+
     def __init__(self, r_in, r_out_max, width, stepsize=0.02 * u.deg,
                  threshold_alpha=0.1, theta=0.22 * u.deg, method='fixed_width'):
 
@@ -119,7 +119,9 @@ class AdaptiveRingBackgroundEstimator(object):
 
     def _alpha_approx_cube(self, cubes):
         """
-        Compute alpha as on_exposure / off_exposure. Where off_exposure < 0,
+        Compute alpha as on_exposure / off_exposure.
+        
+        Where off_exposure < 0,
         alpha is set to infinity.
         """
         exposure_on = cubes['exposure_on']
@@ -130,7 +132,9 @@ class AdaptiveRingBackgroundEstimator(object):
 
     def _exposure_off_cube(self, images, kernels):
         """
-        Compute off exposure cube by convolving the on exposure with different
+        Compute off exposure cube.
+
+        The on exposure is convolved with different
         ring kernels and stacking the data along the third dimension.
         """
         exposure  = images['exposure_on'].data
@@ -139,7 +143,9 @@ class AdaptiveRingBackgroundEstimator(object):
 
     def _exposure_on_cube(self, images, kernels):
         """
-        Compute on exposure cube, by convolving the on exposure with a tophat
+        Compute on exposure cube.
+
+        Calculated by convolving the on exposure with a tophat
         of radius theta, and stacking all images along the third dimension.
         """
         from scipy.ndimage import convolve
@@ -156,7 +162,9 @@ class AdaptiveRingBackgroundEstimator(object):
 
     def _off_cube(self, images, kernels):
         """
-        Compute off cube by convolving the raw counts with different ring kernels
+        Compute off cube.
+
+        Calculated by convolving the raw counts with different ring kernels
         and stacking the data along the third dimension.
         """
         counts = images['counts'].data
@@ -165,7 +173,9 @@ class AdaptiveRingBackgroundEstimator(object):
 
     def _reduce_cubes(self, cubes):
         """
-        Compute off and off exposure map, by reducing the cubes. The data is
+        Compute off and off exposure map.
+
+        Calulated by reducing the cubes. The data is
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
@@ -265,6 +275,7 @@ class RingBackgroundEstimator(object):
     gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
 
     """
+
     def __init__(self, r_in, width):
         self.parameters = dict(r_in=r_in, width=width)
 
@@ -327,15 +338,11 @@ class RingBackgroundEstimator(object):
         return result
 
     def info(self):
-        """
-        Print summary info about the parameters.
-        """
+        """Print summary info about the parameters."""
         print(str(self))
 
     def __str__(self):
-        """
-        String representation of the class.
-        """
+        """String representation of the class."""
         info = "RingBackground parameters: \n"
         info += 'r_in : {}\n'.format(self.parameters['r_in'])
         info += 'width: {}\n'.format(self.parameters['width'])

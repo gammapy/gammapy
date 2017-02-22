@@ -16,7 +16,6 @@
 .. _photutils: http://photutils.readthedocs.io
 .. _astroplan: http://astroplan.readthedocs.io
 .. _gwcs: http://gwcs.readthedocs.io
-.. _wcsaxes: https://github.com/astrofrog/wcsaxes
 .. _iminuit: https://github.com/iminuit/iminuit
 .. _probfit: https://github.com/iminuit/probfit
 .. _h5py: http://www.h5py.org/
@@ -89,8 +88,10 @@
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
-.. _Slack: https://slack.com/
 .. _Gammapy on Slack: https://gammapy.slack.com
+
+.. _Slack: https://slack.com
+.. _PyPI: https://pypi.python.org
 
 .. _scientific Python stack: http://www.scipy.org/about.html
 
@@ -103,3 +104,5 @@
 .. _RMF: http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
+
+.. _Gammapy tutorial notebooks: http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb

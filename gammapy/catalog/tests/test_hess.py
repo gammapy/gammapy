@@ -23,7 +23,6 @@ class TestSourceCatalogHGPS:
         assert len(self.cat.associations) == 223
 
 
-@requires_dependency('uncertainties')
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
     def setup(self):
@@ -65,14 +64,11 @@ class TestSourceCatalogObjectHGPS:
         assert 'Source name          : HESS J1825-137' in ss
         assert 'Component HGPSC 065:' in ss
 
-    def test_spectrum(self):
-        source = self.cat['HESS J1825-137']
-        assert 'Fit result info' in str(source.spectrum)
-
+    @requires_dependency('uncertainties')
     def test_ecut_error(self):
         import uncertainties
-        val = self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL']
-        err = self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL']
+        val = float(self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL'].value)
+        err = float(self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL'].value)
         energy = 1 / uncertainties.ufloat(val, err)
 
         energy_err = err / val ** 2
@@ -81,9 +77,18 @@ class TestSourceCatalogObjectHGPS:
     def test_model(self):
         model = self.source.spectral_model
         pars = model.parameters
-        assert_quantity_allclose(pars.amplitude, Quantity(1.716531924e-11, 'TeV-1 cm-2 s-1'))
-        assert_quantity_allclose(pars.index, Quantity(2.3770857316, ''))
-        assert_quantity_allclose(pars.reference, Quantity(1.1561109149, 'TeV'))
+        assert_quantity_allclose(
+            pars['amplitude'].quantity,
+            Quantity(1.716531924e-11, 'TeV-1 cm-2 s-1'),
+        )
+        assert_quantity_allclose(
+            pars['index'].quantity,
+            Quantity(2.3770857316, ''),
+        )
+        assert_quantity_allclose(
+            pars['reference'].quantity,
+            Quantity(1.1561109149, 'TeV'),
+        )
 
         emin, emax = Quantity([1, 1E10], 'TeV')
         desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
@@ -92,10 +97,22 @@ class TestSourceCatalogObjectHGPS:
     def test_ecpl_model(self):
         model = self.cat['HESS J0835-455'].spectral_model
         pars = model.parameters
-        assert_quantity_allclose(pars.amplitude, Quantity(6.408420542586617e-12, 'TeV-1 cm-2 s-1'))
-        assert_quantity_allclose(pars.index, Quantity(1.3543991614920847, ''))
-        assert_quantity_allclose(pars.reference, Quantity(1.696938754239, 'TeV'))
-        assert_quantity_allclose(pars.lambda_, Quantity(0.081517637, 'TeV-1'))
+        assert_quantity_allclose(
+            pars['amplitude'].quantity,
+            Quantity(6.408420542586617e-12, 'TeV-1 cm-2 s-1'),
+        )
+        assert_quantity_allclose(
+            pars['index'].quantity,
+            Quantity(1.3543991614920847, ''),
+        )
+        assert_quantity_allclose(
+            pars['reference'].quantity,
+            Quantity(1.696938754239, 'TeV'),
+        )
+        assert_quantity_allclose(
+            pars['lambda_'].quantity,
+            Quantity(0.081517637, 'TeV-1'),
+        )
 
         emin, emax = Quantity([1, 1E10], 'TeV')
         desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')

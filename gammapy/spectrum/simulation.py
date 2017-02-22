@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import astropy.units as u
 import logging
 from ..utils.random import get_random_state
+from ..utils.energy import EnergyBounds 
 from .utils import calculate_predicted_counts
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
@@ -43,7 +44,8 @@ class SpectrumSimulation(object):
         self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
-        self.e_reco = e_reco or edisp.e_reco.data
+        temp = e_reco or edisp.e_reco.bins
+        self.e_reco = EnergyBounds(temp)
         self.background_model = background_model
         self.alpha = alpha
 
@@ -139,9 +141,10 @@ class SpectrumSimulation(object):
         rand: `~numpy.random.RandomState`
             random state
         """
-        on_counts = rand.poisson(self.npred_source.data.value)
+        on_counts = rand.poisson(self.npred_source.data.data.value)
 
-        counts_kwargs = dict(energy=self.e_reco,
+        counts_kwargs = dict(energy_lo=self.e_reco.lower_bounds,
+                             energy_hi=self.e_reco.upper_bounds,
                              livetime=self.livetime,
                              creator=self.__class__.__name__)
 
@@ -165,14 +168,15 @@ class SpectrumSimulation(object):
         rand: `~numpy.random.RandomState`
             random state
         """
-        bkg_counts = rand.poisson(self.npred_background.data.value)
-        off_counts = rand.poisson(self.npred_background.data.value / self.alpha)
+        bkg_counts = rand.poisson(self.npred_background.data.data.value)
+        off_counts = rand.poisson(self.npred_background.data.data.value / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data += bkg_counts * u.ct
+        self.on_vector.data.data += bkg_counts * u.ct
 
         # Create off vector
-        off_vector = PHACountsSpectrum(energy=self.e_reco,
+        off_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,
+                                       energy_hi=self.e_reco.upper_bounds,
                                        data=off_counts,
                                        livetime=self.livetime,
                                        backscal=1. / self.alpha,

@@ -23,10 +23,10 @@ def test_asmooth():
     asmooth = ASmooth(kernel=kernel, scales=scales[6:], method='lima', threshold=4)
     smoothed = asmooth.run(images)
 
-    desired = {'counts': 0.040077985776716646,
-               'background': 0.033560848932845534,
-               'scale': 2.4072088898037625,
-               'significance': 2.082196418686816}
+    desired = {'counts': 0.02089332998318483,
+               'background': 0.022048139647973686,
+               'scale': np.nan,
+               'significance': np.nan}
 
     for name in smoothed.names:
         actual = smoothed[name].data[100, 100]

@@ -513,7 +513,7 @@ def calculate_flux_point_binning(obs_list, min_signif):
     max_bin = (current_ebins.find_node(obs.hi_threshold))[0]
 
     # List holding final energy binning
-    binning = [current_ebins.data[current_bin]]
+    binning = [current_ebins.lo[current_bin]]
 
     # Precompute ObservationStats for each bin
     obs_stats = [obs.stats(i) for i in range(current_ebins.nbins)]
@@ -527,7 +527,7 @@ def calculate_flux_point_binning(obs_list, min_signif):
             continue
 
         # Append upper bin edge of good energy bin to final binning
-        binning.append(current_ebins.data[current_bin + rebin_factor])
+        binning.append(current_ebins.lo[current_bin + rebin_factor])
         current_bin += rebin_factor
 
     binning = Quantity(binning)

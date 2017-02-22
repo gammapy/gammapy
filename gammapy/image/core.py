@@ -50,7 +50,7 @@ class SkyImage(object):
     _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
     _ax_idx = _AxisIndex(x=1, y=0)
 
-    def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, unit=u.Unit(''), meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
@@ -344,13 +344,13 @@ class SkyImage(object):
         x, y = self.wcs_skycoord_to_pixel(coords=position)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
-    def footprint(self, mode='corner'):
+    def footprint(self, mode='edges'):
         """
         Footprint of the image on the sky.
 
         Parameters
         ----------
-        mode : {'center', 'corner'}
+        mode : {'center', 'edges'}
             Use corner pixel centers or corners?
 
         Returns
@@ -373,18 +373,27 @@ class SkyImage(object):
 
         if mode == 'center':
             pixcoord = [(0, 0), (0, naxis2), (naxis1, naxis2), (naxis1, 0)]
-        elif mode == 'corner':
+        elif mode == 'edges':
             pixcoord = [(-0.5, -0.5), (-0.5, naxis2 + 0.5),
                         (naxis1 + 0.5, naxis2 + 0.5), (naxis1 + 0.5, -0.5)]
         else:
             raise ValueError('Invalid mode: {}'.format(mode))
 
-        coordinates = OrderedDict()
+        footprint = OrderedDict()
         keys = ['lower left', 'upper left', 'upper right', 'lower right']
         for key, (x, y) in zip(keys, pixcoord):
-            coordinates[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
+            footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        return coordinates
+        width_low = footprint['lower left'].separation(footprint['lower right'])
+        width_up = footprint['upper left'].separation(footprint['upper right'])
+        footprint['width'] = Angle([width_low, width_up]).max()
+
+        height_left = footprint['lower left'].separation(footprint['upper left'])
+        height_right = footprint['lower right'].separation(footprint['upper right'])
+        footprint['height'] = Angle([height_right, height_left]).max()
+
+        footprint['center'] = self.center
+        return footprint
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """
@@ -401,8 +410,8 @@ class SkyImage(object):
         bounds_ref = image_ref.wcs.wcs_world2pix(bounds[0], bounds[1], _DEFAULT_WCS_ORIGIN)
 
         # round to nearest integer and clip at the boundaries
-        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
-        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
+        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref)).astype('int')
+        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref)).astype('int')
 
         if wcs_check:
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
@@ -840,7 +849,7 @@ class SkyImage(object):
 
         Parameters
         ----------
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
         fig : `~matplotlib.figure.Figure`, optional
             Figure
@@ -849,7 +858,7 @@ class SkyImage(object):
         -------
         fig : `~matplotlib.figure.Figure`, optional
             Figure
-        ax : `~astropy.wcsaxes.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object
         cbar : ?
             Colorbar object (if ``add_cbar=True`` was set)
@@ -1172,8 +1181,8 @@ class SkyImage(object):
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using `SkyImage.wcs_pixel_scale()`.
         kwargs : dict
-            Keyword arguments passed to `~scipy.ndimage.filters.uniform_filter`
-            ('box'), `~scipy.ndimage.filters.gaussian_filter` ('gauss') or
+            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
+            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
             `~scipy.ndimage.convolve` ('disk').
 
         Returns

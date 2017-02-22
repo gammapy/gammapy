@@ -46,7 +46,7 @@ class SingleObsCubeMaker(object):
 
     def __init__(self, obs, empty_cube_images, empty_exposure_cube, offset_band, exclusion_mask=None,
                  save_bkg_scale=True):
-        self.energy_reco = empty_cube_images.energies()
+        self.energy_reco = empty_cube_images.energies(mode="edges")
         self.offset_band = offset_band
         self.counts_cube = SkyCube.empty_like(empty_cube_images)
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)

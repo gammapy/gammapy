@@ -17,10 +17,10 @@ def test_cta_irf():
     offset = Quantity(3, 'deg')
     migra = 1
 
-    val = irf.aeff.evaluate(energy=energy, offset=offset)
+    val = irf.aeff.data.evaluate(energy=energy, offset=offset)
     assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
 
-    val = irf.edisp.evaluate(offset=offset, e_true=energy, migra=migra)
+    val = irf.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
     assert_quantity_allclose(val, 0.13111834249544874)
 
     # TODO: clean up these PSF classes, e.g. to return quantities.
@@ -38,12 +38,6 @@ def test_cta_irf():
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_point_like_perf():
-    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/\
-CTA-Performance-South-20150511/CTA-Performance-South-50h_20150511.fits'
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     cta_perf = CTAPerf.read(filename)
     cta_perf.peek()
-    
-    
-if __name__ == '__main__':
-    test_cta_irf()
-    test_point_like_perf()

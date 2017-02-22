@@ -11,8 +11,8 @@ sources, by using the `~gammapy.spectrum.models.SpectralModel`, `~gammapy.spectr
 and `~gammapy.spectrum.DifferentialFluxPoints` classes.
 
 
-As a first example we plot the spectral energy distribution for the Crab,
-namely ``'3FGL J0534.5+2201'`` and ``'2FHL J0534.5+2201'``, including best fit
+As a first example we plot the spectral energy distribution for the source PKS 2155-304,
+namely ``'3FGL J2158.8-3013'`` and ``'2FHL J2158.8-3013'``, including best fit
 model, butterfly and flux points. First we load the corresponding catalog from
 `~gammapy.catalog` and access the data for the crab:
 
@@ -28,8 +28,8 @@ model, butterfly and flux points. First we load the corresponding catalog from
     fermi_2fhl = SourceCatalog2FHL()
 
     # access crab data by corresponding identifier
-    crab_3fgl = fermi_3fgl['3FGL J0534.5+2201']
-    crab_2fhl = fermi_2fhl['2FHL J0534.5+2201']
+    crab_3fgl = fermi_3fgl['3FGL J2158.8-3013']
+    crab_2fhl = fermi_2fhl['2FHL J2158.8-3013']
 
 First we plot the best fit model for the 3FGL model:
 
@@ -46,20 +46,13 @@ distribution instead of the differential flux density. The `~gammapy.spectrum.mo
 method returns an `~matplotlib.axes.Axes` object that can be reused later to plot
 additional information on it. Here we just modify the y-limits of the plot.
 
-As the next step we compute the butterfly for the best fit model and add it to
-the plot:
+As the next step we add the butterfly for the best fit model by calling
+`.plot_error`:
 
 .. code-block:: python
 
-    from gammapy.utils.energy import EnergyBounds
-
-    # set up an energy array to evaluate the butterfly
-    emin, emax = crab_3fgl.energy_range
-    energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-    butterfly_3fg = crab_3fgl.spectrum.butterfly(energy)
-
-    butterfly_3fg.plot(crab_3fgl.energy_range, ax=ax, energy_power=2, color='r',
-                       flux_unit='erg-1 cm-2 s-1')
+    crab_3fgl.spectral_model.plot_error(crab_3fgl.energy_range, ax=ax, energy_power=2, color='r',
+                                        flux_unit='erg-1 cm-2 s-1')
 
 Finally we add the flux points by calling:
 
@@ -76,19 +69,14 @@ The same can be done with the 2FHL best fit model:
     crab_2fhl.spectral_model.plot(crab_2fhl.energy_range, ax=ax, energy_power=2,
                                   c='g', label='Fermi 2FHL', flux_unit='erg-1 cm-2 s-1')
 
-    # set up an energy array to evaluate the butterfly using the 2FHL energy range
-    emin, emax = crab_2fhl.energy_range
-    energy = EnergyBounds.equal_log_spacing(emin, emax, 100)
-    butterfly_2fhl = crab_2fhl.spectrum.butterfly(energy)
-
     # plot butterfly and flux points
-    butterfly_2fhl.plot(crab_2fhl.energy_range, ax=ax, energy_power=2, color='g',
-                        flux_unit='erg-1 cm-2 s-1')
+    crab_2fhl.spectral_model.plot(crab_2fhl.energy_range, ax=ax, energy_power=2, color='g',
+                                  flux_unit='erg-1 cm-2 s-1')
     crab_2fhl.flux_points.plot(ax=ax, energy_power=2, color='g',
                                flux_unit='erg-1 cm-2 s-1')
 
 
 The final plot looks as following:
 
-.. plot:: spectrum/plot_fermi_spectra.py
-   :include-source:
+#.. plot:: spectrum/plot_fermi_spectra.py
+#   :include-source:

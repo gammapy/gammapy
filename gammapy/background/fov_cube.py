@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""FOVCube container.
-"""
+"""FOVCube container."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
@@ -40,9 +39,7 @@ def _make_bin_edges_array(lo, hi):
 
 
 def _parse_data_units(data_unit):
-    """
-    Utility function to parse the data units correctly.
-    """
+    """Utility function to parse the data units correctly."""
     # try 1st to parse them as astropy units
     try:
         u.Unit(data_unit)
@@ -144,8 +141,7 @@ class FOVCube(object):
 
     @property
     def scheme_dict(self):
-        """Naming scheme, depending on the kind of cube (dict)"""
-
+        """Naming scheme, depending on the kind of cube (dict)."""
         return self.define_scheme(self.scheme)
 
     @staticmethod
@@ -226,7 +222,6 @@ class FOVCube(object):
         cube : `~gammapy.background.FOVCube`
             FOVCube object.
         """
-
         header = hdu.header
         data = hdu.data
 
@@ -509,7 +504,7 @@ class FOVCube(object):
 
     @property
     def image_extent(self):
-        """Image extent (`~astropy.coordinates.Angle`)
+        """Image extent (`~astropy.coordinates.Angle`).
 
         The output array format is ``(x_lo, x_hi, y_lo, y_hi)``.
         """
@@ -519,7 +514,7 @@ class FOVCube(object):
 
     @property
     def spectrum_extent(self):
-        """Spectrum extent (`~astropy.units.Quantity`)
+        """Spectrum extent (`~astropy.units.Quantity`).
 
         The output array format is  ``(e_lo, e_hi)``.
         """
@@ -528,7 +523,7 @@ class FOVCube(object):
 
     @property
     def image_bin_centers(self):
-        """Image bin centers **(x, y)** (2x `~astropy.coordinates.Angle`)
+        """Image bin centers **(x, y)** (2x `~astropy.coordinates.Angle`).
 
         Returning two separate elements for the X and Y bin centers.
         """
@@ -538,12 +533,12 @@ class FOVCube(object):
 
     @property
     def energy_edges(self):
-        """Energy binning (`~gammapy.utils.energy.EnergyBounds`)"""
+        """Energy binning (`~gammapy.utils.energy.EnergyBounds`)."""
         return self._energy_edges
 
     @property
     def coord_wcs(self):
-        """WCS object describing the coordinates of the coord (X, Y) bins (`~astropy.wcs.WCS`)
+        """WCS object describing the coordinates of the coord (X, Y) bins (`~astropy.wcs.WCS`).
 
         This method gives the correct answer only for linear X, Y binning.
         """
@@ -683,7 +678,7 @@ class FOVCube(object):
 
     def make_spectrum(self, coord, ebounds=None):
         """
-        Generate energy spectrum at a certain position in the FOV
+        Generate energy spectrum at a certain position in the FOV.
 
         Parameters
         ----------
@@ -777,7 +772,7 @@ class FOVCube(object):
 
     @property
     def integral(self):
-        """Integral of the cube (`~astropy.units.Quantity`)
+        """Integral of the cube (`~astropy.units.Quantity`).
 
         The returned quantity has dimension of the data in the cube
         times solid angle times energy.
@@ -795,7 +790,7 @@ class FOVCube(object):
 
     @property
     def integral_images(self):
-        """Integral of the cube images (`~astropy.units.Quantity`)
+        """Integral of the cube images (`~astropy.units.Quantity`).
 
         Calculate the integral of each energy bin (slice) in the
         cube. Returns an array of integrals.
@@ -849,7 +844,7 @@ class FOVCube(object):
         This add the counts to the existing value array.
 
         Parameters
-        -------------
+        ----------
         event_lists : list of `~gammapy.data.EventList`
            Python list of event list objects.
         """
@@ -861,7 +856,7 @@ class FOVCube(object):
         """Fill one event list into a counts array.
 
         Parameters
-        -------------
+        ----------
         events :`~gammapy.data.EventList`
            Event list objects.
         """
