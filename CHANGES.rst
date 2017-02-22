@@ -89,6 +89,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#906] Enable catalog getitem to work with numpy int index (Zé Vinícius)
 - [#893] Add Fermi-LAT 3FGL catalog object lightcurve property (Arpit Gogia)
 - [#888] Improve CTA IRF and simulation classes (point-like analysis) (Julien Lefaucheur)
 - [#885] Improve spectral model uncertainty handling (Axel Donath)
