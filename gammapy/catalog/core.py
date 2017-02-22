@@ -2,7 +2,7 @@
 """Source catalog and object base classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .utils.array import _is_int
+from ..utils.array import _is_int
 from collections import OrderedDict
 import sys
 from pprint import pprint
