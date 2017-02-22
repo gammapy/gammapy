@@ -439,20 +439,67 @@ class EventList(object):
         """Summary plots."""
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
-        self.plot_image(ax=axes[0])
-        self.plot_time_map(ax=axes[1])
+        self.plot_imageRADEC(ax=axes[0])
+#        self.plot_time_map(ax=axes[1])
+        self.plot_time(ax=axes[1])
 
         # log-log scale for time map
-        xlims = axes[1].set_xlim()
-        ylims = axes[1].set_ylim()
-        axes[1].set_xlim(1e-3, xlims[1])
-        axes[1].set_ylim(1e-3, ylims[1])
-        axes[1].loglog()
+#        xlims = axes[1].set_xlim()
+#        ylims = axes[1].set_ylim()
+#        axes[1].set_xlim(1e-3, xlims[1])
+#        axes[1].set_ylim(1e-3, ylims[1])
+#        axes[1].loglog()
         # TODO: self.plot_energy_dependence(ax=axes[x])
         # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
+#        plt.show()
 
-        return fig
+#        return fig # Don't return fig to avoid double plots in jupyter notebooks
+
+    def plot_imageRADEC(self, ax=None, number_bins=50):
+        """Plot a sky  counts image in RADEC coordinate.
+
+        TODO: fix the histogramming ... this example shows that it's currently incorrect:
+        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
+        Maybe we can use the FOVCube class for this with one energy bin.
+        Or add a separate FOVImage class.
+        """
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        from matplotlib.colors import PowerNorm
+
+        ax = plt.gca() if ax is None else ax
+
+#         max_x = max(self.table['RA'])
+#         min_x = min(self.table['RA'])
+#         max_y = max(self.table['DEC'])
+#         min_y = min(self.table['DEC'])
+# 
+#         x_edges = np.linspace(min_x, max_x, number_bins)
+#         y_edges = np.linspace(min_y, max_y, number_bins)
+
+        count_image, x_edges, y_edges = np.histogram2d(
+            self.table[:]['RA'], self.table[:]['DEC'],bins=number_bins)
+
+        ax.set_title('# Photons')
+
+        ax.set_xlabel('RA')
+        ax.set_ylabel('DEC')
+
+        ax.plot(self.pointing_radec.ra.value,self.pointing_radec.dec.value,'+',ms=20,mew=3,color='white')
+
+        im=ax.imshow(count_image, interpolation='nearest', origin='low',
+                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+                  norm=PowerNorm(gamma=0.5))
+
+        ax.invert_xaxis()
+        ax.grid()
+        
+        divider = make_axes_locatable(ax)
+        cax     = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(im,cax=cax)
+        
+#        return ax
 
     def plot_image(self, ax=None, number_bins=50):
         """Plot the counts as a function of x and y camera coordinate.
@@ -485,6 +532,7 @@ class EventList(object):
         ax.imshow(count_image, interpolation='nearest', origin='low',
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
+
     def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
         """
         A plot showing counts as a function of energy.
@@ -513,6 +561,58 @@ class EventList(object):
         A plot showing energy dependence as a function of  camera offset. Not implemented.
         """
         raise NotImplementedError
+
+    def plot_time(self, ax=None):
+        """
+        Plots an event rate time curve
+
+        Parameters
+        ----------
+
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes
+
+        Examples
+        --------
+        Plot the rate of the events:
+
+        .. plot::
+            :include-source:
+
+            import matplotlib.pyplot as plt
+            from gammapy.data import DataStore
+
+            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+            events = ds.obs(obs_id=23523).events
+            events.plot_time_map()
+            plt.show()
+
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        time = self.table['TIME']
+        first_event_time = np.min(time)
+
+        # Note the events are not necessarily in time order
+        relative_event_times = time - first_event_time
+
+        ax.set_title('Event rate ')
+
+        ax.set_xlabel('seconds')
+        ax.set_ylabel('Events / s')
+        rate,t = np.histogram(relative_event_times ,bins = 50)
+        t_center=(t[1:]+t[:-1])/2
+
+        ax.plot(t_center,rate)
+
+        return ax
 
     def plot_time_map(self, ax=None):
         """
