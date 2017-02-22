@@ -2,9 +2,9 @@
 """Source catalog and object base classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from .utils.array import _is_int
 from collections import OrderedDict
 import sys
-import numpy as np
 from pprint import pprint
 from astropy.extern import six
 from astropy.utils import lazyproperty
@@ -167,7 +167,7 @@ class SourceCatalog(object):
         """
         if isinstance(key, six.string_types):
             index = self.row_index(key)
-        elif isinstance(key, (six.integer_types, np.int)):
+        elif _is_int(key):
             index = key
         else:
             msg = 'Key must be source name string or row index integer. '
