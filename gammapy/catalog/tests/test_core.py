@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.table import Table, Column
@@ -51,6 +52,9 @@ class TestSourceCatalog:
         assert source.data['Source_Name'] == 'a'
 
         source = self.cat[0]
+        assert source.data['Source_Name'] == 'a'
+
+        source = self.cat[np.int(0)]
         assert source.data['Source_Name'] == 'a'
 
         with pytest.raises(KeyError):
