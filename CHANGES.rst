@@ -21,15 +21,15 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 
 .. _gammapy_0p6_release:
 
-0.6 (Feb 13, 2017)
-------------------
+0.6 (Mar 3, 2017)
+-----------------
 
 Summary
 +++++++
 
 - Not released yet. For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
 - XXX contributors (XXX new)
-- 3 months of work (from November 22, 2016 to February 13, 2017)
+- 3 months of work (from November 22, 2016 to March 3, 2017)
 - XXX pull requests (not all listed below)
 
 **What's new?**
@@ -81,6 +81,7 @@ Summary
 - Léa Jouvin
 - Nachiketa Chakraborty
 - Régis Terrier
+- Zé Vinícius (new)
 
 Pull requests
 +++++++++++++
@@ -89,7 +90,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
-- [#906] Enable catalog getitem to work with numpy int index (Zé Vinícius)
+- [#906] Fix catalog getitem to work with numpy int index (Zé Vinícius)
 - [#893] Add Fermi-LAT 3FGL catalog object lightcurve property (Arpit Gogia)
 - [#888] Improve CTA IRF and simulation classes (point-like analysis) (Julien Lefaucheur)
 - [#885] Improve spectral model uncertainty handling (Axel Donath)

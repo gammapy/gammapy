@@ -100,6 +100,7 @@ The following people have contributed to Gammapy (first name alphabetical order)
 - Rolf Bühler (`@rbuehler <https://github.com/rbuehler>`__)
 - Stefan Klepser (`@klepser <https://github.com/klepser>`__)
 - Victor Zabalza (`@zblz <https://github.com/zblz>`__)
+- Zé Vinícius (`@mirca <https://github.com/mirca>`__)
 
 
 A detailed listing of contributions is here: :ref:`changelog`.
