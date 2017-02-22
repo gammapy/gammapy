@@ -13,11 +13,11 @@ __all__ = [
 ]
 
 
+# TODO: share code with the `~gammapy.data.EventList` and `~gammapy.data.ObservationTable` classes.
 class PointingInfo(object):
     """IACT array pointing info.
 
-    TODO: link to open spec.
-    TODO: share code with the `~gammapy.data.EventList` and `~gammapy.data.ObservationTable` classes.
+    The ``POINTING_TABLE`` format is described here: :ref:`gadf:iact-pnt`
 
     This class has many cached properties.
     Should be used as read-only.
