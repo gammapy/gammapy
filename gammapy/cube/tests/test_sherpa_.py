@@ -57,7 +57,7 @@ def test_sherpa_crab_fit():
                  0.096903,
                  2.240989]
 
-    assert_allclose(result.parvals, reference, rtol=1E-5)
+    assert_allclose(result.parvals, reference, rtol=1E-3)
 
 
 @requires_dependency('sherpa')
@@ -118,13 +118,13 @@ def testCombinedModel3DInt():
     result = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference = [184.19524957441664,
-                 -6.1693008203971562,
-                 6.1666646581766011,
-                 0.076340497278248376,
-                 2.305912037549]
+    reference = [1.841954e+02,
+                 -6.169173e+00,
+                 6.166281e+00,
+                 7.656752e-02,
+                 2.306480e+00]
 
-    assert_allclose(result.parvals, reference, rtol=1E-5)
+    assert_allclose(result.parvals, reference, rtol=1E-3)
 
     # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
     # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
@@ -160,12 +160,12 @@ def testCombinedModel3DInt():
     result2 = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference2 = [184.20146538191321,
-                  -6.1600047997645975,
-                  5.4193056837212374,
-                  0.08635929788659219,
-                  2.2979723660330]
-    assert_allclose(result2.parvals, reference2, rtol=1E-5)
+    reference2 = [1.842016e+02,
+                  -6.159901e+00,
+                  5.419152e+00,
+                  8.658486e-02,
+                  2.298557e+00]
+    assert_allclose(result2.parvals, reference2, rtol=1E-3)
 
 
 @requires_dependency('sherpa')
@@ -233,12 +233,12 @@ def testCombinedModel3DIntConvolveEdisp():
     result = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion, flux and source size is due to the dummy psf
-    reference = [184.19189525423425,
-                 -6.1758238877562386,
-                 6.2283155506945755,
-                 0.071013932890499717,
-                 2.2685809241308674]
-    assert_allclose(result.parvals, reference, rtol=1E-5)
+    reference = [1.841920e+02,
+                 -6.175650e+00,
+                 6.227756e+00,
+                 7.129763e-02,
+                 2.269026e+00]
+    assert_allclose(result.parvals, reference, rtol=1E-3)
 
     # Add a region to exclude in the fit: Here we will exclude some events from the Crab since there is no region to
     # exclude in the FOV for this example. It's just an example to show how it works and how to proceed in the fit.
@@ -277,9 +277,9 @@ def testCombinedModel3DIntConvolveEdisp():
     result2 = fit.fit()
 
     # TODO: The fact that it doesn't converge to the right Crab postion is due to the dummy psf
-    reference2 = [184.1919580251583,
-                  -6.1692775561065769,
-                  5.4976586957354581,
-                  0.074821281329729109,
-                  2.2504892463464699]
-    assert_allclose(result2.parvals, reference2, rtol=1E-5)
+    reference2 = [1.841921e+02,
+                  -6.169094e+00,
+                  5.497368e+00,
+                  7.513465e-02,
+                  2.250965e+00]
+    assert_allclose(result2.parvals, reference2, rtol=1E-3)
