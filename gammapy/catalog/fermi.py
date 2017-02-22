@@ -62,12 +62,12 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'spectral', 'lightcurve' 'other'}
+        info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
             Comma separated list of options
         """
 
         if info == 'all':
-            info = 'basic,position,spectral,lightcurve,other'
+            info = 'basic,position,spectral,lightcurve'
 
         ss = ''
         ops = info.split(',')
@@ -79,8 +79,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += self._info_spectral()
         if 'lightcurve' in ops:
             ss += self._info_lightcurve()
-        if 'other' in ops:
-            ss += self._info_other()
         return ss
 
     def _info_basic(self):
@@ -170,16 +168,14 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += '{:<20s} : {:.3f} deg\n'.format('GLAT', d['GLAT'])
 
         ss += '\n'
-        ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)',
-                                              d['Conf_68_SemiMajor']
-                                              )
+        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
         ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
         ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
 
         ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
         ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
         ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
 
         return ss
 
@@ -187,62 +183,72 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
-        ss += '{:<45s} : {:.3} +- {:.3} erg cm^-2 s^-1\n'.format('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'],
-                                                                 d['Unc_Energy_Flux100'])
-        ss += '{:<45s} : {:.3f} Sigma\n'.format('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
+
+        fmt = '{:<45s} : {:.3} +- {:.3} erg cm^-2 s^-1\n'
+        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'], d['Unc_Energy_Flux100'])
+        ss += fmt.format(*args)
+
+        fmt = '{:<45s} : {:.3f} Sigma\n'
+        args = ('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
+        ss += fmt.format(*args)
+
         ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
-        if d['SpectrumType'].rstrip() == 'LogParabola':
+
+        spec_type = d['SpectrumType'].rstrip()
+        if spec_type == 'LogParabola':
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
-        if d['SpectrumType'].rstrip() in ['PLExpCutoff', 'PlSuperExpCutoff']:
+        if spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
             ss += '{:<45s} : {:.0f} +- {:.0f} MeV\n'.format('Cutoff energy', d['Cutoff'], d['Unc_Cutoff'])
-        if d['SpectrumType'].rstrip() == 'PLSuperExpCutoff':
+        if spec_type == 'PLSuperExpCutoff':
             ss += '{:<45s} : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
+
         ss += '{:<45s} : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
-        ss += '{:<45s} : {:.3f} +- {:.3f}\n'.format('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+
+        fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
+        args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+        ss += fmt.format(*args)
+
         ss += '{:<45s} : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
-        ss += '{:<45s} : {:.3} +- {:.3} cm^-2 MeV^-1 s^-1\n'.format('Flux Density (100 MeV - 100 GeV)',
-                                                                    d['Flux_Density'],
-                                                                    d['Unc_Flux_Density'])
-        ss += '{:<45s} : {:.3} +- {:.3} cm^-2 s^-1\n'.format('Integral flux (1 - 100 GeV)', d['Flux1000'],
-                                                             d['Unc_Flux1000'])
+
+        fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 MeV^-1 s^-1\n'
+        args = ('Flux Density (100 MeV - 100 GeV)', d['Flux_Density'], d['Unc_Flux_Density'])
+        ss += fmt.format(*args)
+
+        fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 s^-1\n'
+        args = ('Integral flux (1 - 100 GeV)', d['Flux1000'], d['Unc_Flux1000'])
+        ss += fmt.format(*args)
+
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
         ss += '\n\n'
         ss += 'Table:\n\n'
-        ss += '{:<15} {:<35} {:<25} {:<20}\n'.format('Energy range', 'Integral flux', 'Energy distribution',
+        ss += '{:<15} {:<35} {:<25} {:<20}\n'.format('Energy range', 'Integral flux', 'Energy flux',
                                                      'Sqrt Test Statistic')
         flux_table = {
-            # Omitting the 30-100 MeV range because it's not filled?
-
-            # '30-100 MeV': [
-            #     '{!s:.3} +- {!s:.3} cm^-2 s^-1'.format(d['Flux30_100'], d['Unc_Flux30_100']),
-            #     '{!s:.3} erg cm^-2 s^-1'.format(d['nuFnu30_100']),
-            #     '{!s:.3}'.format(d['Sqrt_TS30_100'])
-            # ],
             '100-300 MeV': [
                 '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux100_300'], d['Unc_Flux100_300'][1]),
                 '{:.3} erg cm^-2 s^-1'.format(d['nuFnu100_300']),
-                '{:.3}'.format(d['Sqrt_TS100_300'])
+                '{:.1f}'.format(d['Sqrt_TS100_300'])
             ],
             '0.3-1 GeV': [
                 '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux300_1000'], d['Unc_Flux300_1000'][1]),
                 '{:.3} erg cm^-2 s^-1'.format(d['nuFnu300_1000']),
-                '{:.3}'.format(d['Sqrt_TS300_1000'])
+                '{:.1f}'.format(d['Sqrt_TS300_1000'])
             ],
             '1-3 GeV': [
                 '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux1000_3000'], d['Unc_Flux1000_3000'][1]),
                 '{:.3} erg cm^-2 s^-1'.format(d['nuFnu1000_3000']),
-                '{:.3}'.format(d['Sqrt_TS1000_3000'])
+                '{:.1f}'.format(d['Sqrt_TS1000_3000'])
             ],
             '3-10 GeV': [
                 '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux3000_10000'], d['Unc_Flux3000_10000'][1]),
                 '{:.3} erg cm^-2 s^-1'.format(d['nuFnu3000_10000']),
-                '{:.3}'.format(d['Sqrt_TS3000_10000'])
+                '{:.1f}'.format(d['Sqrt_TS3000_10000'])
             ],
             '10-100 GeV': [
                 '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux10000_100000'], d['Unc_Flux10000_100000'][1]),
                 '{:.3} erg cm^-2 s^-1'.format(d['nuFnu10000_100000']),
-                '{:.3}'.format(d['Sqrt_TS10000_100000'])
+                '{:.1f}'.format(d['Sqrt_TS10000_100000'])
             ]
         }
         for k, v in flux_table.items():
@@ -255,28 +261,23 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _info_lightcurve(self):
         """Print lightcurve info."""
         d = self.data
-        ss = '\n*** Lightcurve info ***\n\n'
+        ss = '\n*** Lightcurve info ***\n'
+        ss += 'Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n'
+
         ss += '{:<40s} : {:.3f}\n'.format('Variability index', d['Variability_Index'])
         ss += '{:<40s} : {:.3f}\n'.format('Significance peak (100 MeV - 100 GeV)', d['Signif_Peak'])
-        ss += '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'.format('Integral flux peak (100 MeV - 100 GeV)', d['Flux_Peak'],
-                                                           d['Unc_Flux_Peak'])
+
+        fmt = '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'
+        args = ('Integral flux peak (100 MeV - 100 GeV)', d['Flux_Peak'], d['Unc_Flux_Peak'])
+        ss += fmt.format(*args)
+
         ss += '{:<40s} : {:.3} s\n'.format('Time peak', d['Time_Peak'])
         ss += '{:<40s} : {:.3} s\n'.format('Peak interval', d['Peak_Interval'])
 
-
-
-        return ss
-
-    def _info_other(self):
-        """
-        Other items - this method should be removed later.
-        """
-        d = self.data
-        ss = '\n*** Other info (omitted for now) ***\n\n'
-
-        ss += 'Flux_History/Unc_Flux_History - should I make a similar table to the one I made above?\n'
+        # TODO: Add a lightcurve table with d['Flux_History'] and d['Unc_Flux_History']
 
         return ss
+
 
     @property
     def spectral_model(self):
