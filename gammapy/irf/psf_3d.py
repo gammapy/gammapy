@@ -425,5 +425,5 @@ class PSF3D(object):
         # psf.plot_components(ax=axes[2])
 
         plt.tight_layout()
-        plt.show()
-        return fig
+        #plt.show()
+        #return fig

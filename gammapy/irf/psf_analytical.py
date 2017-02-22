@@ -318,8 +318,8 @@ class EnergyDependentMultiGaussPSF(object):
         # psf.plot_components(ax=axes[2])
 
         plt.tight_layout()
-        plt.show()
-        return fig
+        #plt.show()
+        #return fig
 
     def info(self, fractions=[0.68, 0.95], energies=Quantity([1., 10.], 'TeV'),
              thetas=Quantity([0.], 'deg')):

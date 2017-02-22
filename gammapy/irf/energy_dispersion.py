@@ -899,8 +899,8 @@ class EnergyDispersion2D(object):
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
-        plt.show()
-        return fig
+        #plt.show()
+        #return fig
 
     def __str__(self):
         ss = self.__class__.__name__
