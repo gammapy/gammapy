@@ -84,7 +84,7 @@ def has_data(name):
     elif name == 'gamma-cat':
         return ('GAMMA_CAT' in os.environ)
     elif name == 'fermi-lat':
-        return ('FERMI_LAT_DATA' in os.environ)
+        return ('GAMMAPY_FERMI_LAT_DATA' in os.environ)
     else:
         raise ValueError('Invalid name: {}'.format(name))
 
