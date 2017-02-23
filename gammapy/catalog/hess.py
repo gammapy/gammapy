@@ -357,12 +357,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['index'] = data['Index_Spec_PL']
             pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_PL_Pivot']
+            errs['amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
+            errs['index'] = data['Index_Spec_PL_Err'] * Unit('')
             model = PowerLaw(**pars)
         elif spec_type == 'ECPL':
             pars['index'] = data['Index_Spec_ECPL']
             pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_ECPL_Pivot']
             pars['lambda_'] = data['Lambda_Spec_ECPL']
+            errs['index'] = data['Index_Spec_ECPL_Err'] * Unit('')
+            errs['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot_Err']
+            errs['lambda_'] = data['Lambda_Spec_ECPL_Err']
             model = ExponentialCutoffPowerLaw(**pars)
         else:
             raise ValueError('Invalid spectral model: {}'.format(spec_type))
