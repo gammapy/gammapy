@@ -215,11 +215,15 @@ class FermiLATBasicImageEstimator(object):
             Exposure sky image.
         """
         from ..cube import SkyCube
+        from ..catalog.gammacat import NoDataAvailableError
 
         p = self.parameters
 
-        ref_cube = self._cutout_background_cube(dataset)
-        exposure_cube = dataset.exposure.reproject(ref_cube)
+        try:
+            ref_cube = self._cutout_background_cube(dataset)
+            exposure_cube = dataset.exposure.reproject(ref_cube)
+        except NoDataAvailableError:
+            exposure_cube = dataset.exposure.reproject(self.reference)
 
         exposure_weighted = SkyCube.empty_like(exposure_cube)
         energies = exposure_weighted.energies('center')
