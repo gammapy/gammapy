@@ -58,7 +58,6 @@ class CTAIrf(object):
         self.psf = psf
         self.bkg = bkg
 
-        
     @classmethod
     def read(cls, filename):
         """
@@ -71,8 +70,6 @@ class CTAIrf(object):
         """
         filename = str(make_path(filename))
 
-        # table = Table.read(filename, hdu='EFFECTIVE AREA')
-        # aeff = EffectiveAreaTable2D.from_table(table)
         aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
         # TODO: fix `FOVCube.read`, then use it directly here.
@@ -81,23 +78,9 @@ class CTAIrf(object):
         table.header['TUNIT7'] = '1 / (MeV s sr)'
         bkg = FOVCube.from_fits_table(table, scheme='bg_cube')
 
-        # Dealing energy dispersion matrix
-        # Fix offset values a la gammapy (theta_lo=theta_hi)
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
-        # Dealing with psf and fix values to get a single gaussian component
-        # by setting the amplitudes and the sigmas of the last two components
-        # to 0 and 1, respectively
-        # Fix offset values a la gammapy (theta_lo=theta_hi)
-        table_hdu_psf = fits.open(filename)['POINT SPREAD FUNCTION']
-
-        table_hdu_psf.data[0]['AMPL_2'] = 0
-        table_hdu_psf.data[0]['AMPL_3'] = 0
-
-        table_hdu_psf.data[0]['SIGMA_2'] = 1
-        table_hdu_psf.data[0]['SIGMA_3'] = 1
-
-        psf = EnergyDependentMultiGaussPSF.from_fits(table_hdu_psf)
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
         return cls(
             aeff=aeff,
@@ -121,6 +104,7 @@ class BgRateTable(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
+
     def __init__(self, energy_lo, energy_hi, data):
         axes = [BinnedDataAxis(energy_lo, energy_hi,
                                interpolation_mode='log', name='energy')]
@@ -207,6 +191,7 @@ class Psf68Table(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
+
     def __init__(self, energy_lo, energy_hi, data):
         axes = [BinnedDataAxis(energy_lo, energy_lo,
                                interpolation_mode='log', name='energy')]
@@ -294,6 +279,7 @@ class SensitivityTable(object):
     data : `~astropy.units.Quantity`
         Background rate
     """
+
     def __init__(self, energy_lo, energy_hi, data):
         axes = [BinnedDataAxis(energy_lo, energy_hi,
                                interpolation_mode='log', name='energy')]
@@ -403,7 +389,7 @@ class CTAPerf(object):
         self.bkg = bkg
         self.sens = sens
         self.rmf = rmf
-        
+
     @classmethod
     def read(cls, filename):
         """
@@ -443,7 +429,7 @@ class CTAPerf(object):
         rmf = edisp.to_energy_dispersion(offset=0.5 * u.degree,
                                          e_reco=e_reco_axis,
                                          e_true=e_true_axis)
-        
+
         return cls(
             aeff=aeff,
             bkg=bkg,
