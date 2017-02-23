@@ -626,6 +626,48 @@ class EnergyDispersion2D(object):
         return self.data.axis('offset')
 
     @classmethod
+    def _from_gaus(cls, e_true, migra, bias, sigma, offset=None):
+        """Create Gaussian `EnergyDispersion2D` matrix.
+
+         The output matrix will be Gaussian in (e_true / e_reco)
+         The output matrix is flat in offset
+         TODO: add option to have log normal distribution
+
+         Parameters
+         ----------
+         e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+             Bin edges of true energy axis
+         migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+             Bin edges of migra axis
+         sigma : float, optional
+             RMS width of Gaussian energy dispersion, resolution
+         offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`, optional
+             Bin edges of offset
+         """
+        if offset is None:
+            offset = np.linspace(0.,3.,10)*u.deg
+
+        from scipy.special import erf
+
+        e_true = EnergyBounds(e_true)
+        # erf does not work with Quantities
+        true = e_true.log_centers.to('TeV').value
+
+        true2d, migra2d = np.meshgrid(true, migra)
+
+        migra2d_lo = migra2d[:-1, :]
+        migra2d_hi = migra2d[1:, :]
+
+        pdf = .5 * (erf((migra2d_hi - bias) / (np.sqrt(2.) * sigma))
+                    - erf((migra2d_lo - bias) / (np.sqrt(2.) * sigma)))
+
+        pdf_array= pdf.T[:,:,np.newaxis] * np.ones(len(offset)-1)
+
+        return cls(e_true[:-1], e_true[1:], migra[:-1], migra[1:],
+                    offset[:-1], offset[1:], pdf_array)
+
+
+    @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`
         """

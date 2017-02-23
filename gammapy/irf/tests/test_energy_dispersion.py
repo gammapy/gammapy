@@ -94,45 +94,30 @@ class TestEnergyDispersion2D():
 
     def test_get_response(self):
         # Here we test get_response with an expected gaussian shape for edisp
-
+        from scipy.special import erf
         # First we define a fake EnergyDispersion2D
         size_true = 50
-        size_mig = 10000
+        size_mig = 1000
         size_off = 4
 
         etrues = np.logspace(-1., 2., size_true + 1) * u.TeV
         migras = np.linspace(0., 4., size_mig + 1)
         offsets = np.linspace(0., 2.5, size_off + 1) * u.deg
 
-        mig_mean = 0.5 * (migras[:-1] + migras[1:])
         # Resolution with energy
-        sigma = 0.1 / np.sqrt(etrues / (1 * u.TeV)).value
+        sigma = 0.15 / ((etrues[:-1] / (1 * u.TeV)).value)**0.3
         # Bias with energy
-        mu = 1.0 + 1e-3 * (etrues - 1 * u.TeV).value
+        mu = 1.0 + 1e-3 * (etrues[:-1] - 1 * u.TeV).value
 
-        from scipy.special import erf
-
-        data = np.zeros((size_true, size_mig, size_off))
-        for i in range(size_true):
-            for j in range(size_off):
-                val = (migras - mu[i]) / (np.sqrt(2) * sigma[i])
-                data[i, :, j] = np.diff(erf(val)) * 0.5
-
-        edisp = EnergyDispersion2D(etrues[:-1], etrues[1:],
-                                   migras[:-1], migras[1:],
-                                   offsets[:-1], offsets[1:],
-                                   data)
+        edisp = EnergyDispersion2D._from_gaus(etrues, migras, mu, sigma, offsets)
 
         for i in [5, 10, 15, 20, 25, 30, 35, 40]:
             e_true = etrues[i]
             e_reco = np.array([0.25, 0.5, 1.0, 1.5, 2.0]) * e_true
-            actual = edisp.get_response(offset=0.7 * u.deg, e_true=e_true, e_reco=e_reco, mig_step=2e-3)
+            actual = edisp.get_response(offset=0.7 * u.deg, e_true=e_true, e_reco=e_reco, mig_step=1e-2)
 
             val = ((e_reco / e_true).value - mu[i]) / (np.sqrt(2) * sigma[i])
             desired = np.diff(erf(val)) * 0.5
-
-#            err_r = (expected - edisp_resp) / expected
-#            err_a = (expected - edisp_resp)
 
             # We want the absolute precision to be less than 5%
             assert_allclose(actual, desired, atol=5e-2)
