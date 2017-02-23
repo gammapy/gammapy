@@ -76,7 +76,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if 'position' in ops:
             ss += self._info_position()
         if 'spectral' in ops:
-            ss += self._info_spectral()
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_points()
         if 'lightcurve' in ops:
             ss += self._info_lightcurve()
         return ss
@@ -89,50 +90,32 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += '{:<30s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
         ss += '{:<30s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
-        associations = []
-        if d['ASSOC1'].isspace() == False:
-            associations.append(d['ASSOC1'].rstrip())
-        if d['ASSOC2'].isspace() == False:
-            associations.append(d['ASSOC2'].rstrip())
-        if d['ASSOC_TEV'].isspace() == False:
-            associations.append(d['ASSOC_TEV'].rstrip())
-        if d['ASSOC_GAM1'].isspace() == False:
-            associations.append(d['ASSOC_GAM1'].rstrip())
-        if d['ASSOC_GAM2'].isspace() == False:
-            associations.append(d['ASSOC_GAM2'].rstrip())
-        if d['ASSOC_GAM3'].isspace() == False:
-            associations.append(d['ASSOC_GAM3'].rstrip())
+        def get_nonentry_keys(keys):
+            vals = [d[_].strip() for _ in keys]
+            return ', '.join([_ for _ in vals if _ != ''])
 
-        associations = ', '.join(associations)
+        keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM1', 'ASSOC_GAM2', 'ASSOC_GAM3']
+        associations = get_nonentry_keys(keys)
         ss += '{:<30s} : {}\n'.format('Associations', associations)
 
-        otherNames = []
-        if d['0FGL_Name'].isspace() == False:
-            otherNames.append(d['0FGL_Name'].rstrip())
-        if d['1FGL_Name'].isspace() == False:
-            otherNames.append(d['1FGL_Name'].rstrip())
-        if d['2FGL_Name'].isspace() == False:
-            otherNames.append(d['2FGL_Name'].rstrip())
-        if d['1FHL_Name'].isspace() == False:
-            otherNames.append(d['1FHL_Name'].rstrip())
-
-        otherNames = ', '.join(otherNames)
-        ss += '{:<30s} : {}\n'.format('Other names', otherNames)
+        keys = ['0FGL_Name', '1FGL_Name', '2FGL_Name', '1FHL_Name']
+        other_names = get_nonentry_keys(keys)
+        ss += '{:<30s} : {}\n'.format('Other names', other_names)
 
         ss += '{:<30s} : {}\n'.format('Class', d['CLASS1'])
 
-        tevcatFlag = d['TEVCAT_FLAG']
-        if tevcatFlag == 'N':
-            tevcatMessage = 'No TeV association'
-        elif tevcatFlag == 'P':
-            tevcatMessage = 'Small TeV source'
-        elif tevcatFlag == 'E':
-            tevcatMessage = 'Extended TeV source (diameter > 40 arcmins)'
+        tevcat_flag = d['TEVCAT_FLAG']
+        if tevcat_flag == 'N':
+            tevcat_message = 'No TeV association'
+        elif tevcat_flag == 'P':
+            tevcat_message = 'Small TeV source'
+        elif tevcat_flag == 'E':
+            tevcat_message = 'Extended TeV source (diameter > 40 arcmins)'
         else:
-            tevcatMessage = 'N/A'
-        ss += '{:<30s} : {}\n'.format('TeVCat flag', tevcatMessage)
+            tevcat_message = 'N/A'
+        ss += '{:<30s} : {}\n'.format('TeVCat flag', tevcat_message)
 
-        flagMessage = {
+        flag_message = {
             0: 'None',
             1: 'Source with TS > 35 which went to TS < 25 when changing the diffuse model. Note that sources with TS < '
                '35 are not flagged with this bit because normal statistical fluctuations can push them to TS < 25.',
@@ -154,7 +137,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             12: 'Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see '
                 'Section 3.3 in catalog paper).'
         }
-        ss += '{:<30s} : {}\n'.format('Other flags', flagMessage.get(d['Flags'], 'N/A'))
+        ss += '{:<30s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
 
         return ss
 
@@ -179,22 +162,20 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         return ss
 
-    def _info_spectral(self):
+    def _info_spectral_fit(self):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
 
-        fmt = '{:<45s} : {:.3} +- {:.3} erg cm^-2 s^-1\n'
-        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'], d['Unc_Energy_Flux100'])
-        ss += fmt.format(*args)
+        ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
 
-        fmt = '{:<45s} : {:.3f} Sigma\n'
+        fmt = '{:<45s} : {:.3f}\n'
         args = ('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
         ss += fmt.format(*args)
 
-        ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
+        ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
-        spec_type = d['SpectrumType'].rstrip()
+        spec_type = d['SpectrumType'].strip()
         if spec_type == 'LogParabola':
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         if spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
@@ -202,26 +183,31 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if spec_type == 'PLSuperExpCutoff':
             ss += '{:<45s} : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
 
+        ss += '{:<45s} : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
+
         ss += '{:<45s} : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
 
         fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
         args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
         ss += fmt.format(*args)
 
-        ss += '{:<45s} : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
-
         fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 MeV^-1 s^-1\n'
-        args = ('Flux Density (100 MeV - 100 GeV)', d['Flux_Density'], d['Unc_Flux_Density'])
+        args = ('Flux Density at pivot energy', d['Flux_Density'], d['Unc_Flux_Density'])
         ss += fmt.format(*args)
 
         fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 s^-1\n'
         args = ('Integral flux (1 - 100 GeV)', d['Flux1000'], d['Unc_Flux1000'])
         ss += fmt.format(*args)
 
-        ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
+        fmt = '{:<45s} : {:.3} +- {:.3} erg cm^-2 s^-1\n'
+        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'], d['Unc_Energy_Flux100'])
+        ss += fmt.format(*args)
 
-        ss += '\n\n'
-        ss += 'Table:\n\n'
+        return ss
+
+    def _info_spectral_points(self):
+        d = self.data
+        ss = '\n*** Spectral points ***\n\n'
         ss += '{:<15} {:<35} {:<25} {:<20}\n'.format('Energy range', 'Integral flux', 'Energy flux',
                                                      'Sqrt Test Statistic')
         flux_table = {
@@ -261,23 +247,28 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _info_lightcurve(self):
         """Print lightcurve info."""
         d = self.data
-        ss = '\n*** Lightcurve info ***\n'
+        ss = '\n*** Lightcurve info ***\n\n'
         ss += 'Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n'
 
         ss += '{:<40s} : {:.3f}\n'.format('Variability index', d['Variability_Index'])
-        ss += '{:<40s} : {:.3f}\n'.format('Significance peak (100 MeV - 100 GeV)', d['Signif_Peak'])
 
-        fmt = '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'
-        args = ('Integral flux peak (100 MeV - 100 GeV)', d['Flux_Peak'], d['Unc_Flux_Peak'])
-        ss += fmt.format(*args)
+        if d['Signif_Peak'] == np.nan:
+            ss += '{:<40s} : {:.3f}\n'.format('Significance peak (100 MeV - 100 GeV)', d['Signif_Peak'])
 
-        ss += '{:<40s} : {:.3} s\n'.format('Time peak', d['Time_Peak'])
-        ss += '{:<40s} : {:.3} s\n'.format('Peak interval', d['Peak_Interval'])
+            fmt = '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'
+            args = ('Integral flux peak (100 MeV - 100 GeV)', d['Flux_Peak'], d['Unc_Flux_Peak'])
+            ss += fmt.format(*args)
+
+            # TODO: give time as UTC string, not MET
+            ss += '{:<40s} : {:.3} s (Mission elapsed time)\n'.format('Time peak', d['Time_Peak'])
+            peak_interval = Quantity(d['Peak_Interval'], 's').to('day').value
+            ss += '{:<40s} : {:.3} day\n'.format('Peak interval', peak_interval)
+        else:
+            ss += '\nNo peak measured for this source.\n'
 
         # TODO: Add a lightcurve table with d['Flux_History'] and d['Unc_Flux_History']
 
         return ss
-
 
     @property
     def spectral_model(self):
@@ -314,7 +305,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
-    
+
     @property
     def flux_points(self):
         """
@@ -453,7 +444,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
-        table['e_max'] =    self._ebounds.upper_bounds
+        table['e_max'] = self._ebounds.upper_bounds
         table['flux'] = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
         table['flux_errn'] = np.abs(flux_err[:, 0])
