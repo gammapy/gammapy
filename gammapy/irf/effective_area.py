@@ -361,7 +361,7 @@ class EffectiveAreaTable2D(object):
 
         energy_lo = table['{}_LO'.format(energy_col)].quantity[0]
         energy_hi = table['{}_HI'.format(energy_col)].quantity[0]
-        o_lo = table['{}_HI'.format(offset_col)].quantity[0]
+        o_lo = table['{}_LO'.format(offset_col)].quantity[0]
         o_hi = table['{}_HI'.format(offset_col)].quantity[0]
         data = table['{}'.format(data_col)].quantity[0].transpose()
         return cls(offset_lo=o_lo, offset_hi=o_hi,
