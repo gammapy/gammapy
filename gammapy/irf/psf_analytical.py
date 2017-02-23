@@ -79,7 +79,11 @@ class EnergyDependentMultiGaussPSF(object):
                                                            self.energy_hi)
         self.energy = ebounds.log_centers
         self.theta = theta.to('deg')
+        sigmas[0][np.where(sigmas[0] == 0)] = 1
+        sigmas[1][np.where(sigmas[1] == 0)] = 1
+        sigmas[2][np.where(sigmas[2] == 0)] = 1
         self.sigmas = sigmas
+
         self.norms = norms
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
