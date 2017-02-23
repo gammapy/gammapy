@@ -2,9 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import (
     FermiLATDataset,
@@ -126,7 +127,7 @@ def test_load_lat_psf_performance():
 @requires_dependency('yaml')
 class TestFermiLATDataset:
     def setup(self):
-        filename = '$FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
+        filename = '$GAMMAPY_FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
         self.data_2fhl = data = FermiLATDataset(filename)
 
     def test_events(self):

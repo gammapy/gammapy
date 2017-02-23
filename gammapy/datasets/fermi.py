@@ -17,6 +17,7 @@ from ..cube import SkyCube
 from ..irf import EnergyDependentTablePSF
 from ..utils.scripts import make_path
 from ..spectrum.models import TableModel
+from ..catalog.gammacat import NoDataAvailableError
 
 __all__ = [
     'FermiLATDataset',

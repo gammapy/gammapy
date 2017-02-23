@@ -22,7 +22,7 @@ class TestFermiLATBasicImageEstimator:
         kwargs['emax'] = 3000 * u.GeV
         self.estimator = FermiLATBasicImageEstimator(**kwargs)
 
-        filename = '$FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
+        filename = '$GAMMAPY_FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
         self.dataset = FermiLATDataset(filename)
 
     def test_run(self):
