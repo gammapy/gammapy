@@ -60,8 +60,8 @@ class TestFermi3FGLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert 'Source: 3FGL J0534.5+2201' in ss
-        assert 'RA (J2000)  : 83.63' in ss
+        assert '3FGL J0534.5+2201' in ss # Source name
+        assert '83.637 deg' in ss # RA
 
     @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
     def test_spectral_model(self, index, model_type, desired, desired_err):
