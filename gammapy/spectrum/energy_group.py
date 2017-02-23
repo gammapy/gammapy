@@ -107,14 +107,21 @@ class SpectrumEnergyGroupMaker(object):
         return len(self.groups)
 
     # Methods to compute total ranges
-
     def compute_range_safe(self):
-        """Apply safe energy range to ``groups``.
+        """Apply safe energy range of observation to ``groups``.
         """
-        # TODO: This method should work with obs.on_vector.quality
-        emin = self.obs.lo_threshold * 0.9999
-        emax = self.obs.hi_threshold * 1.0001
-        self.set_energy_range(emin=emin, emax=emax)
+        bins = self.obs.on_vector.bins_in_safe_range
+        underflow = bins[0] - 1 
+        # If no low threshold is set no underflow bin is needed
+        if underflow > 0:
+            self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
+
+        # The group binning has changed
+        overflow = bins[-1] - underflow + 1
+        max_bin = self.groups[-1].energy_group_idx
+        # If no high threshold is set no overflow bin is needed
+        if overflow <= max_bin:
+            self.groups.make_and_replace_merged_group(overflow, max_bin , 'overflow')
 
     def set_energy_range(self, emin=None, emax=None):
         """Apply energy range to ``groups``.
@@ -315,6 +322,7 @@ class SpectrumEnergyGroups(UserList):
         * Min index is the bin that contains ``energy_range.min``
         * Max index is the bin that is below the one that contains ``energy_range.max``
         * This way we don't loose any bins or count them twice.
+        * Containment is checked for each bin as [min, max)
         """
         idx_min = self.find_list_idx(energy=energy_range.min)
         idx_max = self.find_list_idx(energy=energy_range.max) - 1
@@ -444,7 +452,7 @@ class EnergyRange(object):
         return np.sqrt(self.min * self.max)
 
     def __contains__(self, energy):
-        if (self.min < energy) and (energy < self.max):
+        if (self.min <= energy) and (energy < self.max):
             return True
         else:
             return False

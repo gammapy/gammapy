@@ -22,12 +22,11 @@ def seg(obs):
     # Run one example here, to have it available for
     seg = SpectrumEnergyGroupMaker(obs=obs)
     # TODO: Check again as soon as GroupMaker is fixed
-    ebounds = [0.3, 1.0001, 3, 10.0001, 30] * u.TeV
+    ebounds = [0.3, 1, 3, 10, 30] * u.TeV
     seg.compute_range_safe()
     seg.compute_groups_fixed(ebounds=ebounds)
     return seg
 
-@pytest.mark.xfail(reason='see #867')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestSpectrumEnergyGrouping:
