@@ -149,51 +149,42 @@ def test_compute_flux_points_dnde_exp(method):
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
-@pytest.mark.xfail(reason='Cannot freeze parameters at the moment')
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
 @requires_dependency('scipy')
 class TestFluxEstimator:
     def setup(self):
+        from .test_energy_group import seg, obs
         self.model = PowerLaw(
             index=Quantity(2, ''),
             amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
             reference=Quantity(1, 'TeV'),
         )
+        seg = seg(obs())
+        self.fpe = FluxPointEstimator(
+            obs=obs(), groups=seg.groups, model=self.model)
 
-        # TODO: simulate known spectrum instead of using this example:
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
-        self.obs = SpectrumObservation.read(filename)
-        self.seg = SpectrumEnergyGroupMaker(obs=self.obs)
-        ebounds = [0.3, 1.001, 3, 10.001, 30] * u.TeV
-        self.seg.compute_range_safe()
-        self.seg.compute_groups_fixed(ebounds=ebounds)
+    def test_basic(self):
+        assert 'FluxPointEstimator' in str(self.fpe)
 
-        self.groups = self.seg.groups
+    def test_approx_model(self):
+        approx_model = self.fpe.compute_approx_model(self.model, self.fpe.groups[3])
+        assert approx_model.parameters['index'].frozen == True
+        assert approx_model.parameters['amplitude'].frozen == False
+        assert approx_model.parameters['reference'].frozen == True
 
     def test_with_power_law(self):
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
-
-        fpe = FluxPointEstimator(
-            obs=self.obs,
-            groups=self.groups,
-            model=self.model,
-        )
-
-        assert 'FluxPointEstimator' in str(fpe)
-
-        fpe.compute_points()
-        flux_points = fpe.flux_points
-        flux_points.table.pprint()
-        flux_points.table.info()
+        self.fpe.compute_points()
+        flux_points = self.fpe.flux_points
 
         actual = flux_points.table['dnde'].quantity[2]
-        desired = Quantity(5.737510858664804e-09, 'm-2 s-1 TeV-1')
+        desired = Quantity(5.531600795458988e-09, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
         actual = flux_points.table['dnde_err'].quantity[2]
-        desired = Quantity(9.904468386098078e-10, 'm-2 s-1 TeV-1')
+        desired = Quantity(9.682647193953536e-10, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
     def test_with_ecpl(self):

@@ -557,6 +557,8 @@ class FluxPointEstimator(object):
     def compute_approx_model(global_model, energy_range):
         """
         Compute approximate model, to be used in the energy bin.
+        TODO: At the moment just the global model with fixed parameters is
+        returned
         """
         # binning = EnergyBounds(binning)
         # low_bins = binning.lower_bounds
@@ -593,21 +595,20 @@ class FluxPointEstimator(object):
         #    amplitude=u.Quantity(1, 'm-2 s-1 TeV-1'),
         #    reference=u.Quantity(1, 'TeV'),
         #)
-        return global_model
+        approx_model = global_model.copy()
+        for par in approx_model.parameters.parameters:
+            if par.name != 'amplitude':
+                par.frozen=True
+        return approx_model
 
     def fit_point(self, model, energy_group, energy_ref):
         from gammapy.spectrum import SpectrumFit
 
-        # TODO: The code below won't work because SpectrumFit only accepts
-        # gammapy models. Add Parameter class to freeze index
-        # sherpa_model = model.to_sherpa()
-        # sherpa_model.gamma.freeze()
-        #fit = SpectrumFit(self.obs, sherpa_model)
         fit = SpectrumFit(self.obs, model)
-
         erange = energy_group.energy_range
+
         # TODO: Notice channels contained in energy_group
-        fit.fit_range = erange.min, 0.9999 * erange.max
+        fit.fit_range = erange.min, erange.max
 
         log.debug(
             'Calling Sherpa fit for flux point '
