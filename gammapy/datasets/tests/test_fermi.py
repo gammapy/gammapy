@@ -153,8 +153,3 @@ class TestFermiLATDataset:
         actual = isodiff(10 * u.GeV)
         desired = 6.3191722098744606e-12 * u.Unit('1 / (cm2 MeV s sr)')
         assert_quantity_allclose(actual, desired)
-
-    def test_galdiff(self):
-        with pytest.raises(Exception) as exc_info:
-            galdiff = self.data_2fhl.galactic_diffuse
-            assert 'galactic diffuse model' in str(exc_info.value)
