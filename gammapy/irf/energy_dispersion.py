@@ -754,8 +754,9 @@ class EnergyDispersion2D(object):
         tmp = np.cumsum(vals) / np.sum(vals)
 
         # Determine positions (bin indices) of e_reco bounds in migration array
+        pos_mig = np.digitize(migra_e_reco, mig_array) - 1
         # We ensure that no negative values are found
-        pos_mig = np.maximum(np.digitize(migra_e_reco, mig_array)-1 , 0)
+        pos_mig = np.maximum(pos_mig, 0)
 
         # We compute the difference between 2 successive bounds in e_reco to get integral over reco energy bin
         integral = np.diff(tmp[pos_mig])
