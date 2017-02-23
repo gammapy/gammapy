@@ -5,4 +5,5 @@ Time-based analysis.
 from .plot import *
 from .simulate import *
 from .lightcurve import *
+from .phasogram import *
 from .exptest import *
