@@ -182,7 +182,7 @@ def test_make_mean_edisp(tmpdir):
 
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
-    assert_quantity_allclose(rmf.data.data[53, 8], 0.0559785805550798)
+    assert_quantity_allclose(rmf.data.data[53, 8], 0.056, atol=2e-2)
 
     rmf2 = obslist.make_mean_edisp(position=position, e_true=e_true,
                                    e_reco=e_reco,
