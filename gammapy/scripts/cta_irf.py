@@ -467,8 +467,8 @@ class CTAPerf(object):
         ax_sens.grid(which='both')
         ax_psf.grid(which='both')
         plt.tight_layout()
-        plt.show()
-        return fig
+        #plt.show()
+        #return fig
 
     @staticmethod
     def superpose_perf(cta_perf, labels):
@@ -508,5 +508,5 @@ class CTAPerf(object):
         ax_sens.grid(which='both')
 
         plt.tight_layout()
-        plt.show()
-        return fig
+        #plt.show()
+        #return fig
