@@ -626,6 +626,47 @@ class EnergyDispersion2D(object):
         return self.data.axis('offset')
 
     @classmethod
+    def from_gauss(cls, e_true, migra, bias, sigma, offset):
+        """Create Gaussian `EnergyDispersion2D` matrix.
+
+         The output matrix will be Gaussian in (e_true / e_reco).
+         bias and sigma should be either floats or arrays of same dimension than e_true.
+         Note that, the output matrix is flat in offset.
+
+         Parameters
+         ----------
+         e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+             Bin edges of true energy axis
+         migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+             Bin edges of migra axis
+         bias : float or `~np.array`
+             Center of Gaussian energy dispersion, bias
+         sigma : float or `~np.array`
+             RMS width of Gaussian energy dispersion, resolution
+         offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`, optional
+             Bin edges of offset
+         """
+        from scipy.special import erf
+
+        e_true = EnergyBounds(e_true)
+        # erf does not work with Quantities
+        true = e_true.log_centers.to('TeV').value
+
+        true2d, migra2d = np.meshgrid(true, migra)
+
+        migra2d_lo = migra2d[:-1, :]
+        migra2d_hi = migra2d[1:, :]
+
+        pdf = .5 * (erf((migra2d_hi - bias) / (np.sqrt(2.) * sigma))
+                    - erf((migra2d_lo - bias) / (np.sqrt(2.) * sigma)))
+
+        pdf_array= pdf.T[:,:,np.newaxis] * np.ones(len(offset)-1)
+
+        return cls(e_true[:-1], e_true[1:], migra[:-1], migra[1:],
+                    offset[:-1], offset[1:], pdf_array)
+
+
+    @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`
         """
@@ -702,7 +743,7 @@ class EnergyDispersion2D(object):
                                 e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
                                 data=rm)
 
-    def get_response(self, offset, e_true, e_reco=None):
+    def get_response(self, offset, e_true, e_reco=None, migra_step=5e-3):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
@@ -717,6 +758,8 @@ class EnergyDispersion2D(object):
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
+        mig_step : float
+            Integration step in migration
 
         Returns
         -------
@@ -731,58 +774,34 @@ class EnergyDispersion2D(object):
             e_reco=EnergyBounds.from_lower_and_upper_bounds(
                 self.migra.lo * e_true, self.migra.hi * e_true)
             migra=self.migra.nodes
-
         # Translate given e_reco binning to migra at bin center
         else:
             e_reco=EnergyBounds(e_reco)
             center=e_reco.log_centers
             migra=center / e_true
 
-        # ensure to have a normalized edisp
-        migra_bin=self.migra.hi - self.migra.lo
-        if (migra_bin[0] == migra_bin[1]):
-            migra_mean=1 / 2. * (self.migra.hi + self.migra.lo)
-        else:
-            migra_mean=np.sqrt(self.migra.hi * self.migra.lo)
-        val_norm=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean)
-        norm=np.sum(val_norm * migra_bin)
+        # migration value of e_reco bounds
+        migra_e_reco = e_reco / e_true
 
-        migra_e_reco=e_reco / e_true
-        integral=np.zeros(len(e_reco) - 1)
-        if norm != 0:
-            for i, migra_int in enumerate(migra_e_reco[:-1]):
-                # The migra_e_reco bin is inferior to the migra min in the dispersion fits file
-                if migra_e_reco[i + 1] < migra_mean[0]:
-                    continue
-                # The migra_e_reco bin is superior to the migra max in the dispersion fits file
-                elif migra_e_reco[i] > migra_mean[-1]:
-                    continue
-                else:
-                    if migra_e_reco[i] < migra_mean[0]:
-                        i_min=0
-                    else:
-                        i_min=np.where(migra_mean < migra_e_reco[i])[0][-1]
-                    i_max=np.where(migra_mean < migra_e_reco[i + 1])[0][-1]
+        # Define a vector of migration with mig_step step
+        mrec_min = self.migra.lo[0]
+        mrec_max = self.migra.hi[-1]
+        mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
-                    migra_bin_reco=migra_bin[i_min + 1:i_max]
-                    if migra_e_reco[i + 1] > migra_mean[-1]:
-                        index=np.arange(i_min, i_max, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
-                    elif migra_e_reco[i] < migra_mean[0]:
-                        if i_max == 0:
-                            index=np.arange(i_min, i_max + 1, 1)
-                        else:
-                            index=np.arange(i_min + 1, i_max + 1, 1)
-                        migra_bin_reco=np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
-                    elif i_min == i_max:
-                        index=np.arange(i_min, i_max + 1, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_e_reco[i + 1] - migra_e_reco[i]))
-                    else:
-                        index=np.arange(i_min, i_max + 1, 1)
-                        migra_bin_reco=np.insert(migra_bin_reco, 0, (migra_mean[i_min + 1] - migra_e_reco[i]))
-                        migra_bin_reco=np.append(migra_bin_reco, migra_e_reco[i + 1] - migra_mean[i_max])
-                    val=self.data.evaluate(offset=offset, e_true=e_true, migra=migra_mean[index])
-                    integral[i]=np.sum(val * migra_bin_reco) / norm
+        # Compute energy dispersion probabilty dP/dm for each element of migration array
+        vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
+
+        # Compute normalized cumulative sum to prepare integration
+        tmp = np.cumsum(vals) / np.sum(vals)
+
+        # Determine positions (bin indices) of e_reco bounds in migration array
+        pos_mig = np.digitize(migra_e_reco, mig_array) - 1
+        # We ensure that no negative values are found
+        pos_mig = np.maximum(pos_mig, 0)
+
+        # We compute the difference between 2 successive bounds in e_reco to get integral over reco energy bin
+        integral = np.diff(tmp[pos_mig])
+
         return integral
 
 
