@@ -376,7 +376,6 @@ class SpectrumObservation(object):
 
         # TODO: optimize layout
         # plt.subplots_adjust(hspace = .2, left=.1)
-        #return fig
 
     def to_sherpa(self):
         """Create a `~sherpa.astro.data.DataPHA`

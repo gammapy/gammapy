@@ -236,5 +236,3 @@ class CTAObservationSimulation(object):
                  style='italic', transform=ax2.transAxes, fontsize=7,
                  bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10})
         plt.tight_layout()
-        #plt.show()
-        #return fig

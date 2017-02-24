@@ -539,5 +539,3 @@ class EffectiveAreaTable2D(object):
         self.plot_energy_dependence(ax=axes[1])
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
-        #plt.show()
-        #return fig
