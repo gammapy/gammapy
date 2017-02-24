@@ -80,7 +80,7 @@ class SpectrumFit(object):
         # TODO: Remove once there is a Parameter class
         self.covar_axis = None
         self.covariance = None
-        self.result = list()
+        self.result = None
 
     def __str__(self):
         """String repr"""
@@ -380,12 +380,13 @@ class SpectrumFit(object):
         self._make_fit_result()
 
     def _make_fit_result(self):
-        """Bunde fit results into `~gammapy.spectrum.SpectrumFitResult`
+        """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`
 
         It is important to copy best fit values, because the error estimation
         will change the model parameters and statval again
         """
         from . import SpectrumFitResult
+        results = list()
 
         model = self.model.copy()
         if self.background_model is not None:
@@ -402,7 +403,7 @@ class SpectrumFit(object):
             statval = np.sum(self.statval[idx])
             npred_src = copy.deepcopy(self.predicted_counts[idx][0])
             npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
-            self.result.append(SpectrumFitResult(
+            results.append(SpectrumFitResult(
                 model=model,
                 covariance=covariance,
                 covar_axis=covar_axis,
@@ -414,6 +415,8 @@ class SpectrumFit(object):
                 background_model=bkg_model,
                 obs=obs
             ))
+
+        self.result = results
 
     def est_errors(self):
         """Estimate errors"""
