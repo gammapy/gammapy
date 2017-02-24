@@ -396,7 +396,7 @@ class EnergyDependentMultiGaussPSF(object):
             theta = Angle(0, 'deg')
 
         if offset:
-            offset = Angle(offset)
+            offset = Angle(offset).to('deg')
         else:
             offset = Angle(np.arange(0, 1.5, 0.005), 'deg')
 
