@@ -9,6 +9,7 @@ from ..image.models import Gauss2DPDF
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 
+
 __all__ = [
     'TablePSF',
     'EnergyDependentTablePSF',
@@ -559,6 +560,35 @@ class EnergyDependentTablePSF(object):
             kernel = psf.kernel(cube.sky_image_ref)
             kernels.append(kernel)
         return kernels
+
+    def cube_kernels(self, cube, **kwargs):
+        """
+        Make a set of 2D kernel images, representing the PSF at different energies.
+
+        The kernel image is evaluated on the spatial and energy grid defined by
+        the reference sky cube.
+
+        Parameters
+        ----------
+        cube : `~gammapy.cube.SkyCube`
+            Reference sky cube.
+        kwargs : dict
+            Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
+
+        Returns
+        -------
+        kernels : list of `~numpy.ndarray`
+            List of 2D convolution kernels.
+        """
+        from gammapy.cube import SkyCube
+        psf_cube = SkyCube.empty_like(cube)
+        energies = cube.energies(mode='edges')
+        for iE, (emin, emax) in enumerate(zip(energies[:-1], energies[1:])):
+            energy_band = Quantity([emin, emax])
+            psf = self.table_psf_in_energy_band(energy_band, **kwargs)
+            psf_cube.data[iE,:,:] = psf.kernel(cube.sky_image_ref).data
+
+        return psf_cube
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2,
                                  spectrum=None, **kwargs):
