@@ -58,6 +58,10 @@ class TestEnergyDispersion:
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
+
+# First we define a fake EnergyDispersion2D
+
+
 class TestEnergyDispersion2D():
     def setup(self):
         filename = gammapy_extra.filename(
@@ -92,10 +96,11 @@ class TestEnergyDispersion2D():
                    self.edisp.offset.nbins)
         assert_equal(actual, desired)
 
+
     def test_get_response(self):
         # Here we test get_response with an expected gaussian shape for edisp
         from scipy.special import erf
-        # First we define a fake EnergyDispersion2D
+
         size_true = 50
         size_mig = 1000
         size_off = 4
@@ -105,22 +110,22 @@ class TestEnergyDispersion2D():
         offsets = np.linspace(0., 2.5, size_off + 1) * u.deg
 
         # Resolution with energy
-        sigma = 0.15 / ((etrues[:-1] / (1 * u.TeV)).value)**0.3
+        sigma = 0.15 / ((etrues[:-1] / (1 * u.TeV)).value) ** 0.3
         # Bias with energy
         mu = 1.0 + 1e-3 * (etrues[:-1] - 1 * u.TeV).value
 
-        edisp = EnergyDispersion2D._from_gaus(etrues, migras, mu, sigma, offsets)
+        edisp = EnergyDispersion2D.from_gauss(etrues, migras, mu, sigma, offsets)
 
         for i in [5, 10, 15, 20, 25, 30, 35, 40]:
             e_true = etrues[i]
             e_reco = np.array([0.25, 0.5, 1.0, 1.5, 2.0]) * e_true
-            actual = edisp.get_response(offset=0.7 * u.deg, e_true=e_true, e_reco=e_reco, mig_step=1e-2)
+            actual = edisp.get_response(offset=0.7 * u.deg, e_true=e_true, e_reco=e_reco)
 
             val = ((e_reco / e_true).value - mu[i]) / (np.sqrt(2) * sigma[i])
             desired = np.diff(erf(val)) * 0.5
 
-            # We want the absolute precision to be less than 5%
-            assert_allclose(actual, desired, atol=5e-2)
+            # We want the absolute precision to be less than 3%
+            assert_allclose(actual, desired, atol=3e-2)
 
     def test_exporter(self):
         # Check RMF exporter

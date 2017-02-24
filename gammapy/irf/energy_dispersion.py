@@ -626,12 +626,12 @@ class EnergyDispersion2D(object):
         return self.data.axis('offset')
 
     @classmethod
-    def _from_gaus(cls, e_true, migra, bias, sigma, offset=None):
+    def from_gauss(cls, e_true, migra, bias, sigma, offset):
         """Create Gaussian `EnergyDispersion2D` matrix.
 
-         The output matrix will be Gaussian in (e_true / e_reco)
-         The output matrix is flat in offset
-         TODO: add option to have log normal distribution
+         The output matrix will be Gaussian in (e_true / e_reco).
+         bias and sigma should be either floats or arrays of same dimension than e_true.
+         Note that, the output matrix is flat in offset.
 
          Parameters
          ----------
@@ -639,14 +639,13 @@ class EnergyDispersion2D(object):
              Bin edges of true energy axis
          migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
              Bin edges of migra axis
-         sigma : float, optional
+         bias : float or `~np.array`
+             Center of Gaussian energy dispersion, bias
+         sigma : float or `~np.array`
              RMS width of Gaussian energy dispersion, resolution
          offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`, optional
              Bin edges of offset
          """
-        if offset is None:
-            offset = np.linspace(0.,3.,10)*u.deg
-
         from scipy.special import erf
 
         e_true = EnergyBounds(e_true)
@@ -744,7 +743,7 @@ class EnergyDispersion2D(object):
                                 e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
                                 data=rm)
 
-    def get_response(self, offset, e_true, e_reco=None, mig_step=5e-3):
+    def get_response(self, offset, e_true, e_reco=None, migra_step=5e-3):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
@@ -787,7 +786,7 @@ class EnergyDispersion2D(object):
         # Define a vector of migration with mig_step step
         mrec_min = self.migra.lo[0]
         mrec_max = self.migra.hi[-1]
-        mig_array = np.arange(mrec_min, mrec_max, mig_step)
+        mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
         # Compute energy dispersion probabilty dP/dm for each element of migration array
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
