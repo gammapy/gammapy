@@ -180,11 +180,11 @@ class TestFluxEstimator:
         flux_points = self.fpe.flux_points
 
         actual = flux_points.table['dnde'].quantity[2]
-        desired = Quantity(5.531600795458988e-09, 'm-2 s-1 TeV-1')
+        desired = Quantity(5.594906786715122e-09, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
         actual = flux_points.table['dnde_err'].quantity[2]
-        desired = Quantity(9.682647193953536e-10, 'm-2 s-1 TeV-1')
+        desired = Quantity(9.793478484157414e-10, 'm-2 s-1 TeV-1')
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
     def test_with_ecpl(self):
