@@ -34,7 +34,7 @@ def get_test_obs():
         obs=obs_1,
         total_on=172,
         livetime = 1581.73681640625 * u.second,
-        npred = 212.35910231742795,
+        npred = 214.28006281297564,
         excess = 167.36363636363637,
         excess_safe_range = 135)
     )
@@ -185,7 +185,7 @@ class TestSpectrumObservationList:
         assert_quantity_allclose(stacked_obs.aeff.data.data[10],
                                  86443352.23037884 * u.cm ** 2)
         assert_quantity_allclose(stacked_obs.edisp.data.data[50, 52],
-                                 0.024019396113124782)
+                                 0.02803437535072469)
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)

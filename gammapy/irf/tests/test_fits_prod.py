@@ -24,7 +24,7 @@ def get_tested_prods():
         prod = 'pa-release1',
         datastore = 'hess-crab4-pa',
         test_obs = 23523,
-        aeff_ref = 208561.83571068867 * u.m**2,
+        aeff_ref = 207835.97395833334 * u.m**2,
         psf_type = 'psf_king',
         psf_ref = 51.0044923171571 / u.sr,
         edisp_ref = 2.783763964427291)

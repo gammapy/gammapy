@@ -48,10 +48,6 @@ class SpectrumExtraction(object):
     containment_correction : bool
         Apply containment correction for point sources and circular ON regions.
 
-    Examples
-    --------
-    TODO
-
     """
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
