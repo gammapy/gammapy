@@ -74,6 +74,7 @@ def gammacat():
 
 
 @requires_data('gammapy-extra')
+@requires_data('gamma-cat')
 class TestSourceCatalogGammaCat:
     def test_source_table(self, gammacat):
         assert gammacat.name == 'gamma-cat'
@@ -101,6 +102,7 @@ class TestSourceCatalogGammaCat:
 
 
 @requires_data('gammapy-extra')
+@requires_data('gamma-cat')
 class TestSourceCatalogObjectGammaCat:
 
     def test_data(self, gammacat):
