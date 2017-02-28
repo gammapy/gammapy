@@ -313,12 +313,12 @@ class SpectrumFitResult(object):
         resspec.data.data -= self.obs.on_vector.data.data
         return resspec
 
-    def plot(self):
+    def plot(self, **kwargs):
         """Standard debug plot.
 
         Plot ON counts in comparison to model.
         """
-        ax0, ax1 = get_plot_axis()
+        ax0, ax1 = get_plot_axis(**kwargs)
 
         self.plot_counts(ax0)
         self.plot_residuals(ax1)
@@ -371,50 +371,39 @@ class SpectrumResult(object):
 
     Best fit model, flux points
 
-    TODO: Rewrite once `~gammapy.spectrum.models.SpectralModel` can hold
-    covariance matrix
-
     Parameters
     ----------
-    fit : `~SpectrumFitResult`
-        Spectrum fit result holding best fit model
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Best Fit model 
     points : `~gammapy.spectrum.FluxPoints`, optional
         Flux points
     """
 
-    def __init__(self, fit=None, obs=None, points=None):
-        self.fit = fit
+    def __init__(self, model, points):
+        self.model = model
         self.points = points
 
     @property
     def flux_point_residuals(self):
         """Residuals
 
-        Based on best fit model and fluxpoints.
-        Defined as ``(points - model)/model``
+        Defined as ``(points - model) / model``
 
         Returns
         -------
-        residuals : `~uncertainties.ufloat`
+        residuals : np.array 
             Residuals
+        residuals_err : np.array
+            Residuals error
         """
-        from uncertainties import ufloat
-        # Get units right
-        pars = self.fit.model.parameters
-        if self.fit.model.__class__.__name__ == 'PowerLaw2':
-            energy_unit = pars['emin'].unit
-            flux_unit = pars['amplitude'].unit / energy_unit
-        else:
-            energy_unit = pars['reference'].unit
-            flux_unit = pars['amplitude'].unit
+        e_ref = self.points.table['e_ref'].quantity
+        points = self.points.table['dnde'].quantity
+        points_err = self.points.table['dnde_err'].quantity
 
-        e_ref = self.points.table['e_ref'].quantity.to(energy_unit)
-        points = self.points.table['dnde'].quantity.to(flux_unit)
-        points_err = self.points.table['dnde_err'].quantity.to(flux_unit)
+        model_val = self.model(e_ref)
+        residuals = ((points - model_val) / model_val).to('')
+        residuals_err = (points_err / model_val).to('')
 
-        model = self.fit.model(e_ref)
-        residuals = (points - model) / model
-        residuals_err = (points_err - model) / model
         return residuals, residuals_err
 
     def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
@@ -437,7 +426,7 @@ class SpectrumResult(object):
         fit_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.models.SpectralModel.plot`
         butterfly_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.SpectrumButterfly.plot`
+            forwarded to :func:`gammapy.spectrum.SpectralModel.plot_error`
         point_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.FluxPoints.plot`
         fig_kwargs : dict, optional
@@ -463,14 +452,12 @@ class SpectrumResult(object):
         point_kwargs.update(common_kwargs)
         butterfly_kwargs.update(common_kwargs)
 
-        self.fit.model.plot(energy_range=energy_range,
-                            ax=ax0,
-                            **fit_kwargs)
-
-        energy = EnergyBounds.equal_log_spacing(energy_range[0],
-                                                energy_range[1],
-                                                100)
-        self.fit.butterfly(energy=energy).plot(ax=ax0, **butterfly_kwargs)
+        self.model.plot(energy_range=energy_range,
+                        ax=ax0,
+                        **fit_kwargs)
+        self.model.plot_error(energy_range=energy_range,
+                              ax=ax0,
+                              **butterfly_kwargs)
         self.points.plot(ax=ax0,
                          **point_kwargs)
         point_kwargs.pop('flux_unit')
@@ -478,9 +465,6 @@ class SpectrumResult(object):
         ax0.set_xlabel('')
         self._plot_residuals(ax=ax1,
                              **point_kwargs)
-
-        plt.xlim(energy_range[0].to(energy_unit).value * 0.9,
-                 energy_range[1].to(energy_unit).value * 1.1)
 
         return ax0, ax1
 
@@ -503,19 +487,17 @@ class SpectrumResult(object):
 
         ax = plt.gca() if ax is None else ax
 
-        kwargs.setdefault('fmt', 'o')
+        kwargs.setdefault('fmt', '.')
 
         y, y_err = self.flux_point_residuals
         x = self.points.e_ref
         x = x.to(energy_unit).value
-        ax.errorbar(x, y.value, yerr=y_err.value, **kwargs)
-
-        xx = ax.get_xlim()
-        yy = [0, 0]
-        ax.plot(xx, yy, color='black')
+        ax.errorbar(x, y, yerr=y_err, **kwargs)
+        
+        ax.axhline(0, color='black')
 
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('(Points - Model) / Model')
+        ax.set_ylabel('Residuals')
 
         return ax
 
@@ -547,7 +529,5 @@ def get_plot_axis(**kwargs):
 
     ax0.set_xscale('log')
     ax1.set_xscale('log')
-
-    gs.tight_layout(fig)
 
     return ax0, ax1
