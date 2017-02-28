@@ -455,12 +455,6 @@ class SpectrumResult(object):
         ax0, ax1 = get_plot_axis(**fig_kwargs)
         ax0.set_yscale('log')
 
-        fit_kwargs.setdefault('lw', '2')
-        fit_kwargs.setdefault('color', 'navy')
-        point_kwargs.setdefault('marker', '.')
-        point_kwargs.setdefault('color', 'navy')
-        butterfly_kwargs.setdefault('facecolor', 'darkblue')
-        butterfly_kwargs.setdefault('alpha', '0.5')
         common_kwargs = dict(
             energy_unit=energy_unit,
             flux_unit=flux_unit,
