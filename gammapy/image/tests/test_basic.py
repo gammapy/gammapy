@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
-
+import os
+from collections import OrderedDict
 from numpy.testing.utils import assert_allclose
-
 from astropy import units as u
 from ..basic import FermiLATBasicImageEstimator
 from .. import SkyImage
@@ -26,8 +25,25 @@ class TestFermiLATBasicImageEstimator:
         self.dataset = FermiLATDataset(filename)
 
     def test_run(self):
-        result = self.estimator.run(self.dataset)
-        desired = [155.0, 1294.44777903, 7.16714933731e+13, -1139.44777903,
-                  -3.67226151181e-09, 1.]
-        for image, value in zip(result, desired):
-            assert_allclose(image.data.sum(), value)
+        images = OrderedDict()
+        images['counts'] = dict(sum=155.0)
+        images['background'] = dict(sum=1294.44777903)
+        images['exposure'] = dict(sum=71671503335592.98)
+        # Note: excess / flux is negative, because diffuse background
+        # is overestimated for the Galactic center region used here.
+        images['excess'] = dict(sum=-1139.44777903)
+        images['flux'] = dict(sum=-3.67226151181e-09)
+        images['psf'] = dict(sum=1)
+
+        if 'FERMI_DIFFUSE_DIR' in os.environ:
+            names = list(images.keys())
+        else:
+            names = ['counts', 'exposure', 'psf']
+
+        results = self.estimator.run(
+            self.dataset,
+            which=names,
+        )
+
+        for name in names:
+            assert_allclose(results[name].data.sum(), images[name]['sum'])
