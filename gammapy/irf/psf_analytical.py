@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy import log
+import logging
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
@@ -15,6 +15,8 @@ from ..irf import HESSMultiGaussPSF
 from . import EnergyDependentTablePSF
 
 __all__ = ['EnergyDependentMultiGaussPSF']
+
+log = logging.getLogger(__name__)
 
 
 class EnergyDependentMultiGaussPSF(object):
