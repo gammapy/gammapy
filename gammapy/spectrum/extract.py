@@ -89,13 +89,10 @@ class SpectrumExtraction(object):
     def run(self, outdir=None, use_sherpa=False):
         """Run all steps
 
-        Extract spectrum, update observation table, filter observations,
-        write results to disk.
-
         Parameters
         ----------
         outdir : Path, str
-            directory to write results files to
+            directory to write results files to (if given)
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
         """
@@ -105,7 +102,8 @@ class SpectrumExtraction(object):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background(self.background)
         self.extract_spectrum()
-        self.write(outdir, use_sherpa=use_sherpa)
+        if outdir is not None:
+            self.write(outdir, use_sherpa=use_sherpa)
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
