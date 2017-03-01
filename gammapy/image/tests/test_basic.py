@@ -46,4 +46,4 @@ class TestFermiLATBasicImageEstimator:
         )
 
         for name in names:
-            assert_allclose(results[name].data.sum(), images[name]['sum'])
+            assert_allclose(results[name].data.sum(), images[name]['sum'], rtol=1e-3)
