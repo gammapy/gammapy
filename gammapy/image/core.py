@@ -874,7 +874,12 @@ class SkyImage(object):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
-        caxes = ax.imshow(self.data, **kwargs)
+        # TODO: make skyimage.data a quantity
+        try:
+            data = self.data.value
+        except AttributeError:
+            data = self.data
+        caxes = ax.imshow(data, **kwargs)
 
         if add_cbar:
             unit = self.unit or 'A.U.'
