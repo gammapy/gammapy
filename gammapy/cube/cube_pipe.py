@@ -309,5 +309,6 @@ class StackedObsCubeMaker(object):
                 psf_table = TablePSF(psf_energydependent.offset,
                                      u.Quantity(np.zeros(len(psf_energydependent.offset)), u.sr ** -1))
             data = fill_acceptance_image(header, center, psf_table._offset.to("deg"),
-                                                             psf_table._dp_domega, psf_table._offset.to("deg")[-1]).data
+                                         psf_table._dp_domega, psf_table._offset.to("deg")[-1]).data
+            ref_cube.data[i_E, :, :] = data / data.sum()
         return ref_cube

@@ -720,6 +720,8 @@ class ObservationList(UserList):
         psf = self[0].make_psf(position, energy, theta)
         if not theta:
             theta = psf.offset
+        if not energy:
+            energy = psf.energy
 
         exposure = psf.exposure
         psf_value = psf.psf_value.T * psf.exposure
