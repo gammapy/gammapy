@@ -120,7 +120,7 @@ class AdaptiveRingBackgroundEstimator(object):
     def _alpha_approx_cube(self, cubes):
         """
         Compute alpha as on_exposure / off_exposure.
-        
+
         Where off_exposure < 0,
         alpha is set to infinity.
         """
@@ -328,10 +328,10 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
-        result['off'] = counts_excluded.convolve(ring.array)
+        result['off'] = counts_excluded.convolve(ring.array, mode='reflect')
 
         exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
-        result['exposure_off'] = exposure_on_excluded.convolve(ring.array)
+        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='reflect')
 
         result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
         result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
