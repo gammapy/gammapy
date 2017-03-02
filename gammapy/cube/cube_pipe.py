@@ -4,8 +4,9 @@ from __future__ import absolute_import, division, print_function, \
 import logging
 import numpy as np
 from astropy.units import Quantity
+from astropy import units as u
 from astropy.table import Table
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from astropy.convolution import Tophat2DKernel
 from ..stats import significance
 from ..background import fill_acceptance_image
@@ -52,7 +53,7 @@ class SingleObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit='m2 s')
 
         self.obs_id = obs.obs_id
         events = obs.events
@@ -202,7 +203,7 @@ class StackedObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit='m2 s')
 
         self.data_store = data_store
         self.obs_table = obs_table
@@ -268,3 +269,46 @@ class StackedObsCubeMaker(object):
     def make_excess_cube(self):
         """Compute excess cube between counts and bkg cube."""
         self.excess_cube.data = self.counts_cube.data - self.bkg_cube.data
+
+
+    #Define a method for the mean psf from a list of observation
+    def make_mean_psf_cube(self, ref_cube, spectral_index=2.3):
+        """
+        Compute the mean psf for a set of observation for different energy bands
+        Parameters
+        ----------
+        image_size:int, Total number of pixel of the 2D map
+        energy: Tuple for the energy axis: (Emin,Emax,nbins)
+        center_maps: SkyCoord
+                center of the images
+        center: SkyCoord
+                position where we want to compute the psf
+        ObsList: ObservationList to use to compute the psf (could be different that the data_store for G0p9 for the GC for example)
+        spectral_index: assumed spectral index to compute the psf
+
+        Returns
+        -------
+        ref_cube : `~gammapy.cube.SkyCube`
+                 PSF mean cube
+
+        """
+        from ..irf import TablePSF
+        ref_cube = SkyCube.empty_like(ref_cube)
+        obslist = self.data_store.obs_list(self.data_store.obs_table["OBS_ID"])
+
+        header = ref_cube.sky_image_ref.to_image_hdu().header
+        energy_bins = ref_cube.energies()
+        center = ref_cube.sky_image_ref.center
+        for i_E, E in enumerate(energy_bins[0:-1]):
+            energy_band = Energy([energy_bins[i_E].value, energy_bins[i_E + 1].value], energy_bins.unit)
+            energy = EnergyBounds.equal_log_spacing(energy_band[0].value, energy_band[1].value, 100, energy_band.unit)
+            psf_energydependent = obslist.make_psf(center, energy, theta=None)
+            try:
+                psf_table = psf_energydependent.table_psf_in_energy_band(energy_band, spectral_index=spectral_index)
+            except:
+                psf_table = TablePSF(psf_energydependent.offset,
+                                     u.Quantity(np.zeros(len(psf_energydependent.offset)), u.sr ** -1))
+            data = fill_acceptance_image(header, center, psf_table._offset.to("deg"),
+                                         psf_table._dp_domega, psf_table._offset.to("deg")[-1]).data
+            ref_cube.data[i_E, :, :] = data / data.sum()
+        return ref_cube

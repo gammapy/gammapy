@@ -233,7 +233,7 @@ class SkyCube(object):
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
-    def empty_like(cls, refcube, fill=0):
+    def empty_like(cls, refcube, fill=0, unit=''):
         """
         Create an empty sky cube with the same WCS, energy specification and meta
         as given sky cube.
@@ -244,9 +244,11 @@ class SkyCube(object):
             Reference sky cube.
         fill : float, optional
             Fill image with constant value. Default is 0.
+        unit : str or `~astropy.units.Unit`
+            Unit of the data for the empty cube.
         """
         wcs = refcube.wcs.copy()
-        data = fill * np.ones_like(refcube.data)
+        data = fill * np.ones_like(refcube.data) * u.Unit(unit)
         energy_axis = refcube.energy_axis
         return cls(data=data, wcs=wcs, energy_axis=energy_axis, meta=refcube.meta)
 
@@ -685,7 +687,7 @@ class SkyCube(object):
         spectrum = np.nansum(data * weights).sum(-1).sum(-1)
         return spectrum
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format='fermi-counts', **kwargs):
         """Write to FITS file.
 
         Parameters
