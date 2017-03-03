@@ -188,3 +188,51 @@ class ReflectedRegionsBackgroundEstimator(object):
             result.append(temp)
 
         self.result = result
+
+    def plot(self, fig=None, ax=None, cmap=None, idx=None):
+        """Debug plot
+
+        Parameters
+        ----------
+        cmap : `~matplotlib.colors.ListedColormap`, optional
+            Color map to use
+        idx : int, optional
+            Observations to include in the plot, default: all
+        """
+        import matplotlib.pyplot as plt
+
+        fig, ax, cbar = self.exclusion.plot(fig=fig, ax=ax)
+
+        on_patch = self.on_region.to_pixel(wcs=self.exclusion.wcs).as_patch(color='red')
+        ax.add_patch(on_patch)
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+
+        if idx is None:
+            obs_list = self.obs_list
+        else:
+            obs_list = np.asarray(self.obs_list)[idx]
+            obs_list = np.atleast_1d(obs_list)
+
+        handles = list()
+        if cmap is None:
+            cmap = plt.get_cmap('viridis')
+        colors = cmap(np.linspace(0, 1, len(obs_list)))
+        for idx_ in np.arange(len(obs_list)):
+            obs = self.obs_list[idx_]
+            for off in self.result[idx_].off_region:
+                tmp = off.to_pixel(wcs=self.exclusion.wcs)
+                off_patch = tmp.as_patch(alpha=0.8, color=colors[idx_],
+                                         label='Obs {}'.format(obs.obs_id))
+                handle = ax.add_patch(off_patch)
+            handles.append(handle)
+
+            test_pointing = obs.pointing_radec
+            ax.scatter(test_pointing.galactic.l, test_pointing.galactic.b,
+                       transform=ax.get_transform('galactic'),
+                       marker='+', color=colors[idx_], s=300, linewidths=3)
+
+        ax.legend(handles=handles)
+
+        return fig, ax

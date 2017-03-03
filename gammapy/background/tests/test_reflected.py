@@ -64,3 +64,11 @@ class TestReflectedRegionBackgroundEstimator:
         self.bg_maker.config.update(min_distance = '0.2 deg')
         self.bg_maker.run()
         assert len(self.bg_maker.result[1].off_region) == 22
+
+    @requires_dependency('matplotlib')
+    def test_plot(self):
+        self.bg_maker.run()
+        self.bg_maker.plot()
+        self.bg_maker.plot(idx=1)
+        self.bg_maker.plot(idx=[0, 1])
+
