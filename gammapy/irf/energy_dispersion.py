@@ -43,7 +43,7 @@ class EnergyDispersion(object):
         2-dim energy dispersion matrix (probability density).
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=0)
-    """Default Interpolation kwargs for `~NDDataArray`"""
+    """Default Interpolation kwargs for `~NDDataArray`. Fill zeros"""
 
     def __init__(self, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi,  data,
                  interp_kwargs=None, meta=None):
@@ -595,8 +595,8 @@ class EnergyDispersion2D(object):
         plt.loglog()
 
     """
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0)
-    """Default Interpolation kwargs for `~NDDataArray`"""
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
+    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 
     def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
                  offset_hi, data, interp_kwargs=None):

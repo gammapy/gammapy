@@ -192,13 +192,14 @@ class TestSpectralFit:
         self.fit.fit()
         result = self.fit.result[0]
         assert self.fit.method == 'sherpa'
-        assert_allclose(result.statval, 32.689097201967954)
+        assert_allclose(result.statval, 32.65890, rtol=1e-5)
         pars = result.model.parameters
         assert_quantity_allclose(pars['index'].value,
-                                 2.2507746631523795) 
+                                 2.25103, rtol=1e-5)
         assert_quantity_allclose(pars['amplitude'].quantity,
-                                 2.0073443570129334e-7 * u.Unit('m-2 s-1 TeV-1'))
-        assert_allclose(result.npred_src[60], 0.5704948742222784)
+                                 2.00538e-7 * u.Unit('m-2 s-1 TeV-1'),
+                                 rtol=1e-5)
+        assert_allclose(result.npred_src[60], 0.568627, rtol=1e-5)
 
         with pytest.raises(ValueError):
             t = self.fit.result[0].to_table()
@@ -208,8 +209,8 @@ class TestSpectralFit:
         self.fit.est_errors()
         result = self.fit.result[0]
         par_errors = result.model.parameters._ufloats
-        assert_allclose(par_errors['index'].s, 0.09824357532850064)
-        assert_allclose(par_errors['amplitude'].s, 2.2038551595980807e-12)
+        assert_allclose(par_errors['index'].s, 0.098231, rtol=1e-5)
+        assert_allclose(par_errors['amplitude'].s, 2.199406e-12, rtol=1e-5)
 
         t = self.fit.result[0].to_table()
 
@@ -264,15 +265,16 @@ class TestSpectralFit:
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
         assert_quantity_allclose(fit.result[0].model.parameters['lambda_'].quantity,
-                                 0.033130174674062804 / u.TeV)
+                                 0.0331969 / u.TeV, rtol=1e-5)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
         assert_quantity_allclose(fit.model.parameters['index'].quantity,
-                                 2.208835103098456)
+                                 2.20872, rtol=1e-5)
         assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
-                                 2.362014689033278e-11 * u.Unit('cm-2 s-1 TeV-1'))
+                                 2.35883e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                                 rtol=1e-5)
 
         # Change energy binnig of one observation
         # TODO: Add Rebin method to SpectrumObservation
@@ -285,9 +287,10 @@ class TestSpectralFit:
 
         # TODO: Check if such a large deviation makes sense
         assert_quantity_allclose(fit.model.parameters['index'].quantity,
-                                 2.165317253019541)
+                                 2.16517, rtol=1e-5)
         assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
-                                 3.2006027905020016e-11 * u.Unit('cm-2 s-1 TeV-1'))
+                                 3.19642e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                                 rtol=1e-5)
 
 
     def test_stacked_fit(self):
@@ -296,9 +299,10 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.24586418915541)
+        assert_quantity_allclose(pars['index'].value, 2.24588, rtol=1e-5)
         assert_quantity_allclose(pars['amplitude'].quantity,
-                                 2.4970910953885096e-11 * u.Unit('cm-2 s-1 TeV-1'))
+                                 2.49398e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                                 rtol=1e-5)
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
@@ -321,5 +325,5 @@ def test_sherpa_fit(tmpdir):
     model.gamma = 2
     sau.set_model(model * 1e-20)
     sau.fit()
-    assert_allclose(model.pars[0].val, 2.0021424984466254) 
-    assert_allclose(model.pars[2].val, 2.2977111184000267)
+    assert_allclose(model.pars[0].val, 2.00331, rtol=1e-5)
+    assert_allclose(model.pars[2].val, 2.29916, rtol=1e-5)
