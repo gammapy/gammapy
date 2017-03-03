@@ -33,7 +33,7 @@ def test_EffectiveAreaTable2D(tmpdir):
     test_val = aeff.data.evaluate(energy=test_e, offset=test_o)
     assert_allclose(test_val.value, 740929.645, atol=1e-2)
 
-    aeff.plot_image()
+    aeff.plot()
     aeff.plot_energy_dependence()
     aeff.plot_offset_dependence()
 

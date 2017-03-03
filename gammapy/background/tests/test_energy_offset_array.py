@@ -76,7 +76,7 @@ def test_energy_offset_array_fill_evaluate():
 @requires_dependency('matplotlib')
 def test_energy_offset_array_plot():
     array = make_test_array()
-    array.plot_image()
+    array.plot()
 
 
 def test_energy_offset_array_read_write(tmpdir):
