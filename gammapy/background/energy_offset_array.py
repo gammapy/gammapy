@@ -74,7 +74,7 @@ class EnergyOffsetArray(object):
 
         return hist
 
-    def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """Plot Energy_offset Array image (x=offset, y=energy).
 
         TODO: Currently theta axis is not shown correctly if theta scale is not linear (like square root).
@@ -83,30 +83,19 @@ class EnergyOffsetArray(object):
         """
         import matplotlib.pyplot as plt
 
-        kwargs.setdefault('cmap', 'afmhot')
-        kwargs.setdefault('origin', 'bottom')
-        kwargs.setdefault('interpolation', 'nearest')
+        kwargs.setdefault('cmap', 'GnBu')
+        #kwargs.setdefault('interpolation', 'None')
 
         ax = plt.gca() if ax is None else ax
 
-        if offset is None:
-            offset = self.offset
-
-        if energy is None:
-            energy = self.energy
-
-        extent = [
-            offset.value.min(), offset.value.max(),
-            energy.value.min(), energy.value.max(),
-        ]
-        ax.imshow(self.data.value, extent=extent, **kwargs)
+        offset, energy = self.offset, self.energy.log_centers
+        x, y, z = offset.value, energy.value, self.data.value
+        caxes = ax.pcolormesh(x, y, z,  **kwargs)
+        unit = self.data.unit
+        cbar = ax.figure.colorbar(caxes, ax=ax, label='Value ({0})'.format(unit))
         ax.semilogy()
         ax.set_xlabel('Offset ({0})'.format(offset.unit))
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
-        ax.set_title('Energy_offset Array')
-        ax.legend()
-        image = ax.imshow(self.data.value, extent=extent, **kwargs)
-        # plt.colorbar(image)
         return ax
 
     @classmethod
