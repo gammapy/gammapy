@@ -275,22 +275,18 @@ class StackedObsCubeMaker(object):
     def make_mean_psf_cube(self, ref_cube, spectral_index=2.3):
         """
         Compute the mean psf for a set of observation for different energy bands
+
         Parameters
         ----------
-        image_size:int, Total number of pixel of the 2D map
-        energy: Tuple for the energy axis: (Emin,Emax,nbins)
-        center_maps: SkyCoord
-                center of the images
-        center: SkyCoord
-                position where we want to compute the psf
-        ObsList: ObservationList to use to compute the psf (could be different that the data_store for G0p9 for the GC for example)
-        spectral_index: assumed spectral index to compute the psf
+        ref_cube : `~gammapy.cube.SkyCube`
+            Reference sky cube to evaluate PSF on.
+        spectral_index: float
+            Assumed spectral index to compute mean psf in energy band.
 
         Returns
         -------
         ref_cube : `~gammapy.cube.SkyCube`
                  PSF mean cube
-
         """
         from ..irf import TablePSF
         ref_cube = SkyCube.empty_like(ref_cube)
