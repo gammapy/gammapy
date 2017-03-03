@@ -329,12 +329,10 @@ class SpectrumFitResult(object):
         """Plot predicted and detected counts"""
 
         self.expected_source_counts.plot(ax=ax,
-                                         fmt='none',
                                          label='mu_source')
 
         self.expected_background_counts.plot(ax=ax,
                                              label='mu_background',
-                                             fmt='none',
                                              energy_unit='TeV')
 
         self.expected_on_counts.plot(ax=ax, label='mu_on', energy_unit='TeV')
@@ -342,7 +340,7 @@ class SpectrumFitResult(object):
         self.obs.on_vector.plot(ax=ax,
                                 label='n_on',
                                 show_poisson_errors=True,
-                                fmt='none',
+                                fmt='.',
                                 energy_unit='TeV')
 
         ax.legend(numpoints=1)

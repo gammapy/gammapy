@@ -337,7 +337,7 @@ class SpectrumObservation(object):
         if self.edisp is not None:
             self.edisp.write(str(outdir / rmffile), clobber=overwrite)
 
-    def peek(self, figsize=(15, 15)):
+    def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
 
@@ -368,14 +368,14 @@ class SpectrumObservation(object):
 
         ax3.axis('off')
         if self.off_vector is not None:
-            ax3.text(0, 0.3, '{}'.format(self.total_stats_safe_range), fontsize=18)
+            ax3.text(0, 0.2, '{}'.format(self.total_stats_safe_range), fontsize=12)
 
         ax4.set_title('Energy Dispersion')
         if self.edisp is not None:
             self.edisp.plot_matrix(ax=ax4)
 
         # TODO: optimize layout
-        # plt.subplots_adjust(hspace = .2, left=.1)
+        plt.subplots_adjust(wspace=0.3)
 
     def to_sherpa(self):
         """Create a `~sherpa.astro.data.DataPHA`
@@ -442,6 +442,20 @@ class SpectrumObservationList(UserList):
         ss += '\nNumber of observations: {}'.format(len(self))
         #ss += '\n{}'.format(self.obs_id)
         return ss
+
+    def peek(self):
+        """Quickly look at observations 
+
+        Uses IPython widgets.
+        TODO: Change to bokeh
+        """
+        from ipywidgets import interact
+        max_ = len(self) - 1
+
+        def show_obs(idx):
+            self[idx].peek()
+
+        return interact(show_obs, idx=(0, max_, 1))
 
     @property
     def obs_id(self):

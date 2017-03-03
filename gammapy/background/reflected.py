@@ -211,17 +211,20 @@ class ReflectedRegionsBackgroundEstimator(object):
 
         if idx is None:
             obs_list = self.obs_list
+            result = self.result
         else:
             obs_list = np.asarray(self.obs_list)[idx]
             obs_list = np.atleast_1d(obs_list)
+            result = np.asarray(self.result)[idx]
+            result = np.atleast_1d(result)
 
         handles = list()
         if cmap is None:
             cmap = plt.get_cmap('viridis')
         colors = cmap(np.linspace(0, 1, len(obs_list)))
         for idx_ in np.arange(len(obs_list)):
-            obs = self.obs_list[idx_]
-            for off in self.result[idx_].off_region:
+            obs = obs_list[idx_]
+            for off in result[idx_].off_region:
                 tmp = off.to_pixel(wcs=self.exclusion.wcs)
                 off_patch = tmp.as_patch(alpha=0.8, color=colors[idx_],
                                          label='Obs {}'.format(obs.obs_id))
