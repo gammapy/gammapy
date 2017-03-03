@@ -366,8 +366,10 @@ class SpectrumEnergyGroups(UserList):
         if self[list_idx].bin_type == 'overflow':
             list_idx -= 1
 
-        if (list_idx < 0) or (list_idx >= len(self)):
-            raise IndexError('Oh no!')
+        if (list_idx < 0):
+            raise IndexError('list_idx {} < 0'.format(list_idx))
+        if (list_idx >= len(self)):
+            raise IndexError('list_idx {} > len(self) {}'.format(list_idx))
 
         return list_idx
 
