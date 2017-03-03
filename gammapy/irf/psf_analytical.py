@@ -404,7 +404,7 @@ class EnergyDependentMultiGaussPSF(object):
 
         for i, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
-            psf_value[i] = Quantity(psf_gauss(offset, np.zeros_like(offset)), 'deg^-2')
+            psf_value[i] = Quantity(psf_gauss(offset), 'deg^-2')
 
         return EnergyDependentTablePSF(energy=energies, offset=offset,
                                        exposure=exposure, psf_value=psf_value)
