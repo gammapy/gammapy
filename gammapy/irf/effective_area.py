@@ -318,8 +318,14 @@ class EffectiveAreaTable2D(object):
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
     Data           : size =    40, min =  1.000 cm2, max =  1.000 cm2
     """
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
+    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 
-    def __init__(self, energy_lo, energy_hi, offset_lo, offset_hi, data, meta=None):
+    def __init__(self, energy_lo, energy_hi, offset_lo, offset_hi, data,
+                 meta=None, interp_kwargs=None):
+
+        if interp_kwargs is None:
+            interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
                 energy_lo, energy_hi, 
@@ -328,7 +334,8 @@ class EffectiveAreaTable2D(object):
                 offset_lo, offset_hi,
                 interpolation_mode='linear', name='offset')
         ]
-        self.data = NDDataArray(axes=axes, data=data)
+        self.data = NDDataArray(axes=axes, data=data,
+                                interp_kwargs=interp_kwargs)
         if meta is not None:
             self.meta = Bunch(meta)
 
