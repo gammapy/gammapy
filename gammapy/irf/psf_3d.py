@@ -371,7 +371,6 @@ class PSF3D(object):
 
         ax = plt.gca() if ax is None else ax
 
-
         energy = self.energy_logcenter()
         offset = self.offset
 
@@ -384,13 +383,13 @@ class PSF3D(object):
         kwargs.setdefault('vmax', np.nanmax(containment.value))
 
         # Plotting
-        caxes = ax.pcolormesh(offset.value, energy.value,
-                              containment.value, **kwargs)
+        caxes = ax.pcolormesh(energy.value, offset.value,
+                              containment.value.T, **kwargs)
 
         # Axes labels and ticks, colobar
-        ax.semilogy()
-        ax.set_xlabel('Offset ({unit})'.format(unit=offset.unit))
-        ax.set_ylabel('Energy ({unit})'.format(unit=energy.unit))
+        ax.semilogx()
+        ax.set_ylabel('Offset ({unit})'.format(unit=offset.unit))
+        ax.set_xlabel('Energy ({unit})'.format(unit=energy.unit))
 
         if show_safe_energy:
             self._plot_safe_energy_range(ax)
