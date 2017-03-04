@@ -232,7 +232,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             handles.append(handle)
 
             test_pointing = obs.pointing_radec
-            ax.scatter(test_pointing.galactic.l, test_pointing.galactic.b,
+            ax.scatter(test_pointing.galactic.l.degree, test_pointing.galactic.b.degree,
                        transform=ax.get_transform('galactic'),
                        marker='+', color=colors[idx_], s=300, linewidths=3)
 
