@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
+from astropy.tests.helper import pytest
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
@@ -71,8 +72,8 @@ def test_EventListDataset():
     assert len(dset.event_list.table) == 49
     # TODO: test all methods ... get ~ 100% test coverage
     # even without running the following test.
-
-
+ 
+@pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_EventListDatasetChecker():
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
