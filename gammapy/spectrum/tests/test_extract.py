@@ -67,12 +67,12 @@ class TestSpectrumExtraction:
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
                                                   aeff=549861.8 * u.m ** 2,
-                                                  edisp=0.2237980131973548
+                                                  edisp=0.22417647310823458
                                                  )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
                                                  aeff=412731.8043631101 * u.m ** 2,
-                                                 edisp=0.2237980131973548
+                                                 edisp=0.22417647310823458
                                                 ))
     ])
     def test_extract(self, pars, results, target, obs, bkg, tmpdir):
