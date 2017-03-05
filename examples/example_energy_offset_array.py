@@ -23,5 +23,5 @@ def make_counts_array():
 
 if __name__ == '__main__':
     array = make_counts_array()
-    array.plot_image()
+    array.plot()
     plt.show()
