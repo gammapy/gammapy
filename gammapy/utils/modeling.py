@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
 Model classes to generate XML.
 
@@ -8,6 +8,7 @@ The goal was to be able to save gamma-cat in XML format
 for the CTA data challenge GPS sky model.
 
 TODO (needs a bit of experimentation / discussion / thought and a few days of coding):
+
 - add repr to all classes
 - integrate this the existing Gammapy model classes to make analysis possible.
 - don't couple this to gamma-cat. Gamma-cat should change to create model classes that support XML I/O.
@@ -22,16 +23,13 @@ For XML model format definitions, see here:
 * http://cta.irap.omp.eu/ctools/user_manual/getting_started/models.html#spectral-model-components
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
-from numpy.linalg import LinAlgError
-
 from astropy.extern import six
 from astropy import units as u
-
-from .scripts import make_path
 from ..extern import xmltodict
-
+from .scripts import make_path
 
 __all__ = [
     'Parameter',
@@ -81,6 +79,7 @@ class Parameter(object):
         Whether the parameter is free to be varied in a model fit.
 
     """
+
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
@@ -110,7 +109,7 @@ class Parameter(object):
 
         return ss.format(**self.__dict__)
 
-    # TODO: I thin kthis method is not very useful, because the same can be just
+    # TODO: I think this method is not very useful, because the same can be just
     # achieved with `Parameter(**data)`. Why duplicate?
     @classmethod
     def from_dict(cls, data):
@@ -164,8 +163,8 @@ class ParameterList(object):
     covariance : `~numpy.ndarray`
         Parameters covariance matrix. Order of values as specified by
         `parameters`.
-
     """
+
     def __init__(self, parameters, covariance=None):
         self.parameters = parameters
         self.covariance = covariance
@@ -201,7 +200,7 @@ class ParameterList(object):
     def names(self):
         """List of parameter names"""
         return [par.name for par in self.parameters]
-    
+
     @property
     def _ufloats(self):
         """
@@ -213,7 +212,7 @@ class ParameterList(object):
         try:
             # convert existing parameters to ufloats
             uarray = correlated_values(values, self.covariance)
-        except LinAlgError:
+        except np.linalg.LinAlgError:
             raise ValueError('Covariance matrix not set.')
 
         upars = {}
@@ -254,14 +253,14 @@ class ParameterList(object):
         shape = (len(self.parameters), len(self.parameters))
         covariance_new = np.zeros(shape)
         idx_lookup = dict([(par.name, idx) for idx, par in enumerate(self.parameters)])
-        
-        #TODO: make use of covariance matrix symmetry
+
+        # TODO: make use of covariance matrix symmetry
         for i, par in enumerate(covar_axis):
             i_new = idx_lookup[par]
             for j, par_other in enumerate(covar_axis):
                 j_new = idx_lookup[par_other]
                 covariance_new[i_new, j_new] = covariance[i, j]
-        
+
         self.covariance = covariance_new
 
 
