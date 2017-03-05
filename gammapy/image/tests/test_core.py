@@ -159,7 +159,7 @@ class TestSkyImagePoisson:
         refstring += "Name: None\n"
         refstring += "Data shape: (200, 200)\n"
         refstring += "Data type: >i4\n"
-        refstring += "Data unit: None\n"
+        refstring += "Data unit: \n"
         refstring += "Data mean: 1.022e+00\n"
         refstring += "WCS type: ['GLON-CAR', 'GLAT-CAR']\n"
         assert str(self.image) == refstring

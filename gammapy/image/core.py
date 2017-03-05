@@ -50,7 +50,7 @@ class SkyImage(object):
     _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
     _ax_idx = _AxisIndex(x=1, y=0)
 
-    def __init__(self, name=None, data=None, wcs=None, unit=u.Unit(''), meta=None):
+    def __init__(self, name=None, data=None, wcs=None, unit='', meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
@@ -61,7 +61,7 @@ class SkyImage(object):
         else:
             self.meta = OrderedDict(meta)
 
-        self.unit = unit
+        self.unit = u.Unit(unit)
 
     @property
     def center_pix(self):
@@ -127,7 +127,7 @@ class SkyImage(object):
             # Validate unit string
             unit = u.Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
-            unit = None
+            unit = ''
 
         meta = OrderedDict(header)
 
@@ -152,7 +152,7 @@ class SkyImage(object):
     @classmethod
     def empty(cls, name=None, nxpix=200, nypix=200, binsz=0.02, xref=0, yref=0,
               fill=0, proj='CAR', coordsys='GAL', xrefpix=None, yrefpix=None,
-              dtype='float64', unit=None, meta=None):
+              dtype='float64', unit='', meta=None):
         """
         Create an empty image from scratch.
 
@@ -189,7 +189,7 @@ class SkyImage(object):
             Coordinate system reference pixel for y axis. Default is None.
         dtype : str, optional
             Data type, default is float32
-        unit : str
+        unit : str or `~astropy.units.Unit`
             Data unit.
         meta : `~collections.OrderedDict`
             Meta data attached to the image.
@@ -206,7 +206,7 @@ class SkyImage(object):
         return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
-    def empty_like(cls, image, name=None, unit=None, fill=0, meta=None):
+    def empty_like(cls, image, name=None, unit='', fill=0, meta=None):
         """
         Create an empty image like the given image.
 

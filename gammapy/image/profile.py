@@ -384,10 +384,10 @@ class ImageProfileEstimator(object):
         result['x_min'] = x_edges[:-1]
         result['x_max'] = x_edges[1:]
         result['x_ref'] = (x_edges[:-1] + x_edges[1:]) / 2
-        result['profile'] = profile * u.Unit(image.unit)
+        result['profile'] = profile * image.unit
 
         if profile_err is not None:
-            result['profile_err'] = profile_err * u.Unit(image.unit)
+            result['profile_err'] = profile_err * image.unit
 
         result.meta['PROFILE_TYPE'] = p['axis']
         return ImageProfile(result)
