@@ -221,9 +221,7 @@ class SkyCube(object):
         
         Examples
         --------
-        Create an empty sky cube:
-
-        .. code::
+        Create an empty sky cube::
 
             from gammapy.cube import SkyCube
             cube = SkyCube.empty(nxpix=11, nypix=7, enumbins=3, mode='center',
@@ -258,36 +256,28 @@ class SkyCube(object):
         ----------
         reference : `~gammapy.cube.SkyCube` or `~gammapy.image.SkyImage`
             Reference sky cube or image.
-        energies : `~gammapy.utils.Energy` or `~gammapy.utils.EnergyBounds` (optional)
+        energies : `~gammapy.utils.energy.Energy` or `~gammapy.utils.energy.EnergyBounds` (optional)
             Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
         fill : float
             Value to fill the data array with.
 
         Examples
         --------
-        Create an empty sky cube from an image and energy center specification:
+        Create an empty sky cube from an image and energy center specification::
         
-        .. code::
-
             from astropy import units as u
             from gammapy.image import SkyImage
             from gammapy.cube import SkyCube
-            from gammapy.utils.energy import Energy
+            from gammapy.utils.energy import Energy, EnergyBounds
 
+            # define reference image
             image = SkyImage.empty(nxpix=11, nypix=7)
+            
+            # define energy binning centers 
             energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
             cube = SkyCube.empty_like(reference=image, energies=energies)
 
-        Create an empty sky cube from an image and energy bounds specification:
-
-        .. code::
-
-            from astropy import units as u
-            from gammapy.image import SkyImage
-            from gammapy.cube import SkyCube
-            from gammapy.utils.energy import EnergyBounds
-
-            image = SkyImage.empty(nxpix=11, nypix=7)
+            # define energy binning bounds
             energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
             cube = SkyCube.empty_like(reference=image, energies=energies)
 
