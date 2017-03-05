@@ -235,8 +235,8 @@ class SkyCube(object):
     @classmethod
     def empty_like(cls, reference, energies=None, fill=0):
         """
-        Create an empty sky cube with the same WCS, energy specification and meta
-        as given sky cube.
+        Create an empty sky cube with the same WCS and energy specification
+        as given reference.
 
         Parameters
         ----------
@@ -244,13 +244,22 @@ class SkyCube(object):
             Reference sky cube or image.
         energies : `~gammapy.utils.Energy` or `~gammapy.utils.EnergyBounds` (optional)
             Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
+        fill : float
+            Value to fill the data array with.
+
+        Returns
+        -------
+        empty_cube : `SkyCube`
+            Empty sky cube object.
         """
+        wcs = reference.wcs.copy()
         
         if isinstance(reference, SkyImage): 
-            if isinstance(energies, Energy):
+            unit = reference.unit
+            if type(energies) == Energy:
                 mode = 'center'
                 enumbins = len(energies)        
-            elif isinstance(energies, EnergyBounds):
+            elif type(energies) == EnergyBounds:
                 mode = 'edges'
                 enumbins = len(energies) - 1
             else:
@@ -258,14 +267,18 @@ class SkyCube(object):
                                  "but {} was given.".format(type(energies)))  
             energy_axis = LogEnergyAxis(energies, mode=mode)
             data = np.ones_like(reference.data)
-            data *= np.ones(enumbins).reshape((-1, 1, 1))
+            data = data * np.ones(enumbins).reshape((-1, 1, 1))
+
         elif isinstance(reference, SkyCube):
+            unit = reference.data.unit
             energy_axis = reference.energy_axis
             data = np.ones_like(reference.data)
-        else:
-            raise ValueError("'refernce' must be instance of SkyImage or SkyCube")    
 
-        return cls(data=data * fill, wcs=wcs, energy_axis=energy_axis)
+        else:
+            raise ValueError("'reference' must be instance of SkyImage or SkyCube")
+
+        return cls(data=data * fill * u.Unit(unit), wcs=wcs,
+                   energy_axis=energy_axis)
 
     def energies(self, mode='center'):
         """
