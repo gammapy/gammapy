@@ -382,7 +382,7 @@ class EnergyDispersion(object):
             e_reco=EnergyBounds(e_reco)
             reco_nodes=e_reco.log_centers
         if e_true is None:
-            true_nodes = self.e_true.nodes 
+            true_nodes = self.e_true.nodes
         else:
             e_true = EnergyBounds(e_true)
             true_nodes = e_true.log_centers
@@ -402,8 +402,9 @@ class EnergyDispersion(object):
         y=self.e_reco.bins[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
-    def plot_matrix(self, ax=None, show_energy=None, **kwargs):
-        """Plot PDF matrix.
+    def plot_matrix(self, ax=None, show_energy=None, add_cbar=True, **kwargs):
+        """
+        Plot PDF matrix.
 
         Parameters
         ----------
@@ -411,6 +412,8 @@ class EnergyDispersion(object):
             Axis
         show_energy : `~astropy.units.Quantity`, optional
             Show energy, e.g. threshold, as vertical line
+        add_cbar : bool
+            Add a colorbar to the plot.
 
         Returns
         -------
@@ -420,25 +423,30 @@ class EnergyDispersion(object):
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
 
-        kwargs.setdefault('cmap', 'afmhot')
-        kwargs.setdefault('origin', 'bottom')
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
+        kwargs.setdefault('cmap', 'GnBu')
+        norm =  PowerNorm(gamma=0.5)
+        kwargs.setdefault('norm', norm)
 
-        ax=plt.gca() if ax is None else ax
+        ax = plt.gca() if ax is None else ax
 
-        image=self.pdf_matrix.transpose()
-        ax.imshow(image, extent=self._extent(), **kwargs)
+        z = self.pdf_matrix
+        x = self.e_true.bins
+        y = self.e_reco.bins
+
+        caxes = ax.pcolormesh(x.value, y.value, z.T, **kwargs)
+
         if show_energy is not None:
             ener_val=Quantity(show_energy).to(self.reco_energy.unit).value
             ax.hlines(ener_val, 0, 200200, linestyles='dashed')
 
-        ax.set_xlabel('True energy (TeV)')
-        ax.set_ylabel('Reco energy (TeV)')
+        if add_cbar:
+            label = 'Probability density (A.U.)'
+            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
+        ax.set_xlabel('True energy ({unit})'.format(unit=x.unit))
+        ax.set_ylabel('Reco energy ({unit})'.format(unit=y.unit))
         ax.set_xscale('log')
         ax.set_yscale('log')
-
         return ax
 
     def plot_bias(self, ax=None, **kwargs):
@@ -611,7 +619,7 @@ class EnergyDispersion2D(object):
                            interpolation_mode='linear', name='offset')
         ]
         self.data = NDDataArray(axes=axes, data=data,
-                                interp_kwargs=interp_kwargs)                       
+                                interp_kwargs=interp_kwargs)
 
     @property
     def e_true(self):

@@ -243,50 +243,48 @@ class EnergyDependentMultiGaussPSF(object):
         add_cbar : bool
             Add a colorbar
         """
-        from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
-        kwargs.setdefault('cmap', 'afmhot')
-        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('interpolation', 'nearest')
-        # kwargs.setdefault('vmin', 0.1)
-        # kwargs.setdefault('vmax', 0.2)
+        energy = self.energy_hi
+        offset = self.theta
 
         # Set up and compute data
-        containment = self.containment_radius(self.energy_hi, self.theta, fraction)
+        containment = self.containment_radius(energy, offset, fraction)
 
-        extent = [
-            self.theta[0].value, self.theta[-1].value,
-            self.energy_lo[0].value, self.energy_hi[-1].value,
-        ]
+        # plotting defaults
+        kwargs.setdefault('cmap', 'GnBu')
+        kwargs.setdefault('vmin', np.nanmin(containment.value))
+        kwargs.setdefault('vmax', np.nanmax(containment.value))
 
         # Plotting
-        ax.imshow(containment.T.value, extent=extent, **kwargs)
-
-        if show_safe_energy:
-            # Log scale transformation for position of energy threshold
-            e_min = self.energy_hi.value.min()
-            e_max = self.energy_hi.value.max()
-            e = (self.energy_thresh_lo.value - e_min) / (e_max - e_min)
-            x = (np.log10(e * (e_max / e_min - 1) + 1) / np.log10(e_max / e_min)
-                 * (len(self.energy_hi) + 1))
-            ax.vlines(x, -0.5, len(self.theta) - 0.5)
-            ax.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
+        caxes = ax.pcolormesh(energy.value, offset.value,
+                              containment.value, **kwargs)
 
         # Axes labels and ticks, colobar
-        ax.semilogy()
-        ax.set_xlabel('Offset (deg)')
-        ax.set_ylabel('Energy (TeV)')
+        ax.semilogx()
+        ax.set_ylabel('Offset ({unit})'.format(unit=offset.unit))
+        ax.set_xlabel('Energy ({unit})'.format(unit=energy.unit))
+
+        if show_safe_energy:
+            self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            ax_cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9,
-                                   mappable=ax.images[0], ax=ax)
-            label = 'Containment radius R{0:.0f} (deg)'.format(100 * fraction)
-            ax_cbar.set_label(label)
+            label = 'Containment radius R{0:.0f} ({1})'.format(100 * fraction,
+                                                               containment.unit)
+            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
+
+    def _plot_safe_energy_range(self, ax):
+        """add safe energy range lines to the plot"""
+        esafe = self.energy_thresh_lo
+        omin = self.offset.value.min()
+        omax = self.offset.value.max()
+        ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
+        label = 'Safe energy threshold: {0:3.2f}'.format(esafe)
+        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va='top')
 
     def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
                                    thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):

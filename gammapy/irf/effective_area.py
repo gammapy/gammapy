@@ -296,9 +296,9 @@ class EffectiveAreaTable2D(object):
         Upper bin edges of offset axis
     data : `~astropy.units.Quantity`
         Effective area
-    low_threshold : `~astropy.units.Quantity`, optional 
+    low_threshold : `~astropy.units.Quantity`, optional
         Low energy threshold
-    high_threshold : `~astropy.units.Quantity`, optional 
+    high_threshold : `~astropy.units.Quantity`, optional
         High energy threshold
 
     Examples
@@ -328,7 +328,7 @@ class EffectiveAreaTable2D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, 
+                energy_lo, energy_hi,
                 interpolation_mode='log', name='energy'),
             BinnedDataAxis(
                 offset_lo, offset_hi,
@@ -372,7 +372,7 @@ class EffectiveAreaTable2D(object):
         o_hi = table['{}_HI'.format(offset_col)].quantity[0]
         data = table['{}'.format(data_col)].quantity[0].transpose()
         return cls(offset_lo=o_lo, offset_hi=o_hi,
-                   energy_lo=energy_lo, energy_hi=energy_hi, 
+                   energy_lo=energy_lo, energy_hi=energy_hi,
                    data=data, meta=table.meta)
 
     @classmethod
@@ -404,7 +404,7 @@ class EffectiveAreaTable2D(object):
         """
         if energy is None:
             energy = self.energy.bins
-       
+
         energy = EnergyBounds(energy)
 
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
@@ -500,49 +500,43 @@ class EffectiveAreaTable2D(object):
 
         return ax
 
-    def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot effective area image.
         """
         import matplotlib.pyplot as plt
 
-        kwargs.setdefault('cmap', 'afmhot')
-        kwargs.setdefault('origin', 'bottom')
-        kwargs.setdefault('interpolation', 'nearest')
-
         ax = plt.gca() if ax is None else ax
 
-        if offset is None:
-            vals = self.data.axis('offset').nodes.value
-            offset = np.linspace(vals.min(), vals.max(), 100)
-            offset = offset * self.data.axis('offset').unit
-
-        if energy is None:
-            vals = np.log10(self.energy.nodes.value)
-            energy = np.logspace(
-                vals.min(), vals.max(), 100) * self.energy.unit
-
+        offset = self.data.axis('offset').bins
+        energy = self.data.axis('energy').bins
         aeff = self.data.evaluate(offset=offset, energy=energy)
-        extent = [
-            offset.value.min(), offset.value.max(),
-            energy.value.min(), energy.value.max(),
-        ]
-        ax.imshow(aeff.value, extent=extent, **kwargs)
 
-        ax.set_yscale('log')
-        ax.set_xlabel('Offset ({0})'.format(offset.unit))
-        ax.set_ylabel('Energy ({0})'.format(energy.unit))
+        vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 
-        ax.set_title('Effective Area ({0})'.format(aeff.unit))
+        kwargs.setdefault('cmap', 'GnBu')
+        kwargs.setdefault('edgecolors', 'face')
+        kwargs.setdefault('vmin', vmin)
+        kwargs.setdefault('vmax', vmax)
 
-        ax.legend()
+        caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
+        ax.set_xscale('log')
+        ax.set_ylabel('Offset ({0})'.format(offset.unit))
+        ax.set_xlabel('Energy ({0})'.format(energy.unit))
+
+        xmin, xmax = energy.value.min(), energy.value.max()
+        ax.set_xlim(xmin, xmax)
+
+        if add_cbar:
+            label = 'Effective Area ({unit})'.format(unit=aeff.unit)
+            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
         return ax
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-        self.plot_image(ax=axes[0])
-        self.plot_energy_dependence(ax=axes[1])
-        self.plot_offset_dependence(ax=axes[2])
+        self.plot(ax=axes[2])
+        self.plot_energy_dependence(ax=axes[0])
+        self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
