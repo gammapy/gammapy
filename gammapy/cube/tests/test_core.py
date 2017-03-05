@@ -9,11 +9,31 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
 from ...data import EventList
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
 from ...spectrum.models import PowerLaw2
 from .. import SkyCube, compute_npred_cube
+
+
+def test_empty_like_energy():
+    image = SkyImage.empty(nxpix=11, nypix=7)
+    energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+    actual = SkyCube.empty_like(reference=image, energies=energies)
+
+    desired = SkyCube.empty(nxpix=11, nypix=7, enumbins=3, mode='center',
+                            emin=1, emax=100, eunit='TeV')
+    SkyCube.assert_allclose(actual, desired)
+
+def test_empty_like_energy_bounds():
+    image = SkyImage.empty(nxpix=11, nypix=7)
+    energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 4)
+    actual = SkyCube.empty_like(reference=image, energies=energies)
+
+    desired = SkyCube.empty(nxpix=11, nypix=7, enumbins=4, mode='edges',
+                            emin=1, emax=100, eunit='TeV')
+    SkyCube.assert_allclose(actual, desired)
 
 
 @requires_data('gammapy-extra')
