@@ -218,6 +218,20 @@ class SkyCube(object):
         kwargs : dict
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
+        
+        Examples
+        --------
+        Create an empty sky cube::
+
+            from gammapy.cube import SkyCube
+            cube = SkyCube.empty(nxpix=11, nypix=7, enumbins=3, mode='center',
+                            emin=1, emax=100, eunit='TeV')
+
+        Returns
+        -------
+        empty_cube : `SkyCube`
+            Empty sky cube object.    
+
         """
         image = SkyImage.empty(**kwargs)
 
@@ -233,24 +247,73 @@ class SkyCube(object):
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
-    def empty_like(cls, refcube, fill=0, unit=''):
+    def empty_like(cls, reference, energies=None, fill=0):
         """
-        Create an empty sky cube with the same WCS, energy specification and meta
-        as given sky cube.
+        Create an empty sky cube with the same WCS and energy specification
+        as given reference.
 
         Parameters
         ----------
-        refcube : `~gammapy.cube.SkyCube`
-            Reference sky cube.
-        fill : float, optional
-            Fill image with constant value. Default is 0.
-        unit : str or `~astropy.units.Unit`
-            Unit of the data for the empty cube.
+        reference : `~gammapy.cube.SkyCube` or `~gammapy.image.SkyImage`
+            Reference sky cube or image.
+        energies : `~gammapy.utils.energy.Energy` or `~gammapy.utils.energy.EnergyBounds` (optional)
+            Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
+        fill : float
+            Value to fill the data array with.
+
+        Examples
+        --------
+        Create an empty sky cube from an image and energy center specification::
+        
+            from astropy import units as u
+            from gammapy.image import SkyImage
+            from gammapy.cube import SkyCube
+            from gammapy.utils.energy import Energy, EnergyBounds
+
+            # define reference image
+            image = SkyImage.empty(nxpix=11, nypix=7)
+            
+            # define energy binning centers 
+            energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+            cube = SkyCube.empty_like(reference=image, energies=energies)
+
+            # define energy binning bounds
+            energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+            cube = SkyCube.empty_like(reference=image, energies=energies)
+
+
+        Returns
+        -------
+        empty_cube : `SkyCube`
+            Empty sky cube object.
         """
-        wcs = refcube.wcs.copy()
-        data = fill * np.ones_like(refcube.data) * u.Unit(unit)
-        energy_axis = refcube.energy_axis
-        return cls(data=data, wcs=wcs, energy_axis=energy_axis, meta=refcube.meta)
+        wcs = reference.wcs.copy()
+        
+        if isinstance(reference, SkyImage): 
+            unit = reference.unit
+            if type(energies) == Energy:
+                mode = 'center'
+                enumbins = len(energies)        
+            elif type(energies) == EnergyBounds:
+                mode = 'edges'
+                enumbins = len(energies) - 1
+            else:
+                raise ValueError("'energies' must be instance of Energy or EnergyBounds, "
+                                 "but {} was given.".format(type(energies)))  
+            energy_axis = LogEnergyAxis(energies, mode=mode)
+            data = np.ones_like(reference.data)
+            data = data * np.ones(enumbins).reshape((-1, 1, 1))
+
+        elif isinstance(reference, SkyCube):
+            unit = reference.data.unit
+            energy_axis = reference.energy_axis
+            data = np.ones_like(reference.data)
+
+        else:
+            raise ValueError("'reference' must be instance of SkyImage or SkyCube")
+
+        return cls(data=data * fill * u.Unit(unit), wcs=wcs,
+                   energy_axis=energy_axis)
 
     def energies(self, mode='center'):
         """
