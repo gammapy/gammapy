@@ -1,26 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import itertools
 import numpy as np
-from astropy.units import Quantity
 from numpy.testing import assert_allclose
+from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.modeling import ParameterList
+from ...spectrum import SpectrumResult, SpectrumFit
+from ...spectrum.models import PowerLaw, SpectralModel
 from ..flux_point import (_e_ref_lafferty, _dnde_from_flux,
                           compute_flux_points_dnde,
                           FluxPointEstimator, FluxPoints)
 from ..flux_point import SEDLikelihoodProfile
-from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
-from ...spectrum import (
-    SpectrumObservation,
-    SpectrumEnergyGroupMaker,
-    SpectrumResult,
-    SpectrumFit,
-)
-from ...spectrum.models import PowerLaw, SpectralModel
-from ...utils.modeling import ParameterList
 
 E_REF_METHODS = ['table', 'lafferty', 'log_center']
 indices = [0, 1, 2, 3]
@@ -29,6 +22,7 @@ FLUX_POINTS_FILES = ['diff_flux_points.ecsv',
                      'diff_flux_points.fits',
                      'flux_points.ecsv',
                      'flux_points.fits']
+
 
 class LWTestModel(SpectralModel):
     parameters = ParameterList([])
@@ -45,7 +39,7 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    parameters = ParameterList([]) 
+    parameters = ParameterList([])
 
     @staticmethod
     def evaluate(x):
@@ -59,7 +53,7 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    parameters = ParameterList([]) 
+    parameters = ParameterList([])
 
     @staticmethod
     def evaluate(x):
@@ -165,11 +159,11 @@ def get_test_cases():
                                 reference=Quantity(1, 'TeV')),
                  obs=obs(),
                  seg=seg(obs()),
-                 dnde = 2.7507365595357705e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                 dnde_err = 4.7628658000907185e-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 res = -0.11023361,
-                 res_err = 0.15406193,  
-                )
+                 dnde=2.746487655013871e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                 dnde_err=4.75540974278388e-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 res=-0.11081311538185892,
+                 res_err=0.1539583826837699,
+                 )
         )
         return test_cases
     except IOError:
@@ -184,6 +178,7 @@ def get_test_cases():
 def test_flux_points(config):
     tester = FluxPointTester(config)
     tester.test_all()
+
 
 @pytest.mark.parametrize('case', get_test_cases())
 class FluxPointTester:
@@ -246,12 +241,11 @@ class FluxPointTester:
         result.plot(energy_range=[1, 10] * u.TeV)
 
 
-
 @requires_data('gammapy-extra')
 class TestSEDLikelihoodProfile:
     def setup(self):
-        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/'
-                                             'llsed_hights.fits')
+        filename = '$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits'
+        self.sed = SEDLikelihoodProfile.read(filename)
 
     def test_basics(self):
         # print(self.sed)
@@ -267,10 +261,10 @@ def flux_points(request):
     path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
     return FluxPoints.read(path)
 
+
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 class TestFluxPoints:
-
     @requires_dependency('matplotlib')
     def test_plot(self, flux_points):
         import matplotlib.pyplot as plt
