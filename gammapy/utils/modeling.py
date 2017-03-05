@@ -9,14 +9,15 @@ for the CTA data challenge GPS sky model.
 
 TODO (needs a bit of experimentation / discussion / thought and a few days of coding):
 
-- add repr to all classes
-- integrate this the existing Gammapy model classes to make analysis possible.
-- don't couple this to gamma-cat. Gamma-cat should change to create model classes that support XML I/O.
-- sub-class Astropy Parameter and ParameterSet classes instead of starting from scratch?
-- implement spatial and spectral mode registries instead of `if-elif` set on type to make SourceLibrary extensible.
-- write test and docs
-- Once modeling setup OK, ask new people to add missing models (see Gammalib, Fermi ST, naima, Sherpa, HESS)
-(it's one of the simplest and nicest things to get started with.
+* add repr to all classes
+* integrate this the existing Gammapy model classes to make analysis possible.
+* don't couple this to gamma-cat. Gamma-cat should change to create model classes that support XML I/O.
+* sub-class Astropy Parameter and ParameterSet classes instead of starting from scratch?
+* implement spatial and spectral mode registries instead of `if-elif` set on type to make SourceLibrary extensible.
+* write test and docs
+* Once modeling setup OK, ask new people to add missing models
+  (see Gammalib, Fermi ST, naima, Sherpa, HESS)
+  (it's one of the simplest and nicest things to get started with)
 
 For XML model format definitions, see here:
 
