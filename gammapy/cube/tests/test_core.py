@@ -17,6 +17,7 @@ from ...spectrum.models import PowerLaw2
 from .. import SkyCube, compute_npred_cube
 
 
+@requires_dependency('scipy')
 def test_empty_like_energy():
     image = SkyImage.empty(nxpix=11, nypix=7)
     energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
@@ -26,6 +27,8 @@ def test_empty_like_energy():
                             emin=1, emax=100, eunit='TeV')
     SkyCube.assert_allclose(actual, desired)
 
+
+@requires_dependency('scipy')
 def test_empty_like_energy_bounds():
     image = SkyImage.empty(nxpix=11, nypix=7)
     energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 4)
