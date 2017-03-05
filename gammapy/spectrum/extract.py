@@ -33,6 +33,8 @@ class SpectrumExtraction(object):
 
     For a usage example see :gp-extra-notebook:`spectrum_analysis`
 
+    TODO: Take background estimator instance as input
+
     Parameters
     ----------
     target : `~gammapy.data.Target` or `~regions.SkyRegion`
@@ -124,13 +126,13 @@ class SpectrumExtraction(object):
             config = self.background.copy()
             config.pop('n_min', None)
             exclusion = config.pop('exclusion', None)
-            refl = ReflectedRegionsBackgroundEstimator(
+            self.refl = ReflectedRegionsBackgroundEstimator(
                 on_region=self.target.on_region,
                 obs_list=self.obs,
                 exclusion=exclusion,
                 config=config)
-            refl.run()
-            self.background = refl.result
+            self.refl.run()
+            self.background = self.refl.result
         else:
             raise NotImplementedError("Method: {}".format(method))
 
@@ -152,6 +154,9 @@ class SpectrumExtraction(object):
 
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
+
+
+        TODO: refactor
         """
         log.info('Starting spectrum extraction')
         spectrum_observations = []
@@ -231,8 +236,11 @@ class SpectrumExtraction(object):
                                        off_vector=off_vec,
                                        edisp=rmf)
 
-            temp.hi_threshold = obs.aeff.high_threshold
-            temp.lo_threshold = obs.aeff.low_threshold
+            try:
+                temp.hi_threshold = obs.aeff.high_threshold
+                temp.lo_threshold = obs.aeff.low_threshold
+            except AttributeError:
+                pass
 
             spectrum_observations.append(temp)
 
@@ -274,7 +282,7 @@ class SpectrumExtraction(object):
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk
-        
+
         Parameters
         ----------
         outdir : `~gammapy.extern.pathlib.Path`
