@@ -402,7 +402,7 @@ class EnergyDispersion(object):
         y=self.e_reco.bins[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
-    def plot_matrix(self, ax=None, show_energy=None, add_cbar=True, **kwargs):
+    def plot_matrix(self, ax=None, show_energy=None, add_cbar=False, **kwargs):
         """
         Plot PDF matrix.
 
@@ -424,16 +424,17 @@ class EnergyDispersion(object):
         from matplotlib.colors import PowerNorm
 
         kwargs.setdefault('cmap', 'GnBu')
-        norm =  PowerNorm(gamma=0.5)
+        norm = PowerNorm(gamma=0.5)
         kwargs.setdefault('norm', norm)
 
         ax = plt.gca() if ax is None else ax
 
+        e_true = self.e_true.bins
+        e_reco = self.e_reco.bins  
+        x = e_true.value
+        y = e_reco.value
         z = self.pdf_matrix
-        x = self.e_true.bins
-        y = self.e_reco.bins
-
-        caxes = ax.pcolormesh(x.value, y.value, z.T, **kwargs)
+        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if show_energy is not None:
             ener_val=Quantity(show_energy).to(self.reco_energy.unit).value
@@ -443,10 +444,12 @@ class EnergyDispersion(object):
             label = 'Probability density (A.U.)'
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel('True energy ({unit})'.format(unit=x.unit))
-        ax.set_ylabel('Reco energy ({unit})'.format(unit=y.unit))
+        ax.set_xlabel('True energy ({unit})'.format(unit=e_true.unit))
+        ax.set_ylabel('Reco energy ({unit})'.format(unit=e_reco.unit))
         ax.set_xscale('log')
         ax.set_yscale('log')
+        ax.set_xlim(x.min(), x.max())
+        ax.set_ylim(y.min(), y.max())
         return ax
 
     def plot_bias(self, ax=None, **kwargs):
@@ -461,10 +464,10 @@ class EnergyDispersion(object):
         """
         import matplotlib.pyplot as plt
 
-        ax=plt.gca() if ax is None else ax
+        ax = plt.gca() if ax is None else ax
 
-        x=self.e_true.nodes.to('TeV').value
-        y=self.get_bias(self.e_true.nodes)
+        x = self.e_true.nodes.to('TeV').value
+        y = self.get_bias(self.e_true.nodes)
 
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('True energy [TeV]')
@@ -860,8 +863,7 @@ class EnergyDispersion2D(object):
 
         return ax
 
-    def plot_bias(self, ax=None, offset=None, e_true=None,
-                  migra=None, **kwargs):
+    def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
         """Plot migration as a function of true energy for a given offset
 
         Parameters
@@ -870,10 +872,10 @@ class EnergyDispersion2D(object):
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
-        e_true : `~gammapy.utils.energy.Energy`, optional
-            True energy
-        migra : `~numpy.array`, list, optional
-            Migration nodes
+        add_cbar : bool
+            Add a colorbar to the plot.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
@@ -883,32 +885,32 @@ class EnergyDispersion2D(object):
         from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
 
-        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault('cmap', 'GnBu')
         kwargs.setdefault('norm', PowerNorm(gamma=0.5))
 
-        ax=plt.gca() if ax is None else ax
+        ax = plt.gca() if ax is None else ax
 
         if offset is None:
             offset=Angle([1], 'deg')
-        if e_true is None:
-            e_true=self.e_true.nodes
-        if migra is None:
-            migra=self.migra.nodes
 
-        z=self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
-        #y=e_true.value
-        #x=migra
-        #ax.pcolor(x, y, z, **kwargs)
+        e_true = self.e_true.bins
+        migra = self.migra.bins
 
-        extent = [
-            e_true.value.min(), e_true.value.max(),
-            migra.min(), migra.max(),
-        ]
-        ax.imshow(z.transpose(), extent=extent, origin='bottom', **kwargs)
+        x = e_true.value
+        y = migra.value
+        z = self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
+
+        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
+
+        if add_cbar:
+            label = 'Probability density (A.U.)'
+            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+
         ax.semilogx()
-        ax.set_xlabel('Energy (TeV)')
+        ax.set_xlabel('Energy ({unit})'.format(unit=e_true.unit))
         ax.set_ylabel('E_Reco / E_true')
-
+        ax.set_xlim(x.min(), x.max())
+        ax.set_ylim(y.min(), y.max())
         return ax
 
     def peek(self, figsize=(15, 5)):

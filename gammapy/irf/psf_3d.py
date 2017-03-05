@@ -383,13 +383,16 @@ class PSF3D(object):
         kwargs.setdefault('vmax', np.nanmax(containment.value))
 
         # Plotting
-        caxes = ax.pcolormesh(energy.value, offset.value,
-                              containment.value.T, **kwargs)
+        x = energy.value
+        y = offset.value
+        caxes = ax.pcolormesh(x, y, containment.value.T, **kwargs)
 
         # Axes labels and ticks, colobar
         ax.semilogx()
         ax.set_ylabel('Offset ({unit})'.format(unit=offset.unit))
         ax.set_xlabel('Energy ({unit})'.format(unit=energy.unit))
+        ax.set_xlim(x.min(), x.max())
+        ax.set_ylim(y.min(), y.max())
 
         if show_safe_energy:
             self._plot_safe_energy_range(ax)
