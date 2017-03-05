@@ -218,6 +218,22 @@ class SkyCube(object):
         kwargs : dict
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
+        
+        Examples
+        --------
+        Create an empty sky cube:
+
+        .. code::
+
+            from gammapy.cube import SkyCube
+            cube = SkyCube.empty(nxpix=11, nypix=7, enumbins=3, mode='center',
+                            emin=1, emax=100, eunit='TeV')
+
+        Returns
+        -------
+        empty_cube : `SkyCube`
+            Empty sky cube object.    
+
         """
         image = SkyImage.empty(**kwargs)
 
@@ -246,6 +262,35 @@ class SkyCube(object):
             Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
         fill : float
             Value to fill the data array with.
+
+        Examples
+        --------
+        Create an empty sky cube from an image and energy center specification:
+        
+        .. code::
+
+            from astropy import units as u
+            from gammapy.image import SkyImage
+            from gammapy.cube import SkyCube
+            from gammapy.utils.energy import Energy
+
+            image = SkyImage.empty(nxpix=11, nypix=7)
+            energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+            cube = SkyCube.empty_like(reference=image, energies=energies)
+
+        Create an empty sky cube from an image and energy bounds specification:
+
+        .. code::
+
+            from astropy import units as u
+            from gammapy.image import SkyImage
+            from gammapy.cube import SkyCube
+            from gammapy.utils.energy import EnergyBounds
+
+            image = SkyImage.empty(nxpix=11, nypix=7)
+            energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+            cube = SkyCube.empty_like(reference=image, energies=energies)
+
 
         Returns
         -------
