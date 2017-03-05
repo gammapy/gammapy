@@ -455,12 +455,7 @@ class CTAPerf(object):
         self.sens.plot(ax=ax_sens)
         self.psf.plot(ax=ax_psf)
         self.edisp.plot_bias(ax=ax_resol,
-                             offset=0.5 * u.degree,  # hacked for now
-                             e_true=EnergyBounds.equal_log_spacing(0.02,
-                                                                   300,
-                                                                   100,
-                                                                   'TeV'),
-                             migra=np.linspace(0., 3, 80))
+                             offset=0.5 * u.degree)
 
         ax_bkg.grid(which='both')
         ax_area.grid(which='both')
