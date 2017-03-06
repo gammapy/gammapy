@@ -42,7 +42,7 @@ class BasicImageEstimator(object):
         image = SkyImage.empty_like(self.reference)
         image.meta['emin'] = str(p['emin'])
         image.meta['emax'] = str(p['emax'])
-        image.name
+        image.name = name
         return image
 
     @staticmethod
@@ -181,8 +181,18 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure.data = np.nan_to_num(exposure.data.value)
         return exposure
 
-    def _psf_image(self, observation):
-        raise NotImplementedError
+    def psf(self, observations):
+        p = self.parameters
+        psf_image = self._get_empty_skyimage('psf')
+        mean_psf = observations.make_mean_psf(self.reference.center)
+        erange = u.Quantity((p['emin'], p['emax']))
+        psf_mean = mean_psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
+
+        coordinates = psf_image.coordinates()
+        offset = coordinates.separation(psf_image.center)
+        psf_image.data = psf_mean.evaluate(offset)
+        psf_image.data /= psf_image.data.sum()
+        return psf_image
 
     def _counts(self, observation):
         """
@@ -238,7 +248,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         result = SkyImageList()
 
         if 'all' in which:
-            which = ['counts', 'exposure', 'background', 'excess', 'flux']
+            which = ['counts', 'exposure', 'background', 'excess', 'flux', 'psf']
 
         for name in which:
             result[name] = self._get_empty_skyimage(name)
@@ -270,8 +280,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
                 result['flux'].data += flux.data
 
         if 'psf' in which:
-            images['psf'] = self._psf_image(dataset)
-
+            result['psf'] = self.psf(observations)
         return result
 
 
