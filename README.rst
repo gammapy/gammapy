@@ -5,15 +5,12 @@ A Python Package for Gamma-ray Astronomy.
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: http://docs.gammapy.org/
+* Tutorials: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
 * License: BSD-3
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
 
-Try Gammapy online in the browser via http://mybinder.org/ :
-
-.. image:: http://mybinder.org/badge.svg
-    :target: http://mybinder.org/repo/gammapy/gammapy-extra
 
 Status shields
 ++++++++++++++
