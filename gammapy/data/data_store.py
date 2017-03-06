@@ -694,7 +694,7 @@ class ObservationList(UserList):
             s += str(obs)
         return s
 
-    def make_psf(self, position, energy=None, theta=None):
+    def make_mean_psf(self, position, energy=None, theta=None):
         """Make energy-dependent mean PSF for a given position and a set of
         observations.
 
