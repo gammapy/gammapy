@@ -53,7 +53,7 @@ class SingleObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit='m2 s')
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
 
         self.obs_id = obs.obs_id
         events = obs.events
@@ -203,7 +203,7 @@ class StackedObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit='m2 s')
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
 
         self.data_store = data_store
         self.obs_table = obs_table
@@ -270,8 +270,7 @@ class StackedObsCubeMaker(object):
         """Compute excess cube between counts and bkg cube."""
         self.excess_cube.data = self.counts_cube.data - self.bkg_cube.data
 
-
-    #Define a method for the mean psf from a list of observation
+    # Define a method for the mean psf from a list of observation
     def make_mean_psf_cube(self, ref_cube, spectral_index=2.3):
         """
         Compute the mean psf for a set of observation for different energy bands
