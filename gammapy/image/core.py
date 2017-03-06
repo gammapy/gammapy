@@ -897,7 +897,9 @@ class SkyImage(object):
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
 
-        return fig, ax, cbar
+        ax.set_xlim(-0.5, self.data.shape[1] - 0.5)
+        ax.set_ylim(-0.5, self.data.shape[0] - 0.5)
+        return ax
 
     def plot_norm(self, stretch='linear', power=1.0, asinh_a=0.1, min_cut=None,
                   max_cut=None, min_percent=None, max_percent=None,
