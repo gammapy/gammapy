@@ -101,6 +101,7 @@ class TestIACTBasicImageEstimator:
         images['exposure'] = dict(sum=83036669325.30281)
         images['excess'] = dict(sum=625.2074556536902)
         images['flux'] = dict(sum=2.524971454563909e-07)
+        images['psf'] = dict(sum=1.)
         results = self.estimator.run(self.observations)
 
         for name in results.names:

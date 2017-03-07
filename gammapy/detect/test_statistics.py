@@ -11,7 +11,7 @@ from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import numpy as np
-from astropy.convolution import Model2DKernel, Gaussian2DKernel
+from astropy.convolution import Model2DKernel, Gaussian2DKernel, CustomKernel, Kernel2D
 from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.io import fits
 from ..utils.array import shape_2N, symmetric_crop_pad_width
@@ -247,7 +247,7 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
         Background image
     exposure : `~gammapy.image.SkyImage`
         Exposure image
-    kernel : `astropy.convolution.Kernel2D`
+    kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
         Source model kernel.
     flux : float (None)
         Flux image used as a starting value for the amplitude fit.
@@ -294,6 +294,9 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
     t_0 = time()
 
     log.info("Using method '{}'".format(method))
+
+    if not isinstance(kernel, Kernel2D):
+        kernel = CustomKernel(kernel)
 
     wcs = counts.wcs.deepcopy()
 

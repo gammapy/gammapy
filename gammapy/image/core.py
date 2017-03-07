@@ -897,6 +897,8 @@ class SkyImage(object):
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
 
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
         return fig, ax, cbar
 
     def plot_norm(self, stretch='linear', power=1.0, asinh_a=0.1, min_cut=None,

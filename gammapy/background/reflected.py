@@ -206,9 +206,6 @@ class ReflectedRegionsBackgroundEstimator(object):
         on_patch = self.on_region.to_pixel(wcs=self.exclusion.wcs).as_patch(color='red')
         ax.add_patch(on_patch)
 
-        # without this the axis limits are changed when calling scatter
-        ax.autoscale(enable=False)
-
         if idx is None:
             obs_list = self.obs_list
             result = self.result
