@@ -430,7 +430,7 @@ class EnergyDispersion(object):
         ax = plt.gca() if ax is None else ax
 
         e_true = self.e_true.bins
-        e_reco = self.e_reco.bins  
+        e_reco = self.e_reco.bins
         x = e_true.value
         y = e_reco.value
         z = self.pdf_matrix
@@ -584,10 +584,8 @@ class EnergyDispersion2D(object):
         from astropy.coordinates import Angle
         filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-        migra = np.linspace(0.1,2,80)
-        e_true = Energy.equal_log_spacing(0.13,60,60,'TeV')
         offset = Angle([0.554], 'deg')
-        edisp.plot_bias(offset=offset, e_true=e_true, migra=migra)
+        edisp.plot_bias(offset=offset)
         plt.xscale('log')
 
     Create RMF matrix
