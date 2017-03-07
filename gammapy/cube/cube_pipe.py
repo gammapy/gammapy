@@ -53,7 +53,7 @@ class SingleObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit="m2 s")
 
         self.obs_id = obs.obs_id
         events = obs.events
@@ -203,7 +203,7 @@ class StackedObsCubeMaker(object):
         self.bkg_cube = SkyCube.empty_like(empty_cube_images)
         self.significance_cube = SkyCube.empty_like(empty_cube_images)
         self.excess_cube = SkyCube.empty_like(empty_cube_images)
-        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube)
+        self.exposure_cube = SkyCube.empty_like(empty_exposure_cube, unit="m2 s")
 
         self.data_store = data_store
         self.obs_table = obs_table

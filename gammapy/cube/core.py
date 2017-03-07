@@ -247,7 +247,7 @@ class SkyCube(object):
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
-    def empty_like(cls, reference, energies=None, fill=0):
+    def empty_like(cls, reference, energies=None, unit='', fill=0):
         """
         Create an empty sky cube with the same WCS and energy specification
         as given reference.
@@ -258,6 +258,8 @@ class SkyCube(object):
             Reference sky cube or image.
         energies : `~gammapy.utils.energy.Energy` or `~gammapy.utils.energy.EnergyBounds` (optional)
             Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
+        unit : str
+            String specifying the data units.
         fill : float
             Value to fill the data array with.
 
@@ -290,7 +292,6 @@ class SkyCube(object):
         wcs = reference.wcs.copy()
 
         if isinstance(reference, SkyImage):
-            unit = reference.unit
             if type(energies) == Energy:
                 mode = 'center'
                 enumbins = len(energies)
@@ -301,11 +302,10 @@ class SkyCube(object):
                 raise ValueError("'energies' must be instance of Energy or EnergyBounds, "
                                  "but {} was given.".format(type(energies)))
             energy_axis = LogEnergyAxis(energies, mode=mode)
-            data = np.ones_like(reference.data.value)
+            data = np.ones_like(reference.data)
             data = data * np.ones(enumbins).reshape((-1, 1, 1))
 
         elif isinstance(reference, SkyCube):
-            unit = reference.data.unit
             energy_axis = reference.energy_axis
             data = np.ones_like(reference.data.value)
 
