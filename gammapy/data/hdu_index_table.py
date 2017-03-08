@@ -222,20 +222,18 @@ class HDUIndexTable(Table):
         idx : list of int
             List of row indices matching the selection.
         """
-        # Working with the HDU_CLASS or HDU_TYPE column directly is difficult,
-        # because those are padded strings (sometimes left-padded, sometimes right-padded).
-        # Using a Python loop and cached lists of stripped string columns is easiest here.
-        idx_list = []
+        selection = self['OBS_ID'] == obs_id
 
-        for idx in range(len(self)):
-            if self['OBS_ID'][idx] == obs_id:
-                if hdu_class and self._hdu_class_stripped[idx] == hdu_class:
-                    idx_list.append(idx)
+        if hdu_class:
+            is_hdu_class = self._hdu_class_stripped == hdu_class
+            selection &= is_hdu_class
 
-                if hdu_type and self._hdu_type_stripped[idx] == hdu_type:
-                    idx_list.append(idx)
+        if hdu_type:
+            is_hdu_type = self._hdu_type_stripped == hdu_type
+            selection &= is_hdu_type
 
-        return idx_list
+        idx = np.where(selection)[0]
+        return list(idx)
 
     def location_info(self, idx):
         """Create `HDULocation` for a given row index."""
@@ -253,11 +251,11 @@ class HDUIndexTable(Table):
 
     @lazyproperty
     def _hdu_class_stripped(self):
-        return [_.strip() for _ in self['HDU_CLASS']]
+        return np.array([_.strip() for _ in self['HDU_CLASS']])
 
     @lazyproperty
     def _hdu_type_stripped(self):
-        return [_.strip() for _ in self['HDU_TYPE']]
+        return np.array([_.strip() for _ in self['HDU_TYPE']])
 
     @lazyproperty
     def obs_id_unique(self):
