@@ -225,13 +225,11 @@ class HDUIndexTable(Table):
         selection = self['OBS_ID'] == obs_id
 
         if hdu_class:
-            hdu_class_stripped = np.array(self._hdu_class_stripped)
-            is_hdu_class = hdu_class_stripped == hdu_class
+            is_hdu_class = self._hdu_class_stripped == hdu_class
             selection &= is_hdu_class
 
         if hdu_type:
-            hdu_type_stripped = np.array(self._hdu_type_stripped)
-            is_hdu_type = hdu_type_stripped == hdu_type
+            is_hdu_type = self._hdu_type_stripped == hdu_type
             selection &= is_hdu_type
 
         idx = np.where(selection)[0]
@@ -253,11 +251,11 @@ class HDUIndexTable(Table):
 
     @lazyproperty
     def _hdu_class_stripped(self):
-        return [_.strip() for _ in self['HDU_CLASS']]
+        return np.array([_.strip() for _ in self['HDU_CLASS']])
 
     @lazyproperty
     def _hdu_type_stripped(self):
-        return [_.strip() for _ in self['HDU_TYPE']]
+        return np.array([_.strip() for _ in self['HDU_TYPE']])
 
     @lazyproperty
     def obs_id_unique(self):
