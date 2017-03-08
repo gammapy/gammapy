@@ -138,6 +138,11 @@ class EventList(object):
         return ss
 
     @property
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)"""
+        return time_ref_from_dict(self.table.meta)
+
+    @property
     def time(self):
         """Event times (`~astropy.time.Time`).
 
@@ -147,10 +152,8 @@ class EventList(object):
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table['TIME'].astype('float64'), 'second')
-        time = met_ref + met
-        return time
+        return self.time_ref + met
 
     @property
     def radec(self):
@@ -1028,10 +1031,9 @@ class EventListDatasetChecker(object):
 
         meta = self.dset.event_list.table.meta
         telescope = meta['TELESCOP']
-        met_ref = time_ref_from_dict(meta)
 
         if telescope in telescope_met_refs.keys():
-            dt = (met_ref - telescope_met_refs[telescope])
+            dt = (self.time_ref - telescope_met_refs[telescope])
             if dt > self.accuracy['time']:
                 ok = False
                 self.logger.error('MET reference is incorrect.')

@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Lightcurve and elementary temporal functions
-"""
 from collections import OrderedDict
 import numpy as np
-from astropy.table import QTable
-from astropy.units import Quantity
-from astropy.time import Time
 import astropy.units as u
+from astropy.table import Table
+from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
+from ..utils.scripts import make_path
 
 __all__ = [
     'LightCurve',
@@ -17,64 +14,116 @@ __all__ = [
 ]
 
 
-class LightCurve(QTable):
-    """LightCurve class.
+class LightCurve(object):
+    """Lightcurve container.
 
-    Contains all data in the tabular form with columns
-    tstart, tstop, flux, flux error, time bin (opt).
-    Possesses functions allowing plotting data, saving as txt
-    and elementary stats like mean & std dev.
+    The lightcurve data is stored in ``table``.
+
+    For now we only support times stored in MJD format!
 
     TODO: specification of format is work in progress
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/pull/61
+
+    Usage: :ref:`time-lc`
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table with lightcurve data
     """
 
-    def plot(self, ax=None):
-        """Plot flux versus time.
+    def __init__(self, table):
+        self.table = table
+
+    def __repr__(self):
+        return '{}(len={})'.format(self.__class__.__name__, len(self.table))
+
+    @property
+    def time_scale(self):
+        """Time scale (str).
+
+        Taken from table "TIMESYS" header.
+        Common values: "TT" or "UTC".
+        Assumed default is "UTC".
+        """
+        return self.table.meta.get('TIMESYS', 'utc')
+
+    @property
+    def time_format(self):
+        """Time format (str)."""
+        return 'mjd'
+
+    # @property
+    # def time_ref(self):
+    #     """Time reference (`~astropy.time.Time`)."""
+    #     return time_ref_from_dict(self.table.meta)
+
+    def _make_time(self, colname):
+        val = self.table[colname].data
+        scale = self.time_scale
+        format = self.time_format
+        return Time(val, scale=scale, format=format)
+
+    @property
+    def time(self):
+        """Time (`~astropy.time.Time`)."""
+        return self._make_time('time')
+
+    @property
+    def time_min(self):
+        """Time bin start (`~astropy.time.Time`)."""
+        return self._make_time('time_min')
+
+    @property
+    def time_max(self):
+        """Time bin end (`~astropy.time.Time`)."""
+        return self._make_time('time_max')
+
+    @property
+    def time_mid(self):
+        """Time bin center (`~astropy.time.Time`).
+
+        ::
+            time_mid = time_min + 0.5 * time_delta
+        """
+        return self.time_min + 0.5 * self.time_delta
+
+    @property
+    def time_delta(self):
+        """Time bin width (`~astropy.time.TimeDelta`).
+
+        ::
+            time_delta = time_max - time_min
+        """
+        return self.time_max - self.time_min
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read from file.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None, optional.
-            The `~matplotlib.axes.Axes` object to be drawn on.
-            If None, uses the current `~matplotlib.axes.Axes`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes` or None, optional.
-            The `~matplotlib.axes.Axes` object to be drawn on.
-            If None, uses the current `~matplotlib.axes.Axes`.
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `astropy.table.Table.read`.
         """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+        filename = make_path(filename)
+        table = Table.read(str(filename), **kwargs)
+        return cls(table=table)
 
-        tstart = self['TIME_MIN']
-        tstop = self['TIME_MAX']
-        time = (tstart.value + tstop.value) / 2.0
-        flux = self['FLUX'].to('cm-2 s-1')
-        errors = self['FLUX_ERR'].to('cm-2 s-1')
+    def write(self, filename, **kwargs):
+        """Write to file.
 
-        ax.errorbar(time, flux.value,
-                    yerr=errors.value, linestyle="None")
-        ax.scatter(time, flux)
-        ax.set_xlabel("Time (MJD)")
-        ax.set_ylabel("Flux ($cm^{-2} sec^{-1}$)")
-
-        return ax
-
-    @classmethod
-    def simulate_example(cls):
-        """Simulate an example `LightCurve`.
-
-        TODO: add options to simulate some more interesting lightcurves.
+        Parameters
+        ----------
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `astropy.table.Table.write`.
         """
-        lc = cls()
-
-        lc['TIME_MIN'] = Time([1, 4, 7, 9], format='mjd')
-        lc['TIME_MAX'] = Time([1, 4, 7, 9], format='mjd')
-        lc['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
-        lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
-
-        return lc
+        filename = make_path(filename)
+        self.table.write(str(filename), **kwargs)
 
     def compute_fvar(self):
         r"""Calculate the fractional excess variance.
@@ -102,8 +151,9 @@ class LightCurve(QTable):
            curves from active galaxies", Vaughan et al. (2003)
            http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
-        flux = self['FLUX'].value.astype('float64')
-        flux_err = self['FLUX_ERR'].value.astype('float64')
+        flux = self.table['flux'].data.astype('float64')
+        flux_err = self.table['flux_err'].data.astype('float64')
+
         flux_mean = np.mean(flux)
         n_points = len(flux)
 
@@ -130,12 +180,68 @@ class LightCurve(QTable):
             Tuple of Chi-square and P-value
         """
         import scipy.stats as stats
-        flux = self['FLUX']
-        ymean = np.mean(flux)
-        yexp = ymean.value
-        yobs = flux.value
+        flux = self.table['flux']
+        yexp = np.mean(flux)
+        yobs = flux.data
         chi2, pval = stats.chisquare(yobs, yexp)
         return chi2, pval
+
+    def plot(self, ax=None):
+        """Plot flux versus time.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        # TODO: Should we plot with normal time axis labels (ISO, not MJD)?
+
+        x, xerr = self._get_plot_x()
+        y, yerr = self._get_plot_y()
+
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, linestyle="None")
+        ax.scatter(x=x, y=y)
+        ax.set_xlabel("Time (MJD)")
+        ax.set_ylabel("Flux (cm-2 s-1)")
+
+        return ax
+
+    def _get_plot_x(self):
+        try:
+            x = self.time.mjd
+        except KeyError:
+            x = self.time_mid.mjd
+
+        try:
+            xerr = x - self.time_min.mjd, self.time_max.mjd - x
+        except KeyError:
+            xerr = None
+
+        return x, xerr
+
+    def _get_plot_y(self):
+        y = self.table['flux'].quantity.to('cm-2 s-1').value
+
+        if 'flux_errp' in self.table.colnames:
+            yp = self.table['flux_errp'].quantity.to('cm-2 s-1').value
+            yn = self.table['flux_errn'].quantity.to('cm-2 s-1').value
+            yerr = yn, yp
+        elif 'flux_err' in self.table.colunames:
+            yerr = self.table['flux_err'].quantity.to('cm-2 s-1').value
+        else:
+            yerr = None
+
+        return y, yerr
 
 
 class LightCurveEstimator(object):
@@ -208,21 +314,21 @@ class LightCurveEstimator(object):
 
     @staticmethod
     def _make_lc_from_row_data(rows):
-        lc = LightCurve()
-        lc['TIME_MIN'] = Time([_['TIME_MIN'].value for _ in rows], format='mjd')
-        lc['TIME_MAX'] = Time([_['TIME_MAX'].value for _ in rows], format='mjd')
+        table = Table()
+        table['time_min'] = Time([_['time_min'].value for _ in rows], format='mjd')
+        table['time_max'] = Time([_['time_max'].value for _ in rows], format='mjd')
 
-        lc['FLUX'] = [_['FLUX'].value for _ in rows] * u.Unit('1 / (s cm2)')
-        lc['FLUX_ERR'] = [_['FLUX_ERR'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
 
-        lc['LIVETIME'] = [_['LIVETIME'].value for _ in rows] * u.s
-        lc['N_ON'] = [_['N_ON'] for _ in rows]
-        lc['N_OFF'] = [_['N_OFF'] for _ in rows]
-        lc['ALPHA'] = [_['ALPHA'] for _ in rows]
-        lc['MEASURED_EXCESS'] = [_['MEASURED_EXCESS'] for _ in rows]
-        lc['EXPECTED_EXCESS'] = [_['EXPECTED_EXCESS'].value for _ in rows]
+        table['livetime'] = [_['livetime'].value for _ in rows] * u.s
+        table['n_on'] = [_['n_on'] for _ in rows]
+        table['n_off'] = [_['n_off'] for _ in rows]
+        table['alpha'] = [_['alpha'] for _ in rows]
+        table['measured_excess'] = [_['measured_excess'] for _ in rows]
+        table['expected_excess'] = [_['expected_excess'].value for _ in rows]
 
-        return lc
+        return LightCurve(table)
 
     def compute_flux_point(self, time_interval, spectral_model, energy_range):
         """Compute one flux point for one time interval.
@@ -352,18 +458,16 @@ class LightCurveEstimator(object):
         flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
 
         # Store measurements in a dict and return that
-        data = OrderedDict()
-        data['TIME_MIN'] = Time(tmin, format='mjd')
-        data['TIME_MAX'] = Time(tmax, format='mjd')
+        return OrderedDict([
+            ('time_min', Time(tmin, format='mjd')),
+            ('time_max', Time(tmax, format='mjd')),
+            ('flux', flux * u.Unit('1 / (s cm2)')),
+            ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
 
-        data['FLUX'] = flux * u.Unit('1 / (s cm2)')
-        data['FLUX_ERR'] = flux_err * u.Unit('1 / (s cm2)')
-
-        data['LIVETIME'] = livetime * u.s
-        data['ALPHA'] = alpha_mean
-        data['N_ON'] = n_on
-        data['N_OFF'] = n_off
-        data['MEASURED_EXCESS'] = measured_excess
-        data['EXPECTED_EXCESS'] = predicted_excess
-
-        return data
+            ('livetime', livetime * u.s),
+            ('alpha', alpha_mean),
+            ('n_on', n_on),
+            ('n_off', n_off),
+            ('measured_excess', measured_excess),
+            ('expected_excess', predicted_excess),
+        ])
