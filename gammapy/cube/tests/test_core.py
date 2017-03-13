@@ -8,6 +8,8 @@ from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
+from regions import CircleSkyRegion
+
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
@@ -140,6 +142,26 @@ class TestSkyCube(object):
         """)
         assert actual == expected
 
+    @requires_dependency('scipy')
+    @requires_dependency('regions')
+    def test_spectrum(self):
+        center = SkyCoord(0, 0, frame='galactic', unit='deg')
+        radius = 1 * u.deg
+        region = CircleSkyRegion(center, radius)
+        spectrum = self.sky_cube.spectrum(region)
+
+        assert_quantity_allclose(spectrum['e_ref'].quantity,
+                                 self.sky_cube.energies('center'))
+
+        assert_quantity_allclose(spectrum['e_min'].quantity,
+                                 self.sky_cube.energies('edges')[:-1])
+
+        assert_quantity_allclose(spectrum['e_max'].quantity,
+                                 self.sky_cube.energies('edges')[1:])
+
+        assert_quantity_allclose(spectrum['value'].quantity.sum(),
+                                 8.710522670298815E-4 * u.Unit('1 / (cm2 MeV s sr)'))
+
 
 @requires_dependency('scipy')
 class TestSkyCubeInterpolation(object):
@@ -254,3 +276,4 @@ def test_bin_events_in_cube():
 
     assert counts.data.sum() == 1233
     assert counts.data.sum() == counts_image.data.sum()
+
