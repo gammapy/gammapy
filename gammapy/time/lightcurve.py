@@ -46,16 +46,16 @@ class LightCurve(QTable):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        tstart = self['TIME_MIN'].to('s')
-        tstop = self['TIME_MAX'].to('s')
-        time = (tstart + tstop) / 2.0
+        tstart = self['TIME_MIN']
+        tstop = self['TIME_MAX']
+        time = (tstart.value + tstop.value) / 2.0
         flux = self['FLUX'].to('cm-2 s-1')
         errors = self['FLUX_ERR'].to('cm-2 s-1')
 
-        ax.errorbar(time.value, flux.value,
+        ax.errorbar(time, flux.value,
                     yerr=errors.value, linestyle="None")
         ax.scatter(time, flux)
-        ax.set_xlabel("Time (secs)")
+        ax.set_xlabel("Time (MJD)")
         ax.set_ylabel("Flux ($cm^{-2} sec^{-1}$)")
 
         return ax
@@ -68,8 +68,8 @@ class LightCurve(QTable):
         """
         lc = cls()
 
-        lc['TIME_MIN'] = [1, 4, 7, 9] * u.s
-        lc['TIME_MAX'] = [1, 4, 7, 9] * u.s
+        lc['TIME_MIN'] = Time([1, 4, 7, 9], format='mjd')
+        lc['TIME_MAX'] = Time([1, 4, 7, 9], format='mjd')
         lc['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
         lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
 
