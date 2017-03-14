@@ -218,7 +218,7 @@ class SkyCube(object):
         kwargs : dict
             Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
-        
+
         Examples
         --------
         Create an empty sky cube::
@@ -230,7 +230,7 @@ class SkyCube(object):
         Returns
         -------
         empty_cube : `SkyCube`
-            Empty sky cube object.    
+            Empty sky cube object.
 
         """
         image = SkyImage.empty(**kwargs)
@@ -264,7 +264,7 @@ class SkyCube(object):
         Examples
         --------
         Create an empty sky cube from an image and energy center specification::
-        
+
             from astropy import units as u
             from gammapy.image import SkyImage
             from gammapy.cube import SkyCube
@@ -272,8 +272,8 @@ class SkyCube(object):
 
             # define reference image
             image = SkyImage.empty(nxpix=11, nypix=7)
-            
-            # define energy binning centers 
+
+            # define energy binning centers
             energies = Energy.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
             cube = SkyCube.empty_like(reference=image, energies=energies)
 
@@ -288,18 +288,18 @@ class SkyCube(object):
             Empty sky cube object.
         """
         wcs = reference.wcs.copy()
-        
-        if isinstance(reference, SkyImage): 
+
+        if isinstance(reference, SkyImage):
             unit = reference.unit
             if type(energies) == Energy:
                 mode = 'center'
-                enumbins = len(energies)        
+                enumbins = len(energies)
             elif type(energies) == EnergyBounds:
                 mode = 'edges'
                 enumbins = len(energies) - 1
             else:
                 raise ValueError("'energies' must be instance of Energy or EnergyBounds, "
-                                 "but {} was given.".format(type(energies)))  
+                                 "but {} was given.".format(type(energies)))
             energy_axis = LogEnergyAxis(energies, mode=mode)
             data = np.ones_like(reference.data)
             data = data * np.ones(enumbins).reshape((-1, 1, 1))
@@ -504,8 +504,9 @@ class SkyCube(object):
         data = np.zeros_like(self.data[0])
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
-    def lookup(self, position, energy, interpolation=False):
-        """Differential flux.
+    def lookup(self, position, energy, interpolation=None):
+        """
+        Lookup value in the cube at given sky position and energy.
 
         Parameters
         ----------
@@ -513,11 +514,13 @@ class SkyCube(object):
             Position on the sky.
         energy : `~astropy.units.Quantity`
             Energy
+        interpolation : {None, 'linear', 'nearest'}
+            Interpolate data values between energies.
 
         Returns
         -------
-        flux : `~astropy.units.Quantity`
-            Differential flux (1 / (cm2 MeV s sr))
+        value : `~astropy.units.Quantity`
+            Value at the given sky position and energy.
         """
         # TODO: add interpolation option using NDDataArray
 
@@ -721,34 +724,59 @@ class SkyCube(object):
         images = [self.sky_image(energy) for energy in energies]
         return SkyCubeImages(self.name, images, self.wcs, energies)
 
-    def to_spectrum(self, region, weights=None):
+    def spectrum(self, region):
         """
-        Integrate spatial dimensions of the cube to give a spectrum.
-
-        TODO: give formulas.
+        Extract spectrum in a given sky region.
 
         Parameters
         ----------
         region : `~regions.SkyRegion`
-            Region to sum the data in.
-        weighting : {None, 'solid_angle'}, optional
-            Weighting factor to use.
+            Sky region to extract the spectrum from.
 
         Returns
         -------
-        spectrum : numpy.array
+        spectrum : `~astropy.table.Table`
             Summed spectrum of pixels in the mask.
         """
-        raise NotImplementedError
-        # TODO: clean up API and implementation and add test
-        value = cube.dat
+        spectrum = Table()
 
-        mask = region.contains(sky_image_ref.coordinates())
-        if weights == 'solid_angle':
-            weights = self.sky_image_ref.solid_angle()
+        # store energy binning
+        energies = self.energies('edges')
+        e_ref = self.energies('center')
+        spectrum['e_min'] = energies[:-1]
+        spectrum['e_max'] = energies[1:]
+        spectrum['e_ref'] = e_ref
 
-        spectrum = np.nansum(data * weights).sum(-1).sum(-1)
+        # mask region and sum
+        mask = self.region_mask(region)
+        value = (self.data * mask.data).sum(-1).sum(-1)
+        spectrum['value'] = value
         return spectrum
+
+    def region_mask(self, region):
+        """
+        Create a boolean cube mask for a region.
+
+        The mask is:
+
+        - ``True`` for pixels inside the region
+        - ``False`` for pixels outside the region
+
+        Parameters
+        ----------
+        region : `~regions.PixelRegion` or `~regions.SkyRegion`
+            Region in pixel or sky coordinates.
+
+        Returns
+        -------
+        mask : `SkyCube`
+            A boolean sky cube mask.
+        """
+        mask = self.sky_image_ref.region_mask(region)
+        data = mask.data * np.ones(self.data.shape, dtype='bool') * u.Unit('')
+        wcs = self.wcs.deepcopy() if self.wcs else None
+        return self.__class__(name=self.name, data=data.astype('bool'), wcs=wcs,
+                              energy_axis=self.energy_axis)
 
     def write(self, filename, format='fermi-counts', **kwargs):
         """Write to FITS file.
