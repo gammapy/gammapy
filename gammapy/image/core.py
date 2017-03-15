@@ -901,52 +901,6 @@ class SkyImage(object):
         ax.autoscale(enable=False)
         return fig, ax, cbar
 
-    def plot_norm(self, stretch='linear', power=1.0, asinh_a=0.1, min_cut=None,
-                  max_cut=None, min_percent=None, max_percent=None,
-                  percent=None, clip=True):
-        """Create a matplotlib norm object for plotting.
-
-        This is a copy of this function that will be available in Astropy 1.3:
-        `astropy.visualization.mpl_normalize.simple_norm`
-
-        See the parameter description there!
-
-        Examples
-        --------
-        >>> image = SkyImage()
-        >>> norm = image.plot_norm(stretch='sqrt', max_percent=99)
-        >>> image.plot(norm=norm)
-        """
-        import astropy.visualization as v
-        from astropy.visualization.mpl_normalize import ImageNormalize
-
-        if percent is not None:
-            interval = v.PercentileInterval(percent)
-        elif min_percent is not None or max_percent is not None:
-            interval = v.AsymmetricPercentileInterval(min_percent or 0.,
-                                                      max_percent or 100.)
-        elif min_cut is not None or max_cut is not None:
-            interval = v.ManualInterval(min_cut, max_cut)
-        else:
-            interval = v.MinMaxInterval()
-
-        if stretch == 'linear':
-            stretch = v.LinearStretch()
-        elif stretch == 'sqrt':
-            stretch = v.SqrtStretch()
-        elif stretch == 'power':
-            stretch = v.PowerStretch(power)
-        elif stretch == 'log':
-            stretch = v.LogStretch()
-        elif stretch == 'asinh':
-            stretch = v.AsinhStretch(asinh_a)
-        else:
-            raise ValueError('Unknown stretch: {0}.'.format(stretch))
-
-        vmin, vmax = interval.get_limits(self.data)
-
-        return ImageNormalize(vmin=vmin, vmax=vmax, stretch=stretch, clip=clip)
-
     def info(self):
         """
         Print summary info about the image.
