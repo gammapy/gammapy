@@ -247,7 +247,7 @@ class SkyCube(object):
         return cls(data=data, wcs=image.wcs, energy_axis=energy_axis)
 
     @classmethod
-    def empty_like(cls, reference, energies=None, fill=0):
+    def empty_like(cls, reference, energies=None, unit='', fill=0):
         """
         Create an empty sky cube with the same WCS and energy specification
         as given reference.
@@ -258,6 +258,8 @@ class SkyCube(object):
             Reference sky cube or image.
         energies : `~gammapy.utils.energy.Energy` or `~gammapy.utils.energy.EnergyBounds` (optional)
             Reference energies, mandatory when a `~gammapy.image.SkyImage` is passed.
+        unit : str
+            String specifying the data units.
         fill : float
             Value to fill the data array with.
 
@@ -290,7 +292,6 @@ class SkyCube(object):
         wcs = reference.wcs.copy()
 
         if isinstance(reference, SkyImage):
-            unit = reference.unit
             if type(energies) == Energy:
                 mode = 'center'
                 enumbins = len(energies)
@@ -305,9 +306,8 @@ class SkyCube(object):
             data = data * np.ones(enumbins).reshape((-1, 1, 1))
 
         elif isinstance(reference, SkyCube):
-            unit = reference.data.unit
             energy_axis = reference.energy_axis
-            data = np.ones_like(reference.data)
+            data = np.ones_like(reference.data.value)
 
         else:
             raise ValueError("'reference' must be instance of SkyImage or SkyCube")
@@ -407,7 +407,6 @@ class SkyCube(object):
         ehi = energies[1:]
         n_ebins = len(elo)
         if dstype == 'Data3DInt':
-
             coordinates = self.sky_image_ref.coordinates(mode="edges")
             ra = coordinates.data.lon.degree
             dec = coordinates.data.lat.degree
@@ -418,8 +417,8 @@ class SkyCube(object):
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
             return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
-                                 ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
-                                 self.data.value.ravel().shape)
+                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
+                             self.data.value.ravel().shape)
 
         if dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
@@ -430,8 +429,8 @@ class SkyCube(object):
             elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
             return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                              dec_cube.ravel(), self.data.value.ravel(),
-                              self.data.value.ravel().shape)
+                          dec_cube.ravel(), self.data.value.ravel(),
+                          self.data.value.ravel().shape)
 
         else:
             raise ValueError('Invalid sherpa data type.')
