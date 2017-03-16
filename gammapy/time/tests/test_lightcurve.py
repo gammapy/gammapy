@@ -70,7 +70,8 @@ def spec_extraction():
     return extraction
 
 @requires_data('gammapy-extra')
-def test_lightcurvefactory():
+@requires_dependency('scipy')
+def test_lightcurve_estimator():
 
     spec_extract = spec_extraction()
     lc_factory = LightCurveEstimator(spec_extract)
