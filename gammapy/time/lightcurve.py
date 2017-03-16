@@ -9,10 +9,11 @@ import astropy.units as u
 import numpy as np
 
 from ..spectrum.utils import calculate_predicted_counts
+from ..stats.poisson import excess_error
 
 __all__ = [
     'LightCurve',
-    'LightCurveFactory',
+    'LightCurveEstimator',
 ]
 
 
@@ -118,111 +119,83 @@ class LightCurve(QTable):
         return fvar, fvar_err
 
 
-class LightCurveFactory(object):
+class LightCurveEstimator(object):
     """
     Class producing light curve
 
     Parameters
     ----------
-    spectral_extraction: `~gammapy.spectrum.SpectrumExtraction`
+    spec_extract: `~gammapy.spectrum.SpectrumExtraction`
        class storing statistics, IRF and event lists
     """
 
-    def __init__(self, spectral_extraction):
-        self.obs_list = spectral_extraction.obs
-        self.obs_spec = spectral_extraction.observations
-        self.off_evt_list = self._get_off_evt_list(spectral_extraction)
-        self.on_evt_list = self._get_on_evt_list(spectral_extraction)
+    def __init__(self, spec_extract):
+        self.obs_list = spec_extract.obs
+        self.obs_spec = spec_extract.observations
+        self.off_evt_list = self._get_off_evt_list(spec_extract)
+        self.on_evt_list = self._get_on_evt_list(spec_extract)
 
-        
-    def _get_off_evt_list(self, spectral_extraction):
+
+    @staticmethod
+    def _get_off_evt_list(spec_extract):
         """
         Returns list of OFF events for each observations
         """
         off_evt_list = []
-        for bg in spectral_extraction.background:
+        for bg in spec_extract.background:
             off_evt_list.append(bg.off_events)
         return off_evt_list
 
     
-    def _get_on_evt_list(self, spectral_extraction):
+    @staticmethod
+    def _get_on_evt_list(spec_extract):
         """
         Returns list of OFF events for each observations
         """
-        on_region = spectral_extraction.target.on_region
+        on_region = spec_extract.target.on_region
         on_evt_list = []
-        for obs in spectral_extraction.obs:
+        for obs in spec_extract.obs:
             idx = on_region.contains(obs.events.radec)
             on_evt_list.append(obs.events.select_row_subset(idx))
             
         return on_evt_list
     
-            
-    def _get_time_intervals(self, t_start, t_stop, time_binning_type):
+    def light_curve(self, time_intervals, spectral_model, energy_range):
         """
-        Compute time intervals needed for a light curve
+        Function returning light curve for in each specified
+        time intervals.
+
+        Implementation follows what is done in:
+        http://adsabs.harvard.edu/abs/2010A%26A...520A..83H
 
         Parameters
         ----------
-        time_start: `~astropy.units.Quantity`
-            start time to integrate events
-        time_stop: `~astropy.units.Quantity`
-            start time to integrate events
-        time_binning_type: `str`
-            type of time binning (e.g. obs, minute, hour, night, day, month, user)
-        """
-
-        dt = None
-        n_dt = None
-        intervals = []
-        if time_binning_type == 'obs':
-            n_dt = len(self.obs_list)
-            for obs in self.obs_list:
-                # for now use time of first and last evt to define the interval
-                # intervals.append([obs.tstart, obs.tstop])
-                intervals.append([obs.events.time[0], obs.events.time[-1]])
-        else:
-            raise NotImplementedError
-
-        return intervals
-
-    
-    def light_curve(self, t_start, t_stop, t_binning_type,
-                    spectral_model, energy_range, binning=None):
-        """
-        Function returning light curve for given parameters
-        
-        Parameters
-        ----------
-        t_start: `~astropy.units.Quantity`
-            start time to integrate events
-        t_stop: `~astropy.units.Quantity`
-            start time to integrate events
-        t_binning_type: `str`
-            type of time binning (e.g. obs, minute, hour, night, day, month, user)
+        time_intervals: `list` of `~astropy.time.Time`
+            List of time intervals
         spectral_model: `~gammapy.spectrum.models.SpectralModel`
-            spectral model
+            Spectral model
         energy_range: `~astropy.units.Quantity`
-            true energy range to evaluate integrated flux (true energy)
-        binning: `~astropy.units.Quantity` 
-            bining 
-        """
+            True energy range to evaluate integrated flux (true energy)
 
-        # create time intervals
-        if binning == 'user':
-            t_intervals = binning
-        else:
-            t_intervals = self._get_time_intervals(t_start,
-                                                   t_stop,
-                                                   t_binning_type)
+        Returns:
+        --------
+        lc: `~gammapy.time.LightCurve`
+            Light curve
+        """
 
         lc_flux = []
         lc_flux_err = []
         lc_tmin = []
         lc_tmax = []
-            
+        lc_livetime = []
+        lc_alpha_mean = []
+        lc_on = []
+        lc_off = []
+        lc_measured_excess = []
+        lc_predicted_excess = []
+        
         # Loop on time intervals
-        for t_bin in t_intervals:
+        for t_bin in time_intervals:
             interval_tmin, interval_tmax = t_bin[0], t_bin[1]
 
             interval_livetime = 0
@@ -337,7 +310,10 @@ class LightCurveFactory(object):
             interval_flux *= int_flux
             interval_flux_error = int_flux / interval_measured_excess
             # Gaussian errors, ToDo: should be improved
-            interval_flux_error *= np.sqrt(interval_on + interval_alpha_mean**2 * interval_off)
+            interval_flux_error *= excess_error(n_on=interval_on,
+                                                n_off=interval_off,
+                                                alpha=interval_alpha_mean)
+            
 
             print('### start:{}, stop:{}'.format(interval_tmin, interval_tmax))
             print('LIVETIME={}'.format(interval_livetime))
@@ -353,6 +329,12 @@ class LightCurveFactory(object):
             lc_flux_err.append(interval_flux_error.value)
             lc_tmin.append(interval_tmin.value)
             lc_tmax.append(interval_tmax.value)
+            lc_livetime.append(interval_livetime.value)
+            lc_alpha_mean.append(interval_alpha_mean)
+            lc_on.append(interval_on)
+            lc_off.append(interval_off)
+            lc_measured_excess.append(interval_measured_excess)
+            lc_predicted_excess.append(interval_predicted_excess.value)
             
         # Fill light curve data 
         lc = LightCurve()
@@ -360,5 +342,11 @@ class LightCurveFactory(object):
         lc['FLUX_ERR'] = lc_flux_err * u.Unit('1 / (s cm2)')
         lc['TIME_MIN'] = Time(lc_tmin, format='mjd')
         lc['TIME_MAX'] = Time(lc_tmax, format='mjd')
+        lc['LIVETIME'] = lc_livetime * u.s
+        lc['ALPHA'] = lc_alpha_mean
+        lc['ON'] = lc_on
+        lc['OFF'] = lc_off
+        lc['MEASURED_EXCESS'] = lc_measured_excess
+        lc['EXPECTED_EXCESS'] = lc_predicted_excess
         
         return lc

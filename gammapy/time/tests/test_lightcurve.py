@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency, requires_data
-from ..lightcurve import LightCurve, LightCurveFactory
+from ..lightcurve import LightCurve, LightCurveEstimator
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
 from ...spectrum import SpectrumExtraction
@@ -37,17 +37,15 @@ def test_lightcurve_plot():
     lc.plot()
 
 
-@requires_data('gammapy-extra')
 @pytest.fixture(scope='session')
 def spec_extraction():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-    obs_ids = [23523, 23526, 23559, 23592]
+    obs_ids = [23523, 23526]
     obs_list = data_store.obs_list(obs_ids)
     
     target_position = SkyCoord(ra=83.63308,
                                dec=22.01450,
-                               unit='deg',
-                               frame='icrs')
+                               unit='deg')
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
     target = Target(on_region=on_region, name='Crab', tag='ana_crab')
@@ -74,22 +72,28 @@ def spec_extraction():
 @requires_data('gammapy-extra')
 def test_lightcurvefactory():
 
-    lc_factory = LightCurveFactory(spec_extraction())
+    spec_extract = spec_extraction()
+    lc_factory = LightCurveEstimator(spec_extract)
 
     # param
-    t_start = Time(100.0, format='mjd')
-    t_stop = Time(100000.0, format='mjd')
+    intervals = []
+    for obs in spec_extract.obs:
+        intervals.append([obs.events.time[0], obs.events.time[-1]])
     energy_range = [0.5, 10] * u.TeV
     model = PowerLaw(index=2.3 * u.Unit(''),
                      amplitude=3.4e-11 * u.Unit('1 / (cm2 s TeV)'),
                      reference=1 * u.TeV)
-
+    
     # build the light curve
-    lc = lc_factory.light_curve(t_start=t_start,
-                                t_stop=t_stop,
-                                t_binning_type='obs',
+    lc = lc_factory.light_curve(time_intervals=intervals,
                                 spectral_model=model,
                                 energy_range=energy_range)
 
-    # ToDo, add real test when results are checked
-    assert_quantity_allclose(len(lc), 4)
+    # Test number of intervals
+    assert_quantity_allclose(len(lc), 2)
+    # Test flux values for the first and the last interval
+    assert_allclose(lc['FLUX'][0].value, 5.678899701403769e-11, rtol=1e-2)
+    assert_allclose(lc['FLUX'][-1].value, 6.047638325123559e-11, rtol=1e-2)
+    # Test flux error values for the first and the last interval
+    assert_allclose(lc['FLUX_ERR'][0].value, 5.5262147103422505e-12, rtol=1e-2)
+    assert_allclose(lc['FLUX_ERR'][-1].value, 5.776966170949116e-12, rtol=1e-2)
