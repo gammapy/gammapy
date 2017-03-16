@@ -314,17 +314,6 @@ class LightCurveEstimator(object):
                                                 n_off=interval_off,
                                                 alpha=interval_alpha_mean)
             
-
-            print('### start:{}, stop:{}'.format(interval_tmin, interval_tmax))
-            print('LIVETIME={}'.format(interval_livetime))
-            print('ALPHA={}'.format(interval_alpha_mean))
-            print('ON={}'.format(interval_on))
-            print('OFF={}'.format(interval_off))
-            print('EXCESS={}'.format(interval_measured_excess))
-            print('EXP. EXCESS={}'.format(interval_predicted_excess))
-            print('FLUX={}'.format(interval_flux))
-            print('FLUX_ERR={}'.format(interval_flux_error))
-
             lc_flux.append(interval_flux.value)
             lc_flux_err.append(interval_flux_error.value)
             lc_tmin.append(interval_tmin.value)
