@@ -160,13 +160,18 @@ class LightCurveEstimator(object):
             
         return on_evt_list
     
-    def light_curve(self, time_intervals, spectral_model, energy_range):
+    def light_curve(self, time_intervals, spectral_model, energy_range, e_reco=None):
         """
         Function returning light curve for in each specified
         time intervals.
 
         Implementation follows what is done in:
-        http://adsabs.harvard.edu/abs/2010A%26A...520A..83H
+        http://adsabs.harvard.edu/abs/2010A%26A...520A..83H.
+        To be discussed: assumption that threshold energy in the
+        same in reco and true energy
+
+        For the moment there is an issue with the rebinning in reconstructed
+        energy, do not use it: https://github.com/gammapy/gammapy/issues/953
 
         Parameters
         ----------
@@ -176,13 +181,14 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range: `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
-
+        e_reco: `~gammapy.utils.energy.EnergyBounds`, optional
+            Reconstructed energy
         Returns:
         --------
         lc: `~gammapy.time.LightCurve`
             Light curve
         """
-
+        
         lc_flux = []
         lc_flux_err = []
         lc_tmin = []
@@ -223,32 +229,32 @@ class LightCurveEstimator(object):
                 if ( (interval_tmin < obs_start and interval_tmax < obs_start)
                      or interval_tmin > obs_stop ):
                     continue
-
-                # print('## t_index={}, obs={}'.format(t_index, obs.obs_id))
                 
                 # get ON and OFF evt list
                 off_evt = self.off_evt_list[t_index]
                 on_evt = self.on_evt_list[t_index]
                 
-                # Loop on energy bins
-                for e_index in range(len(spec.e_reco)-1):
-                    emin = spec.e_reco[e_index]
-                    emax = spec.e_reco[e_index+1]
-
-                    # discard bins not matching the energy threshold
+                # Loop on energy bins (default binning set to SpectrumObservation.e_reco)
+                if e_reco == None:
+                    e_reco = spec.e_reco
+                for e_index in range(len(e_reco)-1):
+                    emin = e_reco[e_index]
+                    emax = e_reco[e_index+1]
+                    
+                    # discard bins not matching the energy threshold of SpectrumObservation
                     if emin < spec.lo_threshold or emax > spec.hi_threshold:
                         continue
 
                     # Loop on ON evts (time and energy)
-                    on = on_evt.select_energy([emin, emax])
+                    on = on_evt.select_energy([emin, emax])  # evt in bin energy range
+                    on = on.select_energy(energy_range)  # evt in user energy range
                     on = on.select_time([interval_tmin, interval_tmax])
-                    # print('on={}'.format(len(on.table)))
                     obs_on += len(on.table)
 
                     # Loop on OFF evts
-                    off = off_evt.select_energy([emin, emax])
+                    off = off_evt.select_energy([emin, emax])  # evt in bin energy range
+                    off = off.select_energy(energy_range)  # evt in user energy range
                     off = off.select_time([interval_tmin, interval_tmax])
-                    # print('off={}'.format(len(off.table)))
                     obs_off += len(off.table)
                     
                 # compute effective livetime (for the interval)
@@ -274,15 +280,21 @@ class LightCurveEstimator(object):
                 # Compute excess
                 obs_measured_excess = obs_on - spec.alpha * obs_off
 
-                # Compute expected excess
+                # Compute the expected excess in the range given by the user
+                # but must respect the energy threshold of the observation
+                # (to match the energy range of the measured excess)
                 # We use the effective livetime and the right energy threshold
-                e_idx = np.where(np.logical_and(spec.e_reco>=spec.lo_threshold,
-                                                spec.e_reco<=spec.hi_threshold))
+                e_idx = np.where(np.logical_and.reduce(
+                    (e_reco>=spec.lo_threshold,  # threshold
+                     e_reco<=spec.hi_threshold,  # threshold
+                     e_reco>=energy_range[0],  # user
+                     e_reco<=energy_range[-1])  # user 
+                ))
                 counts_predicted_excess = calculate_predicted_counts(livetime=livetime_to_add,
                                                                      aeff=spec.aeff,
                                                                      edisp=spec.edisp,
                                                                      model=spectral_model,
-                                                                     e_reco=spec.e_reco[e_idx])
+                                                                     e_reco=e_reco[e_idx])
                 obs_predicted_excess = np.sum(counts_predicted_excess.data.data)
                 obs_predicted_excess /= obs.observation_live_time_duration.to('s').value
                 obs_predicted_excess *= livetime_to_add.value
