@@ -4,11 +4,16 @@ Lightcurve and elementary temporal functions
 """
 from astropy.table import QTable
 from astropy.units import Quantity
+from astropy.time import Time
 import astropy.units as u
 import numpy as np
 
+from ..spectrum.utils import calculate_predicted_counts
+from ..stats.poisson import excess_error
+
 __all__ = [
     'LightCurve',
+    'LightCurveEstimator',
 ]
 
 
@@ -42,16 +47,16 @@ class LightCurve(QTable):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        tstart = self['TIME_MIN'].to('s')
-        tstop = self['TIME_MAX'].to('s')
-        time = (tstart + tstop) / 2.0
+        tstart = self['TIME_MIN']
+        tstop = self['TIME_MAX']
+        time = (tstart.value + tstop.value) / 2.0
         flux = self['FLUX'].to('cm-2 s-1')
         errors = self['FLUX_ERR'].to('cm-2 s-1')
 
-        ax.errorbar(time.value, flux.value,
+        ax.errorbar(time, flux.value,
                     yerr=errors.value, linestyle="None")
         ax.scatter(time, flux)
-        ax.set_xlabel("Time (secs)")
+        ax.set_xlabel("Time (MJD)")
         ax.set_ylabel("Flux ($cm^{-2} sec^{-1}$)")
 
         return ax
@@ -64,8 +69,8 @@ class LightCurve(QTable):
         """
         lc = cls()
 
-        lc['TIME_MIN'] = [1, 4, 7, 9] * u.s
-        lc['TIME_MAX'] = [1, 4, 7, 9] * u.s
+        lc['TIME_MIN'] = Time([1, 4, 7, 9], format='mjd')
+        lc['TIME_MAX'] = Time([1, 4, 7, 9], format='mjd')
         lc['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
         lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
 
@@ -112,3 +117,237 @@ class LightCurve(QTable):
         fvar_err = sigxserr / (2 * fvar)
 
         return fvar, fvar_err
+
+
+class LightCurveEstimator(object):
+    """
+    Class producing light curve
+
+    Parameters
+    ----------
+    spec_extract: `~gammapy.spectrum.SpectrumExtraction`
+       class storing statistics, IRF and event lists
+    """
+
+    def __init__(self, spec_extract):
+        self.obs_list = spec_extract.obs
+        self.obs_spec = spec_extract.observations
+        self.off_evt_list = self._get_off_evt_list(spec_extract)
+        self.on_evt_list = self._get_on_evt_list(spec_extract)
+
+
+    @staticmethod
+    def _get_off_evt_list(spec_extract):
+        """
+        Returns list of OFF events for each observations
+        """
+        off_evt_list = []
+        for bg in spec_extract.background:
+            off_evt_list.append(bg.off_events)
+        return off_evt_list
+
+    
+    @staticmethod
+    def _get_on_evt_list(spec_extract):
+        """
+        Returns list of OFF events for each observations
+        """
+        on_region = spec_extract.target.on_region
+        on_evt_list = []
+        for obs in spec_extract.obs:
+            idx = on_region.contains(obs.events.radec)
+            on_evt_list.append(obs.events.select_row_subset(idx))
+            
+        return on_evt_list
+    
+    def light_curve(self, time_intervals, spectral_model, energy_range, e_reco=None):
+        """
+        Function returning light curve for in each specified
+        time intervals.
+
+        Implementation follows what is done in:
+        http://adsabs.harvard.edu/abs/2010A%26A...520A..83H.
+        To be discussed: assumption that threshold energy in the
+        same in reco and true energy
+
+        For the moment there is an issue with the rebinning in reconstructed
+        energy, do not use it: https://github.com/gammapy/gammapy/issues/953
+
+        Parameters
+        ----------
+        time_intervals: `list` of `~astropy.time.Time`
+            List of time intervals
+        spectral_model: `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
+        energy_range: `~astropy.units.Quantity`
+            True energy range to evaluate integrated flux (true energy)
+        e_reco: `~gammapy.utils.energy.EnergyBounds`, optional
+            Reconstructed energy
+        Returns:
+        --------
+        lc: `~gammapy.time.LightCurve`
+            Light curve
+        """
+        
+        lc_flux = []
+        lc_flux_err = []
+        lc_tmin = []
+        lc_tmax = []
+        lc_livetime = []
+        lc_alpha_mean = []
+        lc_on = []
+        lc_off = []
+        lc_measured_excess = []
+        lc_predicted_excess = []
+        
+        # Loop on time intervals
+        for t_bin in time_intervals:
+            interval_tmin, interval_tmax = t_bin[0], t_bin[1]
+
+            interval_livetime = 0
+            interval_alpha_mean = 0.
+            interval_alpha_mean_backup = 0.
+
+            interval_measured_excess = 0
+            interval_predicted_excess = 0
+            interval_off = 0
+            interval_on = 0
+            
+            # Loop on observations
+            for t_index, obs in enumerate(self.obs_list):
+
+                spec = self.obs_spec[t_index]
+
+                obs_on = 0
+                obs_off = 0
+                obs_measured_excess = 0
+                obs_predicted_excess = 0
+                
+                # discard observations not matching the time interval
+                obs_start = obs.events.time[0]
+                obs_stop = obs.events.time[-1]
+                if ( (interval_tmin < obs_start and interval_tmax < obs_start)
+                     or interval_tmin > obs_stop ):
+                    continue
+                
+                # get ON and OFF evt list
+                off_evt = self.off_evt_list[t_index]
+                on_evt = self.on_evt_list[t_index]
+                
+                # Loop on energy bins (default binning set to SpectrumObservation.e_reco)
+                if e_reco == None:
+                    e_reco = spec.e_reco
+                for e_index in range(len(e_reco)-1):
+                    emin = e_reco[e_index]
+                    emax = e_reco[e_index+1]
+                    
+                    # discard bins not matching the energy threshold of SpectrumObservation
+                    if emin < spec.lo_threshold or emax > spec.hi_threshold:
+                        continue
+
+                    # Loop on ON evts (time and energy)
+                    on = on_evt.select_energy([emin, emax])  # evt in bin energy range
+                    on = on.select_energy(energy_range)  # evt in user energy range
+                    on = on.select_time([interval_tmin, interval_tmax])
+                    obs_on += len(on.table)
+
+                    # Loop on OFF evts
+                    off = off_evt.select_energy([emin, emax])  # evt in bin energy range
+                    off = off.select_energy(energy_range)  # evt in user energy range
+                    off = off.select_time([interval_tmin, interval_tmax])
+                    obs_off += len(off.table)
+                    
+                # compute effective livetime (for the interval)
+                livetime_to_add = 0.
+                # interval included in obs
+                if interval_tmin >= obs_start and interval_tmax <= obs_stop:
+                    livetime_to_add = (interval_tmax - interval_tmin).to('s')
+                # interval min above tstart from obs
+                elif interval_tmin >= obs_start and interval_tmax >= obs_stop:
+                    livetime_to_add = (obs_stop - interval_tmin).to('s')
+                # interval min below tstart from obs
+                elif interval_tmin <= obs_start and interval_tmax <= obs_stop:
+                    livetime_to_add = (interval_tmax - obs_start).to('s')
+                # obs included in interval
+                elif interval_tmin <= obs_start and interval_tmax >= obs_stop:
+                    livetime_to_add = (obs_stop - obs_start).to('s')
+                else:
+                    pass
+
+                # Take into account dead time
+                livetime_to_add *= (1. - obs.observation_dead_time_fraction)
+                
+                # Compute excess
+                obs_measured_excess = obs_on - spec.alpha * obs_off
+
+                # Compute the expected excess in the range given by the user
+                # but must respect the energy threshold of the observation
+                # (to match the energy range of the measured excess)
+                # We use the effective livetime and the right energy threshold
+                e_idx = np.where(np.logical_and.reduce(
+                    (e_reco>=spec.lo_threshold,  # threshold
+                     e_reco<=spec.hi_threshold,  # threshold
+                     e_reco>=energy_range[0],  # user
+                     e_reco<=energy_range[-1])  # user 
+                ))
+                counts_predicted_excess = calculate_predicted_counts(livetime=livetime_to_add,
+                                                                     aeff=spec.aeff,
+                                                                     edisp=spec.edisp,
+                                                                     model=spectral_model,
+                                                                     e_reco=e_reco[e_idx])
+                obs_predicted_excess = np.sum(counts_predicted_excess.data.data)
+                obs_predicted_excess /= obs.observation_live_time_duration.to('s').value
+                obs_predicted_excess *= livetime_to_add.value
+
+                # compute effective normalisation between ON/OFF (for the interval)
+                interval_livetime += livetime_to_add
+                interval_alpha_mean += spec.alpha * obs_off
+                interval_alpha_mean_backup += spec.alpha * livetime_to_add
+                interval_measured_excess += obs_measured_excess
+                interval_predicted_excess += obs_predicted_excess
+                interval_on += obs_on
+                interval_off += obs_off
+                
+            # Fill time interval information
+            int_flux = spectral_model.integral(energy_range[0], energy_range[1])
+            if interval_off > 0.:
+                interval_alpha_mean /= interval_off
+            if interval_livetime > 0.:
+                interval_alpha_mean_backup /= interval_livetime
+
+            if interval_alpha_mean == 0.:  # use backup if necessary
+                interval_alpha_mean = interval_alpha_mean_backup
+
+            interval_flux = interval_measured_excess / interval_predicted_excess.value
+            interval_flux *= int_flux
+            interval_flux_error = int_flux / interval_measured_excess
+            # Gaussian errors, ToDo: should be improved
+            interval_flux_error *= excess_error(n_on=interval_on,
+                                                n_off=interval_off,
+                                                alpha=interval_alpha_mean)
+            
+            lc_flux.append(interval_flux.value)
+            lc_flux_err.append(interval_flux_error.value)
+            lc_tmin.append(interval_tmin.value)
+            lc_tmax.append(interval_tmax.value)
+            lc_livetime.append(interval_livetime.value)
+            lc_alpha_mean.append(interval_alpha_mean)
+            lc_on.append(interval_on)
+            lc_off.append(interval_off)
+            lc_measured_excess.append(interval_measured_excess)
+            lc_predicted_excess.append(interval_predicted_excess.value)
+            
+        # Fill light curve data 
+        lc = LightCurve()
+        lc['FLUX'] = lc_flux * u.Unit('1 / (s cm2)')
+        lc['FLUX_ERR'] = lc_flux_err * u.Unit('1 / (s cm2)')
+        lc['TIME_MIN'] = Time(lc_tmin, format='mjd')
+        lc['TIME_MAX'] = Time(lc_tmax, format='mjd')
+        lc['LIVETIME'] = lc_livetime * u.s
+        lc['ALPHA'] = lc_alpha_mean
+        lc['ON'] = lc_on
+        lc['OFF'] = lc_off
+        lc['MEASURED_EXCESS'] = lc_measured_excess
+        lc['EXPECTED_EXCESS'] = lc_predicted_excess
+        
+        return lc

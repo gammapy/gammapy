@@ -1,11 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
-from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency
-from ..lightcurve import LightCurve
+from astropy.tests.helper import assert_quantity_allclose, pytest
+from regions import CircleSkyRegion
+from astropy.time import Time
+import astropy.units as u
+from ...utils.testing import requires_dependency, requires_data
+from ..lightcurve import LightCurve, LightCurveEstimator
 from numpy.testing import assert_allclose
-
+from astropy.coordinates import SkyCoord, Angle
+from ...spectrum import SpectrumExtraction
+from ...spectrum.models import PowerLaw
+from ...data import Target, DataStore
+from ...image import SkyMask
+from ...utils.energy import EnergyBounds
 
 def test_lightcurve():
     lc = LightCurve.simulate_example()
@@ -28,3 +36,77 @@ def test_lightcurve_fvar():
 def test_lightcurve_plot():
     lc = LightCurve.simulate_example()
     lc.plot()
+
+
+@pytest.fixture(scope='session')
+def spec_extraction():
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    obs_ids = [23523, 23526]
+    obs_list = data_store.obs_list(obs_ids)
+    
+    target_position = SkyCoord(ra=83.63308,
+                               dec=22.01450,
+                               unit='deg')
+    on_region_radius = Angle('0.11 deg')
+    on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
+    target = Target(on_region=on_region, name='Crab', tag='ana_crab')
+
+    exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
+    allsky_mask = SkyMask.read(exclusion_file)
+    exclusion_mask = allsky_mask.cutout(
+        position=target.on_region.center,
+        size=Angle('6 deg'),
+    )
+    bkg_estimation = dict(
+        method='reflected',
+        exclusion=exclusion_mask,
+    )
+    e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit='TeV') # fine binning
+    e_true = EnergyBounds.equal_log_spacing(0.05, 100, 200, unit='TeV')
+    extraction = SpectrumExtraction(target=target,
+                                    obs=obs_list,
+                                    background=bkg_estimation,
+                                    containment_correction=True,
+                                    e_reco=e_reco,
+                                    e_true=e_true)
+    extraction.estimate_background(extraction.background)
+    extraction.define_energy_threshold('area_max', percent=10.0)
+    return extraction
+
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+def test_lightcurve_estimator():
+
+    spec_extract = spec_extraction()
+    lc_factory = LightCurveEstimator(spec_extract)
+
+    # param
+    intervals = []
+    for obs in spec_extract.obs:
+        intervals.append([obs.events.time[0], obs.events.time[-1]])
+    model = PowerLaw(index=2.3 * u.Unit(''),
+                     amplitude=3.4e-11 * u.Unit('1 / (cm2 s TeV)'),
+                     reference=1 * u.TeV)
+    
+    # build the light curve
+    lc = lc_factory.light_curve(time_intervals=intervals,
+                                spectral_model=model,
+                                energy_range=[0.5, 100] * u.TeV)
+
+    # Test number of intervals
+    assert_quantity_allclose(len(lc), 2)
+    # Test flux values for the first and the last interval
+    assert_allclose(lc['FLUX'][0].value, 5.70852574714e-11, rtol=1e-2)
+    assert_allclose(lc['FLUX'][-1].value, 6.16718031281e-11 , rtol=1e-2)
+    # Test flux error values for the first and the last interval
+    assert_allclose(lc['FLUX_ERR'][0].value, 5.43450927144e-12, rtol=1e-2)
+    assert_allclose(lc['FLUX_ERR'][-1].value, 5.91581572415e-12, rtol=1e-2)
+
+    # same but with threshold equal to 2 TeV
+    lc = lc_factory.light_curve(time_intervals=intervals,
+                                spectral_model=model,
+                                energy_range=[2, 100] * u.TeV)
+
+    # Test flux values for the first and the last interval
+    assert_allclose(lc['FLUX'][0].value, 1.02122885108e-11, rtol=1e-2)
+    assert_allclose(lc['FLUX_ERR'][0].value, 1.43055726983e-12, rtol=1e-2)
