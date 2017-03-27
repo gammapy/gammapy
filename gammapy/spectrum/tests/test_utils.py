@@ -1,15 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_dependency, requires_data
+from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...spectrum import (
     LogEnergyAxis,
     integrate_spectrum,
+    CountsPredictor
 )
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
-from ..models import ExponentialCutoffPowerLaw
+from ..models import ExponentialCutoffPowerLaw, PowerLaw
 
 
 @requires_dependency('scipy')
@@ -84,3 +87,38 @@ def test_integrate_spectrum_ecpl():
 
     assert_allclose(unumpy.nominal_values(val), 5.956578235358054e-13)
     assert_allclose(unumpy.std_devs(val), 9.278302514378108e-14)
+
+
+def get_test_cases():
+    e_true = Quantity(np.logspace(-1, 2, 120), 'TeV')
+    e_reco = Quantity(np.logspace(-1, 2, 100), 'TeV')
+
+    return [
+        dict(model=PowerLaw(index=2,
+                            reference=Quantity(1, 'TeV'),
+                            amplitude=Quantity(1e2, 'TeV-1')),
+             e_true=e_true,
+             npred=999),
+        dict(model=PowerLaw(index=2,
+                            reference=Quantity(1, 'TeV'),
+                            amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
+             aeff=EffectiveAreaTable.from_parametrization(e_true),
+             livetime = Quantity(10, 'h'),
+             npred=1448.059605038253),
+        dict(model=PowerLaw(index=2,
+                            reference=Quantity(1, 'TeV'),
+                            amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
+             aeff=EffectiveAreaTable.from_parametrization(e_true),
+             edisp=EnergyDispersion.from_gauss(e_reco=e_reco, e_true=e_true),
+             livetime = Quantity(10, 'h'),
+             npred=1417.0316019166937),
+    ]
+
+
+@pytest.mark.parametrize('case', get_test_cases())
+def test_counts_predictor(case):
+    desired = case.pop('npred')
+    predictor = CountsPredictor(**case)
+    predictor.run()
+    actual = predictor.npred.total_counts.value
+    assert_allclose(actual, desired)

@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
-from .utils import calculate_predicted_counts
+from .utils import CountsPredictor 
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
@@ -197,7 +197,7 @@ class SpectrumFit(object):
         """
         binning = obs.e_reco
         if forward_folded:
-            temp = calculate_predicted_counts(model=model,
+            temp = CountsPredictor(model=model,
                                               livetime=obs.livetime,
                                               aeff=obs.aeff,
                                               edisp=obs.edisp,

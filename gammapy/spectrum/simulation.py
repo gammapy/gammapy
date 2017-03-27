@@ -4,7 +4,7 @@ import astropy.units as u
 import logging
 from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds 
-from .utils import calculate_predicted_counts
+from .utils import CountsPredictor
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
@@ -31,7 +31,7 @@ class SpectrumSimulation(object):
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy Dispersion
     e_reco : `~astropy.units.Quantity`, optional
-        see :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        see :func:`gammapy.spectrum.utils.CountsPredictor`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model
     alpha : float, optional
@@ -58,9 +58,9 @@ class SpectrumSimulation(object):
     def npred_source(self):
         """Predicted source `~gammapy.spectrum.CountsSpectrum`
 
-        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        calls :func:`gammapy.spectrum.utils.CountsPredictor`
         """
-        npred = calculate_predicted_counts(livetime=self.livetime,
+        npred = CountsPredictor(livetime=self.livetime,
                                            aeff=self.aeff,
                                            edisp=self.edisp,
                                            model=self.source_model,
@@ -71,9 +71,9 @@ class SpectrumSimulation(object):
     def npred_background(self):
         """Predicted background `~gammapy.spectrum.CountsSpectrum`
 
-        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        calls :func:`gammapy.spectrum.utils.CountsPredictor`
         """
-        npred = calculate_predicted_counts(livetime=self.livetime,
+        npred = CountsPredictor(livetime=self.livetime,
                                            aeff=self.aeff,
                                            edisp=self.edisp,
                                            model=self.background_model,

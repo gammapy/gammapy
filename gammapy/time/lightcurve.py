@@ -9,7 +9,7 @@ from astropy.time import Time
 import astropy.units as u
 import numpy as np
 
-from ..spectrum.utils import calculate_predicted_counts
+from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
 
 __all__ = [
@@ -316,7 +316,7 @@ class LightCurveEstimator(object):
                  e_reco >= energy_range[0],  # user
                  e_reco <= energy_range[-1])  # user
             ))
-            counts_predicted_excess = calculate_predicted_counts(
+            counts_predicted_excess = CountsPredictor(
                 livetime=livetime_to_add,
                 aeff=spec.aeff,
                 edisp=spec.edisp,

@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 from ..spectrum import SpectrumObservation
-from ..spectrum.utils import calculate_predicted_counts
+from ..spectrum.utils import CountsPredictor
 from ..spectrum.core import PHACountsSpectrum
 from ..utils.energy import EnergyBounds
 from ..utils.random import get_random_state
@@ -149,7 +149,7 @@ class CTAObservationSimulation(object):
         # Compute expected counts
         reco_energy = perf.bkg.energy
         bkg_rate_values = perf.bkg.data.data * livetime.to('s')
-        predicted_counts = calculate_predicted_counts(model=model,
+        predicted_counts = CountsPredictor(model=model,
                                                       aeff=perf.aeff,
                                                       livetime=livetime,
                                                       edisp=perf.rmf,
