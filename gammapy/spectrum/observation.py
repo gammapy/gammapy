@@ -484,6 +484,29 @@ class SpectrumObservationList(UserList):
         stacker.run()
         return stacker.stacked_obs
 
+    def safe_range(self, method='inclusive'):
+        """Safe energy range
+        
+        This is the energy range in with any / all observations have their safe
+        threshold
+
+        Parameters
+        ----------
+        method : str, {'inclusive', 'exclusive'}
+            Maximum or minimum range
+        """
+        lo_thres = Quantity([obs.lo_threshold for obs in self])
+        hi_thres = Quantity([obs.hi_threshold for obs in self])
+
+        if method == 'inclusive':
+            safe_range = [np.min(lo_thres), np.max(hi_thres)]
+        elif method == 'exclusive':
+            safe_range = [np.max(lo_thres), np.min(hi_thres)]
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
+        return safe_range
+
     def write(self, outdir=None, pha_typeII=False, **kwargs):
         """Create OGIP files
 

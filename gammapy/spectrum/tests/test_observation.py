@@ -199,3 +199,10 @@ class TestSpectrumObservationList:
 
         test_list = SpectrumObservationList.read(outdir, pha_typeII=True)
         assert str(test_list[0].total_stats) == str(self.obs_list[0].total_stats)
+
+    def test_range(self):
+        erange = self.obs_list.safe_range('inclusive')
+        assert_quantity_allclose(erange, [0.5994843, 100] * u.TeV)
+
+        erange = self.obs_list.safe_range('exclusive')
+        assert_quantity_allclose(erange, [0.6812921, 100] * u.TeV)
