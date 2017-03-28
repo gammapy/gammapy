@@ -181,8 +181,8 @@ class FluxPoints(object):
 
         # get errors and ul
         is_ul = self._is_ul
-        x_err_all = self._plot_get_x_err(sed_type)
-        y_err_all = self._plot_get_y_err(sed_type)
+        x_err_all = self.get_energy_err(sed_type)
+        y_err_all = self.get_flux_err(sed_type)
 
         # handle energy power
         e_unit = self._get_y_energy_unit(y_unit)
@@ -230,7 +230,11 @@ class FluxPoints(object):
         ax.set_ylabel('{0} ({1})'.format(self.sed_type, y_unit))
         return ax
 
-    def _plot_get_x_err(self, sed_type):
+    def get_energy_err(self, sed_type=None):
+        """Compute energy error for given sed type"""
+        # TODO: sed_type is not used
+        if sed_type is None: 
+            sed_type = self.sed_type
         try:
             e_min = self.table['e_min'].quantity
             e_max = self.table['e_max'].quantity
@@ -240,7 +244,10 @@ class FluxPoints(object):
             x_err = None
         return x_err
 
-    def _plot_get_y_err(self, sed_type):
+    def get_flux_err(self, sed_type=None):
+        """Compute flux error for given sed type"""
+        if sed_type is None: 
+            sed_type = self.sed_type
         try:
             # assymmetric error
             y_errn = self.table[sed_type + '_errn'].quantity
