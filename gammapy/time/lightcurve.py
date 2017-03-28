@@ -159,7 +159,7 @@ class LightCurveEstimator(object):
 
         return on_evt_list
 
-    def light_curve(self, time_intervals, spectral_model, energy_range, e_reco=None):
+    def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -179,9 +179,6 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
-        e_reco : `~gammapy.utils.energy.EnergyBounds`, optional
-            Reconstructed energy interval to use for measurement (event selection).
-            Default: use all energies
 
         Returns
         -------
@@ -190,7 +187,7 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            row = self.compute_flux_point(time_interval, spectral_model, energy_range, e_reco)
+            row = self.compute_flux_point(time_interval, spectral_model, energy_range)
             rows.append(row)
 
         return self._make_lc_from_row_data(rows)
@@ -213,7 +210,7 @@ class LightCurveEstimator(object):
 
         return lc
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range, e_reco=None):
+    def compute_flux_point(self, time_interval, spectral_model, energy_range):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -224,8 +221,6 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
-        e_reco : `~gammapy.utils.energy.EnergyBounds`, optional
-            Reconstructed energy
 
         Returns
         -------
@@ -260,9 +255,7 @@ class LightCurveEstimator(object):
             on_evt = self.on_evt_list[t_index]
 
             # Loop on energy bins (default binning set to SpectrumObservation.e_reco)
-            if e_reco is None:
-                e_reco = spec.e_reco
-
+            e_reco = spec.e_reco
             for e_index in range(len(e_reco) - 1):
                 emin = e_reco[e_index]
                 emax = e_reco[e_index + 1]
@@ -316,14 +309,17 @@ class LightCurveEstimator(object):
                  e_reco >= energy_range[0],  # user
                  e_reco <= energy_range[-1])  # user
             ))
-            counts_predicted_excess = CountsPredictor(
+            counts_predictor = CountsPredictor(
                 livetime=livetime_to_add,
                 aeff=spec.aeff,
                 edisp=spec.edisp,
                 model=spectral_model,
-                e_reco=e_reco[e_idx],
+                #e_reco=e_reco[e_idx],
             )
-            obs_predicted_excess = np.sum(counts_predicted_excess.data.data)
+            counts_predictor.run()
+            counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
+
+            obs_predicted_excess = np.sum(counts_predicted_excess)
             obs_predicted_excess /= obs.observation_live_time_duration.to('s').value
             obs_predicted_excess *= livetime_to_add.value
 
