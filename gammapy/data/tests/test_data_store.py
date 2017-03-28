@@ -195,6 +195,6 @@ def test_make_mean_edisp(tmpdir):
     i = np.where(rmf.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
     i2 = np.where(rmf2.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
     assert_equal(i, i2)
-    i = np.where(rmf.data.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
-    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(55, "TeV")) != 0)[0]
+    i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     assert_equal(i, i2)

@@ -195,17 +195,16 @@ class SpectrumFit(object):
         predicted_counts: `np.array`
             Predicted counts for one observation
         """
-        binning = obs.e_reco
+        predictor = CountsPredictor(model=model)
         if forward_folded:
-            temp = CountsPredictor(model=model,
-                                              livetime=obs.livetime,
-                                              aeff=obs.aeff,
-                                              edisp=obs.edisp,
-                                              e_reco=binning)
-            counts = temp.data.data
+            predictor.livetime = obs.livetime
+            predictor.aeff = obs.aeff
+            predictor.edisp = obs.edisp
         else:
-            # TODO: This could also be part of calculate predicted counts
-            counts = model.integral(binning[:-1], binning[1:], intervals=True)
+            predictor.e_true = obs.e_reco
+
+        predictor.run()
+        counts = predictor.npred.data.data
 
         # Check count unit (~unit of model amplitude)
         cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')

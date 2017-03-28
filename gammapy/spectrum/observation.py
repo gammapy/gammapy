@@ -247,11 +247,12 @@ class SpectrumObservation(object):
         npred : `~gammapy.spectrum.CountsSpectrum`
             Predicted counts
         """
-        return CountsPredictor(model=model,
-                                          edisp=self.edisp,
-                                          aeff=self.aeff,
-                                          livetime=self.livetime,
-                                          e_reco=self.e_reco)
+        predictor = CountsPredictor(model=model,
+                                    edisp=self.edisp,
+                                    aeff=self.aeff,
+                                    livetime=self.livetime)
+        predictor.run()
+        return predictor.npred
 
     @classmethod
     def read(cls, filename):

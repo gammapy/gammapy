@@ -64,11 +64,9 @@ class TestSpectrumSimulation:
         sim = SpectrumSimulation(aeff=self.sim.aeff,
                                  source_model=self.sim.source_model,
                                  livetime=4*u.h,
-                                 e_reco=self.sim.edisp.e_reco.bins
                                 )
-        
         sim.simulate_obs(seed=23, obs_id=23)
-        assert sim.obs.on_vector.total_counts == 160 * u.ct
+        assert sim.obs.on_vector.total_counts == 161 * u.ct
         # The test value is taken from the test with edisp
         assert_allclose(np.sum(sim.npred_source.data.data.value),
                         167.467572145, rtol=0.01)

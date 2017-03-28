@@ -158,7 +158,8 @@ class CountsPredictor(object):
     def integrate_model(self):
         """Integrate model in true energy space"""
         if self.aeff is not None:
-            self.e_true = self.aeff.energy.bins
+            # TODO: True energy is converted to TeV. See issue 869 
+            self.e_true = self.aeff.energy.bins.to('TeV')
         else:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")

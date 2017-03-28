@@ -30,8 +30,6 @@ class SpectrumSimulation(object):
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy Dispersion
-    e_reco : `~astropy.units.Quantity`, optional
-        see :func:`gammapy.spectrum.utils.CountsPredictor`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model
     alpha : float, optional
@@ -39,13 +37,11 @@ class SpectrumSimulation(object):
     """
 
     def __init__(self, livetime, source_model, aeff, edisp=None,
-                 e_reco=None, background_model=None, alpha=None):
+                 background_model=None, alpha=None):
         self.livetime = livetime
         self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
-        temp = e_reco or edisp.e_reco.bins
-        self.e_reco = EnergyBounds(temp)
         self.background_model = background_model
         self.alpha = alpha
 
@@ -60,12 +56,12 @@ class SpectrumSimulation(object):
 
         calls :func:`gammapy.spectrum.utils.CountsPredictor`
         """
-        npred = CountsPredictor(livetime=self.livetime,
-                                           aeff=self.aeff,
-                                           edisp=self.edisp,
-                                           model=self.source_model,
-                                           e_reco=self.e_reco)
-        return npred
+        predictor = CountsPredictor(livetime=self.livetime,
+                                    aeff=self.aeff,
+                                    edisp=self.edisp,
+                                    model=self.source_model)
+        predictor.run()
+        return predictor.npred
 
     @property
     def npred_background(self):
@@ -73,12 +69,21 @@ class SpectrumSimulation(object):
 
         calls :func:`gammapy.spectrum.utils.CountsPredictor`
         """
-        npred = CountsPredictor(livetime=self.livetime,
-                                           aeff=self.aeff,
-                                           edisp=self.edisp,
-                                           model=self.background_model,
-                                           e_reco=self.e_reco)
-        return npred
+        predictor = CountsPredictor(livetime=self.livetime,
+                                    aeff=self.aeff,
+                                    edisp=self.edisp,
+                                    model=self.background_model)
+        predictor.run()
+        return predictor.npred
+
+    @property
+    def e_reco(self):
+        """Reconstruced energy binning"""
+        if self.edisp is not None:
+            temp = self.edisp.e_reco.bins
+        else:
+            temp = self.aeff.energy.bins
+        return EnergyBounds(temp)
 
     def run(self, seed):
         """Simulate `~gammapy.spectrum.SpectrumObservationList`
