@@ -126,15 +126,13 @@ class CountsPredictor(object):
                                 reference=1*u.TeV)
 
         livetime = 1 * u.h
-        e_reco_desired = np.logspace(-1, 1, 15) * u.TeV
 
-        npred = CountsPredictor(model=model,
-                                           aeff=aeff,
-                                           edisp=edisp,
-                                           livetime=livetime,
-                                           e_reco=e_reco_desired)
-
-        npred.plot_hist()
+        predictor = CountsPredictor(model=model,
+                                    aeff=aeff,
+                                    edisp=edisp,
+                                    livetime=livetime)
+        predictor.run()
+        predictor.npred.plot_hist()
         plt.show()
     """
     def __init__(self, model, aeff=None, edisp=None, livetime=None, e_true=None):
