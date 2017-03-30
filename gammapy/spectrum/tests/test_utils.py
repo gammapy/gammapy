@@ -92,29 +92,36 @@ def test_integrate_spectrum_ecpl():
 def get_test_cases():
     e_true = Quantity(np.logspace(-1, 2, 120), 'TeV')
     e_reco = Quantity(np.logspace(-1, 2, 100), 'TeV')
+    
+    try:
+        import scipy
+    except ImportError:
+        return []
+    else:
+        return [
+            dict(model=PowerLaw(index=2,
+                                reference=Quantity(1, 'TeV'),
+                                amplitude=Quantity(1e2, 'TeV-1')),
+                 e_true=e_true,
+                 npred=999),
+            dict(model=PowerLaw(index=2,
+                                reference=Quantity(1, 'TeV'),
+                                amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
+                 aeff=EffectiveAreaTable.from_parametrization(e_true),
+                 livetime = Quantity(10, 'h'),
+                 npred=1448.059605038253),
+            dict(model=PowerLaw(index=2,
+                                reference=Quantity(1, 'TeV'),
+                                amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
+                 aeff=EffectiveAreaTable.from_parametrization(e_true),
+                 edisp=EnergyDispersion.from_gauss(e_reco=e_reco, e_true=e_true),
+                 livetime = Quantity(10, 'h'),
+                 npred=1417.0316019166937),
+        ]
+    
 
-    return [
-        dict(model=PowerLaw(index=2,
-                            reference=Quantity(1, 'TeV'),
-                            amplitude=Quantity(1e2, 'TeV-1')),
-             e_true=e_true,
-             npred=999),
-        dict(model=PowerLaw(index=2,
-                            reference=Quantity(1, 'TeV'),
-                            amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
-             aeff=EffectiveAreaTable.from_parametrization(e_true),
-             livetime = Quantity(10, 'h'),
-             npred=1448.059605038253),
-        dict(model=PowerLaw(index=2,
-                            reference=Quantity(1, 'TeV'),
-                            amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
-             aeff=EffectiveAreaTable.from_parametrization(e_true),
-             edisp=EnergyDispersion.from_gauss(e_reco=e_reco, e_true=e_true),
-             livetime = Quantity(10, 'h'),
-             npred=1417.0316019166937),
-    ]
 
-
+@requires_dependency('scipy')
 @pytest.mark.parametrize('case', get_test_cases())
 def test_counts_predictor(case):
     desired = case.pop('npred')
