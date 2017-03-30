@@ -151,13 +151,16 @@ class CountsPredictor(object):
         self.integrate_model()
         self.apply_aeff()
         self.apply_edisp()
-        self.verify_npred()
 
     def integrate_model(self):
         """Integrate model in true energy space"""
         if self.aeff is not None:
-            # TODO: True energy is converted to TeV. See issue 869 
-            self.e_true = self.aeff.energy.bins.to('TeV')
+            # TODO: True energy is converted to model amplitude unit. See issue 869 
+            ref_unit = None
+            for unit in self.model.parameters['amplitude'].unit.bases:
+                if unit.is_equivalent('eV'):
+                    ref_unit = unit
+            self.e_true = self.aeff.energy.bins.to(ref_unit)
         else:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
@@ -189,37 +192,11 @@ class CountsPredictor(object):
                                     energy_lo=self.e_reco[:-1],
                                     energy_hi=self.e_reco[1:])
 
-    def verify_npred(self):
-        pass
-
-    def old(self):
-        if e_reco is None and edisp is None:
-            raise ValueError("No reconstruced energy binning provided. "
-                             "Please specifiy e_reco or edisp") 
-        else:
-            temp = e_reco or edisp.e_reco.data
-            e_reco = EnergyBounds(temp)
-
-        if edisp is not None:
-            # TODO: True energy is converted to TeV. See issue 869 
-            true_energy = aeff.energy.bins.to('TeV')
-
-            # Need to fill nan values in aeff due to matrix multiplication with RMF
-            counts = flux * livetime * aeff.evaluate_fill_nan()
-            counts = counts.to('')
-            reco_counts = edisp.apply(counts, e_reco=e_reco, e_true=true_energy)
-        else:
-            flux = model.integral(emin=e_reco[:-1], emax=e_reco[1:], intervals=True)
-            reco_counts = flux * livetime * aeff.evaluate_fill_nan(energy=e_reco.log_centers)
-            reco_counts = reco_counts.to('')
-
-        return CountsSpectrum(data=reco_counts, energy_lo=e_reco.lower_bounds,
-                              energy_hi=e_reco.upper_bounds)
-
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     """
     Integrate 1d function using the log-log trapezoidal rule. If scalar values
+
     for xmin and xmax are passed an oversampled grid is generated using the
     ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
     oversampling is performed and the integral is computed in the provided
