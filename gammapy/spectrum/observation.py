@@ -713,6 +713,7 @@ class SpectrumObservationStacker(object):
     def stack_backscal(self):
         """Stack backscal for on and off vector
         """
+        """
         nbins = self.obs_list[0].e_reco.nbins
         bkscal_on = np.zeros(nbins)
         bkscal_off = np.zeros(nbins)
@@ -736,6 +737,31 @@ class SpectrumObservationStacker(object):
 
         self.stacked_bkscal_on = stacked_bkscal_on
         self.stacked_bkscal_off = stacked_bkscal_off
+        """
+        nbins = self.obs_list[0].e_reco.nbins
+        bkscal_on = np.ones(nbins)
+        bkscal_off = np.zeros(nbins)
+
+        for o in self.obs_list:
+            bkscal_on_data = o.on_vector._backscal_array.copy()
+            #bkscal_on += bkscal_on_data * o.off_vector.counts_in_safe_range
+
+            bkscal_off_data = o.off_vector._backscal_array.copy()
+            bkscal_off += (bkscal_on_data/bkscal_off_data) * o.off_vector.counts_in_safe_range
+
+        #stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.data.value
+        stacked_bkscal_off = self.stacked_off_vector.data.data.value/ bkscal_off
+
+        # there should be no nan values in backscal_on or backscal_off
+        # this leads to problems when fitting the data
+        alpha_correction = - 1
+        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
+        bkscal_on[idx] = alpha_correction
+        stacked_bkscal_off[idx] = alpha_correction
+
+        self.stacked_bkscal_on = bkscal_on
+        self.stacked_bkscal_off = stacked_bkscal_off
+
 
     def setup_counts_vectors(self):
         """Add correct attributes to stacked counts vectors"""
