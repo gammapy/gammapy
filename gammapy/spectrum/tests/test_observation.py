@@ -143,6 +143,8 @@ class TestSpectrumObservationStacker:
 
         # Change threshold to make stuff more interesting
         self.obs_list.obs(23523).lo_threshold = 1.2 * u.TeV
+        self.obs_list.obs(23592).hi_threshold = 20 * u.TeV
+        self.obs_list.obs(23523).hi_threshold = 50 * u.TeV
         self.obs_stacker = SpectrumObservationStacker(self.obs_list)
         self.obs_stacker.run()
 
@@ -153,6 +155,15 @@ class TestSpectrumObservationStacker:
         summed_counts = counts1 + counts2
         stacked_counts = self.obs_stacker.stacked_obs.total_stats.n_on
         assert summed_counts == stacked_counts
+
+    def test_thresholds(self):
+        actual = self.obs_stacker.stacked_obs.lo_threshold
+        desired = 599484250.319 * u.keV
+        assert_quantity_allclose(actual, desired)
+
+        actual = self.obs_stacker.stacked_obs.hi_threshold
+        desired = 46415888336.1 * u.keV
+        assert_quantity_allclose(actual, desired)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
