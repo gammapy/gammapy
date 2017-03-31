@@ -174,6 +174,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         table['dnde'] = d['sed_dnde'][valid]
         table['dnde_errp'] = d['sed_dnde_errp'][valid]
         table['dnde_errn'] = d['sed_dnde_errn'][valid]
+        table['dnde_ul'] = d['sed_dnde_ul'][valid]
 
         if len(e_ref) == 0:
             raise NoDataAvailableError('No flux points available.')
