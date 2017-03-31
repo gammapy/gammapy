@@ -296,9 +296,9 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.249406693574462) 
+        assert_quantity_allclose(pars['index'].value, 2.2134741433676934) 
         assert_quantity_allclose(pars['amplitude'].quantity,
-                                 2.4978415475815918e-11 * u.Unit('cm-2 s-1 TeV-1'))
+                                 2.3750588665654947e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)

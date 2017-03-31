@@ -689,16 +689,20 @@ class SpectrumObservationStacker(object):
         """Stack `~gammapy.spectrum.PHACountsSpectrum`
 
         Bins outside the safe energy range are set to 0, attributes
-        are set to None.
+        are set to None. The quality vector of the observations are combined
+        with a logical or, such that the low (high) threshold of the stacked
+        obs is the minimum low (maximum high) threshold of the observation list
+        to be stacked.
         """
         template = counts_spectrum_list[0].copy()
         energy = template.energy
         stacked_data = np.zeros(energy.nbins)
-        stacked_quality = np.zeros(energy.nbins)
+        stacked_quality = np.ones(energy.nbins)
         for spec in counts_spectrum_list:
             stacked_data += spec.counts_in_safe_range
-            stacked_quality = np.logical_or(stacked_quality,
-                                            spec.quality)
+            temp = np.logical_and(stacked_quality,
+                                  spec.quality)
+            stacked_quality = np.array(temp, dtype=int)
 
         stacked_spectrum = PHACountsSpectrum(data=stacked_data,
                                              energy_lo=energy.lo,
