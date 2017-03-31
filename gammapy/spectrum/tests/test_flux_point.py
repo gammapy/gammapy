@@ -159,10 +159,10 @@ def get_test_cases():
                                 reference=Quantity(1, 'TeV')),
                  obs=obs(),
                  seg=seg(obs()),
-                 dnde=2.746487655013871e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                 dnde_err=4.75540974278388e-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 res=-0.11081311538185892,
-                 res_err=0.1539583826837699,
+                 dnde=2.7465439050126e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                 dnde_err=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 res=-0.11262182922477647,
+                 res_err=0.1536450758523701,
                  )
         )
         return test_cases

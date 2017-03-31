@@ -34,7 +34,7 @@ def get_test_obs():
         obs=obs_1,
         total_on=172,
         livetime=1581.73681640625 * u.second,
-        npred=214.28087642097444,
+        npred=214.55242978860932,
         excess=167.36363636363637,
         excess_safe_range=135)
     )

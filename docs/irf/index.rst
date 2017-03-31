@@ -15,17 +15,20 @@ Introduction
 * Energy dispersion (EDISP)
 * Point spread function (PSF)
 
-Most of the formats defined at :ref:`gadf:iact-irfs` are supported.
-Otherwise, at the moment, there is very little support for Fermi-LAT or other instruments.
+Most of the formats defined at :ref:`gadf:iact-irfs` are supported.  Otherwise,
+at the moment, there is very little support for Fermi-LAT or other instruments.
 
-Most users will not use `gammapy.irf` directly, but will instead use IRFs as part of their
-spectrum, image or cube analysis to compute exposure and effective EDISP and PSF for a given
-dataset.
+Most users will not use `gammapy.irf` directly, but will instead use IRFs as
+part of their spectrum, image or cube analysis to compute exposure and
+effective EDISP and PSF for a given dataset.
+
+Most (at some point maybe all) classes in `gammapy.irf` have an
+`gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
 
 Getting Started
 ===============
 
-TODO: document
+see :gp-extra-notebook:`data_iact` for an example how to access IACT IRFs.
 
 
 Using `gammapy.irf`

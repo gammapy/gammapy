@@ -211,6 +211,7 @@ class SpectrumExtraction(object):
 
             # If required, correct arf for psf leakage
             # TODO: write correction factor as AREASCAL column in PHAFILE
+            # TODO: Refactor as separate function
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg

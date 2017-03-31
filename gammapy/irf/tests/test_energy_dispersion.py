@@ -26,9 +26,9 @@ class TestEnergyDispersion:
         test_e_true = 3.34 * u.TeV
         # Check for correct normalization
         test_pdf = self.edisp.data.evaluate(e_true=test_e_true)
-        assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
+        assert_allclose(np.sum(test_pdf), 1, atol=1e-2)
         # Check bias
-        assert_allclose(self.edisp.get_bias(test_e_true), 0, atol=1e-4)
+        assert_allclose(self.edisp.get_bias(test_e_true), 0, atol=1e-2)
         # Check resolution
         assert_allclose(self.edisp.get_resolution(test_e_true),
                         self.resolution,
@@ -58,12 +58,9 @@ class TestEnergyDispersion:
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-
-# First we define a fake EnergyDispersion2D
-
-
 class TestEnergyDispersion2D():
     def setup(self):
+        # TODO: use from_gauss method to create know edisp
         filename = gammapy_extra.filename(
             'test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
         self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
