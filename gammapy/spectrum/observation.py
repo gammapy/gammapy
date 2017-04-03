@@ -608,8 +608,12 @@ class SpectrumObservationStacker(object):
         \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
             \epsilon_{jk}
 
-        \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
-            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
+        \overline{\alpha}_k = \frac{\overline{{backscale_{ON}}}_k}{\overline{{backscale_{OFF}}}_k}
+
+        \overline{{backscale}_{ON}}_k = 1
+
+        \overline{{backscale}_{OFF}}_k = \frac{1}{\sum_{j}\alpha_{jk} \cdot
+            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}} \cdot \overline{\mathrm {n_{off}}}
 
         \overline{t} = \sum_{j} t_i
 
