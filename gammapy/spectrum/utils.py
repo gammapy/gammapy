@@ -157,9 +157,12 @@ class CountsPredictor(object):
         if self.aeff is not None:
             # TODO: True energy is converted to model amplitude unit. See issue 869 
             ref_unit = None
-            for unit in self.model.parameters['amplitude'].unit.bases:
-                if unit.is_equivalent('eV'):
-                    ref_unit = unit
+            try:
+                for unit in self.model.parameters['amplitude'].unit.bases:
+                    if unit.is_equivalent('eV'):
+                        ref_unit = unit
+            except IndexError:
+                ref_unit = 'TeV'
             self.e_true = self.aeff.energy.bins.to(ref_unit)
         else:
             if self.e_true is None:

@@ -608,21 +608,16 @@ class SpectrumObservationStacker(object):
         \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
             \epsilon_{jk}
 
-        \overline{\alpha}_k = \frac{\overline{{backscale_{ON}}}_k}{\overline{{backscale_{OFF}}}_k}
+        \overline{\alpha}_k =
+        \frac{\overline{{b_{on}}}_k}{\overline{{b_{off}}}_k}
 
-        \overline{{backscale}_{ON}}_k = 1
+        \overline{{b}_{on}}_k = 1
 
-        \overline{{backscale}_{OFF}}_k = \frac{1}{\sum_{j}\alpha_{jk} \cdot
+        \overline{{b}_{off}}_k = \frac{1}{\sum_{j}\alpha_{jk} \cdot
             \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}} \cdot \overline{\mathrm {n_{off}}}
 
-        \overline{t} = \sum_{j} t_i
-
-        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
-            \cdot t_j}{\overline{t}}
-
-        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
-            \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
-            \cdot t_j}
+    Please refer to the `~gammapy.irf.IRFStacker` for the description
+    of how the IRFs are stacked.
 
     Parameters
     ----------
