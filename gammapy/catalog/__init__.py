@@ -2,7 +2,6 @@
 """
 Source catalogs and objects.
 """
-from .analysis import *
 from .core import *
 from .fermi import *
 from .hess import *
