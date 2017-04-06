@@ -150,14 +150,15 @@ class CTAObservationSimulation(object):
         reco_energy = perf.bkg.energy
         bkg_rate_values = perf.bkg.data.data * livetime.to('s')
         predicted_counts = CountsPredictor(model=model,
-                                                      aeff=perf.aeff,
-                                                      livetime=livetime,
-                                                      edisp=perf.rmf,
-                                                      e_reco=e_reco_axis)
-
+                                           aeff=perf.aeff,
+                                           livetime=livetime,
+                                           edisp=perf.rmf)
+        predicted_counts.run()
+        npred = predicted_counts.npred
         # Randomise counts
         rand = get_random_state('random-seed')
-        on_counts = rand.poisson(predicted_counts.data.data.value)  # excess
+        on_counts = rand.poisson(npred.data.data.value)  # excess
+        on_counts = rand.poisson()  # excess
         bkg_counts = rand.poisson(bkg_rate_values.value)  # bkg in ON region
         off_counts = rand.poisson(bkg_rate_values.value / alpha)  # bkg in OFF region
 
