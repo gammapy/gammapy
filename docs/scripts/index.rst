@@ -49,7 +49,6 @@ Spectrum
 
 - ``gammapy-spectrum`` calls `gammapy.spectrum.spectrum_analysis`
 - ``gammapy-spectrum-pipe`` runs `gammapy.scripts.SpectrumPipe`
-- ``gammapy-spectrum-regions`` calls `gammapy.scripts.spectrum_regions`
 
 Image
 -----

@@ -11,8 +11,6 @@ from .data_manage import *
 from .data_select import *
 from .data_show import *
 
-from .spectrum_regions import *
-
 from .image_bin import *
 #from .image_lima import *
 from .image_fit import *
