@@ -177,7 +177,7 @@ Skip unit tests for some Astropy versions
 .. code-block:: python
 
    import astropy
-   from astropy.tests.helper import pytest
+   import pytest
 
    ASTROPY_VERSION = (astropy.version.major, astropy.version.minor)
    @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")

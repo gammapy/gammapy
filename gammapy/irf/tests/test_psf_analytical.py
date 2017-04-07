@@ -5,7 +5,7 @@ from numpy.testing.utils import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.tests.helper import pytest
+import pytest
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDependentMultiGaussPSF

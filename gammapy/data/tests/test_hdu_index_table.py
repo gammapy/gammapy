@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
+import pytest
 from ..hdu_index_table import HDUIndexTable
 from ...utils.testing import requires_data
 

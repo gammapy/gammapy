@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
-from astropy.tests.helper import pytest
+import pytest
 from ...utils.testing import requires_data, requires_dependency
 from ...scripts.cta_irf import CTAPerf
 from ...scripts.cta_utils import Target, ObservationParameters, CTAObservationSimulation
