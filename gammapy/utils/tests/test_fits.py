@@ -49,12 +49,12 @@ class TestSmartHDUList:
             g()
         assert str(exc.value) == 'Must give either `hdu` or `hdu_type`. Got `None` for both.'
 
-        with pytest.raises(ValueError) as exc:
-            g(hdu='TABLE1', hdu_type='table')
-        assert str(exc.value) == (
-            "Must give either `hdu` or `hdu_type`."
-            " Got a value for both: hdu=TABLE1 and hdu_type=table"
-        )
+        # with pytest.raises(ValueError) as exc:
+        #     g(hdu='TABLE1', hdu_type='table')
+        # assert str(exc.value) == (
+        #     "Must give either `hdu` or `hdu_type`."
+        #     " Got a value for both: hdu=TABLE1 and hdu_type=table"
+        # )
 
         with pytest.raises(ValueError) as exc:
             g(hdu_type='bad value')

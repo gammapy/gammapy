@@ -40,7 +40,7 @@ class SingleObsCubeMaker(object):
     offset_band : `astropy.coordinates.Angle`
         Offset band selection
     exclusion_mask : `~gammapy.cube.SkyCube`
-        Cube of `~gammapy.image.SkyMask`
+        Exclusion mask
     save_bkg_scale: bool
         True if you want to save the normalisation of the bkg computed outside the exclusion region in a Table
     """
@@ -184,7 +184,7 @@ class StackedObsCubeMaker(object):
     obs_table : `~astropy.table.Table`
         Required columns: OBS_ID
     exclusion_mask : `~gammapy.cube.SkyCube`
-        Cube of `~gammapy.image.SkyMask`
+        Exclusion mask
     save_bkg_scale: bool
         True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm with two columns:
          "OBS_ID" and "bkg_scale"

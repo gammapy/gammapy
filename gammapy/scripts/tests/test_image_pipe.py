@@ -5,9 +5,10 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, requires_dependency, pytest
 from ...utils.energy import Energy
 from ...data import DataStore
-from ...image import SkyImage, SkyMask
+from ...image import SkyImage
 from ...background import OffDataBackgroundMaker
 from ...scripts import StackedObsImageMaker
+
 
 # Temp xfail for this: https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
 @pytest.mark.xfail
@@ -54,7 +55,7 @@ def test_image_pipe(tmpdir):
     ref_image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
                                yref=center.b.deg, proj='TAN', coordsys='GAL')
 
-    exclusion_mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=ref_image)
 
     # TODO: fix this:

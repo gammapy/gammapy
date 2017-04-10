@@ -3,11 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import logging
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel, CustomKernel
-from ..extern.pathlib import Path
-from ..image import SkyMask, SkyImage, SkyImageList
+from ..image import SkyImage, SkyImageList
 from .lima import compute_lima_image
 
 log = logging.getLogger(__name__)
@@ -101,7 +99,7 @@ class KernelBackgroundEstimator(object):
 
         # initial mask, if not present
         if not 'exclusion' in images.names:
-            images['exclusion'] = SkyMask.empty_like(images['counts'], fill=1)
+            images['exclusion'] = SkyImage.empty_like(images['counts'], fill=1)
 
         # initial background estimate, if not present
         if not 'background' in images.names:
@@ -175,6 +173,7 @@ class KernelBackgroundEstimator(object):
         images : `gammapy.image.SkyImageList`
             Input sky images
         """
+        from scipy.ndimage import binary_erosion
         images.check_required(['counts', 'exclusion', 'background'])
         wcs = images['counts'].wcs.copy()
         p = self.parameters
@@ -182,14 +181,13 @@ class KernelBackgroundEstimator(object):
         significance = self._estimate_significance(images['counts'], images['background'])
 
         # update exclusion mask
-        mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
-        exclusion = SkyMask(name='exclusion', data=mask.astype('float'), wcs=wcs)
-
-        # erode exclusion regions
         radius = p['mask_dilation_radius'].to('deg')
         scale = images['counts'].wcs_pixel_scale()[0]
         structure = Tophat2DKernel((radius / scale).value)
-        exclusion = exclusion.erode(structure, border_value=1)
+
+        mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
+        mask = binary_erosion(mask, structure, border_value=1)
+        exclusion = SkyImage(name='exclusion', data=mask.astype('float'), wcs=wcs)
 
         background = self._estimate_background(images['counts'], exclusion)
         return SkyImageList([images['counts'], background, exclusion, significance])

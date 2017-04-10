@@ -3,21 +3,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion
-from ..image import SkyMask
+from ..image import SkyImage
 from .background_estimate import BackgroundEstimate
-import logging
 
 __all__ = [
     'find_reflected_regions',
     'ReflectedRegionsBackgroundEstimator',
 ]
 
-log = logging.getLogger(__name__)
-
 
 def find_reflected_regions(region, center, exclusion_mask=None,
-                           angle_increment=None, min_distance=None,
-                           min_distance_input=None):
+                           angle_increment='0.1 rad',
+                           min_distance='0 rad',
+                           min_distance_input='0.1 rad'):
     """Find reflected regions.
 
     Converts to pixel coordinates internally.
@@ -28,36 +26,29 @@ def find_reflected_regions(region, center, exclusion_mask=None,
         Region
     center : `~astropy.coordinates.SkyCoord`
         Rotation point
-    exclusion_mask : `~gammapy.image.SkyMask`, optional
+    exclusion_mask : `~gammapy.image.SkyImage`, optional
         Exclusion mask
     angle_increment : `~astropy.coordinates.Angle`
-        Rotation angle for each step, default: 0.1 rad
+        Rotation angle for each step
     min_distance : `~astropy.coordinates.Angle`
-        Minimal distance between to reflected regions, default: 0 rad
+        Minimal distance between to reflected regions
     min_distance_input : `~astropy.coordinates.Angle`
-        Minimal distance from input region, default: 0.1 rad
+        Minimal distance from input region
 
     Returns
     -------
     regions : list of `~regions.SkyRegion`
         Reflected regions list
     """
-    angle_increment = Angle('0.1 rad') if angle_increment is None else Angle(angle_increment)
-    min_distance = Angle('0 rad') if min_distance is None else Angle(min_distance)
-    min_distance_input = Angle('0.1 rad') if min_distance_input is None else Angle(min_distance_input)
+    angle_increment = Angle(angle_increment)
+    min_distance = Angle(min_distance)
+    min_distance_input = Angle(min_distance_input)
 
     # Create empty exclusion mask if None is provided
     if exclusion_mask is None:
-        min_size = region.center.separation(center)
-        binsz = 0.02
-        npix = int((3 * min_size / binsz).value)
-        exclusion_mask = SkyMask.empty(name='empty exclusion mask',
-                                       xref=center.galactic.l.value,
-                                       yref=center.galactic.b.value,
-                                       binsz=binsz,
-                                       nxpix=npix,
-                                       nypix=npix,
-                                       fill=1)
+        exclusion_mask = make_default_exclusion_mask(center, exclusion_mask, region)
+
+    distance_image = exclusion_mask.distance_image
 
     reflected_regions_pix = list()
     wcs = exclusion_mask.wcs
@@ -77,24 +68,38 @@ def find_reflected_regions(region, center, exclusion_mask=None,
     # Add required minimal distance between two off regions
     min_ang += min_distance
 
-    # Maximum allowd angle before the an overlap with the ON regions happens
-    max_angle = angle + Angle('360deg') - min_ang - min_distance_input
+    # Maximum allowed angle before the an overlap with the ON regions happens
+    max_angle = angle + Angle('360 deg') - min_ang - min_distance_input
 
     # Starting angle
     curr_angle = angle + min_ang + min_distance_input
+
     while curr_angle < max_angle:
         test_pos = _compute_xy(pix_center, offset, curr_angle)
         test_reg = CirclePixelRegion(test_pos, pix_region.radius)
-        if not _is_inside_exclusion(test_reg, exclusion_mask):
+        if distance_image.lookup_pix(test_reg.center) > pix_region.radius:
             reflected_regions_pix.append(test_reg)
             curr_angle = curr_angle + min_ang
         else:
             curr_angle = curr_angle + angle_increment
 
     reflected_regions = [_.to_sky(wcs) for _ in reflected_regions_pix]
-    log.debug('Found {} reflected regions:\n {}'.format(len(reflected_regions),
-                                                        reflected_regions))
     return reflected_regions
+
+
+def make_default_exclusion_mask(center, region):
+    min_size = region.center.separation(center)
+    binsz = 0.02
+    npix = int((3 * min_size / binsz).value)
+    return SkyImage.empty(
+        name='empty exclusion mask',
+        xref=center.galactic.l.value,
+        yref=center.galactic.b.value,
+        binsz=binsz,
+        nxpix=npix,
+        nypix=npix,
+        fill=1,
+    )
 
 
 def _compute_xy(pix_center, offset, angle):
@@ -109,15 +114,6 @@ def _compute_xy(pix_center, offset, angle):
     return PixCoord(x=x, y=y)
 
 
-# TODO :Copied from gammapy.region.PixCircleList (deleted), find better place
-def _is_inside_exclusion(pixreg, exclusion):
-    x, y = pixreg.center.x, pixreg.center.y
-    image = exclusion.distance_image
-    excl_dist = image.data
-    val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
-    return val < pixreg.radius
-
-
 class ReflectedRegionsBackgroundEstimator(object):
     """Reflected Regions background estimator.
 
@@ -127,7 +123,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         Target region
     obs_list : `~gammapy.data.ObservationList`
         List of observations to process
-    exclusion : `~gammapy.image.SkyMask`
+    exclusion : `~gammapy.image.SkyImage`
         Exclusion mask
     config : dict
         Config dict to be passed to :func:`gammapy.background.find_reflected_regions`

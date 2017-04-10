@@ -1,25 +1,24 @@
 """Example how to make a Cube analysis from a 2D background model.
 """
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord, Angle
 from astropy.units import Quantity
-from gammapy.extern.pathlib import Path
-from ...data import DataStore
+from ...extern.pathlib import Path
 from ...utils.testing import requires_dependency, requires_data, pytest
-from ...image import SkyMask
+from ...utils.energy import Energy
+from ...data import DataStore
+from ...image import SkyImage
 from .. import StackedObsCubeMaker
 from ...background import OffDataBackgroundMaker
 from .. import SkyCube
-from ...utils.energy import Energy
 
 
 def make_empty_cube(image_size, energy, center, data_unit=None):
     """
-    Make an empty `SkyCube` from a given `SkyMask` and an energy binning.
+    Make an empty `SkyCube` from a given `SkyImage` and an energy binning.
 
     Parameters
     ----------
@@ -90,7 +89,7 @@ def test_cube_pipe(tmpdir):
     data_store = DataStore.from_dir(tmpdir)
 
     refheader = ref_cube_images.sky_image_ref.to_image_hdu().header
-    exclusion_mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
     ref_cube_skymask.data = np.tile(exclusion_mask.data, (5, 1, 1))
     # Pb with the load psftable for one of the run that is not implemented yet...

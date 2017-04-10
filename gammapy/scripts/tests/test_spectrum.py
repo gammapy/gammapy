@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...datasets import gammapy_extra
 from ...data import ObservationList
-from ...image import SkyMask
+from ...image import SkyImage
 from ...utils.testing import data_manager, requires_dependency, requires_data, run_cli
 from ...spectrum.results import SpectrumFitResult
 from ...spectrum import SpectrumExtraction
@@ -59,7 +59,7 @@ def test_spectrum(tmpdir, data_manager):
     radius = Angle('0.3 deg')
     on_region = CircleSkyRegion(center, radius)
 
-    exclusion = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     bkg_method = dict(method='reflected', exclusion=exclusion)
 
     extraction = SpectrumExtraction(target=on_region, obs=obs, background=bkg_method)

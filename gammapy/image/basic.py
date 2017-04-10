@@ -116,7 +116,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         Upper bound of offset range.
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf image.
-    exclusion_mask : `~gammapy.image.SkyMask`
+    exclusion_mask : `~gammapy.image.SkyImage`
         Exclusion mask.
     background_estimator :
         Instance of background estimation method.
@@ -149,7 +149,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     def _exposure_cube(self, observation):
         """
-        Extimate exposure cube for one observation.
+        Estimate exposure cube for one observation.
 
         Parameters
         ----------

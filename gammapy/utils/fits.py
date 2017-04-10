@@ -133,12 +133,12 @@ class SmartHDUList(object):
         if (hdu_key is None) and (hdu_type is None):
             raise ValueError('Must give either `hdu` or `hdu_type`. Got `None` for both.')
 
-        if (hdu_key is not None) and (hdu_type is not None):
-            raise ValueError(
-                'Must give either `hdu` or `hdu_type`.'
-                ' Got a value for both: hdu={} and hdu_type={}'
-                ''.format(hdu_key, hdu_type)
-            )
+        # if (hdu_key is not None) and (hdu_type is not None):
+        #     raise ValueError(
+        #         'Must give either `hdu` or `hdu_type`.'
+        #         ' Got a value for both: hdu={} and hdu_type={}'
+        #         ''.format(hdu_key, hdu_type)
+        #     )
 
         if hdu_key is not None:
             idx = self.hdu_list.index_of(hdu_key)
