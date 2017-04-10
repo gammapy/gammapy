@@ -13,7 +13,7 @@ from ...data import Target, DataStore
 def mask():
     """Example mask for testing."""
     filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    return SkyMask.read(filename, hdu=1)
+    return SkyMask.read(filename, hdu='EXCLUSION')
 
 @pytest.fixture
 def on_region():

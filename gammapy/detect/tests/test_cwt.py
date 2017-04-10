@@ -15,8 +15,8 @@ class TestCWT:
 
     def setup(self):
         filename = load_poisson_stats_image(return_filenames=True)
-        image = SkyImage.read(filename=filename)
-        background = SkyImage.read(filename=filename)
+        image = SkyImage.read(filename)
+        background = SkyImage.read(filename)
         background.data = np.ones_like(image.data, dtype=float)
 
         self.kernels = CWTKernels(n_scale=2,
@@ -176,8 +176,8 @@ class TestCWTData:
 
     def setup(self):
         filename = load_poisson_stats_image(return_filenames=True)
-        image = SkyImage.read(filename=filename)
-        background = SkyImage.read(filename=filename)
+        image = SkyImage.read(filename)
+        background = SkyImage.read(filename)
         background.data = np.ones_like(image.data, dtype=float)
 
         self.kernels = CWTKernels(n_scale=2,
@@ -249,10 +249,10 @@ class TestCWTData:
     def test_io(self, tmpdir):
         filename = str(tmpdir / 'test-cwt.fits')
         self.cwt_data.write(filename=filename, overwrite=True)
-        approx = SkyImage.read(filename=filename, extname='approx')
+        approx = SkyImage.read(filename, hdu='APPROX')
         assert_allclose(approx.data[100, 100], self.cwt_data._approx[100, 100])
         assert_allclose(approx.data[36, 63], self.cwt_data._approx[36, 63])
 
-        transform_2d = SkyImage.read(filename=filename, extname='transform_2d')
+        transform_2d = SkyImage.read(filename, hdu='TRANSFORM_2D')
         assert_allclose(transform_2d.data[100, 100], self.cwt_data.transform_2d.data[100, 100])
         assert_allclose(transform_2d.data[36, 63], self.cwt_data.transform_2d.data[36, 63])

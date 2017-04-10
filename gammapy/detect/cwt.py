@@ -422,12 +422,11 @@ class CWTData(object):
 
     Examples
     --------
-    >>> import os
-    >>> from astropy.io import fits
+    >>> from gammapy.image import SkyImage
     >>> from gammapy.detect import CWTData
-    >>> filename = os.environ['GAMMAPY_EXTRA'] + '/datasets/fermi_survey/all.fits.gz'
-    >>> image = SkyImage.read(filename, extname='COUNTS')
-    >>> background = SkyImage.read(filename, extname='BACKGROUND')
+    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    >>> image = SkyImage.read(filename, hdu='COUNTS')
+    >>> background = SkyImage.read(filename, hdu='BACKGROUND')
     >>> data = CWTData(counts=image, background=background, n_scale=2)
     """
 

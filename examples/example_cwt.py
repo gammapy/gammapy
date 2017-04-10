@@ -8,11 +8,10 @@ from gammapy.image import SkyImage
 
 
 def make_fermi_data():
-    import os
-    filename = os.environ['GAMMAPY_EXTRA'] + '/datasets/fermi_survey/all.fits.gz'
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
 
-    image = SkyImage.read(filename=filename, extname='COUNTS')
-    background = SkyImage.read(filename=filename, extname='BACKGROUND')
+    image = SkyImage.read(filename, hdu='COUNTS')
+    background = SkyImage.read(filename, hdu='BACKGROUND')
 
     return dict(image=image, background=background)
 
@@ -20,8 +19,8 @@ def make_fermi_data():
 def make_poisson_data():
     from gammapy.datasets import load_poisson_stats_image
     filename = load_poisson_stats_image(return_filenames=True)
-    image = SkyImage.read(filename=filename)
-    background = SkyImage.read(filename=filename)
+    image = SkyImage.read(filename)
+    background = SkyImage.read(filename)
     background.data = np.ones_like(image.data, dtype=float)
 
     return dict(image=image, background=background)
