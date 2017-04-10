@@ -16,6 +16,7 @@ from astropy.nddata.utils import Cutout2D
 from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
+from ..utils.fits import SmartHDUList, fits_header_to_meta_dict
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header
@@ -83,21 +84,31 @@ class SkyImage(object):
         )
 
     @classmethod
-    def read(cls, filename, **kwargs):
-        """Read image from FITS file.
+    def read(cls, filename, hdu=None, **kwargs):
+        """Read image from FITS file (`SkyImage`).
+
+        Parameters are passed to `~gammapy.utils.fits.SmartHDUList`.
+        """
+        hdu_list = SmartHDUList.open(filename)
+        hdu = hdu_list.get_hdu(hdu=hdu, hdu_type='image')
+        return cls.from_image_hdu(hdu)
+
+    def write(self, filename, *args, **kwargs):
+        """
+        Write image to FITS file.
 
         Parameters
         ----------
         filename : str
-            FITS file name
+            Name of the FITS file.
+        *args : list
+            Arguments passed to `~astropy.fits.ImageHDU.writeto`.
         **kwargs : dict
-            Keyword arguments passed `~astropy.io.fits.getdata`.
+            Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
         """
         filename = str(make_path(filename))
-        data = fits.getdata(filename, **kwargs)
-        header = fits.getheader(filename, **kwargs)
-        image_hdu = fits.ImageHDU(data, header)
-        return cls.from_image_hdu(image_hdu)
+        hdu = self.to_image_hdu()
+        hdu.writeto(filename, *args, **kwargs)
 
     @classmethod
     def from_image_hdu(cls, image_hdu):
@@ -129,16 +140,7 @@ class SkyImage(object):
         except (KeyError, ValueError):
             unit = ''
 
-        meta = OrderedDict(header)
-
-        # Drop problematic header content, i.e. values of type
-        # `astropy.io.fits.header._HeaderCommentaryCards`
-        # Handling this well and preserving it is a bit complicated, see
-        # See https://github.com/astropy/astropy/blob/master/astropy/io/fits/connect.py
-        # for how `astropy.table.Table.read` does it
-        # and see https://github.com/gammapy/gammapy/issues/701
-        meta.pop('COMMENT', None)
-        meta.pop('HISTORY', None)
+        meta = fits_header_to_meta_dict(header)
 
         obj = cls(name, data, wcs, unit, meta)
 
@@ -148,6 +150,32 @@ class SkyImage(object):
         obj._header = header
 
         return obj
+
+    def to_image_hdu(self):
+        """
+        Convert image to a `~astropy.io.fits.PrimaryHDU`.
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.PrimaryHDU`
+            Primary image hdu object.
+        """
+        header = fits.Header()
+        header.update(self.meta)
+
+        if self.wcs is not None:
+            # update wcs, because it could have changed
+            header_wcs = self.wcs.to_header()
+            header.update(header_wcs)
+
+        if self.unit is not None:
+            header['BUNIT'] = u.Unit(self.unit).to_string('fits')
+
+        if self.name is not None:
+            header['EXTNAME'] = self.name
+            header['HDUNAME'] = self.name
+
+        return fits.PrimaryHDU(data=self.data, header=header)
 
     @classmethod
     def empty(cls, name=None, nxpix=200, nypix=200, binsz=0.02, xref=0, yref=0,
@@ -265,23 +293,6 @@ class SkyImage(object):
         bins0 = np.arange(self.data.shape[0] + 1) - 0.5
         bins1 = np.arange(self.data.shape[1] + 1) - 0.5
         return bins0, bins1
-
-    def write(self, filename, *args, **kwargs):
-        """
-        Write image to FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            Name of the FITS file.
-        *args : list
-            Arguments passed to `~astropy.fits.ImageHDU.writeto`.
-        **kwargs : dict
-            Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
-        """
-        filename = str(make_path(filename))
-        hdu = self.to_image_hdu()
-        hdu.writeto(filename, *args, **kwargs)
 
     def coordinates_pix(self, mode='center'):
         """
@@ -736,32 +747,6 @@ class SkyImage(object):
         Copy image.
         """
         return deepcopy(self)
-
-    def to_image_hdu(self):
-        """
-        Convert image to a `~astropy.io.fits.PrimaryHDU`.
-
-        Returns
-        -------
-        hdu : `~astropy.io.fits.PrimaryHDU`
-            Primary image hdu object.
-        """
-        header = fits.Header()
-        header.update(self.meta)
-
-        if self.wcs is not None:
-            # update wcs, because it could have changed
-            header_wcs = self.wcs.to_header()
-            header.update(header_wcs)
-
-        if self.unit is not None:
-            header['BUNIT'] = u.Unit(self.unit).to_string('fits')
-
-        if self.name is not None:
-            header['EXTNAME'] = self.name
-            header['HDUNAME'] = self.name
-
-        return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
