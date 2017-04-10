@@ -8,7 +8,7 @@ from astropy.visualization import LinearStretch
 from gammapy.image import SkyImage
 
 filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz'
-image = SkyImage.read(filename, extname='sqrt_ts')
+image = SkyImage.read(filename, hdu='SQRT_TS')
 
 # Plot with the HESS and Milagro colormap
 vmin, vmax, vtransition = -5, 15, 5
