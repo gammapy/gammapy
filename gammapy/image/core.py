@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import abc
 import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
@@ -7,6 +8,7 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
+from astropy.extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
@@ -29,7 +31,32 @@ _DEFAULT_WCS_ORIGIN = 0
 _DEFAULT_WCS_MODE = 'all'
 
 
-class SkyImage(object):
+@six.add_metaclass(abc.ABCMeta)
+class MapBase(object):
+    """Map base class.
+    
+    This is just a temp solution to put code that's common
+    between `SkyImage` and `SkyCube`.
+    """
+
+    @property
+    def is_mask(self):
+        """Is this a mask (check values, not dtype).
+        
+        """
+        if self.data.dtype == bool:
+            return True
+
+        d = self.data
+        mask = (d == 0) | (d == 1)
+        return mask.all()
+
+    def _check_is_mask(self):
+        if not self.is_mask:
+            raise ValueError('This method is only available for masks.')
+
+
+class SkyImage(MapBase):
     """
     Sky image.
 
@@ -672,27 +699,6 @@ class SkyImage(object):
         pos = self.wcs_pixel_to_skycoord(xp=x, yp=y)
         return pos, self.data[y, x]
 
-    def solid_angle(self):
-        """
-        Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
-        """
-
-        coordinates = self.coordinates(mode='edges')
-        lon = coordinates.data.lon.radian
-        lat = coordinates.data.lat.radian
-
-        # Compute solid angle using the approximation that it's
-        # the product between angular separation of pixel corners.
-        # First index is "y", second index is "x"
-        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
-        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
-        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
-
-        dx = angular_separation(*(ylo_xlo + ylo_xhi))
-        dy = angular_separation(*(ylo_xlo + yhi_xlo))
-        omega = u.Quantity(dx * dy, 'sr')
-        return omega
-
     def lookup(self, position, interpolation=None):
         """
         Lookup value at given sky position.
@@ -1174,6 +1180,27 @@ class SkyImage(object):
 
         return image
 
+    def solid_angle(self):
+        """
+        Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
+        """
+
+        coordinates = self.coordinates(mode='edges')
+        lon = coordinates.data.lon.radian
+        lat = coordinates.data.lat.radian
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
+        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
+        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        omega = u.Quantity(dx * dy, 'sr')
+        return omega
+
     @property
     def distance_image(self):
         """Distance to nearest exclusion region.
@@ -1210,6 +1237,8 @@ class SkyImage(object):
         >>> print(mask.distance_image.data)
         [[-1, -1, 1], [1, 1, 1.41421356]]
         """
+        self._check_is_mask()
+
         from scipy.ndimage import distance_transform_edt
 
         max_value = 1e10

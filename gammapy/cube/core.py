@@ -20,14 +20,14 @@ from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.fits import SmartHDUList, fits_header_to_meta_dict, table_to_fits_table
-from ..image import SkyImage
+from ..image.core import SkyImage, MapBase
 from ..spectrum import LogEnergyAxis
 from ..spectrum.utils import _trapz_loglog
 
 __all__ = ['SkyCube']
 
 
-class SkyCube(object):
+class SkyCube(MapBase):
     """
     Sky cube with dimensions lon, lat and energy.
 
@@ -59,7 +59,6 @@ class SkyCube(object):
         Energy axis object, defining the energy transformation.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
-
     """
 
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
