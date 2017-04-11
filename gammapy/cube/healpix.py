@@ -20,6 +20,7 @@ class SkyCubeHealpix(object):
 
     First axis is energy axis.
     """
+
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
@@ -116,7 +117,7 @@ class SkyCubeHealpix(object):
         data = u.Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
         return SkyCube(name=self.name, data=data, wcs=wcs, meta=self.meta,
-                              energy_axis=self.energy_axis)
+                       energy_axis=self.energy_axis)
 
     def energies(self, mode='center'):
         """
@@ -152,7 +153,6 @@ class SkyCubeHealpix(object):
             self.data.shape[0], self.energy_axis._eunit)
 
         return info
-
 
     def info(self):
         """

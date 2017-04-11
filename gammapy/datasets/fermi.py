@@ -14,6 +14,7 @@ from astropy.utils import lazyproperty
 from .core import gammapy_extra
 from ..data import EventList
 from ..cube import SkyCube
+from ..cube.healpix import SkyCubeHealpix
 from ..irf import EnergyDependentTablePSF
 from ..utils.scripts import make_path
 from ..spectrum.models import TableModel
@@ -293,11 +294,10 @@ class FermiLATDataset(object):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 cube = SkyCube.read(filename, format='fermi-exposure')
-        except ValueError:
-            from ..cube.healpix import SkyCubeHealpix
+        except (ValueError, KeyError):
             cube = SkyCubeHealpix.read(filename, format='fermi-exposure')
         cube.name = 'exposure'
-        #TODO: check why fixing the unit is needed
+        # TODO: check why fixing the unit is needed
         cube.data = u.Quantity(cube.data.value, 'cm2 s')
         return cube
 
@@ -429,7 +429,7 @@ class FermiLATDataset(object):
         Summary info string about the dataset.
         """
         import yaml
-        info =  'Fermi-LAT {name} dataset'.format(name=self.name)
+        info = 'Fermi-LAT {name} dataset'.format(name=self.name)
         info += '\n' + len(info) * '=' + '\n'
 
         info += 'Filenames:\n'
