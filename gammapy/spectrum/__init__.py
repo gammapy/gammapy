@@ -10,7 +10,6 @@ from .crab import *
 from .diffuse import *
 from .energy_group import *
 from .flux_point import *
-from .isrf import *
 from .sherpa_chi2asym import *
 from .utils import *
 from .extract import *
