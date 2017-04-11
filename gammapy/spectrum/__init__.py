@@ -9,8 +9,6 @@ from .cosmic_ray import *
 from .crab import *
 from .diffuse import *
 from .energy_group import *
-from .fitter import *
-from .fitting_utils import *
 from .flux_point import *
 from .isrf import *
 from .sherpa_chi2asym import *
