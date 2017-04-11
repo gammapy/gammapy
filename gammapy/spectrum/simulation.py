@@ -148,15 +148,14 @@ class SpectrumSimulation(object):
         """
         on_counts = rand.poisson(self.npred_source.data.data.value)
 
-        counts_kwargs = dict(energy_lo=self.e_reco.lower_bounds,
-                             energy_hi=self.e_reco.upper_bounds,
-                             livetime=self.livetime,
-                             creator=self.__class__.__name__)
+        meta = dict(CREATOR=self.__class__.__name__)
 
-        on_vector = PHACountsSpectrum(data=on_counts,
+        on_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,
+                                      energy_hi=self.e_reco.upper_bounds,
+                                      data=on_counts,
                                       backscal=1,
-                                      **counts_kwargs)
-
+                                      meta=meta)
+        on_vector.livetime = self.livetime
         self.on_vector = on_vector
 
     def simulate_background_counts(self, rand):

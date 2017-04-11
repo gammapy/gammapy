@@ -2,18 +2,19 @@
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from gammapy.image import SkyImage
-from gammapy.background import find_reflected_regions
+from gammapy.background import ReflectedRegionsFinder
 
 mask = SkyImage.empty(
     name='Exclusion Mask', nxpix=801, nypix=701, binsz=0.01,
     coordsys='CEL', xref=83.633, yref=23.014, fill=1,
 )
 
-pos = SkyCoord(83.633, 22.014, unit='deg')
-radius = Angle(0.3, 'deg')
-on_region = CircleSkyRegion(pos, radius)
-center = SkyCoord(83.633, 23.014, unit='deg')
-regions = find_reflected_regions(on_region, center, mask)
+pos = SkyCoord(80.2, 23.5, unit='deg')
+radius = Angle(0.4, 'deg')
+test_region = CircleSkyRegion(pos, radius)
+center = SkyCoord(82.8, 22.5, unit='deg')
+finder = ReflectedRegionsFinder(exclusion_mask=mask)
+regions = finder.run(region=test_region, center=center)
 
 import matplotlib.pyplot as plt
 

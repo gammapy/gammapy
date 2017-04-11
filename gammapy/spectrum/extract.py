@@ -26,226 +26,160 @@ class SpectrumExtraction(object):
     This class is responsible for extracting a
     `~gammapy.spectrum.SpectrumObservation` from a
     `~gammapy.data.DataStoreObservation`, given a certain signal extraction
-    region. A background estimate can be passed on initialization or created on
-    the fly given a dict of parameters.  For point sources analyzed with 'full
-    containement' IRFs, a correction for PSF leakage out of the circular ON
-    region can be applied.  For more info see :ref:`spectral_fitting`.
+    region. The background estimation is done beforehand, using e.g. the
+    `~gammapy.background.ReflectedRegionsBackgroundEstimator`. For point
+    sources analyzed with 'full containement' IRFs, a correction for PSF
+    leakage out of the circular ON region can be applied.
 
-    For a usage example see :gp-extra-notebook:`spectrum_analysis`
-
-    TODO: Take background estimator instance as input
+    For more info see :ref:`spectral_fitting`. For a usage example see
+    :gp-extra-notebook:`spectrum_analysis`
 
     Parameters
     ----------
-    target : `~gammapy.data.Target` or `~regions.SkyRegion`
+    on_region : `~regions.SkyRegion`
         Signal extraction region
-    obs : `~gammapy.data.ObservationList`
-        Observations to process
-    background : `~gammapy.background.BackgroundEstimate` or dict
-        Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
     e_true : `~astropy.units.Quantity`, optional
         True energy binning
     containment_correction : bool
-        Apply containment correction for point sources and circular ON regions.
-
+        Apply containment correction for point sources and circular on regions.
     """
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
-    # NOTE : The default true binning is not used in the test due to
-    # extrapolation issues
-
-    def __init__(self, target, obs, background, e_reco=None, e_true=None,
+    def __init__(self, on_region, e_reco=None, e_true=None,
                  containment_correction=False):
 
-        if isinstance(target, CircleSkyRegion):
-            target = Target(target)
-        self.obs = obs
-        self.background = background
-        self.target = target
+        self.on_region = on_region
         self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
         self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
-        self._observations = None
         self.containment_correction = containment_correction
-        if self.containment_correction and not isinstance(target.on_region,
+        if self.containment_correction and not isinstance(on_region,
                                                           CircleSkyRegion):
             raise TypeError("Incorrect region type for containment correction."
                             " Should be CircleSkyRegion.")
 
-    @property
-    def observations(self):
-        """List of `~gammapy.spectrum.SpectrumObservation`
+        self.observations = SpectrumObservationList()
 
-        This list is generated via
-        :func:`~gammapy.spectrum.spectrum_extraction.extract_spectrum`
-        when the property is first called and the result is cached.
-        """
-        if self._observations is None:
-            self.extract_spectrum()
-        return self._observations
-
-    def run(self, outdir=None, use_sherpa=False):
+    def run(self, obs_list, bkg_estimate, outdir=None, use_sherpa=False):
         """Run all steps
 
         Parameters
         ----------
+        obs_list : `~gammapy.data.ObservationList`
+            Observations to process
+        bkg_estimate : `~gammapy.background.BackgroundEstimate`
+            Background estimate, e.g. of
+            `~gammapy.background.ReflectedRegionsBackgroundEstimator`
         outdir : Path, str
             directory to write results files to (if given)
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
         """
-        outdir = make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-        if not isinstance(self.background, list):
-            log.info('Estimate background with config {}'.format(self.background))
-            self.estimate_background(self.background)
-        self.extract_spectrum()
+        log.info('Running {}'.format(self))
+        for obs, bkg in zip(obs_list, bkg_estimate):
+            self.observations.append(self.process(obs, bkg))
         if outdir is not None:
+            outdir = make_path(outdir)
+            outdir.mkdir(exist_ok=True, parents=True)
             self.write(outdir, use_sherpa=use_sherpa)
 
-    def estimate_background(self, config):
-        """Create `~gammapy.background.BackgroundEstimate`
+    def process(self, obs, bkg):
+        """Process one observation"""
+        log.info('Process observation\n {}'.format(obs))
+        self.make_empty_on_vector(obs, bkg)
+        self.extract_counts(obs, bkg)
+        self.extract_irfs(obs)
+        if self.containment_correction:
+            self.apply_containment_correction(obs)
+        spectrum_observation = SpectrumObservation(on_vector=self._on_vector,
+                                                   aeff=self._aeff,
+                                                   off_vector=self._off_vector,
+                                                   edisp=self._edisp)
+        try:
+            spectrum_observation.hi_threshold = obs.aeff.high_threshold
+            spectrum_observation.lo_threshold = obs.aeff.low_threshold
+        except AttributeError:
+            pass
+        return spectrum_observation
 
-        In case no background estimate was passed on initialization, this
-        method creates one given a dict of parameters.
+    def make_empty_on_vector(self, obs, bkg):
+        """Create empty on vector holding all meta info"""
+        log.info('Update observation meta info')
+        # Copy over existing meta information
+        meta = dict(obs._obs_info)
+        offset = obs.pointing_radec.separation(self.on_region.center)
+        log.info('Offset : {}\n'.format(offset))
+        meta['OFFSET'] = offset
+        
+        # LIVETIME is called EXPOSURE in the OGIP standard
+        meta['EXPOSURE'] = meta.pop('LIVETIME')
 
-        TODO: Link to high-level docs page.
-        TODO: Refactor
+        self._on_vector = PHACountsSpectrum(energy_lo=self.e_reco[:-1],
+                                            energy_hi=self.e_reco[1:],
+                                            backscal=bkg.a_on,
+                                            meta=meta,)
 
-        Parameters
-        ----------
-        config : dict
-            Background estimation method
+    def extract_counts(self, obs, bkg):
+        """Fill on and off vector"""
+        log.info('Fill events')
+        idx = self.on_region.contains(obs.events.radec)
+        on_events = obs.events.select_row_subset(idx)
+        self._on_vector.fill(on_events)
+
+        # TODO: Decide which meta info to copy to off vector
+        meta = dict(EXPOSURE=self._on_vector.livetime.value,
+                    OBS_ID=self._on_vector.obs_id)
+        self._off_vector = PHACountsSpectrum(
+            backscal=bkg.a_off, is_bkg=True,
+            energy_lo=self._on_vector.energy.lo,
+            energy_hi=self._on_vector.energy.hi,
+            meta=meta)
+
+        self._off_vector.fill(bkg.off_events)
+
+    def extract_irfs(self, obs):
+        """Extract IRFs"""
+        log.info('Extract IRFs')
+        offset = self._on_vector.offset
+        self._aeff = obs.aeff.to_effective_area_table(offset,
+                                                      energy=self.e_true)
+        self._edisp = obs.edisp.to_energy_dispersion(offset,
+                                                     e_reco=self.e_reco,
+                                                     e_true=self.e_true)
+
+    def apply_containment_correction(self, obs):
+        """Apply containment correction
+
+        TODO: Split out into separate class
         """
-        method = self.background.pop('method')
-        if method == 'reflected':
-            config = self.background.copy()
-            config.pop('n_min', None)
-            exclusion = config.pop('exclusion', None)
-            self.refl = ReflectedRegionsBackgroundEstimator(
-                on_region=self.target.on_region,
-                obs_list=self.obs,
-                exclusion=exclusion,
-                config=config)
-            self.refl.run()
-            self.background = self.refl.result
+        log.info('Apply containment correction')
+        # First need psf
+        angles = np.linspace(0., 1.5, 150) * u.deg
+        if isinstance(obs.psf, PSF3D):
+            psf = obs.psf.to_energy_dependent_table_psf(theta=self._on_vector.offset)
         else:
-            raise NotImplementedError("Method: {}".format(method))
+            psf = obs.psf.to_energy_dependent_table_psf(self._on_vector.offset, angles)
 
-    def filter_observations(self):
-        """Filter observations by number of reflected regions"""
-        raise NotImplementedError("broken")
-        n_min = self.bkg_method['n_min']
-        obs = self.observations
-        mask = obs.filter_by_reflected_regions(n_min)
-        inv_mask = np.where([_ not in mask for _ in np.arange(len(mask + 1))])
-        excl_obs = self.obs_table[inv_mask[0]]['OBS_ID'].data
-        log.info('Excluding obs {} : Found less than {} reflected '
-                 'region(s)'.format(excl_obs, n_min))
-        self._observations = SpectrumObservationList(np.asarray(obs)[mask])
-        self.obs_table = self.obs_table[mask]
-
-    def extract_spectrum(self):
-        """Extract 1D spectral information
-
-        The result can be obtained via
-        :func:`~gammapy.spectrum.spectrum_extraction.observations`
-
-
-        TODO: refactor
-        """
-        log.info('Starting spectrum extraction')
-        spectrum_observations = []
-        if not isinstance(self.background, list):
-            raise ValueError("Invalid background estimate: {}".format(self.background))
-        for obs, bkg in zip(self.obs, self.background):
-            if bkg.a_off == 0:
-                log.info('The run {} is excluded since no off region was found'.format(obs.obs_id))
-                continue
-            log.info('Extracting spectrum for observation\n {}'.format(obs))
-            offset = obs.pointing_radec.separation(self.target.on_region.center)
-            log.info('Offset : {}\n'.format(offset))
-
-            idx = self.target.on_region.contains(obs.events.radec)
-            on_events = obs.events.select_row_subset(idx)
-
-            counts_kwargs = dict(energy_lo=self.e_reco[:-1],
-                                 energy_hi=self.e_reco[1:],
-                                 livetime=obs.observation_live_time_duration,
-                                 obs_id=obs.obs_id)
-
-            # We now add a number of optional keywords for the DataStoreObservation
-            # We first check that the entry exists in the table
+        center_energies = self._on_vector.energy.nodes
+        areascal = list()
+        for index, energy in enumerate(center_energies):
             try:
-                counts_kwargs.update(tstart=obs.tstart)
-            except KeyError:
-                pass
-            try:
-                counts_kwargs.update(tstop=obs.tstop)
-            except KeyError:
-                pass
-            try:
-                counts_kwargs.update(muoneff=obs.muoneff)
-            except KeyError:
-                pass
-            try:
-                counts_kwargs.update(zen_pnt=obs.pointing_zen)
-            except KeyError:
-                pass
+                correction = psf.integral(energy,
+                                          0. * u.deg,
+                                          self.on_region.radius)
+            except:
+                msg = 'Containment correction failed for bin {}, energy {}.'
+                log.warn(msg.format(index, energy))
+                correction = 1
+            finally:
+                areascal.append(correction)
 
-            on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
-            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True,
-                                        **counts_kwargs)
-
-            on_vec.fill(on_events)
-            off_vec.fill(bkg.off_events)
-
-            arf = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
-            rmf = obs.edisp.to_energy_dispersion(offset,
-                                                 e_reco=self.e_reco,
-                                                 e_true=self.e_true)
-
-            # If required, correct arf for psf leakage
-            # TODO: write correction factor as AREASCAL column in PHAFILE
-            # TODO: Refactor as separate function
-            if self.containment_correction:
-                # First need psf
-                angles = np.linspace(0., 1.5, 150) * u.deg
-                if isinstance(obs.psf, PSF3D):
-                    psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
-                else:
-                    psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
-
-                center_energies = arf.energy.nodes
-                for index, energy in enumerate(center_energies):
-                    try:
-                        correction = psf.integral(energy,
-                                                  0. * u.deg,
-                                                  self.target.on_region.radius)
-                    except:
-                        # TODO: Why is this necessary?
-                        correction = np.nan
-
-                    arf.data.data[index] = arf.data.data[index] * correction
-
-            temp = SpectrumObservation(on_vector=on_vec,
-                                       aeff=arf,
-                                       off_vector=off_vec,
-                                       edisp=rmf)
-
-            try:
-                temp.hi_threshold = obs.aeff.high_threshold
-                temp.lo_threshold = obs.aeff.low_threshold
-            except AttributeError:
-                pass
-
-            spectrum_observations.append(temp)
-
-        self._observations = SpectrumObservationList(spectrum_observations)
+        self._on_vector.areascal = areascal
+        self._off_vector.areascal = areascal 
 
     def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
         """Set energy threshold

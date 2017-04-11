@@ -68,18 +68,19 @@ class TestFit:
         obs = SpectrumObservation(on_vector=self.src)
         obs_list = SpectrumObservationList([obs])
 
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+        fit = SpectrumFit(model=self.source_model,
                           stat='cash', forward_folded=False)
         assert 'Spectrum' in str(fit)
 
-        fit.predict_counts()
+        fit.apply_fit_range(obs_list)
+        fit.predict_counts(obs_list)
         assert_allclose(fit.predicted_counts[0][0][5], 660.5171280778071)
 
-        fit.calc_statval()
+        fit.calc_statval(fit.predicted_counts, obs_list)
         assert_allclose(np.sum(fit.statval[0]), -107346.5291329714)
 
         self.source_model.parameters['index'].value = 1.12
-        fit.fit()
+        fit.fit(obs_list)
         # These values are check with sherpa fits, do not change
         assert_allclose(fit.model.parameters['index'].value,
                         1.9955563477414806)
@@ -95,12 +96,12 @@ class TestFit:
 
         self.source_model.parameters['index'].value = 1
         self.bkg_model.parameters['index'].value = 1
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+        fit = SpectrumFit(model=self.source_model,
                           stat='cash', forward_folded=False,
                           background_model=self.bkg_model)
         assert 'Background' in str(fit)
 
-        fit.fit()
+        fit.fit(obs_list)
         print('\nSOURCE\n {}'.format(fit.model))
         print('\nBKG\n {}'.format(fit.background_model))
         assert_allclose(fit.result[0].model.parameters['index'].value,
@@ -116,9 +117,9 @@ class TestFit:
         obs_list = SpectrumObservationList([obs])
 
         self.source_model.parameters.index = 1.12 * u.Unit('')
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+        fit = SpectrumFit(model=self.source_model,
                           stat='wstat', forward_folded=False)
-        fit.fit()
+        fit.fit(obs_list=obs_list)
         assert_allclose(fit.model.parameters['index'].value,
                         1.997344538577775)
         assert_allclose(fit.model.parameters['amplitude'].value,
@@ -130,15 +131,17 @@ class TestFit:
         obs = SpectrumObservation(on_vector=self.src)
         obs_list = SpectrumObservationList([obs])
 
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model)
+        fit = SpectrumFit(model=self.source_model)
+        fit.apply_fit_range(obs_list)
         assert np.sum(fit._bins_in_fit_range[0]) == self.nbins
-        assert_allclose(fit.true_fit_range[0][-1], 10 * u.TeV)
-        assert_allclose(fit.true_fit_range[0][0], 100 * u.GeV)
+        assert_allclose(fit.true_fit_range(obs_list)[0][-1], 10 * u.TeV)
+        assert_allclose(fit.true_fit_range(obs_list)[0][0], 100 * u.GeV)
 
         fit.fit_range = [200, 600] * u.GeV
+        fit.apply_fit_range(obs_list)
         assert np.sum(fit._bins_in_fit_range[0]) == 6
-        assert_allclose(fit.true_fit_range[0][0], 0.21544347 * u.TeV)
-        assert_allclose(fit.true_fit_range[0][-1], 541.1695265464 * u.GeV)
+        assert_allclose(fit.true_fit_range(obs_list)[0][0], 0.21544347 * u.TeV)
+        assert_allclose(fit.true_fit_range(obs_list)[0][-1], 541.1695265464 * u.GeV)
 
     def test_likelihood_profile(self):
         obs = SpectrumObservation(on_vector=self.src)
@@ -165,6 +168,15 @@ class TestFit:
         # TODO: add assert, see issue 294
 
 
+@pytest.fixture(scope='session')
+def fit():
+    """Example fit."""
+    pwl = models.PowerLaw(index=2 * u.Unit(''),
+                          amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+                          reference=1 * u.TeV)
+    fit = SpectrumFit(model=pwl)
+    return fit
+
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_9')
 @requires_data('gammapy-extra')
@@ -175,10 +187,6 @@ class TestSpectralFit:
         self.obs_list = SpectrumObservationList.read(
             '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
-        self.pwl = models.PowerLaw(index=2 * u.Unit(''),
-                                   amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-                                   reference=1 * u.TeV)
-
         self.ecpl = models.ExponentialCutoffPowerLaw(
             index=2 * u.Unit(''),
             amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -186,8 +194,7 @@ class TestSpectralFit:
             lambda_=0.1 / u.TeV
         )
 
-        # Example fit for one observation
-        self.fit = SpectrumFit(self.obs_list[0], self.pwl)
+        self.fit = fit() 
 
     def test_basic_results(self):
         self.fit.fit()

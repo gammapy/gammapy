@@ -87,13 +87,13 @@ class SpectrumObservation(object):
     @property
     def obs_id(self):
         """Unique identifier"""
-        return self.on_vector.obs_id
+        return self.on_vector.meta['OBS_ID']
 
     @obs_id.setter
     def obs_id(self, obs_id):
-        self.on_vector.obs_id = obs_id
+        self.on_vector.meta['OBS_ID'] = obs_id
         if self.off_vector is not None:
-            self.off_vector.obs_id = obs_id
+            self.off_vector.meta['OBS_ID'] = obs_id
 
     @property
     def livetime(self):
@@ -515,13 +515,11 @@ class SpectrumObservationList(UserList):
         default. If the option ``pha_typeII`` is enabled all on and off counts
         spectra will be collected into one
         `~gammapy.spectrum.PHACountsSpectrumList` and written to one FITS file.
-        All datasets will be associated to the same response files.
-        see
+        All datasets will be associated to the same response files.  see
         https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
 
-        TODO: File written with the ``pha_typeII`` option are not read
-        properly with sherpa. This could be a sherpa issue. Investigate and
-        file issue.
+        TODO: File written with the ``pha_typeII`` option are not read properly
+        with sherpa. This could be a sherpa issue. Investigate and file issue.
 
         Parameters
         ----------
@@ -737,10 +735,10 @@ class SpectrumObservationStacker(object):
     def setup_counts_vectors(self):
         """Add correct attributes to stacked counts vectors"""
         total_livetime = self.obs_list.total_livetime
-        self.stacked_on_vector.meta.livetime = total_livetime
-        self.stacked_off_vector.meta.livetime = total_livetime
-        self.stacked_on_vector.meta.backscal = self.stacked_bkscal_on
-        self.stacked_off_vector.meta.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.livetime = total_livetime
+        self.stacked_off_vector.livetime = total_livetime
+        self.stacked_on_vector.backscal = self.stacked_bkscal_on
+        self.stacked_off_vector.backscal = self.stacked_bkscal_off
         self.stacked_on_vector.obs_id = self.obs_list.obs_id
         self.stacked_off_vector.obs_id = self.obs_list.obs_id
 
