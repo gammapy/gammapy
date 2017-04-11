@@ -359,7 +359,7 @@ class ImageProfileEstimator(object):
             Input image to run profile estimator on.
         image_err : `~gammapy.image.SkyImage`
             Input error image to run profile estimator on.
-        mask : `~gammapy.image.SkyMask`
+        mask : `~gammapy.image.SkyImage`
             Optional mask to exclude regions from the measurement.
 
         Returns

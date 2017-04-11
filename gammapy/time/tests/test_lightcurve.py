@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.units import Quantity
-from astropy.tests.helper import assert_quantity_allclose, pytest
-from regions import CircleSkyRegion
-import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
-from ..lightcurve import LightCurve, LightCurveEstimator
 from numpy.testing import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, Angle
+import astropy.units as u
+from regions import CircleSkyRegion
+from ...utils.testing import requires_dependency, requires_data
+from ...utils.energy import EnergyBounds
+from ...data import Target, DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
-from ...data import Target, DataStore
-from ...image import SkyMask
-from ...utils.energy import EnergyBounds
+from ...image import SkyImage
+from ..lightcurve import LightCurve, LightCurveEstimator
 
 
 def test_lightcurve():
@@ -52,7 +52,7 @@ def spec_extraction():
     target = Target(on_region=on_region, name='Crab', tag='ana_crab')
 
     exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    allsky_mask = SkyMask.read(exclusion_file)
+    allsky_mask = SkyImage.read(exclusion_file)
     exclusion_mask = allsky_mask.cutout(
         position=target.on_region.center,
         size=Angle('6 deg'),

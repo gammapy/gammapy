@@ -19,15 +19,15 @@ from astropy.wcs import WCS
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds, Energy
-from ..utils.fits import table_to_fits_table
-from ..image import SkyImage
+from ..utils.fits import SmartHDUList, fits_header_to_meta_dict, table_to_fits_table
+from ..image.core import SkyImage, MapBase
 from ..spectrum import LogEnergyAxis
 from ..spectrum.utils import _trapz_loglog
 
 __all__ = ['SkyCube']
 
 
-class SkyCube(object):
+class SkyCube(MapBase):
     """
     Sky cube with dimensions lon, lat and energy.
 
@@ -59,7 +59,6 @@ class SkyCube(object):
         Energy axis object, defining the energy transformation.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
-
     """
 
     def __init__(self, name=None, data=None, wcs=None, energy_axis=None, meta=None):
@@ -148,12 +147,13 @@ class SkyCube(object):
             Sky cube
         """
         filename = str(make_path(filename))
+        hdu_list = SmartHDUList.open(filename)
+        hdu = hdu_list.get_hdu(hdu_type='image')
 
-        data = fits.getdata(filename)
-        header = fits.getheader(filename)
-
+        header = hdu.header
         wcs = WCS(header).celestial
-        meta = OrderedDict(header)
+        meta = fits_header_to_meta_dict(header)
+        data = hdu.data
 
         # TODO: check and give reference for fermi data units
         # TODO: choose format automatically
@@ -175,7 +175,9 @@ class SkyCube(object):
         else:
             raise ValueError('Not a valid cube fits format')
 
-        return cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis, meta=meta)
+        obj = cls(name=name, data=data, wcs=wcs, energy_axis=energy_axis, meta=meta)
+        obj._header = header
+        return obj
 
     def fill_events(self, events, weights=None):
         """

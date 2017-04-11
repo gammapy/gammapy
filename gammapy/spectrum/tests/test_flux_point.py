@@ -214,8 +214,6 @@ class FluxPointTester:
         assert approx_model.parameters['reference'].frozen == True
 
     def test_values(self):
-        # import logging
-        # logging.basicConfig(level=logging.DEBUG)
         flux_points = self.fpe.flux_points
 
         actual = flux_points.table['dnde'].quantity[0]

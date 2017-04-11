@@ -38,7 +38,7 @@ class SingleObsImageMaker(object):
         Energy band selection
     offset_band : `astropy.coordinates.Angle`
         Offset band selection
-    exclusion_mask : `~gammapy.image.SkyMask`
+    exclusion_mask : `~gammapy.image.SkyImage`
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation (TODO: used how?)
@@ -258,7 +258,7 @@ class StackedObsImageMaker(object):
         Data store
     obs_table : `~astropy.table.Table`
         Required columns: OBS_ID
-    exclusion_mask : `~gammapy.image.SkyMask`
+    exclusion_mask : `~gammapy.image.SkyImage`
         Exclusion mask
     ncounts_min : int
         Minimum counts required for the observation

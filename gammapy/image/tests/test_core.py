@@ -436,3 +436,20 @@ def test_image_fill_events():
 
     assert image.data[0, 0] == 1 + 3
     assert image.data[0, 1] == 2
+
+
+@requires_dependency('scipy')
+def test_distance_image():
+    mask = SkyImage.empty(nxpix=3, nypix=2)
+    distance = mask.distance_image.data
+    assert_allclose(distance, -1e10)
+
+    mask = SkyImage.empty(nxpix=3, nypix=2, fill=1.)
+    distance = mask.distance_image.data
+    assert_allclose(distance, 1e10)
+
+    data = np.array([[0., 0., 1.], [1., 1., 1.]])
+    mask = SkyImage(data=data)
+    distance = mask.distance_image.data
+    expected = [[-1, -1, 1], [1, 1, 1.41421356]]
+    assert_allclose(distance, expected)

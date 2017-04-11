@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats, Target
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyMask
+from ...image import SkyImage
 
 
 def get_obs_list():
@@ -36,7 +36,7 @@ def target():
 
 @pytest.fixture(scope='session')
 def mask():
-    return SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    return SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
 
 @pytest.fixture(scope='session')

@@ -8,11 +8,10 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import assert_quantity_allclose
 from regions import CircleSkyRegion
-from ...utils.scripts import make_path
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
-from ...image import SkyMask
+from ...image import SkyImage
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 
 
@@ -39,9 +38,7 @@ def target():
 @pytest.fixture(scope='session')
 def bkg():
     """An example bkg dict for tests."""
-    exclusion_file = gammapy_extra.filename(
-        "datasets/exclusion_masks/tevcat_exclusion.fits")
-    excl = SkyMask.read(exclusion_file)
+    excl = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     bkg = dict(method='reflected', n_min=2, exclusion=excl)
     return bkg
 

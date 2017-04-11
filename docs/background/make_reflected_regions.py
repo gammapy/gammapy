@@ -1,26 +1,29 @@
 """Example how to compute and plot reflected regions."""
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from gammapy.image import SkyMask
+from gammapy.image import SkyImage
 from gammapy.background import find_reflected_regions
 
-mask = SkyMask.empty(name='Exclusion Mask', nxpix=801, nypix=701, binsz=0.01,
-                     coordsys='CEL', xref=83.2, yref=22.7)
-mask.fill_random_circles(n=8, min_rad=30, max_rad=80)
+mask = SkyImage.empty(
+    name='Exclusion Mask', nxpix=801, nypix=701, binsz=0.01,
+    coordsys='CEL', xref=83.633, yref=23.014, fill=1,
+)
 
-pos = SkyCoord(80.2, 23.5, unit='deg')
-radius = Angle(0.4, 'deg')
-test_region = CircleSkyRegion(pos, radius)
-center = SkyCoord(82.8, 22.5, unit='deg')
-regions = find_reflected_regions(test_region, center, mask)
+pos = SkyCoord(83.633, 22.014, unit='deg')
+radius = Angle(0.3, 'deg')
+on_region = CircleSkyRegion(pos, radius)
+center = SkyCoord(83.633, 23.014, unit='deg')
+regions = find_reflected_regions(on_region, center, mask)
 
 import matplotlib.pyplot as plt
 
-fig = plt.figure(figsize=(8, 5), dpi=80)
+fig = plt.figure(figsize=(6, 5))
 ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=mask.wcs)
 mask.plot(ax, fig)
 for reg in regions:
-    reg.to_pixel(mask.wcs).plot(ax, facecolor='red')
-test_region.to_pixel(mask.wcs).plot(ax, facecolor='blue')
+    reg.to_pixel(mask.wcs).plot(ax, color='r')
+on_region.to_pixel(mask.wcs).plot(ax)
+ax.scatter(center.ra.deg, center.dec.deg, s=50, c='w', marker='+',
+           transform=ax.get_transform('world'))
 
 plt.show()

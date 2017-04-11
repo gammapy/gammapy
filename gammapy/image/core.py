@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import abc
 import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
@@ -7,6 +8,7 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
+from astropy.extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
@@ -29,7 +31,32 @@ _DEFAULT_WCS_ORIGIN = 0
 _DEFAULT_WCS_MODE = 'all'
 
 
-class SkyImage(object):
+@six.add_metaclass(abc.ABCMeta)
+class MapBase(object):
+    """Map base class.
+    
+    This is just a temp solution to put code that's common
+    between `SkyImage` and `SkyCube`.
+    """
+
+    @property
+    def is_mask(self):
+        """Is this a mask (check values, not dtype).
+        
+        """
+        if self.data.dtype == bool:
+            return True
+
+        d = self.data
+        mask = (d == 0) | (d == 1)
+        return mask.all()
+
+    def _check_is_mask(self):
+        if not self.is_mask:
+            raise ValueError('This method is only available for masks.')
+
+
+class SkyImage(MapBase):
     """
     Sky image.
 
@@ -89,7 +116,7 @@ class SkyImage(object):
 
         Parameters are passed to `~gammapy.utils.fits.SmartHDUList`.
         """
-        hdu_list = SmartHDUList.open(filename)
+        hdu_list = SmartHDUList.open(filename, **kwargs)
         hdu = hdu_list.get_hdu(hdu=hdu, hdu_type='image')
         return cls.from_image_hdu(hdu)
 
@@ -672,27 +699,6 @@ class SkyImage(object):
         pos = self.wcs_pixel_to_skycoord(xp=x, yp=y)
         return pos, self.data[y, x]
 
-    def solid_angle(self):
-        """
-        Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
-        """
-
-        coordinates = self.coordinates(mode='edges')
-        lon = coordinates.data.lon.radian
-        lat = coordinates.data.lat.radian
-
-        # Compute solid angle using the approximation that it's
-        # the product between angular separation of pixel corners.
-        # First index is "y", second index is "x"
-        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
-        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
-        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
-
-        dx = angular_separation(*(ylo_xlo + ylo_xhi))
-        dy = angular_separation(*(ylo_xlo + yhi_xlo))
-        omega = u.Quantity(dx * dy, 'sr')
-        return omega
-
     def lookup(self, position, interpolation=None):
         """
         Lookup value at given sky position.
@@ -706,6 +712,22 @@ class SkyImage(object):
         """
         x, y = self.wcs_skycoord_to_pixel(coords=position)
         return self.data[np.rint(y).astype('int'), np.rint(x).astype('int')]
+
+    def lookup_pix(self, position, interpolation=None):
+        """
+        Lookup value at given pixel position.
+
+        Parameters
+        ----------
+        position : `~regions.PixCoord`
+            Pixel coordinate position
+        interpolation : {'None'}
+            Interpolation mode.
+        """
+        # TODO: this rounding computation should be moved to a method on `PixCoord`
+        x = np.rint(position.x).astype('int')
+        y = np.rint(position.y).astype('int')
+        return self.data[y, x]
 
     def to_quantity(self):
         """
@@ -916,8 +938,7 @@ class SkyImage(object):
         return self.data
 
     def threshold(self, threshold):
-        """
-        Threshold this image to create a `~gammapy.image.SkyMask`.
+        """Threshold this image, creating a mask.
 
         Parameters
         ----------
@@ -926,15 +947,14 @@ class SkyImage(object):
 
         Returns
         -------
-        mask : `~gammapy.image.SkyMask`
-            Exclusion mask object.
+        mask : `~gammapy.image.SkyImage`
+            Mask with 0 where data > threshold and 1 otherwise
 
         Examples
         --------
         TODO: some more docs and example
         """
-        from .mask import SkyMask
-        mask = SkyMask.empty_like(self)
+        mask = self.copy()
         mask.data = np.where(self.data > threshold, 0, 1)
         return mask
 
@@ -1038,7 +1058,7 @@ class SkyImage(object):
 
         Returns
         -------
-        mask : `~gammapy.image.SkyMask`
+        mask : `~gammapy.image.SkyImage`
             A boolean sky mask.
 
         Examples
@@ -1054,8 +1074,6 @@ class SkyImage(object):
          [0 0 1 0 0]
          [0 0 0 0 0]]
         """
-        from .mask import SkyMask
-
         if isinstance(region, PixelRegion):
             coords = self.coordinates_pix()
         elif isinstance(region, SkyRegion):
@@ -1064,9 +1082,9 @@ class SkyImage(object):
             raise TypeError("Invalid region type, must be instance of "
                             "'regions.PixelRegion' or 'regions.SkyRegion'")
 
-        data = region.contains(coords)
-
-        return SkyMask(data=data, wcs=self.wcs)
+        mask = self.copy()
+        mask.data = region.contains(coords)
+        return mask
 
     @staticmethod
     def assert_allclose(image1, image2, check_wcs=True):
@@ -1161,3 +1179,81 @@ class SkyImage(object):
             raise ValueError('Invalid option kernel = {}'.format(kernel))
 
         return image
+
+    def solid_angle(self):
+        """
+        Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
+        """
+
+        coordinates = self.coordinates(mode='edges')
+        lon = coordinates.data.lon.radian
+        lat = coordinates.data.lat.radian
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
+        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
+        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        omega = u.Quantity(dx * dy, 'sr')
+        return omega
+
+    @property
+    def distance_image(self):
+        """Distance to nearest exclusion region.
+
+        Compute distance image, i.e. the Euclidean (=Cartesian 2D)
+        distance (in pixels) to the nearest exclusion region.
+
+        We need to call distance_transform_edt twice because it only computes
+        dist for pixels outside exclusion regions, so to get the
+        distances for pixels inside we call it on the inverted mask
+        and then combine both distance images into one, using negative
+        distances (note the minus sign) for pixels inside exclusion regions.
+
+        If data consist only of ones, it'll be supposed to be far away
+        from zero pixels, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value Max_Value (MAX_VALUE = 1e10).
+
+        If data consist only of zeros, it'll be supposed to be deep inside
+        an exclusion region, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value -Max_Value (MAX_VALUE = 1e10).
+
+        Returns
+        -------
+        distance : `~gammapy.image.SkyImage`
+            Sky image of distance to nearest exclusion region.
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyImage
+        >>> data = np.array([[0., 0., 1.], [1., 1., 1.]])
+        >>> mask = SkyImage(data=data)
+        >>> print(mask.distance_image.data)
+        [[-1, -1, 1], [1, 1, 1.41421356]]
+        """
+        self._check_is_mask()
+
+        from scipy.ndimage import distance_transform_edt
+
+        max_value = 1e10
+
+        if np.all(self.data == 1):
+            return SkyImage.empty_like(self, fill=max_value)
+
+        if np.all(self.data == 0):
+            return SkyImage.empty_like(self, fill=-max_value)
+
+        distance_outside = distance_transform_edt(self.data)
+
+        invert_mask = np.invert(np.array(self.data, dtype=np.bool))
+        distance_inside = distance_transform_edt(invert_mask)
+
+        distance = np.where(self.data, distance_outside, -distance_inside)
+
+        return SkyImage(data=distance, wcs=self.wcs)

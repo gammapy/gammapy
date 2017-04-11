@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
-from astropy.tests.helper import assert_quantity_allclose
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from ..reflected import find_reflected_regions, ReflectedRegionsBackgroundEstimator
-from ...image import SkyMask
 from ...utils.testing import requires_data, requires_dependency
-from ...data import Target, DataStore
+from ...image import SkyImage
+from ...data import DataStore
+from ..reflected import find_reflected_regions, ReflectedRegionsBackgroundEstimator
+
 
 @pytest.fixture
 def mask():
     """Example mask for testing."""
     filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    return SkyMask.read(filename, hdu='EXCLUSION')
+    return SkyImage.read(filename, hdu='EXCLUSION')
 
 @pytest.fixture
 def on_region():
@@ -23,6 +23,7 @@ def on_region():
     region = CircleSkyRegion(pos, radius)
     return region
 
+
 @pytest.fixture
 def obs_list():
     """Example observation list for testing."""
@@ -31,10 +32,11 @@ def obs_list():
     obs_ids = [23523, 23526]
     return datastore.obs_list(obs_ids)
 
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_find_reflected_regions(mask, on_region):
-    pointing = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
+    pointing = SkyCoord(83.2, 22.7, unit='deg')
     regions = find_reflected_regions(region=on_region, center=pointing,
                                      exclusion_mask=mask,
                                      min_distance_input=Angle('0 deg'))
@@ -46,9 +48,9 @@ def test_find_reflected_regions(mask, on_region):
 @requires_dependency('scipy')
 class TestReflectedRegionBackgroundEstimator:
     def setup(self):
-        temp = ReflectedRegionsBackgroundEstimator(on_region = on_region(),
-                                                   exclusion = mask(),
-                                                   obs_list = obs_list())
+        temp = ReflectedRegionsBackgroundEstimator(on_region=on_region(),
+                                                   exclusion=mask(),
+                                                   obs_list=obs_list())
         self.bg_maker = temp
 
     def test_basic(self):
@@ -61,7 +63,7 @@ class TestReflectedRegionBackgroundEstimator:
         assert len(bg_estimate.off_region) == 22
 
     def test_run(self):
-        self.bg_maker.config.update(min_distance = '0.2 deg')
+        self.bg_maker.config.update(min_distance='0.2 deg')
         self.bg_maker.run()
         assert len(self.bg_maker.result[1].off_region) == 22
 
@@ -71,4 +73,3 @@ class TestReflectedRegionBackgroundEstimator:
         self.bg_maker.plot()
         self.bg_maker.plot(idx=1)
         self.bg_maker.plot(idx=[0, 1])
-

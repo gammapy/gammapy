@@ -2,22 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
 import astropy.units as u
-from astropy.coordinates.angles import Angle
-from astropy.convolution import CustomKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...image import SkyImage, SkyImageList, SkyMask
-from ...stats import significance
+from ...image import SkyImage, SkyImageList
 from ...datasets import FermiGalacticCenter
 from ..kernel import KernelBackgroundEstimator
-
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestKernelBackgroundEstimator(object):
-
     def setup_class(self):
         """Prepares appropriate input and defines inputs for test cases.
         """
@@ -41,11 +35,11 @@ class TestKernelBackgroundEstimator(object):
         counts.data[4][4] = 1000
 
         background = SkyImage.empty_like(counts, fill=42., name='background')
-        exclusion = SkyMask.empty_like(counts, name='exclusion', fill=1.)
+        exclusion = SkyImage.empty_like(counts, name='exclusion', fill=1.)
         return SkyImageList([counts, background, exclusion])
 
     def _images_psf(self):
-         # Initial counts required by one of the tests.
+        # Initial counts required by one of the tests.
         images = self._images_point()
 
         psf = FermiGalacticCenter.psf()
