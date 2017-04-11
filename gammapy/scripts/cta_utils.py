@@ -4,7 +4,6 @@ import astropy.units as u
 from ..spectrum import SpectrumObservation
 from ..spectrum.utils import CountsPredictor
 from ..spectrum.core import PHACountsSpectrum
-from ..utils.energy import EnergyBounds
 from ..utils.random import get_random_state
 
 from ..spectrum.models import AbsorbedSpectralModel, TableModel
@@ -96,7 +95,8 @@ class ObservationParameters(object):
         """Observation summary report (`str`)."""
         ss = '*** Observation parameters summary ***\n'
         ss += 'alpha={} [{}]\n'.format(self.alpha.value, self.alpha.unit)
-        ss += 'livetime={} [{}]\n'.format(self.livetime.value, self.livetime.unit)
+        ss += 'livetime={} [{}]\n'.format(self.livetime.value,
+                                          self.livetime.unit)
         ss += 'emin={} [{}]\n'.format(self.emin.value, self.emin.unit)
         ss += 'emax={} [{}]\n'.format(self.emax.value, self.emax.unit)
         return ss
@@ -137,15 +137,6 @@ class CTAObservationSimulation(object):
 
         model = target.abs_model
 
-        # Create energy dispersion
-        e_reco_min = perf.bkg.energy.lo[0]
-        e_reco_max = perf.bkg.energy.hi[-1]
-        e_reco_bin = perf.bkg.energy.nbins
-        e_reco_axis = EnergyBounds.equal_log_spacing(e_reco_min,
-                                                     e_reco_max,
-                                                     e_reco_bin,
-                                                     'TeV')
-
         # Compute expected counts
         reco_energy = perf.bkg.energy
         bkg_rate_values = perf.bkg.data.data * livetime.to('s')
@@ -158,9 +149,9 @@ class CTAObservationSimulation(object):
         # Randomise counts
         rand = get_random_state('random-seed')
         on_counts = rand.poisson(npred.data.data.value)  # excess
-        on_counts = rand.poisson()  # excess
         bkg_counts = rand.poisson(bkg_rate_values.value)  # bkg in ON region
-        off_counts = rand.poisson(bkg_rate_values.value / alpha)  # bkg in OFF region
+        off_counts = rand.poisson(
+            bkg_rate_values.value / alpha)  # bkg in OFF region
 
         on_counts += bkg_counts  # evts in ON region
 
@@ -180,7 +171,6 @@ class CTAObservationSimulation(object):
                                        is_bkg=True,
                                        creator='gammapy')
 
-        
         obs = SpectrumObservation(on_vector=on_vector,
                                   off_vector=off_vector,
                                   aeff=perf.aeff,
@@ -229,9 +219,9 @@ class CTAObservationSimulation(object):
         ax2.set_xlabel('Energy [TeV]')
         ax2.set_ylabel('Expected counts')
         ax2.set_xlim([energy_range[0].value, energy_range[1].value])
-        ax2.set_ylim([0.0001, on_off.max()*(1+0.05)])
+        ax2.set_ylim([0.0001, on_off.max() * (1 + 0.05)])
         ax2.vlines(simu.lo_threshold.value, 0, 1.1 * on_off.max(),
-                  linestyles='dashed')
+                   linestyles='dashed')
         ax2.grid(which='both')
         plt.text(0.55, 0.05, simu.__str__(),
                  style='italic', transform=ax2.transAxes, fontsize=7,
