@@ -22,7 +22,7 @@ fig.show_colorscale(interpolation='bicubic', cmap='afmhot', stretch='log', vmin=
 fig.tick_labels.set_xformat('ddd')
 fig.tick_labels.set_yformat('dd')
 ticks = np.logspace(-12, -8, 5)
-fig.add_colorbar(ticks=ticks, axis_label_text='Flux (ph s^-1 cm^-2 TeV^-1)')
+fig.add_colorbar(ticks=ticks, axis_label_text='Flux (cm^-2 s^-1 TeV^-1)')
 fig.colorbar._colorbar_axes.set_yticklabels(['{:.0e}'.format(_) for _ in ticks])
 plt.tight_layout()
 plt.show()

@@ -17,25 +17,17 @@ psf_file = FermiGalacticCenter.filenames()['psf']
 psf = EnergyDependentTablePSF.read(psf_file)
 
 # Simulation Parameters
-
-# source density at the sun (sources kpc^-1)
-rho_sun = 3
-# number of sources
 n_sources = int(5e2)
-# Spatial distribution using Lorimer (2006) model
-rad_dis = 'L06'
-# Velocity dispersion
-vel_dis = 'F06B'
-# Includes spiral arms
-spiralarms = True
-# Creates table
-table = population.make_base_catalog_galactic(n_sources=n_sources, rad_dis=rad_dis,
-                                              vel_dis=vel_dis, max_age=1e6,
-                                              spiralarms=spiralarms, random_state=0)
 
-# Minimum source luminosity (ph s^-1)
+table = population.make_base_catalog_galactic(
+    n_sources=n_sources, rad_dis='L06',
+    vel_dis='F06B', max_age=1e6,
+    spiralarms=True, random_state=0,
+)
+
+# Minimum source luminosity (s^-1)
 luminosity_min = 4e34
-# Maximum source luminosity (ph s^-1)
+# Maximum source luminosity (s^-1)
 luminosity_max = 4e37
 # Luminosity function differential power-law index
 luminosity_index = 1.5
@@ -47,7 +39,7 @@ table['luminosity'] = luminosity
 
 # Adds parameters to table: distance, glon, glat, flux, angular_extension
 table = population.add_observed_parameters(table)
-table.meta['Energy Bins'] = np.array([10, 500]) * u.GeV
+table.meta['Energy Bins'] = [10, 500] * u.GeV
 # Create image
 image = catalog_image(reference, psf, catalog='simulation', source_type='point',
                       total_flux=True, sim_table=table)
@@ -58,7 +50,7 @@ fig.show_colorscale(interpolation='bicubic', cmap='afmhot', stretch='log', vmin=
 fig.tick_labels.set_xformat('ddd')
 fig.tick_labels.set_yformat('dd')
 ticks = np.logspace(30, 35, 6)
-fig.add_colorbar(ticks=ticks, axis_label_text='Flux (ph s^-1)')
+fig.add_colorbar(ticks=ticks, axis_label_text='Flux (s^-1)')
 fig.colorbar._colorbar_axes.set_yticklabels(['{:.0e}'.format(_) for _ in ticks])
 plt.tight_layout()
 plt.show()
