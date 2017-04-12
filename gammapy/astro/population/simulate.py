@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import degrees, pi, arctan, exp
+from astropy.extern import six
 from astropy.table import Table, Column
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, spherical_to_cartesian
@@ -183,10 +184,10 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     """
     random_state = get_random_state(random_state)
 
-    if isinstance(rad_dis, str):
+    if isinstance(rad_dis, six.string_types):
         rad_dis = radial_distributions[rad_dis]
 
-    if isinstance(vel_dis, str):
+    if isinstance(vel_dis, six.string_types):
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw r and z values from the given distribution
