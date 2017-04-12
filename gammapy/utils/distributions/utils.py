@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from ...utils.random import get_random_state
 from ...utils.distributions import GeneralRandom
 
 __all__ = ['normalize', 'density', 'draw', 'pdf']
@@ -35,11 +37,12 @@ def density(func):
     return f
 
 
-def draw(low, high, size, dist, *args, **kwargs):
+def draw(low, high, size, dist, random_state='random-seed', *args, **kwargs):
     """Allows drawing of random numbers from any distribution."""
+    random_state = get_random_state(random_state)
+
     def f(x):
         return dist(x, *args, **kwargs)
 
     d = GeneralRandom(f, low, high)
-    array = d.draw(size)
-    return array
+    return d.draw(size, random_state=random_state)

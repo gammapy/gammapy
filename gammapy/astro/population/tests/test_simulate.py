@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ....utils.testing import requires_dependency
 from ...population import (
@@ -88,3 +89,31 @@ def test_add_par_obs(example_table):
     table = add_observed_source_parameters(table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['ext_in_SNR'])
+
+
+def test_make_base_catalog_galactic():
+    """Test that make_base_catalog_galactic uses random_state correctly.
+    
+    Calling with a given seed should always give the same output.
+
+    Regression test for https://github.com/gammapy/gammapy/issues/959
+    """
+    table = make_base_catalog_galactic(n_sources=1, random_state=0)
+    d = table[0]
+    # print(list(zip(d.colnames, d.as_void())))
+
+    assert_allclose(d['x_birth'], -7.7244510367459904)
+    assert_allclose(d['y_birth'], -0.3878120924926074)
+    assert_allclose(d['z_birth'], 0.028117277025426112)
+    assert_allclose(d['x'], -7.7244510367459904)
+    assert_allclose(d['y'], -0.3878120924926074)
+    assert_allclose(d['z'], 0.028117277025426112)
+    assert_allclose(d['vx'], -341.28926571465314)
+    assert_allclose(d['vy'], 48.211461842444507)
+    assert_allclose(d['vz'], 298.79950689388124)
+
+    assert_allclose(d['age'], -0.056712977317443181)
+    assert_allclose(d['n_ISM'], 1.0)
+    assert d['spiralarm'] == 'Crux Scutum'
+    assert d['morph_type'] == 'shell2d'
+    assert_allclose(d['v_abs'], 456.16209099952528)

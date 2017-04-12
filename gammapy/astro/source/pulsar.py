@@ -10,7 +10,7 @@ __all__ = [
     'SimplePulsar',
 ]
 
-DEFAULT_I = Quantity(1e45, 'g cm^2')
+DEFAULT_I = Quantity(1e45, 'g cm2')
 """Pulsar default moment of inertia"""
 
 DEFAULT_R = Quantity(1e6, 'cm')
