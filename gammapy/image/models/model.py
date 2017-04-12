@@ -5,6 +5,7 @@ At the moment you can have any number of Gaussians.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.extern import six
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from ...utils.random import get_random_state
@@ -65,7 +66,7 @@ class MorphModelImageCreator(object):
         if psf_file is not None:
             self.psf_file = psf_file
         if background is not None:
-            if isinstance(background, str):
+            if isinstance(background, six.string_types):
                 self.background = fits.getdata(background)
             elif isinstance(background, (int, float)):
                 self.background = np.ones_like(self.exposure)
@@ -192,7 +193,7 @@ class GaussCatalog(dict):
         if isinstance(source, dict):
             # Assume source is a dict with correct format
             self.pars = source
-        elif isinstance(source, str):
+        elif isinstance(source, six.string_types):
             # Assume it is a JSON filename
             fh = open(source)
             self.pars = json.load(fh)

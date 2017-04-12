@@ -308,10 +308,9 @@ class Delta2D(Fittable2DModel):
         return np.select([np.logical_and(x_mask, y_mask)], [amplitude])
 
 
-morph_types = OrderedDict(
-    delta2d=Delta2D,
-    gauss2d=Gaussian2D,
-    shell2d=Shell2D,
-    sphere2d=Sphere2D,
-)
+morph_types = OrderedDict()
 """Available morphology types."""
+morph_types['delta2d'] = Delta2D
+morph_types['gauss2d'] = Gaussian2D
+morph_types['shell2d'] = Shell2D
+morph_types['sphere2d'] = Sphere2D

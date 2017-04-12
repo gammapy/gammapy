@@ -37,7 +37,7 @@ class SNR(object):
     """
 
     def __init__(self, e_sn=Quantity(1e51, 'erg'), theta=Quantity(0.1),
-                 n_ISM=Quantity(1, 'cm^-3'), m_ejecta=const.M_sun,
+                 n_ISM=Quantity(1, 'cm-3'), m_ejecta=const.M_sun,
                  t_stop=Quantity(1e6, 'K'), age=None, morphology='Shell2D',
                  spectral_index=2.1):
         self.e_sn = e_sn
@@ -167,12 +167,12 @@ class SNR(object):
         # Flux in 1 k distance according to Drury formula 9
         term_0 = energy_min / Quantity(1, 'TeV')
         term_1 = self.e_sn / Quantity(1e51, 'erg')
-        term_2 = self.rho_ISM / (Quantity(1, 'cm^-3') * const.m_p)
+        term_2 = self.rho_ISM / (Quantity(1, 'cm-3') * const.m_p)
         L = self.theta * term_0 ** (1 - self.spectral_index) * term_1 * term_2
 
         # Corresponding luminosity
         L = np.select([t <= self.sedov_taylor_begin, t <= self.sedov_taylor_end], [0, L])
-        return Quantity(1.0768E34, 'ph s^-1') * L
+        return Quantity(1.0768E34, 's-1') * L
 
     @lazyproperty
     def sedov_taylor_begin(self):
@@ -196,7 +196,7 @@ class SNR(object):
         """
         term1 = (self.e_sn / Quantity(1e51, 'erg')) ** (-1. / 2)
         term2 = (self.m_ejecta / const.M_sun) ** (5. / 6)
-        term3 = (self.rho_ISM / (Quantity(1, 'cm^-3') * const.m_p)) ** (-1. / 3)
+        term3 = (self.rho_ISM / (Quantity(1, 'cm-3') * const.m_p)) ** (-1. / 3)
         return Quantity(200, 'yr') * term1 * term2 * term3
 
     @lazyproperty

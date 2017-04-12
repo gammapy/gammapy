@@ -493,8 +493,8 @@ class FaucherSpiral(LogSpiral):
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 
         if blur:  # Apply blurring model according to Faucher
-            radius, theta = self._blur(radius, theta)
-            radius, theta = self._gc_correction(radius, theta)
+            radius, theta = self._blur(radius, theta, random_state=random_state)
+            radius, theta = self._gc_correction(radius, theta, random_state=random_state)
         return radius, theta, spiralarm
 
 
