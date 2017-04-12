@@ -1,17 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
-import healpy as hp
-
 from astropy.wcs import WCS
 from .core import SkyImage
 from ..utils.scripts import make_path
 
-
 __all__ = ['SkyImageHealpix']
 
 
-#TODO: check if inheritance from SkyImage is resonable
 class SkyImageHealpix(object):
     """
     Sky image object with healpix pixelisation.
@@ -29,6 +25,7 @@ class SkyImageHealpix(object):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
+
     def __init__(self, name=None, data=None, wcs=None, meta=None, unit=None):
         self.name = name
         if not len(data) == wcs.npix:
@@ -44,7 +41,7 @@ class SkyImageHealpix(object):
         self.unit = unit
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename):
         """Read image from FITS file.
 
         Parameters
@@ -54,6 +51,7 @@ class SkyImageHealpix(object):
         **kwargs : dict
             Keyword arguments passed `~healpy.read_map`.
         """
+        import healpy as hp
         filename = make_path(filename)
         data, header = hp.read_map(str(filename), h=True)
         header = OrderedDict(header)
@@ -91,7 +89,7 @@ class SkyImageHealpix(object):
                             "of `Header`, `WCS` or `SkyImage`.")
 
         out = reproject_from_healpix((self.data, self.wcs.coordsys), wcs_reference,
-                                      nested=self.wcs.nested, shape_out=shape_out)
+                                     nested=self.wcs.nested, shape_out=shape_out)
         return SkyImage(name=self.name, data=out[0], wcs=wcs_reference)
 
     def plot(self, ax=None, projection='mollweide', **kwargs):
@@ -103,7 +101,8 @@ class SkyImageHealpix(object):
         projection : ['mollweide', 'cartesian']
             Which projection to use for plotting.
         """
-        #TODO: add other projections
+        import healpy as hp
+        # TODO: add other projections
         if projection == 'mollweide':
             hp.mollview(map=self.data, nest=self.wcs.nested, **kwargs)
         elif projection == 'cartesian':
@@ -119,6 +118,7 @@ class WCSHealpix(object):
     TODO: check if this can be handled by `~astropy.wcs.WCS` as well and if this
     class is needed at all.
     """
+
     def __init__(self, nside, scheme='nested', coordsys='galactic'):
         self.coordsys = coordsys
 
@@ -132,12 +132,9 @@ class WCSHealpix(object):
         self.scheme = scheme
 
     def wcs_pix2world(self, ipix):
+        import healpy as hp
         theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nested)
         return theta, phi
-
-    def wcs_world2pix(self, skycoord):
-        ipix = hp.ang2pix(self.nside, theta=theta, phi=phi, nest=self.nested)
-        return ipix
 
     @property
     def nested(self):
@@ -147,11 +144,12 @@ class WCSHealpix(object):
     @property
     def npix(self):
         """Number of pixels corresponding to nside"""
+        import healpy as hp
         return hp.nside2npix(self.nside)
 
     def __str__(self):
         info = 'WCSHealpix\n'
-        info = '==========\n'
+        info += '==========\n'
         info += '  coordsys: {}\n'.format(self.coordsys)
         info += '  nside   : {}\n'.format(self.nside)
         info += '  npix    : {}\n'.format(self.npix)
