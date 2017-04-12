@@ -5,8 +5,11 @@ from ..spectrum import (
     SpectrumObservationList,
     SpectrumEnergyGroupMaker,
     FluxPointEstimator,
+    SpectrumExtraction,
+    SpectrumFit,
     SpectrumResult,
 )
+from ..background import ReflectedRegionsBackgroundEstimator
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -14,8 +17,6 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
-
-
 
 
 class SpectrumAnalysisIACT(object):
@@ -28,8 +29,6 @@ class SpectrumAnalysisIACT(object):
 
     Parameters
     ----------
-    outdir : `~gammapy.extern.pathlib.Path`
-        Analysis directory
     observations : `~gammapy.data.ObservationList`
         Observations to analyse
     background_estimator : `~gammapy.background.ReflectedRegionsBackgroundEstimator`
@@ -41,17 +40,20 @@ class SpectrumAnalysisIACT(object):
     fp_binning : `~astropy.units.Quantity`
         Flux points binning
         TODO: Replace with `~gammapy.spectrum.SpectrumEnergyGroupMaker`
-    flux_point_estimator : `~gammapy
+    flux_point_estimator : `~gammapy.spectrum.FluxPointEstimator`
         Flux points estimator
         TODO: Input not used at the moment, fpe is created on the fly
     clobber : False
         Overwrite OGIP files
     stacked : Bool, optional
         Stack observations prior to fitting
+    outdir : `~gammapy.extern.pathlib.Path`, optional
+        Analysis directory to write files (if given)
     """
-    def __init__(self, outdir, observations, background_estimator, extraction,
+
+    def __init__(self, observations, background_estimator, extraction,
                  fit, fp_binning, flux_point_estimator=None,
-                 clobber=False, stacked=False):
+                 clobber=False, stacked=False, outdir=None):
         self.outdir = outdir
         self.observations = observations
         self.background_estimator = background_estimator
@@ -62,6 +64,27 @@ class SpectrumAnalysisIACT(object):
 
         self.clobber = clobber
         self.stacked = stacked
+
+    @classmethod
+    def configure(cls, observations, on_region, model, fp_binning,
+                  background_kwargs=dict(),
+                  extraction_kwargs=dict(),
+                  fit_kwargs=dict(),
+                  pipeline_kwargs=dict()):
+        """Configure the analysis
+
+        This method takes care of instantiating the analysis classes that
+        constitue the spectrum pipeline
+        """
+        bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
+                                                            **background_kwargs)
+        extraction = SpectrumExtraction(on_region=on_region,
+                                        **extraction_kwargs)
+        fit = SpectrumFit(model=model, **fit_kwargs)
+
+        return cls(observations=observations,
+                   background_estimator=bkg_estimator, extraction=extraction,
+                   fit=fit, fp_binning=fp_binning, **pipeline_kwargs)
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -76,20 +99,19 @@ class SpectrumAnalysisIACT(object):
     @property
     def spectrum_observations(self):
         """`~gammapy.spectrum.SpectrumObservationList`"""
+
         return self._spectrum_observations
 
     def run(self):
         """Run all steps"""
         if (make_path(self.outdir) / 'ogip_data').is_dir():
-            self._spectrum_observations = SpectrumObservationList.read(
+            log.info('Reading in OGIP data')
+            spec_obs = SpectrumObservationList.read(
                 self.outdir / 'ogip_data')
         else:
             self.extract_all()
+            spec_obs = self.extraction.observations
 
-        spec_obs = self.extraction.observations
-        if self.stacked:
-            spec_obs = spec_obs.stack()
-        
         self.fit_all(spec_obs)
 
     def extract_all(self):
@@ -102,8 +124,12 @@ class SpectrumAnalysisIACT(object):
 
     def fit_all(self, observations):
         """Run all step for the spectrum fit"""
-        self.fit.run(observations, outdir=self.outdir)
-        egm = SpectrumEnergyGroupMaker(observations.stack())
+        stacked_obs = observations.stack()
+        if self.stacked:
+            self.fit.run(stacked_obs, outdir=self.outdir)
+        else:
+            self.fit.run(observations, outdir=self.outdir)
+        egm = SpectrumEnergyGroupMaker(stacked_obs)
         egm.compute_groups_fixed(self.fp_binning)
         self.flux_point_estimator = FluxPointEstimator(
             groups=egm.groups,

@@ -14,6 +14,9 @@ from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..irf import IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
 from .utils import CountsPredictor 
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     'SpectrumStats',
@@ -661,6 +664,7 @@ class SpectrumObservationStacker(object):
 
     def run(self):
         """Run all steps in the correct order"""
+        log.info('Running {}'.format(self))
         self.stack_counts_vectors()
         self.stack_aeff()
         self.stack_edisp()

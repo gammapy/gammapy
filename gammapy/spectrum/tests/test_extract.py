@@ -13,37 +13,15 @@ from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import SkyImage
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-from ...background import ReflectedRegionsBackgroundEstimator
+from ...background.tests.test_reflected import on_region, bkg_estimator, obs_list
 
 
 @pytest.fixture(scope='session')
-def obs():
-    """An example ObservationList for tests."""
-    obs_id = [23523, 23592]
-    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
-    ds = DataStore.from_dir(store)
-    obs = ObservationList([ds.obs(_) for _ in obs_id])
-    return obs
-
-
-@pytest.fixture(scope='session')
-def on_region():
-    """An example Target for tests."""
-    center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
-    radius = Angle('0.11 deg')
-    on_region = CircleSkyRegion(center, radius)
-    return on_region
-
-
-@pytest.fixture(scope='session')
-def bkg_estimator():
-    """An example background_estimator"""
-    exclusion_file = gammapy_extra.filename(
-        "datasets/exclusion_masks/tevcat_exclusion.fits")
-    excl = SkyImage.read(exclusion_file)
-    bkg = ReflectedRegionsBackgroundEstimator(exclusion_mask=excl,
-                                              on_region=on_region())
-    return bkg
+def bkg_estimate():
+    """An example background estimate"""
+    est = bkg_estimator()
+    est.run(obs_list())
+    return est.result
 
 
 @pytest.fixture(scope='session')
@@ -55,33 +33,34 @@ def extraction():
     extraction = SpectrumExtraction(on_region=on_region(),
                                     e_true=e_true
                                     )
+    extraction.run(obs_list(), bkg_estimate())
     return extraction
 
-
+# TODO: Run on simulated data
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
+
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
                                                   aeff=549861.8 * u.m ** 2,
-                                                  containment = 1,
+                                                  containment=1,
                                                   edisp=0.2595896944765074
-                                                 )),
+                                                  )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
                                                  aeff=549861.8 * u.m ** 2,
-                                                 containment = 0.8525390663792395,
+                                                 containment=0.8525390663792395,
                                                  edisp=0.2595896944765074
-                                                ))
+                                                 ))
     ])
-    def test_extract(self, pars, results, on_region, obs, bkg_estimator, tmpdir):
+    def test_extract(self, pars, results, on_region, obs_list, bkg_estimate, tmpdir):
         """Test quantitative output for various configs"""
         extraction = SpectrumExtraction(on_region=on_region,
-                                        background_estimator=bkg_estimator,
                                         **pars)
 
-        extraction.run(obs)
+        extraction.run(obs_list, bkg_estimate)
         obs = extraction.observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
         containment_actual = obs.on_vector.areascal[60]
@@ -99,9 +78,9 @@ class TestSpectrumExtraction:
         assert n_on_actual == results['n_on']
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
 
-    def test_run(self, tmpdir, extraction, obs):
+    def test_run(self, tmpdir, extraction, obs_list, bkg_estimate):
         """Test the run method and check if files are written correctly"""
-        extraction.run(outdir=tmpdir, obs_list=obs)
+        extraction.run(outdir=tmpdir, obs_list=obs_list, bkg_estimate=bkg_estimate)
         testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
         assert_quantity_allclose(testobs.aeff.data.data,
                                  extraction.observations[0].aeff.data.data)
@@ -111,9 +90,10 @@ class TestSpectrumExtraction:
                                  extraction.observations[0].on_vector.energy.nodes)
 
     @requires_dependency('sherpa')
-    def test_sherpa(self, tmpdir, extraction, obs):
+    def test_sherpa(self, tmpdir, extraction, obs_list, bkg_estimate):
         """Same as above for files to be used with sherpa"""
-        extraction.run(outdir=tmpdir, obs_list=obs, use_sherpa=True)
+        extraction.run(outdir=tmpdir, obs_list=obs_list,
+                       bkg_estimate=bkg_estimate, use_sherpa=True)
 
         import sherpa.astro.ui as sau
         sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
@@ -122,8 +102,9 @@ class TestSpectrumExtraction:
         desired = extraction.observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
-    def test_define_energy_threshold(self, extraction):
+    def test_define_energy_threshold(self, extraction, bkg_estimate, obs_list):
         # TODO: Find better API for this
+        extraction.run(obs_list, bkg_estimate)
         extraction.define_energy_threshold(method_lo_threshold="area_max",
                                            percent=10)
         assert_quantity_allclose(extraction.observations[0].lo_threshold,

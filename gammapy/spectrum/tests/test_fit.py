@@ -145,13 +145,13 @@ class TestFit:
 
     def test_likelihood_profile(self):
         obs = SpectrumObservation(on_vector=self.src)
-        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
+        fit = SpectrumFit(stat='cash', model=self.source_model,
                           forward_folded=False)
-        fit.fit()
+        fit.fit(obs)
         true_idx = fit.result[0].model.parameters['index'].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_1d(model=fit.result[0].model, parname='index',
-                                    parvals=scan_idx)
+        profile = fit.likelihood_1d(model=fit.result[0].model, obs_list=[obs],
+                                    parname='index', parvals=scan_idx)
         argmin = np.argmin(profile)
         actual = scan_idx[argmin]
         assert_allclose(actual, true_idx, rtol=0.01)
@@ -159,12 +159,12 @@ class TestFit:
     @requires_dependency('matplotlib')
     def test_plot(self):
         obs = SpectrumObservation(on_vector=self.src)
-        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
+        fit = SpectrumFit(stat='cash', model=self.source_model,
                           forward_folded=False)
-
+        fit.apply_fit_range([obs])
         scan_idx = np.linspace(1, 3, 20)
-        fit.plot_likelihood_1d(model=self.source_model, parname='index',
-                               parvals=scan_idx)
+        fit.plot_likelihood_1d(model=self.source_model, obs_list=[obs],
+                               parname='index', parvals=scan_idx)
         # TODO: add assert, see issue 294
 
 
@@ -197,7 +197,7 @@ class TestSpectralFit:
         self.fit = fit() 
 
     def test_basic_results(self):
-        self.fit.fit()
+        self.fit.fit(self.obs_list[0])
         result = self.fit.result[0]
         assert self.fit.method == 'sherpa'
         assert_allclose(result.statval, 32.838716584005645)
@@ -211,7 +211,7 @@ class TestSpectralFit:
             self.fit.result[0].to_table()
 
     def test_basic_errors(self):
-        self.fit.fit()
+        self.fit.fit(self.obs_list[0])
         self.fit.est_errors()
         result = self.fit.result[0]
         par_errors = result.model.parameters._ufloats
@@ -221,8 +221,8 @@ class TestSpectralFit:
         self.fit.result[0].to_table()
 
     def test_npred(self):
-        self.fit.fit()
-        actual = self.fit.obs_list[0].predicted_counts(
+        self.fit.fit(self.obs_list[0])
+        actual = self.obs_list[0].predicted_counts(
             self.fit.result[0].model).data.data.value
         desired = self.fit.result[0].npred_src
         assert_allclose(actual, desired)
@@ -236,9 +236,9 @@ class TestSpectralFit:
 
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
-        obs = self.fit.obs_list[0]
+        obs = self.obs_list[0]
         desired = obs.on_vector.lo_threshold
-        actual = self.fit.true_fit_range[0][0]
+        actual = self.fit.true_fit_range([obs])[0][0]
         assert_quantity_allclose(actual, desired)
 
         # Restrict fit range
@@ -247,14 +247,14 @@ class TestSpectralFit:
 
         range_bin = obs.on_vector.energy.find_node(fit_range[1])
         desired = obs.on_vector.energy.lo[range_bin]
-        actual = self.fit.true_fit_range[0][1]
+        actual = self.fit.true_fit_range([obs])[0][1]
         assert_quantity_allclose(actual, desired)
 
         # Make sure fit range is not extended below threshold
         fit_range = [0.001, 10] * u.TeV
         self.fit.fit_range = fit_range
         desired = obs.on_vector.lo_threshold
-        actual = self.fit.true_fit_range[0][0]
+        actual = self.fit.true_fit_range([obs])[0][0]
         assert_quantity_allclose(actual, desired)
 
     @pytest.mark.xfail(reason='only simplex supported at the moment')
@@ -267,49 +267,30 @@ class TestSpectralFit:
                                  2.2395184727047788)
 
     def test_ecpl_fit(self):
-        fit = SpectrumFit(self.obs_list[0], self.ecpl)
-        fit.fit()
-        actual = fit.result[0].model.parameters['lambda_'].quantity
+        self.fit.model = self.ecpl
+        self.fit.fit(self.obs_list[0])
+        actual = self.fit.result[0].model.parameters['lambda_'].quantity
         assert_quantity_allclose(actual, 0.0341911861834517 / u.TeV)
 
     def test_joint_fit(self):
-        fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.fit()
-        actual = fit.model.parameters['index'].quantity
+        self.fit.fit(self.obs_list)
+        actual = self.fit.model.parameters['index'].quantity
         assert_quantity_allclose(actual, 2.212325780417152)
 
-        actual = fit.model.parameters['amplitude'].quantity
+        actual = self.fit.model.parameters['amplitude'].quantity
         assert_quantity_allclose(actual, 2.3621921135787887e-11 * u.Unit('cm-2 s-1 TeV-1'))
-
-        # Change energy binnig of one observation
-        # TODO: Does not work because the EDISP needs to be rebinned as well
-        # TODO: Add Rebin method to SpectrumObservation
-        #on_vector = self.obs_list[0].on_vector.rebin(2)
-        #off_vector = self.obs_list[0].off_vector.rebin(2)
-        #self.obs_list[0].on_vector = on_vector
-        #self.obs_list[0].off_vector = off_vector
-        #fit = SpectrumFit(self.obs_list, self.pwl)
-        #fit.fit()
-
-        # TODO: Check if such a large deviation makes sense
-        #assert_quantity_allclose(fit.model.parameters['index'].quantity,
-        #                         2.165179870753458)
-        #assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
-        #                         3.196423508937948e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
         obs_list = SpectrumObservationList([stacked_obs])
-        fit = SpectrumFit(obs_list, self.pwl)
-        fit.fit()
-        pars = fit.model.parameters
+        self.fit.fit(obs_list=obs_list)
+        pars = self.fit.model.parameters
         assert_quantity_allclose(pars['index'].value, 2.2132304579760893)
         assert_quantity_allclose(pars['amplitude'].quantity,
                                  2.3618290865168973e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_run(self, tmpdir):
-        fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run(outdir=tmpdir)
+        self.fit.run(outdir=tmpdir, obs_list=self.obs_list)
 
 
 @requires_dependency('sherpa')

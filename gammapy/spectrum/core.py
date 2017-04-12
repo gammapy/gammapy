@@ -383,7 +383,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def offset(self):
-        return self.meta['OFFSET']
+        return self.meta['OFFSET'] * u.deg
 
     @property
     def bins_in_safe_range(self):
@@ -564,7 +564,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
 
 class PHACountsSpectrumList(list):
-    """List of `~gammapy.spectrum.PHACountsSpectrum
+    """List of `~gammapy.spectrum.PHACountsSpectrum`
 
     All spectra must have the same energy binning. This represent the PHA type
     II data format. See

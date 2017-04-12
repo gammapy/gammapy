@@ -1,9 +1,9 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+#Licensed under a 3 - clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 import logging
 from ..utils.random import get_random_state
-from ..utils.energy import EnergyBounds 
+from ..utils.energy import EnergyBounds
 from .utils import CountsPredictor
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
@@ -148,13 +148,11 @@ class SpectrumSimulation(object):
         """
         on_counts = rand.poisson(self.npred_source.data.data.value)
 
-        meta = dict(CREATOR=self.__class__.__name__)
-
         on_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,
                                       energy_hi=self.e_reco.upper_bounds,
                                       data=on_counts,
                                       backscal=1,
-                                      meta=meta)
+                                      meta=self._get_meta())
         on_vector.livetime = self.livetime
         self.on_vector = on_vector
 
@@ -182,8 +180,15 @@ class SpectrumSimulation(object):
         off_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,
                                        energy_hi=self.e_reco.upper_bounds,
                                        data=off_counts,
-                                       livetime=self.livetime,
                                        backscal=1. / self.alpha,
                                        is_bkg=True,
-                                       creator=self.__class__.__name__)
+                                       meta=self._get_meta())
+        off_vector.livetime = self.livetime
         self.off_vector = off_vector
+
+    def _get_meta(self):
+        """Meta info added to simulated counts spectra"""
+        return dict(
+            CREATOR=self.__class__.__name__
+        )
+

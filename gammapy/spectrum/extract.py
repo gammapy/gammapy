@@ -113,7 +113,7 @@ class SpectrumExtraction(object):
         meta = dict(obs._obs_info)
         offset = obs.pointing_radec.separation(self.on_region.center)
         log.info('Offset : {}\n'.format(offset))
-        meta['OFFSET'] = offset
+        meta['OFFSET'] = offset.deg
         
         # LIVETIME is called EXPOSURE in the OGIP standard
         meta['EXPOSURE'] = meta.pop('LIVETIME')

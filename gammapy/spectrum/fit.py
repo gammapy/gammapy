@@ -299,13 +299,15 @@ class SpectrumFit(object):
         if self.stat == 'wstat' and obs_list[0].off_vector is None:
             raise ValueError('Off vector required for WStat fit')
 
-    def likelihood_1d(self, model, parname, parvals):
+    def likelihood_1d(self, model, obs_list, parname, parvals):
         """Compute likelihood profile
 
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Model to draw likelihood profile for
+        obs_list : `~gammapy.spectrum.SpectrumObservationList`
+            Observations
         parname : str
             Parameter to calculate profile for
         parvals : `~astropy.units.Quantity`
@@ -315,8 +317,8 @@ class SpectrumFit(object):
         self.model = model
         for val in parvals:
             self.model.parameters[parname].value = val
-            self.predict_counts()
-            self.calc_statval()
+            self.predict_counts(obs_list)
+            self.calc_statval(self.predicted_counts, obs_list)
             likelihood.append(self.total_stat)
         return np.array(likelihood)
 

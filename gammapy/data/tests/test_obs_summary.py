@@ -58,11 +58,12 @@ def obs_summary():
     obs_stats = ObservationStatsList()
 
     for index, run in enumerate(obs_list):
-        bkg = ReflectedRegionsBackgroundEstimator.process(on_region=on_region,
-                                                          obs=run,
-                                                          exclusion=mask)
+        bkg = ReflectedRegionsBackgroundEstimator(on_region=on_region,
+                                                  exclusion_mask=mask)
+        bkg.run([run])
 
-        obs_stats.append(ObservationStats.from_target(run, target, bkg))
+        obs_stats.append(ObservationStats.from_target(run, target,
+                                                      bkg.result[0]))
 
     summary = ObservationSummary(obs_stats)
 
