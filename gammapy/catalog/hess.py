@@ -192,7 +192,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             'Other component model', d['Flux_Map_RSpec_Other'].value / FF, d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Diffuse component model', d['Flux_Map_RSpec_Diffuse'].value / FF, d['Flux_Map_RSpec_Diffuse'].value * FLUX_TO_CRAB)
+            'Large scale component model', d['Flux_Map_RSpec_LS'].value / FF, d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
             'Total model', d['Flux_Map_RSpec_Total'].value / FF, d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB)

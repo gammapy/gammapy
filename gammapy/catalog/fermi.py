@@ -21,6 +21,7 @@ from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
     ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff3FGL,
     LogParabola,
 )
 from .core import SourceCatalog, SourceCatalogObject
@@ -298,8 +299,14 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs['beta'] = Quantity(self.data['Unc_beta'], '')
             model = LogParabola(**pars)
         elif spec_type == "PLSuperExpCutoff":
-            # TODO Implement super exponential cut off
-            raise NotImplementedError
+            pars['reference'] = pars['reference'].to('GeV')
+            pars['index_1'] = Quantity(self.data['Spectral_Index'], '')
+            pars['index_2'] = Quantity(self.data['Exp_Index'], '')
+            pars['ecut'] = Quantity(self.data['Cutoff'], 'MeV').to('GeV')
+            errs['index_1'] = Quantity(self.data['Unc_Spectral_Index'], '')
+            errs['index_2'] = Quantity(self.data['Unc_Exp_Index'], '')
+            errs['ecut'] = Quantity(self.data['Unc_Cutoff'], 'MeV').to('GeV')
+            model = PLSuperExpCutoff3FGL(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
 
@@ -680,10 +687,10 @@ class SourceCatalog3FGL(SourceCatalog):
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
         filename = str(make_path(filename))
-        self.hdu_list = fits.open(filename)
-        self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
+        hdu_list = fits.open(filename)
+        self.extended_sources_table = Table(hdu_list['ExtendedSources'].data)
 
-        table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+        table = Table(hdu_list['LAT_Point_Source_Catalog'].data)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
@@ -707,11 +714,10 @@ class SourceCatalog1FHL(SourceCatalog):
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v07.fit.gz'):
         filename = str(make_path(filename))
-        self.hdu_list = fits.open(filename)
+        hdu_list = fits.open(filename)
         # self.count_map_hdu = self.hdu_list['Count Map']
-        self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
-        table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
-
+        self.extended_sources_table = Table(hdu_list['ExtendedSources'].data)
+        table = Table(hdu_list['LAT_Point_Source_Catalog'].data)
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
         super(SourceCatalog1FHL, self).__init__(
@@ -731,12 +737,13 @@ class SourceCatalog2FHL(SourceCatalog):
     source_object_class = SourceCatalogObject2FHL
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz'):
+        from ..image import SkyImage
         filename = str(make_path(filename))
-        self.hdu_list = fits.open(filename)
-        self.count_map_hdu = self.hdu_list['Count Map']
-        self.extended_sources_table = Table(self.hdu_list['Extended Sources'].data)
-        self.rois = Table(self.hdu_list['ROIs'].data)
-        table = Table(self.hdu_list['2FHL Source Catalog'].data)
+        hdu_list = fits.open(filename)
+        self.counts_image = SkyImage.from_image_hdu(hdu_list['Count Map'])
+        self.extended_sources_table = Table(hdu_list['Extended Sources'].data)
+        self.rois = Table(hdu_list['ROIs'].data)
+        table = Table(hdu_list['2FHL Source Catalog'].data)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC', '3FGL_Name', '1FHL_Name', 'TeVCat_Name')
@@ -758,12 +765,12 @@ class SourceCatalog3FHL(SourceCatalog):
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v11.fit.gz'):
         filename = str(make_path(filename))
-        self.hdu_list = fits.open(filename)
-        self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
-        self.rois = Table(self.hdu_list['ROIs'].data)
-        table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+        hdu_list = fits.open(filename)
+        self.extended_sources_table = Table(hdu_list['ExtendedSources'].data)
+        self.rois = Table(hdu_list['ROIs'].data)
+        table = Table(hdu_list['LAT_Point_Source_Catalog'].data)
 
-        self.energy_bounds_table = Table(self.hdu_list['EnergyBounds'].data)
+        self.energy_bounds_table = Table(hdu_list['EnergyBounds'].data)
         self._add_flux_point_columns(
             table=table,
             energy_bounds_table=self.energy_bounds_table,
