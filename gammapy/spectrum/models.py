@@ -27,6 +27,7 @@ __all__ = [
     'PowerLaw2',
     'ExponentialCutoffPowerLaw',
     'ExponentialCutoffPowerLaw3FGL',
+    'PLSuperExpCutoff3FGL',
     'LogParabola',
     'TableModel',
     'AbsorbedSpectralModel',
@@ -691,6 +692,53 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         except AttributeError:
             from uncertainties.unumpy import exp
             cutoff = exp((reference - energy) / ecut)
+        return pwl * cutoff
+
+
+class PLSuperExpCutoff3FGL(SpectralModel):
+    r"""Spectral super exponential cutoff power-law model used for 3FGL.
+
+
+    .. math::
+
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
+                  \exp \left( \left(\frac{E_0}{E_{C}} \right)^{\Gamma_2} -
+                              \left(\frac{E}{E_{C}} \right)^{\Gamma_2}
+                              \right)
+
+    Parameters
+    ----------
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    ecut : `~astropy.units.Quantity`
+        :math:`E_{C}`
+    """
+
+    def __init__(self, index_1, index_2, amplitude, reference, ecut):
+        self.parameters = ParameterList([
+            Parameter('amplitude', amplitude, parmin=0),
+            Parameter('reference', reference, frozen=0),
+            Parameter('ecut', ecut),
+            Parameter('index_1', index_1, parmin=0),
+            Parameter('index_2', index_2, parmin=0),
+        ])
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
+        pwl = amplitude * (energy / reference) ** (-index_1)
+        try:
+            cutoff = np.exp((reference / ecut) ** (index_2)
+                             - (energy / ecut) ** (index_2))
+        except AttributeError:
+            from uncertainties.unumpy import exp
+            cutoff = exp((reference / ecut) ** (index_2)
+                          - (energy / ecut) ** (index_2))
         return pwl * cutoff
 
 

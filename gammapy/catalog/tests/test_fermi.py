@@ -5,7 +5,8 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
-from ...spectrum.models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL
+from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL,
+                                PLSuperExpCutoff3FGL)
 from ...utils.testing import requires_data, requires_dependency
 
 MODEL_TEST_DATA_3FGL = [
@@ -15,6 +16,8 @@ MODEL_TEST_DATA_3FGL = [
                      u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
     (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
                                         u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
+    (960, PLSuperExpCutoff3FGL, u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
+                                u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
 ]
 
 MODEL_TEST_DATA_3FHL = [
