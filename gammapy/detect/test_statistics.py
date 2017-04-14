@@ -75,6 +75,54 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
+
+class TSImageEstimator(object):
+
+    def __init__(self, kernels, downsample='auto', method='root brentq',
+                 parallel=True, threshold=None ):
+        self.kernels = kernels
+        self.parameters = OrderedDict(downsample=downsample, method=method,
+                                      parallel=parallel, threshold=threshold)
+
+    def _estimate_flux(self, images):
+        """
+        Estimate flux image as fit start values.
+        """
+        from scipy.signal import fftconvolve
+
+        with np.errstate(invalid='ignore', divide='ignore'):
+            flux = (counts - background) / exposure / FLUX_FACTOR
+        flux[~np.isfinite(flux)] = 0
+        flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
+        return flux
+
+
+    def run(self, images, which='all'):
+        """
+        Run TS image estimation.
+
+        Requires `counts`, `exposure` and `background` image to run.
+
+        Parameters
+        ----------
+        images : `SkyImageList`
+            List of input sky images.
+        which : list of str or 'all'
+            Which images to compute.
+
+        Returns
+        -------
+        result : `SkyImageList`
+            Result images.
+        """
+        images.check_required(['counts', 'background', 'exposure'])
+        result = SkyImageList()
+
+
+        return result
+
+
+
 def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='auto',
                                 residual=False, morphology='Gaussian2D', width=None,
                                 *args, **kwargs):
