@@ -21,9 +21,9 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _x_best_leastsq)
 
 __all__ = [
-    'compute_ts_image',
     'compute_ts_image_multiscale',
     'compute_maximum_ts_image',
+    'TSImageEstimator'
 ]
 
 log = logging.getLogger(__name__)
@@ -77,10 +77,59 @@ def f_cash(x, counts, background, model):
 
 
 class TSImageEstimator(object):
+    """
+    Compute TS image using different optimization methods.
 
-    def __init__(self, kernels, downsample='auto', method='root brentq',
-                 parallel=True, threshold=None ):
-        self.kernels = kernels
+    Parameters
+    ----------
+    kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
+        Source model kernel.
+    method : str ('root')
+        The following options are available:
+
+        * ``'root brentq'`` (default)
+            Fit amplitude finding roots of the the derivative of
+            the fit statistics. Described in Appendix A in Stewart (2009).
+        * ``'root newton'``
+            TODO: document
+        * ``'leastsq iter'``
+            TODO: document
+    parallel : bool (True)
+        Whether to use multiple cores for parallel processing.
+    threshold : float (None)
+        If the TS value corresponding to the initial flux estimate is not above
+        this threshold, the optimizing step is omitted to save computing time.
+
+    Notes
+    -----
+    Negative :math:`TS` values are defined as following:
+
+    .. math::
+
+        TS = \\left \\{
+                 \\begin{array}{ll}
+                   -TS & : \\textnormal{if} \\ F < 0 \\\\
+                   \\ \\ TS & : \\textnormal{else}
+                 \\end{array}
+               \\right.
+
+    Where :math:`F` is the fitted flux amplitude.
+
+    References
+    ----------
+    [Stewart2009]_
+    """
+    def __init__(self, kernel, downsample='auto', method='root brentq',
+                 parallel=True, threshold=None, sensitivity_ts=25):
+
+        if not isinstance(kernel, Kernel2D):
+            kernel = CustomKernel(kernel)
+
+        self.kernel = kernel
+
+        if not method in ['root brentq', 'root newton', 'leastsq iter']:
+            raise ValueError()
+
         self.parameters = OrderedDict(downsample=downsample, method=method,
                                       parallel=parallel, threshold=threshold)
 
@@ -96,6 +145,39 @@ class TSImageEstimator(object):
         flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
         return flux
 
+    def _get_mask(self, exposure, background):
+        # in some image there are pixels, which have exposure, but zero
+        # background, which doesn't make sense and causes the TS computation
+        # to fail, this is a temporary fix
+        mask_ = np.logical_and(background == 0, exposure > 0)
+        if mask_.any():
+            log.warning('There are pixels in the data, that have exposure, but '
+                        'zero background, which can cause the ts computation to '
+                        'fail. Setting exposure of this pixels to zero.')
+            exposure[mask_] = 0
+        # Positions where exposure == 0 are not processed
+        mask = exposure > 0
+        return mask
+
+    def _get_positions(self, mask):
+        kernel_shape = self.kernel.shape
+
+        x_min, x_max = kernel_shape[1] // 2, mask.shape[1] - kernel_shape[1] // 2
+        y_min, y_max = kernel_shape[0] // 2, mask.shape[0] - kernel_shape[0] // 2
+
+        # TODO: use np.where()
+        positions = product(range(y_min, y_max), range(x_min, x_max))
+        positions = [(j, i) for j, i in positions if mask[j][i]]
+        return positions
+
+    def _parse_image_data(self, images):
+        # Parse data type
+        counts = images['counts'].data.astype(float)
+        background = images['background'].data.astype(float)
+        exposure = images['exposure'].data.astype(float)
+        assert counts.shape == background.shape
+        assert counts.shape == exposure.shape
+        return counts, exposure, background
 
     def run(self, images, which='all'):
         """
@@ -112,15 +194,65 @@ class TSImageEstimator(object):
 
         Returns
         -------
-        result : `SkyImageList`
-            Result images.
+        images : `~gammapy.image.SkyImageList`
+            Images (ts, sqrt_ts, niter, amplitude)
+
         """
+        t_0 = time()
         images.check_required(['counts', 'background', 'exposure'])
+        p = self.parameters
+
         result = SkyImageList()
 
+        if which == 'all':
+            which = ['ts', 'sqrt_ts', 'flux', 'flux_err',
+                     'niter']
 
+        for name in which:
+            result[name] = SkyImage.empty_like(images['counts'], fill=np.nan)
+
+        counts, exposure, background = self._parse_image_data(images)
+
+        log.info("Using method '{}'".format(p['method']))
+
+        # Compute null statistics for the whole image
+        c_0_image = _cash_cython(counts, background)
+
+        mask = self._get_mask(exposure, background)
+        positions = self._get_positions(mask)
+
+        if p['method'] == 'root newton':
+            flux = self._estimate_flux(images)
+        else:
+            flux = None
+
+        wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
+                       c_0_image=c_0_image, kernel=self.kernel, flux=flux, method=p['method'],
+                       threshold=p['threshold'])
+
+        if p['parallel']:
+            log.info('Using {0} cores to compute TS image.'.format(cpu_count()))
+            pool = Pool()
+            results = pool.map(wrap, positions)
+            pool.close()
+            pool.join()
+        else:
+            results = map(wrap, positions)
+
+        # Set TS values at given positions
+        j, i = zip(*positions)
+        for name in ['ts', 'flux', 'flux_err', 'niter']:
+            result[name].data[j, i] = [_[name] for _ in results]
+
+        # Compute sqrt(TS) values
+        if 'sqrt_ts' in which:
+            with np.errstate(invalid='ignore', divide='ignore'):
+                ts = result['ts'].data
+                result['sqrt_ts'].data = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+
+        runtime = np.round(time() - t_0, 2)
+        result.meta = OrderedDict(runtime=runtime)
         return result
-
 
 
 def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='auto',
@@ -277,148 +409,6 @@ def compute_maximum_ts_image(ts_image_results):
     ], meta=meta)
 
 
-def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
-                     method='root brentq', parallel=True, threshold=None):
-    """Compute TS image using different optimization methods.
-
-    Parameters
-    ----------
-    counts : `~gammapy.image.SkyImage`
-        Counts image.
-    background : `~gammapy.image.SkyImage`
-        Background image
-    exposure : `~gammapy.image.SkyImage`
-        Exposure image
-    kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
-        Source model kernel.
-    flux : float (None)
-        Flux image used as a starting value for the amplitude fit.
-    method : str ('root')
-        The following options are available:
-
-        * ``'root brentq'`` (default)
-            Fit amplitude finding roots of the the derivative of
-            the fit statistics. Described in Appendix A in Stewart (2009).
-        * ``'root newton'``
-            TODO: document
-        * ``'leastsq iter'``
-            TODO: document
-    parallel : bool (True)
-        Whether to use multiple cores for parallel processing.
-    threshold : float (None)
-        If the TS value corresponding to the initial flux estimate is not above
-        this threshold, the optimizing step is omitted to save computing time.
-
-    Returns
-    -------
-    images : `~gammapy.image.SkyImageList`
-        Images (ts, niter, amplitude)
-
-    Notes
-    -----
-    Negative :math:`TS` values are defined as following:
-
-    .. math::
-
-        TS = \\left \\{
-                 \\begin{array}{ll}
-                   -TS & : \\textnormal{if} \\ F < 0 \\\\
-                   \\ \\ TS & : \\textnormal{else}
-                 \\end{array}
-               \\right.
-
-    Where :math:`F` is the fitted flux amplitude.
-
-    References
-    ----------
-    [Stewart2009]_
-    """
-    t_0 = time()
-
-    log.info("Using method '{}'".format(method))
-
-    if not isinstance(kernel, Kernel2D):
-        kernel = CustomKernel(kernel)
-
-    wcs = counts.wcs.deepcopy()
-
-    # Parse data type
-    counts = counts.data.astype(float)
-    background = background.data.astype(float)
-    exposure = exposure.data.astype(float)
-    assert counts.shape == background.shape
-    assert counts.shape == exposure.shape
-
-    # in some image there are pixels, which have exposure, but zero
-    # background, which doesn't make sense and causes the TS computation
-    # to fail, this is a temporary fix
-    mask_ = np.logical_and(background == 0, exposure > 0)
-    if mask_.any():
-        log.warning('There are pixels in the data, that have exposure, but '
-                    'zero background, which can cause the ts computation to '
-                    'fail. Setting exposure of this pixels to zero.')
-        exposure[mask_] = 0
-
-    if (flux is None and method != 'root brentq') or threshold is not None:
-        from scipy.signal import fftconvolve
-
-        with np.errstate(invalid='ignore', divide='ignore'):
-            flux = (counts - background) / exposure / FLUX_FACTOR
-        flux[~np.isfinite(flux)] = 0
-        flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
-
-    # Compute null statistics for the whole image
-    c_0_image = _cash_cython(counts, background)
-
-    x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
-    y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
-    positions = product(range(y_min, y_max), range(x_min, x_max))
-
-    # Positions where exposure == 0 are not processed
-    if mask is None:
-        mask = exposure > 0
-    positions = [(j, i) for j, i in positions if mask[j][i]]
-
-    wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
-                   c_0_image=c_0_image, kernel=kernel, flux=flux, method=method,
-                   threshold=threshold)
-
-    if parallel:
-        log.info('Using {0} cores to compute TS image.'.format(cpu_count()))
-        pool = Pool()
-        results = pool.map(wrap, positions)
-        pool.close()
-        pool.join()
-    else:
-        results = map(wrap, positions)
-
-    assert positions, ("Positions are empty: possibly kernel " +
-                       "{} is larger than counts {}".format(kernel.shape, counts.shape))
-
-    # Set TS values at given positions
-    j, i = zip(*positions)
-    ts = np.ones(counts.shape) * np.nan
-    amplitudes = np.ones(counts.shape) * np.nan
-    niter = np.ones(counts.shape) * np.nan
-    ts[j, i] = [_[0] for _ in results]
-    amplitudes[j, i] = [_[1] for _ in results]
-    niter[j, i] = [_[2] for _ in results]
-
-    # Handle negative TS values
-    with np.errstate(invalid='ignore', divide='ignore'):
-        sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
-
-    runtime = np.round(time() - t_0, 2)
-    meta = OrderedDict(runtime=runtime)
-
-    return SkyImageList([
-        SkyImage(name='ts', data=ts.astype('float32'), wcs=wcs),
-        SkyImage(name='sqrt_ts', data=sqrt_ts.astype('float32'), wcs=wcs),
-        SkyImage(name='amplitude', data=amplitudes.astype('float32'), wcs=wcs),
-        SkyImage(name='niter', data=niter.astype('int16'), wcs=wcs),
-    ], meta=meta)
-
-
 def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
               method, threshold):
     """Compute TS value at a given pixel position.
@@ -474,8 +464,12 @@ def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
     with np.errstate(invalid='ignore', divide='ignore'):
         c_1 = f_cash(amplitude, counts_, background_, model)
 
-    # Compute and return TS value
-    return (c_0 - c_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
+    result = {}
+    result['ts'] = (c_0 - c_1) * np.sign(amplitude)
+    result['flux'] = amplitude * FLUX_FACTOR
+    result['niter'] = niter
+    result['flux_err'] = _compute_amplitude_err(amplitude, counts_, background_, model)
+    return result
 
 
 def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.001):
@@ -518,6 +512,14 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
             weights = x * model + background
             x_old = x
     return max(x / FLUX_FACTOR, amplitude_min_total), MAX_NITER
+
+
+def _compute_amplitude_err(x, counts, background, model):
+    """
+    Compute amplitude errors using inverse 2nd derivative.
+    """
+    stat = (model ** 2 * counts) / (background + x * FLUX_FACTOR * model) ** 2
+    return np.sqrt(1. / stat.sum())
 
 
 def _root_amplitude(counts, background, model, flux):
