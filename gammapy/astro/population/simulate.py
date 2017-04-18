@@ -300,22 +300,30 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
 
     # Draw the initial values for the period and magnetic field
     P_dist = lambda x: exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
-    P0_birth = Quantity(draw(0, 2, len(table), P_dist), 's')
+    p0_birth = draw(0, 2, len(table), P_dist, random_state=random_state)
+    p0_birth = Quantity(p0_birth, 's')
+
     logB = random_state.normal(B_mean, B_stdv, len(table))
 
-    # Set up pulsar model
-    psr = Pulsar(P0_birth, logB)
+    # Compute pulsar parameters
+    psr = Pulsar(p0_birth, logB)
+    p0 = psr.period(age)
+    p1 = psr.period_dot(age)
+    p1_birth = psr.P_dot_0
+    tau = psr.tau(age)
+    tau_0 = psr.tau_0
+    l_psr = psr.luminosity_spindown(age)
+    l0_psr = psr.L_0
 
     # Add columns to table
-    # TODO: Name all columns as in ATNF catalog
-    table['P0'] = Column(psr.period(age), unit='s', description='Pulsar period')
-    table['P1'] = Column(psr.period_dot(age), unit='', description='Pulsar period derivative')
-    table['P0_birth'] = Column(P0_birth, unit='s', description='Pulsar birth period')
-    table['P1_birth'] = Column(psr.P_dot_0, unit='', description='Pulsar birth period derivative')
-    table['CharAge'] = Column(psr.tau(age), unit='yr', description='Pulsar characteristic age')
-    table['Tau0'] = Column(psr.tau_0, unit='yr')
-    table['L_PSR'] = Column(psr.luminosity_spindown(age), unit='erg s-1')
-    table['L0_PSR'] = Column(psr.L_0, unit='erg s-1')
+    table['P0'] = Column(p0, unit='s', description='Pulsar period')
+    table['P1'] = Column(p1, unit='', description='Pulsar period derivative')
+    table['P0_birth'] = Column(p0_birth, unit='s', description='Pulsar birth period')
+    table['P1_birth'] = Column(p1_birth, unit='', description='Pulsar birth period derivative')
+    table['CharAge'] = Column(tau, unit='yr', description='Pulsar characteristic age')
+    table['Tau0'] = Column(tau_0, unit='yr')
+    table['L_PSR'] = Column(l_psr, unit='erg s-1')
+    table['L0_PSR'] = Column(l0_psr, unit='erg s-1')
     table['logB'] = Column(logB, unit='Gauss')
     return table
 
