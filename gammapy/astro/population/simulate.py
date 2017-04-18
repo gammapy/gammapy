@@ -144,7 +144,7 @@ def make_catalog_random_positions_sphere(size, center='Earth',
 
 
 def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
-                               max_age=Quantity(1E6, 'yr'),
+                               max_age=Quantity(1e6, 'yr'),
                                spiralarms=True, n_ISM=Quantity(1, 'cm-3'),
                                random_state='random-seed'):
     """
@@ -190,16 +190,18 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     if isinstance(vel_dis, six.string_types):
         vel_dis = velocity_distributions[vel_dis]
 
+    # Draw random values for the age
+    age = random_state.uniform(0, max_age.to('yr').value, n_sources)
+    age = Quantity(age, 'yr')
+
     # Draw r and z values from the given distribution
-    r = draw(RMIN.value, RMAX.value, n_sources, pdf(rad_dis()), random_state=random_state)
+    r = draw(RMIN.to('kpc').value, RMAX.to('kpc').value,
+             n_sources, pdf(rad_dis()), random_state=random_state)
     r = Quantity(r, 'kpc')
 
-    z = draw(ZMIN.value, ZMAX.value, n_sources, Exponential(), random_state=random_state)
+    z = draw(ZMIN.to('kpc').value, ZMAX.to('kpc').value,
+             n_sources, Exponential(), random_state=random_state)
     z = Quantity(z, 'kpc')
-
-    # Draw values from velocity distribution
-    v = draw(VMIN.value, VMAX.value, n_sources, vel_dis(), random_state=random_state)
-    v = Quantity(v, 'km/s')
 
     # Apply spiralarm modelling or not
     if spiralarms:
@@ -211,46 +213,44 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     # Compute cartesian coordinates
     x, y = astrometry.cartesian(r, theta)
 
-    # Draw random values for the age
-    age = Quantity(random_state.uniform(0, max_age, n_sources), 'yr')
+    # Draw values from velocity distribution
+    v = draw(VMIN.to('km/s').value, VMAX.to('km/s').value,
+             n_sources, vel_dis(), random_state=random_state)
+    v = Quantity(v, 'km/s')
 
     # Draw random direction of initial velocity
     theta = Quantity(random_state.uniform(0, pi, x.size), 'rad')
     phi = Quantity(random_state.uniform(0, 2 * pi, x.size), 'rad')
 
-    # Set environment interstellar density
-    n_ISM = n_ISM * np.ones(n_sources)
-
     # Compute new position
     dx, dy, dz, vx, vy, vz = astrometry.motion_since_birth(v, age, theta, phi)
 
     # Add displacement to birth position
-    x += dx.to('kpc')
-    y += dy.to('kpc')
-    z += dz.to('kpc')
+    x_moved = x + dx
+    y_moved = y + dy
+    z_moved = z + dz
 
-    # For now we only simulate shell-type SNRs.
-    # Later we might want to simulate certain fractions of object classes
-    # index = randint(0, 1, n_sources)
-    index = 2 * np.ones(n_sources, dtype=np.int)
-    morph_type = np.array(list(morph_types.keys()))[index]
+    # Set environment interstellar density
+    n_ISM = n_ISM * np.ones(n_sources)
 
     table = Table()
-    table['x_birth'] = Column(x, unit='kpc')
-    table['y_birth'] = Column(y, unit='kpc')
-    table['z_birth'] = Column(z, unit='kpc')
-    table['x'] = Column(x, unit='kpc', description='Galactocentric x coordinate')
-    table['y'] = Column(y, unit='kpc', description='Galactocentric y coordinate')
-    table['z'] = Column(z, unit='kpc', description='Galactocentric z coordinate')
-    table['vx'] = Column(vx.to('km/s'), unit='km/s')
-    table['vy'] = Column(vy.to('km/s'), unit='km/s')
-    table['vz'] = Column(vz.to('km/s'), unit='km/s')
+    table['age'] = Column(age, unit='yr', description='Age of the source')
+    table['n_ISM'] = Column(n_ISM, unit='cm-3', description='Interstellar medium density')
+    table['spiralarm'] = Column(spiralarm, description='Which spiralarm?')
 
-    table['age'] = Column(age, unit='yr')
-    table['n_ISM'] = Column(n_ISM, unit='cm-3')
-    table['spiralarm'] = spiralarm
-    table['morph_type'] = morph_type
-    table['v_abs'] = Column(v, unit='km/s')
+    table['x_birth'] = Column(x, unit='kpc', description='Galactocentric x coordinate at birth')
+    table['y_birth'] = Column(y, unit='kpc', description='Galactocentric y coordinate at birth')
+    table['z_birth'] = Column(z, unit='kpc', description='Galactocentric z coordinate at birth')
+
+    table['x'] = Column(x_moved.to('kpc'), unit='kpc', description='Galactocentric x coordinate')
+    table['y'] = Column(y_moved.to('kpc'), unit='kpc', description='Galactocentric y coordinate')
+    table['z'] = Column(z_moved.to('kpc'), unit='kpc', description='Galactocentric z coordinate')
+
+    table['vx'] = Column(vx.to('km/s'), unit='km/s', description='Galactocentric velocity in x direction')
+    table['vy'] = Column(vy.to('km/s'), unit='km/s', description='Galactocentric velocity in y direction')
+    table['vz'] = Column(vz.to('km/s'), unit='km/s', description='Galactocentric velocity in z direction')
+    table['v_abs'] = Column(v, unit='km/s', description='Galactocentric velocity (absolute)')
+
     return table
 
 
@@ -297,22 +297,30 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
 
     # Draw the initial values for the period and magnetic field
     P_dist = lambda x: exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
-    P0_birth = Quantity(draw(0, 2, len(table), P_dist), 's')
+    p0_birth = draw(0, 2, len(table), P_dist, random_state=random_state)
+    p0_birth = Quantity(p0_birth, 's')
+
     logB = random_state.normal(B_mean, B_stdv, len(table))
 
-    # Set up pulsar model
-    psr = Pulsar(P0_birth, logB)
+    # Compute pulsar parameters
+    psr = Pulsar(p0_birth, logB)
+    p0 = psr.period(age)
+    p1 = psr.period_dot(age)
+    p1_birth = psr.P_dot_0
+    tau = psr.tau(age)
+    tau_0 = psr.tau_0
+    l_psr = psr.luminosity_spindown(age)
+    l0_psr = psr.L_0
 
     # Add columns to table
-    # TODO: Name all columns as in ATNF catalog
-    table['P0'] = Column(psr.period(age), unit='s', description='Pulsar period')
-    table['P1'] = Column(psr.period_dot(age), unit='', description='Pulsar period derivative')
-    table['P0_birth'] = Column(P0_birth, unit='s', description='Pulsar birth period')
-    table['P1_birth'] = Column(psr.P_dot_0, unit='', description='Pulsar birth period derivative')
-    table['CharAge'] = Column(psr.tau(age), unit='yr', description='Pulsar characteristic age')
-    table['Tau0'] = Column(psr.tau_0, unit='yr')
-    table['L_PSR'] = Column(psr.luminosity_spindown(age), unit='erg s-1')
-    table['L0_PSR'] = Column(psr.L_0, unit='erg s-1')
+    table['P0'] = Column(p0, unit='s', description='Pulsar period')
+    table['P1'] = Column(p1, unit='', description='Pulsar period derivative')
+    table['P0_birth'] = Column(p0_birth, unit='s', description='Pulsar birth period')
+    table['P1_birth'] = Column(p1_birth, unit='', description='Pulsar birth period derivative')
+    table['CharAge'] = Column(tau, unit='yr', description='Pulsar characteristic age')
+    table['Tau0'] = Column(tau_0, unit='yr')
+    table['L_PSR'] = Column(l_psr, unit='erg s-1')
+    table['L0_PSR'] = Column(l0_psr, unit='erg s-1')
     table['logB'] = Column(logB, unit='Gauss')
     return table
 
@@ -328,8 +336,9 @@ def add_pwn_parameters(table):
     logB = table['logB']
 
     # Compute properties
-    pwn = PWN(Pulsar(P0_birth, logB),
-              SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM))
+    pulsar = Pulsar(P0_birth, logB)
+    snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
+    pwn = PWN(pulsar, snr)
     r_out_pwn = pwn.radius(age)
     L_PWN = pwn.luminosity_tev(age)
 
@@ -391,14 +400,13 @@ def add_observed_parameters(table, obs_pos=None):
     Position of observer in cartesian coordinates.
     Center of galaxy as origin, x-axis goes trough sun.
     """
-    if obs_pos is None:
-        obs_pos = [D_SUN_TO_GALACTIC_CENTER, 0, 0]
+    obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
 
     # Get data
     x, y, z = table['x'].quantity, table['y'].quantity, table['z'].quantity
     vx, vy, vz = table['vx'].quantity, table['vy'].quantity, table['vz'].quantity
 
-    distance, glon, glat = astrometry.galactic(x, y, z)
+    distance, glon, glat = astrometry.galactic(x, y, z, obs_pos=obs_pos)
 
     # Compute projected velocity
     v_glon, v_glat = astrometry.velocity_glon_glat(x, y, z, vx, vy, vz)
@@ -415,8 +423,8 @@ def add_observed_parameters(table, obs_pos=None):
                             description='Velocity in Galactic longitude')
     table['VGLAT'] = Column(v_glat.to('deg/Myr'), unit='deg/Myr',
                             description='Velocity in Galactic latitude')
-    table['RA'] = Column(ra, unit='deg')
-    table['DEC'] = Column(dec, unit='deg')
+    table['RA'] = Column(ra, unit='deg', description='Right ascension')
+    table['DEC'] = Column(dec, unit='deg', description='Declination')
 
     try:
         luminosity = table['luminosity']

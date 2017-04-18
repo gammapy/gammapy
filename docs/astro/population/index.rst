@@ -16,7 +16,7 @@ population studies.
 Getting Started
 ===============
 
-The following example illustrates how to simulate a basic catalog inclusing a
+The following example illustrates how to simulate a basic catalog including a
 spiral arm model.
 
 .. code-block:: python
@@ -26,29 +26,45 @@ spiral arm model.
 
 	max_age = 1E6 * u.yr
 	SN_rate = 3. / (100. * u.yr)
-	n_sources = max_age * SN_rate
-	table = make_base_catalog_galactic(n_sources=n_sources,
-	                                   rad_dis='L06',
-	                                   vel_dis='F06B',
-	                                   max_age=max_age,
-	                                   spiralarms=True)
+	n_sources = int(max_age * SN_rate)
+	table = make_base_catalog_galactic(
+	    n_sources=n_sources,
+	    rad_dis='L06',
+        vel_dis='F06B',
+        max_age=max_age,
+        spiralarms=True,
+    )
 
 The total number of sources is determined assuming a maximum age and a supernova
-rate. The table returned is an instance of `astropy.table.Table` which
+rate. The table returned is an instance of `~astropy.table.Table` which
 can be used for further processing. The example population with spiral-arms is
 illustrated in the following plot.
 
 .. plot:: astro/population/plot_spiral_arms.py
 
-Radial surface density distributions
+Galactocentric spatial distributions
 ------------------------------------
+
 Here is a comparison plot of all available radial distribution functions of the
 surface density of pulsars and related objects used in literature:
 
 .. plot:: astro/population/plot_radial_distributions.py
 
+TODO: add illustration of Galactocentric z-distribution model and combined
+(r, z) distribution for the Besancon model.
+
+Spiral arm models
+-----------------
+
+Two spiral arm models of the Milky way are available:
+(`~gammapy.astro.population.ValleeSpiral` and `gammapy.astro.population.FaucherSpiral`)
+
+.. plot:: astro/population/plot_spiral_arm_models.py
+
+
 Velocity distributions
 ----------------------
+
 Here is a comparison plot of all available velocity distribution functions:
 
 .. plot:: astro/population/plot_velocity_distributions.py

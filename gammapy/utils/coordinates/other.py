@@ -29,9 +29,10 @@ def polar(x, y):
     return r, theta
 
 
-def galactic(x, y, z, obs_pos=[D_SUN_TO_GALACTIC_CENTER, 0, 0]):
+def galactic(x, y, z, obs_pos=None):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
     for given position in cartesian coordinates (kpc)"""
+    obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
     y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
     glon = np.arctan2(x, y_prime).to('deg')

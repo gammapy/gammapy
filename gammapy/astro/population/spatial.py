@@ -35,8 +35,8 @@ __all__ = [
 
 
 # Simulation range used for random number drawing
-RMIN, RMAX = Quantity(0, 'kpc'), Quantity(20, 'kpc')
-ZMIN, ZMAX = Quantity(-0.5, 'kpc'), Quantity(0.5, 'kpc')
+RMIN, RMAX = Quantity([0, 20], 'kpc')
+ZMIN, ZMAX = Quantity([-0.5, 0.5], 'kpc')
 
 
 class Paczynski1990(Fittable1DModel):
