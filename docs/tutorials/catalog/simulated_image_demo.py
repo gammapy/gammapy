@@ -11,7 +11,7 @@ from gammapy.irf import EnergyDependentTablePSF
 from gammapy.utils.random import sample_powerlaw
 
 # Create image of defined size
-reference = SkyImage.empty(nxpix=300, nypix=100, binsz=1).to_image_hdu()
+reference = SkyImage.empty(nxpix=1000, nypix=200, binsz=0.2).to_image_hdu()
 
 psf_file = FermiGalacticCenter.filenames()['psf']
 psf = EnergyDependentTablePSF.read(psf_file)
@@ -20,9 +20,12 @@ psf = EnergyDependentTablePSF.read(psf_file)
 n_sources = int(5e2)
 
 table = population.make_base_catalog_galactic(
-    n_sources=n_sources, rad_dis='L06',
-    vel_dis='F06B', max_age=1e6,
-    spiralarms=True, random_state=0,
+    n_sources=n_sources,
+    rad_dis='L06',
+    vel_dis='F06B',
+    max_age=1e5 * u.yr,
+    spiralarms=True,
+    random_state=0,
 )
 
 # Minimum source luminosity (s^-1)
@@ -45,7 +48,7 @@ image = catalog_image(reference, psf, catalog='simulation', source_type='point',
                       total_flux=True, sim_table=table)
 
 # Plot
-fig = FITSFigure(image.to_fits(format='fermi-background')[0], figsize=(15, 5))
+fig = FITSFigure(image.to_fits(format='fermi-background')[0], figsize=(10, 3))
 fig.show_colorscale(interpolation='bicubic', cmap='afmhot', stretch='log', vmin=1E30, vmax=1E35)
 fig.tick_labels.set_xformat('ddd')
 fig.tick_labels.set_yformat('dd')
