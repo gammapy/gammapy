@@ -170,10 +170,16 @@ Reference/API
 .. automodapi:: gammapy.utils.energy
     :no-inheritance-diagram:
 
+.. automodapi:: gammapy.utils.units
+    :no-inheritance-diagram:
+
 .. automodapi:: gammapy.utils.mpl_style
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.utils.coordinates
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.utils.table
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.utils.fits
