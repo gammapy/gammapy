@@ -26,15 +26,17 @@ spiral arm model.
 
 	max_age = 1E6 * u.yr
 	SN_rate = 3. / (100. * u.yr)
-	n_sources = max_age * SN_rate
-	table = make_base_catalog_galactic(n_sources=n_sources,
-	                                   rad_dis='L06',
-	                                   vel_dis='F06B',
-	                                   max_age=max_age,
-	                                   spiralarms=True)
+	n_sources = int(max_age * SN_rate)
+	table = make_base_catalog_galactic(
+	    n_sources=n_sources,
+	    rad_dis='L06',
+        vel_dis='F06B',
+        max_age=max_age,
+        spiralarms=True,
+    )
 
 The total number of sources is determined assuming a maximum age and a supernova
-rate. The table returned is an instance of `astropy.table.Table` which
+rate. The table returned is an instance of `~astropy.table.Table` which
 can be used for further processing. The example population with spiral-arms is
 illustrated in the following plot.
 
