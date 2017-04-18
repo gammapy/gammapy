@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 # Simulation range used for random number drawing
-VMIN, VMAX = Quantity(0, 'kpc'), Quantity(4000, 'kpc')  # km/s
+VMIN, VMAX = Quantity([0, 4000], 'km/s')
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
