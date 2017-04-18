@@ -144,7 +144,7 @@ def make_catalog_random_positions_sphere(size, center='Earth',
 
 
 def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
-                               max_age=Quantity(1E6, 'yr'),
+                               max_age=Quantity(1e6, 'yr'),
                                spiralarms=True, n_ISM=Quantity(1, 'cm-3'),
                                random_state='random-seed'):
     """
@@ -191,7 +191,8 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw random values for the age
-    age = Quantity(random_state.uniform(0, max_age, n_sources), 'yr')
+    age = random_state.uniform(0, max_age.to('yr').value, n_sources)
+    age = Quantity(age, 'yr')
 
     # Draw r and z values from the given distribution
     r = draw(RMIN.to('kpc').value, RMAX.to('kpc').value,
@@ -225,9 +226,9 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     dx, dy, dz, vx, vy, vz = astrometry.motion_since_birth(v, age, theta, phi)
 
     # Add displacement to birth position
-    x += dx.to('kpc')
-    y += dy.to('kpc')
-    z += dz.to('kpc')
+    x_moved = x + dx
+    y_moved = y + dy
+    z_moved = z + dz
 
     # Set environment interstellar density
     n_ISM = n_ISM * np.ones(n_sources)
@@ -239,21 +240,22 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     morph_type = np.array(list(morph_types.keys()))[index]
 
     table = Table()
-    table['x_birth'] = Column(x, unit='kpc')
-    table['y_birth'] = Column(y, unit='kpc')
-    table['z_birth'] = Column(z, unit='kpc')
-    table['x'] = Column(x, unit='kpc', description='Galactocentric x coordinate')
-    table['y'] = Column(y, unit='kpc', description='Galactocentric y coordinate')
-    table['z'] = Column(z, unit='kpc', description='Galactocentric z coordinate')
-    table['vx'] = Column(vx.to('km/s'), unit='km/s')
-    table['vy'] = Column(vy.to('km/s'), unit='km/s')
-    table['vz'] = Column(vz.to('km/s'), unit='km/s')
+    table['x_birth'] = Column(x, unit='kpc', description='Galactocentric x coordinate at birth')
+    table['y_birth'] = Column(y, unit='kpc', description='Galactocentric y coordinate at birth')
+    table['z_birth'] = Column(z, unit='kpc', description='Galactocentric z coordinate at birth')
+    table['x'] = Column(x_moved.to('kpc'), unit='kpc', description='Galactocentric x coordinate')
+    table['y'] = Column(y_moved.to('kpc'), unit='kpc', description='Galactocentric y coordinate')
+    table['z'] = Column(z_moved.to('kpc'), unit='kpc', description='Galactocentric z coordinate')
+    table['vx'] = Column(vx.to('km/s'), unit='km/s', description='Galactocentrix velocity in x direction')
+    table['vy'] = Column(vy.to('km/s'), unit='km/s', description='Galactocentrix velocity in y direction')
+    table['vz'] = Column(vz.to('km/s'), unit='km/s', description='Galactocentrix velocity in z direction')
 
     table['age'] = Column(age, unit='yr')
     table['n_ISM'] = Column(n_ISM, unit='cm-3')
     table['spiralarm'] = spiralarm
     table['morph_type'] = morph_type
     table['v_abs'] = Column(v, unit='km/s')
+
     return table
 
 
@@ -339,8 +341,9 @@ def add_pwn_parameters(table):
     logB = table['logB']
 
     # Compute properties
-    pwn = PWN(Pulsar(P0_birth, logB),
-              SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM))
+    pulsar = Pulsar(P0_birth, logB)
+    snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
+    pwn = PWN(pulsar, snr)
     r_out_pwn = pwn.radius(age)
     L_PWN = pwn.luminosity_tev(age)
 

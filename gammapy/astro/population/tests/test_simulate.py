@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.table import Table
+import astropy.units as u
 from ....utils.testing import requires_dependency
 from ...population import (
     make_base_catalog_galactic,
@@ -46,17 +46,17 @@ def test_make_base_catalog_galactic():
     d = table[0]
     # print(list(zip(d.colnames, d.as_void())))
 
-    assert_allclose(d['x_birth'], 0.58513884523635529)
-    assert_allclose(d['y_birth'], -11.682838075998815)
-    assert_allclose(d['z_birth'], 0.15710260060554912)
-    assert_allclose(d['x'], 0.58513884523635529)
-    assert_allclose(d['y'], -11.682838075998815)
-    assert_allclose(d['z'], 0.15710260060554912)
+    assert_allclose(d['x_birth'], 0.58513884292018437)
+    assert_allclose(d['y_birth'], -11.682838052120154)
+    assert_allclose(d['z_birth'], 0.15710279448905115)
+    assert_allclose(d['x'], 0.5828226720259867)
+    assert_allclose(d['y'], -11.658959390801584)
+    assert_allclose(d['z'], 0.35098629652725671)
     assert_allclose(d['vx'], -4.1266001441394655)
     assert_allclose(d['vy'], 42.543357869627776)
     assert_allclose(d['vz'], 345.43206179709432)
 
-    assert_allclose(d['age'], -0.54881350392732475)  # TODO: why negative?
+    assert_allclose(d['age'], 548813.50392732478)
     assert_allclose(d['n_ISM'], 1.0)
     assert d['spiralarm'] == 'Crux Scutum'
     assert d['morph_type'] == 'shell2d'
@@ -64,36 +64,40 @@ def test_make_base_catalog_galactic():
 
 
 def test_add_snr_parameters():
-    table = make_base_catalog_galactic(n_sources=10, random_state=0)
-    table = add_snr_parameters(table)
-    assert len(table) == 10
-    assert set(['E_SN']) < set(table.colnames)
+    table = Table()
+    table['age'] = [100, 1000] * u.yr
+    table['n_ISM'] = u.Quantity(1, 'cm-3')
 
-    d = table[0]
-    # print(list(zip(d.colnames, d.as_void())))
-    assert_allclose(d['E_SN'], 9.9999999999999999e+50)
-    assert_allclose(d['r_out'], -0.0054881350392732477)  # TODO: why negative?
-    assert_allclose(d['r_in'], -0.0049865194966836725)  # TODO: why negative?
-    assert_allclose(d['L_SNR'], 0)  # TODO: why zero?
+    table = add_snr_parameters(table)
+
+    assert len(table) == 2
+    assert table.colnames == ['age', 'n_ISM', 'E_SN', 'r_out', 'r_in', 'L_SNR']
+
+    assert_allclose(table['E_SN'], 1e51)
+    assert_allclose(table['r_out'], [1, 3.80730787743])
+    assert_allclose(table['r_in'], [0.9086, 3.45931993743])
+    assert_allclose(table['L_SNR'], [0, 1.0768e+33])
 
 
 def test_add_pulsar_parameters():
-    table = make_base_catalog_galactic(n_sources=10, random_state=0)
-    table = add_pulsar_parameters(table, random_state=0)
-    assert len(table) == 10
-    assert set(['P0']) < set(table.colnames)
+    table = Table()
+    table['age'] = [100, 1000] * u.yr
 
-    d = table[0]
-    # print(list(zip(d.colnames, d.as_void())))
-    assert_allclose(d['P0'], 0.32225433462770614)
-    assert_allclose(d['P1'], 5.494766020259218e-15)
-    assert_allclose(d['P0_birth'], 0.32225471528776467)
-    assert_allclose(d['P1_birth'], 5.494759529623533e-15)
-    assert_allclose(d['CharAge'], 2.8055241333205992e-23)
-    assert_allclose(d['Tau0'], 929215.88847248629)
-    assert_allclose(d['L_PSR'], 6.4820156070136442e+33)
-    assert_allclose(d['L0_PSR'], 6.4820232638367655e+33)
-    assert_allclose(d['logB'], 12.129223964138484)
+    table = add_pulsar_parameters(table, random_state=0)
+
+    assert len(table) == 2
+    assert table.colnames == ['age', 'P0', 'P1', 'P0_birth', 'P1_birth', 'CharAge',
+                              'Tau0', 'L_PSR', 'L0_PSR', 'logB']
+
+    assert_allclose(table['P0'], [0.322829453422, 0.51352778881])
+    assert_allclose(table['P1'], [4.54295751161e-14, 6.98423128444e-13])
+    assert_allclose(table['P0_birth'], [0.322254715288, 0.388110930459])
+    assert_allclose(table['P1_birth'], [4.55105983192e-14, 9.24116423053e-13])
+    assert_allclose(table['CharAge'], [2.32368825638e-22, 5.6826197937e-21])
+    assert_allclose(table['Tau0'], [112189.64476, 6654.19039158])
+    assert_allclose(table['L_PSR'], [5.37834069771e+34, 8.25708734631e+35])
+    assert_allclose(table['L0_PSR'], [5.36876555682e+34, 6.24049160082e+35])
+    assert_allclose(table['logB'], [12.5883058913, 13.2824912596])
 
 
 @requires_dependency('scipy')
@@ -108,12 +112,15 @@ def test_add_pwn_parameters():
 
     d = table[0]
     # print(list(zip(d.colnames, d.as_void())))
-    assert_allclose(d['r_out_PWN'], np.nan)  # TODO: why NaN???
-    assert_allclose(d['L_PWN'], -1.122637636555517e+40)  # TODO: why negative?
+    assert_allclose(d['r_out_PWN'], 0.5892196771927385)
+    assert_allclose(d['L_PWN'], 7.057857699785925e+45)
 
 
 @requires_dependency('scipy')
 def test_chain_all():
+    """
+    Test that running the simulation functions in chain works
+    """
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     table = add_snr_parameters(table)
     table = add_pulsar_parameters(table, random_state=0)
@@ -122,3 +129,6 @@ def test_chain_all():
     table = add_observed_source_parameters(table)
     assert len(table) == 10
     assert set(['ext_in_SNR']) < set(table.colnames)
+
+    # TODO: add proper asserts on the values in the first row
+    # (like in test_make_base_catalog_galactic)
