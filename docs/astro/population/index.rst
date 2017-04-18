@@ -16,7 +16,7 @@ population studies.
 Getting Started
 ===============
 
-The following example illustrates how to simulate a basic catalog inclusing a
+The following example illustrates how to simulate a basic catalog including a
 spiral arm model.
 
 .. code-block:: python
@@ -42,15 +42,29 @@ illustrated in the following plot.
 
 .. plot:: astro/population/plot_spiral_arms.py
 
-Radial surface density distributions
+Galactocentric spatial distributions
 ------------------------------------
+
 Here is a comparison plot of all available radial distribution functions of the
 surface density of pulsars and related objects used in literature:
 
 .. plot:: astro/population/plot_radial_distributions.py
 
+TODO: add illustration of Galactocentric z-distribution model and combined
+(r, z) distribution for the Besancon model.
+
+Spiral arm models
+-----------------
+
+Two spiral arm models of the Milky way are available:
+(`~gammapy.astro.population.ValleeSpiral` and `gammapy.astro.population.FaucherSpiral`)
+
+.. plot:: astro/population/plot_spiral_arm_models.py
+
+
 Velocity distributions
 ----------------------
+
 Here is a comparison plot of all available velocity distribution functions:
 
 .. plot:: astro/population/plot_velocity_distributions.py
