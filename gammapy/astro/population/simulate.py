@@ -233,28 +233,23 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     # Set environment interstellar density
     n_ISM = n_ISM * np.ones(n_sources)
 
-    # For now we only simulate shell-type SNRs.
-    # Later we might want to simulate certain fractions of object classes
-    # index = randint(0, 1, n_sources)
-    index = 2 * np.ones(n_sources, dtype=np.int)
-    morph_type = np.array(list(morph_types.keys()))[index]
-
     table = Table()
+    table['age'] = Column(age, unit='yr', description='Age of the source')
+    table['n_ISM'] = Column(n_ISM, unit='cm-3', description='Interstellar medium density')
+    table['spiralarm'] = Column(spiralarm, description='Which spiralarm?')
+
     table['x_birth'] = Column(x, unit='kpc', description='Galactocentric x coordinate at birth')
     table['y_birth'] = Column(y, unit='kpc', description='Galactocentric y coordinate at birth')
     table['z_birth'] = Column(z, unit='kpc', description='Galactocentric z coordinate at birth')
+
     table['x'] = Column(x_moved.to('kpc'), unit='kpc', description='Galactocentric x coordinate')
     table['y'] = Column(y_moved.to('kpc'), unit='kpc', description='Galactocentric y coordinate')
     table['z'] = Column(z_moved.to('kpc'), unit='kpc', description='Galactocentric z coordinate')
-    table['vx'] = Column(vx.to('km/s'), unit='km/s', description='Galactocentrix velocity in x direction')
-    table['vy'] = Column(vy.to('km/s'), unit='km/s', description='Galactocentrix velocity in y direction')
-    table['vz'] = Column(vz.to('km/s'), unit='km/s', description='Galactocentrix velocity in z direction')
 
-    table['age'] = Column(age, unit='yr')
-    table['n_ISM'] = Column(n_ISM, unit='cm-3')
-    table['spiralarm'] = spiralarm
-    table['morph_type'] = morph_type
-    table['v_abs'] = Column(v, unit='km/s')
+    table['vx'] = Column(vx.to('km/s'), unit='km/s', description='Galactocentric velocity in x direction')
+    table['vy'] = Column(vy.to('km/s'), unit='km/s', description='Galactocentric velocity in y direction')
+    table['vz'] = Column(vz.to('km/s'), unit='km/s', description='Galactocentric velocity in z direction')
+    table['v_abs'] = Column(v, unit='km/s', description='Galactocentric velocity (absolute)')
 
     return table
 
@@ -405,14 +400,13 @@ def add_observed_parameters(table, obs_pos=None):
     Position of observer in cartesian coordinates.
     Center of galaxy as origin, x-axis goes trough sun.
     """
-    if obs_pos is None:
-        obs_pos = [D_SUN_TO_GALACTIC_CENTER, 0, 0]
+    obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
 
     # Get data
     x, y, z = table['x'].quantity, table['y'].quantity, table['z'].quantity
     vx, vy, vz = table['vx'].quantity, table['vy'].quantity, table['vz'].quantity
 
-    distance, glon, glat = astrometry.galactic(x, y, z)
+    distance, glon, glat = astrometry.galactic(x, y, z, obs_pos=obs_pos)
 
     # Compute projected velocity
     v_glon, v_glat = astrometry.velocity_glon_glat(x, y, z, vx, vy, vz)
@@ -429,8 +423,8 @@ def add_observed_parameters(table, obs_pos=None):
                             description='Velocity in Galactic longitude')
     table['VGLAT'] = Column(v_glat.to('deg/Myr'), unit='deg/Myr',
                             description='Velocity in Galactic latitude')
-    table['RA'] = Column(ra, unit='deg')
-    table['DEC'] = Column(dec, unit='deg')
+    table['RA'] = Column(ra, unit='deg', description='Right ascension')
+    table['DEC'] = Column(dec, unit='deg', description='Declination')
 
     try:
         luminosity = table['luminosity']

@@ -39,12 +39,18 @@ def test_make_base_catalog_galactic():
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     assert len(table) == 10
     assert table.colnames == [
-        'x_birth', 'y_birth', 'z_birth', 'x', 'y', 'z',
-        'vx', 'vy', 'vz', 'age', 'n_ISM', 'spiralarm', 'morph_type', 'v_abs'
+        'age', 'n_ISM', 'spiralarm',
+        'x_birth', 'y_birth', 'z_birth',
+        'x', 'y', 'z',
+        'vx', 'vy', 'vz', 'v_abs',
     ]
 
     d = table[0]
     # print(list(zip(d.colnames, d.as_void())))
+
+    assert_allclose(d['age'], 548813.50392732478)
+    assert_allclose(d['n_ISM'], 1.0)
+    assert d['spiralarm'] == 'Crux Scutum'
 
     assert_allclose(d['x_birth'], 0.58513884292018437)
     assert_allclose(d['y_birth'], -11.682838052120154)
@@ -55,12 +61,28 @@ def test_make_base_catalog_galactic():
     assert_allclose(d['vx'], -4.1266001441394655)
     assert_allclose(d['vy'], 42.543357869627776)
     assert_allclose(d['vz'], 345.43206179709432)
-
-    assert_allclose(d['age'], 548813.50392732478)
-    assert_allclose(d['n_ISM'], 1.0)
-    assert d['spiralarm'] == 'Crux Scutum'
-    assert d['morph_type'] == 'shell2d'
     assert_allclose(d['v_abs'], 348.06648135803658)
+
+
+def test_add_observed_parameters():
+    table = make_base_catalog_galactic(n_sources=10, random_state=0)
+    table = add_observed_parameters(table)
+
+    assert len(table) == 10
+    assert set(table.colnames).issuperset([
+        'distance', 'GLON', 'GLAT', 'VGLON', 'VGLAT', 'RA', 'DEC',
+    ])
+
+    d = table[0]
+    # print(list(zip(d.colnames, d.as_void())))
+
+    assert_allclose(d['distance'], 3231.392591455106)
+    assert_allclose(d['GLON'], 169.54657778189639)
+    assert_allclose(d['GLAT'], 6.2356357665816162)
+    assert_allclose(d['VGLON'], 0.066778795313076678)
+    assert_allclose(d['VGLAT'], 5.6115948931932174)
+    assert_allclose(d['RA'], 86.308826288823127)
+    assert_allclose(d['DEC'], 41.090120056648828)
 
 
 def test_add_snr_parameters():
