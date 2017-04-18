@@ -190,16 +190,17 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     if isinstance(vel_dis, six.string_types):
         vel_dis = velocity_distributions[vel_dis]
 
+    # Draw random values for the age
+    age = Quantity(random_state.uniform(0, max_age, n_sources), 'yr')
+
     # Draw r and z values from the given distribution
-    r = draw(RMIN.value, RMAX.value, n_sources, pdf(rad_dis()), random_state=random_state)
+    r = draw(RMIN.to('kpc').value, RMAX.to('kpc').value,
+             n_sources, pdf(rad_dis()), random_state=random_state)
     r = Quantity(r, 'kpc')
 
-    z = draw(ZMIN.value, ZMAX.value, n_sources, Exponential(), random_state=random_state)
+    z = draw(ZMIN.to('kpc').value, ZMAX.to('kpc').value,
+             n_sources, Exponential(), random_state=random_state)
     z = Quantity(z, 'kpc')
-
-    # Draw values from velocity distribution
-    v = draw(VMIN.value, VMAX.value, n_sources, vel_dis(), random_state=random_state)
-    v = Quantity(v, 'km/s')
 
     # Apply spiralarm modelling or not
     if spiralarms:
@@ -211,15 +212,14 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     # Compute cartesian coordinates
     x, y = astrometry.cartesian(r, theta)
 
-    # Draw random values for the age
-    age = Quantity(random_state.uniform(0, max_age, n_sources), 'yr')
+    # Draw values from velocity distribution
+    v = draw(VMIN.to('km/s').value, VMAX.to('km/s').value,
+             n_sources, vel_dis(), random_state=random_state)
+    v = Quantity(v, 'km/s')
 
     # Draw random direction of initial velocity
     theta = Quantity(random_state.uniform(0, pi, x.size), 'rad')
     phi = Quantity(random_state.uniform(0, 2 * pi, x.size), 'rad')
-
-    # Set environment interstellar density
-    n_ISM = n_ISM * np.ones(n_sources)
 
     # Compute new position
     dx, dy, dz, vx, vy, vz = astrometry.motion_since_birth(v, age, theta, phi)
@@ -228,6 +228,9 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     x += dx.to('kpc')
     y += dy.to('kpc')
     z += dz.to('kpc')
+
+    # Set environment interstellar density
+    n_ISM = n_ISM * np.ones(n_sources)
 
     # For now we only simulate shell-type SNRs.
     # Later we might want to simulate certain fractions of object classes
