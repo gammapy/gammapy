@@ -1,15 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import (
-    pytest,
-    assert_quantity_allclose,
-)
+from astropy.tests.helper import pytest, assert_quantity_allclose
 import numpy as np
-import astropy.units as u
-from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
+import astropy.units as u
 from ..testing import requires_dependency
-from ..nddata import NDDataArray, BinnedDataAxis, DataAxis
+from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
 
 def get_test_arrays():
@@ -45,7 +41,6 @@ def test_nddata(config):
 
 
 class NDDataArrayTester:
-
     def __init__(self, config):
         self.config = config
         self.data = config['data']
@@ -151,3 +146,9 @@ class NDDataArrayTester:
         actual = self.nddata.evaluate(**kwargs).shape
         desired = np.zeros([2, nx, ny]).shape
         assert actual == desired
+
+
+def test_sqrt_space():
+    values = sqrt_space(0, 2, 5)
+
+    assert_allclose(values, [0., 1., 1.41421356, 1.73205081, 2.])
