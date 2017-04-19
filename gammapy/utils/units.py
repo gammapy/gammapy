@@ -37,8 +37,10 @@ def standardise_unit(unit):
     Unit("1 / (cm2 s)")
     """
     unit = u.Unit(unit)
+    bases, powers = [], []
     for base, power in zip(unit.bases, unit.powers):
-        if base == u.Unit('ph') or base == u.Unit('ct'):
-            unit = unit / (base ** power)
+        if str(base) not in {'ph', 'ct'}:
+            bases.append(base)
+            powers.append(power)
 
-    return unit
+    return u.CompositeUnit(scale=unit.scale, bases=bases, powers=powers)
