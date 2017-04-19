@@ -11,11 +11,11 @@ import logging
 import os
 import numpy as np
 from astropy import units as u
-from astropy.table import Table, QTable
+from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
 from ..utils.modeling import SourceModel, SourceLibrary
-from ..spectrum import FluxPoints, SpectrumFitResult
+from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import Shell2D, Delta2D
 from ..utils.scripts import make_path
@@ -81,15 +81,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
         spec_type = d['spec_type']
         pars, errs = {}, {}
-        pars['index'] = u.Quantity(d['spec_index'])
-        errs['index'] = u.Quantity(d['spec_index_err'])
+        pars['index'] = d['spec_index'] * u.dimensionless_unscaled
+        errs['index'] = d['spec_index_err'] * u.dimensionless_unscaled
 
         if spec_type == 'pl':
             pars['reference'] = d['spec_ref']
             pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
             errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
             model = PowerLaw(**pars)
-
         elif spec_type == 'ecpl':
             pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
             pars['reference'] = d['spec_ref']
@@ -97,7 +96,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
             errs['lambda_'] = d['spec_ecut_err'] * u.TeV / d['spec_ecut'] ** 2
             model = ExponentialCutoffPowerLaw(**pars)
-
         elif spec_type == 'pl2':
             pars['emin'] = d['spec_ref']
             # TODO: I'd be better to put np.inf, but uncertainties can't handle it
@@ -111,7 +109,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
         Source spatial model.
@@ -121,8 +118,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         pars = {}
         flux = self.spectral_model.integral(emin, emax)
 
-        glon = Angle(d['glon'], 'deg').wrap_at('180d').deg
-        glat = Angle(d['glat'], 'deg').wrap_at('180d').deg
+        glon = Angle(d['glon']).wrap_at('180d').deg
+        glat = Angle(d['glat']).wrap_at('180d').deg
 
         if morph_type == 'gauss':
             pars['x_mean'] = glon
@@ -218,7 +215,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     source_object_class = SourceCatalogObjectGammaCat
 
     def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
-        filename = make_path(filename)
+        filename = str(make_path(filename))
 
         if 'GAMMA_CAT' not in os.environ:
             msg = 'The gamma-cat repo is not available. '
@@ -226,8 +223,9 @@ class SourceCatalogGammaCat(SourceCatalog):
             msg += 'to point to the location for it to be found.'
             raise GammaCatNotFoundError(msg)
 
-        self.filename = str(filename)
-        table = QTable.read(self.filename)
+        table = Table.read(filename, hdu=1)
+        self.filename = filename
+
         source_name_key = 'common_name'
         source_name_alias = ('other_names', 'gamma_names')
         super(SourceCatalogGammaCat, self).__init__(

@@ -12,16 +12,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 from collections import OrderedDict
 import numpy as np
-from astropy.units import Quantity, Unit
+import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
-from gammapy.utils.scripts import make_path
-
 from ..extern.pathlib import Path
-from ..spectrum import FluxPoints, SpectrumFitResult
+from ..utils.scripts import make_path
+from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from .core import SourceCatalog, SourceCatalogObject
-from .gammacat import SourceCatalogGammaCat, GammaCatNotFoundError
 
 __all__ = [
     'SourceCatalogHGPS',
@@ -79,9 +77,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def energy_range(self):
-        erange = Quantity([self.data['Energy_Range_Spec_Lo'],
-                           self.data['Energy_Range_Spec_Hi']], 'TeV')
-        return erange
+        return u.Quantity([self.data['Energy_Range_Spec_Lo'], self.data['Energy_Range_Spec_Hi']])
 
     def info(self, info='all'):
         """
@@ -189,10 +185,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             'Source model', d['Flux_Map_RSpec_Source'].value / FF, d['Flux_Map_RSpec_Source'].value * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Other component model', d['Flux_Map_RSpec_Other'].value / FF, d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB)
+            'Other component model', d['Flux_Map_RSpec_Other'].value / FF,
+                                     d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Large scale component model', d['Flux_Map_RSpec_LS'].value / FF, d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB)
+            'Large scale component model', d['Flux_Map_RSpec_LS'].value / FF,
+                                           d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
             'Total model', d['Flux_Map_RSpec_Total'].value / FF, d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB)
@@ -308,7 +306,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         flux_points = flux_points[['e_ref', 'dnde', 'dnde_errn', 'dnde_errp']]
         flux_points['e_ref'].format = '.3f'
 
-        flux_unit = Unit('1e-12 cm-2 s-1 TeV-1')
+        flux_unit = u.Unit('1e-12 cm-2 s-1 TeV-1')
         for _ in ['dnde', 'dnde_errp', 'dnde_errn']:
             flux_points[_] = flux_points[_].to(flux_unit)
             flux_points[_].format = '.3f'
@@ -358,14 +356,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_PL_Pivot']
             errs['amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
-            errs['index'] = data['Index_Spec_PL_Err'] * Unit('')
+            errs['index'] = data['Index_Spec_PL_Err'] * u.dimensionless_unscaled
             model = PowerLaw(**pars)
         elif spec_type == 'ECPL':
             pars['index'] = data['Index_Spec_ECPL']
             pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_ECPL_Pivot']
             pars['lambda_'] = data['Lambda_Spec_ECPL']
-            errs['index'] = data['Index_Spec_ECPL_Err'] * Unit('')
+            errs['index'] = data['Index_Spec_ECPL_Err'] * u.dimensionless_unscaled
             errs['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot_Err']
             errs['lambda_'] = data['Lambda_Spec_ECPL_Err']
             model = ExponentialCutoffPowerLaw(**pars)
@@ -383,14 +381,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table.meta['SED_TYPE'] = 'dnde'
         mask = ~np.isnan(self.data['Flux_Points_Energy'])
 
-        table['e_ref'] = Quantity(self.data['Flux_Points_Energy'][mask], 'TeV')
-        table['e_min'] = Quantity(self.data['Flux_Points_Energy_Min'][mask], 'TeV')
-        table['e_max'] = Quantity(self.data['Flux_Points_Energy_Max'][mask], 'TeV')
+        table['e_ref'] = self.data['Flux_Points_Energy'][mask]
+        table['e_min'] = self.data['Flux_Points_Energy_Min'][mask]
+        table['e_max'] = self.data['Flux_Points_Energy_Max'][mask]
 
-        table['dnde'] = Quantity(self.data['Flux_Points_Flux'][mask], 'cm-2 s-1 TeV-1')
-        table['dnde_errp'] = Quantity(self.data['Flux_Points_Flux_Err_Hi'][mask], 'cm-2 s-1 TeV-1')
-        table['dnde_errn'] = Quantity(self.data['Flux_Points_Flux_Err_Lo'][mask], 'cm-2 s-1 TeV-1')
-        table['dnde_ul'] = Quantity(self.data['Flux_Points_Flux_UL'][mask], 'cm-2 s-1 TeV-1')
+        table['dnde'] = self.data['Flux_Points_Flux'][mask]
+        table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
+        table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
+        # TODO: Update this line as soon as the catalog is fixed:
+        # https://bitbucket.org/hess_software/hgps_paper/issues/245/missing-unit-on-column-flux_points_flux_ul
+        table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask] * u.Unit('1 / (cm2 s TeV)')
+
         return FluxPoints(table)
 
 
@@ -408,18 +409,19 @@ class SourceCatalogHGPS(SourceCatalog):
         if not filename:
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
 
-        filename = make_path(filename)
+        filename = str(make_path(filename))
 
-        table = Table.read(str(filename), hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ('Identified_Object',)
-        super(SourceCatalogHGPS, self).__init__(table=table,
-                                                source_name_alias=source_name_alias)
+        super(SourceCatalogHGPS, self).__init__(
+            table=table,
+            source_name_alias=source_name_alias,
+        )
 
-        if hdu == 'HGPS_SOURCES':
-            self.components = Table.read(str(filename), hdu='HGPS_GAUSS_COMPONENTS')
-            self.associations = Table.read(str(filename), hdu='HGPS_ASSOCIATIONS')
-            self.identifications = Table.read(str(filename), hdu='HGPS_IDENTIFICATIONS')
+        self.components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
+        self.associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
+        self.identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
 
     def _make_source_object(self, index):
         """Make one source object.
