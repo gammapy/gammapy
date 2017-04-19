@@ -568,10 +568,10 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
-    _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
-    _ebounds_suffix = ['10_20', '20_50', '50_150', '150_500', '500_2000']
     energy_range = u.Quantity([0.01, 2], 'TeV')
     """Energy range of the Fermi 1FHL source catalog"""
+
+    _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
     def __str__(self):
         """Print summary info."""
@@ -629,13 +629,14 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         table['e_min'] = self._ebounds.lower_bounds
         table['e_max'] = self._ebounds.upper_bounds
 
-        flux = self._get_flux_values('Flux')
-        flux_err = self._get_flux_values('Unc_Flux')
+        flux = self.data['Flux_Band']
+        flux_err = self.data['Unc_Flux_Band']
+        e2dnde = self.data['nuFnu']
+
         table['flux'] = flux
         table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
 
-        e2dnde = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
         table['eflux'] = e2dnde
         table['eflux_errn'] = np.abs(e2dnde * flux_err[:, 0] / flux)
         table['eflux_errp'] = e2dnde * flux_err[:, 1] / flux
@@ -650,19 +651,16 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         for column in ['flux', 'flux_errp', 'flux_errn']:
             table[column][is_ul] = np.nan
 
-        # handle upper limits
         table['eflux_ul'] = np.nan * e2dnde.unit
         table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
 
         for column in ['eflux', 'eflux_errp', 'eflux_errn']:
             table[column][is_ul] = np.nan
 
+        # TODO: remove this computation here.
+        # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
         return FluxPoints(table)
-
-    def _get_flux_values(self, prefix, unit='cm-2 s-1'):
-        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
-        return u.Quantity(values, unit)
 
 
 class SourceCatalog3FGL(SourceCatalog):
@@ -761,18 +759,10 @@ class SourceCatalog3FHL(SourceCatalog):
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v11.fit.gz'):
         filename = str(make_path(filename))
-        self.extended_sources_table = Table.read(filename, hdu='ExtendedSources')
-        self.rois = Table.read(filename, hdu='ROIs')
-        self.energy_bounds_table = Table.read(filename, hdu='EnergyBounds')
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
         table_standardise(table)
-
-        self._add_flux_point_columns(
-            table=table,
-            energy_bounds_table=self.energy_bounds_table,
-        )
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
@@ -782,30 +772,9 @@ class SourceCatalog3FHL(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-    @staticmethod
-    def _add_flux_point_columns(table, energy_bounds_table):
-        """
-        Add integrated flux columns (defined in the same way as in the
-        other Fermi catalogs (e.g. FluxY_ZGeV))
-        """
-        for idx, band in enumerate(energy_bounds_table):
-            col_flux_name = 'Flux{:d}_{:d}GeV'.format(int(band['LowerEnergy']),
-                                                      int(band['UpperEnergy']))
-            col_flux_value = table['Flux_Band'][:, idx].data
-            col_flux = Column(col_flux_value, name=col_flux_name)
-
-            col_unc_flux_name = 'Unc_' + col_flux_name
-            col_unc_flux_value = table['Unc_Flux_Band'][:, idx].data
-            col_unc_flux = Column(col_unc_flux_value, name=col_unc_flux_name)
-
-            col_nufnu_name = 'nuFnu{:d}_{:d}GeV'.format(int(band['LowerEnergy']),
-                                                        int(band['UpperEnergy']))
-            col_nufnu_value = table['nuFnu'][:, idx].data
-            col_nufnu = Column(col_nufnu_value, name=col_nufnu_name)
-
-            table.add_column(col_flux)
-            table.add_column(col_unc_flux)
-            table.add_column(col_nufnu)
+        self.extended_sources_table = Table.read(filename, hdu='ExtendedSources')
+        self.rois = Table.read(filename, hdu='ROIs')
+        self.energy_bounds_table = Table.read(filename, hdu='EnergyBounds')
 
 
 def _is_galactic(source_class):
