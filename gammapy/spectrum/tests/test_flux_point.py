@@ -12,7 +12,7 @@ from ...spectrum import SpectrumResult, SpectrumFit
 from ...spectrum.models import PowerLaw, SpectralModel
 from ..flux_point import (_e_ref_lafferty, _dnde_from_flux,
                           compute_flux_points_dnde,
-                          FluxPointEstimator, FluxPoints)
+                          FluxPointEstimator, FluxPoints, FluxPointsFitter)
 from ..flux_point import SEDLikelihoodProfile
 
 E_REF_METHODS = ['table', 'lafferty', 'log_center']
@@ -328,3 +328,20 @@ def test_compute_flux_points_dnde():
         actual = actual_fp.table[column].quantity
         desired = desired_fp.table[column].quantity
         assert_quantity_allclose(actual, desired, rtol=1E-12)
+
+@requires_data('gammapy-extra')
+@requires_dependency('sherpa')
+class TestFluxPointsFitter:
+    def setup(self):
+        path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
+        self.flux_points = FluxPoints.read(path)
+
+    def test_fit_pwl(self):
+        fitter = FluxPointsFitter()
+        model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        result = fitter.run([self.flux_points], model)
+
+        index = result['best_fit_model'].parameters['index']
+        amplitude = result['best_fit_model'].parameters['amplitude']
+        assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1E-3)
+        assert_quantity_allclose(amplitude.quantity, 2.149E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1E-3)

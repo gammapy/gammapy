@@ -233,7 +233,7 @@ class FluxPoints(object):
     def get_energy_err(self, sed_type=None):
         """Compute energy error for given sed type"""
         # TODO: sed_type is not used
-        if sed_type is None: 
+        if sed_type is None:
             sed_type = self.sed_type
         try:
             e_min = self.table['e_min'].quantity
@@ -246,7 +246,7 @@ class FluxPoints(object):
 
     def get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
-        if sed_type is None: 
+        if sed_type is None:
             sed_type = self.sed_type
         try:
             # assymmetric error
@@ -670,3 +670,167 @@ class SEDLikelihoodProfile(object):
             ax = plt.gca()
 
         # TODO
+
+
+def chi2_flux_points(flux_points_list, models):
+    """
+    Chi2 statistics for a list of flux points and model.
+    """
+    # extract first model from list
+    gp_model = models[0]
+    stats, stat_per_bins = 0, []
+    for flux_points in flux_points_list:
+        model = gp_model(flux_points.e_ref)
+        data = flux_points.table['dnde'].quantity
+        data_err = flux_points.table['dnde_err'].quantity
+        stat_per_bin = ((data - model) / data_err).value ** 2
+        stats += np.nansum(stat_per_bin)
+        stat_per_bins = np.append(stat_per_bins, stat_per_bin)
+    return stats, stat_per_bins
+
+
+class FluxPointsFitter(object):
+    """
+    Fit a set of flux points with a parametric model.
+
+    Parameters
+    ----------
+    optimizer : ['simplex', 'moncar', 'gridsearch']
+        Which optmizer to use.
+
+
+    Examples
+    --------
+
+    from astropy import units as u
+    from gammapy.spectrum import FluxPoints, FluxPointsFitter
+    from gammapy.spectrum.models import Powerlaw
+
+    filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+    flux_points = FluxPoints.read(filename)
+    fitter = FluxPointsFitter([flux_points])
+
+    pars = {}
+    pars['index'] = 2. * u.Unit('')
+    pars['amplitude'] = 1E-12 * u.Unit('cm-2 s-1 TeV-1')
+    pars['reference'] = 1. * u.TeV
+    pwl = PowerLaw(**pars)
+
+    pwl_best_fit = fitter.fit(pwl)
+    pwl_best_fit = fitter.estimate_errors(pwl_best_fit)
+    """
+    def __init__(self, optimizer='simplex', error_estimator='covar'):
+        self.parameters = OrderedDict(optimizer=optimizer,
+                                      error_estimator=error_estimator)
+
+    def _setup_sherpa_fit(self, data, model, optimizer):
+        """Fit flux point using sherpa"""
+        from sherpa.fit import Fit
+        from sherpa.data import DataSimulFit
+        from ..utils.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
+                                    SherpaModelWrapper, SHERPA_OPTMETHODS)
+
+        datasets = []
+        for flux_points in data:
+            if flux_points.sed_type == 'dnde':
+                data = SherpaDataWrapper(flux_points)
+                datasets.append(data)
+            else:
+                raise NotImplementedError
+
+        stat = SherpaStatWrapper(chi2_flux_points)
+        data = DataSimulFit(name='GPFluxPoints', datasets=datasets)
+        method = SHERPA_OPTMETHODS[optimizer]
+        models = SherpaModelWrapper(model)
+        return Fit(data=data, model=models, stat=stat, method=method)
+
+    def fit(self, data, model):
+        """
+        Fit given model to data.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+
+        Returns
+        -------
+        best_fit_model : `SpectralModel`
+            Best fit model.
+        """
+        p = self.parameters
+
+        #TODO: make copy of model?
+        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch']:
+            self._sherpa_fitter = self._setup_sherpa_fit(data, model, p['optimizer'])
+            self._sherpa_fitter.fit()
+        else:
+            raise ValueError('Not a valid optimizer')
+
+        return model
+
+    def statval(self, data, model):
+        """
+        Compute statval for given model.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+        """
+        return chi2_flux_points(data, [model])
+
+    def dof(self, data, model):
+        """
+        Return degrees of freedom.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+        """
+        free_pars = [par.name for par in model.parameters.parameters if not par.frozen]
+        m = len(free_pars)
+        n = 0
+        for _ in data:
+            n += len(_.table)
+        return n - m
+
+    def estimate_errors(self, data, model):
+        """
+        Estimate errors on best fit parameters.
+        """
+        p = self.parameters
+        self._sherpa_fitter = self._setup_sherpa_fit(data, model, p['optimizer'])
+        result = self._sherpa_fitter.est_errors()
+        covariance = result.extra_output
+        covar_axis = [par.name for par in model.parameters.parameters if not par.frozen]
+        model.parameters.set_parameter_covariance(covariance, covar_axis)
+        return model
+
+    def run(self, data, model):
+        """
+        Run all fitting steps.
+
+        Parameters
+        ----------
+        flux_points : list of `~gammapy.spectrum.FluxPoints`
+            Flux points.
+        model : `SpectralModel`
+            Spectral model instance
+
+        Returns
+        -------
+        result : OrderedDict
+            Dictionary with fit results and debug output.
+        """
+
+        result = OrderedDict()
+
+        best_fit_model = self.fit(data, model)
+        best_fit_model = self.estimate_errors(data, model)
+        result['best_fit_model'] = best_fit_model
+        result['dof'] = self.dof(data, model)
+        result['chi2'] = self.statval(data, model)[0]
+        result['chi2_reduced'] = result['chi2'] / result['dof']
+        return result
