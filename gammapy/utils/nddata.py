@@ -1,23 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
+"""Utility functions and classes for n-dimensional data and axes.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
 import numpy as np
-import abc
-import copy
-from ..extern.bunch import Bunch
 from astropy.units import Quantity
-from astropy.table import Table, Column
-from astropy.io import fits
-from astropy.extern import six
+from ..extern.bunch import Bunch
 from .array import array_stats_str
-from .scripts import make_path
-from .fits import table_to_fits_table, fits_table_to_table
 
 __all__ = [
     'NDDataArray',
     'DataAxis',
     'BinnedDataAxis',
+    'sqrt_space',
 ]
 
 
@@ -368,10 +363,11 @@ class BinnedDataAxis(DataAxis):
     interpolation_mode : str {'linear', 'log'}
         Interpolation behaviour, default: 'linear'
     """
+
     def __init__(self, lo, hi, **kwargs):
         self.lo = Quantity(lo)
         self.hi = Quantity(hi)
-        super(BinnedDataAxis, self).__init__(None, **kwargs)    
+        super(BinnedDataAxis, self).__init__(None, **kwargs)
 
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None, **kwargs):
@@ -412,9 +408,39 @@ class BinnedDataAxis(DataAxis):
 
     def lin_center(self):
         """Linear bin centers"""
-        return (self.lo  + self.hi) / 2
+        return (self.lo + self.hi) / 2
 
     def log_center(self):
         """Logarithmic bin centers"""
         return np.sqrt(self.lo * self.hi)
 
+
+def sqrt_space(start, stop, num):
+    """Return numbers spaced evenly on a square root scale.
+
+    This function is similar to `numpy.linspace` and `numpy.logspace`.
+
+    Parameters
+    ----------
+    start : float
+        start is the starting value of the sequence
+    stop : float
+        stop is the final value of the sequence
+    num : int
+        Number of samples to generate.
+
+    Returns
+    -------
+    samples : `~numpy.ndarray`
+        1D array with a square root scale
+
+    Examples
+    --------
+    >>> from gammapy.utils.nddata import sqrt_space
+    >>> samples = sqrt_space(0, 2, 5)
+    array([ 0.        ,  1.        ,  1.41421356,  1.73205081,  2.        ])
+
+    """
+    samples2 = np.linspace(start ** 2, stop ** 2, num)
+    samples = np.sqrt(samples2)
+    return samples

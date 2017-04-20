@@ -9,7 +9,7 @@ from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
 from .models import FOVCubeBackgroundModel
 from .models import EnergyOffsetBackgroundModel
 from ..utils.energy import EnergyBounds
-from ..utils.axis import sqrt_space
+from ..utils.nddata import sqrt_space
 
 __all__ = [
     'OffDataBackgroundMaker',
