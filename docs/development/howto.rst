@@ -251,7 +251,6 @@ These are unofficial, unmaintained copies on open codes on Github:
 
 * https://github.com/Xarthisius/yt-drone
 * https://github.com/cdeil/Fermi-ScienceTools-mirror
-* https://github.com/cdeil/kapteyn-mirror
 
 Actually at this point we welcome experimentation, so you can use cool new technologies
 to implement some functionality in Gammapy if you like, e.g.

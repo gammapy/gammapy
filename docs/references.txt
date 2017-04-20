@@ -22,7 +22,6 @@
 .. _naima: https://github.com/zblz/naima
 .. _ROOT: https://root.cern.ch/drupal/
 .. _rootpy: http://www.rootpy.org/
-.. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _CIAO: http://cxc.cfa.harvard.edu/ciao/
 .. _Chandra X-ray observatory (CXC): http://cxc.harvard.edu/
