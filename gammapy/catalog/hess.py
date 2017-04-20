@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 from collections import OrderedDict
 import numpy as np
+from astropy.tests.helper import ignore_warnings
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -386,9 +387,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['dnde'] = self.data['Flux_Points_Flux'][mask]
         table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
-        # TODO: Update this line as soon as the catalog is fixed:
-        # https://bitbucket.org/hess_software/hgps_paper/issues/245/missing-unit-on-column-flux_points_flux_ul
-        table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask] * u.Unit('1 / (cm2 s TeV)')
+        table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask]
 
         return FluxPoints(table)
 
@@ -409,7 +408,8 @@ class SourceCatalogHGPS(SourceCatalog):
 
         filename = str(make_path(filename))
 
-        table = Table.read(filename, hdu=hdu)
+        with ignore_warnings():  # ignore FITS units warnings
+            table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ('Identified_Object',)
         super(SourceCatalogHGPS, self).__init__(
