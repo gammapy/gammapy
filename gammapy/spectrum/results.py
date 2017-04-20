@@ -27,10 +27,6 @@ class SpectrumFitResult(object):
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
         Best-fit model
-    covariance : array-like, optional
-        Covariance matrix
-    covar_axis : list, optional
-        List of strings defining the parameter order in covariance
     fit_range : `~astropy.units.Quantity`
         Energy range of the spectral fit
     statname : str, optional
@@ -51,16 +47,11 @@ class SpectrumFitResult(object):
         Input data used for the fit
     """
 
-    def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
-                 statname=None, statval=None, npred_src=None, npred_bkg=None,
-                 background_model=None, fluxes=None, flux_errors=None, obs=None):
+    def __init__(self, model, fit_range=None, statname=None, statval=None,
+                 npred_src=None, npred_bkg=None, background_model=None,
+                 fluxes=None, flux_errors=None, obs=None):
 
-        #TODO: Set model covariance outside this class
-        if covar_axis:
-            model.parameters.set_parameter_covariance(covariance, covar_axis)
         self.model = model
-        self.covariance = covariance
-        self.covar_axis = covar_axis
         self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
@@ -114,9 +105,7 @@ class SpectrumFitResult(object):
             val['statval'] = float(self.statval)
         if self.statname is not None:
             val['statname'] = self.statname
-        if self.covariance is not None:
-            val['covariance'] = dict(matrix=self.covariance.tolist(),
-                                     axis=self.covar_axis)
+
         return val
 
     @classmethod
@@ -139,20 +128,11 @@ class SpectrumFitResult(object):
             for flu in fl:
                 fluxes[flu] = fl[flu]['value'] * u.Unit(fl[flu]['unit'])
                 flux_errors[flu] = fl[flu]['error'] * u.Unit(fl[flu]['unit'])
-        try:
-            covar = val['covariance']
-            covar_axis = covar['axis']
-            covariance = np.array(covar['matrix'])
-        except KeyError:
-            covar_axis = None
-            covariance = None
 
         return cls(model=model,
                    fit_range=energy_range,
                    fluxes=fluxes,
-                   flux_errors=flux_errors,
-                   covar_axis=covar_axis,
-                   covariance=covariance)
+                   flux_errors=flux_errors)
 
     # TODO: rather add this to ParameterList?
     def to_table(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):

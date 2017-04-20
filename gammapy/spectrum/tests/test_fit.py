@@ -304,6 +304,13 @@ class TestSpectralFit:
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)
 
+        read_result = SpectrumFitResult.from_yaml(tmpdir / 'fit_result_PowerLaw.yaml')
+
+        desired = fit.result[0].model.evaluate_error(1 * u.TeV)
+        actual = read_result.model.evaluate_error(1 * u.TeV)
+        assert_quantity_allclose(actual, desired)
+
+
 
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')

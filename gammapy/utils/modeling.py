@@ -110,6 +110,11 @@ class Parameter(object):
 
         return ss.format(**self.__dict__)
 
+    def to_dict(self):
+        return dict(name=self.name,
+                    value=float(self.value),
+                    unit=str(self.unit))
+
     # TODO: I think this method is not very useful, because the same can be just
     # achieved with `Parameter(**data)`. Why duplicate?
     @classmethod
@@ -196,6 +201,27 @@ class ParameterList(object):
     def to_xml(self):
         xml = [_.to_xml() for _ in self.parameters]
         return '\n'.join(xml)
+
+    def to_dict(self):
+        retval = dict(parameters=list(), covariance=None)
+        for par in self.parameters:
+            retval['parameters'].append(par.to_dict()) 
+        if self.covariance is not None:
+            retval['covariance'] = self.covariance.tolist()
+        return retval
+
+    @classmethod
+    def from_dict(cls, val):
+        pars = list()
+        for par in val['parameters']:
+            pars.append(Parameter(name=par['name'], value=par['value'],
+                                  unit=par['unit']))
+        try:
+            covariance = np.array(val['covariance'])
+        except KeyError:
+            covariance = None
+
+        return cls(parameters=pars, covariance=covariance)
 
     @property
     def names(self):

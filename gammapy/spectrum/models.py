@@ -191,24 +191,21 @@ class SpectralModel(object):
 
     def to_dict(self):
         """Serialize to dict"""
-        retval = dict()
-
+        retval = self.parameters.to_dict()
         retval['name'] = self.__class__.__name__
-        retval['parameters'] = list()
-        for par in self.parameters.parameters:
-            retval['parameters'].append(dict(name=par.name,
-                                             val=float(par.value),
-                                             unit=str(par.unit)))
         return retval
 
     @classmethod
     def from_dict(cls, val):
         """Serialize from dict"""
-        classname = val['name']
+        classname = val.pop('name')
+        parameters = ParameterList.from_dict(val)
         kwargs = dict()
-        for _ in val['parameters']:
-            kwargs[_['name']] = _['val'] * u.Unit(_['unit'])
-        return globals()[classname](**kwargs)
+        for par in parameters.parameters:
+            kwargs[par.name] = par.quantity
+        model =  globals()[classname](**kwargs)
+        model.parameters.covariance = parameters.covariance
+        return model
 
     def plot(self, energy_range, ax=None,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
