@@ -106,19 +106,19 @@ class SmartHDUList(object):
 
     def get_hdu_index(self, hdu=None, hdu_type=None):
         """Get index of HDU with given name, number or type.
-    
+
         If ``hdu`` is given, tries to find an HDU of that given name or number.
         Otherwise, if ``hdu_type`` is given, looks for the first suitable HDU.
-    
+
         Raises ``KeyError`` if no suitable HDU is found.
-    
+
         Parameters
         ----------
         hdu : int or str
             HDU number or name, passed to `astropy.io.fits.HDUList.index_of`.
         hdu_type : {'primary', 'image' , 'table'}
             Type of HDU to load
-    
+
         Returns
         -------
         idx : int
@@ -167,7 +167,7 @@ class SmartHDUList(object):
         raise KeyError('HDU not found: hdu={}, hdu_type={}'.format(hdu_key, hdu_type))
 
     def get_hdu(self, hdu=None, hdu_type=None):
-        """Get HDU with given name, number or type. 
+        """Get HDU with given name, number or type.
 
         This method simply calls ``get_hdu_index(hdu, hdu_type)``,
         and if successful, returns the HDU for that given index.
@@ -265,6 +265,9 @@ def table_to_fits_table(table):
     The name of the table can be stored in the Table meta information
     under the ``name`` keyword.
 
+    Additional column information ``description`` and ``ucd`` can be stored
+    in the column.meta attribute and will be stored in the fits header.
+
     Parameters
     ----------
     table : `~astropy.table.Table`
@@ -288,9 +291,17 @@ def table_to_fits_table(table):
     hdu = fits.BinTableHDU(data, header, name=name)
 
     # Copy over column meta-data
-    for colname in table.colnames:
+    for idx, colname in enumerate(table.colnames):
         if table[colname].unit is not None:
-            hdu.columns[colname].unit = table[colname].unit.to_string('fits')
+            hdu.header['TUNIT' + str(idx + 1)] = table[colname].unit.to_string('fits')
+
+        description = table[colname].meta.get('description')
+        if description:
+            hdu.header['TCOMM' + str(idx + 1)] = description
+
+        ucd = table[colname].meta.get('ucd')
+        if ucd:
+            hdu.header['TUCD' + str(idx + 1)] = ucd
 
     # TODO: this method works fine but the order of keywords in the table
     # header is not logical: for instance, list of keywords with column
@@ -311,6 +322,9 @@ def fits_table_to_table(tbhdu):
     The name of the table is stored in the Table meta information
     under the ``name`` keyword.
 
+    Additional column information ``description`` and ``ucd`` can will be
+    read from the header and stored in the column.meta attribute.
+
     Parameters
     ----------
     hdu : `~astropy.io.fits.BinTableHDU`
@@ -328,8 +342,12 @@ def fits_table_to_table(tbhdu):
     table = Table(data, meta=header)
 
     # Copy over column meta-data
-    for colname in tbhdu.columns.names:
+    for idx, colname in enumerate(tbhdu.columns.names):
         table[colname].unit = tbhdu.columns[colname].unit
+        description = tbhdu.header.get('TCOMM' + str(idx + 1))
+        table[colname].meta['description'] = description
+        ucd = tbhdu.header.get('TUCD' + str(idx + 1))
+        table[colname].meta['ucd'] = ucd
 
     return table
 
