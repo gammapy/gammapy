@@ -63,8 +63,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += 'reference_id: {}\n'.format(d['reference_id'])
         ss += '\n'
 
-        ss += 'RA (J2000)  : {:.2f}\n'.format(d['ra'])
-        ss += 'Dec (J2000) : {:.2f}\n'.format(d['dec'])
+        ss += 'RA          : {:.2f}\n'.format(d['ra'])
+        ss += 'DEC         : {:.2f}\n'.format(d['dec'])
         ss += 'GLON        : {:.2f}\n'.format(d['glon'])
         ss += 'GLAT        : {:.2f}\n'.format(d['glat'])
         ss += '\n'
@@ -87,25 +87,36 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         if spec_type == 'pl':
             pars['reference'] = d['spec_ref']
-            pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
-            errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
+            pars['amplitude'] = d['spec_norm']
+            errs['amplitude'] = d['spec_norm_err']
             model = PowerLaw(**pars)
         elif spec_type == 'ecpl':
-            pars['amplitude'] = d['spec_norm'] * u.Unit('TeV-1 cm-2 s-1')
+            pars['amplitude'] = d['spec_norm']
             pars['reference'] = d['spec_ref']
             pars['lambda_'] = 1. / d['spec_ecut']
-            errs['amplitude'] = d['spec_norm_err'] * u.Unit('TeV-1 cm-2 s-1')
-            errs['lambda_'] = d['spec_ecut_err'] * u.TeV / d['spec_ecut'] ** 2
+            errs['amplitude'] = d['spec_norm_err']
+            errs['lambda_'] = d['spec_ecut_err'] / d['spec_ecut'] ** 2
             model = ExponentialCutoffPowerLaw(**pars)
         elif spec_type == 'pl2':
-            pars['emin'] = d['spec_ref']
-            # TODO: I'd be better to put np.inf, but uncertainties can't handle it
-            pars['emax'] = 1e10 * u.TeV
-            pars['amplitude'] = d['spec_norm'] * u.Unit('cm-2 s-1')
-            errs['amplitude'] = d['spec_norm_err'] * u.Unit('cm-2 s-1')
+            pars['emin'] = d['spec_erange_min']
+            # The PowerLaw2 model needs an `emax` to work.
+            # If none is available, we put a default value here
+            # that is effectively infinity
+            DEFAULT_EMAX = 1e3 * u.TeV
+            if np.isnan(d['spec_erange_max']):
+                pars['emax'] = DEFAULT_EMAX
+            else:
+                pars['emax'] = d['spec_erange_max']
+            np.isnan(d['spec_erange_max'])
+            # TODO: remove this hack once this issue is resolved in gamma-cat
+            # https://github.com/gammapy/gamma-cat/issues/101
+            pars['amplitude'] = d['spec_norm'].value * u.Unit('cm-2 s-1')
+            errs['amplitude'] = d['spec_norm_err'].value * u.Unit('cm-2 s-1')
             model = PowerLaw2(**pars)
+        elif spec_type == 'none':
+            raise NoDataAvailableError('No spectral model available: {}'.format(self.name))
         else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
+            raise NotImplementedError('Unknown spectral model: {!r}'.format(spec_type))
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -119,14 +130,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         pars = {}
         flux = self.spectral_model.integral(emin, emax)
 
-        glon = Angle(d['glon']).wrap_at('180d').deg
-        glat = Angle(d['glat']).wrap_at('180d').deg
+        glon = Angle(d['glon']).wrap_at('180d')
+        glat = Angle(d['glat']).wrap_at('180d')
 
         if morph_type == 'gauss':
-            pars['x_mean'] = glon
-            pars['y_mean'] = glat
-            pars['x_stddev'] = d['morph_sigma']
-            pars['y_stddev'] = d['morph_sigma']
+            pars['x_mean'] = glon.value
+            pars['y_mean'] = glat.value
+            pars['x_stddev'] = d['morph_sigma'].value
+            pars['y_stddev'] = d['morph_sigma'].value
             if not np.isnan(d['morph_sigma2']):
                 pars['y_stddev'] = d['morph_sigma2'].value
             if not np.isnan(d['morph_pa']):
@@ -134,27 +145,27 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 pars['theta'] = Angle(d['morph_pa'], 'deg').rad
             ampl = flux.to('cm-2 s-1').value
             pars['amplitude'] = ampl * 1 / (2 * np.pi * pars['x_stddev'] * pars['y_stddev'])
-
             return Gaussian2D(**pars)
-
         elif morph_type == 'shell':
             pars['amplitude'] = flux.to('cm-2 s-1').value
-            pars['x_0'] = glon
-            pars['y_0'] = glat
-            pars['r_in'] = d['morph_sigma'] * 0.8
-            pars['width'] = 0.2 * d['morph_sigma']
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            pars['r_in'] = d['morph_sigma'].value * 0.8
+            pars['width'] = 0.2 * d['morph_sigma'].value
             return Shell2D(**pars)
-
         elif morph_type == 'point':
+            DEFAULT_POINT_EXTENSION = Angle('0.05 deg')
             pars['amplitude'] = flux.to('cm-2 s-1').value
-            pars['x_mean'] = glon
-            pars['y_mean'] = glat
-            pars['x_stddev'] = 0.05
-            pars['y_stddev'] = 0.05
+            pars['x_mean'] = glon.value
+            pars['y_mean'] = glat.value
+            pars['x_stddev'] = DEFAULT_POINT_EXTENSION
+            pars['y_stddev'] = DEFAULT_POINT_EXTENSION
             # TODO: make Delta2D work and use it here.
             return Gaussian2D(**pars)
+        elif morph_type == 'none':
+            raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
         else:
-            raise ValueError('Spatial model {} not available'.format(morph_type))
+            raise NotImplementedError('Unknown spatial model: {!r}'.format(morph_type))
 
     @property
     def flux_points(self):
@@ -165,17 +176,16 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         table = Table()
         table.meta['SED_TYPE'] = 'dnde'
 
-        e_ref = d['sed_e_ref']
-        valid = ~np.isnan(e_ref)
+        valid = ~np.isnan(d['sed_e_ref'].value)
 
-        table['e_ref'] = e_ref[valid]
+        table['e_ref'] = d['sed_e_ref'][valid]
         table['dnde'] = d['sed_dnde'][valid]
         table['dnde_errp'] = d['sed_dnde_errp'][valid]
         table['dnde_errn'] = d['sed_dnde_errn'][valid]
         table['dnde_ul'] = d['sed_dnde_ul'][valid]
 
-        if len(e_ref) == 0:
-            raise NoDataAvailableError('No flux points available.')
+        if valid.sum() == 0:
+            raise NoDataAvailableError('No flux points available: {}'.format(self.name))
 
         return FluxPoints(table)
 
@@ -207,8 +217,8 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> source.spectrum.butterfly().plot()
-    >>> # source.spectral_model.plot(energy_range=energy_range)
+    >>> source.spectral_model.plot()
+    >>> source.spectral_model.plot_error()
     >>> source.flux_points.plot()
     """
     name = 'gamma-cat'
