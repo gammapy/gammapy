@@ -4,9 +4,10 @@
 (Not released yet.)
 
 TODO:
+- [ ] Load HGPS maps
+- [ ] Source object should contain info on components and associations
 - [ ] Links to SNRCat
 - [ ] Show image in ds9 or js9
-- [ ] Take units automatically from table?
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
@@ -136,11 +137,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         d = self.data
         ss = '\n*** Info from map analysis ***\n\n'
 
-        try:
-            ra_str = Angle(d['RAJ2000'], 'deg').to_string(unit='hour', precision=0)
-            dec_str = Angle(d['DEJ2000'], 'deg').to_string(unit='deg', precision=0)
-        except ValueError:
-            ra_str = dec_str = ''
+        ra_str = Angle(d['RAJ2000'], 'deg').to_string(unit='hour', precision=0)
+        dec_str = Angle(d['DEJ2000'], 'deg').to_string(unit='deg', precision=0)
         ss += '{:<20s} : {:8.3f} = {}\n'.format('RA', d['RAJ2000'], ra_str)
         ss += '{:<20s} : {:8.3f} = {}\n'.format('DEC', d['DEJ2000'], dec_str)
 
@@ -341,10 +339,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def spectral_model(self):
         """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
-        Depending on ``TODO``, one of:
+        One of the following models:
 
-        - `~gammapy.spectrum.models.PowerLaw`
-        - `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
+        - ``Spectral_Model="PL"`` : `~gammapy.spectrum.models.PowerLaw`
+        - ``Spectral_Model="ECPL"`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
         """
         data = self.data
         spec_type = data['Spectral_Model'].strip()
@@ -442,6 +440,7 @@ class SourceCatalogHGPS(SourceCatalog):
                 self._attach_component_info(source)
         if hasattr(self, 'associations'):
             self._attach_association_info(source)
+        # TODO: implement or remove:
         # if source.data['Source_Class'] != 'Unid':
         #    self._attach_identification_info(source)
         return source

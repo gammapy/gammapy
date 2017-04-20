@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Meow!!!!
+Gammacat open TeV source catalog.
 
-Gammacat open TeV source catalog
+Meow!!!!
 
 https://github.com/gammapy/gamma-cat
 """
@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 import numpy as np
+from astropy.tests.helper import ignore_warnings
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -181,7 +182,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
 class SourceCatalogGammaCat(SourceCatalog):
     """
-    Gammacat open TeV sources catalog.
+    Gammacat open TeV source catalog.
 
     See: https://github.com/gammapy/gamma-cat
 
@@ -223,7 +224,8 @@ class SourceCatalogGammaCat(SourceCatalog):
             msg += 'to point to the location for it to be found.'
             raise GammaCatNotFoundError(msg)
 
-        table = Table.read(filename, hdu=1)
+        with ignore_warnings():  # ignore FITS units warnings
+            table = Table.read(filename, hdu=1)
         self.filename = filename
 
         source_name_key = 'common_name'

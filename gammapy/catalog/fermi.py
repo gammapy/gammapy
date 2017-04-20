@@ -6,7 +6,7 @@ import tarfile
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
-from astropy.table import QTable, Table, Column
+from astropy.table import QTable, Table
 from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.tests.helper import ignore_warnings
