@@ -570,6 +570,53 @@ class SkyCube(MapBase):
         elif viewer == 'ds9':
             raise NotImplementedError
 
+    def plot_rgb(self, ax=None, fig=None, **kwargs):
+        """
+        Plot sky cube as RGB image.
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
+
+        Returns
+        -------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object
+        """
+        import matplotlib.pyplot as plt
+
+        if fig is None:
+            fig = plt.gcf()
+
+        if ax is None:
+            ax = fig.add_subplot(1, 1, 1, projection=self.wcs)
+
+        kwargs['origin'] = kwargs.get('origin', 'lower')
+        kwargs['interpolation'] = kwargs.get('interpolation', 'None')
+
+        if not self.data.shape[0] == 3:
+            raise ValueError("Energy axes must be length 3, but is {}".format(ne))
+        data_rgb = []
+        for idx in range(3):
+            data_rgb.append(self.data[idx, :, :])
+        caxes = ax.imshow(np.dstack(data_rgb), **kwargs)
+
+        try:
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
+        except KeyError:
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return ax
+
     def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
         """
         Integrate cube along the energy axes using the log-log trapezoidal rule.
