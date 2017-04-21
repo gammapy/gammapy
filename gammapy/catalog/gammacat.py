@@ -167,6 +167,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         else:
             raise NotImplementedError('Unknown spatial model: {!r}'.format(morph_type))
 
+    def _add_source_meta(self, table):
+        """Copy over some info to table.meta"""
+        d = self.data
+        m = table.meta
+        m['origin'] = 'Data from gamma-cat'
+        m['source_id'] = d['source_id']
+        m['common_name'] = d['common_name']
+        m['reference_id'] = d['reference_id']
+
     @property
     def flux_points(self):
         """
@@ -175,17 +184,32 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
         table = Table()
         table.meta['SED_TYPE'] = 'dnde'
+        self._add_source_meta(table)
 
-        valid = ~np.isnan(d['sed_e_ref'].value)
-
-        table['e_ref'] = d['sed_e_ref'][valid]
-        table['dnde'] = d['sed_dnde'][valid]
-        table['dnde_errp'] = d['sed_dnde_errp'][valid]
-        table['dnde_errn'] = d['sed_dnde_errn'][valid]
-        table['dnde_ul'] = d['sed_dnde_ul'][valid]
+        valid = np.isfinite(d['sed_e_ref'].value)
 
         if valid.sum() == 0:
             raise NoDataAvailableError('No flux points available: {}'.format(self.name))
+
+        table['e_ref'] = d['sed_e_ref']
+        table['e_min'] = d['sed_e_min']
+        table['e_max'] = d['sed_e_max']
+
+        table['dnde'] = d['sed_dnde']
+        table['dnde_err'] = d['sed_dnde_err']
+        table['dnde_errn'] = d['sed_dnde_errn']
+        table['dnde_errp'] = d['sed_dnde_errp']
+        table['dnde_ul'] = d['sed_dnde_ul']
+
+        # Only keep rows that actually contain information
+        table = table[valid]
+
+        # Only keep columns that actually contain information
+        def _del_nan_col(table, colname):
+            if np.isfinite(table[colname]).sum() == 0:
+                del table[colname]
+        for colname in table.colnames:
+            _del_nan_col(table, colname)
 
         return FluxPoints(table)
 
