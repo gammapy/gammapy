@@ -9,6 +9,7 @@ from ..image.models import Gauss2DPDF
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 
+
 __all__ = [
     'TablePSF',
     'EnergyDependentTablePSF',
@@ -146,8 +147,7 @@ class TablePSF(object):
         offset = center.separation(point)
         return self.evaluate(offset)
 
-    def kernel(self, reference, containment=0.99, normalize=True,
-               discretize_model_kwargs=dict(factor=10)):
+    def kernel(self, reference):
         """
         Make a 2-dimensional kernel image.
 
@@ -158,8 +158,8 @@ class TablePSF(object):
         ----------
         reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
             Reference sky image or sky cube defining the spatial grid.
-        containment : float
-            Minimal containment fraction of the kernel image.
+        offset_max : `~astropy.coordinates.Angle`
+             maximal radius up to which the PSF is evaluated.
         normalize : bool
             Whether to normalize the kernel.
 
@@ -170,28 +170,13 @@ class TablePSF(object):
 
         """
         from ..cube import SkyCube
-        offset_max = self.containment_radius(containment)
-
+        from ..background import fill_acceptance_image
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref
-
-        pixel_size = reference.wcs_pixel_scale()[0]
-
-        def _model(x, y):
-            """Model in the appropriate format for discretize_model."""
-            offset = np.sqrt(x * x + y * y) * pixel_size
-            return self.evaluate(offset)
-
-        npix = int(offset_max.radian / pixel_size.radian)
-        pix_range = (-npix, npix + 1)
-
-        kernel = discretize_oversample_2D(_model, x_range=pix_range, y_range=pix_range,
-                                          **discretize_model_kwargs)
-        if normalize:
-            return kernel / kernel.sum()
-        else:
-            return kernel
-
+        header = reference.to_image_hdu().header
+        kernel=fill_acceptance_image(header, reference.center, self._offset.to("deg"),
+                                                         self._dp_domega, self._offset.to("deg")[-1]).data
+        return kernel
     def evaluate(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
 
@@ -559,6 +544,35 @@ class EnergyDependentTablePSF(object):
             kernel = psf.kernel(cube.sky_image_ref)
             kernels.append(kernel)
         return kernels
+
+    def cube_kernels(self, cube, **kwargs):
+        """
+        Make a set of 2D kernel images, representing the PSF at different energies.
+
+        The kernel image is evaluated on the spatial and energy grid defined by
+        the reference sky cube.
+
+        Parameters
+        ----------
+        cube : `~gammapy.cube.SkyCube`
+            Reference sky cube.
+        kwargs : dict
+            Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
+
+        Returns
+        -------
+        kernels : list of `~numpy.ndarray`
+            List of 2D convolution kernels.
+        """
+        from gammapy.cube import SkyCube
+        psf_cube = SkyCube.empty_like(cube)
+        energies = cube.energies(mode='edges')
+        for iE, (emin, emax) in enumerate(zip(energies[:-1], energies[1:])):
+            energy_band = Quantity([emin, emax])
+            psf = self.table_psf_in_energy_band(energy_band, **kwargs)
+            psf_cube.data[iE,:,:] = psf.kernel(cube.sky_image_ref)
+
+        return psf_cube
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2,
                                  spectrum=None, **kwargs):
