@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy import units as u
 from astropy.table import Table
-from ..utils.energy import Energy, EnergyBounds
 from astropy.convolution import Tophat2DKernel
+from ..utils.energy import Energy, EnergyBounds
 from ..stats import significance
+from ..irf import TablePSF
 from ..background import fill_acceptance_image
 from ..cube import SkyCube
 from .exposure import exposure_cube
@@ -285,9 +285,8 @@ class StackedObsCubeMaker(object):
         Returns
         -------
         ref_cube : `~gammapy.cube.SkyCube`
-                 PSF mean cube
+            PSF mean cube
         """
-        from ..irf import TablePSF
         ref_cube = SkyCube.empty_like(ref_cube)
         obslist = self.data_store.obs_list(self.data_store.obs_table["OBS_ID"])
 
@@ -301,9 +300,12 @@ class StackedObsCubeMaker(object):
             try:
                 psf_table = psf_energydependent.table_psf_in_energy_band(energy_band, spectral_index=spectral_index)
             except:
-                psf_table = TablePSF(psf_energydependent.offset,
-                                     u.Quantity(np.zeros(len(psf_energydependent.offset)), u.sr ** -1))
-            data = fill_acceptance_image(header, center, psf_table._offset.to("deg"),
-                                         psf_table._dp_domega, psf_table._offset.to("deg")[-1]).data
+                rad = psf_energydependent.rad
+                dp_domega = u.Quantity(np.zeros(len(psf_energydependent.rad)), u.sr ** -1)
+                psf_table = TablePSF(rad, dp_domega)
+
+            data = fill_acceptance_image(header, center, psf_table._rad.to("deg"),
+                                         psf_table._dp_domega, psf_table._rad.to("deg")[-1]).data
             ref_cube.data[i_E, :, :] = data / data.sum()
+
         return ref_cube

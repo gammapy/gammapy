@@ -5,9 +5,8 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import Angle
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
-from ...irf import EnergyDispersion, EnergyDispersion2D
-from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
+from ...irf import EnergyDispersion, EnergyDispersion2D
 
 
 @requires_dependency('scipy')
@@ -34,11 +33,6 @@ class TestEnergyDispersion:
                         self.resolution,
                         atol=1e-4)
 
-    requires_dependency('matplotlib')
-    def check_plot(self):
-        edisp.plot_matrix()
-        edisp.plot_bias()
-
     def test_io(self, tmpdir):
         indices = np.array([[1, 3, 6], [3, 3, 2]])
         desired = self.edisp.pdf_matrix[indices]
@@ -52,17 +46,25 @@ class TestEnergyDispersion:
         counts = np.arange(len(self.e_true) - 1)
         actual = self.edisp.apply(counts)
         assert_allclose(actual[0], 3.9877484855864265)
-        
+
         actual = self.edisp.apply(counts, e_true=self.e_true)
         assert_allclose(actual[0], 3.9877484855864265)
 
+    @requires_dependency('matplotlib')
+    def test_plot_matrix(self):
+        self.edisp.plot_matrix()
+
+    @requires_dependency('matplotlib')
+    def test_plot_bias(self):
+        self.edisp.plot_bias()
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-class TestEnergyDispersion2D():
+class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp
-        filename = gammapy_extra.filename(
-            'test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
+        filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
         self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
     def test_evaluation(self):
@@ -80,11 +82,11 @@ class TestEnergyDispersion2D():
         assert_allclose(actual, 0.09388659149, rtol=1e-06)
 
         # Check output shape
-        energy = [1,2] * u.TeV
+        energy = [1, 2] * u.TeV
         migra = [0.98, 0.97, 0.7]
         offset = [0.1, 0.2] * u.deg
         actual = self.edisp.data.evaluate(e_true=energy, migra=migra, offset=offset)
-        assert_allclose(actual.shape, (2,3,2))
+        assert_allclose(actual.shape, (2, 3, 2))
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
@@ -92,7 +94,6 @@ class TestEnergyDispersion2D():
                    self.edisp.migra.nbins,
                    self.edisp.offset.nbins)
         assert_equal(actual, desired)
-
 
     def test_get_response(self):
         # Here we test get_response with an expected gaussian shape for edisp
@@ -130,12 +131,12 @@ class TestEnergyDispersion2D():
         e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
         e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, 'TeV')
         rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
-        assert_allclose(rmf.data.data[2,3], 0.08, atol = 5e-2)   # same tolerance as above
+        assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
         actual = rmf.pdf_matrix[2]
         e_val = np.sqrt(e_true[2] * e_true[3])
         desired = self.edisp.get_response(offset, e_val, e_reco)
         assert_equal(actual, desired)
 
     @requires_dependency('matplotlib')
-    def test_plot(self):
+    def test_peek(self):
         self.edisp.peek()

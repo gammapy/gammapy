@@ -16,28 +16,25 @@ from ...image import SkyImage
 def test_TablePSF_gauss():
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
-    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
-    psf = TablePSF.from_shape(shape='gauss', width=width, offset=offset)
-
-    offset = Angle([0.1, 0.3], 'deg')
-
+    rad = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='gauss', width=width, rad=rad)
     assert_allclose(psf.integral(), 1, rtol=1e-3)
 
 
 @requires_dependency('scipy')
 def test_TablePSF_disk():
     width = Angle(2, 'deg')
-    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
-    psf = TablePSF.from_shape(shape='disk', width=width, offset=offset)
+    rad = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='disk', width=width, rad=rad)
 
     # Check psf.evaluate by checking if probabilities sum to 1
-    psf_value = psf.evaluate(offset, quantity='dp_dtheta')
-    integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
+    psf_value = psf.evaluate(rad, quantity='dp_dr')
+    integral = np.sum(np.diff(rad.radian) * psf_value[:-1])
     assert_allclose(integral.value, 1, rtol=1e-3)
 
-    psf_value = psf.evaluate(offset, quantity='dp_domega')
-    psf_value = (2 * np.pi * offset * psf_value).to('radian^-1')
-    integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
+    psf_value = psf.evaluate(rad, quantity='dp_domega')
+    psf_value = (2 * np.pi * rad * psf_value).to('radian^-1')
+    integral = np.sum(np.diff(rad.radian) * psf_value[:-1])
     assert_allclose(integral.value, 1, rtol=1e-3)
 
     assert_allclose(psf.integral(), 1, rtol=1e-3)
@@ -55,23 +52,23 @@ def test_TablePSF_disk():
 def test_TablePSF():
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
-    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
-    psf = TablePSF.from_shape(shape='gauss', width=width, offset=offset)
+    rad = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='gauss', width=width, rad=rad)
 
     # Test inputs
-    offset = Angle([0.1, 0.3], 'deg')
+    rad = Angle([0.1, 0.3], 'deg')
 
-    actual = psf.evaluate(offset=offset, quantity='dp_domega')
+    actual = psf.evaluate(rad=rad, quantity='dp_domega')
     desired = Quantity([5491.52067694, 3521.07804604], 'sr^-1')
     assert_quantity_allclose(actual, desired)
 
-    actual = psf.evaluate(offset=offset, quantity='dp_dtheta')
+    actual = psf.evaluate(rad=rad, quantity='dp_dr')
     desired = Quantity([60.22039017, 115.83738017], 'rad^-1')
     assert_quantity_allclose(actual, desired, rtol=1e-6)
 
-    offset_min = Angle([0.0, 0.1, 0.3], 'deg')
-    offset_max = Angle([0.1, 0.3, 2.0], 'deg')
-    actual = psf.integral(offset_min, offset_max)
+    rad_min = Angle([0.0, 0.1, 0.3], 'deg')
+    rad_max = Angle([0.1, 0.3, 2.0], 'deg')
+    actual = psf.integral(rad_min, rad_max)
     desired = [0.05403975, 0.33942469, 0.60653066]
     assert_allclose(actual, desired)
 
@@ -85,15 +82,15 @@ def test_EnergyDependentTablePSF():
 
     # Test cases
     energy = Quantity(1, 'GeV')
-    offset = Angle(0.1, 'deg')
+    rad = Angle(0.1, 'deg')
     energies = Quantity([1, 2], 'GeV').to('TeV')
-    offsets = Angle([0.1, 0.2], 'deg')
+    rads = Angle([0.1, 0.2], 'deg')
 
-    # actual = psf.evaluate(energy=energy, offset=offset)
+    # actual = psf.evaluate(energy=energy, rad=rad)
     # desired = Quantity(17760.814249206363, 'sr^-1')
     # assert_quantity_allclose(actual, desired)
 
-    # actual = psf.evaluate(energy=energies, offset=offsets)
+    # actual = psf.evaluate(energy=energies, rad=rads)
     # desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
     # assert_quantity_allclose(actual, desired)
 
@@ -117,6 +114,7 @@ def test_EnergyDependentTablePSF():
     actual = psf_band.kernel(ref, normalize=True).value.sum()
     assert_allclose(actual, desired)
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_EnergyDependentTablePSF_plot():
@@ -126,14 +124,16 @@ def test_EnergyDependentTablePSF_plot():
 
     energy = Quantity(1, 'GeV')
     psf_1GeV = psf.table_psf_at_energy(energy)
-    psf_1GeV.plot_psf_vs_theta()
+    psf_1GeV.plot_psf_vs_rad()
+
 
 # TODO: fix this test (move the code from examples/plot_irfs.py here)
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_plot():
     filename = gammapy_extra.filename('test_datasets/unbundled/fermi/psf.fits')
     psf = EnergyDependentTablePSF.read(filename)
     # psf.plot_containment('fermi_psf_containment.pdf')
     # psf.plot_exposure('fermi_psf_exposure.pdf')
-    psf.plot_theta('fermi_psf_theta.pdf')
+    psf.plot_psf_vs_rad()

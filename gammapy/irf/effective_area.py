@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from ..extern.bunch import Bunch
-from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
+from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..utils.fits import fits_table_to_table, table_to_fits_table

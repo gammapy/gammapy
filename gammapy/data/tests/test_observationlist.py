@@ -18,8 +18,8 @@ def test_make_psftable():
     energy = EnergyBounds.equal_log_spacing(1, 10, 100, "TeV")
     energy_band = Energy([energy[0].value, energy[-1].value], energy.unit)
 
-    psf1 = obs1.make_psf(position=position, energy=energy, theta=None)
-    psf2 = obs2.make_psf(position=position, energy=energy, theta=None)
+    psf1 = obs1.make_psf(position=position, energy=energy, rad=None)
+    psf2 = obs2.make_psf(position=position, energy=energy, rad=None)
     psf1_int = psf1.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     psf2_int = psf2.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     obslist = ObservationList([obs1, obs2])

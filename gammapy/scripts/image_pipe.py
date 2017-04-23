@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import QTable, Table
@@ -12,8 +11,6 @@ from ..background import fill_acceptance_image
 from ..image import SkyImage, SkyImageList
 
 __all__ = ['SingleObsImageMaker', 'StackedObsImageMaker']
-
-log = logging.getLogger(__name__)
 
 
 class SingleObsImageMaker(object):
@@ -80,9 +77,6 @@ class SingleObsImageMaker(object):
 
         if len(self.events.table) > self.ncounts_min:
             self.images['counts'].fill_events(self.events)
-        else:
-            log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
-                     format(len(self.events), self.ncounts_min))
 
     def bkg_image(self, bkg_norm=True):
         """

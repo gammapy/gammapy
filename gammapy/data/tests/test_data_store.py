@@ -121,25 +121,25 @@ def test_data_summary(data_manager):
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars,result", [
-    (dict(energy=None, theta=None),
-     dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV,
-          psf_theta=0.05 * u.deg,
+    (dict(energy=None, rad=None),
+     dict(energy_shape=18, rad_shape=300, psf_energy=2.5178505859375 * u.TeV,
+          psf_rad=0.05 * u.deg,
           psf_exposure=Quantity(6878545291473.34, "cm2 s"),
           psf_value=Quantity(1837.4367332530592, "1/sr"))),
-    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=None),
-     dict(energy_shape=101, theta_shape=300,
-          psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.05 * u.deg,
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), rad=None),
+     dict(energy_shape=101, rad_shape=300,
+          psf_energy=1.2589254117941673 * u.TeV, psf_rad=0.05 * u.deg,
           psf_exposure=Quantity(4622187644084.735, "cm2 s"),
           psf_value=Quantity(1682.8135627097995, "1/sr"))),
-    (dict(energy=None, theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=18, theta_shape=1000,
-          psf_energy=2.5178505859375 * u.TeV, psf_theta=0.02 * u.deg,
+    (dict(energy=None, rad=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=18, rad_shape=1000,
+          psf_energy=2.5178505859375 * u.TeV, psf_rad=0.02 * u.deg,
           psf_exposure=Quantity(6878545291473.34, "cm2 s"),
           psf_value=Quantity(20455.914082287516, "1/sr"))),
     (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
-          theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=101, theta_shape=1000,
-          psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
+          rad=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=101, rad_shape=1000,
+          psf_energy=1.2589254117941673 * u.TeV, psf_rad=0.02 * u.deg,
           psf_exposure=Quantity(4622187644084.735, "cm2 s"),
           psf_value=Quantity(25016.103907407552, "1/sr"))),
 ])
@@ -149,16 +149,15 @@ def test_make_psf(pars, result):
     data_store = DataStore.from_dir(store)
 
     obs1 = data_store.obs(23523)
-    psf = obs1.make_psf(position=position, energy=pars["energy"],
-                        theta=pars["theta"])
+    psf = obs1.make_psf(position=position, energy=pars["energy"], rad=pars["rad"])
 
-    assert_allclose(psf.offset.shape, result["theta_shape"])
+    assert_allclose(psf.rad.shape, result["rad_shape"])
     assert_allclose(psf.energy.shape, result["energy_shape"])
     assert_allclose(psf.exposure.shape, result["energy_shape"])
     assert_allclose(psf.psf_value.shape, (result["energy_shape"],
-                                          result["theta_shape"]))
+                                          result["rad_shape"]))
 
-    assert_quantity_allclose(psf.offset[10], result["psf_theta"])
+    assert_quantity_allclose(psf.rad[10], result["psf_rad"])
     assert_quantity_allclose(psf.energy[10], result["psf_energy"])
     assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])
     assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])

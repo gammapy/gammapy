@@ -48,9 +48,7 @@ class IRFStacker(object):
     list_low_threshold: list
         list of low energy threshold, optional for effective area mean computation
     list_high_threshold: list
-        list of high energy threshold, optional for effecitve area mean computation
-
-
+        list of high energy threshold, optional for effective area mean computation
     """
 
     def __init__(self, list_aeff, list_livetime, list_edisp=None,
