@@ -198,3 +198,26 @@ def test_absorbed_spectral_model():
     desired = absorption.evaluate(energy=reference, amplitude=1.)
     actual = model_ref_energy/pwl_ref_energy
     assert_quantity_allclose(actual, desired)
+
+@requires_dependency('uncertainties')
+def test_pwl_index_2_error():
+    pars, errs = {}, {}
+    pars['amplitude'] = 1E-12 * u.Unit('TeV-1 cm-2 s-1')
+    pars['reference'] = 1 * u.Unit('TeV')
+    pars['index'] = 2 * u.Unit('')
+    errs['amplitude'] = 0.1E-12 * u.Unit('TeV-1 cm-2 s-1')
+
+    pwl = PowerLaw(**pars)
+    pwl.parameters.set_parameter_errors(errs)
+
+    val, val_err = pwl.evaluate_error(1 * u.TeV)
+    assert_quantity_allclose(val, 1E-12 * u.Unit('TeV-1 cm-2 s-1'))
+    assert_quantity_allclose(val_err, 0.1E-12 * u.Unit('TeV-1 cm-2 s-1'))
+
+    flux, flux_err = pwl.integral_error(1 * u.TeV, 10 * u.TeV)
+    assert_quantity_allclose(flux, 9E-13 * u.Unit('cm-2 s-1'))
+    assert_quantity_allclose(flux_err, 9E-14 * u.Unit('cm-2 s-1'))
+
+    eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
+    assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit('TeV cm-2 s-1'))
+    assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit('TeV cm-2 s-1'))

@@ -107,7 +107,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 pars['emax'] = DEFAULT_EMAX
             else:
                 pars['emax'] = d['spec_erange_max']
-            np.isnan(d['spec_erange_max'])
+
             # TODO: remove this hack once this issue is resolved in gamma-cat
             # https://github.com/gammapy/gamma-cat/issues/101
             pars['amplitude'] = d['spec_norm'].value * u.Unit('cm-2 s-1')
