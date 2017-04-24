@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table
-from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle
@@ -18,7 +17,9 @@ __all__ = [
 
 
 class PSF3D(object):
-    """This class implements the format described here: :ref:`gadf:psf-table`.
+    """PSF with axes: energy, offset, rad.
+    
+    Data format specification: :ref:`gadf:psf-table`.
 
     Parameters
     ----------
@@ -35,13 +36,13 @@ class PSF3D(object):
     psf_value : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
     energy_thresh_lo : `~astropy.units.Quantity`
-        Lower energy threshold. Default energy_thresh_lo = 100 GeV
+        Lower energy threshold.
     energy_thresh_hi : `~astropy.units.Quantity`
-        Upper energy threshold. Default energy_thresh_hi = 100 TeV
-
+        Upper energy threshold.
     """
 
-    def __init__(self, energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, energy_thresh_lo=Quantity(0.1, 'TeV'),
+    def __init__(self, energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value,
+                 energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV')):
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
@@ -76,20 +77,14 @@ class PSF3D(object):
         energies : `~astropy.units.Quantity`
             Logcenters of energy bins
         """
-
+        # TODO: should call helper function here, not re-implement this!
         return 10 ** ((np.log10(self.energy_hi / Quantity(1, self.energy_hi.unit))
                        + np.log10(self.energy_lo / Quantity(1, self.energy_lo.unit))) / 2) * Quantity(1,
                                                                                                       self.energy_lo.unit)
 
     def rad_center(self):
-        """Get centers of rad bins.
-
-        Returns
-        -------
-        rad : `~astropy.coordinates.Angle`
-            Centers of rad bins
+        """Get centers of rad bins (`~astropy.coordinates.Angle` in deg).
         """
-
         return ((self.rad_hi + self.rad_lo) / 2).to('deg')
 
     @classmethod
@@ -132,13 +127,14 @@ class PSF3D(object):
 
         psf_value = Quantity(table['RPSF'].squeeze(), table['RPSF'].unit)
 
+        opts = {}
         try:
-            energy_thresh_lo = Quantity(table.meta['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(table.meta['HI_THRES'], 'TeV')
-            return cls(energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, energy_thresh_lo, energy_thresh_hi)
+            opts['energy_thresh_lo'] = Quantity(table.meta['LO_THRES'], 'TeV')
+            opts['energy_thresh_hi'] = Quantity(table.meta['HI_THRES'], 'TeV')
         except KeyError:
-            log.warning('No safe energy thresholds found. Setting to default')
-            return cls(energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value)
+            pass
+
+        return cls(energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, **opts)
 
     def to_fits(self):
         """
@@ -184,9 +180,9 @@ class PSF3D(object):
         energy : `~astropy.units.Quantity`
             energy value
         offset : `~astropy.coordinates.Angle`
-            offset value
+            Offset in the field of view
         rad : `~astropy.coordinates.Angle`
-            offset value
+            Offset wrt source position
         interp_kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
@@ -243,10 +239,10 @@ class PSF3D(object):
 
         # Defaults
         theta = theta or Angle(0, 'deg')
-        offset = self.rad_center()
+        rad = self.rad_center()
         psf_value = self.evaluate(offset=theta).squeeze().T
 
-        return EnergyDependentTablePSF(energy=energies, offset=offset,
+        return EnergyDependentTablePSF(energy=energies, rad=rad,
                                        exposure=exposure, psf_value=psf_value)
 
     def to_table_psf(self, energy, theta=None, interp_kwargs=None, **kwargs):
@@ -353,7 +349,7 @@ class PSF3D(object):
         """
 
         table = self.to_table_psf(energy=energy, theta=theta)
-        return table.plot_psf_vs_theta()
+        return table.plot_psf_vs_rad()
 
     def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
                          add_cbar=True, **kwargs):
@@ -412,7 +408,6 @@ class PSF3D(object):
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
         label = 'Safe energy threshold: {0:3.2f}'.format(esafe)
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va='top')
-
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""

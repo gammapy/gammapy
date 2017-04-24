@@ -6,9 +6,8 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
-from ..utils.array import array_stats_str
 from ..utils.scripts import make_path
-from ..utils.nddata import NDDataArray, BinnedDataAxis, DataAxis
+from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.fits import energy_axis_to_ebounds, fits_table_to_table
 
 __all__ = [

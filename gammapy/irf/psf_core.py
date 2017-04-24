@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility funtions for reading / writing PSF parameters to JSON files.
+"""Utility functions for reading / writing PSF parameters to JSON files.
 
 From the documentaion of load_psf():
 

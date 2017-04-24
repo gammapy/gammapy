@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency
 from ...scripts import CTAIrf, CTAPerf

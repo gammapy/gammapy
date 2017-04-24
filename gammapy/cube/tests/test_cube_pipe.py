@@ -11,8 +11,8 @@ from ...utils.testing import requires_dependency, requires_data, pytest
 from ...utils.energy import Energy
 from ...data import DataStore
 from ...image import SkyImage
-from .. import StackedObsCubeMaker
 from ...background import OffDataBackgroundMaker
+from .. import StackedObsCubeMaker
 from .. import SkyCube
 
 

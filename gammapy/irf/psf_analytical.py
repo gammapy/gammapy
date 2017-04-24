@@ -127,14 +127,15 @@ class EnergyDependentMultiGaussPSF(object):
         norms = []
         for key in ['SCALE', 'AMPL_2', 'AMPL_3']:
             norms.append(hdu.data[key].reshape(shape))
+
+        opts = {}
         try:
-            energy_thresh_lo = Quantity(hdu.header['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(hdu.header['HI_THRES'], 'TeV')
-            return cls(energy_lo, energy_hi, theta, sigmas,
-                       norms, energy_thresh_lo, energy_thresh_hi)
+            opts['energy_thresh_lo'] = Quantity(hdu.header['LO_THRES'], 'TeV')
+            opts['energy_thresh_hi'] = Quantity(hdu.header['HI_THRES'], 'TeV')
         except KeyError:
-            log.warning('No safe energy thresholds found. Setting to default')
-            return cls(energy_lo, energy_hi, theta, sigmas, norms)
+            pass
+
+        return cls(energy_lo, energy_hi, theta, sigmas, norms, **opts)
 
     def to_fits(self):
         """
@@ -218,6 +219,7 @@ class EnergyDependentMultiGaussPSF(object):
         energy = Energy(energy).flatten()
         theta = Angle(theta).flatten()
         radius = np.empty((theta.size, energy.size))
+
         for idx_energy in range(len(energy)):
             for idx_theta in range(len(theta)):
                 try:
@@ -367,7 +369,7 @@ class EnergyDependentMultiGaussPSF(object):
                            "".format(100 * fraction, theta, energy, radius))
         return ss
 
-    def to_energy_dependent_table_psf(self, theta=None, offset=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
         """
         Convert triple Gaussian PSF ot table PSF.
 
@@ -375,7 +377,7 @@ class EnergyDependentMultiGaussPSF(object):
         ----------
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view. Default theta = 0 deg
-        offset : `~astropy.coordinates.Angle`
+        rad : `~astropy.coordinates.Angle`
             Offset from PSF center used for evaluating the PSF on a grid.
             Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
         exposure : `~astropy.units.Quantity`
@@ -396,16 +398,16 @@ class EnergyDependentMultiGaussPSF(object):
         else:
             theta = Angle(0, 'deg')
 
-        if offset:
-            offset = Angle(offset).to('deg')
+        if rad:
+            rad = Angle(rad).to('deg')
         else:
-            offset = Angle(np.arange(0, 1.5, 0.005), 'deg')
+            rad = Angle(np.arange(0, 1.5, 0.005), 'deg')
 
-        psf_value = Quantity(np.empty((energies.size, offset.size)), 'deg^-2')
+        psf_value = Quantity(np.empty((energies.size, rad.size)), 'deg^-2')
 
-        for i, energy in enumerate(energies):
+        for idx, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
-            psf_value[i] = Quantity(psf_gauss(offset), 'deg^-2')
+            psf_value[idx] = Quantity(psf_gauss(rad), 'deg^-2')
 
-        return EnergyDependentTablePSF(energy=energies, offset=offset,
+        return EnergyDependentTablePSF(energy=energies, rad=rad,
                                        exposure=exposure, psf_value=psf_value)

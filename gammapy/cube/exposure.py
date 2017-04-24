@@ -1,10 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
-import numpy as np
-from astropy.coordinates import SkyCoord, Angle
+from __future__ import absolute_import, division, print_function, unicode_literals
 from .core import SkyCube
-from ..utils.energy import EnergyBounds
 
 __all__ = [
     'exposure_cube'

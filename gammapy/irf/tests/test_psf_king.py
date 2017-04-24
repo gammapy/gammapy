@@ -16,11 +16,8 @@ def psf_king():
 
 @requires_data('gammapy-extra')
 def test_psf_king_evaluate(psf_king):
-    energy = Quantity(1, "TeV")
-    off1 = Angle(0, "deg")
-    off2 = Angle(1, "deg")
-    param_off1 = psf_king.evaluate(energy, off1)
-    param_off2 = psf_king.evaluate(energy, off2)
+    param_off1 = psf_king.evaluate(energy='1 TeV', offset='0 deg')
+    param_off2 = psf_king.evaluate('1 TeV', '1 deg')
 
     assert_quantity_allclose(param_off1["gamma"], psf_king.gamma[0, 8])
     assert_quantity_allclose(param_off2["gamma"], psf_king.gamma[2, 8])
@@ -45,9 +42,9 @@ def test_psf_king_to_table(psf_king):
     assert_quantity_allclose(psf_king_table_off2.psf_value[8, 200], value_off2)
 
     # Test that the integral value is close to one
-    bin_off = (psf_king_table_off1.offset[1] - psf_king_table_off1.offset[0])
-    integral = np.sum(psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.offset * bin_off)
-    assert_quantity_allclose(integral, 1, rtol=1e-1)
+    bin_off = (psf_king_table_off1.rad[1] - psf_king_table_off1.rad[0])
+    integral = np.sum(psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.rad * bin_off)
+    assert_quantity_allclose(integral, 1, atol=0.03)
 
 
 @requires_data('gammapy-extra')
