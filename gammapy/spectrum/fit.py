@@ -37,16 +37,16 @@ class SpectrumFit(object):
 
     Parameters
     ----------
-    obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
-        Observation(s) to fit
     model : `~gammapy.spectrum.models.SpectralModel`
         Source model. Should return counts if ``forward_folded`` is False and a flux otherwise
     stat : {'wstat', 'cash'}
         Fit statistic
     forward_folded : bool, default: True
         Fold ``model`` with the IRFs given in ``obs_list``
-    fit_range : tuple of `~astropy.units.Quantity``, optional
-        Fit range
+    fit_range : tuple of `~astropy.units.Quantity`
+        Fit range, will be convolved with observation thresholds. If you want to
+        control which bins are taken into account in the fit for each
+        observations, use :func:`~gammapy.spectrum.SpectrumObservation.qualitiy`
     background_model : `~gammapy.spectrum.model.SpectralModel`, optional
         Background model to be used in cash fits
     method : {'sherpa'}
@@ -55,17 +55,9 @@ class SpectrumFit(object):
         Optimization backend for error estimation
     """
 
-    def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
+    def __init__(self, model, stat='wstat', forward_folded=True,
                  fit_range=None, background_model=None,
                  method='sherpa', err_method='sherpa'):
-        # TODO: add fancy converters to accept also e.g. CountsSpectrum
-        if isinstance(obs_list, SpectrumObservation):
-            obs_list = SpectrumObservationList([obs_list])
-        if not isinstance(obs_list, SpectrumObservationList):
-            raise ValueError('Invalid input {} for parameter obs_list'.format(
-                type(obs_list)))
-
-        self.obs_list = obs_list
         self.model = model
         self.stat = stat
         self.forward_folded = forward_folded
@@ -74,18 +66,40 @@ class SpectrumFit(object):
         self.method = method
         self.err_method = method
 
-        # TODO: Reexpose as properties to improve docs
-        self.predicted_counts = None
-        self.statval = None
-        # TODO: Remove once there is a Parameter class
+        self._bins_in_fit_range = None
+        self._predicted_counts = None
+        self._statval = None
+
         self.covar_axis = None
         self.covariance = None
         self.result = None
 
+    @property
+    def bins_in_fit_range(self):
+        """Bins participating in the fit for each observation"""
+        return self._bins_in_fit_range
+
+    @property
+    def predicted_counts(self):
+        """Current value of predicted counts
+        
+        For each observation a tuple to counts for the on and off region is
+        returned.
+        """
+        return self._predicted_counts
+
+    @property
+    def statval(self):
+        """Current value of statval
+
+        For each observation the statval per bin is returned
+        """
+        return self._statval
+        
+
     def __str__(self):
         """String repr"""
         ss = self.__class__.__name__
-        ss += '\nData {}'.format(self.obs_list)
         ss += '\nSource model {}'.format(self.model)
         ss += '\nStat {}'.format(self.stat)
         ss += '\nForward Folded {}'.format(self.forward_folded)
@@ -97,26 +111,11 @@ class SpectrumFit(object):
 
         return ss
 
-    @property
-    def fit_range(self):
-        """Fit range"""
-        return self._fit_range
-
-    @fit_range.setter
-    def fit_range(self, fit_range):
-        self._fit_range = fit_range
-        self._apply_fit_range()
-
-    def _apply_fit_range(self):
+    def apply_fit_range(self, obs_list):
         """Mark bins within desired fit range for each observation
-
-        TODO: Split into smaller functions
-        TODO: Could reuse code from PHACountsSpectrum
-        TODO: Use True (not 0) to mark good bins
-        TODO: Add to EnergyBounds
         """
         self._bins_in_fit_range = list()
-        for obs in self.obs_list:
+        for obs in obs_list:
             # Take into account fit range
             energy = obs.e_reco
             valid_range = np.zeros(energy.nbins)
@@ -136,21 +135,21 @@ class SpectrumFit(object):
             except AttributeError:
                 quality = np.zeros(obs.e_reco.nbins)
 
-            # Convolve (see TODO above)
             convolved = np.logical_and(1 - quality, 1 - valid_range)
 
             self._bins_in_fit_range.append(convolved)
 
-    @property
-    def true_fit_range(self):
+    def true_fit_range(self, obs_list):
         """True fit range for each observation
 
         True fit range is the fit range set in the
         `~gammapy.spectrum.SpectrumFit` with observation threshold taken into
         account.
         """
+        self.apply_fit_range(obs_list)
+
         true_range = list()
-        for binrange, obs in zip(self._bins_in_fit_range, self.obs_list):
+        for binrange, obs in zip(self._bins_in_fit_range, obs_list):
             idx = np.where(binrange)[0]
             e_min = obs.e_reco[idx[0]]
             e_max = obs.e_reco[idx[-1] + 1]
@@ -158,13 +157,13 @@ class SpectrumFit(object):
             true_range.append(fit_range)
         return true_range
 
-    def predict_counts(self, **kwargs):
+    def predict_counts(self, obs_list):
         """Predict counts for all observations
 
         The result is stored as ``predicted_counts`` attribute
         """
         predicted_counts = list()
-        for obs in self.obs_list:
+        for obs in obs_list:
             mu_sig = self._predict_counts_helper(obs,
                                                  self.model,
                                                  self.forward_folded)
@@ -176,7 +175,7 @@ class SpectrumFit(object):
                                                      False)
             counts = [mu_sig, mu_bkg]
             predicted_counts.append(counts)
-        self.predicted_counts = predicted_counts
+        self._predicted_counts = predicted_counts
 
     def _predict_counts_helper(self, obs, model, forward_folded=True):
         """Predict counts for one observation
@@ -215,18 +214,18 @@ class SpectrumFit(object):
 
         return counts
 
-    def calc_statval(self):
+    def calc_statval(self, predicted_counts, obs_list):
         """Calc statistic for all observations
 
         The result is stored as attribute ``statval``, bin outside the fit
         range are set to 0.
         """
         statval = list()
-        for obs, npred in zip(self.obs_list, self.predicted_counts):
+        for obs, npred in zip(obs_list, predicted_counts):
             on_stat, off_stat = self._calc_statval_helper(obs, npred)
             stats = (on_stat, off_stat)
             statval.append(stats)
-        self.statval = statval
+        self._statval = statval
         self._restrict_statval()
 
     def _calc_statval_helper(self, obs, prediction):
@@ -294,19 +293,21 @@ class SpectrumFit(object):
             statval[0][idx] = 0
             statval[1][idx] = 0
 
-    def _check_valid_fit(self):
+    def _check_valid_fit(self, obs_list):
         """Helper function to give usefull error messages"""
         # TODO: Check if IRFs are given for forward folding
-        if self.stat == 'wstat' and self.obs_list[0].off_vector is None:
+        if self.stat == 'wstat' and obs_list[0].off_vector is None:
             raise ValueError('Off vector required for WStat fit')
 
-    def likelihood_1d(self, model, parname, parvals):
+    def likelihood_1d(self, model, obs_list, parname, parvals):
         """Compute likelihood profile
 
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Model to draw likelihood profile for
+        obs_list : `~gammapy.spectrum.SpectrumObservationList`
+            Observations
         parname : str
             Parameter to calculate profile for
         parvals : `~astropy.units.Quantity`
@@ -316,8 +317,8 @@ class SpectrumFit(object):
         self.model = model
         for val in parvals:
             self.model.parameters[parname].value = val
-            self.predict_counts()
-            self.calc_statval()
+            self.predict_counts(obs_list)
+            self.calc_statval(self.predicted_counts, obs_list)
             likelihood.append(self.total_stat)
         return np.array(likelihood)
 
@@ -335,25 +336,39 @@ class SpectrumFit(object):
 
         return ax
 
-    def fit(self):
-        """Run the fit"""
-        self._check_valid_fit()
+    def fit(self, obs_list):
+        """Run the fit
+        
+        Parameters
+        ----------
+        obs_list : `~gammapy.spectrum.SpectrumObservationList`
+            Observation to fit
+        """
+        # TODO: add fancy converters to accept also e.g. CountsSpectrum
+        if isinstance(obs_list, SpectrumObservation):
+            obs_list = SpectrumObservationList([obs_list])
+        if not isinstance(obs_list, SpectrumObservationList):
+            raise ValueError('Invalid input {} for parameter obs_list'.format(
+                type(obs_list)))
+
+        self._check_valid_fit(obs_list)
+        self.apply_fit_range(obs_list)
         if self.method == 'sherpa':
-            self._fit_sherpa()
+            self._fit_sherpa(obs_list)
         else:
             raise NotImplementedError('{}'.format(self.method))
 
-    def _fit_sherpa(self):
+    def _fit_sherpa(self, obs_list):
         """Wrapper around sherpa minimizer
         """
         from sherpa.fit import Fit
         from sherpa.data import Data1DInt
         from sherpa.optmethods import NelderMead
 
-        binning = self.obs_list[0].e_reco
+        binning = obs_list[0].e_reco
         # The sherpa data object is not usued in the fit. It is set to the
         # first observation for debugging purposes, see below
-        data = self.obs_list[0].on_vector.data.data.value
+        data = obs_list[0].on_vector.data.data.value
         data = Data1DInt('Dummy data', binning[:-1].value,
                          binning[1:].value, data)
         # DEBUG
@@ -371,14 +386,14 @@ class SpectrumFit(object):
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/include/sherpa/stats.hh#L122
 
         self._sherpa_fit = Fit(data,
-                               SherpaModel(self),
-                               SherpaStat(self),
+                               SherpaModel(self, obs_list),
+                               SherpaStat(self, obs_list),
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        self._make_fit_result()
+        self._make_fit_result(obs_list)
 
-    def _make_fit_result(self):
+    def _make_fit_result(self, obs_list):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`
 
         It is important to copy best fit values, because the error estimation
@@ -389,6 +404,7 @@ class SpectrumFit(object):
 
         model = self.model.copy()
         if self.background_model is not None:
+
             bkg_model = self.background_model.copy()
         else:
             bkg_model = None
@@ -397,8 +413,8 @@ class SpectrumFit(object):
         covar_axis = None
         statname = self.stat
 
-        for idx, obs in enumerate(self.obs_list):
-            fit_range = self.true_fit_range[idx]
+        for idx, obs in enumerate(obs_list):
+            fit_range = self.true_fit_range(obs_list)[idx]
             statval = np.sum(self.statval[idx])
             npred_src = copy.deepcopy(self.predicted_counts[idx][0])
             npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
@@ -456,25 +472,27 @@ class SpectrumFit(object):
         """
         raise NotImplementedError()
 
-    def run(self, outdir=None):
+    def run(self, obs_list, outdir=None):
         """Run all steps and write result to disk
 
         Parameters
         ----------
+        obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
+            Observation(s) to fit
         outdir : Path, str
-            directory to write results files to
+            directory to write results files to (if given)
         """
-        cwd = Path.cwd()
-        outdir = cwd if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True)
-        os.chdir(str(outdir))
+        log.info('Running {}'.format(self))
 
-        self.fit()
+        self.fit(obs_list)
         self.est_errors()
 
-        # Assume only one model is fit to all data
-        modelname = self.result[0].model.__class__.__name__
-        filename = 'fit_result_{}.yaml'.format(modelname)
-        log.info('Writing {}'.format(filename))
-        self.result[0].to_yaml(filename)
-        os.chdir(str(cwd))
+        if outdir is not None:
+            outdir = make_path(outdir)
+            outdir.mkdir(exist_ok=True, parents=True)
+
+            # Assume only one model is fit to all data
+            modelname = self.result[0].model.__class__.__name__
+            filename = outdir / 'fit_result_{}.yaml'.format(modelname)
+            log.info('Writing {}'.format(filename))
+            self.result[0].to_yaml(filename)

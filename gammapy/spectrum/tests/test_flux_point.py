@@ -187,8 +187,8 @@ class FluxPointTester:
         self.setup()
 
     def setup(self):
-        fit = SpectrumFit(self.config['obs'], self.config['model'])
-        fit.fit()
+        fit = SpectrumFit(model=self.config['model'])
+        fit.fit(self.config['obs']) 
         fit.est_errors()
         self.best_fit_model = fit.result[0].model
         self.fpe = FluxPointEstimator(

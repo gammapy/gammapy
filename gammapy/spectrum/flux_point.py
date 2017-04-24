@@ -611,7 +611,7 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref):
         from gammapy.spectrum import SpectrumFit
 
-        fit = SpectrumFit(self.obs, model)
+        fit = SpectrumFit(model)
         erange = energy_group.energy_range
 
         # TODO: Notice channels contained in energy_group
@@ -622,7 +622,7 @@ class FluxPointEstimator(object):
             ' in energy range:\n{}'.format(fit)
         )
 
-        fit.fit()
+        fit.fit(self.obs)
         fit.est_errors()
 
         # First result contain correct model

@@ -42,10 +42,10 @@ def mask():
 @pytest.fixture(scope='session')
 def stats(target, mask):
     obs = get_obs(23523)
-    bg = ReflectedRegionsBackgroundEstimator.process(on_region=target.on_region,
-                                                     exclusion=mask,
-                                                     obs=obs)
-    return ObservationStats.from_target(obs, target, bg)
+    bg = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
+                                             exclusion_mask=mask)
+    bg.run([obs])
+    return ObservationStats.from_target(obs, target, bg.result[0])
 
 
 @pytest.fixture(scope='session')
@@ -53,10 +53,10 @@ def stats_stacked(target, mask):
     obs_list = get_obs_list()
     obs_stats = list()
     for obs in obs_list:
-        bg = ReflectedRegionsBackgroundEstimator.process(on_region=target.on_region,
-                                                         exclusion=mask,
-                                                         obs=obs)
-        obs_stats.append(ObservationStats.from_target(obs, target, bg))
+        bg = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
+                                                 exclusion_mask=mask)
+        bg.run([obs])
+        obs_stats.append(ObservationStats.from_target(obs, target, bg.result[0]))
 
     return ObservationStats.stack(obs_stats)
 

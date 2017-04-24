@@ -380,9 +380,10 @@ def _significance_simple_on_off(n_on, n_off, alpha):
 
 def _significance_lima_on_off(n_on, n_off, alpha):
     r"""Compute significance with the Li & Ma formula (17)."""
-    temp = (alpha + 1) / (n_on + n_off)
-    l = n_on * log(n_on * temp / alpha)
-    m = n_off * log(n_off * temp)
+    with np.errstate(divide='ignore'):
+        temp = (alpha + 1) / (n_on + n_off)
+        l = n_on * log(n_on * temp / alpha)
+        m = n_off * log(n_off * temp)
     e = excess(n_on, n_off, alpha)
     sign = np.where(e > 0, 1, -1)
 

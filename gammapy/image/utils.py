@@ -344,7 +344,7 @@ def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
         mask_lat_min = (lat_min <= lats)
     else:
         mask_lat_min = np.ones(lats.shape, dtype=bool)
-    if lon_max:
+    if lat_max:
         mask_lat_max = (lats < lat_max)
     else:
         mask_lat_max = np.ones(lats.shape, dtype=bool)

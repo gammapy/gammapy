@@ -74,6 +74,7 @@ def spec_extraction():
     return extraction
 
 
+@pytest.mark.skipif(True, reason='see 982')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 def test_lightcurve_estimator():

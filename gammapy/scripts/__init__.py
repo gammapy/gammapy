@@ -22,6 +22,8 @@ from .image_ts import *
 from .cube_background import *
 from .cube_bin import *
 
+from .spectrum_pipe import *
+
 from .detect import *
 from .detect_iterative import *
 

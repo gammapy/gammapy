@@ -25,8 +25,9 @@ class SherpaModel(ArithmeticModel):
         Fit instance
     """
 
-    def __init__(self, fit):
+    def __init__(self, fit, obs_list):
         self.fit = fit
+        self.obs_list = obs_list
         
         sherpa_name = 'sherpa_model'
         par_list = list()
@@ -56,9 +57,9 @@ class SherpaModel(ArithmeticModel):
             else:
                 self.fit.model.parameters.parameters[idx].value = par
 
-        self.fit.predict_counts()
+        self.fit.predict_counts(self.obs_list)
         # Return ones since sherpa does some check on the shape
-        return np.ones_like(self.fit.obs_list[0].e_reco)
+        return np.ones_like(self.obs_list[0].e_reco)
 
 
 class SherpaStat(Likelihood):
@@ -70,13 +71,14 @@ class SherpaStat(Likelihood):
         Fit instance
     """
 
-    def __init__(self, fit):
+    def __init__(self, fit, obs_list):
         sherpa_name = 'sherpa_stat'
         self.fit = fit
+        self.obs_list = obs_list
         Likelihood.__init__(self, sherpa_name)
 
     def _calc(self, data, model, *args, **kwargs):
-        self.fit.calc_statval()
+        self.fit.calc_statval(self.fit.predicted_counts, self.obs_list)
         # Sum likelihood over all observations
         total_stat = np.sum([np.sum(v) for v in self.fit.statval], dtype=np.float64)
         # sherpa return pattern: total stat, fvec
