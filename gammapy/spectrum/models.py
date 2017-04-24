@@ -671,7 +671,7 @@ class PowerLaw2(SpectralModel):
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
 
-        unit = self.energy_flux(emin, emax, **kwargs).unit
+        unit = self.integral(emin, emax, **kwargs).unit
         upars = self.parameters._ufloats
 
         temp1 = np.power(emax.value, -upars['index'] + 1)
