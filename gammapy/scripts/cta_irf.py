@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy.io import fits
-from astropy import units as u
 from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -60,8 +58,7 @@ class CTAIrf(object):
 
     @classmethod
     def read(cls, filename):
-        """
-        Read from a FITS file.
+        """Read from a FITS file.
 
         Parameters
         ----------
@@ -91,7 +88,7 @@ class CTAIrf(object):
 
 
 class BgRateTable(object):
-    """Background rate Table
+    """Background rate table.
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
@@ -99,15 +96,16 @@ class BgRateTable(object):
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+    energy_lo, energy_hi : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Background rate
     """
 
     def __init__(self, energy_lo, energy_hi, data):
-        axes = [BinnedDataAxis(energy_lo, energy_hi,
-                               interpolation_mode='log', name='energy')]
+        axes = [
+            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+        ]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -117,14 +115,9 @@ class BgRateTable(object):
     @classmethod
     def from_table(cls, table):
         """Background rate reader"""
-        energy_col = 'ENERG'
-        data_col = 'BGD'
-
-        energy_lo = table['{}_LO'.format(energy_col)].quantity
-        energy_hi = table['{}_HI'.format(energy_col)].quantity
-        energy = np.append(energy_lo.value,
-                           energy_hi[-1].value) * energy_lo.unit
-        data = table['{}'.format(data_col)].quantity
+        energy_lo = table['ENERG_LO'].quantity
+        energy_hi = table['ENERG_HI'].quantity
+        data = table['BGD'].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
@@ -145,7 +138,7 @@ class BgRateTable(object):
             raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
-        """Plot background rate
+        """Plot background rate.
 
         Parameters
         ----------
@@ -158,16 +151,16 @@ class BgRateTable(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axis
-
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        if energy is None:
-            energy = self.energy.nodes
+        energy = energy or self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.lo.value,
-                self.energy.hi.value - energy.value)
+        xerr = (
+            energy.value - self.energy.lo.value,
+            self.energy.hi.value - energy.value,
+        )
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -178,7 +171,7 @@ class BgRateTable(object):
 
 
 class Psf68Table(object):
-    """Background rate Table
+    """Background rate table.
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
@@ -186,15 +179,16 @@ class Psf68Table(object):
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+    energy_lo, energy_hi : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Background rate
     """
 
     def __init__(self, energy_lo, energy_hi, data):
-        axes = [BinnedDataAxis(energy_lo, energy_lo,
-                               interpolation_mode='log', name='energy')]
+        axes = [
+            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+        ]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -204,14 +198,9 @@ class Psf68Table(object):
     @classmethod
     def from_table(cls, table):
         """PSF reader"""
-        energy_col = 'ENERG'
-        data_col = 'PSF68'
-
-        energy_lo = table['{}_LO'.format(energy_col)].quantity
-        energy_hi = table['{}_HI'.format(energy_col)].quantity
-        energy = np.append(
-            energy_lo.value, energy_hi[-1].value) * energy_lo.unit
-        data = table['{}'.format(data_col)].quantity
+        energy_lo = table['ENERG_LO'].quantity
+        energy_hi = table['ENERG_HI'].quantity
+        data = table['PSF68'].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
@@ -232,7 +221,7 @@ class Psf68Table(object):
             raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
-        """Plot point spread function
+        """Plot point spread function.
 
         Parameters
         ----------
@@ -245,16 +234,16 @@ class Psf68Table(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axis
-
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        if energy is None:
-            energy = self.energy.nodes
+        energy = energy or self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.lo.value,
-                self.energy.hi.value - energy.value)
+        xerr = (
+            energy.value - self.energy.lo.value,
+            self.energy.hi.value - energy.value,
+        )
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
@@ -266,7 +255,7 @@ class Psf68Table(object):
 
 
 class SensitivityTable(object):
-    """Sensitivity Table
+    """Sensitivity table.
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
@@ -274,15 +263,16 @@ class SensitivityTable(object):
 
     Parameters
     -----------
-    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+    energy_lo, energy_hi : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Background rate
     """
 
     def __init__(self, energy_lo, energy_hi, data):
-        axes = [BinnedDataAxis(energy_lo, energy_hi,
-                               interpolation_mode='log', name='energy')]
+        axes = [
+            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+        ]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
@@ -291,15 +281,9 @@ class SensitivityTable(object):
 
     @classmethod
     def from_table(cls, table):
-        """Sensitivity reader"""
-        energy_col = 'ENERG'
-        data_col = 'SENSITIVITY'
-
-        energy_lo = table['{}_LO'.format(energy_col)].quantity
-        energy_hi = table['{}_HI'.format(energy_col)].quantity
-        energy = np.append(energy_lo.value,
-                           energy_hi[-1].value) * energy_lo.unit
-        data = table['{}'.format(data_col)].quantity
+        energy_lo = table['ENERG_LO'].quantity
+        energy_hi = table['ENERG_HI'].quantity
+        data = table['SENSITIVITY'].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
@@ -320,7 +304,7 @@ class SensitivityTable(object):
             raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
-        """Plot sensitivity
+        """Plot sensitivity.
 
         Parameters
         ----------
@@ -333,16 +317,16 @@ class SensitivityTable(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axis
-
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        if energy is None:
-            energy = self.energy.nodes
+        energy = energy or self.energy.nodes
         values = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.lo.value,
-                self.energy.hi.value - energy.value)
+        xerr = (
+            energy.value - self.energy.lo.value,
+            self.energy.hi.value - energy.value,
+        )
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -372,7 +356,7 @@ class CTAPerf(object):
     ----------
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp_2d : `~gammapy.irf.EnergyDispersion2D`
+    edisp : `~gammapy.irf.EnergyDispersion2D`
         Energy dispersion
     psf : `~gammapy.scripts.Psf68Table`
         Point spread function
@@ -392,8 +376,9 @@ class CTAPerf(object):
 
     @classmethod
     def read(cls, filename):
-        """
-        Read from a FITS file. Build RMF on fly
+        """Read from a FITS file.
+        
+        Compute RMF at 0.5 deg offset on fly.
 
         Parameters
         ----------
@@ -413,22 +398,20 @@ class CTAPerf(object):
         e_reco_min = bkg.energy.lo[0]
         e_reco_max = bkg.energy.hi[-1]
         e_reco_bin = bkg.energy.nbins
-        e_reco_axis = EnergyBounds.equal_log_spacing(e_reco_min,
-                                                     e_reco_max,
-                                                     e_reco_bin,
-                                                     'TeV')
+        e_reco_axis = EnergyBounds.equal_log_spacing(
+            e_reco_min, e_reco_max, e_reco_bin, 'TeV',
+        )
 
         e_true_min = aeff.energy.lo[0]
         e_true_max = aeff.energy.hi[-1]
         e_true_bin = aeff.energy.nbins
-        e_true_axis = EnergyBounds.equal_log_spacing(e_true_min,
-                                                     e_true_max,
-                                                     e_true_bin,
-                                                     'TeV')
+        e_true_axis = EnergyBounds.equal_log_spacing(
+            e_true_min, e_true_max, e_true_bin, 'TeV',
+        )
 
-        rmf = edisp.to_energy_dispersion(offset=0.5 * u.degree,
-                                         e_reco=e_reco_axis,
-                                         e_true=e_true_axis)
+        rmf = edisp.to_energy_dispersion(
+            offset='0.5 deg', e_reco=e_reco_axis, e_true=e_true_axis,
+        )
 
         return cls(
             aeff=aeff,
@@ -443,7 +426,7 @@ class CTAPerf(object):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
 
-        fig = plt.figure(figsize=(15, 8))
+        fig = plt.figure(figsize=figsize)
         ax_bkg = plt.subplot2grid((2, 4), (0, 0))
         ax_area = plt.subplot2grid((2, 4), (0, 1))
         ax_sens = plt.subplot2grid((2, 4), (0, 2), colspan=2, rowspan=2)
@@ -454,19 +437,17 @@ class CTAPerf(object):
         self.aeff.plot(ax=ax_area).set_yscale('log')
         self.sens.plot(ax=ax_sens)
         self.psf.plot(ax=ax_psf)
-        self.edisp.plot_bias(ax=ax_resol,
-                             offset=0.5 * u.degree)
+        self.edisp.plot_bias(ax=ax_resol, offset='0.5 deg')
 
         ax_bkg.grid(which='both')
         ax_area.grid(which='both')
         ax_sens.grid(which='both')
         ax_psf.grid(which='both')
-        plt.tight_layout()
+        fig.tight_layout()
 
     @staticmethod
     def superpose_perf(cta_perf, labels):
-        """
-        Superpose performance plot
+        """Superpose performance plot.
 
         Parameters
         ----------
@@ -500,4 +481,4 @@ class CTAPerf(object):
         ax_psf.grid(which='both')
         ax_sens.grid(which='both')
 
-        plt.tight_layout()
+        fig.tight_layout()

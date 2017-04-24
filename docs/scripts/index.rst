@@ -54,7 +54,6 @@ Image
 -----
 
 - ``gammapy-image-bin`` calls `gammapy.scripts.image_bin`
-- ``gammapy-image-derived`` calls `gammapy.scripts.image_derived`
 - ``gammapy-image-fit`` calls `gammapy.scripts.image_fit`
 - ``gammapy-image-model`` calls `gammapy.scripts.image_model`
 - ``gammapy-image-model-sherpa`` calls `gammapy.scripts.image_model_sherpa`
