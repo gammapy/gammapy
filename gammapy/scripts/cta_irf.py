@@ -6,11 +6,11 @@ from astropy import units as u
 from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..utils.energy import EnergyBounds
 from ..irf import EffectiveAreaTable2D, EffectiveAreaTable
-from ..background import FOVCube
 from ..irf import EnergyDispersion2D
 from ..irf import EnergyDependentMultiGaussPSF
-from ..utils.energy import EnergyBounds
+from ..background import FOVCube
 
 __all__ = [
     'CTAIrf',

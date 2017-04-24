@@ -12,18 +12,13 @@ from .data_select import *
 from .data_show import *
 
 from .image_bin import *
-#from .image_lima import *
 from .image_fit import *
-from .image_model import *
 from .image_model_sherpa import *
 from .image_pipe import *
 from .image_ts import *
 
 from .cube_background import *
 from .cube_bin import *
-
-from .detect import *
-from .detect_iterative import *
 
 from .catalog_browser import *
 # from .catalog_query import *
