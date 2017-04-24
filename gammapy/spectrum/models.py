@@ -103,10 +103,10 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+        **kwargs : dict
+            Keyword arguments passed to `integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -116,10 +116,10 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower adn upper  bound of integration range.
+        **kwargs : dict
+            Keyword arguments passed to `integrate_spectrum`
 
         Returns
         -------
@@ -147,10 +147,11 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+        **kwargs : dict
+            Keyword arguments passed to `integrate_spectrum`
+
         """
 
         def f(x):
@@ -167,10 +168,10 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
+        emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        **kwargs : dict
+            Keyword arguments passed to `integrate_spectrum`
 
         Returns
         -------
@@ -421,10 +422,8 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range.
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
 
         """
         # kwargs are passed to this function but not used
@@ -452,10 +451,8 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range.
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
 
         Returns
         -------
@@ -483,7 +480,6 @@ class PowerLaw(SpectralModel):
         uarray = prefactor * (upper - lower)
         return self._parse_uarray(uarray) * unit
 
-
     def energy_flux(self, emin, emax):
         r"""
         Compute energy flux in given energy range analytically.
@@ -498,20 +494,14 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
         """
+
         pars = self.parameters
         val = -1 * pars['index'].value + 2
 
-        try:
-            val_zero = np.isclose(val.n, 0)
-        except AttributeError:
-            val_zero = np.isclose(val, 0)
-
-        if val_zero:
+        if np.isclose(val, 0):
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
             temp = pars['amplitude'].quantity * pars['reference'].quantity ** 2
@@ -528,10 +518,13 @@ class PowerLaw(SpectralModel):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+
+        Returns
+        -------
+        energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
+            Tuple of energy flux and energy flux error.
         """
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
@@ -541,7 +534,7 @@ class PowerLaw(SpectralModel):
 
         val = -1 * upars['index'] + 2
 
-        if np.isclose(val.n, 0):
+        if np.isclose(val.nominal_value, 0):
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
             temp = upars['amplitude'] * upars['reference'] ** 2
@@ -634,10 +627,8 @@ class PowerLaw2(SpectralModel):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
 
         """
         pars = self.parameters
@@ -652,21 +643,17 @@ class PowerLaw2(SpectralModel):
 
     def integral_error(self, emin, emax, **kwargs):
         r"""
-        Integrate power law analytically.
-
-        .. math::
-
-            F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
-                                - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
-                                - E_{0, min}^{\Gamma + 1}}
+        Integrate power law analytically with error propagation.
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        emax : `~astropy.units.Quantity`
-            Upper bound of integration range
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
 
+        Returns
+        -------
+        integral, integral_error : tuple of `~astropy.units.Quantity`
+            Tuple of integral flux and integral flux error.
         """
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
