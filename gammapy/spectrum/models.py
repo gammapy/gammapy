@@ -445,6 +445,45 @@ class PowerLaw(SpectralModel):
         integral = prefactor * (upper - lower)
         return integral
 
+
+    def integral_error(self, emin, emax, **kwargs):
+        r"""
+        Integrate power law analytically with error propagation.
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : `~astropy.units.Quantity`
+            Upper bound of integration range.
+
+        Returns
+        -------
+        integral, integral_error : tuple of `~astropy.units.Quantity`
+            Tuple of integral flux and integral flux error.
+        """
+        # kwargs are passed to this function but not used
+        # this is to get a consistent API with SpectralModel.integral()
+        emin = self._convert_energy(emin)
+        emax = self._convert_energy(emax)
+
+        unit = self.integral(emin, emax, **kwargs).unit
+        upars = self.parameters._ufloats
+
+        if np.isclose(upars['index'].nominal_value, 1):
+            prefactor = upars['amplitude'] * upars['reference']
+            upper = np.log(emax.value)
+            lower = np.log(emin.value)
+        else:
+            val = -1 * upars['index'] + 1
+            prefactor = upars['amplitude'] * upars['reference'] / val
+            upper = np.power((emax.value / upars['reference']), val)
+            lower = np.power((emin.value / upars['reference']), val)
+
+        uarray = prefactor * (upper - lower)
+        return self._parse_uarray(uarray) * unit
+
+
     def energy_flux(self, emin, emax):
         r"""
         Compute energy flux in given energy range analytically.
@@ -482,6 +521,38 @@ class PowerLaw(SpectralModel):
             upper = (emax / pars['reference'].quantity) ** val
             lower = (emin / pars['reference'].quantity) ** val
             return prefactor * (upper - lower)
+
+    def energy_flux_error(self, emin, emax, **kwargs):
+        r"""
+        Compute energy flux in given energy range analytically with error propagation.
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : `~astropy.units.Quantity`
+            Upper bound of integration range
+        """
+        emin = self._convert_energy(emin)
+        emax = self._convert_energy(emax)
+
+        unit = self.energy_flux(emin, emax, **kwargs).unit
+        upars = self.parameters._ufloats
+
+        val = -1 * upars['index'] + 2
+
+        if np.isclose(val.n, 0):
+            # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
+            # for reference
+            temp = upars['amplitude'] * upars['reference'] ** 2
+            uarray = temp * np.log(emax.value / emin.value)
+        else:
+            prefactor = upars['amplitude'] * upars['reference'] ** 2 / val
+            upper = (emax.value / upars['reference']) ** val
+            lower = (emin.value / upars['reference']) ** val
+            uarray = prefactor * (upper - lower)
+
+        return self._parse_uarray(uarray) * unit
 
     def to_sherpa(self, name='default'):
         """Return Sherpa `~sherpa.models.PowLaw1d`
@@ -578,6 +649,39 @@ class PowerLaw2(SpectralModel):
         bottom = temp1 - temp2
 
         return pars['amplitude'].quantity * top / bottom
+
+    def integral_error(self, emin, emax, **kwargs):
+        r"""
+        Integrate power law analytically.
+
+        .. math::
+
+            F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
+                                - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
+                                - E_{0, min}^{\Gamma + 1}}
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : `~astropy.units.Quantity`
+            Upper bound of integration range
+
+        """
+        emin = self._convert_energy(emin)
+        emax = self._convert_energy(emax)
+
+        unit = self.energy_flux(emin, emax, **kwargs).unit
+        upars = self.parameters._ufloats
+
+        temp1 = np.power(emax.value, -upars['index'] + 1)
+        temp2 = np.power(emin.value, -upars['index'] + 1)
+        top = temp1 - temp2
+        temp1 = np.power(upars['emax'], -upars['index'] + 1)
+        temp2 = np.power(upars['emin'], -upars['index'] + 1)
+        bottom = temp1 - temp2
+        uarray = upars['amplitude'] * top / bottom
+        return self._parse_uarray(uarray) * unit
 
     def inverse(self, value):
         """
