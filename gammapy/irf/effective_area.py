@@ -235,7 +235,7 @@ class EffectiveAreaTable(object):
         return cleaned_data.max()
 
     def find_energy(self, aeff):
-        """Find energy for given effective area
+        """Find energy for given effective area.
 
         A linear interpolation is performed between the two nodes closest to
         the desired effective area value.
@@ -244,13 +244,13 @@ class EffectiveAreaTable(object):
 
         Parameters
         ----------
-        aeff: `~astropy.units.Quantity`
+        aeff : `~astropy.units.Quantity`
             Effective area value
 
         Returns
         -------
-        energy: `~astropy.units.Quantity`
-            Energy corresponing to aeff
+        energy : `~astropy.units.Quantity`
+            Energy corresponding to aeff
         """
         idx = np.where(self.data.data > aeff)[0][0]
 

@@ -233,7 +233,7 @@ class PSF3D(object):
         Returns
         -------
         table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Instance of `EnergyDependentTablePSF`.
+            Energy-dependent PSF
         """
         energies = self.energy_logcenter()
 

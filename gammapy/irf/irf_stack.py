@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class IRFStacker(object):
     r"""
-    Stack instrument response functions
+    Stack instrument response functions.
 
     Compute mean effective area and the mean energy dispersion for a given for a
     given list of instrument response functions. Results are stored as
@@ -39,15 +39,15 @@ class IRFStacker(object):
 
     Parameters
     ----------
-    list_aeff: list
+    list_aeff : list
         list of `~gammapy.irf.EffectiveAreaTable`
-    list_livetime: list
+    list_livetime : list
         list of `~astropy.units.Quantity` (livetime)
-    list_edisp: list
+    list_edisp : list
         list of `~gammapy.irf.EnergyDispersion`
-    list_low_threshold: list
+    list_low_threshold : list
         list of low energy threshold, optional for effective area mean computation
-    list_high_threshold: list
+    list_high_threshold : list
         list of high energy threshold, optional for effective area mean computation
     """
 
@@ -63,7 +63,7 @@ class IRFStacker(object):
 
     def stack_aeff(self):
         """
-        Compute mean effective area
+        Compute mean effective area (`~gammapy.irf.EffectiveAreaTable`).
         """
         nbins = self.list_aeff[0].energy.nbins
         aefft = Quantity(np.zeros(nbins), 'cm2 s')
@@ -83,7 +83,7 @@ class IRFStacker(object):
 
     def stack_edisp(self):
         """
-        Compute mean energy dispersion
+        Compute mean energy dispersion (`~gammapy.irf.EnergyDispersion`).
         """
         reco_bins = self.list_edisp[0].e_reco.nbins
         true_bins = self.list_edisp[0].e_true.nbins
