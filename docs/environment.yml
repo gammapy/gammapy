@@ -1,11 +1,12 @@
-name: astropy
+name: gammapy-rtd
 
 channels:
   - conda-forge
+  - openastronomy
   - astropy
 
 dependencies:
-  - python=3
+  - python=3.5
   - cython
   - numpy
   - uncertainties
