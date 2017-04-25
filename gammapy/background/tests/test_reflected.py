@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency
 from ...image import SkyImage
 from ...data import DataStore
-from ..reflected import find_reflected_regions, ReflectedRegionsBackgroundEstimator
+from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
 
 
 @pytest.fixture
@@ -15,11 +15,12 @@ def mask():
     filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
     return SkyImage.read(filename, hdu='EXCLUSION')
 
+
 @pytest.fixture
 def on_region():
     """Example on_region for testing."""
-    pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
-    radius = Angle(0.4, 'deg')
+    pos = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
+    radius = Angle(0.11, 'deg')
     region = CircleSkyRegion(pos, radius)
     return region
 
@@ -36,36 +37,54 @@ def obs_list():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_find_reflected_regions(mask, on_region):
-    pointing = SkyCoord(83.2, 22.7, unit='deg')
-    regions = find_reflected_regions(region=on_region, center=pointing,
-                                     exclusion_mask=mask,
-                                     min_distance_input=Angle('0 deg'))
-    assert (len(regions)) == 20
-    assert_quantity_allclose(regions[3].center.icrs.ra, Angle('81.752 deg'), rtol=1e-2)
+    pointing = SkyCoord(83.2, 22.5, unit='deg')
+    fregions = ReflectedRegionsFinder(center=pointing,
+                                      region=on_region,
+                                      exclusion_mask=mask,
+                                      min_distance_input=Angle('0 deg'))
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 15
+    assert_quantity_allclose(regions[3].center.icrs.ra, Angle('83.674 deg'), rtol=1e-2)
+
+    # Test without exclusion
+    fregions.exclusion_mask = None
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 16
+
+    # Test with too small exclusion
+    small_mask = mask.cutout(pointing, Angle('0.2 deg'))
+    fregions.exclusion_mask = small_mask
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 16
+    assert_quantity_allclose(regions[3].center.icrs.ra, Angle('83.674 deg'), rtol=1e-2)
+
+
+@pytest.fixture
+def bkg_estimator():
+    """Example background estimator for testing."""
+    estimator = ReflectedRegionsBackgroundEstimator(obs_list=obs_list(),
+                                                    on_region=on_region(),
+                                                    exclusion_mask=mask())
+    return estimator
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestReflectedRegionBackgroundEstimator:
+
     def setup(self):
-        temp = ReflectedRegionsBackgroundEstimator(on_region=on_region(),
-                                                   exclusion=mask(),
-                                                   obs_list=obs_list())
-        self.bg_maker = temp
+        self.bg_maker = bkg_estimator()
 
     def test_basic(self):
         assert 'ReflectedRegionsBackgroundEstimator' in str(self.bg_maker)
 
-    def test_process(self, on_region, obs_list, mask):
-        bg_estimate = self.bg_maker.process(on_region=on_region,
-                                            obs=obs_list[1],
-                                            exclusion=mask)
-        assert len(bg_estimate.off_region) == 22
-
     def test_run(self):
-        self.bg_maker.config.update(min_distance='0.2 deg')
+        self.bg_maker.finder.min_distance = Angle('0.2 deg')
         self.bg_maker.run()
-        assert len(self.bg_maker.result[1].off_region) == 22
+        assert len(self.bg_maker.result[1].off_region) == 11
 
     @requires_dependency('matplotlib')
     def test_plot(self):
