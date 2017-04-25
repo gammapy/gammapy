@@ -221,3 +221,62 @@ def test_pwl_index_2_error():
     eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
     assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit('TeV cm-2 s-1'))
     assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit('TeV cm-2 s-1'))
+
+
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_spectral_model_absorbed_by_ebl():
+    from gammapy.spectrum.models import SpectralModelAbsorbedbyEbl
+    from gammapy.scripts import CTAPerf
+    from gammapy.scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
+    from gammapy.spectrum import SpectrumObservationList, SpectrumFit, SpectrumResult
+
+    # Observation parameters
+    obs_param = ObservationParameters(alpha=0.2 * u.Unit(''),
+                                      livetime=5. * u.h,
+                                      emin=0.08 * u.TeV,
+                                      emax=12 * u.TeV)
+
+    # Target, PKS 2155-304 from 3FHL
+    name = 'test'
+    pwl = PowerLaw(index=3. * u.Unit(''),
+                   amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
+                   reference=1. * u.TeV)
+
+    # here is the new model
+    input_model = SpectralModelAbsorbedbyEbl(spectral_model=pwl,
+                                             redshift=0.1,
+                                             ebl_model='$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz')
+
+    # should be changed, I hack to avoid double absorption by EBL
+    # (redshift = None)
+    target = Target(name=name, model=input_model,
+                    redshift=None,
+                    ebl_model_name='dominguez')
+    
+    # Performance
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
+    cta_perf = CTAPerf.read(filename)
+
+    # Simulation
+    simu = CTAObservationSimulation.simulate_obs(perf=cta_perf,
+                                                 target=target,
+                                                 obs_param=obs_param)
+
+    # Model we want to fit
+    model = SpectralModelAbsorbedbyEbl(spectral_model=PowerLaw(index=2.5 * u.Unit(''),
+                                                               amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
+                                                               reference=1. * u.TeV),
+                                       redshift=0.1,
+                                       ebl_model='$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz')
+
+    # fit
+    fit = SpectrumFit(obs_list=SpectrumObservationList([simu]),
+                      model=model,
+                      stat='wstat')
+    fit.fit()
+    fit.est_errors()
+    result = fit.result[0]
+
+    # here it explodes since NDDataArray can't handle error propagation
+    butterfly = result.butterfly()
