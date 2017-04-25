@@ -247,6 +247,22 @@ class ParameterList(object):
             upars[par.name] = upar
         return upars
 
+    @property
+    def free(self):
+        """
+        Return list of free parameters names.
+        """
+        free_pars = [par.name for par in self.parameters if not par.frozen]
+        return free_pars
+
+    @property
+    def frozen(self):
+        """
+        Return list of frozen parameters names.
+        """
+        frozen_pars = [par.name for par in self.parameters if par.frozen]
+        return frozen_pars
+
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
     def set_parameter_errors(self, errors):

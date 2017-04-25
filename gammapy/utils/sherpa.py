@@ -45,7 +45,9 @@ class SherpaStatWrapper(Likelihood):
             part._update_pars()
             gp_models.append(part.gp_model)
         gp_datasets = [_.gp_data for _ in data.datasets]
-        return self.gp_stat(gp_datasets, gp_models)
+        # right now we only pass the first dataset and model
+        # but in general we'd like pass all
+        return self.gp_stat(gp_datasets[0], gp_models[0])
 
     def calc_stat_error(self):
         staterr = np.array([np.nan])
