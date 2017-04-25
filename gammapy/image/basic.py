@@ -233,7 +233,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         ----------
         TODO
         """
-        p = self.parameters
         input_images = SkyImageList()
         input_images['counts'] = counts
         exposure_on = exposure.copy()

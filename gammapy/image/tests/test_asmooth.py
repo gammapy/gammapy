@@ -2,12 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
-
 from ...utils.testing import requires_data, requires_dependency
-from .. import SkyImage, ASmooth, SkyImageList, asmooth_scales
+from .. import ASmooth, SkyImageList, asmooth_scales
 
 
 @requires_dependency('scipy')
@@ -23,10 +21,12 @@ def test_asmooth():
     asmooth = ASmooth(kernel=kernel, scales=scales[6:], method='lima', threshold=4)
     smoothed = asmooth.run(images)
 
-    desired = {'counts': 0.02089332998318483,
-               'background': 0.022048139647973686,
-               'scale': np.nan,
-               'significance': np.nan}
+    desired = {
+        'counts': 0.02089332998318483,
+        'background': 0.022048139647973686,
+        'scale': np.nan,
+        'significance': np.nan,
+    }
 
     for name in smoothed.names:
         actual = smoothed[name].data[100, 100]

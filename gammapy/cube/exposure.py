@@ -68,4 +68,4 @@ def make_exposure_cube_obs(obs, ref_cube=None):
     if not ref_cube:
         ref_cube = obs.ref_cube
 
-    return exposure_cube(obs.pointing, obs.livetime, obs.irfs.aeff2d, ref_cube)
+    return make_exposure_cube(obs.pointing, obs.livetime, obs.irfs.aeff2d, ref_cube)

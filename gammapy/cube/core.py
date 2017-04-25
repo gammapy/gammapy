@@ -666,7 +666,7 @@ class SkyCube(MapBase):
 
         Parameters
         ----------
-        reference : `~astropy.io.fits.Header`, `~gamampy.image.SkyImage` or `SkyCube`
+        reference : `~astropy.io.fits.Header`, `~gammapy.image.SkyImage` or `SkyCube`
             Reference wcs specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
