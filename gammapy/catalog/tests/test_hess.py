@@ -64,16 +64,6 @@ class TestSourceCatalogObjectHGPS:
         assert 'Source name          : HESS J1825-137' in ss
         assert 'Component HGPSC 065:' in ss
 
-    @requires_dependency('uncertainties')
-    def test_ecut_error(self):
-        import uncertainties
-        val = float(self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL'].value)
-        err = float(self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL'].value)
-        energy = 1 / uncertainties.ufloat(val, err)
-
-        energy_err = err / val ** 2
-        assert_allclose(err, energy.std_dev)
-
     def test_model(self):
         model = self.source.spectral_model
         pars = model.parameters

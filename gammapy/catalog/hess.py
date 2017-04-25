@@ -285,8 +285,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         err = d['Lambda_Spec_ECPL_Err'].value
         ss += '{:<20s} : {:.3f} +/- {:.3f} TeV^-1\n'.format('ECPL Lambda', val, err)
 
-        # Use Gaussian analytical error propagation, tested against the
-        # uncertainties package
+        # Use Gaussian analytical error propagation,
+        # tested against the uncertainties package
         err = err / val ** 2
         val = 1. / val
 
