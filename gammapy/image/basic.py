@@ -4,19 +4,17 @@ Basic sky image estimator classes
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
-
+from ..utils.energy import Energy
 from .core import SkyImage
 from .lists import SkyImageList
-from ..utils.energy import EnergyBounds, Energy
 
-
-__all__ = ['IACTBasicImageEstimator',
-           'FermiLATBasicImageEstimator']
-
+__all__ = [
+    'IACTBasicImageEstimator',
+    'FermiLATBasicImageEstimator',
+]
 
 SPECTRAL_INDEX = 2.3
 
@@ -25,6 +23,7 @@ class BasicImageEstimator(object):
     """
     BasicImageEstimator base class.
     """
+
     @property
     def _default_spectral_model(self):
         p = self.parameters
@@ -54,12 +53,12 @@ class BasicImageEstimator(object):
 
         Parameters
         ----------
-        images : `~gammapy.images.SkyImageList`
+        images : `~gammapy.image.SkyImageList`
             List of sky images.
 
         Returns
         -------
-        excess : `~gammapy.images.SkyImage`
+        excess : `~gammapy.image.SkyImage`
             Excess sky image.
         """
         images.check_required(['counts', 'background'])
@@ -76,15 +75,15 @@ class BasicImageEstimator(object):
 
         Parameters
         ----------
-        images : `~gammapy.images.SkyImageList`
+        images : `~gammapy.image.SkyImageList`
             List of sky images.
 
         Returns
         -------
-        flux : `~gammapy.images.SkyImage`
+        flux : `~gammapy.image.SkyImage`
             Flux sky image.
         """
-        #TODO: differentiate between flux (integral flux) and dnde (differential flux)
+        # TODO: differentiate between flux (integral flux) and dnde (differential flux)
         images.check_required(['counts', 'background', 'exposure'])
         flux = SkyImage.empty_like(images['counts'], name='flux')
         excess = images['counts'].data - images['background'].data
@@ -116,11 +115,12 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         Upper bound of offset range.
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf image.
+    background_estimator : TODO
+        Instance of background estimation method.
     exclusion_mask : `~gammapy.image.SkyImage`
         Exclusion mask.
-    background_estimator :
-        Instance of background estimation method.
     """
+
     def __init__(self, reference, emin, emax, offset_max=Angle(2.5, 'deg'), spectral_model=None,
                  background_estimator=None, exclusion_mask=None):
         self.parameters = OrderedDict(emin=emin, emax=emax, offset_max=offset_max)
@@ -145,6 +145,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         energy = Energy.equal_log_spacing(p['emin'], p['emax'], enumbins, 'TeV')
         energy_axis = LogEnergyAxis(energy, mode='center')
+
         return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)
 
     def _exposure_cube(self, observation):
@@ -156,16 +157,15 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         observation : `~gammapy.data.DataStoreObservation`
             Observation object
         """
-        from ..cube import exposure_cube as compute_exposure_cube
+        from ..cube import make_exposure_cube
         p = self.parameters
-        kwargs = {}
-        kwargs['livetime'] = observation.observation_live_time_duration
-        kwargs['pointing'] = observation.pointing_radec
-        kwargs['aeff2d'] = observation.aeff
-        kwargs['offset_max'] = p['offset_max']
-        kwargs['ref_cube'] = self._get_ref_cube()
-        exposure_cube = compute_exposure_cube(**kwargs)
-        return exposure_cube
+        return make_exposure_cube(
+            livetime=observation.observation_live_time_duration,
+            pointing=observation.pointing_radec,
+            aeff=observation.aeff,
+            offset_max=p['offset_max'],
+            ref_cube=self._get_ref_cube(),
+        )
 
     def _exposure(self, observation):
         p = self.parameters
@@ -182,6 +182,18 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         return exposure
 
     def psf(self, observations):
+        """Mean point spread function kernel image.
+        
+        Parameters
+        ----------
+        observations : `~gammapy.data.ObservationList`
+            List of observations
+
+        Returns
+        -------
+        kernel : `~gammapy.image.SkyImage`
+            PSF kernel as sky image.
+        """
         p = self.parameters
         psf_image = self._get_empty_skyimage('psf')
         mean_psf = observations.make_mean_psf(self.reference.center)
@@ -206,7 +218,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         p = self.parameters
         events = observation.events.select_energy((p['emin'], p['emax']))
 
-        #TODO: check if a lower offset bound different from zero is needed.
+        # TODO: check if a lower offset bound different from zero is needed.
         events = events.select_offset((Angle(0, 'deg'), p['offset_max']))
 
         counts = self._get_empty_skyimage('counts')
@@ -219,8 +231,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         Parameters
         ----------
-        observation : `~gammapy.data.DataStoreObservation`
-            Observation object
+        TODO
         """
         p = self.parameters
         input_images = SkyImageList()
@@ -237,13 +248,13 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         Parameters
         ----------
-        observations : `gammapy.data.ObservationList`
+        observations : `~gammapy.data.ObservationList`
             List of observations
 
         Returns
         -------
-        sky_images : `gammapy.image.SkyImageList`
-            List of sky images.
+        sky_images : `~gammapy.image.SkyImageList`
+            List of sky images
         """
         result = SkyImageList()
 
@@ -265,10 +276,10 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'background' in which:
                 background = self._background(counts, exposure)['background']
 
-                #TODO: check why fixing nan is needed here
+                # TODO: check why fixing nan is needed here
                 background.data = np.nan_to_num(background.data)
 
-                #TODO: included stacked alpha and on/off exposure images
+                # TODO: included stacked alpha and on/off exposure images
                 result['background'].data += background.data
 
             if 'excess' in which:
@@ -329,8 +340,6 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
     """
 
     def __init__(self, reference, emin, emax, spectral_model=None):
-        from ..spectrum.models import PowerLaw2
-
         self.parameters = OrderedDict(emin=emin, emax=emax)
         self.reference = reference
         if spectral_model is None:
@@ -338,7 +347,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
     def counts(self, dataset):
         """
-        Estimate counts image in energy band
+        Estimate counts image in energy band.
 
         Parameters
         ----------
@@ -347,7 +356,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        counts : `~gammapy.images.SkyImage`
+        counts : `~gammapy.image.SkyImage`
             Counts sky image.
         """
         p = self.parameters
@@ -368,7 +377,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        counts : `~gammapy.images.SkyImage`
+        counts : `~gammapy.image.SkyImage`
             Counts sky image.
         """
         galactic_diffuse = dataset.galactic_diffuse
@@ -395,7 +404,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        counts : `~gammapy.images.SkyImage`
+        counts : `~gammapy.image.SkyImage`
             Counts sky image.
         """
         background_total = self._cutout_background_cube(dataset)
@@ -406,12 +415,12 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         background_total.data += flux.reshape(-1, 1, 1)
         return background_total
 
-    #TODO: move this method to a separate GalacticDiffuseBackgroundEstimator?
+    # TODO: move this method to a separate GalacticDiffuseBackgroundEstimator?
     def background(self, dataset):
         """
         Estimate predicted counts background image in energy band.
 
-        The background estimati is based on the Fermi-LAT galactic and
+        The background estimate is based on the Fermi-LAT galactic and
         isotropic diffuse models.
 
         Parameters
@@ -421,8 +430,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        background : `~gammapy.images.SkyImage`
-            Predicated number of background counts sky image.
+        background : `~gammapy.image.SkyImage`
+            Predicted number of background counts sky image.
         """
         from ..cube import compute_npred_cube
 
@@ -462,7 +471,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        exposure : `~gammapy.images.SkyImage`
+        exposure : `~gammapy.image.SkyImage`
             Exposure sky image.
         """
         from ..cube import SkyCube
@@ -531,7 +540,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         Returns
         -------
-        images : `~gammapy.images.SkyImageList`
+        images : `~gammapy.image.SkyImageList`
             List of sky images.
         """
         images = SkyImageList()

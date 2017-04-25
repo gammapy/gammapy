@@ -11,7 +11,7 @@ from ..stats import significance
 from ..irf import TablePSF
 from ..background import fill_acceptance_image
 from ..cube import SkyCube
-from .exposure import exposure_cube
+from .exposure import make_exposure_cube
 
 __all__ = ['SingleObsCubeMaker', 'StackedObsCubeMaker']
 
@@ -37,7 +37,7 @@ class SingleObsCubeMaker(object):
         Reference Cube for images in reco energy
     empty_exposure_cube : `~gammapy.cube.SkyCube`
         Reference Cube for exposure in true energy
-    offset_band : `astropy.coordinates.Angle`
+    offset_band : `~astropy.coordinates.Angle`
         Offset band selection
     exclusion_mask : `~gammapy.cube.SkyCube`
         Exclusion mask
@@ -130,13 +130,15 @@ class SingleObsCubeMaker(object):
 
     def make_exposure_cube(self):
         """
-        Compute the exposure cube
+        Compute the exposure cube.
         """
-        self.exposure_cube = exposure_cube(pointing=self.obs_center,
-                                           livetime=self.livetime,
-                                           aeff2d=self.aeff,
-                                           ref_cube=self.exposure_cube,
-                                           offset_max=self.offset_band[1])
+        self.exposure_cube = make_exposure_cube(
+            pointing=self.obs_center,
+            livetime=self.livetime,
+            aeff=self.aeff,
+            ref_cube=self.exposure_cube,
+            offset_max=self.offset_band[1],
+        )
 
     def make_significance_cube(self, radius):
         """Make the significance cube from the counts and bkg cubes.
@@ -184,10 +186,10 @@ class StackedObsCubeMaker(object):
         Required columns: OBS_ID
     exclusion_mask : `~gammapy.cube.SkyCube`
         Exclusion mask
-    save_bkg_scale: bool
+    save_bkg_scale : bool
         True if you want to save the normalisation of the bkg for each run
-        in a `Table` table_bkg_norm with two columns:
-         "OBS_ID" and "bkg_scale"
+        in a table table_bkg_norm with two columns:
+        "OBS_ID" and "bkg_scale"
     """
 
     def __init__(self, empty_cube_images, empty_exposure_cube=None,
@@ -277,14 +279,14 @@ class StackedObsCubeMaker(object):
     # Define a method for the mean psf from a list of observation
     def make_mean_psf_cube(self, ref_cube, spectral_index=2.3):
         """
-        Compute the mean psf for a set of observation for different energy bands
+        Compute the mean psf for a set of observation for different energy bands.
 
         Parameters
         ----------
         ref_cube : `~gammapy.cube.SkyCube`
             Reference sky cube to evaluate PSF on.
-        spectral_index: float
-            Assumed spectral index to compute mean psf in energy band.
+        spectral_index : float
+            Assumed spectral index to compute mean PSF in energy band.
 
         Returns
         -------

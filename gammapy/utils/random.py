@@ -148,7 +148,7 @@ def sample_sphere_distance(distance_min=0, distance_max=1, size=None,
     distance_min, distance_max : float, optional
         Distance range in which to sample
     size : int or tuple of ints, optional
-        Output shape. Default: one sample. Passed to `~numpy.random.uniform`.
+        Output shape. Default: one sample. Passed to `numpy.random.uniform`.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.

@@ -547,7 +547,7 @@ class SkyCube(MapBase):
             Any valid ds9 command line option can be passed.
             See http://ds9.si.edu/doc/ref/command.html for details.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `matplotlib.pyplot.imshow`.
         """
         import matplotlib.pyplot as plt
         from ipywidgets import interact
@@ -569,6 +569,8 @@ class SkyCube(MapBase):
             return interact(show_image, idx=(0, max_, 1))
         elif viewer == 'ds9':
             raise NotImplementedError
+        else:
+            raise ValueError('Invalid viewer: {}'.format(viewer))
 
     def plot_rgb(self, ax=None, fig=None, **kwargs):
         """
@@ -664,7 +666,7 @@ class SkyCube(MapBase):
 
         Parameters
         ----------
-        reference : `~astropy.io.fits.Header`, `SkyImage` or `SkyCube`
+        reference : `~astropy.io.fits.Header`, `~gamampy.image.SkyImage` or `SkyCube`
             Reference wcs specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.

@@ -3,16 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from .core import SkyCube
 
 __all__ = [
-    'exposure_cube'
+    'make_exposure_cube'
 ]
 
 
-def exposure_cube(pointing,
-                  livetime,
-                  aeff2d,
-                  ref_cube,
-                  offset_max=None,
-                  ):
+def make_exposure_cube(pointing,
+                       livetime,
+                       aeff,
+                       ref_cube,
+                       offset_max=None,
+                       ):
     """Calculate exposure cube.
 
     Parameters
@@ -21,32 +21,34 @@ def exposure_cube(pointing,
         Pointing direction
     livetime : `~astropy.units.Quantity`
         Livetime
-    aeff2d : `~gammapy.irf.EffectiveAreaTable2D`
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area table
-    ref_cube : `~gammapy.data.SkyCube`
+    ref_cube : `~gammapy.cube.SkyCube`
         Reference cube used to define geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
 
     Returns
     -------
-    expcube : `~gammapy.data.SkyCube`
+    expcube : `~gammapy.cube.SkyCube`
         Exposure cube (3D)
     """
     coordinates = ref_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)
-
     energy = ref_cube.energies()
-    exposure = aeff2d.data.evaluate(offset=offset, energy=energy)
+
+    exposure = aeff.data.evaluate(offset=offset, energy=energy)
     exposure *= livetime
     exposure[:, offset >= offset_max] = 0
-    expcube = SkyCube(data=exposure,
-                      wcs=ref_cube.wcs,
-                      energy_axis=ref_cube.energy_axis)
-    return expcube
+
+    return SkyCube(
+        data=exposure,
+        wcs=ref_cube.wcs,
+        energy_axis=ref_cube.energy_axis,
+    )
 
 
-def obs_exposure_cube(obs, ref_cube=None):
+def make_exposure_cube_obs(obs, ref_cube=None):
     """Make exposure cube for a given observation.
 
     Parameters

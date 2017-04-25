@@ -3,12 +3,10 @@
 Cube analysis utility functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy import units as u
-from ..image import SkyImage
-from .core import SkyCube
-from ..spectrum import LogEnergyAxis
 from ..utils.energy import EnergyBounds
+from ..spectrum import LogEnergyAxis
+from .core import SkyCube
 
 __all__ = [
     'compute_npred_cube',
@@ -54,4 +52,5 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         data.append(npred)
 
     data = u.Quantity(data, '')
+
     return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)

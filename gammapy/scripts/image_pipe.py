@@ -168,7 +168,7 @@ class SingleObsImageMaker(object):
             True if you want that the total excess / exposure gives the integrated flux
         """
         from scipy.interpolate import interp1d
-        # TODO: should be re-implemented using the exposure_cube function
+        # TODO: should be re-implemented using the make_exposure_cube function
         table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
         exposure = SkyImage.empty_like(self.empty_image, unit=table["npred"].unit)
 

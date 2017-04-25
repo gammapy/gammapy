@@ -4,18 +4,16 @@ Implementation of adaptive smoothing algorithms.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
-
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
-from gammapy.stats import significance
-
-from . import SkyImage, SkyImageList
+from ..stats import significance
 from .utils import scale_cube
+from . import SkyImage, SkyImageList
 
 __all__ = ['ASmooth', 'asmooth_scales']
 
-#TODO: move to gammapy.stats.significance
+
+# TODO: move to gammapy.stats.significance
 def _significance_asmooth(counts, background):
     """
     Significance according to fomula (5) in asmooth paper.
@@ -38,29 +36,32 @@ def asmooth_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
         sigma_0 = 1. / np.sqrt(9 * np.pi)
     elif kernel == Tophat2DKernel:
         sigma_0 = 1. / np.sqrt(np.pi)
+
     return sigma_0 * factor ** np.arange(n_scales)
 
 
 class ASmooth(object):
-    """
-    Adaptivly smooth counts image, achieving a roughly constant significance
-    of features across the whole image.
+    """Adaptively smooth counts image.
+    
+    Achievesa roughly constant significance of features across the whole image.
 
-    Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E. The
-    algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
-    signifiance of a feature in the image.
+    Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E
+    
+    The algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
+    significance of a feature in the image.
 
     Parameters
     ----------
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    scales : `~astropy.units.Quantity`
-        Smoothing scales.
     method : {'simple', 'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
+    scales : `~astropy.units.Quantity`
+        Smoothing scales.
     """
+
     def __init__(self, kernel=Gaussian2DKernel, method='simple', threshold=5,
                  scales=None):
         self.parameters = OrderedDict(kernel=kernel, method=method,
@@ -85,13 +86,12 @@ class ASmooth(object):
         scales = p['scales'].to('deg') / pix_per_deg
 
         kernels = []
-
         for scale in scales.value:
             kernel = p['kernel'](scale, mode='oversample')
-
             # TODO: check if normalizing here makes sense
             kernel.normalize('peak')
             kernels.append(kernel)
+
         return kernels
 
     def _significance_cube(self, cubes):
@@ -145,7 +145,7 @@ class ASmooth(object):
 
         if 'exposure' in images.names:
             flux = ((images['counts'].data - images['background'].data) /
-                     images['exposure'].data)
+                    images['exposure'].data)
             cubes['flux'] = scale_cube(flux, kernels)
 
         cubes['significance'] = self._significance_cube(cubes)
@@ -166,8 +166,8 @@ class ASmooth(object):
             mask = np.isnan(data)
             data[mask] = np.mean(flux[mask])
             result['flux'] = SkyImage(data=data, wcs=wcs)
-        return result
 
+        return result
 
     def _reduce_cubes(self, cubes, kernels):
         """
@@ -202,4 +202,5 @@ class ASmooth(object):
                 smoothed[key][mask] = cubes[key][slice_][mask] / norm
             if 'flux' in cubes:
                 smoothed['flux'][mask] = cubes['flux'][slice_][mask] / norm
+
         return smoothed

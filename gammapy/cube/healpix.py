@@ -1,22 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-
 from astropy.io import fits
 from astropy.table import Table
 from astropy import units as u
-
-from .core import SkyCube
 from ..image.healpix import SkyImageHealpix, WCSHealpix
 from ..spectrum.utils import LogEnergyAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
+from .core import SkyCube
 
 __all__ = ['SkyCubeHealpix']
 
 
 class SkyCubeHealpix(object):
     """
-    Sky cube object with healpix pixelisation.
+    Sky cube object with HEALPIX pixelisation.
 
     First axis is energy axis.
     """
@@ -116,6 +114,7 @@ class SkyCubeHealpix(object):
 
         data = u.Quantity(np.stack(out, axis=0), self.data.unit)
         wcs = image_out.wcs.copy()
+
         return SkyCube(name=self.name, data=data, wcs=wcs, meta=self.meta,
                        energy_axis=self.energy_axis)
 
@@ -137,6 +136,9 @@ class SkyCubeHealpix(object):
             z = np.arange(self.data.shape[0])
         elif mode == 'edges':
             z = np.arange(self.data.shape[0] + 1) - 0.5
+        else:
+            raise ValueError('Invalid mode: {}'.format(mode))
+
         return self.energy_axis.wcs_pix2world(z)
 
     def __str__(self):
