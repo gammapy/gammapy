@@ -9,6 +9,7 @@ from astropy.table import Table
 
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
+from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.modeling import Parameter, ParameterList
@@ -31,6 +32,7 @@ __all__ = [
     'LogParabola',
     'TableModel',
     'AbsorbedSpectralModel',
+    'SpectralModelAbsorbedbyEbl',
 ]
 
 
@@ -1091,3 +1093,110 @@ class AbsorbedSpectralModel(SpectralModel):
         To be implemented by subclasses
         """
         raise NotImplementedError('{}'.format(self.__class__.__name__))
+
+
+class SpectralModelAbsorbedbyEbl(SpectralModel):
+    """
+    Spectral model class handling EBL absorption
+
+    Parameters:
+    """
+    def __init__(self, spectral_model, redshift,
+                 ebl_model='$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'):
+        """
+        Spectral model with EBL absorption
+
+        Parameters:
+        -----------
+        spectral_model : `~gammapy.spectrum.models.SpectralModel`
+            spectral model
+        redshift : `float`
+            redshift value
+        ebl_model : `str`
+            EBL model file name 
+        """
+        self.spectral_model = spectral_model
+
+        # get interpolator and redshift limit
+        self.ebl, z_min, z_max = self._get_interpolator(ebl_model)
+        self.redshift = redshift
+        # initialise list parameters from spectral model
+        param_list = []
+        for param in spectral_model.parameters.parameters:
+            param_list.append(param)
+
+        # Add redshift
+        param_list.append(Parameter('redshift', redshift,
+                                    parmin=z_min, parmax=z_max, frozen=True))
+
+        self.parameters = ParameterList(param_list)
+        
+
+    def _get_interpolator(self, ebl_model):
+        """
+        Build interpolator (redshift, absorption)
+
+        Parameters:
+        -----------
+        ebl_model : `str`
+            EBL model file name
+
+        Returns:
+        --------
+        ebl : `~gammapy.utils.nddata.NDDataArray`
+            interpolator
+        z_min, z_max : `float`
+            redshift range
+        """
+        # Create EBL data array
+        ebl_model = str(make_path(ebl_model))
+        table_param = Table.read(ebl_model, hdu='PARAMETERS')
+
+        z_min = table_param['MINIMUM']
+        z_max = table_param['MAXIMUM']
+
+        redshift_array = table_param[0]['VALUE']
+        delta_red = np.diff(redshift_array)*0.5
+        redshift_lo = redshift_array
+        redshift_hi = redshift_array
+        redshift_lo[0] = 0.
+        redshift_lo[1:] -= delta_red
+        redshift_hi[:-1] += delta_red
+        redshift_hi[-1] = z_max + delta_red[-1]
+        
+        # Get energy values
+        table_energy = Table.read(ebl_model, hdu='ENERGIES')
+        energy_lo = table_energy['ENERG_LO']
+        energy_hi = table_energy['ENERG_HI']
+
+        # Energies are in keV
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
+                                                                 upper=energy_hi,
+                                                                 unit=u.keV)
+        energy = energy_bounds.log_centers
+
+        # Get spectrum values
+        table_spectra = Table.read(ebl_model, hdu='SPECTRA')
+        data = table_spectra['INTPSPEC'].data
+        
+        axes = [
+            BinnedDataAxis(redshift_lo, redshift_hi,
+                           interpolation_mode='linear', name='redshift'),
+            BinnedDataAxis(energy_bounds.lower_bounds,energy_bounds.upper_bounds,
+                           interpolation_mode='log', name='energy'),
+        ]
+        
+        ebl = NDDataArray(axes=axes, data=data)
+        ebl.default_interp_kwargs['fill_value'] = None
+
+        return ebl, z_min, z_max
+        
+    def evaluate(self, energy, **kwargs):
+        # assign redshift value and remove it from dictionnary
+        # since it does not belong to the spectral model 
+        redshift = kwargs['redshift']
+        del kwargs['redshift']
+
+        flux = self.spectral_model.evaluate(energy=energy, **kwargs)
+        absorption = self.ebl.evaluate(energy=energy, redshift=redshift)
+        return flux * absorption
