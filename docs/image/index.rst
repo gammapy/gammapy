@@ -28,7 +28,7 @@ image based data. Here is a first example:
 
 	from gammapy.image import SkyImage
 	filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
-	image = SkyImage.read(filename, ext=2)
+	image = SkyImage.read(filename, hdu=2)
 	image.show()
 
 This loads a prepared Fermi 2FHL FITS image of the Vela region, creates a

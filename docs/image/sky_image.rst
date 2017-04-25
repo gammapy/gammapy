@@ -23,7 +23,7 @@ Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
     from gammapy.image import SkyImage
 
     filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
-    image = SkyImage.read(filename, ext=2)
+    image = SkyImage.read(filename, hdu=2)
 
 Alternatively an empty image can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
@@ -60,7 +60,7 @@ The image can be easily displayed with an image viewer, by calling ``image.show(
         from gammapy.image import SkyImage
 
         filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
-        counts = SkyImage.read(filename, ext=2)
+        counts = SkyImage.read(filename, hdu=2)
         counts.name = 'Counts Smoothed'
         counts.show()
 
@@ -83,7 +83,7 @@ Here we cut out a 5 deg x 5 deg patch out of an example image:
     from gammapy.image import SkyImage
 
     filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
-    counts = SkyImage.read(filename, ext=2)
+    counts = SkyImage.read(filename, hdu=2)
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
     size = Quantity([5, 5], 'deg')
     cutout = counts.cutout(position, size)
