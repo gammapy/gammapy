@@ -62,7 +62,7 @@ class CWT(object):
 
     Parameters
     ----------
-    kernels : '~gammapy.detect.CWTKernels'
+    kernels : `~gammapy.detect.CWTKernels`
         Kernels for the algorithm.
     max_iter : int, optional (default 10)
         The maximum number of iterations of the CWT algorithm.
@@ -311,12 +311,12 @@ class CWTKernels(object):
         First scale used.
     step_scale : float
         Base scaling factor.
-    scales : '~numpy.ndarray'
+    scales : `~numpy.ndarray`
         Grid of scales.
     kern_base : dict
         Dictionary of scale powers as keys and 2D kernel arrays.
         (mexican hat) as values
-    kern_approx : '~numpy.ndarray'
+    kern_approx : `~numpy.ndarray`
         2D Gaussian kernel array from maximum scale.
 
     Examples
@@ -493,7 +493,7 @@ class CWTData(object):
     @property
     def support_2d(self):
         """
-        2D '~gammapy.cube.SkyCube' cube exclusion mask. Created from support_3d
+        2D `~gammapy.cube.SkyCube` cube exclusion mask. Created from support_3d
         by OR-operation per 0 axis.
         """
         support_2d = (self._support.sum(0) > 0)
@@ -536,13 +536,13 @@ class CWTData(object):
     @property
     def support_3d(self):
         """
-        3D '~gammapy.cube.SkyCube' cube exclusion mask. Primordial initialized by zero array.
+        3D `~gammapy.cube.SkyCube` cube exclusion mask. Primordial initialized by zero array.
         """
         return SkyImage(name='support_3d', data=self._support, wcs=self._wcs)
 
     @property
     def max_scale_image(self):
-        """Compute the maximum scale image as '~gammapy.image.SkyImage'."""
+        """Compute the maximum scale image as `~gammapy.image.SkyImage`."""
         # Previous version:
         # idx_scale_max = np.argmax(self._transform_3d, axis=0)
         # return kernels.scales[idx_scale_max] * (self._support.sum(0) > 0)
@@ -570,21 +570,23 @@ class CWTData(object):
 
         Returns
         -------
-        images : '~collections.OrderedDict'
+        images : `~collections.OrderedDict`
             Dictionary with keys {'counts', 'background', 'model', 'approx',
-            'approx_bkg', 'transform_2d', 'maximal', 'support_2d'} and 2D `~numpy.ndarray` images as values.
+            'approx_bkg', 'transform_2d', 'maximal', 'support_2d'}
+            and 2D `~numpy.ndarray` images as values.
         """
-        images = OrderedDict(counts=self.counts,
-                             background=self.background,
-                             model=self.model,
-                             approx=self.approx,
-                             approx_bkg=self.approx_bkg,
-                             transform_2d=self.transform_2d,
-                             model_plus_approx=self.model_plus_approx,
-                             residual=self.residual,
-                             maximal=self.max_scale_image,
-                             support_2d=self.support_2d)
-        return images
+        return OrderedDict(
+            counts=self.counts,
+            background=self.background,
+            model=self.model,
+            approx=self.approx,
+            approx_bkg=self.approx_bkg,
+            transform_2d=self.transform_2d,
+            model_plus_approx=self.model_plus_approx,
+            residual=self.residual,
+            maximal=self.max_scale_image,
+            support_2d=self.support_2d,
+        )
 
     def cubes(self):
         """
@@ -592,14 +594,15 @@ class CWTData(object):
 
         Returns
         -------
-        cubes : '~collections.OrderedDict'
+        cubes : `~collections.OrderedDict`
             Dictionary with keys {'transform_3d', 'error', 'support_3d'} and 3D
             `~numpy.ndarray` cubes as values.
         """
-        cubes = OrderedDict(transform_3d=self.transform_3d,
-                            error=self.error,
-                            support=self.support_3d)
-        return cubes
+        return OrderedDict(
+            transform_3d=self.transform_3d,
+            error=self.error,
+            support=self.support_3d,
+        )
 
     def _metrics_info(self, data, name):
         """
@@ -644,7 +647,7 @@ class CWTData(object):
 
         Returns
         -------
-        table : `~astropy.Table`
+        table : `~astropy.table.Table`
             Information about the object.
         """
         if name not in self.images():

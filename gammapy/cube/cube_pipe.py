@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class SingleObsCubeMaker(object):
-    """Compute '~gammapy.cube.SkyCube' images for one observation.
+    """Compute `~gammapy.cube.SkyCube` images for one observation.
 
     The computed cubes are stored in a `~gammapy.cube.SkyCube` with the following name:
 
