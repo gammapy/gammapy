@@ -58,22 +58,18 @@ class ObservationStats(Stats):
         self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
 
     @classmethod
-    def from_target(cls, obs, target, bg_estimate):
+    def from_obs(cls, obs, bg_estimate):
         """
-        Auxiliary constructor from an observation, a target, and a background
-        estimate
+        Auxiliary constructor
 
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
             IACT data store observation
-        target : `~gammapy.data.Target`
-            Target
         bg_estimate : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        # TODO: add as property to DataStoreObservation
-        n_on = cls._get_on_events(obs, target)
+        n_on = len(bg_estimate.on_events.table)
         n_off = len(bg_estimate.off_events.table)
         a_on = bg_estimate.a_on
         a_off = bg_estimate.a_off
@@ -109,13 +105,6 @@ class ObservationStats(Stats):
         sigma = significance_on_off(
             self.n_on, self.n_off, self.alpha, method='lima')
         return sigma
-
-    @staticmethod
-    def _get_on_events(obs, target):
-        """Number of ON events in the region of interest (`int`)
-        """
-        mask = target.on_region.contains(obs.events.radec)
-        return len(obs.events.table[mask])
 
     @classmethod
     def stack(cls, stats_list):
