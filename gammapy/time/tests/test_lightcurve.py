@@ -39,6 +39,16 @@ def test_lightcurve_plot():
     lc.plot()
 
 
+@requires_dependency('scipy')
+def test_lightcurve_chisq():
+    lc = LightCurve.simulate_example()
+    chi2, pval = lc.compute_chisq()
+    assert_quantity_allclose(chi2, 7.0)
+    assert_quantity_allclose(pval, 0.07189777249646509)
+
+
+
+
 # TODO: Reuse fixtures from spectrum tests
 @pytest.fixture(scope='session')
 def spec_extraction():
