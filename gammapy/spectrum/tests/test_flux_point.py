@@ -254,7 +254,7 @@ class TestSEDLikelihoodProfile:
         ax = self.sed.plot()
 
 
-@pytest.fixture(params=FLUX_POINTS_FILES)
+@pytest.fixture(params=FLUX_POINTS_FILES, scope='session')
 def flux_points(request):
     path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
     return FluxPoints.read(path)
@@ -310,6 +310,15 @@ class TestFluxPoints:
         actual = FluxPoints.read(filename)
         assert str(flux_points) == str(actual)
 
+    def test_drop_ul(self, flux_points):
+        flux_points = flux_points.drop_ul()
+        assert not np.any(flux_points._is_ul())
+
+    def test_stack(self, flux_points):
+        stacked = FluxPoints.stack([flux_points, flux_points])
+        assert len(stacked.table) == 2 * len(flux_points.table)
+        assert stacked.sed_type == flux_points.sed_type
+
 
 @requires_data('gammapy-extra')
 def test_compute_flux_points_dnde():
@@ -338,8 +347,8 @@ class TestFluxPointsFitter:
 
     def test_fit_pwl(self):
         fitter = FluxPointsFitter()
-        model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
-        result = fitter.run([self.flux_points], model)
+        model = PowerLaw(2.3 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        result = fitter.run(self.flux_points, model)
 
         index = result['best_fit_model'].parameters['index']
         amplitude = result['best_fit_model'].parameters['amplitude']

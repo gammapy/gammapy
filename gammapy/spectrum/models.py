@@ -835,14 +835,14 @@ class LogParabola(SpectralModel):
 
     .. math::
 
-        f(x) = A \left( \frac{E}{E_0} \right) ^ {
+        \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
           - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
         }
 
     Parameters
     ----------
     amplitude : `~astropy.units.Quantity`
-        :math:`Phi_0`
+        :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
     alpha : `~astropy.units.Quantity`
