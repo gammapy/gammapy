@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['image_model_sherpa']
+__all__ = ['run_image_model_sherpa']
 
 log = logging.getLogger(__name__)
 
 
 def image_model_sherpa_main(args=None):
-    parser = get_parser(image_model_sherpa)
+    parser = get_parser(run_image_model_sherpa)
     parser.add_argument('--exposure', type=str, default='exposure.fits',
                         help='Exposure FITS file name')
     parser.add_argument('--psf', type=str, default='psf.json',
@@ -22,14 +22,14 @@ def image_model_sherpa_main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    image_model_sherpa(**vars(args))
+    run_image_model_sherpa(**vars(args))
 
 
-def image_model_sherpa(exposure,
-                       psf,
-                       sources,
-                       model_image,
-                       overwrite):
+def run_image_model_sherpa(exposure,
+                           psf,
+                           sources,
+                           model_image,
+                           overwrite):
     """Compute source model image with Sherpa.
 
     Inputs:

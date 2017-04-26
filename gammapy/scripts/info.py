@@ -5,17 +5,18 @@ import logging
 import importlib
 from ..utils.scripts import get_parser
 
-__all__ = ['info']
+__all__ = ['print_info']
 
 log = logging.getLogger(__name__)
 
 
-def info_main(args=None):
-    parser = get_parser(info)
+def print_info_main(args=None):
+    parser = get_parser(print_info)
     parser.add_argument('--version', action='store_true',
                         help='Print Gammapy version number')
-    parser.add_argument('--tools', action='store_true',
-                        help='Print available command line tools')
+    # TODO: fix or remove:
+    # parser.add_argument('--tools', action='store_true',
+    #                     help='Print available command line tools')
     parser.add_argument('--dependencies', action='store_true',
                         help='Print available versions of dependencies')
     args = parser.parse_args(args)
@@ -24,25 +25,25 @@ def info_main(args=None):
         parser.print_help()
         sys.exit(1)
 
-    info(**vars(args))
+    print_info(**vars(args))
 
 
-def info(version=False, tools=False, dependencies=False):
+def print_info(version=False, tools=False, dependencies=False):
     """Print various info on Gammapy to the console.
 
     TODO: explain.
     """
     if version:
-        _info_version()
+        _print_info_version()
 
     if tools:
-        _info_tools()
+        _print_info_tools()
 
     if dependencies:
-        _info_dependencies()
+        _print_info_dependencies()
 
 
-def _info_version():
+def _print_info_version():
     """Print Gammapy version info."""
     from gammapy import version
     print('\n*** Gammapy version info ***\n')
@@ -52,7 +53,7 @@ def _info_version():
     print('')
 
 
-def _info_tools():
+def _print_info_tools():
     """Print info about Gammapy command line tools."""
     print('\n*** Gammapy tools ***\n')
 
@@ -89,7 +90,7 @@ def _info_tools():
     print('')
 
 
-def _info_dependencies():
+def _print_info_dependencies():
     """Print info about Gammapy dependencies."""
     print('\n*** Gammapy dependencies ***\n')
     from gammapy.conftest import PYTEST_HEADER_MODULES

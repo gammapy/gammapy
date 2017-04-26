@@ -7,13 +7,13 @@ from ..utils.scripts import get_parser, set_up_logging_from_args, make_path
 from ..image import SkyImage, SkyImageList
 from ..detect import compute_ts_image_multiscale
 
-__all__ = ['image_ts']
+__all__ = ['run_image_ts']
 
 log = logging.getLogger(__name__)
 
 
 def image_ts_main(args=None):
-    parser = get_parser(image_ts)
+    parser = get_parser(run_image_ts)
     parser.add_argument('input_file', type=str,
                         help='Input data FITS file name')
     parser.add_argument('output_file', type=str,
@@ -46,14 +46,14 @@ def image_ts_main(args=None):
                         help="Set the logging level")
     parser.add_argument('--threshold', type=float, default=None,
                         help="Minimal required initial (before fitting) TS value,"
-                        " that the fit is done at all.")
+                             " that the fit is done at all.")
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    image_ts(**vars(args))
+    run_image_ts(**vars(args))
 
 
-def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
-             morphology, width, overwrite, threshold):
+def run_image_ts(input_file, output_file, psf, model, scales, downsample, residual,
+                 morphology, width, overwrite, threshold):
     """
     Compute source model residual images.
 
