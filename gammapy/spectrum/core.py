@@ -6,7 +6,6 @@ from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from .. import version
-from ..extern.bunch import Bunch
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fits import (
@@ -20,6 +19,7 @@ from ..data import EventList
 __all__ = [
     'CountsSpectrum',
     'PHACountsSpectrum',
+    'PHACountsSpectrumList',
 ]
 
 
@@ -236,40 +236,6 @@ class CountsSpectrum(object):
         """
         return deepcopy(self)
 
-    def spectral_index(self, energy, dz=1e-3):
-        """Power law spectral index (`numpy.array`).
-
-        A forward finite difference method with step ``dz`` is used along
-        the ``z = log10(energy)`` axis.
-
-        Parameters
-        ----------
-        lon : `~astropy.coordinates.Angle`
-            Longitude
-        lat : `~astropy.coordinates.Angle`
-            Latitude
-        energy : `~astropy.units.Quantity`
-            Energy
-        """
-        raise NotImplementedError
-        # Compute flux at `z = log(energy)`
-        pix_coord = self.world2pix(lon, lat, energy, combine=True)
-        flux1 = self._interpolate(pix_coord)
-
-        # Compute flux at `z + dz`
-        pix_coord[:, 0] += dz
-        # pixel_coordinates += np.zeros(pixel_coordinates.shape)
-        flux2 = self._interpolate(pix_coord)
-
-        # Power-law spectral index through these two flux points
-        # d_log_flux = np.log(flux2 / flux1)
-        # spectral_index = d_log_flux / dz
-        energy1 = energy
-        energy2 = (1. + dz) * energy
-        spectral_index = powerlaw.g_from_points(energy1, energy2, flux1, flux2)
-
-        return spectral_index
-
     def rebin(self, parameter):
         """Rebin
 
@@ -291,7 +257,7 @@ class CountsSpectrum(object):
         retval = self.copy()
         energy = retval.energy
         energy.lo = energy.lo[0::parameter]
-        energy.hi = energy.hi[parameter-1::parameter]
+        energy.hi = energy.hi[parameter - 1::parameter]
         split_indices = np.arange(parameter, len(retval.data.data), parameter)
         counts_grp = np.split(retval.data.data, split_indices)
         counts_rebinned = np.sum(counts_grp, axis=1)
@@ -307,55 +273,40 @@ class PHACountsSpectrum(CountsSpectrum):
     background estimate or not (this slightly affectes the FITS header
     information when writing to disk).
 
-    TODO: Bundle optional parameters as meta
-
     Parameters
     ----------
-    data : `~numpy.array`, list
-        Counts
     energy_lo : `~astropy.units.Quantity`
         Lower bin edges of energy axis
     energy_hi : `~astropy.units.Quantity`
         Upper bin edges of energy axis
-    obs_id : int, optional
-        Unique identifier, default: 0
-    quality : int, array-lik
+    data : `~numpy.array`, list, optional
+        Counts
+    quality : int, array-like, optional
         Mask bins in safe energy range (1 = bad, 0 = good)
+    backscal : float, array-like, optional
+        Background scaling factor
+    areascal : float, array-like, optional
+        Area scaling factor
     is_bkg : bool, optional
         Background or soure spectrum, default: False
-    livetime : `~astropy.units.Quantity`
-        Observation live time
-    backscal : float, array-like
-        Scaling factor for each bin
-    telescope : str, optional
-        Mission name
-    instrument : str, optional
-        Instrument, detector
-    creator : str, optional
-        Software used to produce the PHA file
-    tstart :  `~astropy.time.Time`, optional
-        Time start MJD
-    tstop :  `~astropy.time.Time`, optional
-        Time stop MJD
-    muoneff : float, optional
-        Muon efficiency
-    zen_pnt : `~astropy.coordinates.Angle`, optional
-        Zenith Angle
+    meta : dict, optional
+        Meta information, TODO: add link where possible meta info is listed
     """
-
-    def __init__(self, energy_lo, energy_hi, data=None, areascal=None,
-                 obs_id=0, quality=None, is_bkg=False,
-                 **kwargs):
+    def __init__(self, energy_lo, energy_hi, data=None, quality=None,
+                 backscal=None, areascal=None, is_bkg=False, meta=None):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
-        self.obs_id=obs_id
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
         self.quality = quality
+        if backscal is None:
+            backscal = np.ones(self.energy.nbins)
+        self.backscal = backscal
         if areascal is None:
             areascal = np.ones(self.energy.nbins)
         self.areascal = areascal
         self.is_bkg = is_bkg
-        self.meta = Bunch(kwargs)
+        self.meta = meta or dict()
+        self.meta.setdefault('CREATOR', 'Gammapy {}'.format(version.version))
 
     @property
     def phafile(self):
@@ -378,12 +329,24 @@ class PHACountsSpectrum(CountsSpectrum):
         return self.phafile.replace('pha', 'bkg')
 
     @property
-    def backscal(self):
-        return self.meta.backscal
+    def obs_id(self):
+        return self.meta['OBS_ID']
+
+    @obs_id.setter
+    def obs_id(self, val):
+        self.meta['OBS_ID'] = val
 
     @property
     def livetime(self):
-        return self.meta.livetime
+        return self.meta['EXPOSURE'] * u.s
+
+    @livetime.setter
+    def livetime(self, val):
+        self.meta['EXPOSURE'] = val.to('s').value
+
+    @property
+    def offset(self):
+        return self.meta['OFFSET'] * u.deg
 
     @property
     def bins_in_safe_range(self):
@@ -462,28 +425,22 @@ class PHACountsSpectrum(CountsSpectrum):
 
         table['QUALITY'] = self.quality
         table['BACKSCAL'] = self._backscal_array
+        table['AREASCAL'] = self.areascal
 
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
-                    obs_id=self.obs_id,
-                    exposure=self.livetime.to('s').value,
                     corrscal='',
-                    areascal=1,
                     chantype='PHA',
                     detchans=self.energy.nbins,
                     filter='None',
                     corrfile='',
                     poisserr=True,
-                    telescop=getattr(self, 'telescope', 'HESS'),
-                    instrume=getattr(self, 'instrument', 'CT1234'),
-                    creator=getattr(self, 'creator', 'Gammapy {}'.format(
-                        version.version)),
                     hduclas3='COUNT',
                     hduclas4='TYPE:1',
                     lo_thres=self.lo_threshold.to("TeV").value,
-                    hi_thres=self.hi_threshold.to("TeV").value,
-                    )
+                    hi_thres=self.hi_threshold.to("TeV").value)
+
         if not self.is_bkg:
             if self.rmffile is not None:
                 meta.update(respfile=self.rmffile)
@@ -494,18 +451,7 @@ class PHACountsSpectrum(CountsSpectrum):
         else:
             meta.update(hduclas2='BKG', )
 
-        # Add general optional keywords if the member exists rather than default value. LBYL approach
-        if hasattr(self, 'tstart'):
-            meta.update(tstart=self.tstart.mjd)
-
-        if hasattr(self, 'tstop'):
-            meta.update(tstop=self.tstop.mjd)
-
-        if hasattr(self, 'muoneff'):
-            meta.update(muoneff=self.muoneff)
-
-        if hasattr(self, 'zen_pnt'):
-            meta.update(zen_pnt=self.zen_pnt.to('deg').value)
+        meta.update(self.meta)
 
         table.meta = meta
         return table
@@ -514,16 +460,16 @@ class PHACountsSpectrum(CountsSpectrum):
     def from_hdulist(cls, hdulist, hdu1='SPECTRUM', hdu2='EBOUNDS'):
         """Read"""
         counts_table = fits_table_to_table(hdulist[hdu1])
-        # TODO: Directly read hi and lo
-        energy=ebounds_to_energy_axis(hdulist[hdu2])
+        ebounds = fits_table_to_table(hdulist[2])
+        emin = ebounds['E_MIN'].quantity
+        emax = ebounds['E_MAX'].quantity
         kwargs = dict(
             data=counts_table['COUNTS'] * u.ct,
             backscal=counts_table['BACKSCAL'].data,
-            energy_lo=energy.lower_bounds,
-            energy_hi=energy.upper_bounds,
+            energy_lo=emin,
+            energy_hi=emax,
             quality=counts_table['QUALITY'].data,
-            obs_id=hdulist[1].header['OBS_ID'],
-            livetime=hdulist[1].header['EXPOSURE'] * u.s,
+            meta=counts_table.meta
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs.update(is_bkg=True)
@@ -555,7 +501,6 @@ class PHACountsSpectrum(CountsSpectrum):
         table = self.to_table()
 
         # Workaround to avoid https://github.com/sherpa/sherpa/issues/248
-        # TODO: Remove
         if np.isscalar(self.backscal):
             backscal = self.backscal
         else:
@@ -580,7 +525,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
 
 class PHACountsSpectrumList(list):
-    """List of `~gammapy.spectrum.PHACountsSpectrum
+    """List of `~gammapy.spectrum.PHACountsSpectrum`
 
     All spectra must have the same energy binning. This represent the PHA type
     II data format. See
@@ -618,13 +563,12 @@ class PHACountsSpectrumList(list):
             quality[idx] = t['QUALITY'].data
             backscal[idx] = t['BACKSCAL'].data
             backfile.append('bkg.fits[{}]'.format(idx))
-
         names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
         meta = self[0].to_table().meta
         meta['hduclas4'] = 'TYPE:II'
         meta['ancrfile'] = 'arf.fits'
         meta['respfile'] = 'rmf.fits'
-        meta.pop('obs_id')
+        meta.pop('OBS_ID')
 
         table = Table([spec_num, channel, counts, quality, backscal],
                       names=names,
@@ -641,17 +585,17 @@ class PHACountsSpectrumList(list):
         """Read from file"""
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
-        return cls.from_hdulist(hdulist)
+        speclist = cls.from_hdulist(hdulist)
+        return speclist
 
     @classmethod
     def from_hdulist(cls, hdulist):
         """Create from `~astropy.fits.HDUList`"""
         counts_table = fits_table_to_table(hdulist[1])
-        energy=ebounds_to_energy_axis(hdulist[2])
+        energy = ebounds_to_energy_axis(hdulist[2])
         kwargs = dict(
             energy_lo=energy[:-1],
             energy_hi=energy[1:],
-            livetime=hdulist[1].header['EXPOSURE'] * u.s,
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs.update(is_bkg=True)
@@ -662,8 +606,9 @@ class PHACountsSpectrumList(list):
             kwargs['data'] = row['COUNTS'] * u.ct
             kwargs['backscal'] = row['BACKSCAL']
             kwargs['quality'] = row['QUALITY']
-            kwargs['obs_id'] = row['SPEC_NUM']
-            speclist.append(PHACountsSpectrum(**kwargs))
-
+            spec = PHACountsSpectrum(meta=dict(hdulist[1].header),
+                                     **kwargs)
+            spec.obs_id = row['SPEC_NUM']
+            speclist.append(spec)
 
         return speclist
