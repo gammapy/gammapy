@@ -16,7 +16,7 @@ __all__ = [
 
 
 class Target(object):
-    """Class storing source information
+    """Observation target information.
 
     Parameters
     ----------
@@ -70,7 +70,7 @@ class Target(object):
 
 
 class ObservationParameters(object):
-    """Class storing observation parameters
+    """Container for observation parameters.
 
     Parameters
     ----------
@@ -80,7 +80,7 @@ class ObservationParameters(object):
         Observation time
     emin :  `~astropy.units.Quantity`
         Minimal energy for simulation
-    emax :  `~astropy.units.Quantity`
+    emax : `~astropy.units.Quantity`
         Maximal energy for simulation
     """
 
@@ -103,10 +103,9 @@ class ObservationParameters(object):
 
 
 class CTAObservationSimulation(object):
-    """Class dedicated to simulate observation from one set
-    of IRF and one target.
+    """Simulate observation for one IRF and target.
 
-    TODO : Should be merge with `~gammapy.spectrum.SpectrumSimlation`
+    TODO : Should be merge with `~gammapy.spectrum.SpectrumSimulation`
 
     Parameters
     ----------

@@ -6,13 +6,13 @@ from ..utils.scripts import get_parser
 from ..data import EventList
 from ..image import SkyImage
 
-__all__ = ['image_bin']
+__all__ = ['make_counts_image']
 
 log = logging.getLogger(__name__)
 
 
 def image_bin_main(args=None):
-    parser = get_parser(image_bin)
+    parser = get_parser(make_counts_image)
     parser.add_argument('event_file', type=str,
                         help='Input FITS event file name')
     parser.add_argument('reference_file', type=str,
@@ -22,13 +22,13 @@ def image_bin_main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    image_bin(**vars(args))
+    make_counts_image(**vars(args))
 
 
-def image_bin(event_file,
-              reference_file,
-              out_file,
-              overwrite):
+def make_counts_image(event_file,
+                      reference_file,
+                      out_file,
+                      overwrite):
     """Bin events into an image."""
 
     log.info('Reading {}'.format(event_file))

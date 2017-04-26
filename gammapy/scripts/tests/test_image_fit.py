@@ -6,7 +6,7 @@ from astropy.stats import gaussian_sigma_to_fwhm
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data, run_cli
 from ...datasets import load_poisson_stats_image
-from ..image_fit import image_fit
+from ..image_fit import run_image_fit_sherpa
 
 
 EXPECTED = ([9.016526, 99.865985, 100.147877, 1010.824189],
@@ -56,7 +56,7 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
     else:
         args['psf'] = None
 
-    image_fit(**args)
+    run_image_fit_sherpa(**args)
 
     with outfile.open() as fh:
         data = json.load(fh)

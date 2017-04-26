@@ -81,3 +81,6 @@ test-notebooks:
 	which python
 	python setup.py install --user
 	python test_notebooks.py
+
+conda:
+	python setup.py bdist_conda
