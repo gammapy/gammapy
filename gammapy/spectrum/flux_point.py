@@ -408,7 +408,7 @@ class FluxPoints(object):
         Returns
         -------
         flux_points : `FluxPoints`
-            Flux points without upper limit points.
+            Flux points with upper limit points removed.
         """
         table = self.table.copy()
         table_drop_ul = table[~self._is_ul]
@@ -417,12 +417,16 @@ class FluxPoints(object):
     @classmethod
     def stack(cls, flux_points):
         """
-        Stack a list of flux points
+        Create a new `FluxPoints` object by stacking a list of existing
+        flux points.
+
+        The first `FluxPoints` object in the list is taken as a reference to infer
+        column names and units for the stacked object.
 
         Parameters
         ----------
         flux_points : list of `FluxPoints` objects
-            List of flux point to stack.
+            List of flux points to stack.
 
         Returns
         -------
@@ -778,6 +782,9 @@ class FluxPointsFitter(object):
             self.stat = chi2_flux_points
         elif stat == 'chi2assym':
             self.stat = chi2_flux_points_assym
+        else:
+            raise ValueError("'{stat}' is not a valid fit statistic, please choose"
+                             " either 'chi2' or 'chi2assym'")
 
         if not ul_handling == 'ignore':
             raise NotImplementedError('No handling of upper limits implemented.')
