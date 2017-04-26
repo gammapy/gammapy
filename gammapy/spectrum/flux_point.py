@@ -440,7 +440,8 @@ class FluxPoints(object):
             table = _.table
             for colname in reference.colnames:
                 column = reference[colname]
-                table[colname] = table[colname].quantity.to(column.unit)
+                if column.unit:
+                    table[colname] = table[colname].quantity.to(column.unit)
             tables.append(table[reference.colnames])
         table_stacked = vstack(tables)
         table_stacked.meta['SED_TYPE'] = reference.meta['SED_TYPE']

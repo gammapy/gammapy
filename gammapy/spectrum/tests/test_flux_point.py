@@ -312,7 +312,7 @@ class TestFluxPoints:
 
     def test_drop_ul(self, flux_points):
         flux_points = flux_points.drop_ul()
-        assert not np.any(flux_points._is_ul())
+        assert not np.any(flux_points._is_ul)
 
     def test_stack(self, flux_points):
         stacked = FluxPoints.stack([flux_points, flux_points])
@@ -354,3 +354,5 @@ class TestFluxPointsFitter:
         amplitude = result['best_fit_model'].parameters['amplitude']
         assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1E-3)
         assert_quantity_allclose(amplitude.quantity, 2.149E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1E-3)
+        assert_allclose(result['statval'], 27.183618, rtol=1E-3)
+        assert_allclose(result['dof'], 22)
