@@ -18,13 +18,12 @@ class TestSpectrumFitResult:
                                        amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
                                        reference=1 * u.TeV)
         self.npred = self.obs.predicted_counts(self.best_fit_model).data.data.value
-        self.covar_axis = ['index', 'amplitude']
-        self.covar = np.diag([0.1 ** 2, 1e-12 ** 2])
+        covar_axis = ['index', 'amplitude']
+        covar = np.diag([0.1 ** 2, 1e-12 ** 2])
+        self.best_fit_model.parameters.set_parameter_covariance(covar, covar_axis)
         self.fit_range = [0.1, 50] * u.TeV
         self.fit_result = SpectrumFitResult(
             model=self.best_fit_model,
-            covariance=self.covar,
-            covar_axis=self.covar_axis,
             fit_range=self.fit_range,
             statname='wstat',
             statval=42,
@@ -46,12 +45,6 @@ class TestSpectrumFitResult:
         test_e = 12.5 * u.TeV
         assert_quantity_allclose(self.fit_result.model(test_e),
                                  read_result.model(test_e))
-
-    @requires_dependency('uncertainties')
-    def test_model_covariance(self):
-        actual = self.fit_result.model.parameters.covariance[1][1]
-        desired = self.covar[1][1]
-        assert actual == desired
 
     @requires_dependency('matplotlib')
     def test_plot(self):

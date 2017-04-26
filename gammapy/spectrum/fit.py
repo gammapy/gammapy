@@ -404,8 +404,6 @@ class SpectrumFit(object):
             npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
             results.append(SpectrumFitResult(
                 model=model,
-                covariance=covariance,
-                covar_axis=covar_axis,
                 fit_range=fit_range,
                 statname=statname,
                 statval=statval,
@@ -424,8 +422,6 @@ class SpectrumFit(object):
         else:
             raise NotImplementedError('{}'.format(self.err_method))
         for res in self.result:
-            res.covar_axis = self.covar_axis
-            res.covariance = self.covariance
             res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
 
     def _est_errors_sherpa(self):
