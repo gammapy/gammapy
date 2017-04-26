@@ -1190,26 +1190,22 @@ class Absorption(object):
     
 class AbsorbedSpectralModel(SpectralModel):
     """
-    Spectral model class handling EBL absorption
-
-    Parameters:
+    Spectral model with EBL absorption
+    
+    Parameters
+    ----------
+    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model.
+    absorption : `~gammapy.spectrum.models.Absorption`
+        Absorption model.
+    parameter : `float`
+        parameter value for absorption model
+    parameter_name : `str`, optional
+        parameter name
     """
     def __init__(self, spectral_model, absorption,
                  parameter, parameter_name='redshift'):
-        """
-        Spectral model with EBL absorption
 
-        Parameters
-        ----------
-        spectral_model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model.
-        absorption : `~gammapy.spectrum.models.Absorption`
-            Absorption model.
-        parameter : `float`
-            parameter value for absorption model
-        parameter_name : `str`, optional
-            parameter name
-        """
         self.spectral_model = spectral_model
         self.absorption = absorption
         self.parameter = parameter
