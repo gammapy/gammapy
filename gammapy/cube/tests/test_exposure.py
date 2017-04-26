@@ -5,7 +5,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable2D
-from .. import exposure_cube
+from .. import make_exposure_cube
 from .. import SkyCube
 
 
@@ -17,11 +17,13 @@ def test_exposure_cube():
 
     pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
-    aeff2d = EffectiveAreaTable2D.read(aeff_filename, hdu='AEFF_2D')
+    aeff = EffectiveAreaTable2D.read(aeff_filename, hdu='AEFF_2D')
     count_cube = SkyCube.read(ccube_filename, format='fermi-counts')
     offset_max = Angle(2.2, 'deg')
-    exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube,
-                             offset_max=offset_max)
+
+    exp_cube = make_exposure_cube(
+        pointing, livetime, aeff, count_cube, offset_max=offset_max,
+    )
     exp_ref = Quantity(4.7e8, 'm2 s')
     coordinates = exp_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)

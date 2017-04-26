@@ -37,9 +37,10 @@ def make_empty_cube(image_size, energy, center, data_unit=None):
     def_image["coordsys"] = 'GAL'
     def_image["unit"] = data_unit
     e_min, e_max, nbins = energy
-    empty_cube = SkyCube.empty(emin=e_min.value, emax=e_max.value, enumbins=nbins, eunit=e_min.unit, mode='edges',
-                               **def_image)
-    return empty_cube
+    return SkyCube.empty(
+        emin=e_min.value, emax=e_max.value, enumbins=nbins, eunit=e_min.unit,
+        mode='edges', **def_image
+    )
 
 
 # Temp xfail for this: https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655

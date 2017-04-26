@@ -15,7 +15,7 @@ Introduction
 * Energy dispersion (EDISP)
 * Point spread function (PSF)
 
-Most of the formats defined at :ref:`gadf:iact-irfs` are supported.  Otherwise,
+Most of the formats defined at :ref:`gadf:iact-irf` are supported.  Otherwise,
 at the moment, there is very little support for Fermi-LAT or other instruments.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as

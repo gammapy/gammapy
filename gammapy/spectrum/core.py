@@ -24,7 +24,7 @@ __all__ = [
 
 
 class CountsSpectrum(object):
-    """Generic counts spectrum
+    """Generic counts spectrum.
 
     Parameters
     ----------
@@ -100,9 +100,9 @@ class CountsSpectrum(object):
             raise ValueError(msg)
 
     def to_table(self):
-        """Convert to `~astropy.table.Table`
+        """Convert to `~astropy.table.Table`.
 
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html
+        Data format specification: :ref:`gadf:ogip-pha`
         """
         channel = np.arange(self.energy.nbins, dtype=np.int16)
         counts = np.array(self.data.data.value, dtype=np.int32)

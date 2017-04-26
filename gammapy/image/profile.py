@@ -4,9 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
-from astropy.units import Quantity
 from astropy import units as u
-
 from .core import SkyImage
 
 __all__ = [
@@ -51,6 +49,7 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
         bin_edges = np.percentile(data, quantiles)
     else:
         raise ValueError('Invalid option: method = {0}'.format(method))
+
     bin_edges[-1] += eps
     return bin_edges
 

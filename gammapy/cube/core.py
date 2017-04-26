@@ -388,7 +388,7 @@ class SkyCube(MapBase):
         Returns
         -------
         (position, energy) : tuple
-            Tuple of (`~astropy.coordinates.SkyCoord`, `~astropy.unit.Quantity`).
+            Tuple of (`~astropy.coordinates.SkyCoord`, `~astropy.units.Quantity`).
         """
         position = self.sky_image_ref.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.wcs_pix2world(z)
@@ -547,7 +547,7 @@ class SkyCube(MapBase):
             Any valid ds9 command line option can be passed.
             See http://ds9.si.edu/doc/ref/command.html for details.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `matplotlib.pyplot.imshow`.
         """
         import matplotlib.pyplot as plt
         from ipywidgets import interact
@@ -569,6 +569,8 @@ class SkyCube(MapBase):
             return interact(show_image, idx=(0, max_, 1))
         elif viewer == 'ds9':
             raise NotImplementedError
+        else:
+            raise ValueError('Invalid viewer: {}'.format(viewer))
 
     def plot_rgb(self, ax=None, fig=None, **kwargs):
         """
@@ -583,7 +585,7 @@ class SkyCube(MapBase):
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
         """
         import matplotlib.pyplot as plt
@@ -597,12 +599,15 @@ class SkyCube(MapBase):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
 
-        if not self.data.shape[0] == 3:
+        ne = self.data.shape[0]
+        if ne != 3:
             raise ValueError("Energy axes must be length 3, but is {}".format(ne))
+
         data_rgb = []
         for idx in range(3):
             data_rgb.append(self.data[idx, :, :])
-        caxes = ax.imshow(np.dstack(data_rgb), **kwargs)
+
+        ax.imshow(np.dstack(data_rgb), **kwargs)
 
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
@@ -610,11 +615,10 @@ class SkyCube(MapBase):
         except KeyError:
             ax.coords['ra'].set_axislabel('Right Ascension')
             ax.coords['dec'].set_axislabel('Declination')
-        except AttributeError:
-            log.info("Can't set coordinate axes. No WCS information available.")
 
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
+
         return ax
 
     def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
@@ -662,7 +666,7 @@ class SkyCube(MapBase):
 
         Parameters
         ----------
-        reference : `~astropy.io.fits.Header`, `SkyImage` or `SkyCube`
+        reference : `~astropy.io.fits.Header`, `~gammapy.image.SkyImage` or `SkyCube`
             Reference wcs specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.

@@ -19,7 +19,7 @@ __all__ = [
 class PSF3D(object):
     """PSF with axes: energy, offset, rad.
     
-    Data format specification: :ref:`gadf:psf-table`.
+    Data format specification: :ref:`gadf:psf_table`
 
     Parameters
     ----------
@@ -138,7 +138,7 @@ class PSF3D(object):
 
     def to_fits(self):
         """
-        Convert psf table data to FITS hdu list.
+        Convert PSF table data to FITS HDU list.
 
         Returns
         -------
@@ -173,7 +173,7 @@ class PSF3D(object):
 
     def evaluate(self, energy=None, offset=None, rad=None,
                  interp_kwargs=None):
-        """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
+        """Interpolate the value of the `EnergyOffsetArray` at a given offset and energy.
 
         Parameters
         ----------
@@ -233,17 +233,17 @@ class PSF3D(object):
         Returns
         -------
         table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Instance of `EnergyDependentTablePSF`.
+            Energy-dependent PSF
         """
-        energies = self.energy_logcenter()
-
-        # Defaults
         theta = theta or Angle(0, 'deg')
+        energies = self.energy_logcenter()
         rad = self.rad_center()
         psf_value = self.evaluate(offset=theta).squeeze().T
 
-        return EnergyDependentTablePSF(energy=energies, rad=rad,
-                                       exposure=exposure, psf_value=psf_value)
+        return EnergyDependentTablePSF(
+            energy=energies, rad=rad,
+            exposure=exposure, psf_value=psf_value,
+        )
 
     def to_table_psf(self, energy, theta=None, interp_kwargs=None, **kwargs):
         """Evaluate the `EnergyOffsetArray` at one given energy.
@@ -262,8 +262,6 @@ class PSF3D(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-
-        # Defaults
         theta = theta or Angle(0, 'deg')
 
         psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
@@ -288,8 +286,6 @@ class PSF3D(object):
         radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-
-        # Defaults
         if theta is None:
             theta = Angle(0, 'deg')
         if energy.ndim == 0:
@@ -316,7 +312,7 @@ class PSF3D(object):
         return Quantity(radius.squeeze(), unit)
 
     def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
-                                   thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
+                                   thetas=Angle([0, 1], 'deg'), ax=None):
         """Plot containment fraction as a function of energy.
         """
         import matplotlib.pyplot as plt
@@ -394,8 +390,8 @@ class PSF3D(object):
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = 'Containment radius R{0:.0f} ({1})'.format(100 * fraction,
-                                                               containment.unit)
+            label = ('Containment radius R{0:.0f} ({1})'
+                     ''.format(100 * fraction, containment.unit))
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax

@@ -2,13 +2,13 @@
 """Source catalog and object base classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ..utils.array import _is_int
 from collections import OrderedDict
 import sys
 from pprint import pprint
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
+from ..utils.array import _is_int
 
 __all__ = [
     'SourceCatalog',
@@ -73,13 +73,13 @@ class SourceCatalog(object):
     base class for the other source catalog classes.
 
     This is a thin wrapper around `~astropy.table.Table`,
-    which is stored in the `catalog.table` attribute.
+    which is stored in the ``catalog.table`` attribute.
 
     Parameters
     ----------
     table : `~astropy.table.Table`
         Table with catalog data.
-    source_name_key : str ('Source_Name')
+    source_name_key : str
         Column with source name information
     source_name_alias : tuple of str
         Columns with source name aliases. This will allow accessing the source

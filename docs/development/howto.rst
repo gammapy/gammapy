@@ -944,10 +944,10 @@ for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
 ``astropy.table.Table``.
 
 
-Validating H.E.S.S. Fits exporters
+Validating H.E.S.S. FITS exporters
 ----------------------------------
 
-The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:iact-irfs` format.
+The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:main-page` format.
 The Gammapy tests contain a mechanism to track changes in these exporters.
 
 
