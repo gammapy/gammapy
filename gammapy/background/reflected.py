@@ -256,9 +256,16 @@ class ReflectedRegionsBackgroundEstimator(object):
         self.finder.run()
         off_region = self.finder.reflected_regions
         off_events = obs.events.select_circular_region(off_region)
+        on_events = obs.events.select_circular_region(self.on_region)
         a_on = 1
         a_off = len(off_region)
-        return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='reflected')
+        return BackgroundEstimate(on_region = self.on_region,
+                                  on_events = on_events,
+                                  off_region = off_region,
+                                  off_events = off_events,
+                                  a_on = a_on,
+                                  a_off = a_off,
+                                  method = 'Reflected Regions')
 
     def plot(self, fig=None, ax=None, cmap=None, idx=None):
         """Standard debug plot

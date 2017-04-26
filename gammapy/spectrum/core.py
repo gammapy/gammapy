@@ -343,7 +343,7 @@ class PHACountsSpectrum(CountsSpectrum):
         Zenith Angle
     """
 
-    def __init__(self, energy_lo, energy_hi, data=None,
+    def __init__(self, energy_lo, energy_hi, data=None, areascal=None,
                  obs_id=0, quality=None, is_bkg=False,
                  **kwargs):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
@@ -351,6 +351,9 @@ class PHACountsSpectrum(CountsSpectrum):
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
         self.quality = quality
+        if areascal is None:
+            areascal = np.ones(self.energy.nbins)
+        self.areascal = areascal
         self.is_bkg = is_bkg
         self.meta = Bunch(kwargs)
 

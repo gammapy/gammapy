@@ -85,6 +85,7 @@ class TestReflectedRegionBackgroundEstimator:
         self.bg_maker.finder.min_distance = Angle('0.2 deg')
         self.bg_maker.run()
         assert len(self.bg_maker.result[1].off_region) == 11
+        assert 'Reflected' in str(self.bg_maker.result[1])
 
     @requires_dependency('matplotlib')
     def test_plot(self):
