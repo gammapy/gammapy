@@ -19,6 +19,10 @@ class BackgroundEstimate(object):
 
     Parameters
     ----------
+    on_region : `~regions.SkyRegion`
+        Signal extraction region
+    on_events : `~gammapy.data.EventList`
+        Signal events
     off_region : `~regions.SkyRegion`
         Background extraction region
     off_events : `~gammapy.data.EventList`
@@ -27,16 +31,30 @@ class BackgroundEstimate(object):
         Relative background exposure of the on region
     a_off : float
         Relative background exposure of the off region
-    tag : str
+    method : str
         Background estimation method
     """
 
-    def __init__(self, off_region, off_events, a_on, a_off, tag='default'):
+    def __init__(self, on_region, on_events, off_region,
+                 off_events, a_on, a_off, method='default'):
+        self.on_region = on_region
+        self.on_events = on_events
         self.off_region = off_region
         self.off_events = off_events
         self.a_on = a_on
         self.a_off = a_off
-        self.tag = tag
+        self.method = method
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n Method: {}'.format(self.method)
+        ss += '\n on region'
+        ss += '\n {}'.format(self.on_region)
+        ss += '\n {}'.format(self.on_events)
+        ss += '\n off region'
+        ss += '\n {}'.format(self.off_region)
+        ss += '\n {}'.format(self.off_events)
+        return ss
 
 
 def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
@@ -63,5 +81,3 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
 
     return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
-
-

@@ -13,34 +13,15 @@ from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import SkyImage
 from ...spectrum import SpectrumExtraction, SpectrumObservation
+from ...background.tests.test_reflected import bkg_estimator, obs_list
 
 
 @pytest.fixture(scope='session')
-def obs():
-    """An example ObservationList for tests."""
-    obs_id = [23523, 23592]
-    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
-    ds = DataStore.from_dir(store)
-    obs = ObservationList([ds.obs(_) for _ in obs_id])
-    return obs
-
-
-@pytest.fixture(scope='session')
-def target():
-    """An example Target for tests."""
-    center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
-    radius = Angle('0.11 deg')
-    on_region = CircleSkyRegion(center, radius)
-    target = Target(on_region)
-    return target
-
-
-@pytest.fixture(scope='session')
-def bkg():
-    """An example bkg dict for tests."""
-    excl = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-    bkg = dict(method='reflected', n_min=2, exclusion=excl)
-    return bkg
+def bkg_estimate():
+    """An example background estimate"""
+    est = bkg_estimator()
+    est.run()
+    return est.result
 
 
 @pytest.fixture(scope='session')
@@ -49,9 +30,8 @@ def extraction():
     # Restrict true energy range covered by HAP exporter
     e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
-    extraction = SpectrumExtraction(target=target(),
-                                    obs=obs(),
-                                    background=bkg(),
+    extraction = SpectrumExtraction(bkg_estimate=bkg_estimate(),
+                                    obs_list=obs_list(),
                                     e_true=e_true
                                     )
     return extraction
@@ -60,28 +40,28 @@ def extraction():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
+
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
                                                   aeff=549861.8 * u.m ** 2,
-                                                  edisp=0.2595896944765074
-                                                 )),
+                                                  edisp=0.2595896944765074,
+                                                  containment=1,
+                                                  )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
-                                                 aeff=412731.8043631101 * u.m ** 2,
-                                                 edisp=0.2595896944765074
-                                                ))
+                                                 aeff=549861.8 * u.m ** 2,
+                                                 edisp=0.2595896944765074,
+                                                 containment=0.8525390663792395,
+                                                 ))
     ])
-    def test_extract(self, pars, results, target, obs, bkg, tmpdir):
+    def test_extract(self, pars, results, obs_list, bkg_estimate):
         """Test quantitative output for various configs"""
-        extraction = SpectrumExtraction(target=target,
-                                        obs=obs,
-                                        background=copy.deepcopy(bkg),
+        extraction = SpectrumExtraction(obs_list=obs_list,
+                                        bkg_estimate=bkg_estimate,
                                         **pars)
 
-        # TODO: Improve API
-        extraction.estimate_background(extraction.background)
-        extraction.extract_spectrum()
+        extraction.run()
         obs = extraction.observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
         edisp_actual = obs.edisp.data.evaluate(e_true=5 * u.TeV,
@@ -90,13 +70,14 @@ class TestSpectrumExtraction:
         assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results['edisp'], rtol=1e-3)
 
-
         # TODO: Introduce assert_stats_allclose
         n_on_actual = obs.total_stats.n_on
         sigma_actual = obs.total_stats.sigma
+        containment_actual = obs.on_vector.areascal[60]
 
         assert n_on_actual == results['n_on']
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
+        assert_allclose(containment_actual, results['containment'], rtol=1e-3)
 
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""

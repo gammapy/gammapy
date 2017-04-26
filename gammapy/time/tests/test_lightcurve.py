@@ -11,6 +11,7 @@ from ...utils.energy import EnergyBounds
 from ...data import Target, DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
+from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
 from ..lightcurve import LightCurve, LightCurveEstimator
 
@@ -38,6 +39,7 @@ def test_lightcurve_plot():
     lc.plot()
 
 
+# TODO: Reuse fixtures from spectrum tests
 @pytest.fixture(scope='session')
 def spec_extraction():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
@@ -57,19 +59,19 @@ def spec_extraction():
         position=target.on_region.center,
         size=Angle('6 deg'),
     )
-    bkg_estimation = dict(
-        method='reflected',
-        exclusion=exclusion_mask,
-    )
+    bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
+                                                        obs_list=obs_list,
+                                                        exclusion_mask=exclusion_mask)
+    bkg_estimator.run()
+
     e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit='TeV')  # fine binning
     e_true = EnergyBounds.equal_log_spacing(0.05, 100, 200, unit='TeV')
-    extraction = SpectrumExtraction(target=target,
-                                    obs=obs_list,
-                                    background=bkg_estimation,
+    extraction = SpectrumExtraction(obs_list=obs_list,
+                                    bkg_estimate=bkg_estimator.result,
                                     containment_correction=False,
                                     e_reco=e_reco,
                                     e_true=e_true)
-    extraction.estimate_background(extraction.background)
+    extraction.run()
     extraction.define_energy_threshold('area_max', percent=10.0)
     return extraction
 
@@ -82,7 +84,7 @@ def test_lightcurve_estimator():
 
     # param
     intervals = []
-    for obs in spec_extract.obs:
+    for obs in spec_extract.obs_list:
         intervals.append([obs.events.time[0], obs.events.time[-1]])
 
     model = PowerLaw(

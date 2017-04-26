@@ -131,7 +131,7 @@ class LightCurveEstimator(object):
     """
 
     def __init__(self, spec_extract):
-        self.obs_list = spec_extract.obs
+        self.obs_list = spec_extract.obs_list
         self.obs_spec = spec_extract.observations
         self.off_evt_list = self._get_off_evt_list(spec_extract)
         self.on_evt_list = self._get_on_evt_list(spec_extract)
@@ -142,7 +142,7 @@ class LightCurveEstimator(object):
         Returns list of OFF events for each observations
         """
         off_evt_list = []
-        for bg in spec_extract.background:
+        for bg in spec_extract.bkg_estimate:
             off_evt_list.append(bg.off_events)
         return off_evt_list
 
@@ -151,11 +151,9 @@ class LightCurveEstimator(object):
         """
         Returns list of OFF events for each observations
         """
-        on_region = spec_extract.target.on_region
         on_evt_list = []
-        for obs in spec_extract.obs:
-            idx = on_region.contains(obs.events.radec)
-            on_evt_list.append(obs.events.select_row_subset(idx))
+        for obs in spec_extract.bkg_estimate:
+            on_evt_list.append(obs.on_events)
 
         return on_evt_list
 
@@ -314,7 +312,7 @@ class LightCurveEstimator(object):
                 aeff=spec.aeff,
                 edisp=spec.edisp,
                 model=spectral_model,
-                #e_reco=e_reco[e_idx],
+                # e_reco=e_reco[e_idx],
             )
             counts_predictor.run()
             counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
