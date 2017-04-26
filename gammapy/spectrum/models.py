@@ -32,7 +32,7 @@ __all__ = [
     'LogParabola',
     'TableModel',
     'AbsorbedSpectralModel',
-    'SpectralModelAbsorbedbyEbl',
+    'Absorption',
 ]
 
 
@@ -1065,138 +1065,178 @@ class TableModel(SpectralModel):
         return ax
 
 
-class AbsorbedSpectralModel(SpectralModel):
+class Absorption(object):
+    """
+    Class dealing with absorption model
 
-    def __init__(self, spectral_model, table_model):
-        """Absorbed spectral model
+    Parameters
+    ----------
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
+    param_lo : `~astropy.units.Quantity`
+        Lower bin edges of parameter axis
+    param_hi : `~astropy.units.Quantity`
+        Upper bin edges of parameter axis
+    data : `~astropy.units.Quantity`
+        Model value
+
+    Examples
+    --------
+    Create and plot EBL absorption model for a redshift of 0.2
+
+    .. create::
+        :include-source:
+        import matplotlib.pyplot as plt
+        from gammapy.spectrum.models import Absorption
+
+        table = Absorption.read(filename='$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz').table_model(parameter=0.2)
+
+        ax = plt.gca()
+        opts = dict(energy_range=[0.01, 100] * u.TeV, energy_unit='TeV', ax=ax)
+        table.plot(label='Dominguez 2011', **opts)
+        ax.set_ylabel(r'Absorption coefficient [$\exp{(-\tau(E))}$]')
+        ax.set_yscale('log')
+        ax.set_ylim([1.e-4, 2.])
+        plt.grid(which='both')
+        plt.legend(loc='best')
+        plt.show()
+
+    """
+
+    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
+        axes = [
+            BinnedDataAxis(param_lo, param_hi,
+                           interpolation_mode='linear', name='parameter'), 
+            BinnedDataAxis(energy_lo,energy_hi,
+                           interpolation_mode='log', name='energy')
+        ]
+
+        self.absorption = NDDataArray(axes=axes, data=data)
+        self.absorption.default_interp_kwargs['fill_value'] = None
+        
+    @classmethod
+    def read(cls, filename):
+        """
+        Build object from an XSPEC model
 
         Parameters
         ----------
-        spectral_model : `~gammapy.spectrum.models.SpectralModel`
-            spectral model
-        table_model : `~gammapy.spectrum.models.TableModel`
-            table model
+        filename : `str`
+            File containing the 1-dimensional XSPEC model.
         """
-        self.spectral_model = spectral_model
-        self.table_model = table_model
-        # Will be implemented later for sherpa fit
-        self.parameters = ParameterList([])
 
-    def evaluate(self, energy):
-        flux = self.spectral_model.__call__(energy)
-        absorption = self.table_model.__call__(energy)
-        return flux * absorption
+        # Create EBL data array
+        filename = str(make_path(filename))
+        table_param = Table.read(filename, hdu='PARAMETERS')
 
-    def to_sherpa(self, name='default'):
-        """Convert to Sherpa model
+        par_min = table_param['MINIMUM']
+        par_max = table_param['MAXIMUM']
 
-        To be implemented by subclasses
+        par_array = table_param[0]['VALUE']
+        par_delta = np.diff(par_array)*0.5
+
+        param_lo, param_hi = par_array, par_array  # initialisation
+        param_lo[0] = par_min - par_delta[0]
+        param_lo[1:] -= par_delta
+        param_hi[:-1] += par_delta
+        param_hi[-1] = par_max
+        
+        # Get energy values
+        table_energy = Table.read(filename, hdu='ENERGIES')
+        energy_lo = table_energy['ENERG_LO'] * u.keV  # unit not stored in file
+        energy_hi = table_energy['ENERG_HI'] * u.keV  # unit not stored in file
+        
+        # Energies are in keV
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
+                                                                 upper=energy_hi,
+                                                                 unit=u.keV)
+
+        # Get spectrum values
+        table_spectra = Table.read(filename, hdu='SPECTRA')
+        data = table_spectra['INTPSPEC'].data
+        
+        return cls(energy_lo=energy_bounds.lower_bounds,
+                   energy_hi=energy_bounds.upper_bounds,
+                   param_lo=param_lo, param_hi=param_hi, data=data)
+
+    def table_model(self, parameter, unit='TeV'):
         """
-        raise NotImplementedError('{}'.format(self.__class__.__name__))
+        Returns `~gammapy.spectrum.models.TableModel` for a given parameter
+        from the input aborbed model
 
+        Parameters
+        ----------
+        param : `float`
+            Parameter value.
+        unit : `str`, (optional)
+            desired value for energy axis
+        """
+        energy_axis = self.absorption.axes[1]
+        energy = (energy_axis.log_center()).to(unit)
 
-class SpectralModelAbsorbedbyEbl(SpectralModel):
+        values = self.evaluate(energy=energy, parameter=parameter)
+        
+        return TableModel(energy=energy, values=values, scale_logy=False)
+
+    def evaluate(self, energy, parameter):
+        """
+        Evaluate model for energy and parameter value
+        """
+        return self.absorption.evaluate(energy=energy, parameter=parameter)
+
+    
+    
+class AbsorbedSpectralModel(SpectralModel):
     """
     Spectral model class handling EBL absorption
 
     Parameters:
     """
-    def __init__(self, spectral_model, redshift,
-                 ebl_model='$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'):
+    def __init__(self, spectral_model, absorption,
+                 parameter, parameter_name='redshift'):
         """
         Spectral model with EBL absorption
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         spectral_model : `~gammapy.spectrum.models.SpectralModel`
-            spectral model
-        redshift : `float`
-            redshift value
-        ebl_model : `str`
-            EBL model file name 
+            Spectral model.
+        absorption : `~gammapy.spectrum.models.Absorption`
+            Absorption model.
+        parameter : `float`
+            parameter value for absorption model
+        parameter_name : `str`, optional
+            parameter name
         """
         self.spectral_model = spectral_model
-
-        # get interpolator and redshift limit
-        self.ebl, z_min, z_max = self._get_interpolator(ebl_model)
-        self.redshift = redshift
+        self.absorption = absorption
+        self.parameter = parameter
+        self.parameter_name = parameter_name
+        
         # initialise list parameters from spectral model
         param_list = []
         for param in spectral_model.parameters.parameters:
             param_list.append(param)
 
-        # Add redshift
-        param_list.append(Parameter('redshift', redshift,
-                                    parmin=z_min, parmax=z_max, frozen=True))
+        # Add parameter to the list
+        param_min = self.absorption.absorption.axes[0].lo[0]
+        param_max = self.absorption.absorption.axes[0].lo[-1]
+        param_list.append(Parameter(parameter_name, parameter,
+                                    parmin=param_min, parmax=param_max,
+                                    frozen=True))
 
         self.parameters = ParameterList(param_list)
-        
-
-    def _get_interpolator(self, ebl_model):
-        """
-        Build interpolator (redshift, absorption)
-
-        Parameters:
-        -----------
-        ebl_model : `str`
-            EBL model file name
-
-        Returns:
-        --------
-        ebl : `~gammapy.utils.nddata.NDDataArray`
-            interpolator
-        z_min, z_max : `float`
-            redshift range
-        """
-        # Create EBL data array
-        ebl_model = str(make_path(ebl_model))
-        table_param = Table.read(ebl_model, hdu='PARAMETERS')
-
-        z_min = table_param['MINIMUM']
-        z_max = table_param['MAXIMUM']
-
-        redshift_array = table_param[0]['VALUE']
-        delta_red = np.diff(redshift_array)*0.5
-        redshift_lo = redshift_array
-        redshift_hi = redshift_array
-        redshift_lo[0] = 0.
-        redshift_lo[1:] -= delta_red
-        redshift_hi[:-1] += delta_red
-        redshift_hi[-1] = z_max + delta_red[-1]
-        
-        # Get energy values
-        table_energy = Table.read(ebl_model, hdu='ENERGIES')
-        energy_lo = table_energy['ENERG_LO']
-        energy_hi = table_energy['ENERG_HI']
-
-        # Energies are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
-                                                                 upper=energy_hi,
-                                                                 unit=u.keV)
-        energy = energy_bounds.log_centers
-
-        # Get spectrum values
-        table_spectra = Table.read(ebl_model, hdu='SPECTRA')
-        data = table_spectra['INTPSPEC'].data
-        
-        axes = [
-            BinnedDataAxis(redshift_lo, redshift_hi,
-                           interpolation_mode='linear', name='redshift'),
-            BinnedDataAxis(energy_bounds.lower_bounds,energy_bounds.upper_bounds,
-                           interpolation_mode='log', name='energy'),
-        ]
-        
-        ebl = NDDataArray(axes=axes, data=data)
-        ebl.default_interp_kwargs['fill_value'] = None
-
-        return ebl, z_min, z_max
         
     def evaluate(self, energy, **kwargs):
         # assign redshift value and remove it from dictionnary
         # since it does not belong to the spectral model 
-        redshift = kwargs['redshift']
-        del kwargs['redshift']
+        parameter = kwargs[self.parameter_name]
+        del kwargs[self.parameter_name]
 
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
-        absorption = self.ebl.evaluate(energy=energy, redshift=redshift)
+        absorption = self.absorption.evaluate(energy=energy,
+                                              parameter=parameter)
         return flux * absorption
+
