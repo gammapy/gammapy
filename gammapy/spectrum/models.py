@@ -51,7 +51,15 @@ class SpectralModel(object):
     def __str__(self):
         """String representation"""
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.parameters)
+        ss += '\n\nParameters: \n\n\t'
+
+        table = self.parameters.to_table()
+        ss += '\n\t'.join(table.pformat())
+
+        if self.parameters.covariance is not None:
+            ss += '\n\nCovariance: \n\n\t'
+            covar = self.parameters.covariance_to_table()
+            ss += '\n\t'.join(covar.pformat())
         return ss
 
     def _parse_uarray(self, uarray):
