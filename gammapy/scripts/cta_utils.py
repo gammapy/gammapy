@@ -6,8 +6,6 @@ from ..spectrum.utils import CountsPredictor
 from ..spectrum.core import PHACountsSpectrum
 from ..utils.random import get_random_state
 
-from ..spectrum.models import AbsorbedSpectralModel, TableModel
-
 __all__ = [
     'Target',
     'ObservationParameters',
@@ -24,37 +22,12 @@ class Target(object):
         Name of the source
     model : `~gammapy.spectrum.models.SpectralModel`
         Model of the source
-    redshift : `~astropy.units.Quantity`
-        Redshift of the source
-    ebl_model_name: `str`
-        EBL model (franceschini, dominguez, finke or None)
     """
 
     def __init__(self, name=None,
-                 model=None,
-                 redshift=None,
-                 ebl_model_name=None):
+                 model=None):
         self.name = name
         self.model = model
-        self.redshift = redshift
-        self.ebl_model_name = ebl_model_name
-        self.abs_model = None
-        filename = None
-        if ebl_model_name in 'franceschini':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
-        elif ebl_model_name in 'dominguez':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz'
-        elif ebl_model_name in 'finke':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz'
-        else:
-            pass
-
-        if redshift is not None:
-            absorption = TableModel.read_xspec_model(filename, redshift)
-            self.abs_model = AbsorbedSpectralModel(spectral_model=model,
-                                                   table_model=absorption)
-        else:
-            self.abs_model = model
 
     def __str__(self):
         """Target report (`str`)."""
@@ -62,7 +35,6 @@ class Target(object):
         ss += 'Name={}\n'.format(self.name)
         for par in self.model.parameters.parameters:
             ss += '{}={} {}\n'.format(par.name, str(par.value), par.unit)
-        ss += 'Redshift={}'.format(self.redshift)
         return ss
 
     def from_fermi_lat_catalogue(name):
@@ -106,7 +78,7 @@ class CTAObservationSimulation(object):
     """Class dedicated to simulate observation from one set
     of IRF and one target.
 
-    TODO : Should be merge with `~gammapy.spectrum.SpectrumSimlation`
+    TODO : Should be merge with `~gammapy.spectrum.SpectrumSimulation`
 
     Parameters
     ----------
@@ -135,7 +107,7 @@ class CTAObservationSimulation(object):
         emin = obs_param.emin
         emax = obs_param.emax
 
-        model = target.abs_model
+        model = target.model
 
         # Compute expected counts
         reco_energy = perf.bkg.energy
@@ -192,7 +164,7 @@ class CTAObservationSimulation(object):
 
         # Spectrum plot
         energy_range = [0.01 * u.TeV, 100 * u.TeV]
-        target.abs_model.plot(ax=ax1, energy_range=energy_range,
+        target.model.plot(ax=ax1, energy_range=energy_range,
                               label='Model')
         plt.text(0.55, 0.65, target.__str__(),
                  style='italic', transform=ax1.transAxes, fontsize=7,
