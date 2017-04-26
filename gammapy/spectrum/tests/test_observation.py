@@ -64,9 +64,9 @@ def get_test_obs():
     on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
                                   energy_hi=energy[1:],
                                   data=np.arange(19),
-                                  obs_id=2,
-                                  backscal=1,
-                                  livetime=livetime)
+                                  backscal=1)
+    on_vector.livetime = livetime 
+    on_vector.obs_id = 2
     aeff = EffectiveAreaTable(energy_lo=energy[:-1],
                               energy_hi=energy[1:],
                               data=np.ones(19) * 1e5 * u.m ** 2)

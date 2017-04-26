@@ -33,6 +33,8 @@ class SpectrumFitResult(object):
         Statistic used for the fit
     statval : float, optional
         Final fit statistic
+    stat_per_bin : float, optional
+        Fit statistic value per bin
     npred_src : array-like, optional
         Source counts predicted by the fit
     npred_bkg : array-like, optional
@@ -48,13 +50,15 @@ class SpectrumFitResult(object):
     """
 
     def __init__(self, model, fit_range=None, statname=None, statval=None,
-                 npred_src=None, npred_bkg=None, background_model=None,
-                 fluxes=None, flux_errors=None, obs=None):
+                 stat_per_bin=None, npred_src=None, npred_bkg=None,
+                 background_model=None, fluxes=None, flux_errors=None,
+                 obs=None):
 
         self.model = model
         self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
+        self.stat_per_bin = stat_per_bin
         self.npred_src = npred_src
         self.npred_bkg = npred_bkg
         self.background_model = background_model
@@ -228,31 +232,6 @@ class SpectrumFitResult(object):
         butterfly['flux_lo'] = flux - flux_err.to(flux_unit)
         butterfly['flux_hi'] = flux + flux_err.to(flux_unit)
         return butterfly
-
-    def stats_per_bin(self, fit_range=True):
-        """`~np.array` of fit statistics per bin
-
-        Computed with `~gammapy.stats`. Check that the sum is equal to the
-        total fit statistic returned by the `~gammapy.spectrum.SpectrumFit`
-        (i.e. Sherpa).
-
-        Parameters
-        ----------
-        fit_range : bool, optional
-            Set bins outside the fitted range to 0, default: True
-        """
-        n_on = self.obs.on_vector.data.data.value
-        n_off = self.obs.off_vector.data.data.value
-        alpha = self.obs.alpha
-        mu_sig = self.expected_source_counts.data.data.value
-        stat = stats.wstat(n_on=n_on, n_off=n_off, alpha=alpha, mu_sig=mu_sig)
-        if fit_range:
-            # TODO: make active bins during the fit available more easily
-            e = self.obs.e_reco
-            condition = (e[1:] < self.fit_range[0]) | (e[:-1] > self.fit_range[1])
-            idx = np.where(condition)
-            stat[idx] = 0
-        return stat
 
     @property
     def expected_source_counts(self):

@@ -307,6 +307,7 @@ class PHACountsSpectrum(CountsSpectrum):
         self.is_bkg = is_bkg
         self.meta = meta or dict()
         self.meta.setdefault('CREATOR', 'Gammapy {}'.format(version.version))
+        self.meta.setdefault('OBS_ID', 0) 
 
     @property
     def phafile(self):
