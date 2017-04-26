@@ -119,6 +119,30 @@ class LightCurve(QTable):
 
         return fvar, fvar_err
 
+    def compute_chisq(lc):
+        """Calculate the chi-square test for `LightCurve`.
+
+        Chisquare test is a variability estimator. It computes 
+        deviations from the expected value here mean value 
+
+        Parameters
+        ----------
+        flux : array_like
+            Flux values with units explicitly specified
+        Returns
+        -------
+        ChiSq : array_like
+        P-value : array_like
+        """
+        flux = lc['FLUX']
+        ymean = np.mean(flux)
+        yexp = ymean
+        yobs = flux
+        print yobs, yexp
+        chi2 = stats.chisquare(yobs, yexp)
+        pval = 1 - stats.chi2.cdf(x=chi2_py, df=2)
+        return chi2, pval
+
 
 class LightCurveEstimator(object):
     """
