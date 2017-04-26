@@ -17,7 +17,7 @@ __all__ = [
 
 
 class EffectiveAreaTable(object):
-    """Effective Area Table
+    """Effective area table.
 
     TODO: Document
 
@@ -67,6 +67,7 @@ class EffectiveAreaTable(object):
     >>> print(ener)
     0.185368478744 TeV
     """
+
     def __init__(self, energy_lo, energy_hi, data, meta=None):
         axes = [BinnedDataAxis(energy_lo, energy_hi,
                                interpolation_mode='log', name='energy')]
@@ -79,7 +80,7 @@ class EffectiveAreaTable(object):
         return self.data.axis('energy')
 
     def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
-        """Plot effective area
+        """Plot effective area.
 
         Parameters
         ----------
@@ -94,7 +95,6 @@ class EffectiveAreaTable(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axis
-
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
@@ -119,7 +119,7 @@ class EffectiveAreaTable(object):
 
     @classmethod
     def from_parametrization(cls, energy, instrument='HESS'):
-        """Get parametrized effective area
+        """Get parametrized effective area.
 
         Parametrizations of the effective areas of different Cherenkov
         telescopes taken from Appendix B of Abramowski et al. (2010), see
@@ -160,7 +160,7 @@ class EffectiveAreaTable(object):
         data = value * u.cm ** 2
 
         return cls(energy_lo=energy.lower_bounds,
-                   energy_hi = energy.upper_bounds, data=data)
+                   energy_hi=energy.upper_bounds, data=data)
 
     @classmethod
     def from_table(cls, table):
@@ -191,9 +191,9 @@ class EffectiveAreaTable(object):
             raise ValueError(msg)
 
     def to_table(self):
-        """Convert to `~astropy.table.Table`
+        """Convert to `~astropy.table.Table`.
 
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file
+        Data format specification: :ref:`gadf:ogip-arf`
         """
         ener_lo = self.energy.lo
         ener_hi = self.energy.hi
@@ -213,12 +213,12 @@ class EffectiveAreaTable(object):
         self.to_hdulist().writeto(str(filename), **kwargs)
 
     def evaluate_fill_nan(self, **kwargs):
-        """Modified evalute function
+        """Modified evaluate function.
 
         Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
         possible nan values. Below the finite range the effective area is set
         to zero and above to value of the last valid note. This is needed since
-        other Sofwares, e.g. sherpa, don't like nan values in FITS files. Make
+        other codes, e.g. sherpa, don't like nan values in FITS files. Make
         sure that the replacement happens outside of the energy range, where
         the `~gammapy.irf.EffectiveAreaTable` is used.
         """
@@ -272,17 +272,17 @@ class EffectiveAreaTable(object):
 
         table = self.to_table()
         kwargs = dict(
-            name = name,
-            energ_lo = table['ENERG_LO'].quantity.to('keV').value,
-            energ_hi = table['ENERG_HI'].quantity.to('keV').value,
-            specresp = table['SPECRESP'].quantity.to('cm2').value,
+            name=name,
+            energ_lo=table['ENERG_LO'].quantity.to('keV').value,
+            energ_hi=table['ENERG_HI'].quantity.to('keV').value,
+            specresp=table['SPECRESP'].quantity.to('cm2').value,
         )
 
         return DataARF(**kwargs)
 
 
 class EffectiveAreaTable2D(object):
-    """2D Effective Area Table
+    """2D effective area table.
 
     Parameters
     -----------
@@ -296,10 +296,6 @@ class EffectiveAreaTable2D(object):
         Upper bin edges of offset axis
     data : `~astropy.units.Quantity`
         Effective area
-    low_threshold : `~astropy.units.Quantity`, optional
-        Low energy threshold
-    high_threshold : `~astropy.units.Quantity`, optional
-        High energy threshold
 
     Examples
     --------
@@ -359,21 +355,20 @@ class EffectiveAreaTable2D(object):
 
     @classmethod
     def from_table(cls, table):
-        """This is a reader for the format specified at
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/effective_area/index.html#aeff-2d-format
+        """Read from table.
+        
+        Data format specification: :ref:`gadf:aeff_2d`
         """
-        energy_col = 'ENERG'
-        offset_col = 'THETA'
-        data_col = 'EFFAREA'
-
-        energy_lo = table['{}_LO'.format(energy_col)].quantity[0]
-        energy_hi = table['{}_HI'.format(energy_col)].quantity[0]
-        o_lo = table['{}_LO'.format(offset_col)].quantity[0]
-        o_hi = table['{}_HI'.format(offset_col)].quantity[0]
-        data = table['{}'.format(data_col)].quantity[0].transpose()
-        return cls(offset_lo=o_lo, offset_hi=o_hi,
-                   energy_lo=energy_lo, energy_hi=energy_hi,
-                   data=data, meta=table.meta)
+        energy_lo = table['ENERG_LO'].quantity[0]
+        energy_hi = table['ENERG_HI'].quantity[0]
+        offset_lo = table['THETA_LO'].quantity[0]
+        offset_hi = table['THETA_HI'].quantity[0]
+        data = table['EFFAREA'].quantity[0].transpose()
+        return cls(
+            energy_lo=energy_lo, energy_hi=energy_hi,
+            offset_lo=offset_lo, offset_hi=offset_hi,
+            data=data, meta=table.meta,
+        )
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):

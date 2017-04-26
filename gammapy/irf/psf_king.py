@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class PSFKing(object):
-    """King profile analytical PSF depending on energy and theta.
+    """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.
 
@@ -116,7 +116,7 @@ class PSFKing(object):
 
     def to_fits(self):
         """
-        Convert psf table data to FITS hdu list.
+        Convert PSF table data to FITS HDU list.
 
         Returns
         -------
@@ -149,7 +149,9 @@ class PSFKing(object):
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):
-        """Evaluate formula from here: :ref:`gadf:psf_king`.
+        """Evaluate the PSF model.
+        
+        Formula is given here: :ref:`gadf:psf_king`.
 
         Parameters
         ----------
@@ -162,8 +164,8 @@ class PSFKing(object):
 
         Returns
         -------
-        king function : `~astropy.units.Quantity`
-            formula from here: :ref:`gadf:psf_king`
+        psf_value : `~astropy.units.Quantity`
+            PSF value
         """
         r2 = r * r
         sigma2 = sigma * sigma
