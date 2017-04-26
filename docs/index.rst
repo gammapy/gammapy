@@ -39,7 +39,7 @@ General documentation
   :maxdepth: 1
 
   about
-  install
+  install/index
   getting-started
   tutorials/index
   dataformats/index
