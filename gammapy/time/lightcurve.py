@@ -125,14 +125,10 @@ class LightCurve(QTable):
         Chisquare test is a variability estimator. It computes 
         deviations from the expected value here mean value 
 
-        Parameters
-        ----------
-        flux : array_like
-            Flux values with units explicitly specified
         Returns
         -------
-        ChiSq : array_like
-        P-value : array_like
+        ChiSq, P-value : tuple of float or `~numpy.ndarray` 
+	    Tuple of Chi-square and P-value
         """
         import scipy.stats as stats
         flux = self['FLUX']
