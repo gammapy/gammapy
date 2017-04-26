@@ -234,11 +234,6 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     def run(self):
         """Run all steps
-
-        Returns
-        -------
-        result : list
-            List of `~gammapy.background.BackgroundEstimate`
         """
         log.info('Running {}'.format(self))
         result = []
