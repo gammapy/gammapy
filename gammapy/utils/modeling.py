@@ -29,6 +29,7 @@ import abc
 import numpy as np
 from astropy.extern import six
 from astropy import units as u
+from astropy.table import Table, Column, vstack
 from ..extern import xmltodict
 from .scripts import make_path
 
@@ -113,7 +114,10 @@ class Parameter(object):
     def to_dict(self):
         return dict(name=self.name,
                     value=float(self.value),
-                    unit=str(self.unit))
+                    unit=str(self.unit),
+                    frozen=self.frozen,
+                    min=self.parmin,
+                    max=self.parmax)
 
     # TODO: I think this method is not very useful, because the same can be just
     # achieved with `Parameter(**data)`. Why duplicate?
@@ -179,7 +183,7 @@ class ParameterList(object):
         ss = self.__class__.__name__
         for par in self.parameters:
             ss += '\n{}'.format(par)
-        ss += '\n\nCovariance: {}'.format(self.covariance)
+        ss += '\n\nCovariance: \n{}'.format(self.covariance)
         return ss
 
     def __getitem__(self, name):
@@ -205,10 +209,50 @@ class ParameterList(object):
     def to_dict(self):
         retval = dict(parameters=list(), covariance=None)
         for par in self.parameters:
-            retval['parameters'].append(par.to_dict()) 
+            retval['parameters'].append(par.to_dict())
         if self.covariance is not None:
             retval['covariance'] = self.covariance.tolist()
         return retval
+
+    def to_list_of_dict(self):
+        result = []
+        for i, parameter in enumerate(self.parameters):
+            vals = parameter.to_dict()
+            if self.covariance is None:
+                vals['error'] = np.nan
+            else:
+                vals['error'] = np.sqrt(self.covariance[i, i])
+            result.append(vals)
+        return result
+
+    def to_table(self):
+        """
+        Serialize parameter list into `~astropy.table.Table`
+        """
+        names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
+        formats = {'value': '.3e',
+                   'error': '.3e',}
+        table = Table(self.to_list_of_dict(), names=names)
+
+        for name in formats:
+            table[name].format = formats[name]
+        return table
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def covariance_to_table(self):
+        """
+        Serialize parameter covariance into `~astropy.table.Table`
+        """
+        t = Table(self.covariance, names=self.names)[self.free]
+        for name in t.colnames:
+            t[name].format = '.3'
+
+        col = Column(name='name/name', data=self.names)
+        t.add_column(col, index=0)
+
+        rows = [row for row in t if row['name/name'] in self.free]
+        return vstack(rows)
 
     @classmethod
     def from_dict(cls, val):
