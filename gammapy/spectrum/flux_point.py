@@ -405,6 +405,17 @@ class FluxPoints(object):
         """
         Drop upper limit flux points.
 
+        Examples
+        --------
+
+        from gammapy.spectrum import FluxPoints
+
+        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        flux_points = FluxPoints.read(filename)
+
+        print(flux_points)
+        print(flux_points.drop_ul())
+
         Returns
         -------
         flux_points : `FluxPoints`
