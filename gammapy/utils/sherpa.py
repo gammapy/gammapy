@@ -22,7 +22,7 @@ SHERPA_OPTMETHODS = {'simplex': NelderMead(),
 class SherpaDataWrapper(Data):
     def __init__(self, gp_data, name='GPData'):
         # sherpa does some magic here: it sets class attributes from constructor
-        # arguments so `gp-data` will be available later on the instance.
+        # arguments so `gp_data` will be available later on the instance.
         self._data_dummy = np.empty_like(gp_data.e_ref)
         BaseData.__init__(self)
 
@@ -45,7 +45,9 @@ class SherpaStatWrapper(Likelihood):
             part._update_pars()
             gp_models.append(part.gp_model)
         gp_datasets = [_.gp_data for _ in data.datasets]
-        return self.gp_stat(gp_datasets, gp_models)
+        # right now we only pass the first dataset and model
+        # but in general we'd like pass all
+        return self.gp_stat(gp_datasets[0], gp_models[0])
 
     def calc_stat_error(self):
         staterr = np.array([np.nan])
@@ -77,7 +79,9 @@ class SherpaModelWrapper(ArithmeticModel):
 
     def _update_pars(self):
         for par in self.pars:
-            self.gp_model.parameters[par.name] = u.Quantity(par.val, par.units)
+            gp_par = self.gp_model.parameters[par.name]
+            gp_par.value = par.val
+            gp_par.unit = par.units
 
     def calc(self, pars, *args):
         return np.empty_like(args[0])

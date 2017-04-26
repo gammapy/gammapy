@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from gammapy.utils.scripts import make_path
@@ -233,7 +233,7 @@ class FluxPoints(object):
     def get_energy_err(self, sed_type=None):
         """Compute energy error for given sed type"""
         # TODO: sed_type is not used
-        if sed_type is None: 
+        if sed_type is None:
             sed_type = self.sed_type
         try:
             e_min = self.table['e_min'].quantity
@@ -246,7 +246,7 @@ class FluxPoints(object):
 
     def get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
-        if sed_type is None: 
+        if sed_type is None:
             sed_type = self.sed_type
         try:
             # assymmetric error
@@ -400,6 +400,63 @@ class FluxPoints(object):
             Upper bound of energy bin.
         """
         return self.table['e_max'].quantity
+
+    def drop_ul(self):
+        """
+        Drop upper limit flux points.
+
+        Examples
+        --------
+
+        from gammapy.spectrum import FluxPoints
+
+        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        flux_points = FluxPoints.read(filename)
+
+        print(flux_points)
+        print(flux_points.drop_ul())
+
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Flux points with upper limit points removed.
+        """
+        table = self.table.copy()
+        table_drop_ul = table[~self._is_ul]
+        return self.__class__(table_drop_ul)
+
+    @classmethod
+    def stack(cls, flux_points):
+        """
+        Create a new `FluxPoints` object by stacking a list of existing
+        flux points.
+
+        The first `FluxPoints` object in the list is taken as a reference to infer
+        column names and units for the stacked object.
+
+        Parameters
+        ----------
+        flux_points : list of `FluxPoints` objects
+            List of flux points to stack.
+
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Flux points without upper limit points.
+        """
+        tables = []
+        reference = flux_points[0].table
+
+        for _ in flux_points:
+            table = _.table
+            for colname in reference.colnames:
+                column = reference[colname]
+                if column.unit:
+                    table[colname] = table[colname].quantity.to(column.unit)
+            tables.append(table[reference.colnames])
+        table_stacked = vstack(tables)
+        table_stacked.meta['SED_TYPE'] = reference.meta['SED_TYPE']
+        return cls(table_stacked)
 
 
 def compute_flux_points_dnde(flux_points, model, method='lafferty'):
@@ -668,5 +725,190 @@ class SEDLikelihoodProfile(object):
         import matplotlib.pyplot as plt
         if ax is None:
             ax = plt.gca()
-
         # TODO
+
+
+def chi2_flux_points(flux_points, gp_model):
+    """
+    Chi2 statistics for a list of flux points and model.
+    """
+    model = gp_model(flux_points.e_ref)
+    data = flux_points.table['dnde'].quantity
+    data_err = flux_points.table['dnde_err'].quantity
+    stat_per_bin = ((data - model) / data_err).value ** 2
+    return np.nansum(stat_per_bin), stat_per_bin
+
+
+def chi2_flux_points_assym(flux_points, gp_model):
+    """
+    Assymetric chi2 statistics for a list of flux points and model.
+    """
+    model = gp_model(flux_points.e_ref)
+    data = flux_points.table['dnde'].quantity
+
+    data_errp = flux_points.table['dnde_errp'].quantity
+    data_errn = flux_points.table['dnde_errn'].quantity
+
+    data_err = np.where(model > data, data_errp, data_errn)
+    stat_per_bin = ((data - model) / data_err).value ** 2
+
+    return np.nansum(stat_per_bin), stat_per_bin
+
+
+
+class FluxPointsFitter(object):
+    """
+    Fit a set of flux points with a parametric model.
+
+    Parameters
+    ----------
+    optimizer : ['simplex', 'moncar', 'gridsearch']
+        Which optmizer to use.
+    error_estimator : ['covar']
+        Which error estimator to use.
+    ul_handling : ['ignore']
+        How to handle flux point upper limits in the fit.
+
+    Examples
+    --------
+
+    from astropy import units as u
+    from gammapy.spectrum import FluxPoints, FluxPointsFitter
+    from gammapy.spectrum.models import Powerlaw
+
+    filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+    flux_points = FluxPoints.read(filename)
+    fitter = FluxPointsFitter()
+
+    pars = {}
+    pars['index'] = 2. * u.Unit('')
+    pars['amplitude'] = 1E-12 * u.Unit('cm-2 s-1 TeV-1')
+    pars['reference'] = 1. * u.TeV
+    pwl = PowerLaw(**pars)
+
+    result = fitter.run(flux_points, pwl)
+    """
+    def __init__(self, stat='chi2', optimizer='simplex', error_estimator='covar',
+                 ul_handling='ignore'):
+        if stat == 'chi2':
+            self.stat = chi2_flux_points
+        elif stat == 'chi2assym':
+            self.stat = chi2_flux_points_assym
+        else:
+            raise ValueError("'{stat}' is not a valid fit statistic, please choose"
+                             " either 'chi2' or 'chi2assym'")
+
+        if not ul_handling == 'ignore':
+            raise NotImplementedError('No handling of upper limits implemented.')
+
+        self.parameters = OrderedDict(optimizer=optimizer,
+                                      error_estimator=error_estimator,
+                                      ul_handling=ul_handling)
+
+    def _setup_sherpa_fit(self, data, model):
+        """Fit flux point using sherpa"""
+        from sherpa.fit import Fit
+        from sherpa.data import DataSimulFit
+        from ..utils.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
+                                    SherpaModelWrapper, SHERPA_OPTMETHODS)
+
+        optimizer = self.parameters['optimizer']
+
+        if data.sed_type == 'dnde':
+            data = SherpaDataWrapper(data)
+        else:
+            raise NotImplementedError('Only fitting of differetial flux points data'
+                                      'is supported.')
+
+        stat = SherpaStatWrapper(self.stat)
+        data = DataSimulFit(name='GPFluxPoints', datasets=[data])
+        method = SHERPA_OPTMETHODS[optimizer]
+        models = SherpaModelWrapper(model)
+        return Fit(data=data, model=models, stat=stat, method=method)
+
+    def fit(self, data, model):
+        """
+        Fit given model to data.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+
+        Returns
+        -------
+        best_fit_model : `SpectralModel`
+            Best fit model.
+        """
+        p = self.parameters
+
+        #TODO: make copy of model?
+        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch']:
+            sherpa_fitter = self._setup_sherpa_fit(data, model)
+            sherpa_fitter.fit()
+        else:
+            raise ValueError('Not a valid optimizer')
+
+        return model
+
+    def statval(self, data, model):
+        """
+        Compute statval for given model and data.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+        """
+        return self.stat(data, model)
+
+    def dof(self, data, model):
+        """
+        Return degrees of freedom.
+
+        Parameters
+        ----------
+        model : `SpectralModel`
+            Spectral model instance
+        """
+        m = len(model.parameters.free)
+        n = len(data.table)
+        return n - m
+
+    def estimate_errors(self, data, model):
+        """
+        Estimate errors on best fit parameters.
+        """
+        p = self.parameters
+        sherpa_fitter = self._setup_sherpa_fit(data, model)
+        result = sherpa_fitter.est_errors()
+        covariance = result.extra_output
+        covar_axis = model.parameters.free
+        model.parameters.set_parameter_covariance(covariance, covar_axis)
+        return model
+
+    def run(self, data, model):
+        """
+        Run all fitting adn extra information steps.
+
+        Parameters
+        ----------
+        data : list of `~gammapy.spectrum.FluxPoints`
+            Flux points.
+        model : `SpectralModel`
+            Spectral model instance
+
+        Returns
+        -------
+        result : OrderedDict
+            Dictionary with fit results and debug output.
+        """
+        result = OrderedDict()
+
+        best_fit_model = self.fit(data, model)
+        best_fit_model = self.estimate_errors(data, best_fit_model)
+        result['best_fit_model'] = best_fit_model
+        result['dof'] = self.dof(data, model)
+        result['statval'] = self.statval(data, model)[0]
+        result['statval/dof'] = result['statval'] / result['dof']
+        return result
