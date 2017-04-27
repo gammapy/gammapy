@@ -33,7 +33,6 @@ __all__ = [
     'ZMIN', 'ZMAX',
 ]
 
-
 # Simulation range used for random number drawing
 RMIN, RMAX = Quantity([0, 20], 'kpc')
 ZMIN, ZMAX = Quantity([-0.5, 0.5], 'kpc')
@@ -499,7 +498,7 @@ class FaucherSpiral(LogSpiral):
 
 
 class ValleeSpiral(LogSpiral):
-    r"""Milky way spiral arm model from Vallee (2008).
+    """Milky way spiral arm model from Vallee (2008).
 
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
@@ -507,9 +506,9 @@ class ValleeSpiral(LogSpiral):
     p = Quantity(12.8, 'deg')  # pitch angle in deg
     m = 4  # number of spiral arms
     r_sun = Quantity(7.6, 'kpc')  # distance sun to Galactic center in kpc
-    r_0 = Quantity(2.1, 'kpc')   # spiral inner radius in kpc
+    r_0 = Quantity(2.1, 'kpc')  # spiral inner radius in kpc
     theta_0 = Quantity(-20, 'deg')  # Norma spiral arm start angle
-    bar_radius = Quantity(3.0, 'kpc')   # Radius of the galactic bar (not equal r_0!)
+    bar_radius = Quantity(3.0, 'kpc')  # Radius of the galactic bar (not equal r_0!)
 
     spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
 

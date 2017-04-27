@@ -251,6 +251,7 @@ def test_compute_npred_cube():
 
     assert_allclose(actual, desired, rtol=0.001)
 
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_bin_events_in_cube():
@@ -268,10 +269,9 @@ def test_bin_events_in_cube():
 
     # check against event list energy selection
     counts_image = SkyImage.empty(dtype='int', nxpix=200, nypix=200, xref=meta['RA_OBJ'],
-                       yref=meta['DEC_OBJ'], coordsys='CEL', proj='CAR')
+                                  yref=meta['DEC_OBJ'], coordsys='CEL', proj='CAR')
     events = events.select_energy([0.5, 80] * u.TeV)
     counts_image.fill_events(events)
 
     assert counts.data.sum() == 1233
     assert counts.data.sum() == counts_image.data.sum()
-

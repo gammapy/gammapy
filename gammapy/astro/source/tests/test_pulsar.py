@@ -71,8 +71,7 @@ def test_Pulsar_energy_integrated():
     for t_ in time:
         energy = quad(lumi, 0, t_.cgs.value, epsrel=0.01)[0]
         energies.append(energy)
-    # The last value is quite inaccurate, because integration is over
-    # several decades
+    # The last value is quite inaccurate, because integration is over several decades
     assert_allclose(energies, pulsar.energy_integrated(time).value, rtol=0.2)
 
 

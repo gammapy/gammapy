@@ -125,7 +125,6 @@ class PWN(object):
         t : `~astropy.units.Quantity`
             Time after birth of the SNR.
         """
-
         if t is not None:
             validate_physical_type('t', t, 'time')
         elif hasattr(self, 'age'):
