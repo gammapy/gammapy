@@ -1,31 +1,32 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function
-import os
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
-from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.extern import six
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, val_to_pix
 
+__all__ = [
+    'WCSGeom',
+]
+
 
 class WCSGeom(MapGeom):
-    """Class that encapsulates both a WCS object and the definition of
+    """Container for WCS object and image extent.
+    
+    Class that encapsulates both a WCS object and the definition of
     the image extent (number of pixels).  Also provides a number of
     helper methods for accessing the properties of the WCS object.
 
     Parameters
     ----------
     wcs : `~astropy.wcs.WCS`
-        WCS projection object.
-
+        WCS projection object
     npix : list
-        Number of pixels in each spatial dimension.
-
+        Number of pixels in each spatial dimension
     axes : list
-        Axes for non-spatial dimensions.
+        Axes for non-spatial dimensions
     """
 
     def __init__(self, wcs, npix, axes=None):
@@ -33,7 +34,7 @@ class WCSGeom(MapGeom):
         self._npix = np.array(npix, ndmin=1)
         self._coordsys = get_coordsys(wcs)
         self._axes = axes if axes is not None else []
-        
+
         cdelt0 = np.abs(self.wcs.wcs.cdelt[0])
         cdelt1 = np.abs(self.wcs.wcs.cdelt[1])
 
@@ -48,28 +49,32 @@ class WCSGeom(MapGeom):
 
     @property
     def wcs(self):
+        """TODO."""
         return self._wcs
 
     @property
     def coordsys(self):
+        """TODO."""
         return self._coordsys
 
     @property
     def skydir(self):
-        """Return the sky coordinate of the image center."""
+        """Sky coordinate of the image center (TODO: type?)."""
         return self._skydir
 
     @property
     def width(self):
-        """Return the dimensions of the image."""
+        """Dimensions of the image (TODO: type?)."""
         return self._width
 
     @property
     def npix(self):
+        """TODO."""
         return self._npix
 
     @classmethod
     def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT'):
+        """TODO."""
         npix = np.array(npix, ndmin=1)
         crpix = npix / 2. + 0.5
         wcs = create_wcs(skydir, coordsys, projection,
@@ -80,16 +85,15 @@ class WCSGeom(MapGeom):
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
                axes=None):
-
+        """TODO."""
         header = make_header(nxpix, nypix, binsz, xref, yref,
                              proj, coordsys, xrefpix, yrefpix)
-        w = WCS(w.to_header())
-        return cls(w, [nxpix,nypix], axes)
-    
-    def distance_to_edge(self, skydir):
-        """Return the angular distance from the given direction and
-        the edge of the projection."""
+        wcs = WCS(header)
+        return cls(wcs, [nxpix, nypix], axes)
 
+    def distance_to_edge(self, skydir):
+        """Angular distance from the given direction and
+        the edge of the projection."""
         xpix, ypix = skydir.to_pixel(self.wcs, origin=0)
         deltax = np.array((xpix - self._pix_center[0]) * self._pix_size[0],
                           ndmin=1)
@@ -112,16 +116,19 @@ class WCSGeom(MapGeom):
         return delta
 
     def coord_to_pix(self, coords):
-
-        c = MapCoords.create(coords)        
+        """TODO.
+        """
+        c = MapCoords.create(coords)
         pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
         for i, ax in enumerate(self.axes):
-            pix += val_to_pix(ax, c[i+2])
+            pix += val_to_pix(ax, c[i + 2])
         return pix
 
     def pix_to_coord(self, pix):
+        """TODO.
+        """
         pass
-    
+
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
                cdelt=1.0, crpix=1., naxis=2, energies=None):
@@ -130,13 +137,13 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     Parameters
     ----------
     skydir : `~astropy.coordinates.SkyCoord`
-        Sky coordinate of the WCS reference point.
+        Sky coordinate of the WCS reference point
     coordsys : str
-
+        TODO
     projection : str
-
+        TODO
     cdelt : float
-
+        TODO
     crpix : float or (float,float)
         In the first case the same value is used for x and y axes
     naxis : {2, 3}
@@ -144,21 +151,20 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     energies : array-like
        Array of energies that defines the third dimension if naxis=3.
     """
-
     w = WCS(naxis=naxis)
 
     if coordsys == 'CEL':
-        w.wcs.ctype[0] = 'RA---%s' % (projection)
-        w.wcs.ctype[1] = 'DEC--%s' % (projection)
+        w.wcs.ctype[0] = 'RA---{}'.format(projection)
+        w.wcs.ctype[1] = 'DEC--{}'.format(projection)
         w.wcs.crval[0] = skydir.icrs.ra.deg
         w.wcs.crval[1] = skydir.icrs.dec.deg
     elif coordsys == 'GAL':
-        w.wcs.ctype[0] = 'GLON-%s' % (projection)
-        w.wcs.ctype[1] = 'GLAT-%s' % (projection)
+        w.wcs.ctype[0] = 'GLON-{}'.format(projection)
+        w.wcs.ctype[1] = 'GLAT-{}'.format(projection)
         w.wcs.crval[0] = skydir.galactic.l.deg
         w.wcs.crval[1] = skydir.galactic.b.deg
     else:
-        raise Exception('Unrecognized coordinate system.')
+        raise ValueError('Unrecognized coordinate system.')
 
     try:
         w.wcs.crpix[0] = crpix[0]
@@ -188,11 +194,11 @@ def wcs_add_energy_axis(wcs, energies):
     wcs : `~astropy.wcs.WCS`
         WCS
     energies : array-like
-       Array of energies.
+        Array of energies
     """
     if wcs.naxis != 2:
-        raise Exception(
-            'wcs_add_energy_axis, input WCS naxis != 2 %i' % wcs.naxis)
+        raise Exception('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
+
     w = WCS(naxis=3)
     w.wcs.crpix[0] = wcs.wcs.crpix[0]
     w.wcs.crpix[1] = wcs.wcs.crpix[1]
@@ -202,11 +208,13 @@ def wcs_add_energy_axis(wcs, energies):
     w.wcs.crval[1] = wcs.wcs.crval[1]
     w.wcs.cdelt[0] = wcs.wcs.cdelt[0]
     w.wcs.cdelt[1] = wcs.wcs.cdelt[1]
+
     w = WCS(w.to_header())
     w.wcs.crpix[2] = 1
     w.wcs.crval[2] = energies[0]
     w.wcs.cdelt[2] = energies[1] - energies[0]
     w.wcs.ctype[2] = 'Energy'
+
     return w
 
 
@@ -214,7 +222,6 @@ def offset_to_sky(skydir, offset_lon, offset_lat,
                   coordsys='CEL', projection='AIT'):
     """Convert a cartesian offset (X,Y) in the given projection into
     a pair of spherical coordinates."""
-
     offset_lon = np.array(offset_lon, ndmin=1)
     offset_lat = np.array(offset_lat, ndmin=1)
 
@@ -225,9 +232,10 @@ def offset_to_sky(skydir, offset_lon, offset_lat,
 
 
 def sky_to_offset(skydir, lon, lat, coordsys='CEL', projection='AIT'):
-    """Convert sky coordinates to a projected offset.  This function
-    is the inverse of offset_to_sky."""
-
+    """Convert sky coordinates to a projected offset.
+    
+    This function is the inverse of offset_to_sky.
+    """
     w = create_wcs(skydir, coordsys, projection)
     skycrd = np.vstack((lon, lat)).T
 
@@ -241,7 +249,6 @@ def offset_to_skydir(skydir, offset_lon, offset_lat,
                      coordsys='CEL', projection='AIT'):
     """Convert a cartesian offset (X,Y) in the given projection into
     a SkyCoord."""
-
     offset_lon = np.array(offset_lon, ndmin=1)
     offset_lat = np.array(offset_lat, ndmin=1)
 
@@ -257,14 +264,14 @@ def skydir_to_pix(skydir, wcs):
     Parameters
     ----------
     skydir : `~astropy.coordinates.SkyCoord`
-
+        TODO
     wcs : `~astropy.wcs.WCS`
+        TODO
 
     Returns
     -------
     xp, yp : `numpy.ndarray`
        The pixel coordinates
-
     """
     if len(skydir.shape) > 0 and len(skydir) == 0:
         return [np.empty(0), np.empty(0)]
@@ -280,22 +287,18 @@ def pix_to_skydir(xpix, ypix, wcs):
 
     Parameters
     ----------
-    xpix : `numpy.ndarray`
-
-    ypix : `numpy.ndarray`
-
+    xpix, ypix : `numpy.ndarray`
+        TODO        
     wcs : `~astropy.wcs.WCS`
-
+        TODO
     """
     xpix = np.array(xpix)
     ypix = np.array(ypix)
 
     if xpix.ndim > 0 and len(xpix) == 0:
-        return SkyCoord(np.empty(0), np.empty(0), unit='deg',
-                        frame='icrs')
+        return SkyCoord(np.empty(0), np.empty(0), unit='deg', frame='icrs')
 
-    return SkyCoord.from_pixel(xpix, ypix, wcs,
-                               origin=0).transform_to('icrs')
+    return SkyCoord.from_pixel(xpix, ypix, wcs, origin=0).transform_to('icrs')
 
 
 def get_coordsys(wcs):
@@ -304,13 +307,12 @@ def get_coordsys(wcs):
     elif 'GLON' in wcs.wcs.ctype[0]:
         return 'GAL'
     else:
-        raise Exception('Unrecognized WCS coordinate system.')
+        raise ValueError('Unrecognized WCS coordinate system.')
 
 
 def wcs_to_axes(w, npix):
     """Generate a sequence of bin edge vectors corresponding to the
     axes of a WCS object."""
-
     npix = npix[::-1]
 
     x = np.linspace(-(npix[0]) / 2., (npix[0]) / 2.,
@@ -334,7 +336,7 @@ def wcs_to_coords(w, shape):
     elif w.naxis == 3:
         z, y, x = wcs_to_axes(w, shape)
     else:
-        raise Exception("Wrong number of WCS axes %i" % w.naxis)
+        raise Exception('WCS naxis must be 2 or 3. Got: {}'.format(w.naxis))
 
     x = 0.5 * (x[1:] + x[:-1])
     y = 0.5 * (y[1:] + y[:-1])
@@ -363,8 +365,7 @@ def wcs_to_skydir(wcs):
     lat = wcs.wcs.crval[1]
     coordsys = get_coordsys(wcs)
     if coordsys == 'GAL':
-        return SkyCoord(lon, lat, unit='deg',
-                        frame='galactic').transform_to('icrs')
+        return SkyCoord(lon, lat, unit='deg', frame='galactic').transform_to('icrs')
     else:
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
@@ -376,5 +377,4 @@ def is_galactic(wcs):
     elif coordsys == 'CEL':
         return False
     else:
-        raise Exception('Unsupported coordinate system: %s' % coordsys)
-
+        raise ValueError('Unsupported coordinate system: {}'.format(coordsys))
