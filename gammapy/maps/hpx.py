@@ -631,10 +631,10 @@ class HPXGeom(MapGeom):
         return self.__class__(self.nside, not self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
-    def copy_and_drop_energy(self):
+    def copy_and_drop_axes(self):
         """
         """
-        return self.__class__(self.nside, not self.nest, self.coordsys,
+        return self.__class__(self.nside[0], not self.nest, self.coordsys,
                               self.region, None, self.conv)
 
     @classmethod
@@ -653,16 +653,13 @@ class HPXGeom(MapGeom):
         coordsys : str
            "CEL" or "GAL"
 
-        order    : int
-           nside = 2**order
-
         region   : str
             Allows for partial-sky mappings
 
         axes    : list
             List of axes for non-spatial dimensions.
         """
-        return cls(nside, nest, coordsys, region, zbins, conv)
+        return cls(nside, nest, coordsys, region, axes, conv)
 
     @staticmethod
     def identify_HPX_convention(header):
@@ -715,12 +712,9 @@ class HPXGeom(MapGeom):
         axes  : list
             List of non-spatial axes.
         """
-        convname = HPX.identify_HPX_convention(header)
+        convname = HPXGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
 
-        if conv.convname != 'GALPROP':
-            if header["PIXTYPE"] != "HEALPIX":
-                raise Exception("PIXTYPE != HEALPIX")
         if header["PIXTYPE"] != "HEALPIX":
             raise Exception("PIXTYPE != HEALPIX")
         if header["ORDERING"] == "RING":
@@ -730,16 +724,13 @@ class HPXGeom(MapGeom):
         else:
             raise Exception("ORDERING != RING | NESTED")
 
-        try:
-            order = header["ORDER"]
-        except KeyError:
-            order = -1
-
-        if order < 0:
-            nside = header["NSIDE"]
+        if 'NSIDE' in header:
+            nside = header['NSIDE']
+        elif 'ORDER' in header:
+            nside = 2**header['ORDER']
         else:
-            nside = -1
-
+            raise Exception('Failed to extract NSIDE or ORDER.')
+        
         try:
             coordsys = header[conv.coordsys]
         except KeyError:
@@ -753,13 +744,13 @@ class HPXGeom(MapGeom):
             except KeyError:
                 region = None
 
-        return cls(nside, nest, coordsys, order, region, zbins=zbins, conv=conv)
+        return cls(nside, nest, coordsys, region, axes=axes, conv=conv)
 
     def make_header(self):
         """ Builds and returns FITS header for this HEALPix map """
         cards = [fits.Card("TELESCOP", "GLAST"),
                  fits.Card("INSTRUME", "LAT"),
-                 fits.Card(self._conv.coordsys, self._coordsys),
+                 fits.Card(self._conv.coordsys, self.coordsys),
                  fits.Card("PIXTYPE", "HEALPIX"),
                  fits.Card("ORDERING", self.ordering),
                  fits.Card("ORDER", self._order[0]),
@@ -768,102 +759,52 @@ class HPXGeom(MapGeom):
                  fits.Card("LASTPIX", self._maxpix[0] - 1),
                  fits.Card("HPX_CONV", self._conv.convname)]
 
-        if self._coordsys == "CEL":
+        if self.coordsys == "CEL":
             cards.append(fits.Card("EQUINOX", 2000.0,
                                    "Equinox of RA & DEC specifications"))
 
-        if self._region:
+        if self.region:
             cards.append(fits.Card("HPX_REG", self._region))
 
         header = fits.Header(cards)
         return header
 
-    def make_hdu(self, data, **kwargs):
-        """ Builds and returns a FITs HDU with input data
-
-        data      : The data begin stored
-
-        Keyword arguments
-        -------------------
-        extname   : The HDU extension name        
-        colbase   : The prefix for column names
-        """
-        shape = data.shape
-        extname = kwargs.get('extname', self.conv.extname)
-
-        if shape[-1] != self._npix:
-            raise Exception(
-                "Size of data array does not match number of pixels")
-        cols = []
-        if self._region:
-            cols.append(fits.Column("PIX", "J", array=self._ipix))
-
-        if self.conv.convname == 'FGST_SRCMAP_SPARSE':
-            nonzero = data.nonzero()
-            nfilled = len(nonzero[0])
-            print ('Nfilled ', nfilled)
-            if len(shape) == 1:
-                nonzero = nonzero[0]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data[
-                            nonzero].astype(float).reshape(1, nfilled)))
-            elif len(shape) == 2:
-                nonzero = self._npix * nonzero[0] + nonzero[1]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data.flat[
-                            nonzero].astype(float).reshape(1, nfilled)))
-            else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
-
-        else:
-            if len(shape) == 1:
-                cols.append(fits.Column(self.conv.colname(
-                    indx=i + self.conv.firstcol), "E", array=data.astype(float)))
-            elif len(shape) == 2:
-                for i in range(shape[0]):
-                    cols.append(fits.Column(self.conv.colname(
-                        indx=i + self.conv.firstcol), "E", array=data[i].astype(float)))
-            else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
-
-        header = self.make_header()
-        hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
-
-        return hdu
-
-    def make_energy_bounds_hdu(self, extname="EBOUNDS"):
+    def make_ebounds_hdu(self, extname="EBOUNDS"):
         """ Builds and returns a FITs HDU with the energy bin boundries
 
-        extname   : The HDU extension name            
+        Parameters
+        ----------
+        extname   : str
+            The HDU extension name            
         """
-        if self._zbins is None:
-            return None
+        emin = self._axes[:-1]
+        emax = self._axes[1:]
+        
         cols = [fits.Column("CHANNEL", "I", array=np.arange(1, len(self._zbins + 1))),
-                fits.Column("E_MIN", "1E", unit='keV',
-                            array=1000 * self._zbins[0:-1]),
-                fits.Column("E_MAX", "1E", unit='keV', array=1000 * self._zbins[1:])]
-        hdu = fits.BinTableHDU.from_columns(
-            cols, self.make_header(), name=extname)
+                fits.Column("E_MIN", "1E", unit='keV', array=1000 * emin),
+                fits.Column("E_MAX", "1E", unit='keV', array=1000 * emax)]
+        hdu = fits.BinTableHDU.from_columns(cols, self.make_header(), name=extname)
         return hdu
 
     def make_energies_hdu(self, extname="ENERGIES"):
         """ Builds and returns a FITs HDU with the energy bin boundries
 
-        extname   : The HDU extension name            
+        Parameters
+        ----------
+        extname   : str
+            The HDU extension name            
         """
-        if self._evals is None:
-            return None
-        cols = [fits.Column("ENERGY", "1E", unit='MeV',
-                            array=self._evals)]
+        ectr = np.sqrt(self._axes[1:]*self._axes[:-1])        
+        cols = [fits.Column("ENERGY", "1E", unit='MeV', array=ectr)]
         hdu = fits.BinTableHDU.from_columns(
             cols, self.make_header(), name=extname)
         return hdu
 
-    def write_fits(self, data, outfile, extname="SKYMAP", clobber=True):
+    def write(self, data, outfile, extname="SKYMAP", clobber=True):
         """ Write input data to a FITS file
 
+        Parameters
+        ----------
         data      : The data begin stored
         outfile   : The name of the output file
         extname   : The HDU extension name        
@@ -989,7 +930,7 @@ class HPXGeom(MapGeom):
         else:
             raise Exception("Did not recognize region type %s" % tokens[0])
 
-    def make_wcs(self, naxis=2, proj='CAR', energies=None, oversample=2):
+    def make_wcs(self, naxis=2, proj='CAR', axes=None, oversample=2):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
@@ -1151,7 +1092,7 @@ class HpxToWcsMapping(object):
         HEALPix region"""
         return self._valid
 
-    def write_to_fitsfile(self, fitsfile, clobber=True):
+    def write(self, fitsfile, clobber=True):
         """Write this mapping to a FITS file, to avoid having to recompute it
         """
         from fermipy.skymap import Map
@@ -1177,11 +1118,11 @@ class HpxToWcsMapping(object):
         index_map = Map.read(fitsfile)
         mult_map = Map.read(fitsfile, hdu=1)
         ff = fits.open(fitsfile)
-        hpx = HPX.from_header(ff[0])
+        hpx = HPXGeom.from_header(ff[0])
         mapping_data = dict(ipix=index_map.counts,
                             mult_val=mult_map.counts,
                             npix=mult_map.counts.shape)
-        return HpxToWcsMapping(hpx, index_map.wcs, mapping_data)
+        return cls(hpx, index_map.wcs, mapping_data)
 
     def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
         """Fills the wcs map from the hpx data using the pre-calculated

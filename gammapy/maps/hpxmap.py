@@ -192,17 +192,6 @@ class HpxMap(object):
         """
         return
 
-    @abc.abstractmethod
-    def interpolate(self, coords):
-        """Interpolate map values at the given coordinates.
-
-        Parameters
-        ----------
-        coords : tuple
-
-        """
-        return
-
     def swap_scheme(self):
         """
         """
@@ -246,3 +235,63 @@ class HpxMap(object):
                                                         order_out=new_hpx.ordering,
                                                         power=power) for i in range(shape[0])])
         return HpxMap(new_data, new_hpx)
+
+    def make_hdu(self, **kwargs):
+        """ Builds and returns a FITs HDU with input data
+
+        Parameters
+        ----------
+        extname   : str
+            The HDU extension name.
+
+        colbase   : str
+            The prefix for column names
+        """
+        data = self.data
+        shape = data.shape
+        extname = kwargs.get('extname', self.conv.extname)
+        convname = kwargs.get('convname', self.conv.convname)
+        header = self.hpx.make_header()
+        
+        if shape[-1] != self._npix:
+            raise Exception(
+                "Size of data array does not match number of pixels")
+        cols = []
+        if self._region:
+            header['INDXSCHM'] = 'EXPLICIT'
+            cols.append(fits.Column("PIX", "J", array=self._ipix))
+        else:
+            header['INDXSCHM'] = 'IMPLICIT'
+                        
+        if convname == 'FGST_SRCMAP_SPARSE':
+            nonzero = data.nonzero()
+            nfilled = len(nonzero[0])
+            if len(shape) == 1:
+                nonzero = nonzero[0]
+                cols.append(fits.Column("KEY", "%iJ" %
+                                        nfilled, array=nonzero.reshape(1, nfilled)))
+                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data[
+                            nonzero].astype(float).reshape(1, nfilled)))
+            elif len(shape) == 2:
+                nonzero = self._npix * nonzero[0] + nonzero[1]
+                cols.append(fits.Column("KEY", "%iJ" %
+                                        nfilled, array=nonzero.reshape(1, nfilled)))
+                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data.flat[
+                            nonzero].astype(float).reshape(1, nfilled)))
+            else:
+                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+
+        else:
+            if len(shape) == 1:
+                cols.append(fits.Column(self.conv.colname(
+                    indx=i + self.conv.firstcol), "E", array=data.astype(float)))
+            elif len(shape) == 2:
+                for i in range(shape[0]):
+                    cols.append(fits.Column(self.conv.colname(
+                        indx=i + self.conv.firstcol), "E", array=data[i].astype(float)))
+            else:
+                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+
+        hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
+
+        return hdu

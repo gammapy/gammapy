@@ -6,6 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 
 from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order
@@ -179,3 +180,32 @@ def test_make_hpx_to_wcs_mapping():
                                15, 15,  6,  6, 15, 15, 15,  6],
                               [67, 46, 46, 46, 67, 46, 46, 28,
                                45, 45, 28, 28, 45, 45, 45, 28]]))
+
+def test_hpx_from_header():
+
+    pars = {'HPX_REG' : 'DISK(110.,75.,2.)', 'EXTNAME' : 'SKYMAP',
+            'NSIDE' : 2**6, 'ORDER' : 6, 'PIXTYPE' : 'HEALPIX',
+            'ORDERING' : 'RING', 'COORDSYS' : 'CEL',
+            'TTYPE1' : 'PIX', 'TFORM1' : 'K',
+            'TTYPE2' : 'CHANNEL1', 'TFORM2' : 'D',
+            'INDXSCHM' : 'EXPLICIT'}
+    header = fits.Header()
+    header.update(pars)
+    hpx = HPXGeom.from_header(header)
+
+    assert(hpx.coordsys == pars['COORDSYS'])
+    assert(hpx.nest == False)
+    assert_allclose(hpx.nside,np.array([64]))
+
+
+def test_hpx_make_header():
+
+    hpx = HPXGeom(16, False, 'GAL')
+    header = hpx.make_header()
+
+
+def test_hpx_make_header():
+
+    hpx = HPXGeom(16, False, 'GAL')
+    header = hpx.make_header()
+

@@ -7,10 +7,16 @@ from astropy.extern import six
 from .hpxmap import HpxMap
 
 class HpxCube(HpxMap):
-    """Representation of a 2D or 3D map using HEALPix. """
+    """Representation of a 2D or 3D map using HEALPix.
+
+    Parameters
+    ----------
+    hpx : `~gammapy.maps.hpx.HPXGeom`
+
+    data : `~numpy.ndarray`
+    """
 
     def __init__(self, hpx, data=None):
-        """ C'tor, fill with a counts vector and a HPX object """
 
         if data is None:
 
@@ -23,20 +29,20 @@ class HpxCube(HpxMap):
             data = np.zeros([npix[0]] + list(hpx._shape))
         
         HpxMap.__init__(self, hpx, data)
-        self._hpx = hpx
         self._wcs2d = None
         self._hpx2wcs = None
 
-    @property
-    def hpx(self):
-        return self._hpx
-
     @classmethod
-    def from_hdu(cls, hdu, ebins):
+    def from_hdu(cls, hdu, axes):
         """ Creates and returns an HpxCube object from a FITS HDU.
 
-        hdu    : The FITS
-        ebins  : Energy bin edges [optional]
+        Parameters
+        ----------
+        hdu   : `~astropy.fits.BinTableHDU`
+            The FITS HDU
+
+        axes  : list
+            List of axes for non-spatial dimensions.
         """
         hpx = HPX.create_from_header(hdu.header, ebins)
         colnames = hdu.columns.names
@@ -57,7 +63,7 @@ class HpxCube(HpxMap):
                 data[i, 0:] = hdu.data.field(cname)
         return cls(data, hpx)
 
-    def create_image_hdu(self, name=None, **kwargs):
+    def make_image_hdu(self, name=None, **kwargs):
         kwargs['extname'] = name
         return self.hpx.make_hdu(self.counts, **kwargs)
 
@@ -88,8 +94,8 @@ class HpxCube(HpxMap):
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
-        self._wcs_2d = self.hpx.make_wcs(2, proj=proj, oversample=oversample)
-        self._hpx2wcs = HpxToWcsMapping(self.hpx, self._wcs_2d)
+        self._wcs2d = self.hpx.make_wcs(2, proj=proj, oversample=oversample)
+        self._hpx2wcs = HpxToWcsMapping(self.hpx, self._wcs2d)
         wcs, wcs_data = self.to_cached_wcs(self.counts, sum_ebins,
                                            normalize)
         return wcs, wcs_data
@@ -106,7 +112,13 @@ class HpxCube(HpxMap):
         normalize  : bool
            True -> perserve integral by splitting HEALPix values between bins
 
-        returns (WCS object, np.ndarray() with reprojected data)
+        Returns 
+        -------
+        wcs : `~astropy.wcs.WCS`
+            WCS object.
+
+        data : `~numpy.ndarray`
+            Reprojected data.
         """
         if self._hpx2wcs is None:
             raise Exception('HpxMap.convert_to_cached_wcs() called '
@@ -146,7 +158,7 @@ class HpxCube(HpxMap):
             self._hpx2wcs.fill_wcs_map_from_hpx_data(
                 hpx_data, wcs_data, normalize)
             wcs_data.reshape(self._hpx2wcs.npix)
-            wcs = self._wcs_2d
+            wcs = self._wcs2d
 
         return wcs, wcs_data
 
@@ -164,7 +176,7 @@ class HpxCube(HpxMap):
         # We sum over axis 0 in the array, and drop the energy binning in the
         # hpx object
         return HpxCube(np.sum(self.counts, axis=0),
-                       self.hpx.copy_and_drop_energy())
+                       self.hpx.copy_and_drop_axes())
 
     def get_by_coord(self, coords, interp=None):
         pix = self.hpx.coord_to_pix(coords)
@@ -227,7 +239,7 @@ class HpxCube(HpxMap):
         return v.reshape(shape)
 
     def swap_scheme(self):
-        """
+        """Return a new map with the opposite scheme (ring or nested).
         """
         hpx_out = self.hpx.make_swapped_hpx()
         if self.hpx.nest:
@@ -245,7 +257,7 @@ class HpxCube(HpxMap):
         return self.__class__(hpx_out, data_out)
 
     def ud_grade(self, order, preserve_counts=False):
-        """
+        """Upgrade or downgrade the resolution of the map to the chosen order.
         """
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
@@ -257,16 +269,17 @@ class HpxCube(HpxMap):
             power = 0
 
         if len(shape) == 1:
-            new_data = hp.pixelfunc.ud_grade(self.counts,
+            new_data = hp.pixelfunc.ud_grade(self.data,
                                              nside_out=new_hpx.nside,
                                              order_in=new_hpx.ordering,
                                              order_out=ew_hpx.ordering,
                                              power=power)
         else:
-            new_data = [hp.pixelfunc.ud_grade(self.counts[i],
+            new_data = [hp.pixelfunc.ud_grade(self.data[i],
                                               nside_out=new_hpx.nside,
                                               order_in=new_hpx.ordering,
                                               order_out=new_hpx.ordering,
-                                              power=power) for i in range(shape[0])]
+                                              power=power)
+                        for i in range(shape[0])]
             new_data = np.vstack(new_data)
         return self.__class__(new_hpx, new_data)
