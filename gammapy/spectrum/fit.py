@@ -1,17 +1,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import os
 import copy
 import numpy as np
 import astropy.units as u
-from astropy.extern import six
-from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from .utils import CountsPredictor 
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
-    models,
 )
 from .. import stats
 
@@ -67,7 +63,7 @@ class SpectrumFit(object):
         self.fit_range = fit_range
         self.background_model = background_model
         self.method = method
-        self.err_method = method
+        self.err_method = err_method
 
         self._predicted_counts = None
         self._statval = None
@@ -237,6 +233,9 @@ class SpectrumFit(object):
         else:
             raise ValueError('Predicted counts {}'.format(counts))
 
+        # Apply AREASCAL column
+        counts *= obs.on_vector.areascal
+
         return counts
 
     def calc_statval(self):
@@ -248,10 +247,11 @@ class SpectrumFit(object):
         statval = list()
         for obs, npred in zip(self.obs_list, self.predicted_counts):
             on_stat, off_stat = self._calc_statval_helper(obs, npred)
-            stats = (on_stat, off_stat)
-            statval.append(stats)
+            statvals = (on_stat, off_stat)
+            statval.append(statvals)
         self._statval = statval
         self._restrict_statval()
+
 
     def _calc_statval_helper(self, obs, prediction):
         """Calculate statval one observation
@@ -311,7 +311,6 @@ class SpectrumFit(object):
     def _restrict_statval(self):
         """Apply valid fit range to statval
         """
-        restricted_statval = list()
         for statval, valid_range in zip(self.statval, self.bins_in_fit_range):
             # Find bins outside safe range
             idx = np.where(np.invert(valid_range))[0]
@@ -421,8 +420,6 @@ class SpectrumFit(object):
         else:
             bkg_model = None
 
-        covariance = None
-        covar_axis = None
         statname = self.stat
 
         for idx, obs in enumerate(self.obs_list):
@@ -460,7 +457,7 @@ class SpectrumFit(object):
         """Wrapper around Sherpa error estimator"""
         covar = self._sherpa_fit.est_errors()
         covar_axis = list()
-        for idx, par in enumerate(covar.parnames):
+        for par in covar.parnames:
             name = par.split('.')[-1]
             covar_axis.append(name)
         self.covar_axis = covar_axis
