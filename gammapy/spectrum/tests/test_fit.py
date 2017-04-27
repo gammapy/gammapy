@@ -130,7 +130,8 @@ class TestFit:
         obs = SpectrumObservation(on_vector=self.src)
         obs_list = SpectrumObservationList([obs])
 
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model)
+        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+                          stat=None, forward_folded=False)
         assert np.sum(fit._bins_in_fit_range[0]) == self.nbins
         assert_allclose(fit.true_fit_range[0][-1], 10 * u.TeV)
         assert_allclose(fit.true_fit_range[0][0], 100 * u.GeV)
@@ -220,11 +221,11 @@ class TestSpectralFit:
         desired = self.fit.result[0].npred_src
         assert_allclose(actual, desired)
 
-    @pytest.mark.xfail(reason='add stat per bin to fitresult in fit')
     def test_stats(self):
-        stats = self.result.stats_per_bin()
+        self.fit.fit()
+        stats = self.fit.result[0].stat_per_bin
         actual = np.sum(stats)
-        desired = self.result.statval
+        desired = self.fit.result[0].statval
         assert_allclose(actual, desired)
 
     def test_fit_range(self):
@@ -273,22 +274,6 @@ class TestSpectralFit:
 
         actual = fit.model.parameters['amplitude'].quantity
         assert_quantity_allclose(actual, 2.3621921135787887e-11 * u.Unit('cm-2 s-1 TeV-1'))
-
-        # Change energy binnig of one observation
-        # TODO: Does not work because the EDISP needs to be rebinned as well
-        # TODO: Add Rebin method to SpectrumObservation
-        #on_vector = self.obs_list[0].on_vector.rebin(2)
-        #off_vector = self.obs_list[0].off_vector.rebin(2)
-        #self.obs_list[0].on_vector = on_vector
-        #self.obs_list[0].off_vector = off_vector
-        #fit = SpectrumFit(self.obs_list, self.pwl)
-        #fit.fit()
-
-        # TODO: Check if such a large deviation makes sense
-        #assert_quantity_allclose(fit.model.parameters['index'].quantity,
-        #                         2.165179870753458)
-        #assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
-        #                         3.196423508937948e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()

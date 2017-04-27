@@ -78,9 +78,9 @@ class TestPHACountsSpectrum:
                                       energy_lo=self.binning.lower_bounds,
                                       energy_hi=self.binning.upper_bounds,
                                       quality=quality)
-        self.spec.meta.backscal = 0.3
+        self.spec.backscal = 0.3
         self.spec.obs_id = 42
-        self.spec.meta.livetime = 3 * u.h
+        self.spec.livetime = 3 * u.h
 
     def test_init_wo_unit(self):
         counts = [2, 5]
@@ -117,7 +117,7 @@ class TestPHACountsSpectrum:
                                  self.spec.energy.bins)
 
     def test_backscal_array(self, tmpdir):
-        self.spec.meta.backscal = np.arange(self.spec.energy.nbins)
+        self.spec.backscal = np.arange(self.spec.energy.nbins)
         table = self.spec.to_table()
         assert table['BACKSCAL'][2] == 2
 

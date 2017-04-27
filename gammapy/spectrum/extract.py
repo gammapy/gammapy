@@ -114,20 +114,18 @@ class SpectrumExtraction(object):
         log.info('Offset : {}\n'.format(offset))
         meta['OFFSET'] = offset.deg
 
-        # TODO: LIVETIME is called EXPOSURE in the OGIP standard
-        # meta['EXPOSURE'] = meta.pop('LIVETIME')
+        # LIVETIME is called EXPOSURE in the OGIP standard
+        meta['EXPOSURE'] = meta.pop('LIVETIME')
 
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            obs_id=meta['OBS_ID'],
-            livetime=meta['LIVETIME'] * u.s,
             meta=meta,)
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
-        self._off_vector.meta.backscal = bkg.a_off
+        self._off_vector.backscal = bkg.a_off
 
     def extract_counts(self, bkg):
         """Fill on and off vector for one observation
@@ -150,8 +148,7 @@ class SpectrumExtraction(object):
             observation
         """
         log.info('Extract IRFs')
-        # TODO: Change as soon as obs is upated
-        offset = self._on_vector.meta.meta['OFFSET'] * u.deg
+        offset = self._on_vector.offset
         self._aeff = obs.aeff.to_effective_area_table(offset,
                                                       energy=self.e_true)
         self._edisp = obs.edisp.to_energy_dispersion(offset,
@@ -176,7 +173,7 @@ class SpectrumExtraction(object):
         log.info('Apply containment correction')
         # First need psf
         angles = np.linspace(0., 1.5, 150) * u.deg
-        offset = self._on_vector.meta.meta['OFFSET'] * u.deg
+        offset = self._on_vector.offset
         if isinstance(obs.psf, PSF3D):
             psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
         else:
@@ -204,16 +201,22 @@ class SpectrumExtraction(object):
 
         Set the high and low energy threshold for each observation based on a
         chosen method.
+        
         Available methods for setting the low energy threshold
+
         * area_max : Set energy threshold at x percent of the maximum effective
-                     area (x given as kwargs['percent'])
+          area (x given as kwargs['percent'])
+
         Available methods for setting the high energy threshold
+
         * TBD
+
         Parameters
         ----------
         method_lo_threshold : {'area_max'}
             method for defining the low energy threshold
         """
+        # TODO: This should be a method on SpectrumObservation
         # TODO: define method for the high energy threshold
 
         # It is important to update the low and high threshold for ON and OFF
@@ -230,6 +233,7 @@ class SpectrumExtraction(object):
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk
+
         Parameters
         ----------
         outdir : `~gammapy.extern.pathlib.Path`
