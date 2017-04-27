@@ -14,13 +14,14 @@ from .. import SpectrumAnalysisIACT
 
 def get_config():
     """Get test config, extend to several scenarios"""
+    model = PowerLaw(index=2,
+                     amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                     reference=1 * u.TeV)
     test_conf = dict(
         outdir=None,
         background=dict(on_region=on_region()),
         extraction=dict(),
-        fit=dict(model=PowerLaw(index=2,
-                                amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                                reference=1 * u.TeV)),
+        fit=dict(model=model),
         fp_binning=EnergyBounds.equal_log_spacing(
             1, 50, 4, 'TeV')
     )

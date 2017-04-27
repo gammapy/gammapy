@@ -18,10 +18,24 @@ log = logging.getLogger(__name__)
 
 
 class SpectrumAnalysisIACT(object):
-    """High-level analysis class to perform a full 1D IACT spectral analysis
+    """High-level analysis class to perform a full 1D IACT spectral analysis.
 
-    Observation selected must have happend before. For a usage example see
-    :gp-extra-notebook:`spectrum_pipe`.
+    Observation selection must have happend before.
+    
+    For a usage example see :gp-extra-notebook:`spectrum_pipe`.
+
+    Config options:
+
+    * outdir : `~gammapy.extern.pathlib.Path`, str
+        Output folder, None means no output
+    * background : dict
+        Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`
+    * extraction : dict
+        Forwarded to `~gammapy.spectrum.SpectrumExtraction`
+    * fit : dict
+        Forwareded to `~gammapy.spectrum.SpectrumFit`
+    * fp_binning : `~astropy.units.Quantity`
+        Flux points binning
 
     Parameters
     ----------
@@ -42,13 +56,13 @@ class SpectrumAnalysisIACT(object):
         return ss
 
     def run(self):
-        """Run all steps"""
+        """Run all steps."""
         log.info("Running {}".format(self.__class__.__name__))
         self.run_extraction()
         self.run_fit()
 
     def run_extraction(self):
-        """Run all steps for the spectrum extraction """
+        """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
             obs_list=self.observations,
             **self.config['background'])
@@ -62,7 +76,7 @@ class SpectrumAnalysisIACT(object):
         self.extraction.run(outdir=self.config['outdir'])
 
     def run_fit(self):
-        """Run all step for the spectrum fit"""
+        """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations,
             **self.config['fit'])
@@ -72,6 +86,7 @@ class SpectrumAnalysisIACT(object):
         stacked_obs = self.extraction.observations.stack()
         self.egm = SpectrumEnergyGroupMaker(stacked_obs)
         self.egm.compute_groups_fixed(self.config['fp_binning'])
+
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
@@ -80,6 +95,7 @@ class SpectrumAnalysisIACT(object):
 
     @property
     def spectrum_result(self):
+        """`~gammapy.spectrum.SpectrumResult`"""
         return SpectrumResult(
             points=self.flux_point_estimator.flux_points,
             model=self.fit.result[0].model
