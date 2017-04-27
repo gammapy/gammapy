@@ -89,7 +89,7 @@ class TestFermi3FGLObject:
         assert 'flux_ul' in flux_points.table.colnames
 
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
-        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
     def test_lightcurve(self):
         lc = self.source.lightcurve
@@ -136,7 +136,7 @@ class TestFermi1FHLObject:
 
         actual = flux_points.table['flux_ul']
         desired = [np.nan, 2.081589e-11, 1.299698e-11] * u.Unit('cm-2 s-1')
-        assert_quantity_allclose(actual, desired, rtol=1E-5)
+        assert_quantity_allclose(actual, desired, rtol=1e-5)
 
 
 @requires_data('gammapy-extra')
@@ -211,7 +211,7 @@ class TestFermi3FHLObject:
         assert 'flux_ul' in flux_points.table.colnames
 
         desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10, 4.30737078315e-11]
-        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FHL)
     def test_crab_alias(self, name):

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency
@@ -80,7 +79,7 @@ class TestSourceCatalogObjectHGPS:
             Quantity(1.1561109149, 'TeV'),
         )
 
-        emin, emax = Quantity([1, 1E10], 'TeV')
+        emin, emax = Quantity([1, 1e10], 'TeV')
         desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
         assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
 
@@ -104,7 +103,7 @@ class TestSourceCatalogObjectHGPS:
             Quantity(0.081517637, 'TeV-1'),
         )
 
-        emin, emax = Quantity([1, 1E10], 'TeV')
+        emin, emax = Quantity([1, 1e10], 'TeV')
         desired = Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
         assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
 

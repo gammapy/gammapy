@@ -470,7 +470,7 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     model : `~gammapy.spectrum.SpectralModel`
         Spectral model assumption.  Note that the value of the amplitude parameter
         does not matter. Still it is recommended to use something with the right
-        scale and units. E.g. `amplitude = 1E-12 * u.Unit('cm-2 s-1 TeV-1')`
+        scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
     method : {'lafferty', 'log_center', 'table'}
         Flux points `e_ref` estimation method:
 
@@ -491,7 +491,7 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
     >>> from gammapy.spectrum.models import PowerLaw
     >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
     >>> flux_points = FluxPoints.read(filename)
-    >>> model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+    >>> model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
     >>> flux_point_dnde = compute_flux_points_dnde(flux_points, model=model)
     """
     input_table = flux_points.table

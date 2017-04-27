@@ -2,37 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_dependency
 from ..powerlaw import (
-    power_law_evaluate,
     power_law_pivot_energy,
-    power_law_df_over_f,
     power_law_flux,
     power_law_energy_flux,
     power_law_integral_flux,
-    power_law_g_from_f,
-    power_law_g_from_points,
-    power_law_I_from_points,
-    power_law_f_from_points,
-    power_law_f_with_err,
-    power_law_I_with_err,
     power_law_compatibility,
 )
-
-
-@pytest.mark.xfail
-def test_powerlaw():
-    e = 1
-    e1, e2 = 0.2, 1e42
-    f, f_err = 1, 0.1
-    g, g_err = 2, 0.1
-
-    I_unc, I_unc_err = power_law_I_with_err(e1, e2, e, f, f_err, g, g_err)
-    f_unc, f_unc_err = power_law_f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
-
-    # TODO: add asserts
 
 
 def test_one():
@@ -49,45 +28,11 @@ def test_powerlaw_energy_flux():
     e2 = Quantity(10, 'TeV')
     e = Quantity(1, 'TeV')
     g = 2.3
-    I = Quantity(1E-12, 'cm-2 s-1')
+    I = Quantity(1e-12, 'cm-2 s-1')
 
     val = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
     ref = Quantity(2.1615219876151536e-12, 'TeV cm-2 s-1')
     assert_quantity_allclose(val, ref)
-
-
-# TODO: failing assert at the moment -> fix!
-@pytest.mark.xfail
-@requires_dependency('uncertainties')
-def test_closure(g_error_mag=0):
-    """This test passes for g_error_mag == 0,
-    but fails for g_error_mag != 0, because
-    I and g have correlated errors, but we
-    effectively throw away these correlations!
-    """
-
-    # initialise random number generator
-    random_state = np.random.RandomState(seed=0)
-
-    npoints = 100
-    # Generate some random f values with errors
-    f_val = 10 ** (10 * random_state.uniform(size=npoints) - 5)
-    f_err = f_val * random_state.normal(1, 0.1, npoints)
-    # f = unumpy.uarray((f_val, f_err))
-
-    # Generate some random g values with errors
-    g_val = 5 * random_state.uniform(size=npoints)
-    g_err = g_val * random_state.normal(1, 0.1, npoints)
-    # g = unumpy.uarray((g_val, g_err))
-
-    I_val, I_err = power_law_I_with_err(f_val, f_err, g_val, g_err)
-    # I_val = unumpy.nominal_values(f)
-    # I_err = unumpy.std_devs(f)
-
-    f_val2, f_err2 = power_law_f_with_err(I_val, I_err, g_val, g_err)
-
-    assert_allclose(f_val, f_val2)
-    assert_allclose(f_err, f_err2)
 
 
 def test_e_pivot():

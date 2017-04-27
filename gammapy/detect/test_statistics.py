@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Functions to compute TS images.
-"""
+"""Functions to compute TS images."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from time import time
@@ -30,7 +28,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-FLUX_FACTOR = 1E-12
+FLUX_FACTOR = 1e-12
 MAX_NITER = 20
 CONTAINMENT = 0.8
 
@@ -506,7 +504,7 @@ def _root_amplitude(counts, background, model, flux):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return newton(_f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=1E-2), 0
+            return newton(_f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=1e-2), 0
         except RuntimeError:
             # Where the root finding fails NaN is set as amplitude
             return np.nan, MAX_NITER
@@ -547,7 +545,7 @@ def _root_amplitude_brentq(counts, background, model):
         warnings.simplefilter("ignore")
         try:
             result = brentq(_f_cash_root_cython, amplitude_min, amplitude_max, args=args,
-                            maxiter=MAX_NITER, full_output=True, rtol=1E-3)
+                            maxiter=MAX_NITER, full_output=True, rtol=1e-3)
             return max(result[0], amplitude_min_total), result[1].iterations
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude

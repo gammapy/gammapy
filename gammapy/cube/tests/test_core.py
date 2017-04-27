@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import textwrap
-
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-
 from regions import CircleSkyRegion
-
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
@@ -166,17 +163,18 @@ class TestSkyCube(object):
 @requires_dependency('scipy')
 class TestSkyCubeInterpolation(object):
     def setup(self):
-        # Set up powerlaw
-        amplitude = 1E-12 * u.Unit('1 / (s sr cm2)')
-        index = 2
-        emin = 1 * u.TeV
-        emax = 100 * u.TeV
-        pwl = PowerLaw2(amplitude, index, emin, emax)
+        emin, emax = 1 * u.TeV, 100 * u.TeV,
+        pwl = PowerLaw2(
+            amplitude=1e-12 * u.Unit('1 / (s sr cm2)'),
+            index=2,
+            emin=emin,
+            emax=emax,
+        )
 
-        # Set up data cube
         cube = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=3, nypix=3)
         data = pwl(cube.energies()).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
         cube.data = data
+
         self.sky_cube = cube
         self.pwl = pwl
 
@@ -212,7 +210,7 @@ class TestSkyCubeInterpolation(object):
     def test_analytical_npred_cube(self):
         # Choose exposure such that exposure * flux_int integrates to unity
         energies = [1, 100] * u.TeV
-        exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1E12)
+        exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1e12)
         exposure_cube.data *= u.Unit('cm2 s')
 
         solid_angle = exposure_cube.sky_image_ref.solid_angle()

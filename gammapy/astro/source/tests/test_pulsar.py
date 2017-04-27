@@ -9,7 +9,7 @@ from ....utils.testing import requires_dependency
 from ...source import Pulsar, SimplePulsar
 
 pulsar = Pulsar()
-time = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
+time = Quantity([1e2, 1e4, 1e6, 1e8], 'yr')
 
 
 def get_atnf_catalog_sample():
