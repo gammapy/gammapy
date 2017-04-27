@@ -9,6 +9,7 @@ from astropy.table import Table
 
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
+from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.modeling import Parameter, ParameterList
@@ -31,6 +32,7 @@ __all__ = [
     'LogParabola',
     'TableModel',
     'AbsorbedSpectralModel',
+    'Absorption',
 ]
 
 
@@ -1068,31 +1070,218 @@ class TableModel(SpectralModel):
         return ax
 
 
-class AbsorbedSpectralModel(SpectralModel):
+class Absorption(object):
+    """
+    Class dealing with absorption model.
 
-    def __init__(self, spectral_model, table_model):
-        """Absorbed spectral model
+    Parameters
+    ----------
+    energy_lo : `~astropy.units.Quantity`
+        Lower bin edges of energy axis
+    energy_hi : `~astropy.units.Quantity`
+        Upper bin edges of energy axis
+    param_lo : `~astropy.units.Quantity`
+        Lower bin edges of parameter axis
+    param_hi : `~astropy.units.Quantity`
+        Upper bin edges of parameter axis
+    data : `~astropy.units.Quantity`
+        Model value
+
+    Examples
+    --------
+    Create and plot EBL absorption models for a redshift of 0.5
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        import astropy.units as u
+        from gammapy.spectrum.models import Absorption
+
+        # Load tables for z=0.5
+        redshift = 0.5
+        dominguez = Absorption.read_builtin('dominguez').table_model(redshift)
+        franceschini = Absorption.read_builtin('franceschini').table_model(redshift)
+        finke = Absorption.read_builtin('finke').table_model(redshift)
+
+        # start customised plot
+        energy_range = [0.08, 3] * u.TeV
+        ax = plt.gca()
+        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax)
+        franceschini.plot(label='Franceschini 2008', **opts)
+        finke.plot(label='Finke 2010', **opts)
+        dominguez.plot(label='Dominguez 2011', **opts)
+
+        # tune plot
+        ax.set_ylabel(r'Absorption coefficient [$\exp{(-\tau(E))}$]')
+        ax.set_xlim(energy_range.value)  # we get ride of units
+        ax.set_ylim([1.e-4, 2.])
+        ax.set_yscale('log')
+        ax.set_title('EBL models (z=' + str(redshift) + ')')
+        plt.grid(which='both')
+        plt.legend(loc='best') # legend
+
+        # show plot
+        plt.show()
+
+    """
+
+    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
+        axes = [
+            BinnedDataAxis(param_lo, param_hi,
+                           interpolation_mode='linear', name='parameter'), 
+            BinnedDataAxis(energy_lo,energy_hi,
+                           interpolation_mode='log', name='energy')
+        ]
+
+        self.data = NDDataArray(axes=axes, data=data)
+        self.data.default_interp_kwargs['fill_value'] = None
+        
+    @classmethod
+    def read(cls, filename):
+        """
+        Build object from an XSPEC model.
+
+        Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
 
         Parameters
         ----------
-        spectral_model : `~gammapy.spectrum.models.SpectralModel`
-            spectral model
-        table_model : `~gammapy.spectrum.models.TableModel`
-            table model
+        filename : `str`
+            File containing the model.
         """
-        self.spectral_model = spectral_model
-        self.table_model = table_model
-        # Will be implemented later for sherpa fit
-        self.parameters = ParameterList([])
 
-    def evaluate(self, energy):
-        flux = self.spectral_model.__call__(energy)
-        absorption = self.table_model.__call__(energy)
+        # Create EBL data array
+        filename = str(make_path(filename))
+        table_param = Table.read(filename, hdu='PARAMETERS')
+
+        par_min = table_param['MINIMUM']
+        par_max = table_param['MAXIMUM']
+
+        par_array = table_param[0]['VALUE']
+        par_delta = np.diff(par_array)*0.5
+
+        param_lo, param_hi = par_array, par_array  # initialisation
+        param_lo[0] = par_min - par_delta[0]
+        param_lo[1:] -= par_delta
+        param_hi[:-1] += par_delta
+        param_hi[-1] = par_max
+        
+        # Get energy values
+        table_energy = Table.read(filename, hdu='ENERGIES')
+        energy_lo = table_energy['ENERG_LO'] * u.keV  # unit not stored in file
+        energy_hi = table_energy['ENERG_HI'] * u.keV  # unit not stored in file
+        
+        # Energies are in keV
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
+                                                                 upper=energy_hi,
+                                                                 unit=u.keV)
+
+        # Get spectrum values
+        table_spectra = Table.read(filename, hdu='SPECTRA')
+        data = table_spectra['INTPSPEC'].data
+        
+        return cls(energy_lo=energy_bounds.lower_bounds,
+                   energy_hi=energy_bounds.upper_bounds,
+                   param_lo=param_lo, param_hi=param_hi, data=data)
+
+    @classmethod
+    def read_builtin(cls, name):
+        """
+        Read one of the built-in absorption models.
+
+        Parameters
+        ----------
+        name : {'franceschini', 'dominguez', 'finke'}
+            name of one of the available model in gammapy-extra
+
+        References
+        ----------
+        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity", 
+            `Link <http://adsabs.harvard.edu/abs/2008A%26A...487..837F>`_
+        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
+            `Link <http://adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`_
+        .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
+            `Link <http://adsabs.harvard.edu/abs/2010ApJ...712..238F>`_
+        """
+        models = dict()
+        models['franceschini'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+        models['dominguez'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz'
+        models['finke'] = '$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz'
+        
+        return cls.read(models[name])
+    
+    def table_model(self, parameter, unit='TeV'):
+        """
+        Returns `~gammapy.spectrum.models.TableModel` for a given parameter
+        from the input absorbed model
+
+        Parameters
+        ----------
+        parameter : `float`
+            Parameter value.
+        unit : `str`, (optional)
+            desired value for energy axis
+        """
+        energy_axis = self.data.axes[1]
+        energy = (energy_axis.log_center()).to(unit)
+
+        values = self.evaluate(energy=energy, parameter=parameter)
+        
+        return TableModel(energy=energy, values=values, scale_logy=False)
+
+    def evaluate(self, energy, parameter):
+        """
+        Evaluate model for energy and parameter value
+        """
+        return self.data.evaluate(energy=energy, parameter=parameter)
+
+    
+    
+class AbsorbedSpectralModel(SpectralModel):
+    """
+    Spectral model with EBL absorption.
+    
+    Parameters
+    ----------
+    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model.
+    absorption : `~gammapy.spectrum.models.Absorption`
+        Absorption model.
+    parameter : `float`
+        parameter value for absorption model
+    parameter_name : `str`, optional
+        parameter name
+    """
+    def __init__(self, spectral_model, absorption,
+                 parameter, parameter_name='redshift'):
+
+        self.spectral_model = spectral_model
+        self.absorption = absorption
+        self.parameter = parameter
+        self.parameter_name = parameter_name
+        
+        # initialise list parameters from spectral model
+        param_list = []
+        for param in spectral_model.parameters.parameters:
+            param_list.append(param)
+
+        # Add parameter to the list
+        param_min = self.absorption.data.axes[0].lo[0]
+        param_max = self.absorption.data.axes[0].lo[-1]
+        param_list.append(Parameter(parameter_name, parameter,
+                                    parmin=param_min, parmax=param_max,
+                                    frozen=True))
+
+        self.parameters = ParameterList(param_list)
+        
+    def evaluate(self, energy, **kwargs):
+        # assign redshift value and remove it from dictionnary
+        # since it does not belong to the spectral model 
+        parameter = kwargs[self.parameter_name]
+        del kwargs[self.parameter_name]
+
+        flux = self.spectral_model.evaluate(energy=energy, **kwargs)
+        absorption = self.absorption.evaluate(energy=energy,
+                                              parameter=parameter)
         return flux * absorption
 
-    def to_sherpa(self, name='default'):
-        """Convert to Sherpa model
-
-        To be implemented by subclasses
-        """
-        raise NotImplementedError('{}'.format(self.__class__.__name__))
