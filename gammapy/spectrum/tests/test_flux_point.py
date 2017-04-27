@@ -29,13 +29,13 @@ class LWTestModel(SpectralModel):
 
     @staticmethod
     def evaluate(x):
-        return 1E4 * np.exp(-6 * x)
+        return 1e4 * np.exp(-6 * x)
 
     def integral(self, xmin, xmax):
-        return - 1. / 6 * 1E4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
+        return - 1. / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
 
     def inverse(self, y):
-        return - 1. / 6 * np.log(y * 1E-4)
+        return - 1. / 6 * np.log(y * 1e-4)
 
 
 class XSqrTestModel(SpectralModel):
@@ -330,13 +330,14 @@ def test_compute_flux_points_dnde():
     desired_fp = FluxPoints.read(path + 'diff_flux_points.fits')
 
     # TODO: verify index=2.2, but it seems to give reasonable values
-    model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+    model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
     actual_fp = compute_flux_points_dnde(flux_points, model=model, method='log_center')
 
     for column in ['dnde', 'dnde_err', 'dnde_ul']:
         actual = actual_fp.table[column].quantity
         desired = desired_fp.table[column].quantity
-        assert_quantity_allclose(actual, desired, rtol=1E-12)
+        assert_quantity_allclose(actual, desired, rtol=1e-12)
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
@@ -347,12 +348,12 @@ class TestFluxPointsFitter:
 
     def test_fit_pwl(self):
         fitter = FluxPointsFitter()
-        model = PowerLaw(2.3 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        model = PowerLaw(2.3 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
         result = fitter.run(self.flux_points, model)
 
         index = result['best_fit_model'].parameters['index']
         amplitude = result['best_fit_model'].parameters['amplitude']
-        assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1E-3)
-        assert_quantity_allclose(amplitude.quantity, 2.149E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1E-3)
-        assert_allclose(result['statval'], 27.183618, rtol=1E-3)
+        assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1e-3)
+        assert_quantity_allclose(amplitude.quantity, 2.149E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1e-3)
+        assert_allclose(result['statval'], 27.183618, rtol=1e-3)
         assert_allclose(result['dof'], 22)

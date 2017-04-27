@@ -126,7 +126,7 @@ class ReflectedRegionsFinder(object):
 
         # Maximum possible angle before regions is reached again
         self._max_angle = self._angle + Angle('360deg') \
-            - self._min_ang - self.min_distance_input
+                          - self._min_ang - self.min_distance_input
 
         # Distance image
         self._distance_image = self.exclusion_mask.distance_image
@@ -216,8 +216,8 @@ class ReflectedRegionsBackgroundEstimator(object):
     """
 
     def __init__(self, on_region, obs_list, **kwargs):
-        self.obs_list = obs_list
         self.on_region = on_region
+        self.obs_list = obs_list
         self.finder = ReflectedRegionsFinder(region=on_region,
                                              center=None,
                                              **kwargs)
@@ -254,13 +254,13 @@ class ReflectedRegionsBackgroundEstimator(object):
         on_events = obs.events.select_circular_region(self.on_region)
         a_on = 1
         a_off = len(off_region)
-        return BackgroundEstimate(on_region = self.on_region,
-                                  on_events = on_events,
-                                  off_region = off_region,
-                                  off_events = off_events,
-                                  a_on = a_on,
-                                  a_off = a_off,
-                                  method = 'Reflected Regions')
+        return BackgroundEstimate(on_region=self.on_region,
+                                  on_events=on_events,
+                                  off_region=off_region,
+                                  off_events=off_events,
+                                  a_on=a_on,
+                                  a_off=a_off,
+                                  method='Reflected Regions')
 
     def plot(self, fig=None, ax=None, cmap=None, idx=None):
         """Standard debug plot

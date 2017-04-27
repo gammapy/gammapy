@@ -133,7 +133,7 @@ class Parameter(object):
     def from_dict_gammacat(cls, data):
         return cls(
             name=data['name'],
-            value=float(data['val']),
+            value=float(data['value']),
             unit=data['unit'],
         )
 
