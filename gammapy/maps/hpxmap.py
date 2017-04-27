@@ -19,11 +19,10 @@ class HpxMap(object):
     Parameters
     ----------
     data : `~numpy.ndarray`
+        TODO
     """
 
     def __init__(self, hpx, data):
-        print('here')
-        # MapBase.__init__(self, data)
         self._data = data
         self._hpx = hpx
         self._wcs2d = None
@@ -31,10 +30,12 @@ class HpxMap(object):
 
     @property
     def hpx(self):
+        """TODO"""
         return self._hpx
 
     @property
     def data(self):
+        """TODO"""
         return self._data
 
     @classmethod
@@ -49,6 +50,7 @@ class HpxMap(object):
             Name of the HDU with the map data
         ebounds : str
             Name of the HDU with the energy bin data
+
         Returns
         -------
         hpx_map : `HpxMap`
@@ -59,7 +61,7 @@ class HpxMap(object):
 
     @classmethod
     def from_hdulist(cls, hdulist, **kwargs):
-        """Creates and returns an HpxMap object from a FITS HDUList.
+        """Make a HpxMap object from a FITS HDUList.
 
         Parameters
         ----------
@@ -80,6 +82,7 @@ class HpxMap(object):
         return cls.from_hdu(hdulist[extname], ebins)
 
     def to_image_hdu(self, name=None, **kwargs):
+        """TODO"""
         kwargs['extname'] = name
         return self.hpx.make_hdu(self.counts, **kwargs)
 
@@ -154,12 +157,13 @@ class HpxMap(object):
         Parameters
         ----------
         coords : tuple
+            TODO
 
         Returns
-        ----------
+        -------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map, np.nan used to flag
-           coords outside of map
+           Values of pixels in the flattened map.
+           np.nan used to flag coords outside of map
         """
         pass
 
@@ -170,12 +174,12 @@ class HpxMap(object):
         Parameters
         ----------
         coords : tuple
-
+            TODO
         Returns
         ----------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map, np.nan used to flag
-           coords outside of map
+           Values of pixels in the flattened map
+           np.nan used to flag coords outside of map
         """
         pass
 

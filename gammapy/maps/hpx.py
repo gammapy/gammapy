@@ -6,10 +6,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import re
 import numpy as np
+from astropy.extern.six.moves import range
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
-from astropy.coordinates import Galactic, ICRS
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 
@@ -32,11 +32,10 @@ HPX_ORDER_TO_PIXSIZE = np.array([32.0, 16.0, 8.0, 4.0, 2.0, 1.0,
 
 
 class HPX_Conv(object):
-    """ Data structure to define how a HEALPix map is stored to FITS """
+    """Data structure to define how a HEALPix map is stored to FITS.
+    """
 
     def __init__(self, convname, **kwargs):
-        """
-        """
         self.convname = convname
         self.colstring = kwargs.get('colstring', 'CHANNEL')
         self.firstcol = kwargs.get('firstcol', 1)
@@ -110,7 +109,9 @@ def ravel_hpx_index(idx, npix):
 def coords_to_vec(lon, lat):
     """Converts longitude and latitude coordinates to a unit 3-vector.
 
-    return array(3,n) with v_x[i],v_y[i],v_z[i] = directional cosines
+    Returns
+    -------
+    array(3,n) with v_x[i],v_y[i],v_z[i] = directional cosines
     """
     phi = np.radians(lon)
     theta = (np.pi / 2) - np.radians(lat)
@@ -261,6 +262,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     return ipix, mult_val, npix
 
 
+# TODO: it says "old" in the function name. Remove?
 def make_hpx_to_wcs_mapping_old(hpx, wcs):
     """Make the mapping data needed to from from HPX pixelization to a
     WCS-based array
@@ -632,8 +634,8 @@ class HPXGeom(MapGeom):
         """TODO.
         """
         if np.any(self.order < 0):
-            raise RuntimeError(
-                "Upgrade and degrade only implemented for standard maps")
+            raise RuntimeError("Upgrade and degrade only implemented for standard maps")
+
         return self.__class__(2 ** order, self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
@@ -871,8 +873,7 @@ class HPXGeom(MapGeom):
             elif tokens[1] == 'RING':
                 ipix_ring = int(tokens[3])
             else:
-                raise Exception(
-                    "Did not recognize ordering scheme %s" % tokens[1])
+                raise Exception("Did not recognize ordering scheme %s" % tokens[1])
             ilist = match_hpx_pixel(nside, nest, nside_pix, ipix_ring)
         else:
             raise Exception("Did not recognize region type %s" % tokens[0])
@@ -891,22 +892,15 @@ class HPXGeom(MapGeom):
             Coordinate system
         """
         import healpy as hp
+        frame = 'galactic' if coordsys == 'GAL' else 'icrs'
+
         if region is None:
-            if coordsys == "GAL":
-                c = SkyCoord(0., 0., frame=Galactic, unit="deg")
-            elif coordsys == "CEL":
-                c = SkyCoord(0., 0., frame=ICRS, unit="deg")
-            return c
+            return SkyCoord(0., 0., frame=frame, unit="deg")
 
         tokens = parse_hpxregion(region)
         if tokens[0] in ['DISK', 'DISK_INC']:
-            if coordsys == "GAL":
-                c = SkyCoord(float(tokens[1]), float(tokens[2]),
-                             frame=Galactic, unit="deg")
-            elif coordsys == "CEL":
-                c = SkyCoord(float(tokens[1]), float(tokens[2]),
-                             frame=ICRS, unit="deg")
-            return c
+            lon, lat = float(tokens[1]), float(tokens[2])
+            return SkyCoord(lon, lat, frame=frame, unit='deg')
         elif tokens[0] == 'HPX_PIXEL':
             nside_pix = int(tokens[2])
             ipix_pix = int(tokens[3])
@@ -915,25 +909,19 @@ class HPXGeom(MapGeom):
             elif tokens[1] == 'RING':
                 nest_pix = False
             else:
-                raise Exception(
-                    "Did not recognize ordering scheme %s" % tokens[1])
+                raise Exception("Did not recognize ordering scheme %s" % tokens[1])
             theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
             lat = np.degrees((np.pi / 2) - theta)
             lon = np.degrees(phi)
-            if coordsys == "GAL":
-                c = SkyCoord(lon, lat, frame=Galactic, unit="deg")
-            elif coordsys == "CEL":
-                c = SkyCoord(lon, lat, frame=ICRS, unit="deg")
-            return c
+            return SkyCoord(lon, lat, frame=frame, unit='deg')
         else:
-            raise Exception(
-                "HPX.get_ref_dir did not recognize region type %s" % tokens[0])
+            raise Exception("HPX.get_ref_dir did not recognize region type %s" % tokens[0])
+
         return None
 
     @staticmethod
     def get_region_size(region):
-        """ Finds and returns the approximate size of region (in degrees)  
-        from a HEALPix region string.   
+        """Get the approximate size of region (in degrees) from a HEALPIX region string.   
         """
         if region is None:
             return 180.
@@ -1022,7 +1010,7 @@ class HPXGeom(MapGeom):
         """Get the coordinates of all the pixels in this pixelization."""
         import healpy as hp
         if self._ipix is None:
-            theta, phi = hp.pix2ang(self.nside, xrange(self.npix), self.nest)
+            theta, phi = hp.pix2ang(self.nside, range(self.npix), self.nest)
         else:
             theta, phi = hp.pix2ang(self.nside, self.ipix, self.nest)
 
@@ -1031,7 +1019,6 @@ class HPXGeom(MapGeom):
         return np.vstack([lon, lat]).T
 
     def get_skydirs(self):
-
         lonlat = self.get_coords()
         return SkyCoord(ra=lonlat.T[0], dec=lonlat.T[1], unit='deg')
 

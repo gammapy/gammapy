@@ -2,9 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
 from astropy.io import fits
 from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
+
+pytest.importorskip('healpy')
 
 
 def test_unravel_hpx_index():
@@ -189,15 +192,9 @@ def test_hpx_from_header():
     header.update(pars)
     hpx = HPXGeom.from_header(header)
 
-    assert (hpx.coordsys == pars['COORDSYS'])
-    assert (hpx.nest == False)
+    assert hpx.coordsys == pars['COORDSYS']
+    assert hpx.nest is False
     assert_allclose(hpx.nside, np.array([64]))
-
-
-def test_hpx_make_header():
-    hpx = HPXGeom(16, False, 'GAL')
-    header = hpx.make_header()
-    # TODO: assert on something
 
 
 def test_hpx_make_header():

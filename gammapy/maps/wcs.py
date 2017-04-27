@@ -49,28 +49,32 @@ class WCSGeom(MapGeom):
 
     @property
     def wcs(self):
+        """TODO."""
         return self._wcs
 
     @property
     def coordsys(self):
+        """TODO."""
         return self._coordsys
 
     @property
     def skydir(self):
-        """Sky coordinate of the image center."""
+        """Sky coordinate of the image center (TODO: type?)."""
         return self._skydir
 
     @property
     def width(self):
-        """Dimensions of the image."""
+        """Dimensions of the image (TODO: type?)."""
         return self._width
 
     @property
     def npix(self):
+        """TODO."""
         return self._npix
 
     @classmethod
     def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT'):
+        """TODO."""
         npix = np.array(npix, ndmin=1)
         crpix = npix / 2. + 0.5
         wcs = create_wcs(skydir, coordsys, projection,
@@ -81,15 +85,15 @@ class WCSGeom(MapGeom):
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
                axes=None):
+        """TODO."""
         header = make_header(nxpix, nypix, binsz, xref, yref,
                              proj, coordsys, xrefpix, yrefpix)
-        w = WCS(w.to_header())
-        return cls(w, [nxpix, nypix], axes)
+        wcs = WCS(header)
+        return cls(wcs, [nxpix, nypix], axes)
 
     def distance_to_edge(self, skydir):
         """Angular distance from the given direction and
         the edge of the projection."""
-
         xpix, ypix = skydir.to_pixel(self.wcs, origin=0)
         deltax = np.array((xpix - self._pix_center[0]) * self._pix_size[0],
                           ndmin=1)
@@ -367,8 +371,7 @@ def wcs_to_skydir(wcs):
     lat = wcs.wcs.crval[1]
     coordsys = get_coordsys(wcs)
     if coordsys == 'GAL':
-        return SkyCoord(lon, lat, unit='deg',
-                        frame='galactic').transform_to('icrs')
+        return SkyCoord(lon, lat, unit='deg', frame='galactic').transform_to('icrs')
     else:
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 

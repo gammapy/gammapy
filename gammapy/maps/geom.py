@@ -78,8 +78,7 @@ class MapCoords(object):
             return cls.from_lonlat(skydir.l.deg, skydir.b.deg, *args,
                                    coordsys='GAL')
         else:
-            raise Exception('Unrecognized coordinate frame: %s.' %
-                            skydir.frame.name)
+            raise Exception('Unrecognized coordinate frame: %s.' % skydir.frame.name)
 
     @classmethod
     def from_tuple(cls, coords, **kwargs):
@@ -98,7 +97,7 @@ class MapCoords(object):
         elif isinstance(data, tuple):
             return cls.from_tuple(data, **kwargs)
         elif isinstance(data, SkyCoord):
-            return cls.from_skydir((data), **kwargs)
+            return cls.from_skydir(data, **kwargs)
         else:
             raise Exception('Unsupported input type.')
 
@@ -107,9 +106,6 @@ class MapCoords(object):
 class MapGeom(object):
     """Base class for WCS and HEALPix geometries.
     """
-
-    # def __init__(self):
-    #     pass
 
     @abc.abstractmethod
     def coord_to_pix(self, coords):

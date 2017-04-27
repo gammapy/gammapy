@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord
-
 from .hpxmap import HpxMap
 
 __all__ = ['HpxCube']
@@ -175,10 +174,12 @@ class HpxCube(HpxMap):
                        self.hpx.copy_and_drop_axes())
 
     def get_by_coord(self, coords, interp=None):
+        """TODO."""
         pix = self.hpx.coord_to_pix(coords)
         return self.get_by_pix(pix)
 
     def get_by_pix(self, pix):
+        """TODO."""
         pix = self.hpx[pix]
         if self.data.ndim == 2:
             return self.data[:, pix]
@@ -188,6 +189,7 @@ class HpxCube(HpxMap):
     def _interp_by_coord(self, coords):
         """Interpolate map values.
         """
+        import healpy as hp
         if self.data.ndim == 1:
             theta = np.pi / 2. - np.radians(lat)
             phi = np.radians(lon)
@@ -202,6 +204,7 @@ class HpxCube(HpxMap):
         If egy is None, then interpolation will be performed
         on the existing energy planes.
         """
+        import healpy as hp
         shape = np.broadcast(lon, lat, egy).shape
         lon = lon * np.ones(shape)
         lat = lat * np.ones(shape)
@@ -234,6 +237,7 @@ class HpxCube(HpxMap):
     def swap_scheme(self):
         """Return a new map with the opposite scheme (ring or nested).
         """
+        import healpy as hp
         hpx_out = self.hpx.make_swapped_hpx()
         if self.hpx.nest:
             if self.data.ndim == 2:
@@ -252,6 +256,7 @@ class HpxCube(HpxMap):
     def ud_grade(self, order, preserve_counts=False):
         """Upgrade or downgrade the resolution of the map to the chosen order.
         """
+        import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
         shape = self.counts.shape
