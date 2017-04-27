@@ -50,6 +50,7 @@ clean:
 	rm -rf build dist docs/_build docs/api htmlcov MANIFEST gammapy.egg-info .coverage
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
+	find gammapy -name '*.c' -exec rm {} \;
 	find . -name __pycache__ | xargs rm -fr
 
 clean-repo:
