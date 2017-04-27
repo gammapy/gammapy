@@ -1,18 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import abc
 import numpy as np
 import healpy as hp
-from scipy.interpolate import RegularGridInterpolator
-from scipy.ndimage.interpolation import map_coordinates
 from astropy.extern import six
 from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
-from .wcs import wcs_to_coords, wcs_to_axes
-from .hpx import HPXGeom, HpxToWcsMapping
+from .hpx import HpxToWcsMapping
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -23,10 +17,10 @@ class HpxMap(object):
     ----------
     data : `~numpy.ndarray`
     """
-    
+
     def __init__(self, hpx, data):
         print('here')
-        #MapBase.__init__(self, data)
+        # MapBase.__init__(self, data)
         self._data = data
         self._hpx = hpx
         self._wcs2d = None
@@ -86,7 +80,7 @@ class HpxMap(object):
         extname = kwargs.get('hdu', 'SKYMAP')
         ebins = fits_utils.find_and_read_ebins(hdulist)
         return cls.from_hdu(hdulist[extname], ebins)
-    
+
     def to_image_hdu(self, name=None, **kwargs):
         kwargs['extname'] = name
         return self.hpx.make_hdu(self.counts, **kwargs)
@@ -252,7 +246,7 @@ class HpxMap(object):
         extname = kwargs.get('extname', self.conv.extname)
         convname = kwargs.get('convname', self.conv.convname)
         header = self.hpx.make_header()
-        
+
         if shape[-1] != self._npix:
             raise Exception(
                 "Size of data array does not match number of pixels")
@@ -262,7 +256,7 @@ class HpxMap(object):
             cols.append(fits.Column("PIX", "J", array=self._ipix))
         else:
             header['INDXSCHM'] = 'IMPLICIT'
-                        
+
         if convname == 'FGST_SRCMAP_SPARSE':
             nonzero = data.nonzero()
             nfilled = len(nonzero[0])
@@ -271,13 +265,13 @@ class HpxMap(object):
                 cols.append(fits.Column("KEY", "%iJ" %
                                         nfilled, array=nonzero.reshape(1, nfilled)))
                 cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data[
-                            nonzero].astype(float).reshape(1, nfilled)))
+                    nonzero].astype(float).reshape(1, nfilled)))
             elif len(shape) == 2:
                 nonzero = self._npix * nonzero[0] + nonzero[1]
                 cols.append(fits.Column("KEY", "%iJ" %
                                         nfilled, array=nonzero.reshape(1, nfilled)))
                 cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data.flat[
-                            nonzero].astype(float).reshape(1, nfilled)))
+                    nonzero].astype(float).reshape(1, nfilled)))
             else:
                 raise Exception("HPX.write_fits only handles 1D and 2D maps")
 

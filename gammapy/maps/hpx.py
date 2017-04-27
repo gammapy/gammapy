@@ -2,7 +2,7 @@
 """
 Utilities for dealing with HEALPix projections and mappings
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 import re
 import healpy as hp
 import numpy as np
@@ -19,6 +19,7 @@ from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 HPX_ORDER_TO_PIXSIZE = np.array([32.0, 16.0, 8.0, 4.0, 2.0, 1.0,
                                  0.50, 0.25, 0.1, 0.05, 0.025, 0.01,
                                  0.005, 0.002])
+
 
 class HPX_Conv(object):
     """ Data structure to define how a HEALPix map is stored to FITS """
@@ -69,11 +70,11 @@ def unravel_hpx_index(idx, npix):
     idx : tuple of `~numpy.ndarray`
         Index array for each dimension of the map.
     """
-    dpix = np.zeros(npix.size,dtype='i')
+    dpix = np.zeros(npix.size, dtype='i')
     dpix[1:] = np.cumsum(npix.flat[:-1])
-    bidx = np.searchsorted(np.cumsum(npix.flat), idx+1)
+    bidx = np.searchsorted(np.cumsum(npix.flat), idx + 1)
     pix = idx - dpix[bidx]
-    return tuple([pix] + list(np.unravel_index(bidx,npix.shape)))
+    return tuple([pix] + list(np.unravel_index(bidx, npix.shape)))
 
 
 def ravel_hpx_index(idx, npix):
@@ -88,9 +89,9 @@ def ravel_hpx_index(idx, npix):
         return idx
 
     idx0 = idx[0]
-    idx1 = np.ravel_multi_index(idx[1:], npix.shape)    
-    npix = np.concatenate((np.array([0]),npix.flat[:-1]))
-    
+    idx1 = np.ravel_multi_index(idx[1:], npix.shape)
+    npix = np.concatenate((np.array([0]), npix.flat[:-1]))
+
     return idx0 + np.cumsum(npix)[idx1]
 
 
@@ -209,7 +210,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
         tuple(nx,ny) with the shape of the wcs grid
 
     """
-    
+
     npix = wcs.npix[:2]
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
@@ -221,31 +222,31 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
     mask = ~np.any(np.isnan(sky_crds), axis=1)
-    ipix = -1 * np.ones((len(hpx.nside),npix[0]*npix[1]), int)
-    m = mask[None,:]*np.ones_like(ipix,dtype=bool)
-    
-    ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[...,None],
-                                   sky_crds[:, 1][mask][None,...],
-                                   sky_crds[:, 0][mask][None,...],
+    ipix = -1 * np.ones((len(hpx.nside), npix[0] * npix[1]), int)
+    m = mask[None, :] * np.ones_like(ipix, dtype=bool)
+
+    ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[..., None],
+                                   sky_crds[:, 1][mask][None, ...],
+                                   sky_crds[:, 0][mask][None, ...],
                                    hpx.nest).flatten()
-    
+
     # Here we are counting the number of HEALPix pixels each WCS pixel
     # points to and getting a multiplicative factor that tells use how
     # to split up the counts in each HEALPix pixel (by dividing the
     # corresponding WCS pixels by the number of associated HEALPix
     # pixels).
-    mult_val = np.ones_like(ipix,dtype=float)    
-    for i,t in enumerate(ipix):
+    mult_val = np.ones_like(ipix, dtype=float)
+    for i, t in enumerate(ipix):
         count = np.unique(t, return_counts=True)
         idx = np.searchsorted(count[0], t)
-        mult_val[i,...] = 1./count[1][idx]
+        mult_val[i, ...] = 1. / count[1][idx]
 
-    if hpx.nside.size == 1:        
-        ipix = np.squeeze(ipix,axis=0)
-        mult_val = np.squeeze(mult_val,axis=0)
+    if hpx.nside.size == 1:
+        ipix = np.squeeze(ipix, axis=0)
+        mult_val = np.squeeze(mult_val, axis=0)
 
     return ipix, mult_val, npix
-    
+
 
 def make_hpx_to_wcs_mapping_old(hpx, wcs):
     """Make the mapping data needed to from from HPX pixelization to a
@@ -266,8 +267,8 @@ def make_hpx_to_wcs_mapping_old(hpx, wcs):
       npix     :  tuple(nx,ny) with the shape of the wcs grid
 
     """
-    wcs=wcs.wcs
-    
+    wcs = wcs.wcs
+
     npix = (int(wcs.wcs.crpix[0] * 2), int(wcs.wcs.crpix[1] * 2))
     pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]),
                                      np.arange(npix[1]))).swapaxes(0, 1).reshape((npix[0] * npix[1], 2))
@@ -336,8 +337,8 @@ def nside_to_order(nside):
     """Compute the ORDER given NSIDE.  Returns -1 for NSIDE values that
     are not a power of 2."""
 
-    nside = np.array(nside,ndmin=1)    
-    order = -1*np.ones_like(nside)
+    nside = np.array(nside, ndmin=1)
+    order = -1 * np.ones_like(nside)
     m = is_power2(nside)
     order[m] = np.log2(nside[m]).astype(int)
     return order
@@ -399,44 +400,44 @@ class HPXGeom(MapGeom):
 
         self._nside = np.array(nside, ndmin=1)
         self._axes = axes if axes is not None else []
-        self._shape = tuple([len(ax)-1 for ax in self._axes])
+        self._shape = tuple([len(ax) - 1 for ax in self._axes])
         if self.nside.size > 1 and self.nside.shape != self._shape:
             raise Exception('Wrong dimensionality for nside.  nside must '
                             'be a scalar or have a dimensionality consistent '
                             'with the axes argument.')
-        
+
         self._order = nside_to_order(self._nside)
         self._nest = nest
         self._coordsys = coordsys
         self._region = region
         self._maxpix = 12 * self._nside * self._nside
-        self._maxpix = self._maxpix*np.ones(self._shape,dtype=int)
+        self._maxpix = self._maxpix * np.ones(self._shape, dtype=int)
 
         self._ipix = None
         self._rmap = None
-        self._npix = self._maxpix        
+        self._npix = self._maxpix
         if self._region:
             self._create_lookup(self._region)
 
-        self._npix = self._npix*np.ones(self._shape,dtype=int)        
+        self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
 
     def _create_lookup(self, region):
         """Create local-to-global and global-to-local pixel lookup tables."""
-        
+
         ipix = [self.get_index_list(nside, self._nest, region)
                 for nside in self._nside.flat]
-        self._ipix = [ravel_hpx_index((p, i*np.ones_like(p)),
+        self._ipix = [ravel_hpx_index((p, i * np.ones_like(p)),
                                       np.ravel(self._maxpix)) for i, p in
                       enumerate(ipix)]
         self._npix = np.array([len(t) for t in self._ipix])
         if self.nside.ndim > 1:
-            self._npix = self._npix.reshape(self.nside.shape)            
-        self._ipix = np.concatenate(self._ipix)            
+            self._npix = self._npix.reshape(self.nside.shape)
+        self._ipix = np.concatenate(self._ipix)
         self._rmap = {}
         for i, ipixel in enumerate(self._ipix.flat):
             self._rmap[ipixel] = i
-        
+
     def local_to_global(self, idx):
         """Compute a global index (partial-sky) from a global (all-sky)
         index."""
@@ -446,7 +447,7 @@ class HPXGeom(MapGeom):
         """Compute a local (partial-sky) index from a global (all-sky)
         index."""
         pass
-        
+
     def __getitem__(self, sliced):
         """This implements the global-to-local index lookup.  For all-sky maps
         it just returns the input array.  For partial-sky maps it
@@ -473,16 +474,16 @@ class HPXGeom(MapGeom):
         """
 
         # Convert to tuple representation
-        if (isinstance(sliced,int) or
-            ( isinstance(sliced,tuple) and isinstance(sliced[0],int) ) or
-            isinstance(sliced,np.ndarray) ):
-            sliced = unravel_hpx_index(np.array(sliced,ndmin=1), self._maxpix)
-            
+        if (isinstance(sliced, int) or
+                (isinstance(sliced, tuple) and isinstance(sliced[0], int)) or
+                isinstance(sliced, np.ndarray)):
+            sliced = unravel_hpx_index(np.array(sliced, ndmin=1), self._maxpix)
+
         if self.nside.size == 1:
-            idx = np.array(sliced[0],ndmin=1)
+            idx = np.array(sliced[0], ndmin=1)
         else:
             idx = ravel_hpx_index(sliced, self._maxpix)
-                        
+
         if self._rmap is not None:
             retval = np.empty((idx.size), 'i')
             retval.fill(-1)
@@ -495,20 +496,20 @@ class HPXGeom(MapGeom):
         if self.nside.size == 1:
             retval = ravel_hpx_index([retval] + list(sliced[1:]),
                                      self.npix)
-            
+
         return retval
 
     def coord_to_pix(self, coords):
-        
-        c = MapCoords.create(coords)        
+
+        c = MapCoords.create(coords)
         phi = np.radians(c.lon)
-        theta = np.pi/2.-np.radians(c.lat)
+        theta = np.pi / 2. - np.radians(c.lat)
 
         if self.axes:
-        
+
             bins = []
             for i, ax in enumerate(self.axes):
-                bins += [val_to_bin(ax, c[i+2])]
+                bins += [val_to_bin(ax, c[i + 2])]
 
             # Ravel multi-dimensional indices
             ibin = np.ravel_multi_index(bins, self._shape)
@@ -517,7 +518,7 @@ class HPXGeom(MapGeom):
                 nside = self.nside[ibin]
             else:
                 nside = self.nside
-            
+
             pix = hp.ang2pix(nside, theta, phi, nest=self.nest)
             pix = tuple([pix] + bins)
         else:
@@ -532,9 +533,9 @@ class HPXGeom(MapGeom):
             bins = []
             vals = []
             for i, ax in enumerate(self.axes):
-                bins += [pix[1+i]]
-                vals += [bin_to_val(ax,pix[1+i])]
-                
+                bins += [pix[1 + i]]
+                vals += [bin_to_val(ax, pix[1 + i])]
+
             # Ravel multi-dimensional indices
             ibin = np.ravel_multi_index(bins, self._shape)
 
@@ -545,15 +546,15 @@ class HPXGeom(MapGeom):
 
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
-            coords = [np.degrees(np.pi/2. - theta), np.degrees(phi)]
+            coords = [np.degrees(np.pi / 2. - theta), np.degrees(phi)]
             coords = tuple(coords + [vals])
         else:
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
-            coords = (np.degrees(np.pi/2. - theta), np.degrees(phi))
+            coords = (np.degrees(np.pi / 2. - theta), np.degrees(phi))
 
         return coords
-        
+
     @property
     def axes(self):
         """Return the non-spatial axes."""
@@ -562,7 +563,7 @@ class HPXGeom(MapGeom):
     @property
     def ndim(self):
         return len(self._axes) + 2
-    
+
     @property
     def ordering(self):
         if self._nest:
@@ -606,23 +607,23 @@ class HPXGeom(MapGeom):
     def ipix(self):
         """Return the HEALPix pixel and band indices for every pixel in the map."""
 
-        if self.nside.shape == self._maxpix.shape:        
+        if self.nside.shape == self._maxpix.shape:
             return unravel_hpx_index(self._ipix, self._maxpix)
         else:
 
-            maxpix = np.ravel(self._maxpix*np.arange(self.npix.size))[None,:]
-            maxpix = maxpix*np.ones([self._npix[0]] + list(self._shape),dtype=int)
+            maxpix = np.ravel(self._maxpix * np.arange(self.npix.size))[None, :]
+            maxpix = maxpix * np.ones([self._npix[0]] + list(self._shape), dtype=int)
             maxpix = np.ravel(maxpix.T)
-            ipix = np.ravel(self._ipix[None,:]*np.ones(self._shape,dtype=int)[...,None])
+            ipix = np.ravel(self._ipix[None, :] * np.ones(self._shape, dtype=int)[..., None])
             return unravel_hpx_index(ipix + maxpix, self._maxpix)
-        
+
     def ud_graded_hpx(self, order):
         """
         """
         if np.any(self.order < 0):
             raise RuntimeError(
                 "Upgrade and degrade only implemented for standard maps")
-        return self.__class__(2**order, self.nest, self.coordsys,
+        return self.__class__(2 ** order, self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
     def make_swapped_hpx(self):
@@ -727,10 +728,10 @@ class HPXGeom(MapGeom):
         if 'NSIDE' in header:
             nside = header['NSIDE']
         elif 'ORDER' in header:
-            nside = 2**header['ORDER']
+            nside = 2 ** header['ORDER']
         else:
             raise Exception('Failed to extract NSIDE or ORDER.')
-        
+
         try:
             coordsys = header[conv.coordsys]
         except KeyError:
@@ -779,7 +780,7 @@ class HPXGeom(MapGeom):
         """
         emin = self._axes[:-1]
         emax = self._axes[1:]
-        
+
         cols = [fits.Column("CHANNEL", "I", array=np.arange(1, len(self._zbins + 1))),
                 fits.Column("E_MIN", "1E", unit='keV', array=1000 * emin),
                 fits.Column("E_MAX", "1E", unit='keV', array=1000 * emax)]
@@ -794,7 +795,7 @@ class HPXGeom(MapGeom):
         extname   : str
             The HDU extension name            
         """
-        ectr = np.sqrt(self._axes[1:]*self._axes[:-1])        
+        ectr = np.sqrt(self._axes[1:] * self._axes[:-1])
         cols = [fits.Column("ENERGY", "1E", unit='MeV', array=ectr)]
         hdu = fits.BinTableHDU.from_columns(
             cols, self.make_header(), name=extname)
@@ -956,7 +957,6 @@ class HPXGeom(MapGeom):
             raise Exception('naxis must be between 2 or the total number '
                             'of dimensions.')
 
-        
         w = WCS(naxis=naxis)
         skydir = self.get_ref_dir(self._region, self.coordsys)
 

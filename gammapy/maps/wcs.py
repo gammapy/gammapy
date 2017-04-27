@@ -1,12 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function
-import os
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
-from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.extern import six
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, val_to_pix
 
@@ -33,7 +30,7 @@ class WCSGeom(MapGeom):
         self._npix = np.array(npix, ndmin=1)
         self._coordsys = get_coordsys(wcs)
         self._axes = axes if axes is not None else []
-        
+
         cdelt0 = np.abs(self.wcs.wcs.cdelt[0])
         cdelt1 = np.abs(self.wcs.wcs.cdelt[1])
 
@@ -80,12 +77,11 @@ class WCSGeom(MapGeom):
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
                axes=None):
-
         header = make_header(nxpix, nypix, binsz, xref, yref,
                              proj, coordsys, xrefpix, yrefpix)
         w = WCS(w.to_header())
-        return cls(w, [nxpix,nypix], axes)
-    
+        return cls(w, [nxpix, nypix], axes)
+
     def distance_to_edge(self, skydir):
         """Return the angular distance from the given direction and
         the edge of the projection."""
@@ -112,16 +108,15 @@ class WCSGeom(MapGeom):
         return delta
 
     def coord_to_pix(self, coords):
-
-        c = MapCoords.create(coords)        
+        c = MapCoords.create(coords)
         pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
         for i, ax in enumerate(self.axes):
-            pix += val_to_pix(ax, c[i+2])
+            pix += val_to_pix(ax, c[i + 2])
         return pix
 
     def pix_to_coord(self, pix):
         pass
-    
+
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
                cdelt=1.0, crpix=1., naxis=2, energies=None):
@@ -377,4 +372,3 @@ def is_galactic(wcs):
         return False
     else:
         raise Exception('Unsupported coordinate system: %s' % coordsys)
-

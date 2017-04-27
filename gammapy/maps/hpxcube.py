@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from astropy.extern import six
-
 from .hpxmap import HpxMap
+
 
 class HpxCube(HpxMap):
     """Representation of a 2D or 3D map using HEALPix.
@@ -25,9 +23,9 @@ class HpxCube(HpxMap):
                 raise Exception('HpxCube can only be instantiated from a '
                                 'HPX geometry with the same nside in '
                                 'every plane.')
-            
+
             data = np.zeros([npix[0]] + list(hpx._shape))
-        
+
         HpxMap.__init__(self, hpx, data)
         self._wcs2d = None
         self._hpx2wcs = None
@@ -149,7 +147,7 @@ class HpxCube(HpxMap):
                     hpx_data[i], wcs_data[i], normalize)
                 pass
             wcs_data.reshape((self.counts.shape[0], self._hpx2wcs.npix[
-                             0], self._hpx2wcs.npix[1]))
+                0], self._hpx2wcs.npix[1]))
             # replace the WCS with a 3D one
             wcs = self.hpx.make_wcs(3, proj=self._wcs_proj,
                                     energies=self.hpx.ebins,
@@ -181,14 +179,14 @@ class HpxCube(HpxMap):
     def get_by_coord(self, coords, interp=None):
         pix = self.hpx.coord_to_pix(coords)
         return self.get_by_pix(pix)
-        
+
     def get_by_pix(self, pix):
         pix = self.hpx[pix]
         if self.data.ndim == 2:
             return self.data[:, pix]
         else:
             return self.data[pix]
-        
+
     def _interp_by_coord(self, coords):
         """Interpolate map values.
 

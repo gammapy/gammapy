@@ -1,8 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 
 class MapBase(object):
-    """ Abstract map class.  This can represent either WCS or HPX-based maps in 2 or 3 dimensions."""
+    """Abstract map class.
+    
+    This can represent either WCS or HPX-based maps in 2 or 3 dimensions.
+    """
 
     def __init__(self, geom, data):
         self._data = data
@@ -33,4 +37,3 @@ class MapBase(object):
     def get_by_pix(self, pix, interp=None):
         """Return the map values corresponding to a set of pixel coordinates. """
         pass
-
