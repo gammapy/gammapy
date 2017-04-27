@@ -2,13 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from astropy.extern.six.moves import UserList
 import astropy.units as u
 from ..stats import Stats, significance_on_off
 
 __all__ = [
     'ObservationStats',
-    'ObservationStatsList',
 ]
 
 
@@ -115,7 +113,7 @@ class ObservationStats(Stats):
         Parameters
         ----------
         stats_list : list
-            List of observation statistics `~gammapy.data.ObservationStats`
+            List of `~gammapy.data.ObservationStats`
 
         Returns
         -------
@@ -162,7 +160,7 @@ class ObservationStats(Stats):
         gamma_rate /= livetime.to(u.min)
         bg_rate /= livetime.to(u.min)
 
-        total_stats = cls(
+        return cls(
             n_on=n_on,
             n_off=n_off,
             a_on=a_on,
@@ -173,7 +171,6 @@ class ObservationStats(Stats):
             gamma_rate=gamma_rate,
             bg_rate=bg_rate
         )
-        return total_stats
 
     def to_dict(self):
         """Data as an `~collections.OrderedDict`.
@@ -217,9 +214,3 @@ class ObservationStats(Stats):
         ss += 'Sigma: {:.2f}\n'.format(self.sigma)
 
         return ss
-
-
-# TODO: implement something or remove!
-class ObservationStatsList(UserList):
-    """List of `~gammapy.data.ObservationStats`
-    """

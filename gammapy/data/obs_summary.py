@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
-from .obs_stats import ObservationStats, ObservationStatsList
+from .obs_stats import ObservationStats
 
 __all__ = [
     'ObservationTableSummary',
@@ -41,6 +41,25 @@ class ObservationTableSummary(object):
         offset = pnt_pos.separation(self.target_pos)
 
         return offset
+
+    def __str__(self):
+        """Summary report (`str`).
+        """
+        ss = '*** Observation summary ***\n'
+        ss += 'Target position: {}\n'.format(self.target_pos)
+
+        ss += 'Number of observations: {}\n'.format(len(self.obs_table))
+
+        livetime = Quantity(sum(self.obs_table['LIVETIME']), 'second')
+        ss += 'Livetime: {:.2f}\n'.format(livetime.to('hour'))
+        zenith = self.obs_table['ZEN_PNT']
+        ss += 'Zenith angle: (mean={:.2f}, std={:.2f})\n'.format(
+            zenith.mean(), zenith.std())
+        offset = self.offset
+        ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(
+            offset.mean(), offset.std())
+
+        return ss
 
     def plot_zenith_distribution(self, ax=None, bins=None):
         """Construct the zenith distribution of the observations.
@@ -105,41 +124,21 @@ class ObservationTableSummary(object):
 
         return ax
 
-    def __str__(self):
-        """Summary report (`str`).
-        """
-        ss = '*** Observation summary ***\n'
-        ss += 'Target position: {}\n'.format(self.target_pos)
-
-        ss += 'Number of observations: {}\n'.format(len(self.obs_table))
-
-        livetime = Quantity(sum(self.obs_table['LIVETIME']), 'second')
-        ss += 'Livetime: {:.2f}\n'.format(livetime.to('hour'))
-        zenith = self.obs_table['ZEN_PNT']
-        ss += 'Zenith angle: (mean={:.2f}, std={:.2f})\n'.format(zenith.mean(),
-                                                                 zenith.std())
-        offset = self.offset
-        ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(offset.mean(),
-                                                           offset.std())
-
-        return ss
-
-    def show_in_browser(self):
-        """Make HTML file and images in tmp dir, open in browser.
-        """
-        raise NotImplementedError
-
 
 class ObservationSummary(object):
     """Summary of observations.
 
-    Class allowing to summarise informations contained in
-    a list of observations (`~gammapy.data.ObservationStatsList`)
+    For a list of observation stats, this class can make a
+    table and do summary printout and plots.
+
+    * TODO: Data should be stored in `~astropy.table.Table`!
+    * TODO: there should be a per-run version of the stats
+      in addition to the cumulative version that's there now.
 
     Parameters
     ----------
-    obs_stats : `~gammapy.data.ObservationStatsList`
-        List of observation statistics
+    obs_stats : list
+        Python list of `~gammapy.data.ObservationStats`
     """
 
     def __init__(self, obs_stats):
@@ -161,7 +160,8 @@ class ObservationSummary(object):
     def _init_values(self):
         """Initialise vector attributes for plotting methods.
         """
-        cumul_obs = ObservationStatsList()
+        stats_list = []
+
         for index, obs in enumerate(self.obs_stats):
             # per observation stat
             self.obs_id[index] = obs.obs_id  # keep track of the observation
@@ -169,8 +169,8 @@ class ObservationSummary(object):
             self.bg_rate[index] = obs.bg_rate
 
             # cumulative information
-            cumul_obs.append(obs)
-            stack = ObservationStats.stack(cumul_obs)
+            stats_list.append(obs)
+            stack = ObservationStats.stack(stats_list)
             self.livetime[index] = stack.livetime
             self.n_on[index] = stack.n_on
             self.n_off[index] = stack.n_off
@@ -186,6 +186,14 @@ class ObservationSummary(object):
         for obs in self.obs_stats:
             ss += '{}\n'.format(obs)
 
+        return ss
+
+    def __str__(self):
+        """Observation summary report (`str`).
+        """
+        stack = ObservationStats.stack(self.obs_stats)
+        ss = '*** Observation summary ***\n'
+        ss += '{}\n'.format(stack)
         return ss
 
     def plot_significance_vs_livetime(self, ax=None, **kwargs):
@@ -323,11 +331,3 @@ class ObservationSummary(object):
                  0., np.amax(self.bg_rate.value) * 1.2])
         ax.set_title('Background rates')
         return ax
-
-    def __str__(self):
-        """Observation summary report (`str`).
-        """
-        stack = ObservationStats.stack(self.obs_stats)
-        ss = '*** Observation summary ***\n'
-        ss += '{}\n'.format(stack)
-        return ss
