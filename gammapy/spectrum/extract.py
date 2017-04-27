@@ -42,6 +42,9 @@ class SpectrumExtraction(object):
         True energy binning
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
+    max_alpha : float
+        Maximum alpha value to accept, if the background was estimated using
+        reflected regions this is 1 / minimum number of regions.
     """
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
@@ -49,13 +52,14 @@ class SpectrumExtraction(object):
     """Reconstruced energy axis to be used if not specified otherwise"""
 
     def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False):
+                 containment_correction=False, max_alpha=1):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
         self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
         self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
+        self.max_alpha = max_alpha
         self.observations = SpectrumObservationList()
 
     def run(self, outdir=None, use_sherpa=False):
@@ -70,9 +74,21 @@ class SpectrumExtraction(object):
         """
         log.info('Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
+            if not self._alpha_ok(obs, bkg):
+                continue
             self.observations.append(self.process(obs, bkg))
         if outdir is not None:
             self.write(outdir, use_sherpa=use_sherpa)
+
+    def _alpha_ok(self, obs, bkg):
+        """Check if observation fulfills alpha criterion"""
+        condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
+        if condition:
+            msg = 'Skipping because {} / {} > {}'
+            log.info(msg.format(bkg.a_on, bkg.a_off, self.max_alpha))
+            return False
+        else:
+            return True
 
     def process(self, obs, bkg):
         """Process one observation"""

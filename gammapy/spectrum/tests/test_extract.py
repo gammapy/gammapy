@@ -79,6 +79,15 @@ class TestSpectrumExtraction:
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
         assert_allclose(containment_actual, results['containment'], rtol=1e-3)
 
+    def test_alpha(self, obs_list, bkg_estimate):
+        bkg_estimate[0].a_off = 0
+        bkg_estimate[1].a_off = 2
+        extraction = SpectrumExtraction(obs_list=obs_list,
+                                        bkg_estimate=bkg_estimate,
+                                        max_alpha = 0.2)
+        extraction.run()
+        assert len(extraction.observations) == 0
+
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
         extraction.run(outdir=tmpdir)
