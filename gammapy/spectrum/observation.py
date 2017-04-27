@@ -410,11 +410,6 @@ class SpectrumObservation(object):
         ss = self.total_stats_safe_range.__str__()
         return ss
 
-    def _check_binning(self, **kwargs):
-        """Check that ARF and RMF binnings are compatible
-        """
-        raise NotImplementedError
-
     def copy(self):
         """A deep copy of self.
         """
