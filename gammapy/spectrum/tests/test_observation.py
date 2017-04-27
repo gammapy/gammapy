@@ -101,6 +101,7 @@ class SpectrumObservationTester:
         self.test_stats_table()
         self.test_total_stats()
         self.test_stats_in_safe_range()
+        self.test_to_sherpa()
         self.test_peek()
         self.test_npred()
 
@@ -128,6 +129,12 @@ class SpectrumObservationTester:
         assert_quantity_allclose(stats.energy_min, self.obs.lo_threshold)
         assert_quantity_allclose(stats.energy_max, self.obs.hi_threshold)
         assert_allclose(stats.excess, self.vals['excess_safe_range'], atol=1e-3)
+
+    @requires_dependency('sherpa')
+    def test_to_sherpa(self):
+        # This method is not used anywhere but could be useful in the future
+        sherpa_obs = self.obs.to_sherpa()
+        assert sherpa_obs.counts[10] == self.obs.on_vector.data.data[10].value
 
     @requires_dependency('matplotlib')
     def test_peek(self):

@@ -510,8 +510,8 @@ class EnergyDispersion(object):
             n_chan=n_chan,
             f_chan=f_chan,
             detchans=self.e_reco.nbins,
-            e_min=self.e_reco.data[:-1].to('keV').value,
-            e_max=self.e_reco.data[1:].to('keV').value,
+            e_min=self.e_reco.lo.to('keV').value,
+            e_max=self.e_reco.hi.to('keV').value,
             offset=0,
         )
 
