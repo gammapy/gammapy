@@ -14,6 +14,5 @@ from .sherpa_chi2asym import *
 from .utils import *
 from .extract import *
 from .simulation import *
-from .obs_group import *
 from .fit import *
 from .results import *
