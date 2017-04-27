@@ -72,7 +72,7 @@ class HpxCube(HpxMap):
 
     def make_wcs(self, sum_ebins=False, proj='CAR', oversample=2,
                  normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection.
+        """Make a WCS object and convert HEALPIX data into WCS projection.
 
         NOTE: this re-calculates the mapping, if you have already
         calculated the mapping it is much faster to use
@@ -87,7 +87,7 @@ class HpxCube(HpxMap):
         oversample : int
            Oversampling factor for WCS map
         normalize : bool
-           True -> preserve integral by splitting HEALPix values between bins
+           True -> preserve integral by splitting HEALPIX values between bins
 
         Returns
         -------
@@ -102,12 +102,12 @@ class HpxCube(HpxMap):
         return wcs, wcs_data
 
     def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection.
+        """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
         ----------
         hpx_in  : `~numpy.ndarray`
-           HEALPix input data
+           HEALPIX input data
         sum_ebins : bool
            sum energy bins over energy bins before reprojecting
         normalize  : bool

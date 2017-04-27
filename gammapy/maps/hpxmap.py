@@ -14,7 +14,7 @@ __all__ = [
 
 @six.add_metaclass(abc.ABCMeta)
 class HpxMap(object):
-    """Base class for HEALPix map classes.
+    """Base class for HEALPIX map classes.
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ class HpxMap(object):
 
     def make_wcs_from_hpx(self, sum_ebins=False, proj='CAR', oversample=2,
                           normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection.
+        """Make a WCS object and convert HEALPIX data into WCS projection.
 
         NOTE: this re-calculates the mapping, if you have already
         calculated the mapping it is much faster to use
@@ -103,7 +103,7 @@ class HpxMap(object):
         oversample : int
            Oversampling factor for WCS map
         normalize  : bool
-           True -> preserve integral by splitting HEALPix values between bins
+           True -> preserve integral by splitting HEALPIX values between bins
 
         Returns
         -------
@@ -122,12 +122,12 @@ class HpxMap(object):
 
     @abc.abstractmethod
     def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection.
+        """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
         ----------
         hpx_in : `~numpy.ndarray`
-            HEALPix input data
+            HEALPIX input data
         sum_ebins : bool
             Sum energy bins over energy bins before reprojecting
         normalize : bool
@@ -246,12 +246,11 @@ class HpxMap(object):
         header = self.hpx.make_header()
 
         if shape[-1] != self._npix:
-            raise Exception(
-                "Size of data array does not match number of pixels")
+            raise ValueError('Size of data array does not match number of pixels')
         cols = []
         if self._region:
             header['INDXSCHM'] = 'EXPLICIT'
-            cols.append(fits.Column("PIX", "J", array=self._ipix))
+            cols.append(fits.Column('PIX', 'J', array=self._ipix))
         else:
             header['INDXSCHM'] = 'IMPLICIT'
 
@@ -261,36 +260,36 @@ class HpxMap(object):
             if len(shape) == 1:
                 nonzero = nonzero[0]
                 cols.append(fits.Column(
-                    "KEY", "{}J".format(nfilled),
+                    'KEY', '{}J'.format(nfilled),
                     array=nonzero.reshape(1, nfilled)),
                 )
                 cols.append(fits.Column(
-                    "VALUE", "{}E".format(nfilled),
+                    'VALUE', '{}E'.format(nfilled),
                     array=data[nonzero].astype(float).reshape(1, nfilled)),
                 )
             elif len(shape) == 2:
                 nonzero = self._npix * nonzero[0] + nonzero[1]
                 cols.append(fits.Column(
-                    "KEY", "{}J".format(nfilled),
+                    'KEY', '{}J'.format(nfilled),
                     array=nonzero.reshape(1, nfilled)),
                 )
                 cols.append(fits.Column(
-                    "VALUE", "{}E".format(nfilled),
+                    'VALUE', '{}E'.format(nfilled),
                     array=data.flat[nonzero].astype(float).reshape(1, nfilled)),
                 )
             else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+                raise Exception('HPX.write_fits only handles 1D and 2D maps')
 
         else:
             if len(shape) == 1:
                 cols.append(fits.Column(self.conv.colname(
-                    indx=i + self.conv.firstcol), "E", array=data.astype(float)))
+                    indx=i + self.conv.firstcol), 'E', array=data.astype(float)))
             elif len(shape) == 2:
                 for i in range(shape[0]):
                     cols.append(fits.Column(self.conv.colname(
-                        indx=i + self.conv.firstcol), "E", array=data[i].astype(float)))
+                        indx=i + self.conv.firstcol), 'E', array=data[i].astype(float)))
             else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+                raise Exception('HPX.write_fits only handles 1D and 2D maps')
 
         hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
 

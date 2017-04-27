@@ -104,7 +104,7 @@ class MapCoords(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class MapGeom(object):
-    """Base class for WCS and HEALPix geometries.
+    """Base class for WCS and HEALPIX geometries.
     """
 
     @abc.abstractmethod

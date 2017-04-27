@@ -222,7 +222,6 @@ def offset_to_sky(skydir, offset_lon, offset_lat,
                   coordsys='CEL', projection='AIT'):
     """Convert a cartesian offset (X,Y) in the given projection into
     a pair of spherical coordinates."""
-
     offset_lon = np.array(offset_lon, ndmin=1)
     offset_lat = np.array(offset_lat, ndmin=1)
 
@@ -237,7 +236,6 @@ def sky_to_offset(skydir, lon, lat, coordsys='CEL', projection='AIT'):
     
     This function is the inverse of offset_to_sky.
     """
-
     w = create_wcs(skydir, coordsys, projection)
     skycrd = np.vstack((lon, lat)).T
 
@@ -251,7 +249,6 @@ def offset_to_skydir(skydir, offset_lon, offset_lat,
                      coordsys='CEL', projection='AIT'):
     """Convert a cartesian offset (X,Y) in the given projection into
     a SkyCoord."""
-
     offset_lon = np.array(offset_lon, ndmin=1)
     offset_lat = np.array(offset_lat, ndmin=1)
 
@@ -299,11 +296,9 @@ def pix_to_skydir(xpix, ypix, wcs):
     ypix = np.array(ypix)
 
     if xpix.ndim > 0 and len(xpix) == 0:
-        return SkyCoord(np.empty(0), np.empty(0), unit='deg',
-                        frame='icrs')
+        return SkyCoord(np.empty(0), np.empty(0), unit='deg', frame='icrs')
 
-    return SkyCoord.from_pixel(xpix, ypix, wcs,
-                               origin=0).transform_to('icrs')
+    return SkyCoord.from_pixel(xpix, ypix, wcs, origin=0).transform_to('icrs')
 
 
 def get_coordsys(wcs):
@@ -312,13 +307,12 @@ def get_coordsys(wcs):
     elif 'GLON' in wcs.wcs.ctype[0]:
         return 'GAL'
     else:
-        raise Exception('Unrecognized WCS coordinate system.')
+        raise ValueError('Unrecognized WCS coordinate system.')
 
 
 def wcs_to_axes(w, npix):
     """Generate a sequence of bin edge vectors corresponding to the
     axes of a WCS object."""
-
     npix = npix[::-1]
 
     x = np.linspace(-(npix[0]) / 2., (npix[0]) / 2.,
@@ -342,7 +336,7 @@ def wcs_to_coords(w, shape):
     elif w.naxis == 3:
         z, y, x = wcs_to_axes(w, shape)
     else:
-        raise Exception("WCS naxis must be 2 or 3. Got: {}".format(w.naxis))
+        raise Exception('WCS naxis must be 2 or 3. Got: {}'.format(w.naxis))
 
     x = 0.5 * (x[1:] + x[:-1])
     y = 0.5 * (y[1:] + y[:-1])
