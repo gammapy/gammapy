@@ -154,17 +154,17 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     w = WCS(naxis=naxis)
 
     if coordsys == 'CEL':
-        w.wcs.ctype[0] = 'RA---%s' % (projection)
-        w.wcs.ctype[1] = 'DEC--%s' % (projection)
+        w.wcs.ctype[0] = 'RA---{}'.format(projection)
+        w.wcs.ctype[1] = 'DEC--{}'.format(projection)
         w.wcs.crval[0] = skydir.icrs.ra.deg
         w.wcs.crval[1] = skydir.icrs.dec.deg
     elif coordsys == 'GAL':
-        w.wcs.ctype[0] = 'GLON-%s' % (projection)
-        w.wcs.ctype[1] = 'GLAT-%s' % (projection)
+        w.wcs.ctype[0] = 'GLON-{}'.format(projection)
+        w.wcs.ctype[1] = 'GLAT-{}'.format(projection)
         w.wcs.crval[0] = skydir.galactic.l.deg
         w.wcs.crval[1] = skydir.galactic.b.deg
     else:
-        raise Exception('Unrecognized coordinate system.')
+        raise ValueError('Unrecognized coordinate system.')
 
     try:
         w.wcs.crpix[0] = crpix[0]
@@ -197,7 +197,7 @@ def wcs_add_energy_axis(wcs, energies):
         Array of energies
     """
     if wcs.naxis != 2:
-        raise Exception('wcs_add_energy_axis, input WCS naxis != 2 %i' % wcs.naxis)
+        raise Exception('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
 
     w = WCS(naxis=3)
     w.wcs.crpix[0] = wcs.wcs.crpix[0]
@@ -342,7 +342,7 @@ def wcs_to_coords(w, shape):
     elif w.naxis == 3:
         z, y, x = wcs_to_axes(w, shape)
     else:
-        raise Exception("Wrong number of WCS axes %i" % w.naxis)
+        raise Exception("WCS naxis must be 2 or 3. Got: {}".format(w.naxis))
 
     x = 0.5 * (x[1:] + x[:-1])
     y = 0.5 * (y[1:] + y[:-1])
@@ -383,4 +383,4 @@ def is_galactic(wcs):
     elif coordsys == 'CEL':
         return False
     else:
-        raise Exception('Unsupported coordinate system: %s' % coordsys)
+        raise ValueError('Unsupported coordinate system: {}'.format(coordsys))

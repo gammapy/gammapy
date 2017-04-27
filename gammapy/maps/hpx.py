@@ -13,7 +13,6 @@ from astropy.coordinates import SkyCoord
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 
-
 # TODO: What should be part of the public API?
 __all__ = [
     # 'HPX_Conv',
@@ -45,7 +44,7 @@ class HPX_Conv(object):
         self.coordsys = kwargs.get('coordsys', 'COORDSYS')
 
     def colname(self, indx):
-        return "%s%i" % (self.colstring, indx)
+        return '{}{}'.format(self.colstring, indx)
 
 
 # Various conventions for storing HEALPix maps in FITS files
@@ -135,7 +134,7 @@ def get_pixel_size_from_nside(nside):
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
-        raise ValueError('HEALPix order must be between 0 to 13 %i' % order)
+        raise ValueError('HEALPix order must be between 0 to 13. Value is: {}'.format(order))
 
     return HPX_ORDER_TO_PIXSIZE[order]
 
@@ -873,10 +872,10 @@ class HPXGeom(MapGeom):
             elif tokens[1] == 'RING':
                 ipix_ring = int(tokens[3])
             else:
-                raise Exception("Did not recognize ordering scheme %s" % tokens[1])
+                raise ValueError("Did not recognize ordering scheme: {}".format(tokens[1]))
             ilist = match_hpx_pixel(nside, nest, nside_pix, ipix_ring)
         else:
-            raise Exception("Did not recognize region type %s" % tokens[0])
+            raise ValueError("Did not recognize region type: {}".format(tokens[0]))
 
         return ilist
 
@@ -909,13 +908,13 @@ class HPXGeom(MapGeom):
             elif tokens[1] == 'RING':
                 nest_pix = False
             else:
-                raise Exception("Did not recognize ordering scheme %s" % tokens[1])
+                raise ValueError("Did not recognize ordering scheme: {}".format(tokens[1]))
             theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
             lat = np.degrees((np.pi / 2) - theta)
             lon = np.degrees(phi)
             return SkyCoord(lon, lat, frame=frame, unit='deg')
         else:
-            raise Exception("HPX.get_ref_dir did not recognize region type %s" % tokens[0])
+            raise ValueError("HPX.get_ref_dir did not recognize region type: {}".format(tokens[0]))
 
         return None
 
@@ -932,7 +931,7 @@ class HPXGeom(MapGeom):
             pixel_size = get_pixel_size_from_nside(int(tokens[2]))
             return 2. * pixel_size
         else:
-            raise Exception("Did not recognize region type %s" % tokens[0])
+            raise Exception("Did not recognize region type: {}".format(tokens[0]))
 
     def make_wcs(self, naxis=2, proj='CAR', axes=None, oversample=2):
         """Make a WCS projection appropriate for this HPX pixelization.
@@ -955,24 +954,24 @@ class HPXGeom(MapGeom):
             WCS geometry
         """
         if naxis < 2 or naxis > self.ndim:
-            raise Exception('naxis must be between 2 or the total number '
-                            'of dimensions.')
+            raise ValueError('naxis must be between 2 or the total number '
+                             'of dimensions.')
 
         w = WCS(naxis=naxis)
         skydir = self.get_ref_dir(self._region, self.coordsys)
 
         if self.coordsys == 'CEL':
-            w.wcs.ctype[0] = 'RA---%s' % (proj)
-            w.wcs.ctype[1] = 'DEC--%s' % (proj)
+            w.wcs.ctype[0] = 'RA---{}'.format(proj)
+            w.wcs.ctype[1] = 'DEC--{}'.format(proj)
             w.wcs.crval[0] = skydir.ra.deg
             w.wcs.crval[1] = skydir.dec.deg
         elif self.coordsys == 'GAL':
-            w.wcs.ctype[0] = 'GLON-%s' % (proj)
-            w.wcs.ctype[1] = 'GLAT-%s' % (proj)
+            w.wcs.ctype[0] = 'GLON-{}'.format(proj)
+            w.wcs.ctype[1] = 'GLAT-{}'.format(proj)
             w.wcs.crval[0] = skydir.galactic.l.deg
             w.wcs.crval[1] = skydir.galactic.b.deg
         else:
-            raise Exception('Unrecognized coordinate system.')
+            raise ValueError('Unrecognized coordinate system.')
 
         pixsize = np.min(get_pixel_size_from_nside(self.nside))
         roisize = self.get_region_size(self._region)

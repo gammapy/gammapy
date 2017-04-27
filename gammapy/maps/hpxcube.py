@@ -4,7 +4,9 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from .hpxmap import HpxMap
 
-__all__ = ['HpxCube']
+__all__ = [
+    'HpxCube',
+]
 
 
 class HpxCube(HpxMap):
@@ -138,8 +140,8 @@ class HpxCube(HpxMap):
                 hpx_data = hpx_in
                 loop_ebins = True
         else:
-            raise Exception('Wrong dimension for HpxMap %i' %
-                            len(hpx_in.shape))
+            dim = len(hpx_in.shape)
+            raise Exception('Wrong dimension for HpxMap: {}'.format(dim))
 
         if loop_ebins:
             for i in range(hpx_data.shape[0]):
@@ -168,8 +170,8 @@ class HpxCube(HpxMap):
 
     def sum_over_axes(self):
         """Sum over all non-spatial dimensions."""
-        # We sum over axis 0 in the array, and drop the energy binning in the
-        # hpx object
+        # We sum over axis 0 in the array,
+        # and drop the energy binning in the hpx object
         return HpxCube(np.sum(self.counts, axis=0),
                        self.hpx.copy_and_drop_axes())
 

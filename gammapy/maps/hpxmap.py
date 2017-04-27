@@ -260,16 +260,24 @@ class HpxMap(object):
             nfilled = len(nonzero[0])
             if len(shape) == 1:
                 nonzero = nonzero[0]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data[
-                    nonzero].astype(float).reshape(1, nfilled)))
+                cols.append(fits.Column(
+                    "KEY", "{}J".format(nfilled),
+                    array=nonzero.reshape(1, nfilled)),
+                )
+                cols.append(fits.Column(
+                    "VALUE", "{}E".format(nfilled),
+                    array=data[nonzero].astype(float).reshape(1, nfilled)),
+                )
             elif len(shape) == 2:
                 nonzero = self._npix * nonzero[0] + nonzero[1]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data.flat[
-                    nonzero].astype(float).reshape(1, nfilled)))
+                cols.append(fits.Column(
+                    "KEY", "{}J".format(nfilled),
+                    array=nonzero.reshape(1, nfilled)),
+                )
+                cols.append(fits.Column(
+                    "VALUE", "{}E".format(nfilled),
+                    array=data.flat[nonzero].astype(float).reshape(1, nfilled)),
+                )
             else:
                 raise Exception("HPX.write_fits only handles 1D and 2D maps")
 
