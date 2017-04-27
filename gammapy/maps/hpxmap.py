@@ -7,6 +7,10 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .hpx import HpxToWcsMapping
 
+__all__ = [
+    'HpxMap',
+]
+
 
 @six.add_metaclass(abc.ABCMeta)
 class HpxMap(object):

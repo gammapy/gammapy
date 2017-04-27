@@ -13,6 +13,16 @@ from astropy.coordinates import Galactic, ICRS
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 
+
+# TODO: What should be part of the public API?
+__all__ = [
+    # 'HPX_Conv',
+    # 'HPX_FITS_CONVENTIONS',
+    # 'HPX_ORDER_TO_PIXSIZE',
+    'HPXGeom',
+    # 'HpxToWcsMapping',
+]
+
 # This is an approximation of the size of HEALPix pixels (in degrees)
 # for a particular order.   It is used to convert from HEALPix to WCS-based
 # projections

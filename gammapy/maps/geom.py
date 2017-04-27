@@ -5,6 +5,11 @@ import numpy as np
 from astropy.extern import six
 from astropy.coordinates import SkyCoord
 
+__all__ = [
+    'MapCoords',
+    'MapGeom',
+]
+
 
 def val_to_bin(edges, x):
     """Convert axis coordinates ``x`` to bin indices. 

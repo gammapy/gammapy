@@ -7,6 +7,10 @@ from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, val_to_pix
 
+__all__ = [
+    'WCSGeom',
+]
+
 
 class WCSGeom(MapGeom):
     """Container for WCS object and image extent.
