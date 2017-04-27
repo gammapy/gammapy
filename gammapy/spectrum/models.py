@@ -1089,6 +1089,7 @@ class Absorption(object):
     .. plot::
         :include-source:
         import matplotlib.pyplot as plt
+        import astropy.units as u
         from gammapy.spectrum.models import Absorption
 
         table = Absorption.read(filename='$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz').table_model(parameter=0.2)
@@ -1161,6 +1162,23 @@ class Absorption(object):
                    energy_hi=energy_bounds.upper_bounds,
                    param_lo=param_lo, param_hi=param_hi, data=data)
 
+    @classmethod
+    def read_builtin(cls, name):
+        """
+        Read one of the built-in absorption models.
+
+        Parameters
+        ----------
+        name : {'franceschini', 'dominguez', 'finke'}
+            name of one of the available model in gammapy-extra
+        """
+        models = dict()
+        models['franceschini'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+        models['dominguez'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz'
+        models['finke'] = '$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz'
+        
+        return cls.read(models[name])
+    
     def table_model(self, parameter, unit='TeV'):
         """
         Returns `~gammapy.spectrum.models.TableModel` for a given parameter
@@ -1173,7 +1191,7 @@ class Absorption(object):
         unit : `str`, (optional)
             desired value for energy axis
         """
-        energy_axis = self.absorption.axes[1]
+        energy_axis = self.data.axes[1]
         energy = (energy_axis.log_center()).to(unit)
 
         values = self.evaluate(energy=energy, parameter=parameter)

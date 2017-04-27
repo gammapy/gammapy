@@ -71,3 +71,7 @@ def test_observation_parameters():
 def test_cta_simulation():
     text = str(cta_simu())
     assert '*** Observation summary report ***' in text
+
+    # TODO: fix the seed to have
+    stats = cta_simu().total_stats
+    assert stats.sigma > 5.
