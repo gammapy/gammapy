@@ -24,7 +24,6 @@ __all__ = [
     'SpectrumEnergyGroupMaker',
     'SpectrumEnergyGroup',
     'SpectrumEnergyGroups',
-    'calculate_flux_point_binning',
 ]
 
 # TODO: improve the code so that this isn't needed!
@@ -53,6 +52,11 @@ class SpectrumEnergyGroupMaker(object):
 
     See :ref:`spectrum_energy_group` for examples.
 
+    Parameters
+    ----------
+    obs : `~gammapy.spectrum.SpectrumObservation`
+        Spectrum observation
+
     Attributes
     ----------
     obs : `~gammapy.spectrum.SpectrumObservation`
@@ -63,7 +67,7 @@ class SpectrumEnergyGroupMaker(object):
         List of energy groups.
     """
 
-    def __init__(self, obs=None):
+    def __init__(self, obs):
         self.obs = obs
 
         # Start with a table with the energy binning and basic stats
@@ -78,8 +82,7 @@ class SpectrumEnergyGroupMaker(object):
         self.groups = SpectrumEnergyGroups.from_total_table(self.table)
 
     def __str__(self):
-        """Print a little report"""
-        ss = 'SpectrumEnergyGroupMaker:\n'
+        ss = self.__class__.__name__
 
         ss += '\nSpectrum table:\n'
         ss += 'Number of bins: {}\n'.format(len(self.table))
@@ -91,7 +94,6 @@ class SpectrumEnergyGroupMaker(object):
         return ss
 
     # Properties concerning the total, un-grouped spectrum
-
     @property
     def table_energy_range(self):
         """Total spectrum energy range (no grouping or range applied)"""
@@ -100,7 +102,6 @@ class SpectrumEnergyGroupMaker(object):
         return EnergyRange(emin, emax)
 
     # Properties for the grouped spectrum
-
     @property
     def n_groups(self):
         """Number of groups."""
@@ -111,7 +112,7 @@ class SpectrumEnergyGroupMaker(object):
         """Apply safe energy range of observation to ``groups``.
         """
         bins = self.obs.on_vector.bins_in_safe_range
-        underflow = bins[0] - 1 
+        underflow = bins[0] - 1
         # If no low threshold is set no underflow bin is needed
         if underflow > 0:
             self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
@@ -121,7 +122,7 @@ class SpectrumEnergyGroupMaker(object):
         max_bin = self.groups[-1].energy_group_idx
         # If no high threshold is set no overflow bin is needed
         if overflow <= max_bin:
-            self.groups.make_and_replace_merged_group(overflow, max_bin , 'overflow')
+            self.groups.make_and_replace_merged_group(overflow, max_bin, 'overflow')
 
     def set_energy_range(self, emin=None, emax=None):
         """Apply energy range to ``groups``.
@@ -130,22 +131,14 @@ class SpectrumEnergyGroupMaker(object):
             self.groups.apply_energy_min(emin)
         if emax:
             self.groups.apply_energy_max(emax)
-    # Methods to compute groupings
 
+    # Methods to compute groupings
     def compute_groups_fixed(self, ebounds):
         """Compute grouping for a given fixed energy binning.
         """
         self.groups.apply_energy_min(energy=ebounds[0])
         self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
-
-    def compute_groups_npoints(self, npoints):
-        """TODO: document"""
-        emin, emax = self.get_safe_range()
-        npoints = self.config['n_points']
-        return EnergyBounds.equal_log_spacing(
-            emin=emin, emax=emax, nbins=npoints,
-        )
 
 
 class SpectrumEnergyGroup(object):
@@ -480,7 +473,7 @@ class EnergyRange(object):
         return [
             EnergyRange(min=emin, max=emax)
             for (emin, emax) in zip(ebounds[:-1], ebounds[1:])
-            ]
+        ]
 
 
 def calculate_flux_point_binning(obs_list, min_signif):
@@ -494,7 +487,7 @@ def calculate_flux_point_binning(obs_list, min_signif):
     flux point interval, otherwise the sherpa covariance method breaks
     down.
 
-    TODO: Refactor
+    TODO: Refactor, add back to docs
 
     Parameters
     ----------
