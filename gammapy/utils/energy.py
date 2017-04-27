@@ -4,9 +4,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy import log
-from astropy.table import Table
 from astropy.extern import six
-
 
 __all__ = [
     'Energy',
@@ -15,7 +13,6 @@ __all__ = [
 
 
 class Energy(Quantity):
-
     """Energy quantity scalar or array.
 
     This is a `~astropy.units.Quantity` sub-class that adds convenience methods
@@ -23,7 +20,6 @@ class Energy(Quantity):
     equal-log-spaced grids of energies.
 
     See :ref:`energy_handling_gammapy` for further information.
-
 
     Parameters
     ----------
@@ -37,7 +33,6 @@ class Energy(Quantity):
         See `~astropy.units.Quantity`.
     copy : bool, optional
         See `~astropy.units.Quantity`.
-
     """
 
     def __new__(cls, energy, unit=None, dtype=None, copy=True):
@@ -69,16 +64,12 @@ class Energy(Quantity):
 
     @property
     def nbins(self):
-        """
-        The number of bins
-        """
+        """The number of bins."""
         return self.size
 
     @property
     def range(self):
-        """
-        The covered energy range (tuple)
-        """
+        """The covered energy range (tuple)."""
         return self[0:self.size:self.size - 1]
 
     @classmethod
@@ -100,7 +91,6 @@ class Energy(Quantity):
         per_decade : bool
             Whether nbins is per decade.
         """
-
         if unit is not None:
             emin = Energy(emin, unit)
             emax = Energy(emax, unit)
@@ -129,14 +119,13 @@ class Energy(Quantity):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
-
         header = hdu.header
         fitsunit = header.get('TUNIT1')
 
         if fitsunit is None:
             if unit is not None:
                 log.warning("No unit found in the FITS header."
-                         " Setting it to {0}".format(unit))
+                            " Setting it to {0}".format(unit))
                 fitsunit = unit
             else:
                 raise ValueError("No unit found in the FITS header."
@@ -146,7 +135,7 @@ class Energy(Quantity):
 
         return energy.to(unit)
 
-    def to_fits(self, **kwargs):
+    def to_fits(self):
         """Write ENERGIES fits extension
 
         Returns
@@ -154,7 +143,6 @@ class Energy(Quantity):
         hdu: `~astropy.io.fits.BinTableHDU`
             ENERGIES fits extension
         """
-
         col1 = fits.Column(name='Energy', format='D', array=self.value)
         cols = fits.ColDefs([col1])
         hdu = fits.BinTableHDU.from_columns(cols)
@@ -165,7 +153,6 @@ class Energy(Quantity):
 
 
 class EnergyBounds(Energy):
-
     """EnergyBounds array.
 
     This is a `~gammapy.utils.energy.Energy` sub-class that adds convenience
@@ -176,7 +163,6 @@ class EnergyBounds(Energy):
 
     Parameters
     ----------
-
     energy : `~numpy.array`, scalar, `~astropy.units.Quantity`
         EnergyBounds
     unit : `~astropy.units.UnitBase`, str
@@ -187,41 +173,33 @@ class EnergyBounds(Energy):
 
     @property
     def nbins(self):
-        """
-        The number of bins
-        """
+        """The number of bins."""
         return self.size - 1
 
     @property
     def log_centers(self):
-        """Log centers of the energy bounds
-        """
+        """Log centers of the energy bounds."""
         center = np.sqrt(self[:-1] * self[1:])
         return center.view(Energy)
 
     @property
     def upper_bounds(self):
-        """Upper energy bin edges
-        """
+        """Upper energy bin edges."""
         return self[1:]
 
     @property
     def lower_bounds(self):
-        """Lower energy bin edges
-        """
-
+        """Lower energy bin edges."""
         return self[:-1]
 
     @property
     def boundaries(self):
-        """Energy range"""
+        """Energy range."""
         return self[[0, -1]]
 
     @property
     def bands(self):
-        """Width of the energy bins
-        """
-
+        """Width of the energy bins."""
         upper = self.upper_bounds
         lower = self.lower_bounds
         return upper - lower
@@ -230,7 +208,7 @@ class EnergyBounds(Energy):
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None):
         """EnergyBounds from lower and upper bounds (`~gammapy.utils.energy.EnergyBounds`).
 
-        If no unit is given, it will be taken from upper
+        If no unit is given, it will be taken from upper.
 
         Parameters
         ----------
@@ -239,7 +217,6 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy units
         """
-
         # np.append renders Quantities dimensionless
         # http://docs.astropy.org/en/latest/known_issues.html#quantity-issues
 
@@ -254,7 +231,7 @@ class EnergyBounds(Energy):
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """EnergyBounds with equal log-spacing (`~gammapy.utils.energy.EnergyBounds`).
 
-        If no unit is given, it will be taken from emax
+        If no unit is given, it will be taken from emax.
 
         Parameters
         ----------
@@ -267,22 +244,18 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
-
         return super(EnergyBounds, cls).equal_log_spacing(
             emin, emax, nbins + 1, unit)
 
     @classmethod
-    def from_ebounds(cls, hdu, unit=None):
+    def from_ebounds(cls, hdu):
         """Read EBOUNDS fits extension (`~gammapy.utils.energy.EnergyBounds`).
 
         Parameters
         ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``EBOUNDS`` extensions.
-        unit : `~astropy.units.UnitBase`, str, None
-            Energy unit
         """
-
         if hdu.name != 'EBOUNDS':
             log.warning('This does not seem like an EBOUNDS extension. '
                         'Are you sure?')
@@ -294,17 +267,14 @@ class EnergyBounds(Energy):
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
     @classmethod
-    def from_rmf_matrix(cls, hdu, unit=None):
+    def from_rmf_matrix(cls, hdu):
         """Read MATRIX fits extension (`~gammapy.utils.energy.EnergyBounds`).
 
         Parameters
         ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``MATRIX`` extensions.
-        unit : `~astropy.units.UnitBase`, str, None
-            Energy unit
         """
-
         if hdu.name != 'MATRIX':
             log.warning('This does not seem like a MATRIX extension. '
                         'Are you sure?')
@@ -316,8 +286,7 @@ class EnergyBounds(Energy):
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
     def bin(self, i):
-        """
-        Return energy bin edges (zero-based numbering)
+        """Return energy bin edges (zero-based numbering).
 
         Parameters
         ----------
@@ -350,7 +319,7 @@ class EnergyBounds(Energy):
         return bin_index
 
     def contains(self, energy):
-        """Check of energy is contained in boundaries
+        """Check of energy is contained in boundaries.
 
         Parameters
         ----------
@@ -360,7 +329,7 @@ class EnergyBounds(Energy):
         return (energy > self[0]) & (energy < self[-1])
 
     def to_dict(self):
-        """Construct dict representing an energy range"""
+        """Construct dict representing an energy range."""
         if len(self) != 2:
             raise ValueError(
                 "This is not an energy range. Nbins: {}".format(self.nbins))
@@ -371,6 +340,5 @@ class EnergyBounds(Energy):
 
     @classmethod
     def from_dict(cls, d):
-        """Read dict representing an energy range"""
-
+        """Read dict representing an energy range."""
         return cls((d['min'], d['max']), d['unit'])

@@ -161,9 +161,9 @@ class SpectralModel(object):
             Keyword arguments passed to `integrate_spectrum`
 
         """
-
         def f(x):
             return x * self(x)
+
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def energy_flux_error(self, emin, emax, **kwargs):
@@ -245,7 +245,6 @@ class SpectralModel(object):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
@@ -502,7 +501,6 @@ class PowerLaw(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-
         pars = self.parameters
         val = -1 * pars['index'].value + 2
 
@@ -990,7 +988,6 @@ class TableModel(SpectralModel):
         return cls(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, amplitude):
-
         is_array = True
         try:
             len(energy)
@@ -1045,7 +1042,6 @@ class TableModel(SpectralModel):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 

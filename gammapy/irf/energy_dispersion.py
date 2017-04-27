@@ -736,7 +736,6 @@ class EnergyDispersion2D(object):
         rv : `~numpy.ndarray`
             Redistribution vector
         """
-
         e_true = Energy(e_true)
 
         # Default: e_reco nodes = migra nodes * e_true nodes
@@ -758,7 +757,7 @@ class EnergyDispersion2D(object):
         mrec_max = self.migra.hi[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
-        # Compute energy dispersion probabilty dP/dm for each element of migration array
+        # Compute energy dispersion probability dP/dm for each element of migration array
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
 
         # Compute normalized cumulative sum to prepare integration

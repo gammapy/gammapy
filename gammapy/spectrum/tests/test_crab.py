@@ -27,7 +27,7 @@ class TestCrabSpectrum:
         emin, emax = [1, 1e3] * u.TeV
 
         crab_spectrum = CrabSpectrum(reference)
-        f = crab_spectrum.model(e)
+        f = crab_spectrum.model(energy)
         I = crab_spectrum.model.integral(emin, emax)
         g = crab_spectrum.model.spectral_index(energy)
         assert_quantity_allclose(desired[reference][0], f)

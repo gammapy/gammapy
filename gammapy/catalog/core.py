@@ -206,7 +206,6 @@ class SourceCatalog(object):
         data : `~collections.OrderedDict`
             Source data
         """
-
         data = OrderedDict()
         for colname in self.table.colnames:
             col = self.table[colname]

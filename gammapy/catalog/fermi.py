@@ -68,7 +68,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
             Comma separated list of options
         """
-
         if info == 'all':
             info = 'basic,position,spectral,lightcurve'
 

@@ -343,7 +343,6 @@ class PSF3D(object):
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view. Default theta = 0 deg
         """
-
         table = self.to_table_psf(energy=energy, theta=theta)
         return table.plot_psf_vs_rad()
 

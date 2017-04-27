@@ -659,7 +659,6 @@ class DataStoreObservation(object):
         psf : `~gammapy.irf.EnergyDependentTablePSF`
             Energy dependent psf table
         """
-
         offset = position.separation(self.pointing_radec)
         energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
         rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
@@ -761,10 +760,9 @@ class ObservationList(UserList):
         stacked_edisp : `~gammapy.irf.EnergyDispersion`
             Stacked EDISP for a set of observation
         """
-
-        list_aeff = list()
-        list_edisp = list()
-        list_livetime = list()
+        list_aeff = []
+        list_edisp = []
+        list_livetime = []
         list_low_threshold = [low_reco_threshold] * len(self)
         list_high_threshold = [high_reco_threshold] * len(self)
 

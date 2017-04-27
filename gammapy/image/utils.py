@@ -2,15 +2,12 @@
 """Image utility functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 from multiprocessing import Pool
 from functools import partial
-
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
-
 
 __all__ = [
     'block_reduce_hdu',
@@ -69,6 +66,7 @@ def scale_cube(data, kernels, parallel=True):
     else:
         result = map(wrap, kernels)
     return np.dstack(result)
+
 
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
@@ -375,7 +373,6 @@ def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
     mask : `~numpy.ndarray`
         Boolean mask array for a circular sub-region
     """
-
     lons.wrap_angle = Angle('180 deg')
     center_lon.wrap_angle = Angle('180 deg')
 

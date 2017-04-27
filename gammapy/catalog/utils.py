@@ -243,7 +243,6 @@ def skycoord_from_table(table):
     TODO: I'm not sure if it's a good idea to use this because it's not always clear
     which positions are taken.
     """
-
     if set(['RAJ2000', 'DEJ2000']).issubset(table.colnames):
         lon, lat, frame = 'RAJ2000', 'DEJ2000', 'icrs'
     elif set(['RA', 'DEC']).issubset(table.colnames):
