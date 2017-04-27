@@ -36,7 +36,6 @@ def obs_param():
     return ObservationParameters(alpha=alpha, livetime=livetime,
                                  emin=emin, emax=emax)
 
-@requires_data('gammapy-extra')
 @pytest.fixture(scope='session')
 def perf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'

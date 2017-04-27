@@ -7,7 +7,7 @@ from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
                       TableModel, AbsorbedSpectralModel, Absorption)
 from ...utils.testing import requires_dependency, requires_data
-from .scripts import CTAPerf
+from ...scripts import CTAPerf
 from gammapy.scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
 from gammapy.spectrum import SpectrumObservationList, SpectrumFit, SpectrumResult
 
@@ -266,9 +266,10 @@ def test_spectral_model_absorbed_by_ebl():
                                                  obs_param=obs_param)
 
     # Model we want to fit
-    model = AbsorbedSpectralModel(spectral_model=PowerLaw(index=2.5 * u.Unit(''),
-                                                          amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
-                                                          reference=1. * u.TeV),
+    pwl_model = PowerLaw(index=2.5 * u.Unit(''),
+                         amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
+                         reference=1. * u.TeV)
+    model = AbsorbedSpectralModel(spectral_model=pwl_model,
                                   absorption=absorption,
                                   parameter=0.2)
     

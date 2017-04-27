@@ -1086,7 +1086,7 @@ class Absorption(object):
     --------
     Create and plot EBL absorption model for a redshift of 0.2
 
-    .. create::
+    .. plot::
         :include-source:
         import matplotlib.pyplot as plt
         from gammapy.spectrum.models import Absorption
@@ -1113,8 +1113,8 @@ class Absorption(object):
                            interpolation_mode='log', name='energy')
         ]
 
-        self.absorption = NDDataArray(axes=axes, data=data)
-        self.absorption.default_interp_kwargs['fill_value'] = None
+        self.data = NDDataArray(axes=axes, data=data)
+        self.data.default_interp_kwargs['fill_value'] = None
         
     @classmethod
     def read(cls, filename):
@@ -1184,7 +1184,7 @@ class Absorption(object):
         """
         Evaluate model for energy and parameter value
         """
-        return self.absorption.evaluate(energy=energy, parameter=parameter)
+        return self.data.evaluate(energy=energy, parameter=parameter)
 
     
     
@@ -1217,8 +1217,8 @@ class AbsorbedSpectralModel(SpectralModel):
             param_list.append(param)
 
         # Add parameter to the list
-        param_min = self.absorption.absorption.axes[0].lo[0]
-        param_max = self.absorption.absorption.axes[0].lo[-1]
+        param_min = self.absorption.data.axes[0].lo[0]
+        param_max = self.absorption.data.axes[0].lo[-1]
         param_list.append(Parameter(parameter_name, parameter,
                                     parmin=param_min, parmax=param_max,
                                     frozen=True))
