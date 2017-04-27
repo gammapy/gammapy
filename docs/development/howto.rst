@@ -631,7 +631,7 @@ One solution is to always use properties, but that can get very verbose if we ha
 so many getters and setters. I don't have a solution for this yet ... for now I'll go read
 `this`__ and meditate.
 
-.. __: http://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
+.. __: https://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
 
 TODO: make a decision on this and describe the issue / solution here.
 

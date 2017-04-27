@@ -101,7 +101,7 @@ Some references (please add what you find useful
 * https://github.com/samconnolly/DELightcurveSimulation
 * https://github.com/cokelaer/spectrum
 * https://github.com/YSOVAR/YSOVAR
-* http://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
+* https://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
 
 
 Reference/API

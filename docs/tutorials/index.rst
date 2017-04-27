@@ -51,7 +51,7 @@ IPython notebooks
 =================
 
 The IPython notebooks are in the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repo,
-see `here <http://nbviewer.ipython.org/github/gammapy/gammapy-extra/blob/master/notebooks/Index.ipynb>`__. 
+see `here <https://nbviewer.ipython.org/github/gammapy/gammapy-extra/blob/master/notebooks/Index.ipynb>`__.
 
 External
 ========
@@ -72,4 +72,4 @@ It's possible to learn the basics within a day and to become productive within a
 * Fermi ScienceTools analysis threads ––– http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/
 * CIAO Sherpa threads ––– http://cxc.harvard.edu/sherpa/threads/index.html
 * `Astropy tutorial by Axel Donath from December 2013
-  <http://nbviewer.ipython.org/github/adonath/gamma_astropy_talk/blob/master/gamma_astropy_talk.ipynb>`_
+  <https://nbviewer.ipython.org/github/adonath/gamma_astropy_talk/blob/master/gamma_astropy_talk.ipynb>`_
