@@ -7,22 +7,18 @@ import numpy as np
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
-from gammapy.utils.scripts import make_path
-
+from ..utils.scripts import make_path
 from ..utils.fits import table_from_row_data
-from ..utils.energy import Energy, EnergyBounds
-from ..spectrum.powerlaw import power_law_flux
-from ..spectrum.models import PowerLaw
 
 __all__ = [
     'compute_flux_points_dnde',
-    'FluxPointEstimator',
     'FluxPoints',
+    'FluxPointEstimator',
+    'FluxPointsFitter',
     'SEDLikelihoodProfile',
 ]
 
 log = logging.getLogger(__name__)
-
 
 REQUIRED_COLUMNS = {'dnde': ['e_ref', 'dnde'],
                     'e2dnde': ['e_ref', 'e2dnde'],
@@ -39,7 +35,7 @@ OPTIONAL_COLUMNS = {'dnde': ['dnde_err', 'dnde_errp', 'dnde_errn',
                               'eflux_ul', 'is_ul']}
 
 DEFAULT_UNIT = {'dnde': u.Unit('cm-2 s-1 TeV-1'),
-                'e2dnde' : u.Unit('erg cm-2 s-1'),
+                'e2dnde': u.Unit('erg cm-2 s-1'),
                 'flux': u.Unit('cm-2 s-1'),
                 'eflux': u.Unit('erg cm-2 s-1')}
 
@@ -69,6 +65,7 @@ class FluxPoints(object):
     >>> flux_points.show()
 
     """
+
     def __init__(self, table):
         # validate that the table is a valid representation of the given
         # flux point sed type
@@ -481,24 +478,21 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
             * `'log_center'` log bin center e_ref
             * `'table'` using column 'e_ref' from input flux_points
 
-    Examples
-    --------
-
-    >>> from astropy import units as u
-    >>> from gammapy.spectrum import FluxPoints, compute_flux_points_dnde
-    >>> from gammapy.spectrum.models import Powerlaw
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-    >>> flux_points = FluxPoints.read(filename)
-    >>> model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
-    >>> result = compute_flux_points_dnde(flux_points, model=model)
-
-
     Returns
     -------
     flux_points : `FluxPoints`
         Flux points including differential quantity columns `dnde`
         and `dnde_err` (optional), `dnde_ul` (optional).
 
+    Examples
+    --------
+    >>> from astropy import units as u
+    >>> from gammapy.spectrum import FluxPoints, compute_flux_points_dnde
+    >>> from gammapy.spectrum.models import PowerLaw
+    >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+    >>> flux_points = FluxPoints.read(filename)
+    >>> model = PowerLaw(2.2 * u.Unit(''), 1E-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+    >>> flux_point_dnde = compute_flux_points_dnde(flux_points, model=model)
     """
     input_table = flux_points.table
     flux = input_table['flux'].quantity
@@ -514,7 +508,7 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
         # set e_ref that it represents the mean dnde in the given energy bin
         e_ref = _e_ref_lafferty(model, e_min, e_max)
     else:
-        raise ValueError('Invalid x_method: {0}'.format(x_method))
+        raise ValueError('Invalid method: {0}'.format(method))
 
     dnde = _dnde_from_flux(flux, model, e_ref, e_min, e_max)
 
@@ -574,7 +568,6 @@ class FluxPointEstimator(object):
         self.obs = obs
         self.groups = groups
         self.model = model
-
         self.flux_points = None
 
     def __str__(self):
@@ -654,19 +647,19 @@ class FluxPointEstimator(object):
         #         sherpa_model.gamma.freeze()
         #         sherpa_model.ref = model.parameters.reference.to('keV')
         #         sherpa_model.ampl = 1e-20
-        #return PowerLaw(
+        # return PowerLaw(
         #    index=u.Quantity(2, ''),
         #    amplitude=u.Quantity(1, 'm-2 s-1 TeV-1'),
         #    reference=u.Quantity(1, 'TeV'),
-        #)
+        # )
         approx_model = global_model.copy()
         for par in approx_model.parameters.parameters:
             if par.name != 'amplitude':
-                par.frozen=True
+                par.frozen = True
         return approx_model
 
     def fit_point(self, model, energy_group, energy_ref):
-        from gammapy.spectrum import SpectrumFit
+        from .fit import SpectrumFit
 
         fit = SpectrumFit(self.obs, model)
         erange = energy_group.energy_range
@@ -725,7 +718,7 @@ class SEDLikelihoodProfile(object):
         import matplotlib.pyplot as plt
         if ax is None:
             ax = plt.gca()
-        # TODO
+            # TODO
 
 
 def chi2_flux_points(flux_points, gp_model):
@@ -755,39 +748,42 @@ def chi2_flux_points_assym(flux_points, gp_model):
     return np.nansum(stat_per_bin), stat_per_bin
 
 
-
 class FluxPointsFitter(object):
     """
     Fit a set of flux points with a parametric model.
 
     Parameters
     ----------
-    optimizer : ['simplex', 'moncar', 'gridsearch']
-        Which optmizer to use.
-    error_estimator : ['covar']
-        Which error estimator to use.
-    ul_handling : ['ignore']
-        How to handle flux point upper limits in the fit.
+    optimizer : {'simplex', 'moncar', 'gridsearch'}
+        Select optimizer
+    error_estimator : {'covar'}
+        Select error estimator
+    ul_handling : {'ignore'}
+        How to handle flux point upper limits in the fit
 
     Examples
     --------
 
-    from astropy import units as u
-    from gammapy.spectrum import FluxPoints, FluxPointsFitter
-    from gammapy.spectrum.models import Powerlaw
+    Load flux points from file and fit with a power-law model::
 
-    filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-    flux_points = FluxPoints.read(filename)
-    fitter = FluxPointsFitter()
-
-    pars = {}
-    pars['index'] = 2. * u.Unit('')
-    pars['amplitude'] = 1E-12 * u.Unit('cm-2 s-1 TeV-1')
-    pars['reference'] = 1. * u.TeV
-    pwl = PowerLaw(**pars)
-
-    result = fitter.run(flux_points, pwl)
+        from astropy import units as u
+        from gammapy.spectrum import FluxPoints, FluxPointsFitter
+        from gammapy.spectrum.models import PowerLaw
+    
+        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
+        flux_points = FluxPoints.read(filename)
+    
+        model = PowerLaw(
+            index=2. * u.Unit(''),
+            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1. * u.TeV,
+        )
+    
+        fitter = FluxPointsFitter()
+        result = fitter.run(flux_points, model)
+        print(result['best_fit_model'])
     """
+
     def __init__(self, stat='chi2', optimizer='simplex', error_estimator='covar',
                  ul_handling='ignore'):
         if stat == 'chi2':
@@ -817,7 +813,7 @@ class FluxPointsFitter(object):
         if data.sed_type == 'dnde':
             data = SherpaDataWrapper(data)
         else:
-            raise NotImplementedError('Only fitting of differetial flux points data'
+            raise NotImplementedError('Only fitting of differential flux points data '
                                       'is supported.')
 
         stat = SherpaStatWrapper(self.stat)
@@ -832,17 +828,17 @@ class FluxPointsFitter(object):
 
         Parameters
         ----------
-        model : `SpectralModel`
-            Spectral model instance
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model (with fit start parameters)
 
         Returns
         -------
-        best_fit_model : `SpectralModel`
-            Best fit model.
+        best_fit_model : `~gammapy.spectrum.models.SpectralModel`
+            Best fit model
         """
         p = self.parameters
 
-        #TODO: make copy of model?
+        # TODO: make copy of model?
         if p['optimizer'] in ['simplex', 'moncar', 'gridsearch']:
             sherpa_fitter = self._setup_sherpa_fit(data, model)
             sherpa_fitter.fit()
@@ -857,19 +853,19 @@ class FluxPointsFitter(object):
 
         Parameters
         ----------
-        model : `SpectralModel`
-            Spectral model instance
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
         """
         return self.stat(data, model)
 
     def dof(self, data, model):
         """
-        Return degrees of freedom.
+        Degrees of freedom.
 
         Parameters
         ----------
-        model : `SpectralModel`
-            Spectral model instance
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
         """
         m = len(model.parameters.free)
         n = len(data.table)
@@ -879,7 +875,6 @@ class FluxPointsFitter(object):
         """
         Estimate errors on best fit parameters.
         """
-        p = self.parameters
         sherpa_fitter = self._setup_sherpa_fit(data, model)
         result = sherpa_fitter.est_errors()
         covariance = result.extra_output
@@ -895,12 +890,12 @@ class FluxPointsFitter(object):
         ----------
         data : list of `~gammapy.spectrum.FluxPoints`
             Flux points.
-        model : `SpectralModel`
-            Spectral model instance
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
 
         Returns
         -------
-        result : OrderedDict
+        result : `~collections.OrderedDict`
             Dictionary with fit results and debug output.
         """
         result = OrderedDict()
