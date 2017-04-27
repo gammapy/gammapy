@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
-import healpy as hp
 from astropy.extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -179,6 +178,7 @@ class HpxMap(object):
     def swap_scheme(self):
         """TODO.
         """
+        import healpy as hp
         hpx_out = self.hpx.make_swapped_hpx()
         if self.hpx.nest:
             if self.data.ndim == 2:
@@ -197,6 +197,7 @@ class HpxMap(object):
     def ud_grade(self, order, preserve_counts=False):
         """TODO.
         """
+        import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
         shape = self.counts.shape

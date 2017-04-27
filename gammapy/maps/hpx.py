@@ -10,7 +10,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Galactic, ICRS
-import healpy as hp
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 
@@ -214,7 +213,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     npix : tuple
         tuple(nx,ny) with the shape of the WCS grid
     """
-
+    import healpy as hp
     npix = wcs.npix[:2]
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
@@ -271,6 +270,7 @@ def make_hpx_to_wcs_mapping_old(hpx, wcs):
       npix     :  tuple(nx,ny) with the shape of the wcs grid
 
     """
+    import healpy as hp
     wcs = wcs.wcs
 
     npix = (int(wcs.wcs.crpix[0] * 2), int(wcs.wcs.crpix[1] * 2))
@@ -313,6 +313,7 @@ def make_hpx_to_wcs_mapping_old(hpx, wcs):
 def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
     """TODO
     """
+    import healpy as hp
     ipix_in = np.arange(12 * nside * nside)
     vecs = hp.pix2vec(nside, ipix_in, nest)
     pix_match = hp.vec2pix(nside_pix, vecs[0], vecs[1], vecs[2]) == ipix_ring
@@ -501,7 +502,7 @@ class HPXGeom(MapGeom):
         return retval
 
     def coord_to_pix(self, coords):
-
+        import healpy as hp
         c = MapCoords.create(coords)
         phi = np.radians(c.lon)
         theta = np.pi / 2. - np.radians(c.lat)
@@ -528,7 +529,7 @@ class HPXGeom(MapGeom):
         return pix
 
     def pix_to_coord(self, pix):
-
+        import healpy as hp
         if self.axes:
 
             bins = []
@@ -841,6 +842,7 @@ class HPXGeom(MapGeom):
         region : str
             HEALPIX region string
         """
+        import healpy as hp
         tokens = parse_hpxregion(region)
 
         if tokens[0] == 'DISK':
@@ -878,6 +880,7 @@ class HPXGeom(MapGeom):
         coordsys : {'CEL', 'GAL'}
             Coordinate system
         """
+        import healpy as hp
         if region is None:
             if coordsys == "GAL":
                 c = SkyCoord(0., 0., frame=Galactic, unit="deg")
@@ -1007,6 +1010,7 @@ class HPXGeom(MapGeom):
 
     def get_coords(self):
         """Get the coordinates of all the pixels in this pixelization."""
+        import healpy as hp
         if self._ipix is None:
             theta, phi = hp.pix2ang(self.nside, xrange(self.npix), self.nest)
         else:

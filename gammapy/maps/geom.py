@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
-from astropy.coordinates import SkyCoord
 from astropy.extern import six
+from astropy.coordinates import SkyCoord
 
 
 def val_to_bin(edges, x):
