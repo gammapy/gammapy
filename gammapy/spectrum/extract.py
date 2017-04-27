@@ -201,16 +201,22 @@ class SpectrumExtraction(object):
 
         Set the high and low energy threshold for each observation based on a
         chosen method.
+        
         Available methods for setting the low energy threshold
+
         * area_max : Set energy threshold at x percent of the maximum effective
-                     area (x given as kwargs['percent'])
+          area (x given as kwargs['percent'])
+
         Available methods for setting the high energy threshold
+
         * TBD
+
         Parameters
         ----------
         method_lo_threshold : {'area_max'}
             method for defining the low energy threshold
         """
+        # TODO: This should be a method on SpectrumObservation
         # TODO: define method for the high energy threshold
 
         # It is important to update the low and high threshold for ON and OFF
@@ -227,6 +233,7 @@ class SpectrumExtraction(object):
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk
+
         Parameters
         ----------
         outdir : `~gammapy.extern.pathlib.Path`
