@@ -3,13 +3,14 @@
 Utilities for dealing with HEALPix projections and mappings
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import re
-import healpy as hp
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Galactic, ICRS
+import healpy as hp
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, val_to_bin, bin_to_val
 
@@ -40,18 +41,22 @@ class HPX_Conv(object):
 
 
 # Various conventions for storing HEALPix maps in FITS files
-HPX_FITS_CONVENTIONS = {
-    'FGST_CCUBE': HPX_Conv('FGST_CCUBE'),
-    'FGST_LTCUBE': HPX_Conv('FGST_LTCUBE', colstring='COSBINS', extname='EXPOSURE', energy_hdu='CTHETABOUNDS'),
-    'FGST_BEXPCUBE': HPX_Conv('FGST_BEXPCUBE', colstring='ENERGY', extname='HPXEXPOSURES', energy_hdu='ENERGIES'),
-    'FGST_SRCMAP': HPX_Conv('FGST_SRCMAP', extname=None, quantity_type='differential'),
-    'FGST_TEMPLATE': HPX_Conv('FGST_TEMPLATE', colstring='ENERGY', energy_hdu='ENERGIES'),
-    'FGST_SRCMAP_SPARSE': HPX_Conv('FGST_SRCMAP_SPARSE', colstring=None, extname=None, quantity_type='differential'),
-    'GALPROP': HPX_Conv('GALPROP', colstring='Bin', extname='SKYMAP2',
-                        energy_hdu='ENERGIES', quantity_type='differential',
-                        coordsys='COORDTYPE'),
-    'GALPROP2': HPX_Conv('GALPROP', colstring='Bin', extname='SKYMAP2',
-                         energy_hdu='ENERGIES', quantity_type='differential')}
+HPX_FITS_CONVENTIONS = OrderedDict()
+HPX_FITS_CONVENTIONS['FGST_CCUBE'] = HPX_Conv('FGST_CCUBE')
+HPX_FITS_CONVENTIONS['FGST_LTCUBE'] = HPX_Conv(
+    'FGST_LTCUBE', colstring='COSBINS', extname='EXPOSURE', energy_hdu='CTHETABOUNDS')
+HPX_FITS_CONVENTIONS['FGST_BEXPCUBE'] = HPX_Conv(
+    'FGST_BEXPCUBE', colstring='ENERGY', extname='HPXEXPOSURES', energy_hdu='ENERGIES')
+HPX_FITS_CONVENTIONS['FGST_SRCMAP'] = HPX_Conv('FGST_SRCMAP', extname=None, quantity_type='differential')
+HPX_FITS_CONVENTIONS['FGST_TEMPLATE'] = HPX_Conv('FGST_TEMPLATE', colstring='ENERGY', energy_hdu='ENERGIES')
+HPX_FITS_CONVENTIONS['FGST_SRCMAP_SPARSE'] = HPX_Conv(
+    'FGST_SRCMAP_SPARSE', colstring=None, extname=None, quantity_type='differential')
+HPX_FITS_CONVENTIONS['GALPROP'] = HPX_Conv(
+    'GALPROP', colstring='Bin', extname='SKYMAP2',
+    energy_hdu='ENERGIES', quantity_type='differential', coordsys='COORDTYPE')
+HPX_FITS_CONVENTIONS['GALPROP2'] = HPX_Conv(
+    'GALPROP', colstring='Bin', extname='SKYMAP2',
+    energy_hdu='ENERGIES', quantity_type='differential')
 
 
 def unravel_hpx_index(idx, npix):
@@ -61,7 +66,6 @@ def unravel_hpx_index(idx, npix):
     ----------
     idx : `~numpy.ndarray`
         Flat index.
-
     npix : `~numpy.ndarray`
         Number of pixels in each band.
 
@@ -83,7 +87,6 @@ def ravel_hpx_index(idx, npix):
     Parameters
     ----------
     idx : tuple of `~numpy.ndarray`
-
     """
     if len(idx) == 1:
         return idx
@@ -96,7 +99,7 @@ def ravel_hpx_index(idx, npix):
 
 
 def coords_to_vec(lon, lat):
-    """ Converts longitute and latitude coordinates to a unit 3-vector
+    """Converts longitude and latitude coordinates to a unit 3-vector.
 
     return array(3,n) with v_x[i],v_y[i],v_z[i] = directional cosines
     """
@@ -115,10 +118,10 @@ def coords_to_vec(lon, lat):
 
 
 def get_pixel_size_from_nside(nside):
-    """ Returns an estimate of the pixel size from the HEALPix nside coordinate
+    """Estimate of the pixel size from the HEALPix nside coordinate.
 
-    This just uses a lookup table to provide a nice round number for each
-    HEALPix order. 
+    This just uses a lookup table to provide a nice round number
+    for each HEALPix order. 
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
@@ -128,8 +131,8 @@ def get_pixel_size_from_nside(nside):
 
 
 def hpx_to_axes(h, npix):
-    """ Generate a sequence of bin edge vectors corresponding to the
-    axes of a HPX object."""
+    """Generate a sequence of bin edge vectors corresponding to the axes of a HPX object.
+    """
     x = h.ebins
     z = np.arange(npix[-1] + 1)
 
@@ -137,8 +140,10 @@ def hpx_to_axes(h, npix):
 
 
 def hpx_to_coords(h, shape):
-    """ Generate an N x D list of pixel center coordinates where N is
-    the number of pixels and D is the dimensionality of the map."""
+    """Generate an N x D list of pixel center coordinates.
+     
+    ``N`` is the number of pixels and ``D`` is the dimensionality of the map.
+    """
 
     x, z = hpx_to_axes(h, shape)
 
@@ -152,24 +157,24 @@ def hpx_to_coords(h, shape):
 
 
 def make_hpx_to_wcs_mapping_centers(hpx, wcs):
-    """ Make the mapping data needed to from from HPX pixelization to a
-    WCS-based array
+    """Make the mapping data needed to from from HPX pixelization to a WCS-based array.
 
     Parameters
     ----------
-    hpx     : `~fermipy.hpx_utils.HPX`
-       The healpix mapping (an HPX object)
-
-    wcs     : `~astropy.wcs.WCS`
-       The wcs mapping (a pywcs.wcs object)
+    hpx : `~fermipy.hpx_utils.HPX`
+        The HEALPIX mapping
+    wcs : `~astropy.wcs.WCS`
+        The WCS mapping
 
     Returns
     -------
-      ipixs    :  array(nx,ny) of HEALPix pixel indices for each wcs pixel 
-                  -1 indicates the wcs pixel does not contain the center of a HEALpix pixel
-      mult_val :  array(nx,ny) of 1.
-      npix     :  tuple(nx,ny) with the shape of the wcs grid
-
+    ipixs : array(nx,ny)
+        HEALPix pixel indices for each WCS pixel 
+        -1 indicates the wcs pixel does not contain the center of a HEALPIX pixel
+    mult_val : array
+        (nx,ny) of 1.
+    npix : tuple
+        (nx,ny) with the shape of the WCS grid
     """
     npix = (int(wcs.wcs.crpix[0] * 2), int(wcs.wcs.crpix[1] * 2))
     mult_val = np.ones(npix).T.flatten()
@@ -177,13 +182,16 @@ def make_hpx_to_wcs_mapping_centers(hpx, wcs):
     pix_crds = wcs.wcs_world2pix(sky_crds, 0).astype(int)
     ipixs = -1 * np.ones(npix, int).T.flatten()
     pix_index = npix[1] * pix_crds[0:, 0] + pix_crds[0:, 1]
+
     if hpx._ipix is None:
         for ipix, pix_crd in enumerate(pix_index):
             ipixs[pix_crd] = ipix
     else:
         for pix_crd, ipix in zip(pix_index, hpx._ipix):
             ipixs[pix_crd] = ipix
+
     ipixs = ipixs.reshape(npix).T.flatten()
+
     return ipixs, mult_val, npix
 
 
@@ -192,23 +200,19 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 
     Parameters
     ----------
-    hpx     : `~gammapy.maps.hpx.HPXGeom`
-       The healpix geometry (an HPX object)
-
-    wcs     : `~gammapy.maps.wcs.WCSGeom`
-       The WCS geometry.
+    hpx : `~gammapy.maps.hpx.HPXGeom`
+       The HEALPIX geometry
+    wcs : `~gammapy.maps.wcs.WCSGeom`
+       The WCS geometry
 
     Returns
     -------
-    ipix    : `~numpy.ndarray`
+    ipix : `~numpy.ndarray`
         array(nx,ny) of HEALPix pixel indices for each wcs pixel
-
     mult_val : `~numpy.ndarray`
-        array(nx,ny) of 1./number of wcs pixels pointing at each HEALPix pixel
-
-    npix     :  tuple
-        tuple(nx,ny) with the shape of the wcs grid
-
+        array(nx,ny) of 1./number of WCS pixels pointing at each HEALPix pixel
+    npix : tuple
+        tuple(nx,ny) with the shape of the WCS grid
     """
 
     npix = wcs.npix[:2]
@@ -307,7 +311,7 @@ def make_hpx_to_wcs_mapping_old(hpx, wcs):
 
 
 def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
-    """
+    """TODO
     """
     ipix_in = np.arange(12 * nside * nside)
     vecs = hp.pix2vec(nside, ipix_in, nest)
@@ -316,9 +320,10 @@ def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
 
 
 def parse_hpxregion(region):
-    """Parse the HPX_REG header keyword into a list of tokens."""
-
+    """Parse the ``HPX_REG`` header keyword into a list of tokens.
+    """
     m = re.match(r'([A-Za-z\_]*?)\((.*?)\)', region)
+
     if m is None:
         raise Exception('Failed to parse hpx region string.')
 
@@ -334,9 +339,10 @@ def is_power2(n):
 
 
 def nside_to_order(nside):
-    """Compute the ORDER given NSIDE.  Returns -1 for NSIDE values that
-    are not a power of 2."""
-
+    """Compute the ORDER given NSIDE.
+    
+    Returns -1 for NSIDE values that are not a power of 2.
+    """
     nside = np.array(nside, ndmin=1)
     order = -1 * np.ones_like(nside)
     m = is_power2(nside)
@@ -357,7 +363,9 @@ def pix_to_upix(pix, nside):
 
 
 class HPXGeom(MapGeom):
-    """Geometry class for healpix maps and cubes.  This class performs
+    """Geometry class for healpix maps and cubes.
+    
+    This class performs
     mapping between partial-sky indices (pixel number within a HEALPix
     region) and all-sky indices (pixel number within an all-sky
     HEALPix map).  Multi-band HEALPix geometries use a global indexing
@@ -367,31 +375,24 @@ class HPXGeom(MapGeom):
 
     Parameters
     ----------
-    nside     : `~numpy.ndarray` 
+    nside : `~numpy.ndarray` 
         HEALPix nside parameter, the total number of pixels is
         12*nside*nside.  For multi-dimensional maps one can pass
         either a single nside value or a vector of nside values
         defining the pixel size for each image plane.  If nside is not
         a scalar then its dimensionality should match that of the
         non-spatial axes.
-
-    nest      : bool
+    nest : bool
         True -> 'NESTED', False -> 'RING' indexing scheme
-
-    coordsys  : str
+    coordsys : str
         Coordinate system, 'CEL' | 'GAL'
-
     region : str
         Region string defining the spatial geometry of the map.  If
         none the map will encompass the whole sky.
-
     axes : list
         Axes for non-spatial dimensions.
-
     sparse : bool
-        If True defer allocation of partial- to all-sky index mapping
-        arrays.
-
+        If True defer allocation of partial- to all-sky index mapping arrays.
     """
 
     def __init__(self, nside, nest=True,
@@ -449,18 +450,20 @@ class HPXGeom(MapGeom):
         pass
 
     def __getitem__(self, sliced):
-        """This implements the global-to-local index lookup.  For all-sky maps
-        it just returns the input array.  For partial-sky maps it
-        returns the local indices corresponding to the indices in the
+        """This implements the global-to-local index lookup.
+        
+        For all-sky maps it just returns the input array.
+        For partial-sky maps it returns the local indices corresponding to the indices in the
         input array, and -1 for those pixels that are outside the
         selected region.  For multi-dimensional maps with a different
-        NSIDE in each band the global index is an unrolled index for
-        both HEALPix pixel number and image slice.
+        ``NSIDE`` in each band the global index is an unrolled index for
+        both HEALPIX pixel number and image slice.
 
         Parameters
         ----------
         sliced: `~numpy.ndarray`
-            An array of pixel indices.  If this is a tuple, list, or
+            An array of pixel indices.
+            If this is a tuple, list, or
             array of integers it will be interpreted as a global
             (raveled) index.  If this argument is a tuple of lists or
             arrays it will be interpreted as a list of unraveled index
@@ -470,9 +473,7 @@ class HPXGeom(MapGeom):
         -------
         idx_local : `~numpy.ndarray`
             An array of local HEALPix pixel indices.
-
         """
-
         # Convert to tuple representation
         if (isinstance(sliced, int) or
                 (isinstance(sliced, tuple) and isinstance(sliced[0], int)) or
@@ -557,7 +558,7 @@ class HPXGeom(MapGeom):
 
     @property
     def axes(self):
-        """Return the non-spatial axes."""
+        """Non-spatial axes."""
         return self._axes
 
     @property
@@ -572,7 +573,7 @@ class HPXGeom(MapGeom):
 
     @property
     def nside(self):
-        """Return the NSIDE in each band."""
+        """NSIDE in each band."""
         return self._nside
 
     @property
@@ -585,9 +586,10 @@ class HPXGeom(MapGeom):
 
     @property
     def npix(self):
-        """Return the number of pixels in each band.  For partial-sky
-        geometries this can be less than the number of pixels for the
-        band NSIDE.
+        """Number of pixels in each band.
+        
+        For partial-sky geometries this can be less than the
+        number of pixels for the band NSIDE.
         """
         return self._npix
 
@@ -605,12 +607,10 @@ class HPXGeom(MapGeom):
 
     @property
     def ipix(self):
-        """Return the HEALPix pixel and band indices for every pixel in the map."""
-
+        """HEALPix pixel and band indices for every pixel in the map."""
         if self.nside.shape == self._maxpix.shape:
             return unravel_hpx_index(self._ipix, self._maxpix)
         else:
-
             maxpix = np.ravel(self._maxpix * np.arange(self.npix.size))[None, :]
             maxpix = maxpix * np.ones([self._npix[0]] + list(self._shape), dtype=int)
             maxpix = np.ravel(maxpix.T)
@@ -618,7 +618,7 @@ class HPXGeom(MapGeom):
             return unravel_hpx_index(ipix + maxpix, self._maxpix)
 
     def ud_graded_hpx(self, order):
-        """
+        """TODO.
         """
         if np.any(self.order < 0):
             raise RuntimeError(
@@ -627,13 +627,13 @@ class HPXGeom(MapGeom):
                               self.region, self.axes, self.conv)
 
     def make_swapped_hpx(self):
-        """
+        """TODO.
         """
         return self.__class__(self.nside, not self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
     def copy_and_drop_axes(self):
-        """
+        """TODO.
         """
         return self.__class__(self.nside[0], not self.nest, self.coordsys,
                               self.region, None, self.conv)
@@ -645,26 +645,22 @@ class HPXGeom(MapGeom):
 
         Parameters
         ----------
-        nside    : `~numpy.ndarray`
-           HEALPix nside paramter
-
-        nest     : bool
-           True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
-
+        nside : `~numpy.ndarray`
+            HEALPix nside parameter
+        nest : bool
+            True for HEALPix "NESTED" indexing scheme, False for "RING" scheme
         coordsys : str
-           "CEL" or "GAL"
-
-        region   : str
+            "CEL" or "GAL"
+        region  : str
             Allows for partial-sky mappings
-
-        axes    : list
-            List of axes for non-spatial dimensions.
+        axes : list
+            List of axes for non-spatial dimensions
         """
         return cls(nside, nest, coordsys, region, axes, conv)
 
     @staticmethod
     def identify_HPX_convention(header):
-        """ Identify the convention used to write this file """
+        """Identify the convention used to write this file."""
         # Hopefully the file contains the HPX_CONV keyword specifying
         # the convention used
         try:
@@ -705,13 +701,14 @@ class HPXGeom(MapGeom):
 
     @classmethod
     def from_header(cls, header, axes=None):
-        """ Creates an HPX object from a FITS header.
+        """Create an HPX object from a FITS header.
 
         Parameters
         ----------
-        header : The FITS header
+        header : `~astropy.io.fits.Header`
+            The FITS header
         axes  : list
-            List of non-spatial axes.
+            List of non-spatial axes
         """
         convname = HPXGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
@@ -748,17 +745,19 @@ class HPXGeom(MapGeom):
         return cls(nside, nest, coordsys, region, axes=axes, conv=conv)
 
     def make_header(self):
-        """ Builds and returns FITS header for this HEALPix map """
-        cards = [fits.Card("TELESCOP", "GLAST"),
-                 fits.Card("INSTRUME", "LAT"),
-                 fits.Card(self._conv.coordsys, self.coordsys),
-                 fits.Card("PIXTYPE", "HEALPIX"),
-                 fits.Card("ORDERING", self.ordering),
-                 fits.Card("ORDER", self._order[0]),
-                 fits.Card("NSIDE", self._nside[0]),
-                 fits.Card("FIRSTPIX", 0),
-                 fits.Card("LASTPIX", self._maxpix[0] - 1),
-                 fits.Card("HPX_CONV", self._conv.convname)]
+        """Build and return FITS header for this HEALPIX map."""
+        cards = [
+            fits.Card("TELESCOP", "GLAST"),
+            fits.Card("INSTRUME", "LAT"),
+            fits.Card(self._conv.coordsys, self.coordsys),
+            fits.Card("PIXTYPE", "HEALPIX"),
+            fits.Card("ORDERING", self.ordering),
+            fits.Card("ORDER", self._order[0]),
+            fits.Card("NSIDE", self._nside[0]),
+            fits.Card("FIRSTPIX", 0),
+            fits.Card("LASTPIX", self._maxpix[0] - 1),
+            fits.Card("HPX_CONV", self._conv.convname),
+        ]
 
         if self.coordsys == "CEL":
             cards.append(fits.Card("EQUINOX", 2000.0,
@@ -767,15 +766,14 @@ class HPXGeom(MapGeom):
         if self.region:
             cards.append(fits.Card("HPX_REG", self._region))
 
-        header = fits.Header(cards)
-        return header
+        return fits.Header(cards)
 
     def make_ebounds_hdu(self, extname="EBOUNDS"):
-        """ Builds and returns a FITs HDU with the energy bin boundries
+        """Make a FITS HDU with the energy bin boundaries.
 
         Parameters
         ----------
-        extname   : str
+        extname : str
             The HDU extension name            
         """
         emin = self._axes[:-1]
@@ -788,11 +786,11 @@ class HPXGeom(MapGeom):
         return hdu
 
     def make_energies_hdu(self, extname="ENERGIES"):
-        """ Builds and returns a FITs HDU with the energy bin boundries
+        """Make a FITS HDU with the energy bin centers.
 
         Parameters
         ----------
-        extname   : str
+        extname : str
             The HDU extension name            
         """
         ectr = np.sqrt(self._axes[1:] * self._axes[:-1])
@@ -802,44 +800,49 @@ class HPXGeom(MapGeom):
         return hdu
 
     def write(self, data, outfile, extname="SKYMAP", clobber=True):
-        """ Write input data to a FITS file
+        """Write input data to a FITS file.
 
         Parameters
         ----------
-        data      : The data begin stored
-        outfile   : The name of the output file
-        extname   : The HDU extension name        
-        clobber   : True -> overwrite existing files
+        data :
+            The data being stored
+        outfile : str
+            The name of the output file
+        extname :
+            The HDU extension name        
+        clobber : bool
+            True -> overwrite existing files
         """
         hdu_prim = fits.PrimaryHDU()
         hdu_hpx = self.make_hdu(data, extname=extname)
         hl = [hdu_prim, hdu_hpx]
+
         if self.conv.energy_hdu == 'EBOUNDS':
             hdu_energy = self.make_energy_bounds_hdu()
         elif self.conv.energy_hdu == 'ENERGIES':
             hdu_energy = self.make_energies_hdu()
+
         if hdu_energy is not None:
             hl.append(hdu_energy)
+
         hdulist = fits.HDUList(hl)
         hdulist.writeto(outfile, clobber=clobber)
 
     @staticmethod
     def get_index_list(nside, nest, region):
-        """ Returns the list of pixels indices for all the pixels in a region
+        """Get list of pixels indices for all the pixels in a region.
 
         Parameters
         ----------
-        nside    : int
-            HEALPix nside parameter.
-
-        nest     : bool
+        nside : int
+            HEALPIX nside parameter
+        nest : bool
             True for 'NESTED', False = 'RING'
-
-        region   : str
-            HEALPix region string
+        region : str
+            HEALPIX region string
         """
-
         tokens = parse_hpxregion(region)
+
         if tokens[0] == 'DISK':
             vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
             ilist = hp.query_disc(nside, vec[0], np.radians(float(tokens[3])),
@@ -861,20 +864,19 @@ class HPXGeom(MapGeom):
             ilist = match_hpx_pixel(nside, nest, nside_pix, ipix_ring)
         else:
             raise Exception("Did not recognize region type %s" % tokens[0])
+
         return ilist
 
     @staticmethod
     def get_ref_dir(region, coordsys):
-        """ Finds and returns the reference direction for a given 
-        HEALPix region string.   
+        """Get the reference direction for a given  HEALPix region string.   
 
         Parameters
         ----------
-        region   : str
-            a string describing a HEALPix region
-
-        coordsys : str
-            coordinate system, GAL | CEL
+        region : str
+            A string describing a HEALPIX region
+        coordsys : {'CEL', 'GAL'}
+            Coordinate system
         """
         if region is None:
             if coordsys == "GAL":
@@ -940,10 +942,8 @@ class HPXGeom(MapGeom):
             Set the number of axes that will be extracted from the
             HEALPix geometry.  If None then all dimensions of the
             HEALPix geometry will be copied to the WCS geometry.
-
         proj : str
             Projection type of WCS geometry.
-
         oversample : int
             Factor by which the WCS pixel size will be chosen to
             oversample the HEALPix map.
@@ -951,7 +951,7 @@ class HPXGeom(MapGeom):
         Returns
         -------
         wcs : `~gammapy.maps.wcs.WCSGeom`
-
+            WCS geometry
         """
         if naxis < 2 or naxis > self.ndim:
             raise Exception('naxis must be between 2 or the total number '
@@ -1006,7 +1006,7 @@ class HPXGeom(MapGeom):
         return wcs_proj
 
     def get_coords(self):
-        """ Get the coordinates of all the pixels in this pixelization. """
+        """Get the coordinates of all the pixels in this pixelization."""
         if self._ipix is None:
             theta, phi = hp.pix2ang(self.nside, xrange(self.npix), self.nest)
         else:
@@ -1036,11 +1036,14 @@ class HPXGeom(MapGeom):
 
 
 class HpxToWcsMapping(object):
-    """ Stores the indices need to convert from HEALPix to WCS """
+    """Stores the indices need to convert from HEALPIX to WCS.
+
+    Parameters
+    ----------
+    TODO
+    """
 
     def __init__(self, hpx, wcs, mapping_data=None):
-        """
-        """
         self._hpx = hpx
         self._wcs = wcs
         if mapping_data is None:
@@ -1055,29 +1058,27 @@ class HpxToWcsMapping(object):
 
     @property
     def hpx(self):
-        """ The HEALPix projection """
+        """The HEALPix projection"""
         return self._hpx
 
     @property
     def wcs(self):
-        """ The WCS projection """
+        """The WCS projection"""
         return self._wcs
 
     @property
     def ipix(self):
-        """An array(nx,ny) of the global HEALPix pixel indices for each WCS
-        pixel"""
+        """An array(nx,ny) of the global HEALPix pixel indices for each WCS pixel"""
         return self._ipix
 
     @property
     def mult_val(self):
-        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPix
-        pixel"""
+        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPix pixel"""
         return self._mult_val
 
     @property
     def npix(self):
-        """ A tuple(nx,ny) of the shape of the WCS grid """
+        """A tuple(nx,ny) of the shape of the WCS grid"""
         return self._npix
 
     @property
@@ -1111,13 +1112,12 @@ class HpxToWcsMapping(object):
         hdulist.writeto(fitsfile, clobber=clobber)
 
     @classmethod
-    def read(cls, fitsfile):
-        """ Read a fits file and use it to make a mapping
-        """
+    def read(cls, filename):
+        """Read a FITS file and use it to make a mapping."""
         from fermipy.skymap import Map
-        index_map = Map.read(fitsfile)
-        mult_map = Map.read(fitsfile, hdu=1)
-        ff = fits.open(fitsfile)
+        index_map = Map.read(filename)
+        mult_map = Map.read(filename, hdu=1)
+        ff = fits.open(filename)
         hpx = HPXGeom.from_header(ff[0])
         mapping_data = dict(ipix=index_map.counts,
                             mult_val=mult_map.counts,
@@ -1125,13 +1125,16 @@ class HpxToWcsMapping(object):
         return cls(hpx, index_map.wcs, mapping_data)
 
     def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
-        """Fills the wcs map from the hpx data using the pre-calculated
-        mappings
+        """Fill the WCS map from the hpx data using the pre-calculated mappings.
 
-        hpx_data  : the input HEALPix data
-        wcs_data  : the data array being filled
-        normalize : True -> perserve integral by splitting HEALPix values between bins
-
+        Parameters
+        ----------
+        hpx_data : TODO
+            The input HEALPIX data
+        wcs_data : TODO
+            The data array being filled
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
         """
         # FIXME, there really ought to be a better way to do this
         hpx_data_flat = hpx_data.flatten()
@@ -1143,12 +1146,16 @@ class HpxToWcsMapping(object):
         wcs_data.flat = wcs_data_flat
 
     def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):
-        """ Creates and fills a wcs map from the hpx data using the pre-calculated
-        mappings
+        """Create and fill a WCS map from the HEALPIX data using the pre-calculated mappings.
 
-        hpx_data  : the input HEALPix data
-        wcs       : the WCS object
-        normalize : True -> perserve integral by splitting HEALPix values between bins
+        Parameters
+        ----------
+        hpx_data : TODO
+            The input HEALPIX data
+        wcs : TODO
+            The WCS object
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
         """
         wcs_data = np.zeros(wcs.npix)
         self.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)

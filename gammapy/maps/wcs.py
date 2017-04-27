@@ -9,20 +9,20 @@ from .geom import MapGeom, MapCoords, val_to_pix
 
 
 class WCSGeom(MapGeom):
-    """Class that encapsulates both a WCS object and the definition of
+    """Container for WCS object and image extent.
+    
+    Class that encapsulates both a WCS object and the definition of
     the image extent (number of pixels).  Also provides a number of
     helper methods for accessing the properties of the WCS object.
 
     Parameters
     ----------
     wcs : `~astropy.wcs.WCS`
-        WCS projection object.
-
+        WCS projection object
     npix : list
-        Number of pixels in each spatial dimension.
-
+        Number of pixels in each spatial dimension
     axes : list
-        Axes for non-spatial dimensions.
+        Axes for non-spatial dimensions
     """
 
     def __init__(self, wcs, npix, axes=None):
@@ -53,12 +53,12 @@ class WCSGeom(MapGeom):
 
     @property
     def skydir(self):
-        """Return the sky coordinate of the image center."""
+        """Sky coordinate of the image center."""
         return self._skydir
 
     @property
     def width(self):
-        """Return the dimensions of the image."""
+        """Dimensions of the image."""
         return self._width
 
     @property
@@ -83,7 +83,7 @@ class WCSGeom(MapGeom):
         return cls(w, [nxpix, nypix], axes)
 
     def distance_to_edge(self, skydir):
-        """Return the angular distance from the given direction and
+        """Angular distance from the given direction and
         the edge of the projection."""
 
         xpix, ypix = skydir.to_pixel(self.wcs, origin=0)
@@ -108,6 +108,8 @@ class WCSGeom(MapGeom):
         return delta
 
     def coord_to_pix(self, coords):
+        """TODO.
+        """
         c = MapCoords.create(coords)
         pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
         for i, ax in enumerate(self.axes):
@@ -115,6 +117,8 @@ class WCSGeom(MapGeom):
         return pix
 
     def pix_to_coord(self, pix):
+        """TODO.
+        """
         pass
 
 
@@ -125,13 +129,13 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     Parameters
     ----------
     skydir : `~astropy.coordinates.SkyCoord`
-        Sky coordinate of the WCS reference point.
+        Sky coordinate of the WCS reference point
     coordsys : str
-
+        TODO
     projection : str
-
+        TODO
     cdelt : float
-
+        TODO
     crpix : float or (float,float)
         In the first case the same value is used for x and y axes
     naxis : {2, 3}
@@ -139,7 +143,6 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     energies : array-like
        Array of energies that defines the third dimension if naxis=3.
     """
-
     w = WCS(naxis=naxis)
 
     if coordsys == 'CEL':
@@ -183,11 +186,11 @@ def wcs_add_energy_axis(wcs, energies):
     wcs : `~astropy.wcs.WCS`
         WCS
     energies : array-like
-       Array of energies.
+        Array of energies
     """
     if wcs.naxis != 2:
-        raise Exception(
-            'wcs_add_energy_axis, input WCS naxis != 2 %i' % wcs.naxis)
+        raise Exception('wcs_add_energy_axis, input WCS naxis != 2 %i' % wcs.naxis)
+
     w = WCS(naxis=3)
     w.wcs.crpix[0] = wcs.wcs.crpix[0]
     w.wcs.crpix[1] = wcs.wcs.crpix[1]
@@ -197,11 +200,13 @@ def wcs_add_energy_axis(wcs, energies):
     w.wcs.crval[1] = wcs.wcs.crval[1]
     w.wcs.cdelt[0] = wcs.wcs.cdelt[0]
     w.wcs.cdelt[1] = wcs.wcs.cdelt[1]
+
     w = WCS(w.to_header())
     w.wcs.crpix[2] = 1
     w.wcs.crval[2] = energies[0]
     w.wcs.cdelt[2] = energies[1] - energies[0]
     w.wcs.ctype[2] = 'Energy'
+
     return w
 
 
@@ -220,8 +225,10 @@ def offset_to_sky(skydir, offset_lon, offset_lat,
 
 
 def sky_to_offset(skydir, lon, lat, coordsys='CEL', projection='AIT'):
-    """Convert sky coordinates to a projected offset.  This function
-    is the inverse of offset_to_sky."""
+    """Convert sky coordinates to a projected offset.
+    
+    This function is the inverse of offset_to_sky.
+    """
 
     w = create_wcs(skydir, coordsys, projection)
     skycrd = np.vstack((lon, lat)).T
@@ -252,14 +259,14 @@ def skydir_to_pix(skydir, wcs):
     Parameters
     ----------
     skydir : `~astropy.coordinates.SkyCoord`
-
+        TODO
     wcs : `~astropy.wcs.WCS`
+        TODO
 
     Returns
     -------
     xp, yp : `numpy.ndarray`
        The pixel coordinates
-
     """
     if len(skydir.shape) > 0 and len(skydir) == 0:
         return [np.empty(0), np.empty(0)]
@@ -275,12 +282,10 @@ def pix_to_skydir(xpix, ypix, wcs):
 
     Parameters
     ----------
-    xpix : `numpy.ndarray`
-
-    ypix : `numpy.ndarray`
-
+    xpix, ypix : `numpy.ndarray`
+        TODO        
     wcs : `~astropy.wcs.WCS`
-
+        TODO
     """
     xpix = np.array(xpix)
     ypix = np.array(ypix)

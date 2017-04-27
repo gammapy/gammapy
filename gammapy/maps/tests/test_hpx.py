@@ -171,12 +171,20 @@ def test_make_hpx_to_wcs_mapping():
 
 
 def test_hpx_from_header():
-    pars = {'HPX_REG': 'DISK(110.,75.,2.)', 'EXTNAME': 'SKYMAP',
-            'NSIDE': 2 ** 6, 'ORDER': 6, 'PIXTYPE': 'HEALPIX',
-            'ORDERING': 'RING', 'COORDSYS': 'CEL',
-            'TTYPE1': 'PIX', 'TFORM1': 'K',
-            'TTYPE2': 'CHANNEL1', 'TFORM2': 'D',
-            'INDXSCHM': 'EXPLICIT'}
+    pars = {
+        'HPX_REG': 'DISK(110.,75.,2.)',
+        'EXTNAME': 'SKYMAP',
+        'NSIDE': 2 ** 6,
+        'ORDER': 6,
+        'PIXTYPE': 'HEALPIX',
+        'ORDERING': 'RING',
+        'COORDSYS': 'CEL',
+        'TTYPE1': 'PIX',
+        'TFORM1': 'K',
+        'TTYPE2': 'CHANNEL1',
+        'TFORM2': 'D',
+        'INDXSCHM': 'EXPLICIT',
+    }
     header = fits.Header()
     header.update(pars)
     hpx = HPXGeom.from_header(header)
@@ -189,8 +197,10 @@ def test_hpx_from_header():
 def test_hpx_make_header():
     hpx = HPXGeom(16, False, 'GAL')
     header = hpx.make_header()
+    # TODO: assert on something
 
 
 def test_hpx_make_header():
     hpx = HPXGeom(16, False, 'GAL')
     header = hpx.make_header()
+    # TODO: assert on something

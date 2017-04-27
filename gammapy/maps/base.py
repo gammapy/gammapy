@@ -27,13 +27,13 @@ class MapBase(object):
         self._counts = val
 
     def sum_over_axes(self):
-        """Reduce a counts cube to a counts map by summing over the energy planes """
+        """Reduce a counts cube to a counts map by summing over the energy planes."""
         pass
 
     def get_by_coord(self, coord, interp=None):
-        """Return the map values corresponding to a set of map coordinates. """
+        """Return the map values corresponding to a set of map coordinates."""
         pass
 
     def get_by_pix(self, pix, interp=None):
-        """Return the map values corresponding to a set of pixel coordinates. """
+        """Return the map values corresponding to a set of pixel coordinates."""
         pass

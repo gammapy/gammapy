@@ -7,12 +7,18 @@ from astropy.extern import six
 
 
 def val_to_bin(edges, x):
-    """Convert axis coordinates ``x`` to bin indices.  Returns -1 for
-    values below/above the lower/upper edge.
+    """Convert axis coordinates ``x`` to bin indices. 
+    
+    Returns -1 for values below/above the lower/upper edge.
     """
     ibin = np.digitize(np.array(x, ndmin=1), edges) - 1
     ibin[x > edges[-1]] = -1
     return ibin
+
+
+def bin_to_val(edges, bins):
+    ctr = 0.5 * (edges[1:] + edges[:-1])
+    return ctr[bins]
 
 
 def val_to_pix(edges, x):
@@ -21,20 +27,16 @@ def val_to_pix(edges, x):
     return np.interp(x, edges, np.arange(len(center)).astype(float))
 
 
-def bin_to_val(edges, bins):
-    ctr = 0.5 * (edges[1:] + edges[:-1])
-    return ctr[bins]
-
-
 class MapCoords(object):
-    """Object representing a sequence of n-dimensional map coordinates.
+    """Represents a sequence of n-dimensional map coordinates.
+
     Contains coordinates for 2 spatial dimensions and an arbitrary
     number of additional non-spatial dimensions.
 
     Parameters
     ----------
     data : tuple of `~numpy.ndarray`
-
+        Data
     """
 
     def __init__(self, data, coordsys='CEL'):
@@ -101,8 +103,8 @@ class MapGeom(object):
     """Base class for WCS and HEALPix geometries.
     """
 
-    def __init__(self):
-        pass
+    # def __init__(self):
+    #     pass
 
     @abc.abstractmethod
     def coord_to_pix(self, coords):

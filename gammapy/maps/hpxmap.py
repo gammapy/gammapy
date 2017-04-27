@@ -35,26 +35,23 @@ class HpxMap(object):
         return self._data
 
     @classmethod
-    def read(cls, fitsfile, **kwargs):
+    def read(cls, filename, **kwargs):
         """Read from a FITS file.
 
         Parameters
         ----------
         filename : str
-            File name.
-
+            File name
         hdu : str
-            The name of the HDU with the map data.
-
+            Name of the HDU with the map data
         ebounds : str
-            The name of the HDU with the energy bin data.
-
+            Name of the HDU with the energy bin data
         Returns
         -------
         hpx_map : `HpxMap`
-            Map object.
+            Map object
         """
-        hdulist = fits.open(fitsfile)
+        hdulist = fits.open(filename)
         return cls.from_hdulist(hdulist, **kwargs)
 
     @classmethod
@@ -64,18 +61,16 @@ class HpxMap(object):
         Parameters
         ----------
         hdulist :  `~astropy.io.fits.HDUList`
-            An HDUList containing HDUs for map data and bands/ebounds.
-
+            HDU list containing HDUs for map data and bands/ebounds
         hdu : str
-            The name of the HDU with the map data.
-
+            Name of the HDU with the map data
         ebounds : str
-            The name of the HDU with the energy bin data
+            Name of the HDU with the energy bin data
 
         Returns
         -------
         hpx_map : `HpxMap`
-            Map object.
+            Map object
         """
         extname = kwargs.get('hdu', 'SKYMAP')
         ebins = fits_utils.find_and_read_ebins(hdulist)
@@ -87,7 +82,7 @@ class HpxMap(object):
 
     def make_wcs_from_hpx(self, sum_ebins=False, proj='CAR', oversample=2,
                           normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection
+        """Make a WCS object and convert HEALPix data into WCS projection.
 
         NOTE: this re-calculates the mapping, if you have already
         calculated the mapping it is much faster to use
@@ -97,21 +92,19 @@ class HpxMap(object):
         ----------
         sum_ebins  : bool
            sum energy bins over energy bins before reprojecting
-
-        proj       : str
+        proj : str
            WCS-projection
-
         oversample : int
            Oversampling factor for WCS map
-
         normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
+           True -> preserve integral by splitting HEALPix values between bins
 
         Returns
         -------
         wcs : `~gammapy.maps.wcs.WCSGeom`
-        
+            WCS geometry
         wcs_data : `~numpy.ndarray`
+            WCS data
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
@@ -123,34 +116,33 @@ class HpxMap(object):
 
     @abc.abstractmethod
     def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
-        """ Make a WCS object and convert HEALPix data into WCS projection
+        """Make a WCS object and convert HEALPix data into WCS projection.
 
         Parameters
         ----------
-        hpx_in     : `~numpy.ndarray`
-           HEALPix input data
-        sum_ebins  : bool
-           sum energy bins over energy bins before reprojecting
-        normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
+        hpx_in : `~numpy.ndarray`
+            HEALPix input data
+        sum_ebins : bool
+            Sum energy bins over energy bins before reprojecting
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
 
-        returns (WCS object, np.ndarray() with reprojected data)
+        Returns
+        -------
+        (WCS object, np.ndarray() with reprojected data)
         """
-        return
+        pass
 
     def get_pixel_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
         sky_coords = self._hpx.get_sky_coords()
-        if self.hpx.coordsys == 'GAL':
-            frame = Galactic
-        else:
-            frame = ICRS
+        frame = 'galactic' if self.hpx.coordsys == 'GAL' else 'icrs'
         return SkyCoord(sky_coords[0], sky_coords[1], frame=frame, unit='deg')
 
     @abc.abstractmethod
     def sum_over_axes(self):
-        """ Reduce to a map by droppping non-spatial dimensions."""
-        return
+        """Reduce to a map by dropping non-spatial dimensions."""
+        pass
 
     @abc.abstractmethod
     def get_by_coord(self, coords, interp=None):
@@ -165,9 +157,8 @@ class HpxMap(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map, np.nan used to flag
            coords outside of map
-
         """
-        return
+        pass
 
     @abc.abstractmethod
     def get_by_pix(self, coords, interp=None):
@@ -182,12 +173,11 @@ class HpxMap(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map, np.nan used to flag
            coords outside of map
-
         """
-        return
+        pass
 
     def swap_scheme(self):
-        """
+        """TODO.
         """
         hpx_out = self.hpx.make_swapped_hpx()
         if self.hpx.nest:
@@ -205,7 +195,7 @@ class HpxMap(object):
         return HpxMap(data_out, hpx_out)
 
     def ud_grade(self, order, preserve_counts=False):
-        """
+        """TODO.
         """
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
@@ -231,14 +221,13 @@ class HpxMap(object):
         return HpxMap(new_data, new_hpx)
 
     def make_hdu(self, **kwargs):
-        """ Builds and returns a FITs HDU with input data
+        """Make a FITS HDU with input data.
 
         Parameters
         ----------
-        extname   : str
+        extname : str
             The HDU extension name.
-
-        colbase   : str
+        colbase : str
             The prefix for column names
         """
         data = self.data

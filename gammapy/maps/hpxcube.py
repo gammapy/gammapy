@@ -1,17 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.coordinates import SkyCoord
+
 from .hpxmap import HpxMap
 
 
 class HpxCube(HpxMap):
-    """Representation of a 2D or 3D map using HEALPix.
+    """Representation of a 2D or 3D map using HEALPIX.
 
     Parameters
     ----------
     hpx : `~gammapy.maps.hpx.HPXGeom`
-
+        HEALPIX geometry
     data : `~numpy.ndarray`
+        HEALPIX data
     """
 
     def __init__(self, hpx, data=None):
@@ -32,14 +35,13 @@ class HpxCube(HpxMap):
 
     @classmethod
     def from_hdu(cls, hdu, axes):
-        """ Creates and returns an HpxCube object from a FITS HDU.
+        """Make a HpxCube object from a FITS HDU.
 
         Parameters
         ----------
-        hdu   : `~astropy.fits.BinTableHDU`
+        hdu : `~astropy.fits.BinTableHDU`
             The FITS HDU
-
-        axes  : list
+        axes : list
             List of axes for non-spatial dimensions.
         """
         hpx = HPX.create_from_header(hdu.header, ebins)
@@ -67,7 +69,7 @@ class HpxCube(HpxMap):
 
     def make_wcs(self, sum_ebins=False, proj='CAR', oversample=2,
                  normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection
+        """Make a WCS object and convert HEALPix data into WCS projection.
 
         NOTE: this re-calculates the mapping, if you have already
         calculated the mapping it is much faster to use
@@ -75,20 +77,18 @@ class HpxCube(HpxMap):
 
         Parameters
         ----------
-        sum_ebins  : bool
+        sum_ebins : bool
            sum energy bins over energy bins before reprojecting
-
-        proj       : str
+        proj  : str
            WCS-projection
-
         oversample : int
            Oversampling factor for WCS map
+        normalize : bool
+           True -> preserve integral by splitting HEALPix values between bins
 
-        normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
-
-        returns (WCS object, np.ndarray() with reprojected data)
-
+        Returns
+        -------
+        (WCS object, np.ndarray() with reprojected data)
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
@@ -99,24 +99,23 @@ class HpxCube(HpxMap):
         return wcs, wcs_data
 
     def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
-        """ Make a WCS object and convert HEALPix data into WCS projection
+        """Make a WCS object and convert HEALPix data into WCS projection.
 
         Parameters
         ----------
-        hpx_in     : `~numpy.ndarray`
+        hpx_in  : `~numpy.ndarray`
            HEALPix input data
-        sum_ebins  : bool
+        sum_ebins : bool
            sum energy bins over energy bins before reprojecting
         normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
+           True -> preserve integral by splitting HEALPIX values between bins
 
         Returns 
         -------
         wcs : `~astropy.wcs.WCS`
-            WCS object.
-
+            WCS object
         data : `~numpy.ndarray`
-            Reprojected data.
+            Reprojected data
         """
         if self._hpx2wcs is None:
             raise Exception('HpxMap.convert_to_cached_wcs() called '
@@ -146,8 +145,8 @@ class HpxCube(HpxMap):
                 self._hpx2wcs.fill_wcs_map_from_hpx_data(
                     hpx_data[i], wcs_data[i], normalize)
                 pass
-            wcs_data.reshape((self.counts.shape[0], self._hpx2wcs.npix[
-                0], self._hpx2wcs.npix[1]))
+
+            wcs_data.reshape((self.counts.shape[0], self._hpx2wcs.npix[0], self._hpx2wcs.npix[1]))
             # replace the WCS with a 3D one
             wcs = self.hpx.make_wcs(3, proj=self._wcs_proj,
                                     energies=self.hpx.ebins,
@@ -163,10 +162,7 @@ class HpxCube(HpxMap):
     def get_pixel_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
         sky_coords = self._hpx.get_sky_coords()
-        if self.hpx.coordsys == 'GAL':
-            frame = Galactic
-        else:
-            frame = ICRS
+        frame = 'galactic' if self.hpx.coordsys == 'GAL' else 'icrs'
         return SkyCoord(sky_coords[0], sky_coords[1], frame=frame, unit='deg')
 
     def sum_over_axes(self):
@@ -189,9 +185,7 @@ class HpxCube(HpxMap):
 
     def _interp_by_coord(self, coords):
         """Interpolate map values.
-
         """
-
         if self.data.ndim == 1:
             theta = np.pi / 2. - np.radians(lat)
             phi = np.radians(lon)
@@ -201,12 +195,11 @@ class HpxCube(HpxMap):
             return self._interpolate_cube(lon, lat, egy, interp_log)
 
     def _interpolate_cube(self, lon, lat, egy=None, interp_log=True):
-        """Perform interpolation on a healpix cube.  If egy is None
-        then interpolation will be performed on the existing energy
-        planes.
-
+        """Perform interpolation on a HEALPIX cube. 
+        
+        If egy is None, then interpolation will be performed
+        on the existing energy planes.
         """
-
         shape = np.broadcast(lon, lat, egy).shape
         lon = lon * np.ones(shape)
         lat = lat * np.ones(shape)
@@ -280,4 +273,5 @@ class HpxCube(HpxMap):
                                               power=power)
                         for i in range(shape[0])]
             new_data = np.vstack(new_data)
+
         return self.__class__(new_hpx, new_data)
