@@ -77,6 +77,7 @@ Contributors
 
 The following people have contributed to Gammapy (first name alphabetical order):
 
+- Arjun Voruganti (`@vorugantia <https://github.com/vorugantia>`__)
 - Arpit Gogia (`@arpitgogia <https://github.com/arpitgogia>`__)
 - Axel Donath (`@adonath <https://github.com/adonath>`__)
 - Brigitta Sipocz (`@bsipocz <https://github.com/bsipocz>`__)
@@ -84,6 +85,7 @@ The following people have contributed to Gammapy (first name alphabetical order)
 - Dirk Lennarz (`@dlennarz <https://github.com/dlennarz>`__)
 - Domenico Tiziani (`@dltiziani <https://github.com/dltiziani>`__)
 - Ellis Owen (`@ellisowen <https://github.com/ellisowen>`__)
+- Fabio Acero (`@facero <https://github.com/facero>`__)
 - Helen Poon (`@helen-poon <https://github.com/helen-poon>`__)
 - Ignasi Reichardt (`@ignasi-reichardt <https://github.com/ignasi-reichardt>`__)
 - Johannes King (`@joleroi <https://github.com/joleroi>`__)
