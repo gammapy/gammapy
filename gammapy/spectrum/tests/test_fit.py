@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
 import numpy as np
-from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from ...datasets import gammapy_extra
 from ...spectrum import (
@@ -20,15 +19,7 @@ from ...utils.testing import (
 )
 from ...utils.random import get_random_state
 
-try:
-    import sherpa
 
-    SHERPA_LT_4_9 = not '4.9' in sherpa.__version__
-except ImportError:
-    SHERPA_LT_4_9 = True
-
-
-@pytest.mark.skipif('SHERPA_LT_4_9')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
@@ -101,8 +92,6 @@ class TestFit:
         assert 'Background' in str(fit)
 
         fit.fit()
-        print('\nSOURCE\n {}'.format(fit.model))
-        print('\nBKG\n {}'.format(fit.background_model))
         assert_allclose(fit.result[0].model.parameters['index'].value,
                         1.996272386763962)
         assert_allclose(fit.background_model.parameters['index'].value,
@@ -166,15 +155,12 @@ class TestFit:
         # TODO: add assert, see issue 294
 
 
-@pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_LT_4_9')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
 
     def setup(self):
-        self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
         self.pwl = models.PowerLaw(index=2 * u.Unit(''),
                                    amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -304,7 +290,6 @@ class TestSpectralFit:
         desired = fit.result[0].model.evaluate_error(1 * u.TeV)
         actual = read_result.model.evaluate_error(1 * u.TeV)
         assert_quantity_allclose(actual, desired)
-
 
 
 @requires_dependency('sherpa')
