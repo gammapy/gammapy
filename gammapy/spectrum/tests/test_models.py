@@ -175,6 +175,7 @@ def test_table_model_from_file():
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_absorption():
     # absorption values for given redshift
     redshift = 0.117
