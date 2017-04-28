@@ -11,7 +11,6 @@ from astropy.stats import gaussian_fwhm_to_sigma
 from ...utils.random import get_random_state
 
 __all__ = [
-    'GaussCatalog',
     'make_test_model',
     'read_json',
     'MorphModelImageCreator',
@@ -183,27 +182,6 @@ class MorphModelImageCreator(object):
         # Fake measurements
         for _ in range(N):
             self.measurements.append(random_state.poisson(self.model_image))
-
-
-class GaussCatalog(dict):
-    """Multi-Gauss catalog utils."""
-
-    def __init__(self, source):
-        import json
-        if isinstance(source, dict):
-            # Assume source is a dict with correct format
-            self.pars = source
-        elif isinstance(source, six.string_types):
-            # Assume it is a JSON filename
-            fh = open(source)
-            self.pars = json.load(fh)
-            fh.close()
-        else:
-            raise ValueError('Unknown source: {0}'.format(source))
-
-    def set(self):
-        ' + '.join(['gauss2d.' + name for name in source_names])
-        pass
 
 
 def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30,
