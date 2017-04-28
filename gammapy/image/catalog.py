@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-""" Make an image from a source catalog, or simulated catalog, e.g 1FHL 2FGL etc
+"""Make an image from a source catalog, or simulated catalog, e.g 1FHL 2FGL etc
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np

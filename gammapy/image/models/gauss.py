@@ -401,7 +401,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     Examples
     --------
-
     A simple example for an image consisting of three Gaussians
     with zero covariance matrix:
 

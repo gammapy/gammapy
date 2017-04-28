@@ -295,9 +295,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
 
 class FermiLATBasicImageEstimator(BasicImageEstimator):
-    """
-    Make basic (counts, exposure and background) Fermi sky images in given
-    energy band.
+    """Estimate basic sky images for Fermi-LAT data.
+
+    Can compute the following images: counts, exposure, background
 
     TODO: allow different background estimation methods
     TODO: add examples
@@ -335,7 +335,6 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         result = image_estimator.run(dataset)
         result['counts'].show()
-
     """
 
     def __init__(self, reference, emin, emax, spectral_model=None):

@@ -4,6 +4,11 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
+from ...utils.testing import (
+    requires_dependency,
+    requires_data,
+)
+from ...utils.random import get_random_state
 from ...datasets import gammapy_extra
 from ...spectrum import (
     PHACountsSpectrum,
@@ -13,11 +18,6 @@ from ...spectrum import (
     SpectrumFitResult,
     models,
 )
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-)
-from ...utils.random import get_random_state
 
 
 @requires_dependency('sherpa')

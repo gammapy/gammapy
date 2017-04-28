@@ -75,6 +75,7 @@ class SkyImage(MapBase):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
+
     _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
     _ax_idx = _AxisIndex(x=1, y=0)
 
@@ -434,9 +435,7 @@ class SkyImage(MapBase):
         return footprint
 
     def _get_boundaries(self, image_ref, image, wcs_check):
-        """
-        Get boundary coordinates of one image in the pixel coordinate system
-        of another reference image.
+        """Boundary pixel coordinates on another reference image.
         """
         ymax, xmax = image.data.shape
         ymax_ref, xmax_ref = image_ref.data.shape
