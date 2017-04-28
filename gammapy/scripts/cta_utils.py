@@ -126,21 +126,22 @@ class CTAObservationSimulation(object):
 
         on_counts += bkg_counts  # evts in ON region
 
-        counts_kwargs = dict(energy_lo=reco_energy.lo,
-                             energy_hi=reco_energy.hi,
-                             livetime=livetime,
-                             creator='gammapy')
-        on_vector = PHACountsSpectrum(data=on_counts,
-                                      backscal=1,
-                                      **counts_kwargs)
+        meta = dict(EXPOSURE=livetime.to('s').value)
+
+        on_vector = PHACountsSpectrum(
+            data=on_counts,
+            backscal=1,
+            energy_lo=reco_energy.lo,
+            energy_hi=reco_energy.hi,
+            meta=meta,
+        )
 
         off_vector = PHACountsSpectrum(energy_lo=reco_energy.lo,
                                        energy_hi=reco_energy.hi,
                                        data=off_counts,
-                                       livetime=livetime,
                                        backscal=1. / alpha,
                                        is_bkg=True,
-                                       creator='gammapy')
+                                       )
 
         obs = SpectrumObservation(on_vector=on_vector,
                                   off_vector=off_vector,
@@ -164,7 +165,7 @@ class CTAObservationSimulation(object):
         # Spectrum plot
         energy_range = [0.01 * u.TeV, 100 * u.TeV]
         target.model.plot(ax=ax1, energy_range=energy_range,
-                              label='Model')
+                          label='Model')
         plt.text(0.55, 0.65, target.__str__(),
                  style='italic', transform=ax1.transAxes, fontsize=7,
                  bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10})
