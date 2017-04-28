@@ -1189,7 +1189,7 @@ class Absorption(object):
 
         References
         ----------
-        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity", 
+        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
             `Link <http://adsabs.harvard.edu/abs/2008A%26A...487..837F>`_
         .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
             `Link <http://adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`_
@@ -1232,7 +1232,7 @@ class Absorption(object):
 class AbsorbedSpectralModel(SpectralModel):
     """
     Spectral model with EBL absorption.
-    
+
     Parameters
     ----------
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
@@ -1268,7 +1268,7 @@ class AbsorbedSpectralModel(SpectralModel):
 
     def evaluate(self, energy, **kwargs):
         # assign redshift value and remove it from dictionnary
-        # since it does not belong to the spectral model 
+        # since it does not belong to the spectral model
         parameter = kwargs[self.parameter_name]
         del kwargs[self.parameter_name]
 

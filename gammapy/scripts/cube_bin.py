@@ -29,7 +29,7 @@ def make_counts_cube(event_file,
                      out_file,
                      overwrite):
     """Bin events into a LON-LAT-Energy cube.
-    
+
     """
     events = Table.read(event_file)
     refcube = SkyCube.read(reference_file)

@@ -34,7 +34,7 @@ _DEFAULT_WCS_MODE = 'all'
 @six.add_metaclass(abc.ABCMeta)
 class MapBase(object):
     """Map base class.
-    
+
     This is just a temp solution to put code that's common
     between `SkyImage` and `SkyCube`.
     """
@@ -42,7 +42,7 @@ class MapBase(object):
     @property
     def is_mask(self):
         """Is this a mask (check values, not dtype).
-        
+
         """
         if self.data.dtype == bool:
             return True

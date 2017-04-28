@@ -356,7 +356,7 @@ class EffectiveAreaTable2D(object):
     @classmethod
     def from_table(cls, table):
         """Read from table.
-        
+
         Data format specification: :ref:`gadf:aeff_2d`
         """
         energy_lo = table['ENERG_LO'].quantity[0]

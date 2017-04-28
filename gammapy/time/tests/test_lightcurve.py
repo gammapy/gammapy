@@ -111,7 +111,7 @@ def test_lightcurve_estimator():
 
     assert_quantity_allclose(len(lc), 2)
 
-    # TODO: 
+    # TODO:
     # The uncommented values are with containment correction, this does not
     # work at the moment, try to reproduce them later
     #assert_allclose(lc['FLUX'][0].value, 5.70852574714e-11, rtol=1e-2)

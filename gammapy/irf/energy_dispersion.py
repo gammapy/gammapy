@@ -19,7 +19,7 @@ __all__ = [
 class EnergyDispersion(object):
     """Energy dispersion matrix.
 
-    see :ref:`gadf:ogip-rmf` 
+    see :ref:`gadf:ogip-rmf`
 
     Parameters
     ----------
@@ -561,7 +561,7 @@ class EnergyDispersion2D(object):
     >>> print(rmf)
     EnergyDispersion
     NDDataArray summary info
-    e_true         : size =    60, min =  0.105 TeV, max = 19.136 TeV 
+    e_true         : size =    60, min =  0.105 TeV, max = 19.136 TeV
     e_reco         : size =    60, min =  0.105 TeV, max = 19.136 TeV
     Data           : size =  3600, min =  0.000, max =  0.266
     """

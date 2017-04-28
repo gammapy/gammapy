@@ -40,14 +40,14 @@ def obs_param():
 def perf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     return CTAPerf.read(filename)
-    
+
 @requires_data('gammapy-extra')
 @pytest.fixture(scope='session')
 def cta_simu():
     return CTAObservationSimulation.simulate_obs(perf=perf(),
                                                  target=target(),
                                                  obs_param=obs_param())
-    
+
 @requires_data('gammapy-extra')
 def test_target():
     text = str(target())

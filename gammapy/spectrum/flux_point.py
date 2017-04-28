@@ -769,16 +769,16 @@ class FluxPointsFitter(object):
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsFitter
         from gammapy.spectrum.models import PowerLaw
-    
+
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)
-    
+
         model = PowerLaw(
             index=2. * u.Unit(''),
             amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
             reference=1. * u.TeV,
         )
-    
+
         fitter = FluxPointsFitter()
         result = fitter.run(flux_points, model)
         print(result['best_fit_model'])

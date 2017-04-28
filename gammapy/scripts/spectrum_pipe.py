@@ -21,7 +21,7 @@ class SpectrumAnalysisIACT(object):
     """High-level analysis class to perform a full 1D IACT spectral analysis.
 
     Observation selection must have happend before.
-    
+
     For a usage example see :gp-extra-notebook:`spectrum_pipe`.
 
     Config options:

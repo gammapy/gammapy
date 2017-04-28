@@ -8,7 +8,7 @@ __all__ = [
 
 class MapBase(object):
     """Abstract map class.
-    
+
     This can represent either WCS or HEALPIX-based maps in 2 or 3 dimensions.
     """
 

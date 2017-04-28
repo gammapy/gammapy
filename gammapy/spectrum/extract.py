@@ -218,7 +218,7 @@ class SpectrumExtraction(object):
 
         Set the high and low energy threshold for each observation based on a
         chosen method.
-        
+
         Available methods for setting the low energy threshold
 
         * area_max : Set energy threshold at x percent of the maximum effective

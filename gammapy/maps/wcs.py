@@ -14,7 +14,7 @@ __all__ = [
 
 class WCSGeom(MapGeom):
     """Container for WCS object and image extent.
-    
+
     Class that encapsulates both a WCS object and the definition of
     the image extent (number of pixels).  Also provides a number of
     helper methods for accessing the properties of the WCS object.
@@ -233,7 +233,7 @@ def offset_to_sky(skydir, offset_lon, offset_lat,
 
 def sky_to_offset(skydir, lon, lat, coordsys='CEL', projection='AIT'):
     """Convert sky coordinates to a projected offset.
-    
+
     This function is the inverse of offset_to_sky.
     """
     w = create_wcs(skydir, coordsys, projection)
@@ -288,7 +288,7 @@ def pix_to_skydir(xpix, ypix, wcs):
     Parameters
     ----------
     xpix, ypix : `numpy.ndarray`
-        TODO        
+        TODO
     wcs : `~astropy.wcs.WCS`
         TODO
     """

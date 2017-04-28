@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
-from .utils import CountsPredictor 
+from .utils import CountsPredictor
 from . import (
     SpectrumObservationList,
     SpectrumObservation,
@@ -93,7 +93,7 @@ class SpectrumFit(object):
     @property
     def predicted_counts(self):
         """Current value of predicted counts
-        
+
         For each observation a tuple to counts for the on and off region is
         returned.
         """
@@ -106,7 +106,7 @@ class SpectrumFit(object):
         For each observation the statval per bin is returned
         """
         return self._statval
-        
+
 
     def __str__(self):
         """String repr"""

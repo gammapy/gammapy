@@ -377,7 +377,7 @@ class CTAPerf(object):
     @classmethod
     def read(cls, filename):
         """Read from a FITS file.
-        
+
         Compute RMF at 0.5 deg offset on fly.
 
         Parameters

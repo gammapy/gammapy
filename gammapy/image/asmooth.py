@@ -42,11 +42,11 @@ def asmooth_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
 
 class ASmooth(object):
     """Adaptively smooth counts image.
-    
+
     Achievesa roughly constant significance of features across the whole image.
 
     Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E
-    
+
     The algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
     significance of a feature in the image.
 

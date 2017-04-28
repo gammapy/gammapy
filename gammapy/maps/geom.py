@@ -12,8 +12,8 @@ __all__ = [
 
 
 def val_to_bin(edges, x):
-    """Convert axis coordinates ``x`` to bin indices. 
-    
+    """Convert axis coordinates ``x`` to bin indices.
+
     Returns -1 for values below/above the lower/upper edge.
     """
     ibin = np.digitize(np.array(x, ndmin=1), edges) - 1

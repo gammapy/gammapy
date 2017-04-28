@@ -183,7 +183,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     def psf(self, observations):
         """Mean point spread function kernel image.
-        
+
         Parameters
         ----------
         observations : `~gammapy.data.ObservationList`

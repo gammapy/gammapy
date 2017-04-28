@@ -65,7 +65,7 @@ def get_test_obs():
                                   energy_hi=energy[1:],
                                   data=np.arange(19),
                                   backscal=1)
-    on_vector.livetime = livetime 
+    on_vector.livetime = livetime
     on_vector.obs_id = 2
     aeff = EffectiveAreaTable(energy_lo=energy[:-1],
                               energy_hi=energy[1:],

@@ -228,7 +228,7 @@ class DataAxis(object):
     """Data axis to be used with NDDataArray
 
     Axis values are interpreted as nodes.
-    
+
     For binned data see `~gammapy.utils.nddata.BinnedDataAxis`.
 
     Parameters

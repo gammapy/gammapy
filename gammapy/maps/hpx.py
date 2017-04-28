@@ -130,7 +130,7 @@ def get_pixel_size_from_nside(nside):
     """Estimate of the pixel size from the HEALPIX nside coordinate.
 
     This just uses a lookup table to provide a nice round number
-    for each HEALPIX order. 
+    for each HEALPIX order.
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
@@ -150,7 +150,7 @@ def hpx_to_axes(h, npix):
 
 def hpx_to_coords(h, shape):
     """Generate an N x D list of pixel center coordinates.
-     
+
     ``N`` is the number of pixels and ``D`` is the dimensionality of the map.
     """
     x, z = hpx_to_axes(h, shape)
@@ -177,7 +177,7 @@ def make_hpx_to_wcs_mapping_centers(hpx, wcs):
     Returns
     -------
     ipixs : array(nx,ny)
-        HEALPIX pixel indices for each WCS pixel 
+        HEALPIX pixel indices for each WCS pixel
         -1 indicates the wcs pixel does not contain the center of a HEALPIX pixel
     mult_val : array
         (nx,ny) of 1.
@@ -351,7 +351,7 @@ def is_power2(n):
 
 def nside_to_order(nside):
     """Compute the ORDER given NSIDE.
-    
+
     Returns -1 for NSIDE values that are not a power of 2.
     """
     nside = np.array(nside, ndmin=1)
@@ -375,7 +375,7 @@ def pix_to_upix(pix, nside):
 
 class HPXGeom(MapGeom):
     """Geometry class for HEALPIX maps and cubes.
-    
+
     This class performs
     mapping between partial-sky indices (pixel number within a HEALPIX
     region) and all-sky indices (pixel number within an all-sky
@@ -386,7 +386,7 @@ class HPXGeom(MapGeom):
 
     Parameters
     ----------
-    nside : `~numpy.ndarray` 
+    nside : `~numpy.ndarray`
         HEALPIX nside parameter, the total number of pixels is
         12*nside*nside.  For multi-dimensional maps one can pass
         either a single nside value or a vector of nside values
@@ -461,7 +461,7 @@ class HPXGeom(MapGeom):
 
     def __getitem__(self, sliced):
         """This implements the global-to-local index lookup.
-        
+
         For all-sky maps it just returns the input array.
         For partial-sky maps it returns the local indices corresponding to the indices in the
         input array, and -1 for those pixels that are outside the
@@ -597,7 +597,7 @@ class HPXGeom(MapGeom):
     @property
     def npix(self):
         """Number of pixels in each band.
-        
+
         For partial-sky geometries this can be less than the
         number of pixels for the band NSIDE.
         """
@@ -784,7 +784,7 @@ class HPXGeom(MapGeom):
         Parameters
         ----------
         extname : str
-            The HDU extension name            
+            The HDU extension name
         """
         emin = self._axes[:-1]
         emax = self._axes[1:]
@@ -801,7 +801,7 @@ class HPXGeom(MapGeom):
         Parameters
         ----------
         extname : str
-            The HDU extension name            
+            The HDU extension name
         """
         ectr = np.sqrt(self._axes[1:] * self._axes[:-1])
         cols = [fits.Column('ENERGY', '1E', unit='MeV', array=ectr)]
@@ -819,7 +819,7 @@ class HPXGeom(MapGeom):
         outfile : str
             The name of the output file
         extname :
-            The HDU extension name        
+            The HDU extension name
         clobber : bool
             True -> overwrite existing files
         """
@@ -879,7 +879,7 @@ class HPXGeom(MapGeom):
 
     @staticmethod
     def get_ref_dir(region, coordsys):
-        """Get the reference direction for a given  HEALPIX region string.   
+        """Get the reference direction for a given  HEALPIX region string.
 
         Parameters
         ----------
@@ -918,7 +918,7 @@ class HPXGeom(MapGeom):
 
     @staticmethod
     def get_region_size(region):
-        """Get the approximate size of region (in degrees) from a HEALPIX region string.   
+        """Get the approximate size of region (in degrees) from a HEALPIX region string.
         """
         if region is None:
             return 180.

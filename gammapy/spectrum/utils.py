@@ -155,7 +155,7 @@ class CountsPredictor(object):
     def integrate_model(self):
         """Integrate model in true energy space"""
         if self.aeff is not None:
-            # TODO: True energy is converted to model amplitude unit. See issue 869 
+            # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
             try:
                 for unit in self.model.parameters['amplitude'].unit.bases:

@@ -327,7 +327,7 @@ class SpectrumResult(object):
     Parameters
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
-        Best Fit model 
+        Best Fit model
     points : `~gammapy.spectrum.FluxPoints`, optional
         Flux points
     """
@@ -344,7 +344,7 @@ class SpectrumResult(object):
 
         Returns
         -------
-        residuals : np.array 
+        residuals : np.array
             Residuals
         residuals_err : np.array
             Residuals error

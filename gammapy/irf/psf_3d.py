@@ -18,7 +18,7 @@ __all__ = [
 
 class PSF3D(object):
     """PSF with axes: energy, offset, rad.
-    
+
     Data format specification: :ref:`gadf:psf_table`
 
     Parameters

@@ -439,7 +439,7 @@ class SpectrumObservationList(UserList):
         return ss
 
     def peek(self):
-        """Quickly look at observations 
+        """Quickly look at observations
 
         Uses IPython widgets.
         TODO: Change to bokeh
@@ -481,7 +481,7 @@ class SpectrumObservationList(UserList):
 
     def safe_range(self, method='inclusive'):
         """Safe energy range
-        
+
         This is the energy range in with any / all observations have their safe
         threshold
 

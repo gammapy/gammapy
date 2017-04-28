@@ -113,7 +113,7 @@ class HpxCube(HpxMap):
         normalize  : bool
            True -> preserve integral by splitting HEALPIX values between bins
 
-        Returns 
+        Returns
         -------
         wcs : `~astropy.wcs.WCS`
             WCS object
@@ -201,8 +201,8 @@ class HpxCube(HpxMap):
             return self._interpolate_cube(lon, lat, egy, interp_log)
 
     def _interpolate_cube(self, lon, lat, egy=None, interp_log=True):
-        """Perform interpolation on a HEALPIX cube. 
-        
+        """Perform interpolation on a HEALPIX cube.
+
         If egy is None, then interpolation will be performed
         on the existing energy planes.
         """
