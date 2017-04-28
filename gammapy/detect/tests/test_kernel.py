@@ -19,7 +19,6 @@ class TestKernelBackgroundEstimator(object):
         background_kernel = np.ones((5, 3))
 
         # Loads prepared inputs into estimator
-
         self.kbe = KernelBackgroundEstimator(
             kernel_src=source_kernel,
             kernel_bkg=background_kernel,

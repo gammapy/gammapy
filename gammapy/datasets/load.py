@@ -88,7 +88,7 @@ def load_tev_spectrum(source_name):
     return table
 
 
-def load_crab_flux_points(component='both', with_fermi_flare=False):
+def load_crab_flux_points(component='both'):
     """Load published Crab pulsar and nebula flux points.
 
     Besides the usual flux point columns, this table contains
@@ -127,11 +127,7 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     Aleksic et al. ApJ 742 2011, Aliu et al. Science 334 2011,
     Aleksic et al. Astron. Astrophys. 540 2012
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
-
     """
-    if with_fermi_flare:
-        raise NotImplementedError
-
     filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
 
     with warnings.catch_warnings():

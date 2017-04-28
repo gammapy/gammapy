@@ -71,8 +71,7 @@ def make_dataset(config):
 
 
 class OneFileDataset(object):
-    """One file simple dataset.
-    """
+    """One file simple dataset."""
 
     def __init__(self, name, filename, url=None, description=None, tags=None):
         self.name = name

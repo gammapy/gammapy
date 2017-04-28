@@ -6,4 +6,5 @@ from ...detect import iterfind
 
 @requires_dependency('scipy')
 def test_IterativeSourceDetector():
+    # TODO: add tests!!!
     pass

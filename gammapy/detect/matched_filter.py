@@ -5,7 +5,9 @@ import numpy as np
 from ..image import process_image_pixels
 from ..stats import probability_to_significance_normal
 
-__all__ = []
+__all__ = [
+    # TODO: Not tested yet, so not public yet.
+]
 
 
 def probability_center(images, kernel):

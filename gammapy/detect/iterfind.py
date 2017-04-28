@@ -39,15 +39,15 @@ from ..extern.pathlib import Path
 from .. import stats
 
 __all__ = [
-    'IterativeSourceDetector',
+    # TODO: not working, so not part of the docs yet
+    # 'IterativeSourceDetector',
 ]
 
 log = logging.getLogger(__name__)
 
 
 class FitFailedError(object):
-    """Fit failed error.
-    """
+    """Fit failed error."""
     pass
 
 

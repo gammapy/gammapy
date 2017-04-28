@@ -90,7 +90,7 @@ class EventList(object):
     @classmethod
     def read(cls, filename, **kwargs):
         """Read from FITS file.
-         
+
         Format specification: :ref:`gadf:iact-events`
 
         Parameters

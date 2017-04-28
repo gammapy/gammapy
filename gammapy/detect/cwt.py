@@ -45,8 +45,7 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
 
 
 class CWT(object):
-    """
-    Continuous wavelet transform.
+    """Continuous wavelet transform.
 
     TODO: describe algorithm (modify the words below)
 
@@ -102,8 +101,7 @@ class CWT(object):
         self.previous_variance = None
 
     def _execute_iteration(self, data):
-        """
-        Do one iteration of the algorithm.
+        """Do one iteration of the algorithm.
 
         Parameters
         ----------
@@ -115,8 +113,7 @@ class CWT(object):
         self._inverse_transform(data=data)
 
     def _transform(self, data):
-        """
-        Do the transform itself.
+        """Do the transform itself.
 
         The transform is made by using `scipy.signal.fftconvolve`.
 
@@ -149,8 +146,7 @@ class CWT(object):
         log.debug('Approximate background sum: {0:.4f}'.format(data._approx_bkg.sum()))
 
     def _compute_support(self, data):
-        """
-        Compute the multiresolution support with hard sigma clipping.
+        """Compute the multiresolution support with hard sigma clipping.
 
         Imposing a minimum significance on a connected region of significant pixels
         (i.e. source detection).
@@ -208,11 +204,11 @@ class CWT(object):
 
             log.debug('Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale]))
             data._support[idx_scale] |= mask
+
         log.debug('Support sum: {0}'.format(data._support.sum()))
 
     def _inverse_transform(self, data):
-        """
-        Do the inverse transform (reconstruct the image).
+        """Do the inverse transform (reconstruct the image).
 
         TODO: describe better what this does.
 
@@ -228,8 +224,7 @@ class CWT(object):
         log.debug('Model max: {:.4f}'.format(data._model.max()))
 
     def _is_converged(self, data):
-        """
-        Check if the algorithm has converged on current iteration.
+        """Check if the algorithm has converged on current iteration.
 
         TODO: document metric used, but not super important.
 
@@ -261,8 +256,9 @@ class CWT(object):
         return variance_ratio < self.tol
 
     def analyze(self, data):
-        """
-        Run iterative filter peak algorithm. The algorithm modifies the original data.
+        """Run iterative filter peak algorithm.
+
+        The algorithm modifies the original data.
 
         Parameters
         ----------
@@ -289,8 +285,7 @@ class CWT(object):
 
 
 class CWTKernels(object):
-    """
-    Conduct arrays of kernels and scales for CWT algorithm.
+    """Conduct arrays of kernels and scales for CWT algorithm.
 
     Parameters
     ----------
@@ -362,8 +357,7 @@ class CWTKernels(object):
         self.kern_approx = Gaussian2DKernel(max_scale).array
 
     def _info(self):
-        """
-        Return information about the object as a dict.
+        """Return information about the object as a dict.
 
         Returns
         -------
@@ -379,16 +373,17 @@ class CWTKernels(object):
         info_dict['Kernels approx width'] = len(self.kern_approx)
         info_dict['Kernels approx sum'] = self.kern_approx.sum()
         info_dict['Kernels approx max'] = self.kern_approx.max()
+
         for idx_scale, scale in enumerate(self.scales):
             info_dict['Kernels base width for {0} scale'.format(scale)] = len(self.kern_base[idx_scale])
             info_dict['Kernels base sum for {0} scale'.format(scale)] = self.kern_base[idx_scale].sum()
             info_dict['Kernels base max for {0} scale'.format(scale)] = self.kern_base[idx_scale].max()
+
         return info_dict
 
     @property
     def info_table(self):
-        """
-        Summary info table about the object.
+        """Summary info table about the object.
 
         Returns
         -------
@@ -408,8 +403,9 @@ class CWTKernels(object):
 
 
 class CWTData(object):
-    """
-    Images for CWT algorithm. Contains also input counts and background.
+    """Images for CWT algorithm.
+
+    Contains also input counts and background.
 
     Parameters
     ----------
@@ -448,62 +444,65 @@ class CWTData(object):
 
     @property
     def counts(self):
-        """2D counts input `~gammapy.image.SkyImage` image."""
+        """2D counts input image (`~gammapy.image.SkyImage`)."""
         return SkyImage(name='counts', data=self._counts, wcs=copy.deepcopy(self._wcs))
 
     @property
     def background(self):
-        """2D background input `~gammapy.image.SkyImage` image."""
+        """2D background input image (`~gammapy.image.SkyImage`)."""
         return SkyImage(name='background', data=self._background, wcs=copy.deepcopy(self._wcs))
 
     @property
     def model(self):
-        """
-        2D `~gammapy.image.SkyImage` image. Positive version of
-        transform_2d image. Primordial initialized by zero array.
+        """2D model image (`~gammapy.image.SkyImage`).
+
+        Positive version of transform_2d image.
+        Primordial initialized by zero array.
         """
         return SkyImage(name='model', data=self._model, wcs=self._wcs)
 
     @property
     def approx(self):
-        """
-        2D `~gammapy.image.SkyImage` image. In the course of iterations
-        updated by convolution of ``counts - model - background`` with ``kern_approx``
+        """2D approx??? image (`~gammapy.image.SkyImage`).
+
+        In the course of iterations updated by convolution of
+            ``counts - model - background`` with ``kern_approx``
         Primordial initialized by zero array.
         """
         return SkyImage(name='approx', data=self._approx, wcs=self._wcs)
 
     @property
     def approx_bkg(self):
-        """
-        2D `~gammapy.image.SkyImage` image. In the course of iterations
-        updated by convolution of ``background`` with ``kern_approx``.
+        """2D approx bkg image (`~gammapy.image.SkyImage`).
+
+        In the course of iterations updated by convolution of ``background`` with ``kern_approx``.
         Primordial initialized by zero array.
         """
         return SkyImage(name='approx_bkg', data=self._approx_bkg, wcs=self._wcs)
 
     @property
     def transform_2d(self):
-        """
-        2D `~gammapy.image.SkyImage` image. Created from transform_3d by summarize
-        values per 0 axes. Primordial initialized by zero array.
+        """2D transforma??? image (`~gammapy.image.SkyImage`).
+
+        Created from transform_3d by summarize values per 0 axes.
+        Primordial initialized by zero array.
         """
         return SkyImage(name='transform_2d', data=self._transform_2d, wcs=self._wcs)
 
     @property
     def support_2d(self):
-        """
-        2D `~gammapy.cube.SkyCube` cube exclusion mask. Created from support_3d
-        by OR-operation per 0 axis.
+        """2D cube exclusion mask (`~gammapy.cube.SkyCube`).
+
+        Created from support_3d by OR-operation per 0 axis.
         """
         support_2d = (self._support.sum(0) > 0)
         return SkyImage(name='support_2d', data=support_2d, wcs=self._wcs)
 
     @property
     def residual(self):
-        """
-        2D `~gammapy.image.SkyImage` image. Calculate as
-        ``counts - model - approx``.
+        """2D residual image (`~gammapy.image.SkyImage`).
+
+        Calculate as ``counts - model - approx``.
         """
         residual = self._counts - (self._model + self._approx)
         return SkyImage(name='residual', data=residual, wcs=self._wcs)
@@ -526,8 +525,9 @@ class CWTData(object):
 
     @property
     def error(self):
-        """
-        3D `~gammapy.cube.SkyCube` cube. Primordial initialized by zero array.
+        """3D error cube (`~gammapy.cube.SkyCube`).
+
+        Primordial initialized by zero array.
         In the course of iterations updated by convolution of ``total_background``
         with kernel^2 for each scale.
         """
@@ -535,14 +535,15 @@ class CWTData(object):
 
     @property
     def support_3d(self):
-        """
-        3D `~gammapy.cube.SkyCube` cube exclusion mask. Primordial initialized by zero array.
+        """3D support (exclusion) cube (`~gammapy.cube.SkyCube`).
+
+        Primordial initialized by zero array.
         """
         return SkyImage(name='support_3d', data=self._support, wcs=self._wcs)
 
     @property
     def max_scale_image(self):
-        """Compute the maximum scale image as `~gammapy.image.SkyImage`."""
+        """Maximum scale image (`~gammapy.image.SkyImage`)."""
         # Previous version:
         # idx_scale_max = np.argmax(self._transform_3d, axis=0)
         # return kernels.scales[idx_scale_max] * (self._support.sum(0) > 0)
@@ -565,8 +566,7 @@ class CWTData(object):
         return data
 
     def images(self):
-        """
-        Return all the images in a dict.
+        """All the images in a dict.
 
         Returns
         -------
@@ -589,8 +589,7 @@ class CWTData(object):
         )
 
     def cubes(self):
-        """
-        Return all the cubes in a dict.
+        """All the cubes in a dict.
 
         Returns
         -------
@@ -605,8 +604,7 @@ class CWTData(object):
         )
 
     def _metrics_info(self, data, name):
-        """
-        Compute variance, mean, find max and min values and compute sum for given data.
+        """Compute variance, mean, find max and min values and compute sum for given data.
 
         Parameters
         ----------
@@ -634,7 +632,8 @@ class CWTData(object):
         return info
 
     def image_info(self, name):
-        """
+        """Compute image info.
+
         Compute variance, mean, find max and min values and compute sum for image with given name.
         Return that information about the image.
 
@@ -669,7 +668,8 @@ class CWTData(object):
         return Table(rows=rows, names=['Metrics', 'Source'])
 
     def cube_info(self, name, per_scale=False):
-        """
+        """Compute cube info.
+
         Compute variance, mean, find max and min values and compute sum for image with given name.
         Return that information about the image.
 
@@ -727,8 +727,7 @@ class CWTData(object):
 
     @property
     def info_table(self):
-        """
-        Information about all the images and cubes.
+        """Information about all the images and cubes.
 
         Returns
         -------
@@ -746,8 +745,7 @@ class CWTData(object):
         return Table(rows=rows, names=columns)
 
     def write(self, filename, overwrite=False):
-        """
-        Save results to file.
+        """Save results to FITS file.
 
         Parameters
         ----------

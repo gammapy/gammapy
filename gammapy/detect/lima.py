@@ -6,14 +6,16 @@ import numpy as np
 from ..image import SkyImage, SkyImageList
 from ..stats import significance, significance_on_off
 
-__all__ = ['compute_lima_image', 'compute_lima_on_off_image']
+__all__ = [
+    'compute_lima_image',
+    'compute_lima_on_off_image',
+]
 
 log = logging.getLogger(__name__)
 
 
 def compute_lima_image(counts, background, kernel, exposure=None):
-    """
-    Compute Li & Ma significance and flux images for known background.
+    """Compute Li & Ma significance and flux images for known background.
 
     If exposure is given the corresponding flux image is computed and returned.
 
@@ -67,8 +69,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
 
 
 def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
-    """
-    Compute Li & Ma significance and flux images for on-off observations.
+    """Compute Li & Ma significance and flux images for on-off observations.
 
     Parameters
     ----------

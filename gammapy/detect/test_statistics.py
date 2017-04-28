@@ -59,8 +59,7 @@ def _extract_array(array, shape, position):
 
 
 def f_cash(x, counts, background, model):
-    """
-    Wrapper for cash statistics, that defines the model function.
+    """Wrapper for cash statistics, that defines the model function.
 
     Parameters
     ----------
@@ -79,8 +78,7 @@ def f_cash(x, counts, background, model):
 def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='auto',
                                 residual=False, morphology='Gaussian2D', width=None,
                                 *args, **kwargs):
-    """
-    Compute multi-scale TS images using ``compute_ts_image``.
+    """Compute multi-scale TS images using ``compute_ts_image``.
 
     High level TS image computation using a multi-Gauss PSF kernel and assuming
     a given source morphology. To optimize the performance the input data
@@ -191,8 +189,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
 
 
 def compute_maximum_ts_image(ts_image_results):
-    """
-    Compute maximum TS image across a list of given TS images.
+    """Compute maximum TS image across a list of given TS images.
 
     Parameters
     ----------
@@ -204,7 +201,6 @@ def compute_maximum_ts_image(ts_image_results):
     images : `~gammapy.image.SkyImageList`
         Images (ts, niter, amplitude)
     """
-
     # Get data
     ts = np.dstack([result.ts for result in ts_image_results])
     niter = np.dstack([result.niter for result in ts_image_results])
@@ -217,13 +213,14 @@ def compute_maximum_ts_image(ts_image_results):
     niter_max = np.zeros(ts.shape[:-1])
     amplitude_max = np.zeros(ts.shape[:-1])
 
-    for i, scale in enumerate(scales):
-        index = np.where(ts[:, :, i] == ts_max)
+    for idx_scale, scale in enumerate(scales):
+        index = np.where(ts[:, :, idx_scale] == ts_max)
         scale_max[index] = scale
-        niter_max[index] = niter[:, :, i][index]
-        amplitude_max[index] = amplitude[:, :, i][index]
+        niter_max[index] = niter[:, :, idx_scale][index]
+        amplitude_max[index] = amplitude[:, :, idx_scale][index]
 
-    meta = {'MORPH': (ts_image_results[0].morphology, 'Source morphology assumption')}
+    meta = OrderedDict()
+    meta['MORPH'] = (ts_image_results[0].morphology, 'Source morphology assumption')
 
     return SkyImageList([
         SkyImage(name='ts', data=ts_max.astype('float32')),
@@ -234,8 +231,7 @@ def compute_maximum_ts_image(ts_image_results):
 
 def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
                      method='root brentq', parallel=True, threshold=None):
-    """
-    Compute TS image using different optimization methods.
+    """Compute TS image using different optimization methods.
 
     Parameters
     ----------
@@ -366,6 +362,7 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
 
     runtime = np.round(time() - t_0, 2)
     meta = OrderedDict(runtime=runtime)
+
     return SkyImageList([
         SkyImage(name='ts', data=ts.astype('float32'), wcs=wcs),
         SkyImage(name='sqrt_ts', data=sqrt_ts.astype('float32'), wcs=wcs),
@@ -376,9 +373,9 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
 
 def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
               method, threshold):
-    """
-    Compute TS value at a given pixel position i, j using the approach described
-    in Stewart (2009).
+    """Compute TS value at a given pixel position.
+
+    Uses approach described in Stewart (2009).
 
     Parameters
     ----------
@@ -553,9 +550,7 @@ def _root_amplitude_brentq(counts, background, model):
 
 
 def _flux_correlation_radius(kernel, containment=CONTAINMENT):
-    """
-    Compute equivalent top-hat kernel radius for a given kernel instance and
-    containment fraction.
+    """Compute equivalent top-hat kernel radius for a given kernel instance and containment fraction.
 
     Parameters
     ----------

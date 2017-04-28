@@ -91,7 +91,7 @@ class ObservationStats(Stats):
     @property
     def alpha(self):
         """Alpha (on / off exposure ratio)
-        
+
         Override member function from `~gammapy.stats.Stats`
         to take into account weighted alpha by number of Off events
         """
