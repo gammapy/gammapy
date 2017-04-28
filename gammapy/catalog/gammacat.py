@@ -16,10 +16,10 @@ from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
 from ..utils.modeling import SourceModel, SourceLibrary
+from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import Shell2D, Delta2D
-from ..utils.scripts import make_path
+from ..image.models import Shell2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -37,8 +37,7 @@ class NoDataAvailableError(LookupError):
 
 
 class GammaCatNotFoundError(OSError):
-    """
-    The gammapy-cat repo is not available.
+    """The gammapy-cat repo is not available.
 
     You have to set the GAMMA_CAT environment variable so that it's found.
     """
@@ -46,8 +45,7 @@ class GammaCatNotFoundError(OSError):
 
 
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
-    """
-    One object from the gamma-cat source catalog.
+    """One object from the gamma-cat source catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalogGammaCat`.
     """
@@ -76,9 +74,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Source spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         d = self.data
         spec_type = d['spec_type']
         pars, errs = {}, {}
@@ -122,9 +118,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return model
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
-        """
-        Source spatial model.
-        """
+        """Source spatial model."""
         d = self.data
         morph_type = d['morph_type']
         pars = {}
@@ -178,9 +172,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Differential flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Differential flux points (`~gammapy.spectrum.FluxPoints`)."""
         d = self.data
         table = Table()
         table.meta['SED_TYPE'] = 'dnde'
@@ -215,8 +207,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
 
 class SourceCatalogGammaCat(SourceCatalog):
-    """
-    Gammacat open TeV source catalog.
+    """Gammacat open TeV source catalog.
 
     See: https://github.com/gammapy/gamma-cat
 
@@ -229,7 +220,6 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     Examples
     --------
-
     Load the catalog data:
 
     >>> from gammapy.catalog import SourceCatalogGammaCat
@@ -271,7 +261,8 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_source_library(self):
-        """
+        """Convert to a `~gammapy.utils.modeling.SourceLibrary`.
+
         TODO: add an option whether to skip or raise on missing models or data.
         """
         source_list = []

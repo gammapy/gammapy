@@ -14,8 +14,7 @@ __all__ = [
 
 
 class SourceCatalogObjectSNRcat(SourceCatalogObject):
-    """One source from the SNRcat catalog.
-    """
+    """One source from the SNRcat catalog."""
     pass
 
 

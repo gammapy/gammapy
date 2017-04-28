@@ -223,15 +223,11 @@ class SourceCatalog(object):
         return data
 
     def info(self):
-        """
-        Print info string.
-        """
+        """Print info string."""
         print(self)
 
     def __str__(self):
-        """
-        Info string
-        """
+        """Info string."""
         ss = self.description
         ss += ' with {} objects.'.format(len(self.table))
         return ss

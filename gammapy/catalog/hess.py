@@ -74,15 +74,15 @@ class HGPSGaussComponent(object):
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
-    """One object from the HGPS catalog.
-    """
+    """One object from the HGPS catalog."""
 
     @property
     def energy_range(self):
         return u.Quantity([self.data['Energy_Range_Spec_Lo'], self.data['Energy_Range_Spec_Hi']])
 
     def info(self, info='all'):
-        """
+        """Print info.
+
         Parameters
         ----------
         info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations'}
@@ -92,8 +92,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         print(ss)
 
     def __str__(self, info='all'):
-        """
-        Info string.
+        """Info string.
 
         Parameters
         ----------
@@ -376,8 +375,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)
-        """
+        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'dnde'
         mask = ~np.isnan(self.data['Flux_Points_Energy'])

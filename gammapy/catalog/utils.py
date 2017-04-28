@@ -369,8 +369,7 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
                   glat='GLAT', unc_glat=None, label=None, label_position='top',
                   label_additional_info=None, label_distance=1.2, marker='diamond',
                   dashed=False, width=3):
-    """
-    Write ds9 region file from catalog.
+    """Write ds9 region file from catalog.
 
     Currently works only for galactic coordinates.
 
@@ -461,8 +460,7 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
 
 
 def _get_cross_ds9_region(x, y, unc_x, unc_y, color, width, endbar=0.01):
-    """
-    Get ds9 region string for a cross that represents position uncertainties.
+    """Get ds9 region string for a cross that represents position uncertainties.
 
     Parameters
     ----------

@@ -36,6 +36,7 @@ def load_catalog_green():
     return Table.read(filename)
 
 
+# TODO: remove, or integrate with gammapy.astro.source.Pulsar !
 class SourceCatalogObjectATNF(SourceCatalogObject):
     """One source from the ATNF pulsar catalog.
     """

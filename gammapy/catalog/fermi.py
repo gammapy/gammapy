@@ -43,8 +43,7 @@ __all__ = [
 
 
 class SourceCatalogObject3FGL(SourceCatalogObject):
-    """
-    One source from the Fermi-LAT 3FGL catalog.
+    """One source from the Fermi-LAT 3FGL catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
@@ -60,8 +59,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     """
 
     def __str__(self, info='all'):
-        """
-        Summary info string.
+        """Summary info string.
 
         Parameters
         ----------
@@ -274,9 +272,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.SpectralModel`)."""
         spec_type = self.data['SpectrumType'].strip()
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux_Density']
@@ -317,9 +313,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         e_ref = self._ebounds.log_centers
@@ -364,8 +358,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`).
-        """
+        """Lightcurve (`~gammapy.time.LightCurve`)."""
         flux = self.data['Flux_History']
 
         # Flux error is given as asymmetric high/low
@@ -438,9 +431,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Integral flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
@@ -467,18 +458,16 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model `~gammapy.spectrum.models.SpectralModel`."""
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux']
         pars['emin'], pars['emax'] = self.energy_range
         pars['index'] = self.data['Spectral_Index'] * u.dimensionless_unscaled
         errs['amplitude'] = self.data['Unc_Flux']
         errs['index'] = self.data['Unc_Spectral_Index'] * u.dimensionless_unscaled
-        pwl = PowerLaw2(**pars)
-        pwl.parameters.set_parameter_errors(errs)
-        return pwl
+        model = PowerLaw2(**pars)
+        model.parameters.set_parameter_errors(errs)
+        return model
 
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
@@ -517,9 +506,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Integral flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
@@ -546,9 +533,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux50']
         pars['emin'], pars['emax'] = self.energy_range
@@ -557,9 +542,9 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         errs['amplitude'] = self.data['Unc_Flux50']
         errs['index'] = self.data['Unc_Spectral_Index'] * u.dimensionless_unscaled
 
-        pwl = PowerLaw2(**pars)
-        pwl.parameters.set_parameter_errors(errs)
-        return pwl
+        model = PowerLaw2(**pars)
+        model.parameters.set_parameter_errors(errs)
+        return model
 
 
 class SourceCatalogObject3FHL(SourceCatalogObject):
@@ -590,9 +575,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         d = self.data
         spec_type = d['SpectrumType'].strip()
         pars, errs = {}, {}
@@ -618,9 +601,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         e_ref = self._ebounds.log_centers
