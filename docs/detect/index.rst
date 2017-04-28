@@ -50,21 +50,24 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 	from gammapy.detect import compute_ts_image
 	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 	kernel = Gaussian2DKernel(5)
-	result = compute_ts_image(images['counts'], images['background'],
-							  images['exposure'], kernel)
+	result = compute_ts_image(images['COUNTS'], images['BACKGROUND'],
+							  images['EXPOSURE'], kernel)
 
 The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
 
 .. code-block:: python
 
-	print(result.meta['runtime'])
+	result.meta['runtime']
 
-The TS image itself can be accessed using the ``ts`` attribute of the `~gammapy.image.SkyImageList` object:
+The TS `~gammapy.image.SkyImage` itself can be accessed from the `~gammapy.image.SkyImageList` object.
+E.g. here's how to find the largest TS value:
 
 .. code-block:: python
 
-	print(result.ts.data.max())
+    import numpy as np
+    ts = result['ts']
+	np.nanmax(ts.data)
 
 Command line tool
 -----------------
@@ -97,8 +100,8 @@ Furthermore it is possible to compute residual TS images. Using the following op
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
 
 
-Computation of Li&Ma significance images
-========================================
+Computation of Li & Ma significance images
+==========================================
 
 The method derived by [LiMa1983]_ is one of the standard methods to determine
 detection significances for gamma-ray sources. Using the same prepared Fermi
@@ -112,28 +115,10 @@ dataset as above, the corresponding images can be computed using the
     from gammapy.detect import compute_lima_image
     images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
     kernel = Tophat2DKernel(5)
-    result = compute_lima_image(images['counts'].data, images['background'].data, kernel)
+    result = compute_lima_image(images['COUNTS'], images['BACKGROUND'], kernel)
 
 The function returns a `~gammapy.image.SkyImageList`, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
-
-
-Command line tool
------------------
-
-There is also a corresponding command line tool available. That can be used as
-following:
-
-.. code-block:: bash
-
-    $ cd gammapy-extra/datasets/fermi_survey
-    $ gammapy-image-lima all.fits.gz lima_image_0.1.fits --theta 0.1
-    
-
-The command line tool features an ``--onoff`` option to compute Li & Ma significance
-for on-off observations and a ``--residual`` option to compute residual significance
-images. For this function the input fits file needs a ``model`` extension, containing
-a excess model.
 
 
 Iterative source detection

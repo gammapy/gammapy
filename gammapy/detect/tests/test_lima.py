@@ -12,7 +12,7 @@ from ...image import SkyImageList
 @requires_data('gammapy-extra')
 def test_compute_lima_image():
     """
-    Test Li&Ma image against TS image for Tophat kernel
+    Test Li & Ma image against TS image for Tophat kernel
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
     images = SkyImageList.read(filename)
@@ -34,7 +34,7 @@ def test_compute_lima_image():
 @requires_data('gammapy-extra')
 def test_compute_lima_on_off_image():
     """
-    Test Li&Ma image with snippet from the H.E.S.S. survey data.
+    Test Li & Ma image with snippet from the H.E.S.S. survey data.
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/survey/hess_survey_snippet.fits.gz'
     images = SkyImageList.read(filename)

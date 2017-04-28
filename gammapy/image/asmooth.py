@@ -16,7 +16,7 @@ __all__ = ['ASmooth', 'asmooth_scales']
 # TODO: move to gammapy.stats.significance
 def _significance_asmooth(counts, background):
     """
-    Significance according to fomula (5) in asmooth paper.
+    Significance according to formula (5) in asmooth paper.
 
     Parameters
     ----------
@@ -29,9 +29,7 @@ def _significance_asmooth(counts, background):
 
 
 def asmooth_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
-    """
-    Create list of Gaussian widths.
-    """
+    """Create list of Gaussian widths."""
     if kernel == Gaussian2DKernel:
         sigma_0 = 1. / np.sqrt(9 * np.pi)
     elif kernel == Tophat2DKernel:
@@ -43,11 +41,11 @@ def asmooth_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
 class ASmooth(object):
     """Adaptively smooth counts image.
 
-    Achievesa roughly constant significance of features across the whole image.
+    Achieves a roughly constant significance of features across the whole image.
 
     Algorithm based on http://adsabs.harvard.edu/abs/2006MNRAS.368...65E
 
-    The algorithm was slightly adapted to also allow Li&Ma and TS to estimate the
+    The algorithm was slightly adapted to also allow Li & Ma and TS to estimate the
     significance of a feature in the image.
 
     Parameters
