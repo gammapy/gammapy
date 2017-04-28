@@ -13,7 +13,7 @@ from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..irf import IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
-from .utils import CountsPredictor 
+from .utils import CountsPredictor
 
 __all__ = [
     'SpectrumStats',

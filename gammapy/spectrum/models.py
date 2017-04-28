@@ -19,7 +19,6 @@ try:
 except ImportError:
     pass
 
-
 __all__ = [
     'SpectralModel',
     'PowerLaw',
@@ -41,6 +40,7 @@ class SpectralModel(object):
     `~gammapy.spectrum.models.ParameterList`, see for example return pardict
     `~gammapy.spectrum.models.PowerLaw`.
     """
+
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         kwargs = dict()
@@ -161,6 +161,7 @@ class SpectralModel(object):
             Keyword arguments passed to `integrate_spectrum`
 
         """
+
         def f(x):
             return x * self(x)
 
@@ -213,7 +214,7 @@ class SpectralModel(object):
         kwargs = dict()
         for par in parameters.parameters:
             kwargs[par.name] = par.quantity
-        model =  globals()[classname](**kwargs)
+        model = globals()[classname](**kwargs)
         model.parameters.covariance = parameters.covariance
         return model
 
@@ -262,8 +263,8 @@ class SpectralModel(object):
         return ax
 
     def plot_error(self, energy_range, ax=None,
-             energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-             energy_power=0, n_points=100, **kwargs):
+                   energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
+                   energy_power=0, n_points=100, **kwargs):
         """Plot error `~gammapy.spectrum.SpectralModel`
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.fill_between`
@@ -447,7 +448,6 @@ class PowerLaw(SpectralModel):
 
         integral = prefactor * (upper - lower)
         return integral
-
 
     def integral_error(self, emin, emax, **kwargs):
         r"""
@@ -728,7 +728,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
 
-
     def to_sherpa(self, name='default'):
         """Return Sherpa `~sherpa.models.Arithmetic model`
 
@@ -828,11 +827,11 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
             cutoff = np.exp((reference / ecut) ** (index_2)
-                             - (energy / ecut) ** (index_2))
+                            - (energy / ecut) ** (index_2))
         except AttributeError:
             from uncertainties.unumpy import exp
             cutoff = exp((reference / ecut) ** (index_2)
-                          - (energy / ecut) ** (index_2))
+                         - (energy / ecut) ** (index_2))
         return pwl * cutoff
 
 
@@ -1017,7 +1016,7 @@ class TableModel(SpectralModel):
                 values = 0
 
         if self.scale_logy:
-                values = np.power(10, values)
+            values = np.power(10, values)
         return amplitude * values * self.unit
 
     def plot(self, energy_range, ax=None, energy_unit='TeV',
@@ -1123,14 +1122,14 @@ class Absorption(object):
     def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
         axes = [
             BinnedDataAxis(param_lo, param_hi,
-                           interpolation_mode='linear', name='parameter'), 
-            BinnedDataAxis(energy_lo,energy_hi,
+                           interpolation_mode='linear', name='parameter'),
+            BinnedDataAxis(energy_lo, energy_hi,
                            interpolation_mode='log', name='energy')
         ]
 
         self.data = NDDataArray(axes=axes, data=data)
         self.data.default_interp_kwargs['fill_value'] = None
-        
+
     @classmethod
     def read(cls, filename):
         """
@@ -1152,19 +1151,19 @@ class Absorption(object):
         par_max = table_param['MAXIMUM']
 
         par_array = table_param[0]['VALUE']
-        par_delta = np.diff(par_array)*0.5
+        par_delta = np.diff(par_array) * 0.5
 
         param_lo, param_hi = par_array, par_array  # initialisation
         param_lo[0] = par_min - par_delta[0]
         param_lo[1:] -= par_delta
         param_hi[:-1] += par_delta
         param_hi[-1] = par_max
-        
+
         # Get energy values
         table_energy = Table.read(filename, hdu='ENERGIES')
         energy_lo = table_energy['ENERG_LO'] * u.keV  # unit not stored in file
         energy_hi = table_energy['ENERG_HI'] * u.keV  # unit not stored in file
-        
+
         # Energies are in keV
         energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
                                                                  upper=energy_hi,
@@ -1173,7 +1172,7 @@ class Absorption(object):
         # Get spectrum values
         table_spectra = Table.read(filename, hdu='SPECTRA')
         data = table_spectra['INTPSPEC'].data
-        
+
         return cls(energy_lo=energy_bounds.lower_bounds,
                    energy_hi=energy_bounds.upper_bounds,
                    param_lo=param_lo, param_hi=param_hi, data=data)
@@ -1201,9 +1200,9 @@ class Absorption(object):
         models['franceschini'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
         models['dominguez'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz'
         models['finke'] = '$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz'
-        
+
         return cls.read(models[name])
-    
+
     def table_model(self, parameter, unit='TeV'):
         """
         Returns `~gammapy.spectrum.models.TableModel` for a given parameter
@@ -1220,7 +1219,7 @@ class Absorption(object):
         energy = (energy_axis.log_center()).to(unit)
 
         values = self.evaluate(energy=energy, parameter=parameter)
-        
+
         return TableModel(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, parameter):
@@ -1229,8 +1228,7 @@ class Absorption(object):
         """
         return self.data.evaluate(energy=energy, parameter=parameter)
 
-    
-    
+
 class AbsorbedSpectralModel(SpectralModel):
     """
     Spectral model with EBL absorption.
@@ -1246,14 +1244,14 @@ class AbsorbedSpectralModel(SpectralModel):
     parameter_name : `str`, optional
         parameter name
     """
+
     def __init__(self, spectral_model, absorption,
                  parameter, parameter_name='redshift'):
-
         self.spectral_model = spectral_model
         self.absorption = absorption
         self.parameter = parameter
         self.parameter_name = parameter_name
-        
+
         # initialise list parameters from spectral model
         param_list = []
         for param in spectral_model.parameters.parameters:
@@ -1267,7 +1265,7 @@ class AbsorbedSpectralModel(SpectralModel):
                                     frozen=True))
 
         self.parameters = ParameterList(param_list)
-        
+
     def evaluate(self, energy, **kwargs):
         # assign redshift value and remove it from dictionnary
         # since it does not belong to the spectral model 
@@ -1278,4 +1276,3 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = self.absorption.evaluate(energy=energy,
                                               parameter=parameter)
         return flux * absorption
-

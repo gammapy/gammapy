@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from copy import deepcopy
+from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy.io import fits
@@ -108,7 +109,8 @@ class CountsSpectrum(object):
         counts = np.array(self.data.data.value, dtype=np.int32)
 
         names = ['CHANNEL', 'COUNTS']
-        meta = dict(name='COUNTS')
+        meta = OrderedDict()
+        meta['name'] = 'COUNTS'
         return Table([channel, counts], names=names, meta=meta)
 
     def to_hdulist(self):
@@ -292,6 +294,7 @@ class PHACountsSpectrum(CountsSpectrum):
     meta : dict, optional
         Meta information, TODO: add link where possible meta info is listed
     """
+
     def __init__(self, energy_lo, energy_hi, data=None, quality=None,
                  backscal=None, areascal=None, is_bkg=False, meta=None):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
@@ -305,9 +308,9 @@ class PHACountsSpectrum(CountsSpectrum):
             areascal = np.ones(self.energy.nbins)
         self.areascal = areascal
         self.is_bkg = is_bkg
-        self.meta = meta or dict()
+        self.meta = meta or OrderedDict()
         self.meta.setdefault('CREATOR', 'Gammapy {}'.format(version.version))
-        self.meta.setdefault('OBS_ID', 0) 
+        self.meta.setdefault('OBS_ID', 0)
 
     @property
     def phafile(self):
@@ -428,29 +431,30 @@ class PHACountsSpectrum(CountsSpectrum):
         table['BACKSCAL'] = self._backscal_array
         table['AREASCAL'] = self.areascal
 
-        meta = dict(name='SPECTRUM',
-                    hduclass='OGIP',
-                    hduclas1='SPECTRUM',
-                    corrscal='',
-                    chantype='PHA',
-                    detchans=self.energy.nbins,
-                    filter='None',
-                    corrfile='',
-                    poisserr=True,
-                    hduclas3='COUNT',
-                    hduclas4='TYPE:1',
-                    lo_thres=self.lo_threshold.to("TeV").value,
-                    hi_thres=self.hi_threshold.to("TeV").value)
+        meta = OrderedDict()
+        meta['name'] = 'SPECTRUM'
+        meta['hduclass'] = 'OGIP'
+        meta['hduclas1'] = 'SPECTRUM'
+        meta['corrscal'] = ''
+        meta['chantype'] = 'PHA'
+        meta['detchans'] = self.energy.nbins
+        meta['filter'] = 'None'
+        meta['corrfile'] = ''
+        meta['poisserr'] = True
+        meta['hduclas3'] = 'COUNT'
+        meta['hduclas4'] = 'TYPE:1'
+        meta['lo_thres'] = self.lo_threshold.to("TeV").value
+        meta['hi_thres'] = self.hi_threshold.to("TeV").value
 
         if not self.is_bkg:
             if self.rmffile is not None:
-                meta.update(respfile=self.rmffile)
+                meta['respfile'] = self.rmffile
 
-            meta.update(backfile=self.bkgfile,
-                        ancrfile=self.arffile,
-                        hduclas2='TOTAL', )
+            meta['backfile'] = self.bkgfile
+            meta['ancrfile'] = self.arffile
+            meta['hduclas2'] = 'TOTAL'
         else:
-            meta.update(hduclas2='BKG', )
+            meta['hduclas2'] = 'BKG'
 
         meta.update(self.meta)
 
@@ -473,7 +477,7 @@ class PHACountsSpectrum(CountsSpectrum):
             meta=counts_table.meta
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
-            kwargs.update(is_bkg=True)
+            kwargs['is_bkg'] = True
         return cls(**kwargs)
 
     @classmethod
@@ -509,7 +513,7 @@ class PHACountsSpectrum(CountsSpectrum):
             if np.allclose(backscal.mean(), backscal):
                 backscal = backscal[0]
 
-        kwargs = dict(
+        return DataPHA(
             name=name,
             channel=(table['CHANNEL'].data + 1).astype(SherpaFloat),
             counts=table['COUNTS'].data.astype(SherpaFloat),
@@ -521,8 +525,6 @@ class PHACountsSpectrum(CountsSpectrum):
             staterror=None,
             grouping=None,
         )
-
-        return DataPHA(**kwargs)
 
 
 class PHACountsSpectrumList(list):
@@ -592,14 +594,13 @@ class PHACountsSpectrumList(list):
     @classmethod
     def from_hdulist(cls, hdulist):
         """Create from `~astropy.fits.HDUList`"""
-        counts_table = fits_table_to_table(hdulist[1])
         energy = ebounds_to_energy_axis(hdulist[2])
         kwargs = dict(
             energy_lo=energy[:-1],
             energy_hi=energy[1:],
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
-            kwargs.update(is_bkg=True)
+            kwargs['is_bkg'] = True
 
         counts_table = fits_table_to_table(hdulist[1])
         speclist = cls()

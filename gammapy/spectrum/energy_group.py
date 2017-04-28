@@ -16,9 +16,8 @@ from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.fits import table_from_row_data
-from ..utils.energy import EnergyBounds
 from ..data import ObservationStats
-from .observation import SpectrumObservation, SpectrumObservationList
+from .observation import SpectrumObservationList
 
 __all__ = [
     'SpectrumEnergyGroupMaker',

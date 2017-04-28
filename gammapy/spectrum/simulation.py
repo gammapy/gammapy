@@ -1,7 +1,8 @@
 #Licensed under a 3 - clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
+from collections import OrderedDict
 import logging
+import astropy.units as u
 from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
 from .utils import CountsPredictor
@@ -188,7 +189,7 @@ class SpectrumSimulation(object):
 
     def _get_meta(self):
         """Meta info added to simulated counts spectra"""
-        return dict(
-            CREATOR=self.__class__.__name__
-        )
+        meta = OrderedDict()
+        meta['CREATOR'] = self.__class__.__name__
+        return meta
 

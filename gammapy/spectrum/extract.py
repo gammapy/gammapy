@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from collections import OrderedDict
 import numpy as np
 from regions import CircleSkyRegion
 import astropy.units as u
@@ -24,7 +25,7 @@ class SpectrumExtraction(object):
     `~gammapy.data.DataStoreObservation`. The background estimation is done
     beforehand, using e.g. the
     `~gammapy.background.ReflectedRegionsBackgroundEstimator`. For point
-    sources analyzed with 'full containement' IRFs, a correction for PSF
+    sources analyzed with 'full containment' IRFs, a correction for PSF
     leakage out of the circular ON region can be applied.  For more info see
     :ref:`spectral_fitting`. For a usage example see
     :gp-extra-notebook:`spectrum_analysis`
@@ -125,7 +126,7 @@ class SpectrumExtraction(object):
         """
         log.info('Update observation meta info')
         # Copy over existing meta information
-        meta = dict(obs._obs_info)
+        meta = OrderedDict(obs._obs_info)
         offset = obs.pointing_radec.separation(bkg.on_region.center)
         log.info('Offset : {}\n'.format(offset))
         meta['OFFSET'] = offset.deg
@@ -137,7 +138,7 @@ class SpectrumExtraction(object):
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            meta=meta,)
+            meta=meta, )
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
@@ -263,4 +264,5 @@ class SpectrumExtraction(object):
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
         self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
-        # TODO : add more debug plots etc. here
+
+    # TODO : add more debug plots etc. here
