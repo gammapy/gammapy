@@ -14,6 +14,7 @@ from ..utils.modeling import Parameter, ParameterList
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
+# TODO: figure out why!???
 try:
     from .sherpa_utils import SherpaExponentialCutoffPowerLaw
 except ImportError:
@@ -1064,25 +1065,20 @@ class TableModel(SpectralModel):
 
 
 class Absorption(object):
-    """
-    Class dealing with absorption model.
+    """Gamma-ray absorption models.
 
     Parameters
     ----------
-    energy_lo : `~astropy.units.Quantity`
-        Lower bin edges of energy axis
-    energy_hi : `~astropy.units.Quantity`
-        Upper bin edges of energy axis
-    param_lo : `~astropy.units.Quantity`
-        Lower bin edges of parameter axis
-    param_hi : `~astropy.units.Quantity`
-        Upper bin edges of parameter axis
+    energy_lo, energy_hi : `~astropy.units.Quantity`
+        Lower and upper bin edges of energy axis
+    param_lo, param_hi : `~astropy.units.Quantity`
+        Lower and upper bin edges of parameter axis
     data : `~astropy.units.Quantity`
         Model value
 
     Examples
     --------
-    Create and plot EBL absorption models for a redshift of 0.5
+    Create and plot EBL absorption models for a redshift of 0.5:
 
     .. plot::
         :include-source:
@@ -1116,15 +1112,12 @@ class Absorption(object):
 
         # show plot
         plt.show()
-
     """
 
     def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
         axes = [
-            BinnedDataAxis(param_lo, param_hi,
-                           interpolation_mode='linear', name='parameter'),
-            BinnedDataAxis(energy_lo, energy_hi,
-                           interpolation_mode='log', name='energy')
+            BinnedDataAxis(param_lo, param_hi, interpolation_mode='linear', name='parameter'),
+            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
         ]
 
         self.data = NDDataArray(axes=axes, data=data)
@@ -1132,8 +1125,7 @@ class Absorption(object):
 
     @classmethod
     def read(cls, filename):
-        """
-        Build object from an XSPEC model.
+        """Build object from an XSPEC model.
 
         Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
 
@@ -1173,14 +1165,15 @@ class Absorption(object):
         table_spectra = Table.read(filename, hdu='SPECTRA')
         data = table_spectra['INTPSPEC'].data
 
-        return cls(energy_lo=energy_bounds.lower_bounds,
-                   energy_hi=energy_bounds.upper_bounds,
-                   param_lo=param_lo, param_hi=param_hi, data=data)
+        return cls(
+            energy_lo=energy_bounds.lower_bounds,
+            energy_hi=energy_bounds.upper_bounds,
+            param_lo=param_lo, param_hi=param_hi, data=data,
+        )
 
     @classmethod
     def read_builtin(cls, name):
-        """
-        Read one of the built-in absorption models.
+        """Read one of the built-in absorption models.
 
         Parameters
         ----------
@@ -1190,11 +1183,11 @@ class Absorption(object):
         References
         ----------
         .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
-            `Link <http://adsabs.harvard.edu/abs/2008A%26A...487..837F>`_
+            `Link <http://adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
         .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
-            `Link <http://adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`_
+            `Link <http://adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
-            `Link <http://adsabs.harvard.edu/abs/2010ApJ...712..238F>`_
+            `Link <http://adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
         """
         models = dict()
         models['franceschini'] = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
@@ -1204,9 +1197,7 @@ class Absorption(object):
         return cls.read(models[name])
 
     def table_model(self, parameter, unit='TeV'):
-        """
-        Returns `~gammapy.spectrum.models.TableModel` for a given parameter
-        from the input absorbed model
+        """Table model for a given parameter (`~gammapy.spectrum.models.TableModel`).
 
         Parameters
         ----------
@@ -1223,15 +1214,12 @@ class Absorption(object):
         return TableModel(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, parameter):
-        """
-        Evaluate model for energy and parameter value
-        """
+        """Evaluate model for energy and parameter value."""
         return self.data.evaluate(energy=energy, parameter=parameter)
 
 
 class AbsorbedSpectralModel(SpectralModel):
-    """
-    Spectral model with EBL absorption.
+    """Spectral model with EBL absorption.
 
     Parameters
     ----------
@@ -1260,9 +1248,10 @@ class AbsorbedSpectralModel(SpectralModel):
         # Add parameter to the list
         param_min = self.absorption.data.axes[0].lo[0]
         param_max = self.absorption.data.axes[0].lo[-1]
-        param_list.append(Parameter(parameter_name, parameter,
-                                    parmin=param_min, parmax=param_max,
-                                    frozen=True))
+        par = Parameter(parameter_name, parameter,
+                        parmin=param_min, parmax=param_max,
+                        frozen=True)
+        param_list.append(par)
 
         self.parameters = ParameterList(param_list)
 

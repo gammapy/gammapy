@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 class SpectrumAnalysisIACT(object):
     """High-level analysis class to perform a full 1D IACT spectral analysis.
 
-    Observation selection must have happend before.
+    Observation selection must have happened before.
 
     For a usage example see :gp-extra-notebook:`spectrum_pipe`.
 
