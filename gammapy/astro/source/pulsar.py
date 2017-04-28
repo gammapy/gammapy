@@ -47,8 +47,7 @@ class SimplePulsar(object):
 
     @property
     def luminosity_spindown(self):
-        """
-        Spin-down luminosity (`~astropy.units.Quantity`)
+        """Spin-down luminosity (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -62,8 +61,7 @@ class SimplePulsar(object):
 
     @property
     def tau(self):
-        """
-        Characteristic age (`~astropy.units.Quantity`)
+        """Characteristic age (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -77,8 +75,7 @@ class SimplePulsar(object):
 
     @property
     def magnetic_field(self):
-        """
-        Magnetic field strength at the polar cap (`~astropy.units.Quantity`)
+        """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -128,9 +125,7 @@ class Pulsar(SimplePulsar):
             self.L_0 = 4 * np.pi ** 2 * self.I * self.P_dot_0 / self.P_0 ** 3
 
     def luminosity_tev(self, t=None, fraction=0.1):
-        """
-        Gamma luminosity assumed to be a certain fraction of the spin-down
-        luminosity.
+        """Gamma-ray luminosity assumed to be a certain fraction of the spin-down luminosity.
 
         Parameters
         ----------
@@ -146,8 +141,7 @@ class Pulsar(SimplePulsar):
         return self.luminosity_spindown(t) * fraction
 
     def luminosity_spindown(self, t=None):
-        """
-        Spin down luminosity  at age t.
+        """Spin down luminosity  at age t.
 
         Parameters
         ----------
@@ -171,8 +165,7 @@ class Pulsar(SimplePulsar):
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def period(self, t=None):
-        """
-        Period at age t.
+        """Period at age t.
 
         Parameters
         ----------
@@ -196,8 +189,7 @@ class Pulsar(SimplePulsar):
         return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def energy_integrated(self, t=None):
-        """
-        Total released energy at age t.
+        """Total released energy at age t.
 
         Time-integrated spin-down luminosity since birth.
 
@@ -224,8 +216,7 @@ class Pulsar(SimplePulsar):
         return self.L_0 * self.tau_0 * (t / (t + self.tau_0))
 
     def period_dot(self, t=None):
-        """
-        Period derivative at age t.
+        """Period derivative at age t.
 
         P_dot for a given period and magnetic field B, assuming a dipole
         spin-down.
@@ -252,8 +243,7 @@ class Pulsar(SimplePulsar):
         return Quantity(10 ** self.logB, 'gauss') ** 2 / (self.period(t) * B_CONST ** 2)
 
     def tau(self, t=None):
-        """
-        Characteristic age at real age t.
+        """Characteristic age at real age t.
 
         Parameters
         ----------
@@ -262,7 +252,7 @@ class Pulsar(SimplePulsar):
 
         Notes
         -----
-        The characteritic age is given by:
+        The characteristic age is given by:
 
         .. math::
 
@@ -278,8 +268,7 @@ class Pulsar(SimplePulsar):
         return self.period(t) / 2 * self.period_dot(t)
 
     def magnetic_field(self, t=None):
-        """
-        Magnetic field strength at the polar cap. Assumed to be constant.
+        """Magnetic field strength at the polar cap. Assumed to be constant.
 
         Notes
         -----

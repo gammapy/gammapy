@@ -30,8 +30,7 @@ __all__ = [
 
 def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
                                        random_state='random-seed'):
-    """Make a catalog of sources randomly distributed
-    on a line, square or cube.
+    """Make a catalog of sources randomly distributed on a line, square or cube.
 
     TODO: is this useful enough for general use or should we hide it as an
       internal method to generate test datasets?
@@ -146,9 +145,7 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
                                max_age=Quantity(1e6, 'yr'),
                                spiralarms=True, n_ISM=Quantity(1, 'cm-3'),
                                random_state='random-seed'):
-    """
-    Make a catalog of Galactic sources, with basic parameters like position, age and
-    proper velocity.
+    """Make a catalog of Galactic sources, with basic source parameters.
 
     Choose a radial distribution, a velocity distribution, the number
     of pulsars n_pulsars, the maximal age max_age[years] and the fraction
@@ -278,7 +275,7 @@ def add_snr_parameters(table):
 def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
                           P_mean=0.3, P_stdv=0.15,
                           random_state='random-seed'):
-    """Adds pulsar parameters to the table.
+    """Add pulsar parameters to the table.
 
     For the initial normal distribution of period and logB can exist the following
     Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15
@@ -325,7 +322,7 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
 
 
 def add_pwn_parameters(table):
-    """Adds PWN parameters to the table.
+    """Add PWN parameters to the table.
     """
     # Read relevant columns
     age = table['age'].quantity
@@ -348,7 +345,7 @@ def add_pwn_parameters(table):
 
 
 def add_observed_source_parameters(table):
-    """Adds observed source parameters to the table.
+    """Add observed source parameters to the table.
     """
     # Read relevant columns
     distance = table['distance']
@@ -386,18 +383,26 @@ def add_observed_source_parameters(table):
 
 
 def add_observed_parameters(table, obs_pos=None):
-    """For a given observer position (default: earth)
-    add observed parameters to the
-    table for given physical parameters.
+    """Add observable parameters (such as sky position or distance).
 
-    Input parameters:
-    x, y, z, extension, luminosity
+    Input table columns: x, y, z, extension, luminosity
 
-    Output parameters:
-    distance, glon, glat, flux, angular_extension
+    Output table columns: distance, glon, glat, flux, angular_extension
 
     Position of observer in cartesian coordinates.
     Center of galaxy as origin, x-axis goes trough sun.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Input table
+    obs_pos : tuple or None
+        Observation position (X, Y, Z) in Galactocentric coordinates (default: Earth)
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Modified input table with columns added 
     """
     obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
 
