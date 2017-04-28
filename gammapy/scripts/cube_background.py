@@ -12,7 +12,6 @@ from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..data import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
-from ..catalog import load_catalog_tevcat
 # from ..background import make_bg_cube_model
 
 __all__ = ['make_bg_cube_models',
@@ -130,7 +129,7 @@ def create_bg_observation_list(indir, outdir, overwrite, test):
     log.debug("Full observation table:")
     log.debug(observation_table)
 
-    # filter observations: load catalog and reject obs too close to sources
+    # TODO: filter observations: load catalog and reject obs too close to sources
 
     # load catalog: TeVCAT (no H.E.S.S. catalog)
     catalog = load_catalog_tevcat()
