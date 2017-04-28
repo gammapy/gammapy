@@ -20,6 +20,7 @@ from ...utils.testing import (
 from ...utils.random import get_random_state
 
 
+@requires_dependency('sherpa')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
@@ -155,6 +156,7 @@ class TestFit:
         # TODO: add assert, see issue 294
 
 
+@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
