@@ -6,6 +6,7 @@ from ...utils.testing import requires_dependency
 from ..butterfly import SpectrumButterfly
 from ..crab import CrabSpectrum
 
+
 @pytest.fixture
 def butterfly():
     bf = SpectrumButterfly()

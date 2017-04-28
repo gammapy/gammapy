@@ -1,17 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import copy
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import assert_quantity_allclose
-from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...data import DataStore, Target, ObservationList
-from ...datasets import gammapy_extra
-from ...image import SkyImage
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 from ...background.tests.test_reflected import bkg_estimator, obs_list
 
@@ -40,7 +34,6 @@ def extraction():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
-
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
@@ -84,7 +77,7 @@ class TestSpectrumExtraction:
         bkg_estimate[1].a_off = 2
         extraction = SpectrumExtraction(obs_list=obs_list,
                                         bkg_estimate=bkg_estimate,
-                                        max_alpha = 0.2)
+                                        max_alpha=0.2)
         extraction.run()
         assert len(extraction.observations) == 0
 

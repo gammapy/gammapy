@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.scripts import make_path
 from ...irf import EffectiveAreaTable, EnergyDispersion
