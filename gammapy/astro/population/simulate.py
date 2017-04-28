@@ -402,7 +402,7 @@ def add_observed_parameters(table, obs_pos=None):
     Returns
     -------
     table : `~astropy.table.Table`
-        Modified input table with columns added 
+        Modified input table with columns added
     """
     obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
 

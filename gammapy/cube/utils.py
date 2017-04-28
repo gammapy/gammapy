@@ -15,7 +15,7 @@ __all__ = [
 
 def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                        integral_resolution=10):
-    """Computes predicted counts cube in energy bins.
+    """Compute predicted counts cube in energy bins.
 
     Parameters
     ----------

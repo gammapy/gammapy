@@ -9,7 +9,9 @@ from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from .core import SkyCube
 
-__all__ = ['SkyCubeHealpix']
+__all__ = [
+    'SkyCubeHealpix',
+]
 
 
 class SkyCubeHealpix(object):

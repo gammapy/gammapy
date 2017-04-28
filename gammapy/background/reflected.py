@@ -151,7 +151,7 @@ class ReflectedRegionsFinder(object):
 
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
-         
+
         See example here: :ref:'regions_reflected'.
         """
         fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap='gray')

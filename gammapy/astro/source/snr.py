@@ -297,7 +297,7 @@ class SNRTrueloveMcKee(SNR):
     @lazyproperty
     def sedov_taylor_begin(self):
         """Characteristic time scale when the Sedov-Taylor phase starts.
-        
+
         Given by :math:`t_{ST} \\approx 0.52 t_{ch}`.
         """
         return 0.52 * self.t_c
