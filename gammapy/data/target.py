@@ -1,11 +1,8 @@
 # licensed under a 3-clause bsd style license - see license.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
-from astropy.table import vstack as table_vstack
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
-from ..stats import Stats
 
 __all__ = [
     'Target',
@@ -36,7 +33,7 @@ class Target(object):
 
     Examples
     --------
-    Initialize target and define observations
+    Initialize target and define observations:
 
     >>> import astropy.units as u
     >>> from astropy.coordinates import SkyCoord
@@ -74,7 +71,7 @@ class Target(object):
 
     @classmethod
     def from_config(cls, config):
-        """Initialize target from config
+        """Initialize target from config.
 
         The config dict is stored as attribute for later use by other analysis
         classes.

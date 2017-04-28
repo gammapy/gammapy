@@ -57,8 +57,7 @@ class ObservationStats(Stats):
 
     @classmethod
     def from_obs(cls, obs, bg_estimate):
-        """
-        Auxiliary constructor
+        """Create from `~gammapy.data.DataStoreObservation`.
 
         Parameters
         ----------
@@ -91,14 +90,16 @@ class ObservationStats(Stats):
 
     @property
     def alpha(self):
-        """Override member function from `~gammapy.stats.Stats`
+        """Alpha (on / off exposure ratio)
+        
+        Override member function from `~gammapy.stats.Stats`
         to take into account weighted alpha by number of Off events
         """
         return self.alpha_obs
 
     @property
     def sigma(self):
-        """Li-Ma significance for observation statistics (`float`)
+        """Li-Ma significance for observation statistics (`float`).
         """
         sigma = significance_on_off(
             self.n_on, self.n_off, self.alpha, method='lima')
@@ -106,9 +107,7 @@ class ObservationStats(Stats):
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from a list of
-        `~gammapy.data.ObservationStats` and returns a new instance
-        of `~gammapy.data.ObservationStats`
+        """Stack (concatenate) list of `~gammapy.data.ObservationStats`.
 
         Parameters
         ----------
@@ -193,8 +192,7 @@ class ObservationStats(Stats):
         return data
 
     def __str__(self):
-        """Observation statistics report (`str`)
-        """
+        """Observation statistics report (`str`)."""
         ss = '*** Observation summary report ***\n'
         if type(self.obs_id) is list:
             obs_str = '[{0}-{1}]'.format(self.obs_id[0], self.obs_id[-1])

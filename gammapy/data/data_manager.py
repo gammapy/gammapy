@@ -41,7 +41,7 @@ class DataManager(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        """Create a `DataManager` from a YAML config file.
+        """Create from a YAML config file.
 
         Parameters
         ----------
@@ -79,7 +79,7 @@ class DataManager(object):
 
     @property
     def stores(self):
-        """Data store names"""
+        """List of data stores."""
         stores = []
         for store_config in self.config['stores']:
             store = DataStore.from_config(store_config)

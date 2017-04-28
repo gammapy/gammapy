@@ -158,8 +158,7 @@ class ObservationSummary(object):
         self._init_values()
 
     def _init_values(self):
-        """Initialise vector attributes for plotting methods.
-        """
+        """Initialise vector attributes for plotting methods."""
         stats_list = []
 
         for index, obs in enumerate(self.obs_stats):
@@ -180,8 +179,7 @@ class ObservationSummary(object):
             self.sigma[index] = stack.sigma
 
     def obs_wise_summary(self):
-        """Observation wise summary report (`str`).
-        """
+        """Observation wise summary report (`str`)."""
         ss = '*** Observation Wise summary ***\n'
         for obs in self.obs_stats:
             ss += '{}\n'.format(obs)
@@ -189,8 +187,7 @@ class ObservationSummary(object):
         return ss
 
     def __str__(self):
-        """Observation summary report (`str`).
-        """
+        """Observation summary report (`str`)."""
         stack = ObservationStats.stack(self.obs_stats)
         ss = '*** Observation summary ***\n'
         ss += '{}\n'.format(stack)
@@ -245,7 +242,7 @@ class ObservationSummary(object):
         return ax
 
     def plot_background_vs_livetime(self, ax=None, **kwargs):
-        """Plot background as a function of livetime
+        """Plot background as a function of livetime.
 
         Parameters
         ----------
@@ -269,7 +266,7 @@ class ObservationSummary(object):
         return ax
 
     def plot_gamma_rate(self, ax=None, **kwargs):
-        """Plot gamma rate for each observation
+        """Plot gamma rate for each observation.
 
         Parameters
         ----------

@@ -17,7 +17,7 @@ __all__ = [
 class PointingInfo(object):
     """IACT array pointing info.
 
-    The ``POINTING_TABLE`` format is described here: :ref:`gadf:iact-pnt`
+    Data format specification: :ref:`gadf:iact-pnt`
 
     This class has many cached properties.
     Should be used as read-only.
@@ -29,7 +29,6 @@ class PointingInfo(object):
 
     Examples
     --------
-
     >>> from gammapy.data import PointingInfo
     >>> pointing_info = PointingInfo.read('$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits')
     >>> print(pointing_info)
@@ -81,7 +80,7 @@ class PointingInfo(object):
         return ss
 
     def _str_for_index(self, idx):
-        """Information for one point in the pointing table"""
+        """Information for one point in the pointing table."""
         ss = 'Time:  {}\n'.format(self.time[idx].fits)
         ss += 'Time:  {} MJD (TT)\n'.format(self.time[idx].mjd)
         ss += 'RADEC: {} deg\n'.format(self.radec[idx].to_string())
@@ -90,14 +89,12 @@ class PointingInfo(object):
 
     @lazyproperty
     def location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)"""
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
         return _earth_location_from_dict(self.table.meta)
 
     @lazyproperty
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)"""
-        # For debugging ... change TIMESYS
-        # self.table.meta['TIMESYS'] = 'utc'
         return time_ref_from_dict(self.table.meta)
 
     @lazyproperty

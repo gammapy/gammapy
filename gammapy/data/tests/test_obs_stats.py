@@ -43,8 +43,8 @@ def mask():
 def stats(target, mask):
     obs = get_obs(23523)
     bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
-                                             exclusion_mask=mask,
-                                             obs_list=obs)
+                                              exclusion_mask=mask,
+                                              obs_list=obs)
     bg = bge.process(obs)
     return ObservationStats.from_obs(obs, bg)
 

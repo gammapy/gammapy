@@ -73,6 +73,7 @@ def test_EventListDataset():
     # TODO: test all methods ... get ~ 100% test coverage
     # even without running the following test.
 
+
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_EventListDatasetChecker():

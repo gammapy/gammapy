@@ -13,6 +13,8 @@ __all__ = [
 class GTI(object):
     """Good time intervals (GTI) `~astropy.table.Table`.
 
+    Data format specification: ref:`gadf:iact-gti`
+
     Note: at the moment dead-time and live-time is in the
     EVENTS header ... the GTI header just deals with
     observation times.
@@ -24,7 +26,6 @@ class GTI(object):
 
     Examples
     --------
-
     Load GTIs for a H.E.S.S. event list:
 
     >>> from gammapy.data import GTI

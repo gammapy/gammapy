@@ -83,12 +83,12 @@ class ObservationGroups(object):
 
     @property
     def n_groups(self):
-        """Number of groups (int)"""
+        """Number of groups (int)."""
         return len(self.obs_groups_table)
 
     @property
     def list_of_groups(self):
-        """List of groups (`~numpy.ndarray`)"""
+        """List of groups (`~numpy.ndarray`)."""
         return self.obs_groups_table['GROUP_ID'].data
 
     @staticmethod
@@ -216,8 +216,7 @@ class ObservationGroups(object):
 
     @classmethod
     def read(cls, filename):
-        """
-        Read observation group definitions from ECSV file.
+        """Read observation group definitions from ECSV file.
 
         Using `~astropy.table.Table` and `~astropy.io.ascii`.
 
@@ -236,8 +235,7 @@ class ObservationGroups(object):
         return cls(axes=axes)
 
     def write(self, outfile, overwrite=False):
-        """
-        Write observation group definitions to ECSV file.
+        """Write observation group definitions to ECSV file.
 
         Using `~astropy.table.Table` and `~astropy.io.ascii`.
 
@@ -255,7 +253,7 @@ class ObservationGroups(object):
 
     @property
     def info(self):
-        """Info string (str)"""
+        """Info string (str)."""
         s = ''
         # loop over observation axes
         for i_axis in range(len(self.axes)):
@@ -265,7 +263,7 @@ class ObservationGroups(object):
         return s
 
     def info_group(self, group_id):
-        """Group info string
+        """Group info string.
 
         Parameters
         ----------
@@ -303,8 +301,7 @@ class ObservationGroups(object):
         return s
 
     def apply(self, obs_table):
-        """
-        Group observations in a list according to the defined groups.
+        """Group observations in a list according to the defined groups.
 
         The method returns the same observation table with an extra
         column in the 1st position indicating the group ID of each
@@ -447,14 +444,14 @@ class ObservationGroupAxis(object):
 
     @property
     def n_bins(self):
-        """Number of bins (int)"""
+        """Number of bins (int)."""
         if self.fmt == 'edges':
             return len(self.bins) - 1
         elif self.fmt == 'values':
             return len(self.bins)
 
     def get_bin(self, bin_id):
-        """Get bin (int, float or `~astropy.units.Quantity`-like)
+        """Get bin (int, float or `~astropy.units.Quantity`-like).
 
         Value or tuple of bin edges (depending on the ``fmt`` parameter)
         for the specified bin.
@@ -476,7 +473,7 @@ class ObservationGroupAxis(object):
 
     @property
     def get_bins(self):
-        """List of bins (int, float or `~astropy.units.Quantity`-like)
+        """List of bins (int, float or `~astropy.units.Quantity`-like).
 
         List of bin edges or values (depending on the ``fmt`` parameter)
         for all bins.
@@ -516,7 +513,7 @@ class ObservationGroupAxis(object):
 
     @property
     def info(self):
-        """Info string (str)"""
+        """Info string (str)."""
         s = "{0} {1} {2}".format(self.name, self.fmt, self.bins)
         return s
 
