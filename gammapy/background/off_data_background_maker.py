@@ -178,7 +178,8 @@ class OffDataBackgroundMaker(object):
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
-    def filename(self, modeltype, group_id, smooth=False):
+    @staticmethod
+    def filename(modeltype, group_id, smooth=False):
         """Filename for a given ``modeltype`` and ``group_id``.
 
         Parameters
@@ -189,7 +190,6 @@ class OffDataBackgroundMaker(object):
             number of the background model group
         smooth : bool
             True if you want to use the smooth bkg model
-
         """
         if smooth:
             return 'smooth_background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)

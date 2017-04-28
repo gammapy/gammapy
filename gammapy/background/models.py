@@ -332,8 +332,7 @@ class FOVCubeBackgroundModel(object):
 
     @classmethod
     def set_cube_binning(cls, detx_edges, dety_edges, energy_edges):
-        """
-        Set cube binning from function parameters.
+        """Set cube binning from function parameters.
 
         Parameters
         ----------
@@ -471,8 +470,7 @@ class FOVCubeBackgroundModel(object):
             self.livetime_cube.data += events.observation_live_time_duration
 
     def smooth(self):
-        """
-        Smooth background cube model.
+        """Smooth background cube model.
 
         Smooth method:
 
@@ -496,8 +494,6 @@ class FOVCubeBackgroundModel(object):
         6. fill the values of the image back in the cube
         """
         from scipy import ndimage
-
-        # smooth images
 
         # integral of original images
         integral_images = self.background_cube.integral_images
@@ -584,7 +580,7 @@ class EnergyOffsetBackgroundModel(object):
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1", data_err=bg_rate_err)
 
     def write(self, filename, **kwargs):
-        """Write `EnergyOffsetBackgroundModel` to FITS file.
+        """Write to FITS file.
 
         Parameters
         ----------
@@ -594,7 +590,7 @@ class EnergyOffsetBackgroundModel(object):
         self.to_table().write(filename, format='fits', **kwargs)
 
     def to_table(self):
-        """Convert `EnergyOffsetBackgroundModel` to astropy table format.
+        """Convert to `~astropy.table.Table`.
 
         Returns
         -------
@@ -618,7 +614,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def read(cls, filename):
-        """Create `EnergyOffsetBackgroundModel` from FITS file.
+        """Create from FITS file.
 
         Parameters
         ----------
@@ -630,12 +626,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def from_table(cls, table):
-        """Create `EnergyOffsetBackgroundModel` from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-        """
+        """Create from `~astropy.table.Table`."""
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())

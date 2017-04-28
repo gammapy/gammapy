@@ -70,7 +70,7 @@ class ReflectedRegionsFinder(object):
         self.reflected_regions = None
 
     def run(self):
-        """Run all steps
+        """Run all steps.
         """
         if self.exclusion_mask is None:
             self.exclusion_mask = self.make_empty_mask(self.region, self.center)
@@ -79,7 +79,7 @@ class ReflectedRegionsFinder(object):
 
     @staticmethod
     def make_empty_mask(region, center):
-        """Create empty exclusion mask
+        """Create empty exclusion mask.
 
         The size of the mask is chosen such that all reflected region are
         contained on the image.
@@ -105,7 +105,7 @@ class ReflectedRegionsFinder(object):
         return exclusion_mask
 
     def setup(self):
-        """Compute parameters for reflected regions algorithm"""
+        """Compute parameters for reflected regions algorithm."""
         wcs = self.exclusion_mask.wcs
         self._pix_region = self.region.to_pixel(wcs)
         self._pix_center = PixCoord(*self.center.to_pixel(wcs))
@@ -132,7 +132,7 @@ class ReflectedRegionsFinder(object):
         self._distance_image = self.exclusion_mask.distance_image
 
     def find_regions(self):
-        """Find reflected regions"""
+        """Find reflected regions."""
         curr_angle = self._angle + self._min_ang + self.min_distance_input
         reflected_regions = list()
         while curr_angle < self._max_angle:
@@ -150,7 +150,10 @@ class ReflectedRegionsFinder(object):
         self.reflected_regions = reflected_regions
 
     def plot(self, fig=None, ax=None):
-        """Standard debug plot see :ref:'regions_reflected'."""
+        """Standard debug plot.
+         
+        See example here: :ref:'regions_reflected'.
+        """
         fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap='gray')
         wcs = self.exclusion_mask.wcs
         on_patch = self.region.to_pixel(wcs=wcs).as_patch(color='red', alpha=0.6)
@@ -170,7 +173,7 @@ class ReflectedRegionsFinder(object):
 
     @staticmethod
     def _is_inside_exclusion(pixreg, distance_image):
-        """Test if a `~regions.PixRegion` overlaps with an exclusion mask
+        """Test if a `~regions.PixRegion` overlaps with an exclusion mask.
 
         If the regions is outside the exclusion mask, return 'False'
         """
@@ -233,8 +236,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         return s
 
     def run(self):
-        """Run all steps
-        """
+        """Run all steps."""
         log.info('Running {}'.format(self))
         result = []
         for obs in self.obs_list:
@@ -244,8 +246,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         self.result = result
 
     def process(self, obs):
-        """Estimate background for one observation.
-        """
+        """Estimate background for one observation."""
         log.info('Processing observation {}'.format(obs))
         self.finder.center = obs.pointing_radec
         self.finder.run()
@@ -263,7 +264,7 @@ class ReflectedRegionsBackgroundEstimator(object):
                                   method='Reflected Regions')
 
     def plot(self, fig=None, ax=None, cmap=None, idx=None):
-        """Standard debug plot
+        """Standard debug plot.
 
         Parameters
         ----------
@@ -288,7 +289,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             result = np.asarray(self.result)[idx]
             result = np.atleast_1d(result)
 
-        handles = list()
+        handles = []
         if cmap is None:
             cmap = plt.get_cmap('viridis')
         colors = cmap(np.linspace(0, 1, len(self.obs_list)))

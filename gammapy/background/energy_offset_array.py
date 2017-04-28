@@ -100,7 +100,7 @@ class EnergyOffsetArray(object):
 
     @classmethod
     def read(cls, filename, hdu='bkg_2d', data_name="data"):
-        """Create `EnergyOffsetArray` from  FITS file.
+        """Read from  FITS file.
 
         Parameters
         ----------
@@ -112,13 +112,12 @@ class EnergyOffsetArray(object):
             Name of the data column in the table
         """
         filename = make_path(filename)
-        # import IPython; IPython.embed()
         table = Table.read(str(filename), hdu=hdu, format='fits')
         return cls.from_table(table, data_name)
 
     @classmethod
     def from_table(cls, table, data_name="data"):
-        """Create `EnergyOffsetArray` from  `~astropy.table.Table`.
+        """Create from `~astropy.table.Table`.
 
         Parameters
         ----------
@@ -140,7 +139,7 @@ class EnergyOffsetArray(object):
         return cls(energy_edges, offset_edges, data, data_units=str(data.unit), data_err=data_err)
 
     def write(self, filename, data_name="data", **kwargs):
-        """Write `EnergyOffsetArray` to FITS file.
+        """Write to FITS file.
 
         Parameters
         ----------
@@ -152,7 +151,7 @@ class EnergyOffsetArray(object):
         self.to_table(data_name).write(filename, **kwargs)
 
     def to_table(self, data_name="data"):
-        """Convert `EnergyOffsetArray` to astropy table format.
+        """Convert to `~astropy.table.Table`.
 
         Parameters
         ----------
@@ -177,7 +176,7 @@ class EnergyOffsetArray(object):
 
     def evaluate(self, energy=None, offset=None,
                  interp_kwargs=None):
-        """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
+        """Interpolate at a given offset and energy.
 
         Parameters
         ----------
@@ -193,10 +192,10 @@ class EnergyOffsetArray(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
+        from scipy.interpolate import RegularGridInterpolator
         if not interp_kwargs:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 
-        from scipy.interpolate import RegularGridInterpolator
         if energy is None:
             energy = self.energy.log_centers
         if offset is None:
@@ -240,7 +239,7 @@ class EnergyOffsetArray(object):
         return bin_volume.to('TeV sr')
 
     def evaluate_at_energy(self, energy, interp_kwargs=None):
-        """Evaluate the `EnergyOffsetArray` at one given energy.
+        """Evaluate at one given energy.
 
         Parameters
         ----------
@@ -260,7 +259,7 @@ class EnergyOffsetArray(object):
         return table
 
     def evaluate_at_offset(self, offset, interp_kwargs=None):
-        """Evaluate the `EnergyOffsetArray` at one given offset.
+        """Evaluate at one given offset.
 
         Parameters
         ----------
@@ -312,7 +311,7 @@ class EnergyOffsetArray(object):
         return table
 
     def to_cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
-        """Transform the `EnergyOffsetArray` into a `FOVCube`.
+        """Transform into a `FOVCube`.
 
         Parameters
         ----------

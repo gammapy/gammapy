@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 from .ring import ring_area_factor
 
 __all__ = [
@@ -68,10 +67,8 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     ----------
     pos : `~astropy.coordinates.SkyCoord`
         On region radius
-    inner_radius : `~astropy.coordinates.Angle`
-        Inner ring radius
-    outer_radius : `~astropy.coordinates.Angle`
-        Outer ring radius
+    inner_radius, outer_radius : `~astropy.coordinates.Angle`
+        Inner and outer ring radius
     events : `~gammapy.data.EventList`
         Events
     """
