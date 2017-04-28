@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-from astropy.table import Table
-from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+from astropy.table import Table
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy import units as u
@@ -86,6 +84,7 @@ class _TestImage:
                  0.39006849765871243, 0.15740361210066894, 0.05573613025356901]
             ]
         elif proj == 'AIT':
+            nan = np.nan
             return [
                 [nan, nan, nan, nan, nan, nan],
                 [nan, 0.96302079, 1.02533278, 1.06937617, 1.11576917, nan],
@@ -274,7 +273,7 @@ class TestSkyImagePoisson:
         separation = image.center.separation(image_upsampled.center)
 
         # check WCS
-        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1e-17, 'deg'))
 
         # check data shape
         assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
@@ -296,7 +295,7 @@ class TestSkyImagePoisson:
         image_cropped = image.crop(((2, 2), (2, 2)))
 
         separation = image.center.separation(image_cropped.center)
-        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1e-17, 'deg'))
 
         # check data shape
         assert image_cropped.data.shape == (5, 5)

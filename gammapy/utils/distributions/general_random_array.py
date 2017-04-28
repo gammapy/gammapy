@@ -21,8 +21,7 @@ class GeneralRandomArray(object):
     """
 
     def __init__(self, pdf):
-        """Computes the cdf from the pdf.
-        """
+        # Computes the cdf from the pdf.
 
         # Note that numpy flattens the array automatically,
         # i.e. cdf is a 1D array (normalization not necessary)
@@ -34,7 +33,8 @@ class GeneralRandomArray(object):
         self.shape = pdf.shape
 
     def draw(self, n=1, return_flat_index=False, random_state='random-seed'):
-        """Returns n draws from the pdf
+        """Returns n draws from the pdf.
+
         If return_flat_index == true, a linearized index is returned.
 
         Parameters

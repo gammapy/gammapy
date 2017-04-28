@@ -9,7 +9,8 @@ from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
 from ...utils.testing import requires_dependency, requires_data
 from ...scripts import CTAPerf
 from gammapy.scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
-from gammapy.spectrum import SpectrumObservationList, SpectrumFit, SpectrumResult
+from gammapy.spectrum import SpectrumObservationList, SpectrumFit
+
 
 def table_model():
     energy_edges = EnergyBounds.equal_log_spacing(0.1 * u.TeV, 100 * u.TeV, 1000)
@@ -175,7 +176,6 @@ def test_table_model_from_file():
 
 @requires_data('gammapy-extra')
 def test_absorption():
-
     # absorption values for given redshift
     redshift = 0.117
     absorption = Absorption.read_builtin('dominguez')
@@ -203,28 +203,28 @@ def test_absorption():
                                   reference=reference)
 
     desired = absorption.evaluate(energy=reference, parameter=redshift)
-    actual = model_ref_energy/pwl_ref_energy
+    actual = model_ref_energy / pwl_ref_energy
     assert_quantity_allclose(actual, desired)
 
 
 @requires_dependency('uncertainties')
 def test_pwl_index_2_error():
     pars, errs = {}, {}
-    pars['amplitude'] = 1E-12 * u.Unit('TeV-1 cm-2 s-1')
+    pars['amplitude'] = 1e-12 * u.Unit('TeV-1 cm-2 s-1')
     pars['reference'] = 1 * u.Unit('TeV')
     pars['index'] = 2 * u.Unit('')
-    errs['amplitude'] = 0.1E-12 * u.Unit('TeV-1 cm-2 s-1')
+    errs['amplitude'] = 0.1e-12 * u.Unit('TeV-1 cm-2 s-1')
 
     pwl = PowerLaw(**pars)
     pwl.parameters.set_parameter_errors(errs)
 
     val, val_err = pwl.evaluate_error(1 * u.TeV)
-    assert_quantity_allclose(val, 1E-12 * u.Unit('TeV-1 cm-2 s-1'))
-    assert_quantity_allclose(val_err, 0.1E-12 * u.Unit('TeV-1 cm-2 s-1'))
+    assert_quantity_allclose(val, 1e-12 * u.Unit('TeV-1 cm-2 s-1'))
+    assert_quantity_allclose(val_err, 0.1e-12 * u.Unit('TeV-1 cm-2 s-1'))
 
     flux, flux_err = pwl.integral_error(1 * u.TeV, 10 * u.TeV)
-    assert_quantity_allclose(flux, 9E-13 * u.Unit('cm-2 s-1'))
-    assert_quantity_allclose(flux_err, 9E-14 * u.Unit('cm-2 s-1'))
+    assert_quantity_allclose(flux, 9e-13 * u.Unit('cm-2 s-1'))
+    assert_quantity_allclose(flux_err, 9e-14 * u.Unit('cm-2 s-1'))
 
     eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
     assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit('TeV cm-2 s-1'))
@@ -234,7 +234,6 @@ def test_pwl_index_2_error():
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_model_absorbed_by_ebl():
-
     # Observation parameters
     obs_param = ObservationParameters(alpha=0.2 * u.Unit(''),
                                       livetime=5. * u.h,
@@ -253,7 +252,7 @@ def test_spectral_model_absorbed_by_ebl():
                                         parameter=0.2)
 
     target = Target(name=name, model=input_model)
-    
+
     # Performance
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     cta_perf = CTAPerf.read(filename)
@@ -270,7 +269,7 @@ def test_spectral_model_absorbed_by_ebl():
     model = AbsorbedSpectralModel(spectral_model=pwl_model,
                                   absorption=absorption,
                                   parameter=0.2)
-    
+
     # fit
     fit = SpectrumFit(obs_list=SpectrumObservationList([simu]),
                       model=model,
@@ -278,6 +277,8 @@ def test_spectral_model_absorbed_by_ebl():
     fit.fit()
     fit.est_errors()
     result = fit.result[0]
+
+    # TODO: assert on things from result
 
     # TODO: handle error propagation for AbsorbedSpectralModel
     # here it explodes since NDDataArray can't handle error propagation

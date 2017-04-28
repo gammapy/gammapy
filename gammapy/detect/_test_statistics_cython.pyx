@@ -4,7 +4,7 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-cdef np.float_t FLUX_FACTOR = 1E-12
+cdef np.float_t FLUX_FACTOR = 1e-12
 
 
 cdef extern from "math.h":
@@ -98,8 +98,8 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
         Source template (multiplied with exposure).
     """
 
-    cdef np.float_t s_model = 0, s_counts = 0, sn, sn_min = 1E14, c_min = 1
-    cdef np.float_t b_min, b_max, sn_min_total = 1E14
+    cdef np.float_t s_model = 0, s_counts = 0, sn, sn_min = 1e14, c_min = 1
+    cdef np.float_t b_min, b_max, sn_min_total = 1e14
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]

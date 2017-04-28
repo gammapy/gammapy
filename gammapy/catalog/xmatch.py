@@ -115,7 +115,6 @@ def table_xmatch_circle_criterion(max_separation):
     xmatch : function
         Cross-match function to be passed to `table_xmatch`.
     """
-
     def xmatch(row1, row2):
         skycoord1 = SkyCoord(row1['RAJ2000'], row1['DEJ2000'], unit='deg')
         skycoord2 = SkyCoord(row2['RAJ2000'], row2['DEJ2000'], unit='deg')

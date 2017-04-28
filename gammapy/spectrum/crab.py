@@ -11,13 +11,11 @@ to several publications:
 * 'HEGRA' : http://adsabs.harvard.edu/abs/2000ApJ...539..317A
 * 'HESS PL' and 'HESS ECPL' : http://adsabs.harvard.edu/abs/2006A%26A...457..899A
 * 'Meyer' :  http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
-
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
 from .models import PowerLaw, ExponentialCutoffPowerLaw, SpectralModel
-from ..extern.bunch import Bunch
 from ..utils.modeling import ParameterList, Parameter
 
 __all__ = [
@@ -106,7 +104,7 @@ class CrabSpectrum(object):
         >>> from gammapy.spectrum.models import PowerLaw
         >>>
         >>> # define power law model
-        >>> amplitude = 1E-12 * u.Unit('1 / (cm2 s TeV)')
+        >>> amplitude = 1e-12 * u.Unit('1 / (cm2 s TeV)')
         >>> index = 2.3
         >>> reference = 1 * u.TeV
         >>> pwl = PowerLaw(index, amplitude, reference)

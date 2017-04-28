@@ -63,7 +63,7 @@ def test_measure_image_moments():
                  Quantity(0.2, 'deg')]
 
     for val, ref in zip(moments, reference):
-        assert_quantity_allclose(val, ref, atol=Quantity(1E-12, val.unit))
+        assert_quantity_allclose(val, ref, atol=Quantity(1e-12, val.unit))
 
 
 def test_measure_containment():

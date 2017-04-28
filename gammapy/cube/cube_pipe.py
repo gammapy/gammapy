@@ -232,7 +232,6 @@ class StackedObsCubeMaker(object):
         radius : float
             Disk radius in pixels for the significance image
         """
-
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             cube_images = SingleObsCubeMaker(obs=obs,

@@ -36,11 +36,11 @@ class MorphModelImageCreator(object):
         Json file with PSF information.
     background : str (optional)
         Fits image file with the background.
-    apply_psf : bool (default True)
+    apply_psf : bool
         Whether the psf should be applied.
-    compute_excess : bool (default True)
+    compute_excess : bool
         Whether to compute an excess image.
-    flux_factor : float (default 1E-12)
+    flux_factor : float
         Flux conversion factor.
 
     Examples
@@ -56,7 +56,7 @@ class MorphModelImageCreator(object):
     """
 
     def __init__(self, cfg_file, exposure, psf_file=None, apply_psf=True,
-                 background=None, flux_factor=1E-12, compute_excess=True):
+                 background=None, flux_factor=1e-12, compute_excess=True):
         self.cfg_file = cfg_file
         self.exposure = fits.getdata(exposure)
         self.header = fits.getheader(exposure)

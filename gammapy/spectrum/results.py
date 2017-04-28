@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.utils.decorators import lazyproperty
 from astropy.table import Table, Column
 import astropy.units as u
 from .butterfly import SpectrumButterfly
@@ -9,7 +8,6 @@ from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
 from ..utils.energy import EnergyBounds
-from .. import stats
 
 __all__ = [
     'SpectrumFitResult',
@@ -285,8 +283,7 @@ class SpectrumFitResult(object):
         return ax0, ax1
 
     def plot_counts(self, ax):
-        """Plot predicted and detected counts"""
-
+        """Plot predicted and detected counts."""
         self.expected_source_counts.plot(ax=ax,
                                          label='mu_source')
 
@@ -306,8 +303,7 @@ class SpectrumFitResult(object):
         ax.set_title('')
 
     def plot_residuals(self, ax):
-        """Plot residuals"""
-
+        """Plot residuals."""
         self.residuals.plot(ax=ax, ecolor='black', fmt='none')
         xx = ax.get_xlim()
         yy = [0, 0]

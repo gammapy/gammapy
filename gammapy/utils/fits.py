@@ -12,7 +12,6 @@ from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-
     'table_from_row_data',
     'table_to_fits_table',
     'fits_table_to_table',
@@ -335,10 +334,8 @@ def fits_table_to_table(tbhdu):
     table : `~astropy.table.Table`
         astropy table containing the desired columns
     """
-
     data = tbhdu.data
     header = tbhdu.header
-
     table = Table(data, meta=header)
 
     # Copy over column meta-data

@@ -6,8 +6,6 @@ import numpy as np
 import copy
 import astropy.units as u
 from astropy.table import Table
-
-from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
@@ -163,9 +161,9 @@ class SpectralModel(object):
             Keyword arguments passed to `integrate_spectrum`
 
         """
-
         def f(x):
             return x * self(x)
+
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def energy_flux_error(self, emin, emax, **kwargs):
@@ -247,7 +245,6 @@ class SpectralModel(object):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
@@ -335,7 +332,7 @@ class SpectralModel(object):
         """
         raise NotImplementedError('{}'.format(self.__class__.__name__))
 
-    def spectral_index(self, energy, epsilon=1E-5):
+    def spectral_index(self, energy, epsilon=1e-5):
         """
         Compute spectral index at given energy using a local powerlaw
         approximation.
@@ -376,9 +373,9 @@ class SpectralModel(object):
         energies = []
         for val in np.atleast_1d(value):
             def f(x):
-                # scale by 1E12 to achieve better precision
+                # scale by 1e12 to achieve better precision
                 y = self(x * u.TeV).to(value.unit).value
-                return 1E12 * (y - val.value)
+                return 1e12 * (y - val.value)
 
             energy = brentq(f, emin.to('TeV').value, emax.to('TeV').value)
             energies.append(energy)
@@ -504,7 +501,6 @@ class PowerLaw(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-
         pars = self.parameters
         val = -1 * pars['index'].value + 2
 
@@ -992,7 +988,6 @@ class TableModel(SpectralModel):
         return cls(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, amplitude):
-
         is_array = True
         try:
             len(energy)
@@ -1047,7 +1042,6 @@ class TableModel(SpectralModel):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 

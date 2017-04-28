@@ -4,13 +4,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import warnings
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.utils import lazyproperty
-
 from .core import gammapy_extra
 from ..data import EventList
 from ..cube import SkyCube
@@ -61,7 +59,7 @@ class FermiGalacticCenter(object):
     def filenames():
         """Dictionary of available file names."""
         base_dir = gammapy_extra.dir / 'test_datasets/unbundled/fermi'
-        result = dict()
+        result = OrderedDict()
         result['psf'] = str(base_dir / 'psf.fits')
         result['counts'] = str(base_dir / 'fermi_counts.fits.gz')
         result['diffuse_model'] = str(base_dir / 'gll_iem_v02_cutout.fits')
@@ -108,10 +106,9 @@ class FermiVelaRegion(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
-
         base_dir = gammapy_extra.dir / 'datasets/vela_region'
 
-        result = dict()
+        result = OrderedDict()
         result['counts_cube'] = str(base_dir / 'counts_vela.fits')
         result['exposure_cube'] = str(base_dir / 'exposure_vela.fits')
         result['background_image'] = str(base_dir / 'background_vela.fits')
@@ -224,7 +221,7 @@ def load_lat_psf_performance(performance_file):
     filename = gammapy_extra.filename('test_datasets/unbundled/fermi//fermi_irf_data.fits')
     hdus = fits.open(filename)
 
-    perf_files = dict()
+    perf_files = OrderedDict()
     perf_files['P7REP_SOURCE_V15_68'] = hdus[1]
     perf_files['P7REP_SOURCE_V15_95'] = hdus[4]
     perf_files['P7SOURCEV6_68'] = hdus[3]

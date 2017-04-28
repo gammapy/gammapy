@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 from collections import OrderedDict
-
 from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
@@ -104,7 +102,6 @@ class TestSourceCatalogGammaCat:
 @requires_data('gammapy-extra')
 @requires_data('gamma-cat')
 class TestSourceCatalogObjectGammaCat:
-
     def test_data(self, gammacat):
         source = gammacat[0]
         assert isinstance(source.data, OrderedDict)
@@ -117,15 +114,15 @@ class TestSourceCatalogObjectGammaCat:
         spectral_model = source.spectral_model
 
         emin, emax = [1, 10] * u.TeV
-        einf = 1E10 * u.TeV
+        einf = 1e10 * u.TeV
         flux_at_1TeV = spectral_model(emin)
         flux_above_1TeV = spectral_model.integral(emin=emin, emax=einf)
         eflux_1_10TeV = spectral_model.energy_flux(emin=emin, emax=emax)
 
-        assert_quantity_allclose(flux_at_1TeV, desired['flux_at_1TeV'], rtol=1E-3)
-        assert_quantity_allclose(flux_above_1TeV, desired['flux_above_1TeV'], rtol=1E-3)
-        assert_quantity_allclose(eflux_1_10TeV, desired['eflux_1_10TeV'], rtol=1E-3)
-    
+        assert_quantity_allclose(flux_at_1TeV, desired['flux_at_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux_above_1TeV, desired['flux_above_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV, desired['eflux_1_10TeV'], rtol=1e-3)
+
     @requires_dependency('uncertainties')
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_SM))
     def test_spectral_model_err(self, gammacat, name, desired):
@@ -133,19 +130,18 @@ class TestSourceCatalogObjectGammaCat:
         spectral_model = source.spectral_model
 
         emin, emax = [1, 10] * u.TeV
-        einf = 1E10 * u.TeV
+        einf = 1e10 * u.TeV
         flux_at_1TeV = spectral_model.evaluate_error(emin)
         flux_above_1TeV = spectral_model.integral_error(emin=emin, emax=einf)
         eflux_1_10TeV = spectral_model.energy_flux_error(emin=emin, emax=emax)
 
-        assert_quantity_allclose(flux_at_1TeV[0], desired['flux_at_1TeV'], rtol=1E-3)
-        assert_quantity_allclose(flux_above_1TeV[0], desired['flux_above_1TeV'], rtol=1E-3)
-        assert_quantity_allclose(eflux_1_10TeV[0], desired['eflux_1_10TeV'], rtol=1E-3)
+        assert_quantity_allclose(flux_at_1TeV[0], desired['flux_at_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux_above_1TeV[0], desired['flux_above_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV[0], desired['eflux_1_10TeV'], rtol=1e-3)
 
-        assert_quantity_allclose(flux_at_1TeV[1], desired['flux_at_1TeV_err'], rtol=1E-3)
-        assert_quantity_allclose(flux_above_1TeV[1], desired['flux_above_1TeV_err'], rtol=1E-3)
-        assert_quantity_allclose(eflux_1_10TeV[1], desired['eflux_1_10TeV_err'], rtol=1E-3)
-
+        assert_quantity_allclose(flux_at_1TeV[1], desired['flux_at_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(flux_above_1TeV[1], desired['flux_above_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV[1], desired['eflux_1_10TeV_err'], rtol=1e-3)
 
     @pytest.mark.parametrize(['name', 'desired'], zip(SOURCES, DESIRED_FP))
     def test_flux_points(self, gammacat, name, desired):
@@ -165,6 +161,6 @@ class TestSourceCatalogObjectGammaCat:
         flux, flux_err = source.spectral_model.evaluate_error(energies)
         flux_lo = flux - flux_err
         flux_hi = flux + flux_err
-        assert_quantity_allclose(energies.sum(), desired['energy_sum'], rtol=1E-3)
-        assert_quantity_allclose(flux_lo.sum(), desired['flux_lo_sum'], rtol=1E-3)
-        assert_quantity_allclose(flux_hi.sum(), desired['flux_hi_sum'], rtol=1E-3)
+        assert_quantity_allclose(energies.sum(), desired['energy_sum'], rtol=1e-3)
+        assert_quantity_allclose(flux_lo.sum(), desired['flux_lo_sum'], rtol=1e-3)
+        assert_quantity_allclose(flux_hi.sum(), desired['flux_hi_sum'], rtol=1e-3)

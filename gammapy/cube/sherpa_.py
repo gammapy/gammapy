@@ -40,7 +40,6 @@ class NormGauss2DInt(ArithmeticModel):
         The normgauss2dint model uses the error function to evaluate the
         the gaussian. This corresponds to an integration over bins.
         """
-
         return self.normgauss2d(p, xlo, xhi, ylo, yhi)
 
     def normgauss2d(self, p, xlo, xhi, ylo, yhi):

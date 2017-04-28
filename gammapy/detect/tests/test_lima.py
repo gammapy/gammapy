@@ -26,8 +26,8 @@ def test_compute_lima_image():
         images['counts'], images['background'], images['exposure'], kernel,
     )
 
-    assert_allclose(result_ts['sqrt_ts'], result_lima['significance'], atol=1E-3)
-    assert_allclose(result_ts['amplitude'], result_lima['flux'], atol=3E-12)
+    assert_allclose(result_ts['sqrt_ts'], result_lima['significance'], atol=1e-3)
+    assert_allclose(result_ts['amplitude'], result_lima['flux'], atol=3e-12)
 
 
 @requires_dependency('scipy')
@@ -52,4 +52,4 @@ def test_compute_lima_on_off_image():
 
     # Set boundary to NaN in reference image
     images['Significance'].data[np.isnan(results['significance'])] = np.nan
-    assert_allclose(results['significance'], images['Significance'], atol=1E-5)
+    assert_allclose(results['significance'], images['Significance'], atol=1e-5)

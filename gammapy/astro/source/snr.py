@@ -33,7 +33,6 @@ class SNR(object):
         Ejecta mass (g)
     t_stop : `~astropy.units.Quantity`
         Post-shock temperature where gamma-ray emission stops.
-
     """
 
     def __init__(self, e_sn=Quantity(1e51, 'erg'), theta=Quantity(0.1),

@@ -301,8 +301,8 @@ class StackedObsImageMaker(object):
         radius : float
             Disk radius in pixels for the significance image
         """
-
         total_counts = SkyImage.empty_like(self.empty_image, name='counts')
+
         if make_background_image:
             total_bkg = SkyImage.empty_like(self.empty_image, name='bkg')
             total_exposure = SkyImage.empty_like(self.empty_image, name='exposure')

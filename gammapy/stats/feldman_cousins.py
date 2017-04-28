@@ -6,15 +6,16 @@ import numpy as np
 from astropy.extern.six.moves import range
 from astropy.extern.six import iteritems
 
-__all__ = ['fc_find_acceptance_interval_gauss',
-           'fc_find_acceptance_interval_poisson',
-           'fc_construct_acceptance_intervals_pdfs',
-           'fc_get_limits',
-           'fc_fix_limits',
-           'fc_find_limit',
-           'fc_find_average_upper_limit',
-           'fc_construct_acceptance_intervals',
-           ]
+__all__ = [
+    'fc_find_acceptance_interval_gauss',
+    'fc_find_acceptance_interval_poisson',
+    'fc_construct_acceptance_intervals_pdfs',
+    'fc_get_limits',
+    'fc_fix_limits',
+    'fc_find_limit',
+    'fc_find_average_upper_limit',
+    'fc_construct_acceptance_intervals',
+]
 
 log = logging.getLogger(__name__)
 
@@ -233,7 +234,7 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
             largest_entry_position[i]
             if largest_entry[i][largest_entry_position[i]] != -1 else -1
             for i in range(len(largest_entry_position))
-            ]
+        ]
         # Replace the largest entry with the highest rank so far plus one
         # Add the probability
         for i in range(number_mus):
@@ -313,7 +314,6 @@ def fc_fix_limits(lower_limit, upper_limit):
     upper_limit : array-like
         Feldman Cousins upper limit x-coordinates
     """
-
     all_fixed = False
 
     while not all_fixed:
@@ -348,7 +348,6 @@ def fc_find_limit(x_value, x_values, y_values):
     limit : float
         The Feldman Cousins limit
     """
-
     if x_value > max(x_values):
         raise ValueError("Measured x outside of confidence belt!")
 
@@ -393,8 +392,7 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
     average_limit : float
         Average upper limit
     """
-
-    avergage_limit = 0
+    average_limit = 0
     number_points = len(x_bins)
 
     for i in range(number_points):
@@ -406,10 +404,10 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
         except:
             log.warning("Warning: Calculation of average limit incomplete!")
             log.warning("Add more bins in mu direction or decrease prob_limit.")
-            return avergage_limit
-        avergage_limit += matrix[0][i] * limit
+            return average_limit
+        average_limit += matrix[0][i] * limit
 
-    return avergage_limit
+    return average_limit
 
 
 def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
@@ -431,7 +429,6 @@ def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
     acceptance_intervals : ndarray
         Acceptance intervals (1 means inside, 0 means outside)
     """
-
     distributions_scaled = []
 
     # Histogram gets rid of the last bin, so add one extra

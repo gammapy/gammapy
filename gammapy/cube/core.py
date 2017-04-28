@@ -163,7 +163,7 @@ class SkyCube(MapBase):
             data = Quantity(data, '1 / (cm2 MeV s sr)')
             name = 'flux'
         elif format == 'fermi-counts':
-            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
+            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'])
             energy_axis = LogEnergyAxis(energy, mode='edges')
             data = Quantity(data, 'count')
             name = 'counts'

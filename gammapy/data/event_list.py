@@ -392,7 +392,7 @@ class EventList(object):
         return self.__class__(selected)
 
     def select_circular_region(self, region):
-        """Select events in circular regions
+        """Select events in circular regions.
 
         TODO: Extend to support generic regions
 
@@ -406,14 +406,13 @@ class EventList(object):
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-
         if not isinstance(region, list):
             region = list([region])
         mask = self.filter_circular_region(region)
         return self.select_row_subset(mask)
 
     def filter_circular_region(self, region):
-        """Create selection mask for event in given circular regions
+        """Create selection mask for event in given circular regions.
 
         TODO: Extend to support generic regions
 

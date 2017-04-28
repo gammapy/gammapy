@@ -792,7 +792,6 @@ class SkyImage(MapBase):
         image : `~gammapy.image.SkyImage`
             Image reprojected onto ``reference``.
         """
-
         from reproject import reproject_interp, reproject_exact
 
         if isinstance(reference, SkyImage):
@@ -1184,7 +1183,6 @@ class SkyImage(MapBase):
         """
         Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
         """
-
         coordinates = self.coordinates(mode='edges')
         lon = coordinates.data.lon.radian
         lat = coordinates.data.lat.radian

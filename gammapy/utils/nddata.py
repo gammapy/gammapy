@@ -65,15 +65,15 @@ class NDDataArray(object):
 
     @property
     def data(self):
-        """Array holding the n-dimensional data"""
+        """Array holding the n-dimensional data."""
         return self._data
 
     @data.setter
     def data(self, data):
-        """Set data
+        """Set data.
 
-        Some sanitiy checks are performed to avoid an invalid array. Also, the
-        interpolator is set to None to avoid unwanted behaviour.
+        Some sanity checks are performed to avoid an invalid array.
+        Also, the interpolator is set to None to avoid unwanted behaviour.
 
         Parameters
         ----------
@@ -146,7 +146,6 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-
         values = list()
         for axis in self.axes:
             # Extract values for each axis, default: nodes
@@ -397,7 +396,7 @@ class BinnedDataAxis(DataAxis):
 
     @property
     def nodes(self):
-        """Evaluation nodes
+        """Evaluation nodes.
 
         Depending on the interpolation mode, either log or lin center are
         returned

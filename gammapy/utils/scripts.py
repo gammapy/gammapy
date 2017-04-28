@@ -158,8 +158,7 @@ def read_yaml(filename, logger=None):
 
 
 def write_yaml(dictionary, filename, logger=None):
-    """
-    Write YAML file
+    """Write YAML file.
 
     Parameters
     ----------
@@ -178,8 +177,7 @@ def write_yaml(dictionary, filename, logger=None):
 
 
 def make_path(path):
-    """
-    Expand environment variables on `~pathlib.Path` construction
+    """Expand environment variables on `~pathlib.Path` construction.
 
     Parameters
     ----------
@@ -217,7 +215,6 @@ def recursive_merge_dicts(a, b):
     >>> print(c)
     {'a': 42, 'b': {'c': 50, 'e': 44, 'g': 98}, 'd': 99}
     """
-
     c = a.copy()
     for k, v in b.items():
         if k in c and isinstance(c[k], dict):

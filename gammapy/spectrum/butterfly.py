@@ -25,7 +25,6 @@ class SpectrumButterfly(QTable):
 
         ``kwargs`` are passed to ``matplotlib.pyplot.fill_between``.
         """
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 

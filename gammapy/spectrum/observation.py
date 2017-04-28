@@ -303,7 +303,6 @@ class SpectrumObservation(object):
         overwrite : bool, optional
             Overwrite, default: True
         """
-
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
