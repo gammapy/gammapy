@@ -88,7 +88,7 @@ class CTAObservationSimulation(object):
     """
 
     @staticmethod
-    def simulate_obs(perf, target, obs_param):
+    def simulate_obs(perf, target, obs_param, obs_id=0):
         """
         Simulate observation with given parameters
 
@@ -100,6 +100,8 @@ class CTAObservationSimulation(object):
             Source
         obs_param : `~gammapy.scripts.ObservationParameters`
             Observation parameters
+        obs_id : `int`, optional
+            Observation Id
         """
         livetime = obs_param.livetime
         alpha = obs_param.alpha.value
@@ -147,7 +149,8 @@ class CTAObservationSimulation(object):
                                   off_vector=off_vector,
                                   aeff=perf.aeff,
                                   edisp=perf.rmf)
-
+        obs.obs_id = obs_id
+        
         # Set threshold according to the closest energy reco from bkg bins
         idx_min = np.abs(reco_energy.lo - emin).argmin()
         idx_max = np.abs(reco_energy.lo - emax).argmin()
