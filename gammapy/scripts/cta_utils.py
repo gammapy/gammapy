@@ -119,6 +119,10 @@ class CTAObservationSimulation(object):
                                            edisp=perf.rmf)
         predicted_counts.run()
         npred = predicted_counts.npred
+        # set negative values to zero (interpolation issue)
+        idx = np.where(npred.data.data < 0.)
+        npred.data.data[idx] = 0
+
         # Randomise counts
         rand = get_random_state('random-seed')
         on_counts = rand.poisson(npred.data.data.value)  # excess
