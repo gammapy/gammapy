@@ -19,7 +19,7 @@ from ..utils.modeling import SourceModel, SourceLibrary
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import Shell2D
+from ..image.models import Shell2D, Delta2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
