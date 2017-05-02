@@ -146,6 +146,16 @@ class Shell2D(Fittable2DModel):
                                 np.sqrt(rr_out - rr)])
         return amplitude * values / np.sqrt(rr_out - rr_in)
 
+    @property
+    def bounding_box(self):
+        """
+        Tuple defining the default ``bounding_box`` limits.
+        ``((y_low, y_high), (x_low, x_high))``
+        """
+        r_out = self.r_in + self.width
+        return ((self.y_0 - r_out, self.y_0 + r_out),
+                (self.x_0 - r_out, self.x_0 + r_out))
+
 
 class Sphere2D(Fittable2DModel):
     """
@@ -253,6 +263,15 @@ class Sphere2D(Fittable2DModel):
             values = np.select([rr <= rr_0, rr > rr_0], [np.sqrt(rr_0 - rr), 0])
         return amplitude * values / r_0
 
+    @property
+    def bounding_box(self):
+        """
+        Tuple defining the default ``bounding_box`` limits.
+        ``((y_low, y_high), (x_low, x_high))``
+        """
+        return ((self.y_0 - self.r_0, self.y_0 + self.r_0),
+                (self.x_0 - self.r_0, self.x_0 + self.r_0))
+
 
 class Delta2D(Fittable2DModel):
     """
@@ -286,8 +305,6 @@ class Delta2D(Fittable2DModel):
                     \\end{array}
                 \\right.
 
-    The pixel positions ``x_0`` and ``y_0`` are rounded to integers.
-    Sub-pixel information is lost.
     """
 
     amplitude = Parameter('amplitude')
@@ -300,12 +317,50 @@ class Delta2D(Fittable2DModel):
 
     @staticmethod
     def evaluate(x, y, amplitude, x_0, y_0):
-        """Two dimensional delta model function"""
-        dx = x - x_0
-        dy = y - y_0
-        x_mask = np.logical_and(dx > -0.5, dx <= 0.5)
-        y_mask = np.logical_and(dy > -0.5, dy <= 0.5)
-        return np.select([np.logical_and(x_mask, y_mask)], [amplitude])
+        """
+        Two dimensional delta model function using a local rectangular pixel
+        approximation.
+        """
+        x_diff = np.abs((x - x_0) / np.gradient(x, axis=1))
+        y_diff = np.abs((y - y_0) / np.gradient(y, axis=0))
+
+        x_val = np.select([x_diff < 1], [1 - x_diff], 0)
+        y_val = np.select([y_diff < 1], [1 - y_diff], 0)
+        return x_val * y_val * amplitude
+
+
+class Template2D(Fittable2DModel):
+    """
+    Two dimensional table model .
+
+    Parameters
+    ----------
+    amplitude : float
+        Amplitude of the template model.
+
+    See Also
+    --------
+    Shell2D, Sphere2D, astropy.modeling.models.Gaussian2D
+
+    """
+    amplitude = Parameter('amplitude')
+
+    def __init__(self, x, y, data, amplitude=1, **constraints):
+
+        x_axis = DataAxis(x, name='x')
+        y_axis = DataAxis(y, name='y')
+
+        self._interpolator = NDDataArray(axes=[x_axis, y_axis], data=data)
+        super(Table2D, self).__init__(amplitude=amplitude, **constraints)
+
+    @classmethod
+    def read(filename):
+
+        return cls(x, y, data)
+
+    def evaluate(self, x, y, amplitude):
+        values = self._interpolator.evaluate(x=x, y=y)
+        return amplitude * values
 
 
 morph_types = OrderedDict()
@@ -314,3 +369,4 @@ morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D
 morph_types['sphere2d'] = Sphere2D
+morph_types['template2d'] = Template2D
