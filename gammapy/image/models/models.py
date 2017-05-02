@@ -321,8 +321,10 @@ class Delta2D(Fittable2DModel):
         Two dimensional delta model function using a local rectangular pixel
         approximation.
         """
-        x_diff = np.abs((x - x_0) / np.gradient(x, axis=1))
-        y_diff = np.abs((y - y_0) / np.gradient(y, axis=0))
+        _, grad_x = np.gradient(x)
+        grad_y, _ = np.gradient(y)
+        x_diff = np.abs((x - x_0) / grad_x)
+        y_diff = np.abs((y - y_0) / grad_y)
 
         x_val = np.select([x_diff < 1], [1 - x_diff], 0)
         y_val = np.select([y_diff < 1], [1 - y_diff], 0)
