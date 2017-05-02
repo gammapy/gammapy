@@ -255,8 +255,8 @@ class SourceCatalog(object):
         """
         Select all source within an image
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         image : `~gammapy.image.SkyImage`
             Sky image
 

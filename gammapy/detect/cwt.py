@@ -463,10 +463,10 @@ class CWTData(object):
 
     @property
     def approx(self):
-        """2D approx??? image (`~gammapy.image.SkyImage`).
+        """2D approx ??? image (`~gammapy.image.SkyImage`).
 
         In the course of iterations updated by convolution of
-            ``counts - model - background`` with ``kern_approx``
+        ``counts - model - background`` with ``kern_approx``
         Primordial initialized by zero array.
         """
         return SkyImage(name='approx', data=self._approx, wcs=self._wcs)
@@ -482,7 +482,7 @@ class CWTData(object):
 
     @property
     def transform_2d(self):
-        """2D transforma??? image (`~gammapy.image.SkyImage`).
+        """2D transform ??? image (`~gammapy.image.SkyImage`).
 
         Created from transform_3d by summarize values per 0 axes.
         Primordial initialized by zero array.
@@ -516,8 +516,9 @@ class CWTData(object):
 
     @property
     def transform_3d(self):
-        """
-        3D `~gammapy.cube.SkyCube` cube. Primordial initialized by zero array. In the course of
+        """3D transform ??? cube (`~gammapy.cube.SkyCube`).
+        
+        Primordial initialized by zero array. In the course of
         iterations updated by convolution of ``counts - total_background`` with kernel
         for each scale (``total_background = model + background + approx``).
         """
