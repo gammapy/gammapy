@@ -329,44 +329,9 @@ class Delta2D(Fittable2DModel):
         return x_val * y_val * amplitude
 
 
-class Template2D(Fittable2DModel):
-    """
-    Two dimensional table model .
-
-    Parameters
-    ----------
-    amplitude : float
-        Amplitude of the template model.
-
-    See Also
-    --------
-    Shell2D, Sphere2D, astropy.modeling.models.Gaussian2D
-
-    """
-    amplitude = Parameter('amplitude')
-
-    def __init__(self, x, y, data, amplitude=1, **constraints):
-
-        x_axis = DataAxis(x, name='x')
-        y_axis = DataAxis(y, name='y')
-
-        self._interpolator = NDDataArray(axes=[x_axis, y_axis], data=data)
-        super(Table2D, self).__init__(amplitude=amplitude, **constraints)
-
-    @classmethod
-    def read(filename):
-
-        return cls(x, y, data)
-
-    def evaluate(self, x, y, amplitude):
-        values = self._interpolator.evaluate(x=x, y=y)
-        return amplitude * values
-
-
 morph_types = OrderedDict()
 """Available morphology types."""
 morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D
 morph_types['sphere2d'] = Sphere2D
-morph_types['template2d'] = Template2D
