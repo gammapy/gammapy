@@ -642,6 +642,28 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
         return FluxPoints(table)
 
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Source spatial model.
+        """
+        d = self.data
+        flux = self.spectral_model.integral(emin, emax)
+
+        pars = {}
+        pars['amplitude'] = flux.to('cm-2 s-1').value
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        pointlike = self.data['Extended_Source_Name'].strip() == ''
+
+        if pointlike:
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
+        else:
+            raise NotImplementedError('Only spatial model: {!r}'.format(''))
+
+
 
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
