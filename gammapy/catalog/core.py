@@ -4,10 +4,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import sys
+from copy import deepcopy
 from pprint import pprint
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
+from astropy.coordinates import SkyCoord
 from ..utils.array import _is_int
 
 __all__ = [
@@ -64,6 +66,15 @@ class SourceCatalogObject(object):
         Print summary info about the object.
         """
         print(self)
+
+    @property    
+    def position(self):
+        try:
+            l, b = self.data['GLON'], self.data['GLAT']
+        except KeyError:
+            l, b = self.data['glon'], self.data['glat']
+        position = SkyCoord(l, b, frame='galactic')
+        return position
 
 
 class SourceCatalog(object):
@@ -231,3 +242,38 @@ class SourceCatalog(object):
         ss = self.description
         ss += ' with {} objects.'.format(len(self.table))
         return ss
+
+    @property    
+    def positions(self):
+        """
+        `~astropy.coordinates.SkyCoord`
+        """
+        try:
+            l, b = self.table['GLON'], self.table['GLAT']
+        except KeyError:
+            l, b = self.table['glon'], self.table['glat']
+        position = SkyCoord(l, b, frame='galactic')
+        return position
+
+    def select_image_region(self, image):
+        """
+        Select all source within an image
+
+        Paramters
+        ---------
+        image : `~gammapy.image.SkyImage`
+            Sky image
+
+        Returns
+        -------
+        catalog : `SourceCatalog`
+            Source catalog selection.
+        """
+        catalog = self.copy()
+        selection = image.contains(self.positions)
+        catalog.table = catalog.table[selection]
+        return catalog
+
+    def copy(self):
+        """Copy catalog"""
+        return deepcopy(self)
