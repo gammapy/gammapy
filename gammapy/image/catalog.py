@@ -91,19 +91,23 @@ class CatalogImageEstimator(object):
             except (NotImplementedError, NoDataAvailableError):
                 continue
 
-            if isinstance(spatial_model, Delta2D):
+            if source.pointlike:
                 # use 5 pixel bbox for point-like models
                 size = BBOX_DELTA2D_PIX * image.wcs_pixel_scale().to('deg')
+                solid_angle = 1.
             else:
                 height, width = np.diff(spatial_model.bounding_box)
                 size = (float(height) * u.deg, float(width) * u.deg)
 
             cutout = image.cutout(source.position, size=size)
 
+            if not source.pointlike:
+                solid_angle = cutout.solid_angle().to('deg2').value
+
             # evaluate model on smaller image and paste
             c = cutout.coordinates()
             l, b = c.galactic.l.wrap_at('180d'), c.galactic.b
-            cutout.data = spatial_model(l.deg, b.deg)
+            cutout.data = spatial_model(l.deg, b.deg) * solid_angle
             image.paste(cutout)
 
         return image
