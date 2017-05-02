@@ -40,9 +40,9 @@ env:
         - MAIN_CMD='python setup.py'
 
     matrix:
-        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.4 SETUP_CMD='egg_info'
+        - PYTHON_VERSION=3.6 SETUP_CMD='egg_info'
         - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
+        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
 
 matrix:
 
@@ -51,14 +51,14 @@ matrix:
 
     include:
 
-        # Try MacOS X
+        # MacOS X tests
         - os: osx
           env: PYTHON_VERSION=2.7 SETUP_CMD='test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         - os: osx
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         # Temporarily disabled because of this issue:
         # https://travis-ci.org/gammapy/gammapy/jobs/115820975
@@ -69,30 +69,31 @@ matrix:
         #       CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
         #       PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
 
-        # Run tests
-        # Coverage is measured on Python 2 (where Sherpa is available)
-        - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V --coverage'
 
+        # The main build that's used for coverage measurement
         - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+          env: PYTHON_VERSION=3.6 SETUP_CMD='test -V --coverage'
+
+        # Older Python versions
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
 
         # Build docs
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='build_docs -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
         - os: linux
-          env: PYTHON_VERSION=3.5 SETUP_CMD='build_docs -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES_WO_SHERPA
+          env: PYTHON_VERSION=3.6 SETUP_CMD='build_docs -w'
+               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.6 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+
         # Test with Astropy dev and LTS versions
 #        - os: linux
 #          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
@@ -101,34 +102,35 @@ matrix:
 #               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
-        # Test with with optional dependencies disabled
+        # Run tests without optional dependencies
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES=''
+
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES=''
 
-        # Test with other numpy versions.
+        # Test with other numpy versions
         - os: linux
-          env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
         - os: linux
-          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.10 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.10 SETUP_CMD='test -V'
 
         # Test IPython notebooks
         - os: linux
           env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
         - os: linux
           env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
@@ -137,11 +139,11 @@ matrix:
     # You can move builds that temporarily fail because of some non-Gammapy here.
     # Please add a link to a GH issue that tracks the upstream issue.
     # copy the part from the `include` section above here.
-    allow_failures:
-        # See https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
-        - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+#    allow_failures:
+#        # See https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
 
 
 install:
