@@ -6,7 +6,7 @@
 Installation
 ************
 
-* Gammapy works with legacy Python (version 2.7) as well as Python 3 (version 3.4 or above).
+* Gammapy works with legacy Python (version 2.7) as well as Python 3 (version 3.5 or above).
 * The core dependencies are Numpy and Astropy, as well as for now the regions package
   (until it is merged into Astropy core).
 * The main optional dependencies are PyYAML, Scipy, healpy, uncertainties and Sherpa

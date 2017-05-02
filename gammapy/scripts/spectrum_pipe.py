@@ -22,7 +22,7 @@ class SpectrumAnalysisIACT(object):
 
     Observation selection must have happened before.
 
-    For a usage example see :gp-extra-notebook:`spectrum_pipe`.
+    For a usage example see :gp-extra-notebook:`spectrum_pipe`
 
     Config options:
 

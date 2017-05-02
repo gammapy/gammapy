@@ -18,6 +18,8 @@ Summary
 
 For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/milestones/0.7
 
+- Dropped support for Python 3.4. (probably everything still works with Python 3.4, but we don't
+  test with Python 3.4 anymore in our continuous integration).
 
 .. _gammapy_0p6_release:
 
