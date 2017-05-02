@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
+from astropy.modeling.models import Gaussian2D
 from astropy.modeling.tests.test_models import Fittable2DModelTester
 from ..models import Sphere2D, Shell2D, Delta2D
+from ....utils.testing import requires_dependency
 
 models_2D = {
 
@@ -15,16 +18,6 @@ models_2D = {
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
         'integral': 4. / 3 * np.pi * 10 ** 3 / (2 * 10),
-    },
-
-    Delta2D: {
-        'parameters': [1, 0, 0],
-        'x_values': [0, 0.5, -0.5, 0.25, -0.25],
-        'y_values': [0, 0.5, -0.5, 0.25, -0.25],
-        'z_values': [1, 1, 0, 1, 1],
-        'x_lim': [-10, 10],
-        'y_lim': [-10, 10],
-        'integral': 1,
     },
 
     Shell2D: {
@@ -61,6 +54,33 @@ models_2D = {
                      np.sqrt(10 ** 2 - 8 ** 2)),
     }
 }
+
+
+X_0 = [0, 1, -0.5, 0.012, -0.1245]
+Y_0 = [0, 1, -0.5, -0.0345, 0.35345]
+
+@pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))
+def test_delta2d(x_0, y_0):
+    y, x = np.mgrid[-3:4, -3:4]
+    delta = Delta2D(1, x_0, y_0)
+    values = delta(x, y)
+    assert_allclose(values.sum(), 1)
+
+@requires_dependency('scipy')
+@pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))
+def test_delta2d_against_gauss(x_0, y_0):
+    from scipy.ndimage.filters import gaussian_filter
+    width = 5
+    y, x = np.mgrid[-21:22, -21:22]
+    delta = Delta2D(1, x_0, y_0)
+    amplitude = 1 / (2 * np.pi * width ** 2)
+    gauss = Gaussian2D(amplitude=amplitude, x_mean=x_0, y_mean=y_0,
+                       x_stddev=width, y_stddev=width)
+
+    values = delta(x, y)
+    values_convolved = gaussian_filter(values, width, mode='constant')
+    values_gauss = gauss(x, y)
+    assert_allclose(values_convolved, values_gauss, atol=1E-4)
 
 
 @pytest.mark.parametrize(('model_class', 'test_parameters'), list(models_2D.items()))

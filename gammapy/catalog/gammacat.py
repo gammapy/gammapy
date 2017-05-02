@@ -19,7 +19,7 @@ from ..utils.modeling import SourceModel, SourceLibrary
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import Shell2D
+from ..image.models import Shell2D, Delta2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -148,14 +148,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             pars['width'] = 0.2 * d['morph_sigma'].value
             return Shell2D(**pars)
         elif morph_type == 'point':
-            DEFAULT_POINT_EXTENSION = Angle('0.05 deg')
             pars['amplitude'] = flux.to('cm-2 s-1').value
-            pars['x_mean'] = glon.value
-            pars['y_mean'] = glat.value
-            pars['x_stddev'] = DEFAULT_POINT_EXTENSION
-            pars['y_stddev'] = DEFAULT_POINT_EXTENSION
-            # TODO: make Delta2D work and use it here.
-            return Gaussian2D(**pars)
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
         elif morph_type == 'none':
             raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
         else:
@@ -204,6 +200,13 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             _del_nan_col(table, colname)
 
         return FluxPoints(table)
+
+    @property
+    def pointlike(self):
+        """
+        Source is pointlike.
+        """
+        return self.data['morph_type'] == 'point'
 
 
 class SourceCatalogGammaCat(SourceCatalog):

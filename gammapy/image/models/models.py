@@ -146,6 +146,16 @@ class Shell2D(Fittable2DModel):
                                 np.sqrt(rr_out - rr)])
         return amplitude * values / np.sqrt(rr_out - rr_in)
 
+    @property
+    def bounding_box(self):
+        """
+        Tuple defining the default ``bounding_box`` limits.
+        ``((y_low, y_high), (x_low, x_high))``
+        """
+        r_out = self.r_in + self.width
+        return ((self.y_0 - r_out, self.y_0 + r_out),
+                (self.x_0 - r_out, self.x_0 + r_out))
+
 
 class Sphere2D(Fittable2DModel):
     """
@@ -253,6 +263,15 @@ class Sphere2D(Fittable2DModel):
             values = np.select([rr <= rr_0, rr > rr_0], [np.sqrt(rr_0 - rr), 0])
         return amplitude * values / r_0
 
+    @property
+    def bounding_box(self):
+        """
+        Tuple defining the default ``bounding_box`` limits.
+        ``((y_low, y_high), (x_low, x_high))``
+        """
+        return ((self.y_0 - self.r_0, self.y_0 + self.r_0),
+                (self.x_0 - self.r_0, self.x_0 + self.r_0))
+
 
 class Delta2D(Fittable2DModel):
     """
@@ -286,8 +305,6 @@ class Delta2D(Fittable2DModel):
                     \\end{array}
                 \\right.
 
-    The pixel positions ``x_0`` and ``y_0`` are rounded to integers.
-    Sub-pixel information is lost.
     """
 
     amplitude = Parameter('amplitude')
@@ -300,12 +317,18 @@ class Delta2D(Fittable2DModel):
 
     @staticmethod
     def evaluate(x, y, amplitude, x_0, y_0):
-        """Two dimensional delta model function"""
-        dx = x - x_0
-        dy = y - y_0
-        x_mask = np.logical_and(dx > -0.5, dx <= 0.5)
-        y_mask = np.logical_and(dy > -0.5, dy <= 0.5)
-        return np.select([np.logical_and(x_mask, y_mask)], [amplitude])
+        """
+        Two dimensional delta model function using a local rectangular pixel
+        approximation.
+        """
+        _, grad_x = np.gradient(x)
+        grad_y, _ = np.gradient(y)
+        x_diff = np.abs((x - x_0) / grad_x)
+        y_diff = np.abs((y - y_0) / grad_y)
+
+        x_val = np.select([x_diff < 1], [1 - x_diff], 0)
+        y_val = np.select([y_diff < 1], [1 - y_diff], 0)
+        return x_val * y_val * amplitude
 
 
 morph_types = OrderedDict()

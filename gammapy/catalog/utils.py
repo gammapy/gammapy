@@ -243,13 +243,18 @@ def skycoord_from_table(table):
     TODO: I'm not sure if it's a good idea to use this because it's not always clear
     which positions are taken.
     """
-    if set(['RAJ2000', 'DEJ2000']).issubset(table.colnames):
+    try:
+        keys = table.colnames
+    except AttributeError:
+        keys = table.keys()
+
+    if set(['RAJ2000', 'DEJ2000']).issubset(keys):
         lon, lat, frame = 'RAJ2000', 'DEJ2000', 'icrs'
-    elif set(['RA', 'DEC']).issubset(table.colnames):
+    elif set(['RA', 'DEC']).issubset(keys):
         lon, lat, frame = 'RA', 'DEC', 'icrs'
-    elif set(['GLON', 'GLAT']).issubset(table.colnames):
+    elif set(['GLON', 'GLAT']).issubset(keys):
         lon, lat, frame = 'GLON', 'GLAT', 'galactic'
-    elif set(['glon', 'glat']).issubset(table.colnames):
+    elif set(['glon', 'glat']).issubset(keys):
         lon, lat, frame = 'glon', 'glat', 'galactic'
     else:
         raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
