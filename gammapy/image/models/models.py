@@ -7,6 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
+from astropy.utils import lazyproperty
 from ..core import SkyImage
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     'Shell2D',
     'Sphere2D',
     'Delta2D',
+    'Template2D'
 ]
 
 
@@ -348,29 +350,48 @@ class Template2D(Fittable2DModel):
     """
     amplitude = Parameter('amplitude')
 
-    def __init__(self, x, y, data, amplitude=1., **constraints):
+    def __init__(self, image, amplitude=1., **constraints):
+        self.image = image
+        super(Template2D, self).__init__(amplitude=amplitude, **constraints)
 
-        x_axis = DataAxis(x, name='x')
-        y_axis = DataAxis(y, name='y')
+    @lazyproperty
+    def _interpolate_data(self):
+        """Interpolate data using `~scipy.interpolate.RegularGridInterpolator`."""
+        from scipy.interpolate import RegularGridInterpolator
+        #TODO: move e.g. to SkyImage.interpolate()
 
-        self._interpolator = NDDataArray(axes=[x_axis, y_axis], data=data)
-        super(Table2D, self).__init__(amplitude=amplitude, **constraints)
+        y = np.arange(self.image.data.shape[0])
+        x = np.arange(self.image.data.shape[1])
+
+        data_normed = self.image.data / self.image.data.sum()
+
+        f = RegularGridInterpolator((y, x), data_normed, fill_value=0,
+                                    bounds_error=False)
+
+        def interpolate(y, x, method='linear'):
+            shape = y.shape
+            coords = np.column_stack([y.flat, x.flat])
+            val = f(coords, method=method)
+            return val.reshape(shape)
+
+        return interpolate
 
     @classmethod
     def read(cls, filename):
         """
         Read spatial template model from fits image.
+
+        Parameters
+        ----------
+        filename : str
+            Fits image filename.
         """
         template = SkyImage.read(filename)
-
-        coords = template.coordinates()
-        x = coords.
-        y =
-
-        return cls(x, y, template.data)
+        return cls(template)
 
     def evaluate(self, x, y, amplitude):
-        values = self._interpolator.evaluate(x=x, y=y)
+        y_pix, x_pix = self.image.wcs.wcs_world2pix(y, x, 0)
+        values = self._interpolate_data(y_pix, x_pix)
         return amplitude * values
 
 
