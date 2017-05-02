@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _install-pip-setuppy:
 
 Installation with pip or setup.py
