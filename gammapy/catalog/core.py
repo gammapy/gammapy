@@ -6,11 +6,14 @@ from collections import OrderedDict
 import sys
 from copy import deepcopy
 from pprint import pprint
+import numpy as np
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
+from astropy.table import Table, Row
 from ..utils.array import _is_int
+from .utils import skycoord_from_table
 
 __all__ = [
     'SourceCatalog',
@@ -67,14 +70,12 @@ class SourceCatalogObject(object):
         """
         print(self)
 
-    @property    
+    @property
     def position(self):
-        try:
-            l, b = self.data['GLON'], self.data['GLAT']
-        except KeyError:
-            l, b = self.data['glon'], self.data['glat']
-        position = SkyCoord(l, b, frame='galactic')
-        return position
+        """
+        `~astropy.coordinates.SkyCoord`
+        """
+        return skycoord_from_table(self.data)
 
 
 class SourceCatalog(object):
@@ -243,17 +244,12 @@ class SourceCatalog(object):
         ss += ' with {} objects.'.format(len(self.table))
         return ss
 
-    @property    
+    @property
     def positions(self):
         """
         `~astropy.coordinates.SkyCoord`
         """
-        try:
-            l, b = self.table['GLON'], self.table['GLAT']
-        except KeyError:
-            l, b = self.table['glon'], self.table['glat']
-        position = SkyCoord(l, b, frame='galactic')
-        return position
+        return skycoord_from_table(self.table)
 
     def select_image_region(self, image):
         """
