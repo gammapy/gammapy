@@ -10,10 +10,12 @@ from astropy.table import QTable, Table
 from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.tests.helper import ignore_warnings
+from astropy.modeling.models import Gaussian2D, Disk2D, Ring2D
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise
 from ..image import SkyImage
+from ..image.models import Delta2D, Template2D
 from ..spectrum import (
     FluxPoints,
     compute_flux_points_dnde
@@ -654,15 +656,35 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        pointlike = self.data['Extended_Source_Name'].strip() == ''
-
-        if pointlike:
+        if self.pointlike:
             pars['x_0'] = glon.value
             pars['y_0'] = glat.value
             return Delta2D(**pars)
         else:
-            raise NotImplementedError('Only spatial model: {!r}'.format(''))
+            de = self.data_extended
+            morph_type = de['Spatial_Function'].strip()
 
+            if morph_type == 'RadialDisk':
+
+
+            elif morph_type == 'SpatialMap':
+                filename = de['Spatial_Filename']
+                base = '$GAMMAPY_EXTRA/datsets/fermi/catalog'
+                filename = filename.replace('$LATEXTDIR', base)
+                template = Template2D.read(filename)
+                template.amplitude = pars['amplitude']
+                return template
+            elif morph_type == '2D Gaussian':
+                pass
+
+            elif morph_type == 'Ring':
+                pass
+
+
+
+    @property
+    def pointlike(self):
+        return self.data['Extended_Source_Name'].strip() == ''
 
 
 class SourceCatalog3FGL(SourceCatalog):
