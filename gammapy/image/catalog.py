@@ -22,6 +22,7 @@ __all__ = [
 
 BBOX_DELTA2D_PIX = 5
 
+
 class CatalogImageEstimator(object):
     """Compute model image for given energy band from a catalog.
 

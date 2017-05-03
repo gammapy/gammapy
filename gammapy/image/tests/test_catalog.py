@@ -113,4 +113,4 @@ class TestCatalogImageEstimator(object):
         assert len(selection.table) == 7
 
         desired = selection.table['Flux'].sum()
-        assert_allclose(actual, desired, rtol=1E-1)
+        assert_allclose(actual, desired, rtol=1E-2)
