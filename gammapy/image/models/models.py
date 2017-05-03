@@ -46,7 +46,7 @@ class Shell2D(Fittable2DModel):
 
     See Also
     --------
-    Sphere2D, Delta2D, astropy.modeling.models.Gaussian2D
+    Sphere2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -184,7 +184,7 @@ class Sphere2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Delta2D, astropy.modeling.models.Gaussian2D
+    Shell2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -293,7 +293,7 @@ class Delta2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Sphere2D, astropy.modeling.models.Gaussian2D
+    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -345,7 +345,7 @@ class Template2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Sphere2D, astropy.modeling.models.Gaussian2D
+    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
 
     """
     amplitude = Parameter('amplitude')
@@ -364,6 +364,7 @@ class Template2D(Fittable2DModel):
         x = np.arange(self.image.data.shape[1])
 
         data_normed = self.image.data / self.image.data.sum()
+        data_normed /= self.image.solid_angle()
 
         f = RegularGridInterpolator((y, x), data_normed, fill_value=0,
                                     bounds_error=False)
@@ -394,6 +395,16 @@ class Template2D(Fittable2DModel):
         values = self._interpolate_data(y_pix, x_pix)
         return amplitude * values
 
+    @property
+    def bounding_box(self):
+        footprint = self.image.footprint()
+        width = footprint['width'].deg
+        height = footprint['height'].deg
+        center = footprint['center']
+        x_0 = center.data.lon.wrap_at('180d').deg
+        y_0 = center.data.lat.deg
+        return ((y_0 - height / 2, y_0 + height / 2),
+                (x_0 - width, x_0 + height / 2))
 
 morph_types = OrderedDict()
 """Available morphology types."""
