@@ -7,12 +7,16 @@ from collections import OrderedDict
 import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
+from astropy.utils import lazyproperty
+from astropy.coordinates import SkyCoord
+from ..core import SkyImage
 
 __all__ = [
     'morph_types',
     'Shell2D',
     'Sphere2D',
     'Delta2D',
+    'Template2D'
 ]
 
 
@@ -43,7 +47,7 @@ class Shell2D(Fittable2DModel):
 
     See Also
     --------
-    Sphere2D, Delta2D, astropy.modeling.models.Gaussian2D
+    Sphere2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -181,7 +185,7 @@ class Sphere2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Delta2D, astropy.modeling.models.Gaussian2D
+    Shell2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -290,7 +294,7 @@ class Delta2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Sphere2D, astropy.modeling.models.Gaussian2D
+    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -331,9 +335,83 @@ class Delta2D(Fittable2DModel):
         return x_val * y_val * amplitude
 
 
+class Template2D(Fittable2DModel):
+    """
+    Two dimensional table model .
+
+    Parameters
+    ----------
+    amplitude : float
+        Amplitude of the template model.
+
+    See Also
+    --------
+    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
+
+    """
+    amplitude = Parameter('amplitude')
+
+    def __init__(self, image, amplitude=1., **constraints):
+        self.image = image
+        super(Template2D, self).__init__(amplitude=amplitude, **constraints)
+
+    @lazyproperty
+    def _interpolate_data(self):
+        """Interpolate data using `~scipy.interpolate.RegularGridInterpolator`."""
+        from scipy.interpolate import RegularGridInterpolator
+        #TODO: move e.g. to SkyImage.interpolate()
+
+        y = np.arange(self.image.data.shape[0])
+        x = np.arange(self.image.data.shape[1])
+
+        data_normed = self.image.data / self.image.data.sum()
+        data_normed /= self.image.solid_angle().to('deg2').value
+
+        f = RegularGridInterpolator((y, x), data_normed, fill_value=0,
+                                    bounds_error=False)
+
+        def interpolate(y, x, method='linear'):
+            shape = y.shape
+            coords = np.column_stack([y.flat, x.flat])
+            val = f(coords, method=method)
+            return val.reshape(shape)
+
+        return interpolate
+
+    @classmethod
+    def read(cls, filename):
+        """
+        Read spatial template model from fits image.
+
+        Parameters
+        ----------
+        filename : str
+            Fits image filename.
+        """
+        template = SkyImage.read(filename)
+        return cls(template)
+
+    def evaluate(self, x, y, amplitude):
+        coord = SkyCoord(x, y, frame='galactic', unit='deg')
+        x_pix, y_pix = self.image.wcs_skycoord_to_pixel(coord)
+        values = self._interpolate_data(y_pix, x_pix)
+        return amplitude * values
+
+    @property
+    def bounding_box(self):
+        footprint = self.image.footprint()
+        width = footprint['width'].deg
+        height = footprint['height'].deg
+        center = footprint['center']
+        x_0 = center.data.lon.wrap_at('180d').deg
+        y_0 = center.data.lat.deg
+        return ((y_0 - height / 2, y_0 + height / 2),
+                (x_0 - width, x_0 + height / 2))
+
 morph_types = OrderedDict()
 """Available morphology types."""
 morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D
 morph_types['sphere2d'] = Sphere2D
+morph_types['template2d'] = Template2D

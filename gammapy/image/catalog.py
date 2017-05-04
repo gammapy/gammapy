@@ -17,16 +17,14 @@ from .lists import SkyImageList
 
 __all__ = [
     'CatalogImageEstimator',
-    'catalog_image',
-    'catalog_table',
 ]
 
 
 BBOX_DELTA2D_PIX = 5
 
+
 class CatalogImageEstimator(object):
-    """
-    Compute model image for given energy band from a catalog.
+    """Compute model image for given energy band from a catalog.
 
     Sources are only filled when their center lies within the image boundaries.
 
@@ -64,8 +62,7 @@ class CatalogImageEstimator(object):
         self.parameters = OrderedDict(emin=emin, emax=emax)
 
     def flux(self, catalog):
-        """
-        Compute flux image from catalog.
+        """Compute flux image from catalog.
 
         Sources are only filled when their center lies within the image boundaries.
 
@@ -88,20 +85,23 @@ class CatalogImageEstimator(object):
         for source in selection:
             try:
                 spatial_model = source.spatial_model(emin=p['emin'], emax=p['emax'])
+            #TODO: remove this error handling and add selection to SourceCatalog
+            # class
             except (NotImplementedError, NoDataAvailableError):
                 continue
 
             if source.pointlike:
                 # use 5 pixel bbox for point-like models
                 size = BBOX_DELTA2D_PIX * image.wcs_pixel_scale().to('deg')
-                solid_angle = 1.
             else:
                 height, width = np.diff(spatial_model.bounding_box)
                 size = (float(height) * u.deg, float(width) * u.deg)
 
             cutout = image.cutout(source.position, size=size)
 
-            if not source.pointlike:
+            if source.pointlike:
+                solid_angle = 1.
+            else:
                 solid_angle = cutout.solid_angle().to('deg2').value
 
             # evaluate model on smaller image and paste
@@ -113,8 +113,7 @@ class CatalogImageEstimator(object):
         return image
 
     def run(self, catalog, which='flux'):
-        """
-        Run catalog image estimator.
+        """Run catalog image estimator.
 
         Parameters
         ----------
@@ -128,6 +127,8 @@ class CatalogImageEstimator(object):
         """
         result = SkyImageList()
 
+        #TODO: add input image list and computed derived quantities such as
+        # excess, psf convolution etc.
         if 'flux' in which:
             result['flux'] = self.flux(catalog)
 

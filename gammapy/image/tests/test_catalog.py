@@ -73,22 +73,44 @@ def test_catalog_table():
 
 
 class TestCatalogImageEstimator(object):
-    def setup(self):
-        self.reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=41,
-                                        nxpix=41, binsz=0.1)
-        self.estimator = CatalogImageEstimator(reference=self.reference,
-                                               emin=1 * u.TeV,
-                                               emax=1E4 * u.TeV)
     @requires_data('gammapy-extra')
     def test_flux_gammacat(self):
         from ...catalog import SourceCatalogGammaCat
+        reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=41,
+                                   nxpix=41, binsz=0.1)
+
         catalog = SourceCatalogGammaCat()
-        result = self.estimator.run(catalog)
+        estimator = CatalogImageEstimator(reference=reference,
+                                          emin=1 * u.TeV,
+                                          emax=1E4 * u.TeV)
+
+        result = estimator.run(catalog)
 
         actual = result['flux'].data.sum()
-        selection = catalog.select_image_region(self.reference)
+        selection = catalog.select_image_region(reference)
 
         assert len(selection.table) == 3
 
         desired = selection.table['spec_flux_above_1TeV'].sum()
         assert_allclose(actual, desired, rtol=1E-3)
+
+    @requires_data('gammapy-extra')
+    def test_flux_3FHL(self):
+        from ...catalog import SourceCatalog3FHL
+        reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=81,
+                                   nxpix=81, binsz=0.1)
+
+        catalog = SourceCatalog3FHL()
+        estimator = CatalogImageEstimator(reference=reference,
+                                          emin=10 * u.GeV,
+                                          emax=1000 * u.GeV)
+
+        result = estimator.run(catalog)
+
+        actual = result['flux'].data.sum()
+        selection = catalog.select_image_region(reference)
+
+        assert len(selection.table) == 7
+
+        desired = selection.table['Flux'].sum()
+        assert_allclose(actual, desired, rtol=1E-2)

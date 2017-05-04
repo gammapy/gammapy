@@ -10,10 +10,13 @@ from astropy.table import QTable, Table
 from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.tests.helper import ignore_warnings
+from astropy.modeling.models import Gaussian2D, Disk2D, Ring2D
+from astropy.coordinates import Angle
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise
 from ..image import SkyImage
+from ..image.models import Delta2D, Template2D
 from ..spectrum import (
     FluxPoints,
     compute_flux_points_dnde
@@ -641,6 +644,53 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
         return FluxPoints(table)
+
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Source spatial model.
+        """
+        d = self.data
+        flux = self.spectral_model.integral(emin, emax)
+        amplitude = flux.to('cm-2 s-1').value
+
+        pars = {}
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        if self.pointlike:
+            pars['amplitude'] = amplitude
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
+        else:
+            de = self.data_extended
+            morph_type = de['Spatial_Function'].strip()
+
+            if morph_type == 'RadialDisk':
+                pars['x_0'] = glon.value
+                pars['y_0'] = glat.value
+                pars['R_0'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] =  amplitude / (np.pi * pars['R_0'] ** 2)
+                return Disk2D(**pars)
+            elif morph_type == 'SpatialMap':
+                filename = de['Spatial_Filename'].strip()
+                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17/Templates/'
+                template = Template2D.read(base + filename)
+                template.amplitude = amplitude
+                return template
+            elif morph_type == 'RadialGauss':
+                pars['x_mean'] = glon.value
+                pars['y_mean'] = glat.value
+                pars['x_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['y_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
+                return Gaussian2D(**pars)
+            else:
+                raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def pointlike(self):
+        return self.data['Extended_Source_Name'].strip() == ''
 
 
 class SourceCatalog3FGL(SourceCatalog):

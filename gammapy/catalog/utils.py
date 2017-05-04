@@ -259,8 +259,7 @@ def skycoord_from_table(table):
     else:
         raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
 
-    unit = table[lon].unit if table[lon].unit else 'deg'
-
+    unit = table[lon].unit.to_string() if table[lon].unit else 'deg'
     skycoord = SkyCoord(table[lon], table[lat], unit=unit, frame=frame)
 
     return skycoord
