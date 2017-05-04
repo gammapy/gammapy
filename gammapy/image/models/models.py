@@ -8,6 +8,7 @@ import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
 from astropy.utils import lazyproperty
+from astropy.coordinates import SkyCoord
 from ..core import SkyImage
 
 __all__ = [
@@ -364,7 +365,7 @@ class Template2D(Fittable2DModel):
         x = np.arange(self.image.data.shape[1])
 
         data_normed = self.image.data / self.image.data.sum()
-        data_normed /= self.image.solid_angle()
+        data_normed /= self.image.solid_angle().to('deg2').value
 
         f = RegularGridInterpolator((y, x), data_normed, fill_value=0,
                                     bounds_error=False)
@@ -391,7 +392,8 @@ class Template2D(Fittable2DModel):
         return cls(template)
 
     def evaluate(self, x, y, amplitude):
-        y_pix, x_pix = self.image.wcs.wcs_world2pix(y, x, 0)
+        coord = SkyCoord(x, y, frame='galactic', unit='deg')
+        x_pix, y_pix = self.image.wcs_skycoord_to_pixel(coord)
         values = self._interpolate_data(y_pix, x_pix)
         return amplitude * values
 
