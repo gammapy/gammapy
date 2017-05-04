@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian2D
 from astropy.modeling.tests.test_models import Fittable2DModelTester
-from ..models import Sphere2D, Shell2D, Delta2D
-from ....utils.testing import requires_dependency
+from ..models import Sphere2D, Shell2D, Delta2D, Template2D
+from ....utils.testing import requires_dependency, requires_data
 
 models_2D = {
 
@@ -81,6 +81,15 @@ def test_delta2d_against_gauss(x_0, y_0):
     values_convolved = gaussian_filter(values, width, mode='constant')
     values_gauss = gauss(x, y)
     assert_allclose(values_convolved, values_gauss, atol=1E-4)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_template2d():
+    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17'
+                '/Templates/HESSJ1841-055.fits')
+    template = Template2D.read(filename)
+    assert_allclose(template(26.7, 0), 1.1553735159851262)
 
 
 @pytest.mark.parametrize(('model_class', 'test_parameters'), list(models_2D.items()))
