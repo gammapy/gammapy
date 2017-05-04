@@ -120,7 +120,7 @@ class TSImageEstimator(object):
     [Stewart2009]_
     """
     def __init__(self, kernel, downsample='auto', method='root brentq',
-                 parallel=True, threshold=None, sensitivity_ts=25):
+                 parallel=True, threshold=None):
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -128,7 +128,7 @@ class TSImageEstimator(object):
         self.kernel = kernel
 
         if not method in ['root brentq', 'root newton', 'leastsq iter']:
-            raise ValueError()
+            raise ValueError("Not a valid method: '{}'".format(method))
 
         self.parameters = OrderedDict(downsample=downsample, method=method,
                                       parallel=parallel, threshold=threshold)
@@ -205,7 +205,7 @@ class TSImageEstimator(object):
         result = SkyImageList()
 
         if which == 'all':
-            which = ['ts', 'sqrt_ts', 'flux', 'flux_err',
+            which = ['ts', 'sqrt_ts', 'flux', 'flux_err', 'flux_err_profile',
                      'niter']
 
         for name in which:
@@ -241,7 +241,7 @@ class TSImageEstimator(object):
 
         # Set TS values at given positions
         j, i = zip(*positions)
-        for name in ['ts', 'flux', 'flux_err', 'niter']:
+        for name in ['ts', 'flux', 'flux_err', 'flux_err_profile', 'niter']:
             result[name].data[j, i] = [_[name] for _ in results]
 
         # Compute sqrt(TS) values
@@ -469,6 +469,7 @@ def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
     result['flux'] = amplitude * FLUX_FACTOR
     result['niter'] = niter
     result['flux_err'] = _compute_amplitude_err(amplitude, counts_, background_, model)
+    result['flux_err_profile'] = FLUX_FACTOR * _compute_amplitude_err_profile(amplitude, counts_, background_, model, c_1)
     return result
 
 
@@ -516,10 +517,34 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
 
 def _compute_amplitude_err(x, counts, background, model):
     """
-    Compute amplitude errors using inverse 2nd derivative.
+    Compute amplitude errors using inverse 2nd derivative method.
     """
-    stat = (model ** 2 * counts) / (background + x * FLUX_FACTOR * model) ** 2
-    return np.sqrt(1. / stat.sum())
+    with np.errstate(invalid='ignore', divide='ignore'):
+        stat = (model ** 2 * counts) / (background + x * FLUX_FACTOR * model) ** 2
+        return np.sqrt(1. / stat.sum())
+
+
+def _compute_amplitude_err_profile(amplitude, counts, background, model, c_1):
+    """
+    Compute amplitude errors using inverse likelihood profile method.
+    """
+    from scipy.optimize import brentq
+
+    def ts_diff(x, counts, background, model):
+        return (c_1 + 1) - f_cash(x, counts, background, model)
+
+    args = (counts, background, model)
+
+    amplitude_max = amplitude + 1E4
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            result = brentq(ts_diff, amplitude, amplitude_max, args=args,
+                            maxiter=MAX_NITER, rtol=1e-3)
+            return result - amplitude
+        except (RuntimeError, ValueError):
+            # Where the root finding fails NaN is set as amplitude
+            return np.nan
 
 
 def _root_amplitude(counts, background, model, flux):
