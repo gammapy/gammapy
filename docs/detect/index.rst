@@ -22,15 +22,15 @@ Computation of TS images
 .. gp-extra-image:: fermi_ts_image.png
     :scale: 100%
 
-Test statistics image computed using `~gammapy.detect.compute_ts_image` for an
+Test statistics image computed using `~gammapy.detect.TSImageEstimator` for an
 example Fermi dataset.
 
-The `gammapy.detect` module includes a high performance `~gammapy.detect.compute_ts_image` function to
+The `gammapy.detect` module includes a high performance `~gammapy.detect.TSImageEstimator` class to
 compute test statistics (TS) images for gamma-ray survey data. The implementation is based on the method
 described in [Stewart2009]_.
 
 Assuming a certain source morphology, which can be defined by any `astropy.convolution.Kernel2D`
-instance, the amplitude of the morphology model is fitted at every pixel of the input data using a 
+instance, the amplitude of the morphology model is fitted at every pixel of the input data using a
 Poisson maximum likelihood procedure. As input data a counts, background and exposure images have to be provided.
 Based on the best fit flux amplitude, the change in TS, compared to the null hypothesis is computed
 using `~gammapy.stats.cash` statistics.
@@ -47,11 +47,11 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 
 	from astropy.convolution import Gaussian2DKernel
 	from gammapy.image import SkyImageList
-	from gammapy.detect import compute_ts_image
+	from gammapy.detect import TSImageEstimator
 	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 	kernel = Gaussian2DKernel(5)
-	result = compute_ts_image(images['COUNTS'], images['BACKGROUND'],
-							  images['EXPOSURE'], kernel)
+    ts_estimator = TSImageEstimator()
+	result = ts_estimator.run(images, kernel)
 
 The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
@@ -81,18 +81,18 @@ on the Fermi example dataset by:
 	$ gammapy-image-ts all.fits.gz ts_image_0.00.fits --scale 0
 
 The command line tool additionally requires a psf json file, where the psf shape
-is defined by the parameters of a triple Gaussian model. See also 
+is defined by the parameters of a triple Gaussian model. See also
 `gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
-a Gaussian source kernel, where the width in degree can be defined by the 
+a Gaussian source kernel, where the width in degree can be defined by the
 ``--scale`` parameter. Multiple scales can be selected by passing a list to the
 ``scales`` parameter.  When setting ``--scale 0`` only the psf is used as source
 model, which is the preferred setting to detect point sources. When using scales
 that are larger than five times the binning of the data, the data is sampled down
-and later sampled up again to speed up the performance. See 
-`~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.   
+and later sampled up again to speed up the performance. See
+`~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.
 
 Furthermore it is possible to compute residual TS images. Using the following options:
- 
+
 .. code-block:: bash
 
 	$ gammapy-image-ts all.fits.gz residual_ts_image_0.00.fits --scale 0 --residual --model model.fits.gz
@@ -124,7 +124,7 @@ images such as significance, flux and correlated counts and excess images.
 Iterative source detection
 ==========================
 
-In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection. 
+In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection.
 It takes as arguments count, background and exposure FITS images (in separate files, unlike previous tool)
 and a list of ``--scales`` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
 
