@@ -22,10 +22,10 @@ def test_compute_ts_map():
     images['background'] = images['background'].downsample(2, np.nansum)
     images['exposure'] = images['exposure'].downsample(2, np.mean)
 
-    ts_estimator = TSImageEstimator(kernel=kernel, method='leastsq iter')
-    result = ts_estimator.run(images)
+    ts_estimator = TSImageEstimator(method='leastsq iter')
+    result = ts_estimator.run(images, kernel=kernel)
 
-    for name, order in zip(['ts', 'flux', 'niter'], [2, 5, 0]):
+    for name, order in zip(['ts', 'flux', 'flux_err', 'niter'], [2, 5, 5, 0]):
         result[name].data = np.nan_to_num(result[name].data)
         result[name] = result[name].upsample(2, order=order)
 
@@ -33,3 +33,4 @@ def test_compute_ts_map():
     assert_allclose([[99], [99]], np.where(result['ts'].data == result['ts'].data.max()))
     assert_allclose(3, result['niter'].data[99, 99])
     assert_allclose(1.0227934338735763e-09, result['flux'].data[99, 99], rtol=1e-3)
+    assert_allclose(3.842162268386843e-11, result['flux_err'].data[99, 99], rtol=1e-3)
