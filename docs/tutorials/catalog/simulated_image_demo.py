@@ -6,7 +6,7 @@ import astropy.units as u
 from aplpy import FITSFigure
 from gammapy.astro import population
 from gammapy.datasets import FermiGalacticCenter
-from gammapy.image import SkyImage, catalog_image
+from gammapy.image.catalog import SkyImage, catalog_image
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.utils.random import sample_powerlaw
 

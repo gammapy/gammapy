@@ -21,8 +21,7 @@ __all__ = [
 
 
 class Shell2D(Fittable2DModel):
-    """
-    Projected homogeneous radiating shell model.
+    """Projected homogeneous radiating shell model.
 
     This model can be used for a shell type SNR source morphology.
 
@@ -47,7 +46,7 @@ class Shell2D(Fittable2DModel):
 
     See Also
     --------
-    Sphere2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
+    Sphere2D, Delta2D, Gaussian2D
 
     Notes
     -----
@@ -162,8 +161,7 @@ class Shell2D(Fittable2DModel):
 
 
 class Sphere2D(Fittable2DModel):
-    """
-    Projected homogeneous radiating sphere model.
+    """Projected homogeneous radiating sphere model.
 
     This model can be used for a simple PWN source morphology.
 
@@ -182,10 +180,9 @@ class Sphere2D(Fittable2DModel):
         function. If not set the 'amplitude' parameter corresponds to the
         peak value of the function (value at :math:`r = 0`).
 
-
     See Also
     --------
-    Shell2D, Delta2D, `~astropy.modeling.models.Gaussian2D`
+    Shell2D, Delta2D, Gaussian2D
 
     Notes
     -----
@@ -278,8 +275,7 @@ class Sphere2D(Fittable2DModel):
 
 
 class Delta2D(Fittable2DModel):
-    """
-    Two dimensional delta function .
+    """Two dimensional delta function .
 
     This model can be used for a point source morphology.
 
@@ -291,10 +287,6 @@ class Delta2D(Fittable2DModel):
         x position center of the point source
     y_0 : float
         y position center of the point source
-
-    See Also
-    --------
-    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
 
     Notes
     -----
@@ -308,6 +300,10 @@ class Delta2D(Fittable2DModel):
                         0 & : else
                     \\end{array}
                 \\right.
+
+    See Also
+    --------
+    Shell2D, Sphere2D, Gaussian2D
 
     """
 
@@ -336,8 +332,7 @@ class Delta2D(Fittable2DModel):
 
 
 class Template2D(Fittable2DModel):
-    """
-    Two dimensional table model .
+    """Two dimensional table model.
 
     Parameters
     ----------
@@ -346,7 +341,7 @@ class Template2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Sphere2D, `~astropy.modeling.models.Gaussian2D`
+    Shell2D, Sphere2D, Gaussian2D
 
     """
     amplitude = Parameter('amplitude')
