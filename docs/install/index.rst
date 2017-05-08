@@ -24,7 +24,7 @@ Stable version
 
 You can install the latest stable version of Gammapy with conda::
 
-  conda install -c openastronomy gammapy
+  conda install -c astropy gammapy
 
 or with pip::
 
