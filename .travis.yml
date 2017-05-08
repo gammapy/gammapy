@@ -26,6 +26,7 @@ env:
     global:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
+
         - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject'
         - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa regions reproject'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils regions reproject'
@@ -33,10 +34,15 @@ env:
         - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy regions reproject'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy sherpa libgfortran runipy regions reproject'
         - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy libgfortran runipy regions reproject'
+
         - PIP_DEPENDENCIES='uncertainties'
+
         - CONDA_CHANNELS='conda-forge astropy sherpa'
+
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
+        - PACKAGING_TEST=false
+
         - MAIN_CMD='python setup.py'
 
     matrix:
@@ -60,26 +66,20 @@ matrix:
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
-        # Temporarily disabled because of this issue:
-        # https://travis-ci.org/gammapy/gammapy/jobs/115820975
-        # https://github.com/gammapy/gammapy/pull/483
-        # Test the dev version of Sherpa, this may take a longer time
-        #- os: linux
-        #  env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-        #       CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
-        #       PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
-
-
         # The main build that's used for coverage measurement
         - os: linux
           env: PYTHON_VERSION=3.6 SETUP_CMD='test -V --coverage'
 
-        # Older Python versions
+        # Run tests without optional dependencies
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES='Cython click regions'
+               PIP_DEPENDENCIES=''
 
+        # Run tests without GAMMAPY_EXTRA available
         - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.6 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Build docs
         - os: linux
@@ -89,10 +89,19 @@ matrix:
           env: PYTHON_VERSION=3.6 SETUP_CMD='build_docs -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
-        # Run tests without GAMMAPY_EXTRA available
+        # Test conda build (which runs a bunch of useful tests after building the package)
+        # See https://conda.io/docs/bdist_conda.html
         - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.6 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='conda'
+               PACKAGING_TEST=true
+
+        # Older Python versions
+        - os: linux
+          env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
+
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+
 
         # Test with Astropy dev and LTS versions
 #        - os: linux
@@ -107,16 +116,15 @@ matrix:
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
-        # Run tests without optional dependencies
-        - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click regions'
-               PIP_DEPENDENCIES=''
+        # Temporarily disabled because of this issue:
+        # https://travis-ci.org/gammapy/gammapy/jobs/115820975
+        # https://github.com/gammapy/gammapy/pull/483
+        # Test the dev version of Sherpa, this may take a longer time
+        #- os: linux
+        #  env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+        #       CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
+        #       PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
 
-        - os: linux
-          env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click regions'
-               PIP_DEPENDENCIES=''
 
         # Test with other numpy versions
         - os: linux
@@ -158,6 +166,17 @@ install:
     - if $FETCH_GAMMA_CAT; then
           git clone https://github.com/gammapy/gamma-cat.git $HOME/gamma-cat;
           export GAMMA_CAT=${HOME}/gamma-cat;
+      fi
+
+    # From https://conda.io/docs/bdist_conda.html
+    # bdist_conda must be installed into a root conda environment,
+    # as it imports conda and conda_build. It is included as part of the conda build package.
+    - if $PACKAGING_TEST; then
+          conda install -n root conda-build astropy Cython click regions;
+          conda info;
+          conda --version;
+          conda build --version;
+          source activate root;
       fi
 
     # This is needed to make matplotlib plot testing work
