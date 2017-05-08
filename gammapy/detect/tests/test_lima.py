@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy.convolution import Tophat2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import compute_ts_image, compute_lima_image, compute_lima_on_off_image
+from ...detect import TSImageEstimator, compute_lima_image, compute_lima_on_off_image
 from ...image import SkyImageList
 
 
@@ -22,12 +22,11 @@ def test_compute_lima_image():
         images['counts'], images['background'], kernel, images['exposure'],
     )
     kernel.normalize('integral')
-    result_ts = compute_ts_image(
-        images['counts'], images['background'], images['exposure'], kernel,
-    )
+    ts_estimator = TSImageEstimator()
+    result_ts = ts_estimator.run(images, kernel)
 
     assert_allclose(result_ts['sqrt_ts'], result_lima['significance'], atol=1e-3)
-    assert_allclose(result_ts['amplitude'], result_lima['flux'], atol=3e-12)
+    assert_allclose(result_ts['flux'], result_lima['flux'], atol=3e-12)
 
 
 @requires_dependency('scipy')

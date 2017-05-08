@@ -317,8 +317,7 @@ class Delta2D(Fittable2DModel):
 
     @staticmethod
     def evaluate(x, y, amplitude, x_0, y_0):
-        """
-        Two dimensional delta model function using a local rectangular pixel
+        """Two dimensional delta model function using a local rectangular pixel
         approximation.
         """
         _, grad_x = np.gradient(x)

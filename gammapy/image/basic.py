@@ -12,6 +12,7 @@ from .core import SkyImage
 from .lists import SkyImageList
 
 __all__ = [
+    'BasicImageEstimator',
     'IACTBasicImageEstimator',
     'FermiLATBasicImageEstimator',
 ]
@@ -87,7 +88,10 @@ class BasicImageEstimator(object):
         images.check_required(['counts', 'background', 'exposure'])
         flux = SkyImage.empty_like(images['counts'], name='flux')
         excess = images['counts'].data - images['background'].data
-        flux.data = (excess / images['exposure'].data)
+
+        with np.errstate(invalid='ignore', divide='ignore'):
+            flux.data = (excess / images['exposure'].data)
+
         is_zero = images['exposure'].data == 0
         flux.data[is_zero] = 0
         return flux

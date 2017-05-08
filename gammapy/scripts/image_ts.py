@@ -76,7 +76,8 @@ def run_image_ts(input_file, output_file, psf, model, scales, downsample, residu
         images['model'] = SkyImage.read(model)
 
     results = compute_ts_image_multiscale(images, psf_parameters, scales, downsample,
-                                          residual, morphology, width, threshold)
+                                          residual, morphology, width,
+                                          threshold=threshold)
 
     filename = Path(output_file).name
     folder = Path(output_file).parent
