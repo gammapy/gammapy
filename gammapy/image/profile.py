@@ -269,27 +269,6 @@ class ImageProfileEstimator(object):
             x_edges = lon.wrap_at('180d')
         return x_edges
 
-    def _label_image(self, image):
-        """
-        Compute label image.
-        """
-        p = self.parameters
-
-        label_image = SkyImage.empty_like(image)
-        coordinates = image.coordinates()
-        x_edges = self._get_x_edges(image)
-
-        if p['axis'] == 'lon':
-            lon = coordinates.data.lon.wrap_at('180d')
-            data = np.digitize(lon.degree, x_edges.deg)
-
-        elif p['axis'] == 'lat':
-            lat = coordinates.data.lat
-            data = np.digitize(lat.degree, x_edges.deg)
-
-        label_image.data = data
-        return label_image
-
     def _estimate_profile(self, image, image_err, mask):
         """
         Estimate image profile.
