@@ -69,4 +69,4 @@ def cosmic_ray_flux(energy, particle='proton'):
     elif particle in ['proton', 'He', 'N', 'Si', 'Fe']:
         return _power_law(energy, **pars[particle])
     else:
-        raise ValueError('Invalid argument for particle: {0}'.format(particle))
+        raise ValueError('Invalid argument for particle: {}'.format(particle))

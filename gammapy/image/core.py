@@ -632,8 +632,8 @@ class SkyImage(MapBase):
         shape = self.data.shape
 
         if not (np.mod(shape, factor) == 0).all():
-            raise ValueError('Data shape {0} is not divisable by {1} in all axes.'
-                             'Pad image prior to downsamling to correct'
+            raise ValueError('Data shape {} is not divisible by {} in all axes.'
+                             'Pad image prior to downsampling to correct'
                              ' shape.'.format(shape, factor))
 
         data = block_reduce(self.data, (factor, factor), method)
@@ -889,7 +889,7 @@ class SkyImage(MapBase):
         if add_cbar:
             unit = self.unit or 'A.U.'
             label = self.name or 'None'
-            cbar = fig.colorbar(caxes, ax=ax, label='{0} ({1})'.format(label.title(), unit))
+            cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label.title(), unit))
         else:
             cbar = None
 

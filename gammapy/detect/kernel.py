@@ -207,13 +207,13 @@ class KernelBackgroundEstimator(object):
             ax_bkg = fig.add_subplot(niter_max + 1, 2, 2 * idx + 1, projection=wcs)
             bkg = images['background']
             bkg.plot(ax=ax_bkg, vmin=0)
-            ax_bkg.set_title('Background, N_iter = {0}'.format(idx),
+            ax_bkg.set_title('Background, N_iter = {}'.format(idx),
                              fontsize='small')
 
             ax_sig = fig.add_subplot(niter_max + 1, 2, 2 * idx + 2, projection=wcs)
             sig = images['significance']
             sig.plot(ax=ax_sig, vmin=0, vmax=20)
-            ax_sig.set_title('Significance, N_Iter = {0}'.format(idx),
+            ax_sig.set_title('Significance, N_Iter = {}'.format(idx),
                              fontsize='small')
             mask = images['exclusion'].data
             ax_sig.contour(mask, levels=[0], linewidths=2, colors='green')

@@ -123,8 +123,8 @@ def ra_iau_format(ra, digits):
     strrepr : str
         IAU format string representation of the angle.
     """
-    if (not isinstance(digits, int)) and (digits >= 2):
-        raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
+    if not isinstance(digits, int) and (digits >= 2):
+        raise ValueError('Invalid digits: {}. Valid options: int >= 2'.format(digits))
 
     if ra.isscalar:
         out = _ra_iau_format_scalar(ra, digits)
@@ -193,7 +193,7 @@ def dec_iau_format(dec, digits):
         IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and digits >= 2:
-        raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
+        raise ValueError('Invalid digits: {}. Valid options: int >= 2'.format(digits))
 
     if dec.isscalar:
         out = _dec_iau_format_scalar(dec, digits)
@@ -215,20 +215,20 @@ def _dec_iau_format_scalar(dec, digits):
     dec_s = abs(dec.dms[2])
 
     if digits == 2:  # format: +DD
-        dec_str = '{0}{1:02d}'.format(dec_sign, dec_d)
+        dec_str = '{}{:02d}'.format(dec_sign, dec_d)
     elif digits == 3:  # format: +DDd
-        dec_str = '{0:+04d}'.format(int(10 * dec.deg))
+        dec_str = '{:+04d}'.format(int(10 * dec.deg))
     elif digits == 4:  # format : +DDMM
-        dec_str = '{0}{1:02d}{2:02d}'.format(dec_sign, dec_d, dec_m)
+        dec_str = '{}{:02d}{:02d}'.format(dec_sign, dec_d, dec_m)
     elif digits == 5:  # format: +DDMM.m
-        dec_str = '{0}{1:02d}{2:02d}.{3:01d}'.format(dec_sign, dec_d, dec_m, int(dec_s / 6))
+        dec_str = '{}{:02d}{:02d}.{:01d}'.format(dec_sign, dec_d, dec_m, int(dec_s / 6))
     elif digits == 6:  # format: +DDMMSS
-        dec_str = '{0}{1:02d}{2:02d}.{3:02d}'.format(dec_sign, dec_d, dec_m, int(dec_s))
+        dec_str = '{}{:02d}{:02d}.{:02d}'.format(dec_sign, dec_d, dec_m, int(dec_s))
     else:  # format: +DDMMSS.s
         SS = int(dec_s)
         s_digits = digits - 6
         s = int(10 ** s_digits * (dec_s - SS))
-        fmt = '{0}{1:02d}{2:02d}{3:02d}.{4:0' + str(s_digits) + 'd}'
+        fmt = '{}{:02d}{:02d}{:02d}.{:0' + str(s_digits) + 'd}'
         dec_str = fmt.format(dec_sign, dec_d, dec_m, SS, s)
 
     return dec_str
@@ -434,11 +434,11 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
     if radius is not None:
         shape = 'galactic;circle({0:.5f},{1:.5f},{2:.5f}) #'
     else:
-        shape = 'galactic;point({0:.5f},{1:.5f})' + ' # point = {0}'.format(marker)
+        shape = 'galactic;point({0:.5f},{1:.5f})' + ' # point = {}'.format(marker)
     shape += format_
 
     text = 'galactic;text({0:5f},{1:5f}) # text = {{{2}}} '
-    text += 'color = {0}\n'.format(color)
+    text += 'color = {}\n'.format(color)
 
     for row in catalog:
         label_ = row[label] if label is not None else ''
@@ -482,7 +482,7 @@ def _get_cross_ds9_region(x, y, unc_x, unc_y, color, width, endbar=0.01):
     endbar : float (default = 0.01)
         Length of the endbar in deg.
     """
-    format_line = ' color = {0} width = {1}\n'.format(color, width)
+    format_line = ' color = {} width = {}\n'.format(color, width)
     line_ = ''
     line = 'galactic;line({0:.5f},{1:.5f},{2:.5f},{3:.5f}) #'
     line_ += line.format(x - unc_x, y, x + unc_x, y) + format_line

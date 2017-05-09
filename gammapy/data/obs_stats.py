@@ -195,7 +195,7 @@ class ObservationStats(Stats):
         """Observation statistics report (`str`)."""
         ss = '*** Observation summary report ***\n'
         if type(self.obs_id) is list:
-            obs_str = '[{0}-{1}]'.format(self.obs_id[0], self.obs_id[-1])
+            obs_str = '[{}-{}]'.format(self.obs_id[0], self.obs_id[-1])
         else:
             obs_str = '{}'.format(self.obs_id)
         ss += 'Observation Id: {}\n'.format(obs_str)

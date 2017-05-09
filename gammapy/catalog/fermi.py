@@ -909,7 +909,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     elif catalog == '2PC':
         url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)
@@ -965,7 +965,7 @@ def fetch_fermi_extended_sources(catalog):
     elif catalog == '1FHL':
         url = BASE_URL + '1FHL/LAT_extended_sources_v12.tar'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)

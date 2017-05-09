@@ -210,7 +210,7 @@ class ObservationSummary(object):
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Significance ($\sigma$)')
         ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
                  0., np.amax(self.sigma) * 1.2])
@@ -234,7 +234,7 @@ class ObservationSummary(object):
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.excess, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Excess')
         ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
                  0., np.amax(self.excess) * 1.2])
@@ -258,7 +258,7 @@ class ObservationSummary(object):
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.background, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Background')
         ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
                  0., np.amax(self.background) * 1.2])

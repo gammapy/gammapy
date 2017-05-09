@@ -37,6 +37,7 @@ def diffuse_gamma_ray_flux(energy, component='isotropic'):
     """
     # flux = Quantity(1, 'm^-2 s^-1 TeV^-1 sr^-1')
     if component == 'isotropic':
+        # TODO: fix!
         # Reference: abstract from this Fermi paper:
         # http://adsabs.harvard.edu/abs/2010PhRvL.104j1101A
         integral_flux = Quantity(1.03e-5, 'cm^-2 s^-1 sr^-1')
@@ -47,4 +48,4 @@ def diffuse_gamma_ray_flux(energy, component='isotropic'):
     elif component == 'galactic_fermi2':
         raise NotImplementedError
     else:
-        raise ValueError('Invalid argument for component: {0}'.format(component))
+        raise ValueError('Invalid argument for component: {}'.format(component))

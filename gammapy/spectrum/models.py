@@ -314,7 +314,7 @@ class SpectralModel(object):
     def _plot_format_ax(self, ax, energy, y, energy_power):
         ax.set_xlabel('Energy [{}]'.format(energy.unit))
         if energy_power > 0:
-            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, y.unit))
+            ax.set_ylabel('E{} * Flux [{}]'.format(energy_power, y.unit))
         else:
             ax.set_ylabel('Flux [{}]'.format(y.unit))
         ax.set_xscale("log", nonposx='clip')
@@ -965,7 +965,7 @@ class TableModel(SpectralModel):
         param_min = table_param['MINIMUM']
         param_max = table_param['MAXIMUM']
         if param < param_min or param > param_max:
-            err = 'Parameter out of range, param={0}, param_min={1}, param_max={2}'.format(
+            err = 'Parameter out of range, param={}, param_min={}, param_max={}'.format(
                 param, param_min, param_max)
             raise ValueError(err)
 

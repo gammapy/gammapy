@@ -517,7 +517,7 @@ class ObservationGroupAxis(object):
     @property
     def info(self):
         """Info string (str)."""
-        s = "{0} {1} {2}".format(self.name, self.fmt, self.bins)
+        s = "{} {} {}".format(self.name, self.fmt, self.bins)
         return s
 
 
