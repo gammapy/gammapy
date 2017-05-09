@@ -21,6 +21,26 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Dropped support for Python 3.4. (probably everything still works with Python 3.4, but we don't
   test with Python 3.4 anymore in our continuous integration).
 
+**Contributors:**
+
+- Axel Donath
+- Brigitta Sipocz
+- Christoph Deil
+- Johannes King
+- Rubén López-Coto (new)
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
+
+- [#1021] Fix spiralarm=False case in make_base_catalog_galactic (Ruben Lopez-Coto)
+- [#1014] Introduce TSImageEstimator class (Axel Donath)
+- [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
+- [#845] Add background model component to SpectrumFit (Johannes King)
+
 .. _gammapy_0p6_release:
 
 0.6 (April 28, 2017)
