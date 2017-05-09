@@ -1,23 +1,24 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-# Requires sherpa 4.9
+from collections import OrderedDict
 import numpy as np
-
 from astropy import units as u
-
-from sherpa.models import ArithmeticModel, Parameter
-from sherpa.data import DataND, BaseData, Data
+from sherpa.models import ArithmeticModel
+from sherpa.data import BaseData, Data
 from sherpa.stats import Likelihood
 from sherpa.optmethods import LevMar, NelderMead, MonCar, GridSearch
 
+__all__ = [
+    'SherpaDataWrapper',
+    'SherpaModelWrapper',
+    'SherpaStatWrapper',
+]
 
-__all__ = ['SherpaDataWrapper',
-           'SherpaModelWrapper',
-           'SherpaStatWrapper']
-
-
-SHERPA_OPTMETHODS = {'simplex': NelderMead(),
-                     'moncar': MonCar(),
-                     'gridsearch': GridSearch()}
+SHERPA_OPTMETHODS = OrderedDict()
+SHERPA_OPTMETHODS['levmar'] = LevMar()
+SHERPA_OPTMETHODS = OrderedDict()
+SHERPA_OPTMETHODS['simplex'] = NelderMead()
+SHERPA_OPTMETHODS['moncar'] = MonCar()
+SHERPA_OPTMETHODS['gridsearch'] = GridSearch()
 
 
 class SherpaDataWrapper(Data):
@@ -56,9 +57,9 @@ class SherpaStatWrapper(Likelihood):
 
 
 class SherpaModelWrapper(ArithmeticModel):
+    """Wrapper to call Gammapy models from sherpa.
     """
-    Wrapper to call gammapy models from sherpa.
-    """
+
     def __init__(self, gp_model):
         self.gp_model = gp_model
         self.parts = (self,)
