@@ -16,7 +16,7 @@ catalog_browser = Blueprint('catalog_browser', __name__, static_folder='static')
 def view_index():
     form = CatalogBrowserForm()
 
-    if not 'catalog_name' in session:
+    if 'catalog_name' not in session:
         # This should only be executed once on start-up
         log.info('Using default values for session!')
         # TODO: this is an odd pattern to copy over the default.

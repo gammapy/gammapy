@@ -33,8 +33,7 @@ def check_main(args=None):
 
     data_parser = subparsers.add_parser('fitsexport', help='Test fits data')
     data_parser.add_argument('--directory', default='out', type=str,
-                            help="FITS export output folder")
-
+                             help="FITS export output folder")
 
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
@@ -93,4 +92,3 @@ def run_test_fitsexport(directory):
     fit, analysis = run_spectrum_analysis_using_config(config)
     res = SpectrumResult(fit=fit.result, stats=analysis.observations.total_spectrum.spectrum_stats)
     print(res.to_table())
-
