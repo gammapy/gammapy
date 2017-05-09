@@ -3,22 +3,17 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
 from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy import units as u
 from astropy.table import Table
-
-from .models import Delta2D
 from .core import SkyImage
 from .lists import SkyImageList
-
 
 __all__ = [
     'CatalogImageEstimator',
 ]
-
 
 BBOX_DELTA2D_PIX = 5
 
@@ -40,21 +35,22 @@ class CatalogImageEstimator(object):
     Examples
     --------
 
-    from astropy import units as u
-    from gammapy.image import SkyImage, CatalogImageEstimator
-    from gammapy.catalog import SourceCatalogGammaCat
+    ::
 
-    reference = SkyImage.empty(xref=265, yref=-1.5, nxpix=201,
-                               nypix=201, binsz=0.04)
-
-    image_estimator = CatalogImageEstimator(reference=reference,
-                                            emin=1 * u.TeV,
-                                            emax=10 * u.TeV)
-
-    catalog = SourceCatalogGammaCat()
-    result = image_estimator.run(catalog)
-    result['flux'].show()
-
+        from astropy import units as u
+        from gammapy.image import SkyImage, CatalogImageEstimator
+        from gammapy.catalog import SourceCatalogGammaCat
+    
+        reference = SkyImage.empty(xref=265, yref=-1.5, nxpix=201,
+                                   nypix=201, binsz=0.04)
+    
+        image_estimator = CatalogImageEstimator(reference=reference,
+                                                emin=1 * u.TeV,
+                                                emax=10 * u.TeV)
+    
+        catalog = SourceCatalogGammaCat()
+        result = image_estimator.run(catalog)
+        result['flux'].show()
     """
 
     def __init__(self, reference, emin, emax):
@@ -85,7 +81,7 @@ class CatalogImageEstimator(object):
         for source in selection:
             try:
                 spatial_model = source.spatial_model(emin=p['emin'], emax=p['emax'])
-            #TODO: remove this error handling and add selection to SourceCatalog
+            # TODO: remove this error handling and add selection to SourceCatalog
             # class
             except (NotImplementedError, NoDataAvailableError):
                 continue
@@ -127,7 +123,7 @@ class CatalogImageEstimator(object):
         """
         result = SkyImageList()
 
-        #TODO: add input image list and computed derived quantities such as
+        # TODO: add input image list and computed derived quantities such as
         # excess, psf convolution etc.
         if 'flux' in which:
             result['flux'] = self.flux(catalog)
@@ -163,11 +159,13 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
         source_table = catalog_table(catalog, energy_bands=False)
     else:
         source_table = sim_table
+
     energies = source_table.meta['Energy Bins']
     wcs_reference = reference_cube.wcs
     footprint = wcs_reference.calc_footprint()
     glon_max, glon_min = footprint[0][0], footprint[2][0] - 360
     glat_min, glat_max = footprint[0][1], footprint[1][1]
+
     for source in np.arange(len(source_table['flux'])):
         lon = source_table['GLON'][source]
         if lon >= 180:
@@ -181,6 +179,7 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
                 x, y = wcs.wcs_world2pix(lon, lat, origin)
                 xi, yi = x.astype(int), y.astype(int)
                 new_image[yi, xi] = new_image[yi, xi] + flux
+
     if total_flux:
         factor = source_table['flux'].sum() / new_image.sum()
     else:

@@ -41,7 +41,6 @@ def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
 
     Examples
     --------
-
     Example how to simulate 100 events at a rate of 10 Hz.
     As expected the last event occurs after about 10 seconds.
 

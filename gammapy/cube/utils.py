@@ -33,7 +33,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     """
     if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
         raise ValueError('flux_cube and exposure cube must have the same shape!\n'
-                         'flux_cube: {0}\nexposure_cube: {1}'
+                         'flux_cube: {}\nexposure_cube: {}'
                          ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
 
     energy_axis = LogEnergyAxis(energy_bins, mode='edges')

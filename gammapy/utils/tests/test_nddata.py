@@ -63,7 +63,7 @@ class NDDataArrayTester:
     def test_wrong_init(self):
         wrong_data = np.arange(8).reshape(4, 2)
         with pytest.raises(ValueError):
-            nddata = NDDataArray(axes=self.axes, data=wrong_data)
+            NDDataArray(axes=self.axes, data=wrong_data)
 
     def test_find_node(self):
         kwargs = {}

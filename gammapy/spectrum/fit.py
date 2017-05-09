@@ -4,12 +4,9 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
-from .utils import CountsPredictor
-from . import (
-    SpectrumObservationList,
-    SpectrumObservation,
-)
 from .. import stats
+from .utils import CountsPredictor
+from . import SpectrumObservationList, SpectrumObservation
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
 # https://travis-ci.org/gammapy/gammapy/jobs/194204926#L1915
@@ -26,8 +23,7 @@ log = logging.getLogger(__name__)
 
 
 class SpectrumFit(object):
-    """
-    Spectral Fit
+    """Orchestrate a 1D counts spectrum fit.
 
     For usage examples see :ref:`spectral_fitting`
 
@@ -77,7 +73,7 @@ class SpectrumFit(object):
 
     @staticmethod
     def _convert_obs_list(obs_list):
-        """Helper function to accept different inputs for obs_list"""
+        """Helper function to accept different inputs for obs_list."""
         if isinstance(obs_list, SpectrumObservation):
             obs_list = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
@@ -87,12 +83,12 @@ class SpectrumFit(object):
 
     @property
     def bins_in_fit_range(self):
-        """Bins participating in the fit for each observation"""
+        """Bins participating in the fit for each observation."""
         return self._bins_in_fit_range
 
     @property
     def predicted_counts(self):
-        """Current value of predicted counts
+        """Current value of predicted counts.
 
         For each observation a tuple to counts for the on and off region is
         returned.
@@ -101,15 +97,13 @@ class SpectrumFit(object):
 
     @property
     def statval(self):
-        """Current value of statval
+        """Current value of statval.
 
-        For each observation the statval per bin is returned
+        For each observation the statval per bin is returned.
         """
         return self._statval
 
-
     def __str__(self):
-        """String repr"""
         ss = self.__class__.__name__
         ss += '\nSource model {}'.format(self.model)
         ss += '\nStat {}'.format(self.stat)
@@ -124,7 +118,7 @@ class SpectrumFit(object):
 
     @property
     def fit_range(self):
-        """Fit range"""
+        """Fit range."""
         return self._fit_range
 
     @fit_range.setter
@@ -134,7 +128,7 @@ class SpectrumFit(object):
 
     @property
     def true_fit_range(self):
-        """True fit range for each observation
+        """True fit range for each observation.
 
         True fit range is the fit range set in the
         `~gammapy.spectrum.SpectrumFit` with observation threshold taken into
@@ -149,10 +143,8 @@ class SpectrumFit(object):
             true_range.append(fit_range)
         return true_range
 
-
     def _apply_fit_range(self):
-        """Mark bins within desired fit range for each observation
-        """
+        """Mark bins within desired fit range for each observation."""
         self._bins_in_fit_range = list()
         for obs in self.obs_list:
             # Take into account fit range
@@ -179,9 +171,9 @@ class SpectrumFit(object):
             self._bins_in_fit_range.append(convolved)
 
     def predict_counts(self):
-        """Predict counts for all observations
+        """Predict counts for all observations.
 
-        The result is stored as ``predicted_counts`` attribute
+        The result is stored as ``predicted_counts`` attribute.
         """
         predicted_counts = list()
         for obs in self.obs_list:
@@ -199,7 +191,7 @@ class SpectrumFit(object):
         self._predicted_counts = predicted_counts
 
     def _predict_counts_helper(self, obs, model, forward_folded=True):
-        """Predict counts for one observation
+        """Predict counts for one observation.
 
         Parameters
         ----------
@@ -239,7 +231,7 @@ class SpectrumFit(object):
         return counts
 
     def calc_statval(self):
-        """Calc statistic for all observations
+        """Calc statistic for all observations.
 
         The result is stored as attribute ``statval``, bin outside the fit
         range are set to 0.
@@ -252,9 +244,8 @@ class SpectrumFit(object):
         self._statval = statval
         self._restrict_statval()
 
-
     def _calc_statval_helper(self, obs, prediction):
-        """Calculate statval one observation
+        """Calculate statval one observation.
 
         Parameters
         ----------
@@ -301,15 +292,15 @@ class SpectrumFit(object):
 
     @property
     def total_stat(self):
-        """Statistic summed over all bins and all observations
+        """Statistic summed over all bins and all observations.
 
-        This is what is used for the fit
+        This is what is used for the fit.
         """
         total_stat = np.sum(self.statval, dtype=np.float64)
         return total_stat
 
     def _restrict_statval(self):
-        """Apply valid fit range to statval
+        """Apply valid fit range to statval.
         """
         for statval, valid_range in zip(self.statval, self.bins_in_fit_range):
             # Find bins outside safe range
@@ -318,7 +309,7 @@ class SpectrumFit(object):
             statval[1][idx] = 0
 
     def _check_valid_fit(self):
-        """Helper function to give usefull error messages"""
+        """Helper function to give useful error messages."""
         # Assume that settings are the same for all observations
         test_obs = self.obs_list[0]
         irfs_exist = test_obs.aeff is not None and test_obs.edisp is not None
@@ -328,7 +319,7 @@ class SpectrumFit(object):
             raise ValueError('Off vector required for WStat fit')
 
     def likelihood_1d(self, model, parname, parvals):
-        """Compute likelihood profile
+        """Compute likelihood profile.
 
         Parameters
         ----------
@@ -349,9 +340,9 @@ class SpectrumFit(object):
         return np.array(likelihood)
 
     def plot_likelihood_1d(self, ax=None, **kwargs):
-        """Plot 1D likelihood profile
+        """Plot 1-dim likelihood profile.
 
-        see :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
+        See :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
@@ -363,15 +354,14 @@ class SpectrumFit(object):
         return ax
 
     def fit(self):
-        """Run the fit"""
+        """Run the fit."""
         if self.method == 'sherpa':
             self._fit_sherpa()
         else:
             raise NotImplementedError('{}'.format(self.method))
 
     def _fit_sherpa(self):
-        """Wrapper around sherpa minimizer
-        """
+        """Wrapper around sherpa minimizer."""
         from sherpa.fit import Fit
         from sherpa.data import Data1DInt
         from sherpa.optmethods import NelderMead
@@ -383,11 +373,11 @@ class SpectrumFit(object):
         data = Data1DInt('Dummy data', binning[:-1].value,
                          binning[1:].value, data)
         # DEBUG
-        #from sherpa.models import PowLaw1D
-        #from sherpa.stats import Cash
-        #model = PowLaw1D('sherpa')
-        #model.ref = 0.1
-        #fit = Fit(data, model, Cash(), NelderMead())
+        # from sherpa.models import PowLaw1D
+        # from sherpa.stats import Cash
+        # model = PowLaw1D('sherpa')
+        # model.ref = 0.1
+        # fit = Fit(data, model, Cash(), NelderMead())
 
         # NOTE: We cannot use the Levenbergr-Marquart optimizer in Sherpa
         # because it relies on the fvec return value of the fit statistic (we
@@ -405,7 +395,7 @@ class SpectrumFit(object):
         self._make_fit_result()
 
     def _make_fit_result(self):
-        """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`
+        """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
 
         It is important to copy best fit values, because the error estimation
         will change the model parameters and statval again
@@ -443,7 +433,7 @@ class SpectrumFit(object):
         self.result = results
 
     def est_errors(self):
-        """Estimate errors"""
+        """Estimate parameter errors."""
         if self.err_method == 'sherpa':
             self._est_errors_sherpa()
         else:
@@ -454,7 +444,7 @@ class SpectrumFit(object):
             res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
 
     def _est_errors_sherpa(self):
-        """Wrapper around Sherpa error estimator"""
+        """Wrapper around Sherpa error estimator."""
         covar = self._sherpa_fit.est_errors()
         covar_axis = list()
         for par in covar.parnames:
@@ -464,7 +454,7 @@ class SpectrumFit(object):
         self.covariance = copy.deepcopy(covar.extra_output)
 
     def run(self, outdir=None):
-        """Run all steps and write result to disk
+        """Run all steps and write result to disk.
 
         Parameters
         ----------

@@ -199,13 +199,13 @@ class CWT(object):
                     # island threshold, remove significant pixels island from support
                     struct_signif = significance[idx_scale][coords]
                     if struct_signif.max() < self.significance_island_threshold:
-                        log.debug('Remove significant pixels island {0} from support'.format(struct_label + 1))
+                        log.debug('Remove significant pixels island {} from support'.format(struct_label + 1))
                         mask[coords] = False
 
             log.debug('Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale]))
             data._support[idx_scale] |= mask
 
-        log.debug('Support sum: {0}'.format(data._support.sum()))
+        log.debug('Support sum: {}'.format(data._support.sum()))
 
     def _inverse_transform(self, data):
         """Do the inverse transform (reconstruct the image).
@@ -269,7 +269,7 @@ class CWT(object):
             self.history = [copy.deepcopy(data)]
 
         for n_iter in range(self.max_iter):
-            log.info('************ Start iteration {0} ************'.format(n_iter + 1))
+            log.info('************ Start iteration {} ************'.format(n_iter + 1))
             self._execute_iteration(data=data)
             if self.history is not None:
                 log.debug('Save current data')
@@ -279,9 +279,9 @@ class CWT(object):
                 break
 
         if converge_answer:
-            log.info('Convergence reached at iteration {0}'.format(n_iter + 1))
+            log.info('Convergence reached at iteration {}'.format(n_iter + 1))
         else:
-            log.info('Convergence not formally reached at iteration {0}'.format(n_iter + 1))
+            log.info('Convergence not formally reached at iteration {}'.format(n_iter + 1))
 
 
 class CWTKernels(object):
@@ -375,9 +375,9 @@ class CWTKernels(object):
         info_dict['Kernels approx max'] = self.kern_approx.max()
 
         for idx_scale, scale in enumerate(self.scales):
-            info_dict['Kernels base width for {0} scale'.format(scale)] = len(self.kern_base[idx_scale])
-            info_dict['Kernels base sum for {0} scale'.format(scale)] = self.kern_base[idx_scale].sum()
-            info_dict['Kernels base max for {0} scale'.format(scale)] = self.kern_base[idx_scale].max()
+            info_dict['Kernels base width for {} scale'.format(scale)] = len(self.kern_base[idx_scale])
+            info_dict['Kernels base sum for {} scale'.format(scale)] = self.kern_base[idx_scale].sum()
+            info_dict['Kernels base max for {} scale'.format(scale)] = self.kern_base[idx_scale].max()
 
         return info_dict
 
@@ -517,7 +517,7 @@ class CWTData(object):
     @property
     def transform_3d(self):
         """3D transform ??? cube (`~gammapy.cube.SkyCube`).
-        
+
         Primordial initialized by zero array. In the course of
         iterations updated by convolution of ``counts - total_background`` with kernel
         for each scale (``total_background = model + background + approx``).

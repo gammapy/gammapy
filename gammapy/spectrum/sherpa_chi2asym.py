@@ -47,14 +47,14 @@ def check_chi2():
     best-fit chi2 reported matches the formula coded here"""
     import sherpa.astro.ui as sau
     chi2 = sau.get_fit_results().statval
-    print('chi2 from fit: {0}'.format(chi2))
+    print('chi2 from fit: {}'.format(chi2))
     data = sau.get_dep()
     model = sau.get_model_plot().y
     error = np.where(model > data, sau.get_syserror(), sau.get_staterror())
 
     chi = ((data - model) / error)  # Chi per bin
     chi2 = chi ** 2  # Chi^2 per bin
-    print('chi2 re-computed: {0}'.format(chi2.sum()))
+    print('chi2 re-computed: {}'.format(chi2.sum()))
 
 
 def load_chi2asym_stat():

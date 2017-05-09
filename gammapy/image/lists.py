@@ -161,13 +161,13 @@ class SkyImageList(UserList):
             SkyImage.assert_allclose(image1, image2, check_wcs=check_wcs)
 
     def check_required(self, required_images):
-        """Check if required images are present in the skyimage list.
+        """Check if required images are present in the sky image list.
 
         Parameters
         ----------
-        required : list
-            List of names of required skyimages.
+        required_images : list
+            List of names of required sky images.
         """
         for image in required_images:
-            if not image in self.names:
+            if image not in self.names:
                 raise ValueError("Algorithm requires '{}' image to run.".format(image))

@@ -116,11 +116,11 @@ class TablePSF(object):
     def info(self):
         """Print basic info."""
         ss = array_stats_str(self._rad.degree, 'offset')
-        ss += 'integral = {0}\n'.format(self.integral())
+        ss += 'integral = {}\n'.format(self.integral())
 
         for containment in [50, 68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += ('containment radius {0} deg for {1}%\n'
+            ss += ('containment radius {} deg for {}%\n'
                    .format(radius.degree, containment))
 
         return ss
@@ -229,7 +229,7 @@ class TablePSF(object):
             y = self._dp_dr_spline(x)
             unit = 'radian^-1'
         else:
-            ss = 'Invalid quantity: {0}\n'.format(quantity)
+            ss = 'Invalid quantity: {}\n'.format(quantity)
             ss += "Choose one of: 'dp_domega', 'dp_dr'"
             raise ValueError(ss)
 
@@ -340,8 +340,8 @@ class TablePSF(object):
 
         ax.plot(x.value, y.value, **kwargs)
         ax.loglog()
-        ax.set_xlabel('Radius ({0})'.format(x.unit))
-        ax.set_ylabel('PSF ({0})'.format(y.unit))
+        ax.set_xlabel('Radius ({})'.format(x.unit))
+        ax.set_ylabel('PSF ({})'.format(y.unit))
 
     def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
@@ -662,7 +662,7 @@ class EnergyDependentTablePSF(object):
         ss += '  ' + array_stats_str(self.energy, 'energy')
         ss += '  ' + array_stats_str(self.exposure, 'exposure')
 
-        # ss += 'integral = {0}\n'.format(self.integral())
+        # ss += 'integral = {}\n'.format(self.integral())
 
         ss += '\nContainment info:\n'
         # Print some example containment radii
@@ -671,7 +671,7 @@ class EnergyDependentTablePSF(object):
         for fraction in fractions:
             rads = self.containment_radius(energies=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
-                ss += '  ' + '{0}% containment radius at {1:3.0f}: {2:.2f}\n'.format(100 * fraction, energy, rad)
+                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(100 * fraction, energy, rad)
         return ss
 
     def info(self):
@@ -691,7 +691,7 @@ class EnergyDependentTablePSF(object):
         for energy in energies:
             energy_index = self._energy_index(energy)
             psf = self.psf_value[energy_index, :]
-            label = '{0} GeV'.format(1e-3 * energy)
+            label = '{} GeV'.format(1e-3 * energy)
             x = np.hstack([-self.rad[::-1], self.rad])
             y = 1e-6 * np.hstack([psf[::-1], psf])
             plt.plot(x, y, lw=2, label=label)

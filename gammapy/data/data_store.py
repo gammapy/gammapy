@@ -176,7 +176,7 @@ class DataStore(object):
                 store = cls.from_name(val)
             except KeyError as e2:
                 raise ValueError('Not able to contruct DataStore using key:'
-                                 ' {0}.\nErrors\nfrom_dir: {1}\nfrom_name: {2}'
+                                 ' {}.\nErrors\nfrom_dir: {}\nfrom_name: {}'
                                  .format(val, e1, e2))
 
         return store
@@ -714,7 +714,7 @@ class ObservationList(UserList):
         psf = self[0].make_psf(position, energy, rad)
 
         rad = rad or psf.rad
-        energy = energy or  psf.energy
+        energy = energy or psf.energy
         exposure = psf.exposure
         psf_value = psf.psf_value.T * psf.exposure
 

@@ -125,8 +125,7 @@ class ReflectedRegionsFinder(object):
         self._min_ang = min_ang + self.min_distance
 
         # Maximum possible angle before regions is reached again
-        self._max_angle = self._angle + Angle('360deg') \
-                          - self._min_ang - self.min_distance_input
+        self._max_angle = self._angle + Angle('360deg') - self._min_ang - self.min_distance_input
 
         # Distance image
         self._distance_image = self.exclusion_mask.distance_image

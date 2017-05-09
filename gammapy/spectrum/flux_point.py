@@ -127,8 +127,8 @@ class FluxPoints(object):
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
-            raise ValueError("Missing columns for sed type '{0}':"
-                             " {1}".format(sed_type, missing))
+            raise ValueError("Missing columns for sed type '{}':"
+                             " {}".format(sed_type, missing))
         return table
 
     def _get_y_energy_unit(self, y_unit):
@@ -224,7 +224,7 @@ class FluxPoints(object):
         ax.set_xscale('log', nonposx='clip')
         ax.set_yscale('log', nonposy='clip')
         ax.set_xlabel('Energy ({})'.format(energy_unit))
-        ax.set_ylabel('{0} ({1})'.format(self.sed_type, y_unit))
+        ax.set_ylabel('{} ({})'.format(self.sed_type, y_unit))
         return ax
 
     def get_energy_err(self, sed_type=None):
@@ -508,7 +508,7 @@ def compute_flux_points_dnde(flux_points, model, method='lafferty'):
         # set e_ref that it represents the mean dnde in the given energy bin
         e_ref = _e_ref_lafferty(model, e_min, e_max)
     else:
-        raise ValueError('Invalid method: {0}'.format(method))
+        raise ValueError('Invalid method: {}'.format(method))
 
     dnde = _dnde_from_flux(flux, model, e_ref, e_min, e_max)
 

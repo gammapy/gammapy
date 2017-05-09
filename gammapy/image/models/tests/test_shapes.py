@@ -55,9 +55,9 @@ models_2D = {
     }
 }
 
-
 X_0 = [0, 1, -0.5, 0.012, -0.1245]
 Y_0 = [0, 1, -0.5, -0.0345, 0.35345]
+
 
 @pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))
 def test_delta2d(x_0, y_0):
@@ -65,6 +65,7 @@ def test_delta2d(x_0, y_0):
     delta = Delta2D(1, x_0, y_0)
     values = delta(x, y)
     assert_allclose(values.sum(), 1)
+
 
 @requires_dependency('scipy')
 @pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))

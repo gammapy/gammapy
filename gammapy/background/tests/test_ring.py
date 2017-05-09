@@ -20,7 +20,6 @@ class TestRingBackgroundEstimator:
         exclusion.data[40:60, 40:60] = 0
         self.images['exclusion'] = exclusion
 
-
     def test_run(self):
         result = self.ring.run(self.images)
         assert_allclose(result['background'].data[50, 50], 1)

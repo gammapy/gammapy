@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.wcs import WCS
-from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ..catalog import CatalogImageEstimator, catalog_image, catalog_table, _source_image
 from ...image import SkyImage
@@ -11,12 +10,13 @@ from ...irf import EnergyDependentTablePSF
 from ...cube import SkyCube
 from ...datasets import FermiGalacticCenter
 from ...spectrum import LogEnergyAxis
-
+from ...catalog import SourceCatalog3FHL, SourceCatalogGammaCat
 
 
 def test_extended_image():
     # TODO: implement me
     pass
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -38,6 +38,7 @@ def test_source_image():
     # Flux of sources within a 10x10 deg region about Galactic Center
     expected = 1.6098631760996795e-07
     assert_allclose(actual, expected)
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -71,11 +72,9 @@ def test_catalog_table():
     assert len(table_2fgl) == 1873
 
 
-
 class TestCatalogImageEstimator(object):
     @requires_data('gammapy-extra')
     def test_flux_gammacat(self):
-        from ...catalog import SourceCatalogGammaCat
         reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=41,
                                    nxpix=41, binsz=0.1)
 
@@ -96,7 +95,6 @@ class TestCatalogImageEstimator(object):
 
     @requires_data('gammapy-extra')
     def test_flux_3FHL(self):
-        from ...catalog import SourceCatalog3FHL
         reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=81,
                                    nxpix=81, binsz=0.1)
 

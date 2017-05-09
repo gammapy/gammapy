@@ -293,8 +293,10 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
     age = table['age'].quantity
 
     # Draw the initial values for the period and magnetic field
-    P_dist = lambda x: exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
-    p0_birth = draw(0, 2, len(table), P_dist, random_state=random_state)
+    def p_dist(x):
+        return exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
+
+    p0_birth = draw(0, 2, len(table), p_dist, random_state=random_state)
     p0_birth = Quantity(p0_birth, 's')
 
     logB = random_state.normal(B_mean, B_stdv, len(table))

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table, Column, vstack
-from astropy.coordinates import Angle
 from astropy.io import ascii
 from astropy.units import Quantity
 from ..extern.pathlib import Path
@@ -198,9 +197,13 @@ class ObservationGroups(object):
             try:
                 split_name_min = axes[i_col].name.rsplit("_", 1)
                 split_name_max = axes[i_col + 1].name.rsplit("_", 1)
-                if (split_name_min[-1] == 'MIN'
-                    and split_name_max[-1] == 'MAX'
-                    and split_name_min[0] == split_name_max[0]):
+
+                do_split = (
+                    split_name_min[-1] == 'MIN' and
+                    split_name_max[-1] == 'MAX' and
+                    split_name_min[0] == split_name_max[0]
+                )
+                if do_split:
                     min_values = axes[i_col].bins
                     max_values = axes[i_col + 1].bins
                     edges = np.unique(np.append(min_values, max_values))
@@ -514,7 +517,7 @@ class ObservationGroupAxis(object):
     @property
     def info(self):
         """Info string (str)."""
-        s = "{0} {1} {2}".format(self.name, self.fmt, self.bins)
+        s = "{} {} {}".format(self.name, self.fmt, self.bins)
         return s
 
 

@@ -26,5 +26,4 @@ def test_butterfly_basics(butterfly):
 
 @requires_dependency('matplotlib')
 def test_butterfly_plot(butterfly):
-    ax = butterfly.plot()
-    # TODO: get something from `ax` and assert on it
+    butterfly.plot()

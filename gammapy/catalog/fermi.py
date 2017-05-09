@@ -10,17 +10,14 @@ from astropy.table import QTable, Table
 from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.tests.helper import ignore_warnings
-from astropy.modeling.models import Gaussian2D, Disk2D, Ring2D
+from astropy.modeling.models import Gaussian2D, Disk2D
 from astropy.coordinates import Angle
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise
 from ..image import SkyImage
 from ..image.models import Delta2D, Template2D
-from ..spectrum import (
-    FluxPoints,
-    compute_flux_points_dnde
-)
+from ..spectrum import FluxPoints, compute_flux_points_dnde
 from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
@@ -670,7 +667,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 pars['x_0'] = glon.value
                 pars['y_0'] = glat.value
                 pars['R_0'] = de['Model_SemiMajor'].to('deg').value
-                pars['amplitude'] =  amplitude / (np.pi * pars['R_0'] ** 2)
+                pars['amplitude'] = amplitude / (np.pi * pars['R_0'] ** 2)
                 return Disk2D(**pars)
             elif morph_type == 'SpatialMap':
                 filename = de['Spatial_Filename'].strip()
@@ -912,7 +909,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     elif catalog == '2PC':
         url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)
@@ -968,7 +965,7 @@ def fetch_fermi_extended_sources(catalog):
     elif catalog == '1FHL':
         url = BASE_URL + '1FHL/LAT_extended_sources_v12.tar'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)

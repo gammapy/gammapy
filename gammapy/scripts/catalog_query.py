@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
+
 click.disable_unicode_literals_warning = True
 from ..catalog import source_catalogs
 
@@ -50,7 +51,7 @@ def show_catalog_table(catalog):
 @cli.command('info')
 @click.argument('catalog')
 @click.argument('source')
-def plot_lightcurve(catalog, source):
+def print_source_info(catalog, source):
     """Print info for CATALOG and SOURCE"""
     catalog = source_catalogs[catalog]
     source = catalog[source]
@@ -68,7 +69,7 @@ def plot_lightcurve(catalog, source):
 
 @cli.command('table-info')
 @click.argument('catalog')
-def show_catalog_table(catalog):
+def print_catalog_table_info(catalog):
     """Summarise table info for CATALOG"""
     catalog = source_catalogs[catalog]
     catalog.table.info()

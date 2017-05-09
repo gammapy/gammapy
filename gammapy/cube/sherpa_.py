@@ -423,7 +423,7 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         etrue_band = self.true_energy.bands
         for ireco in range(self.dim_Ereco):
             self.convolve_edisp[:, :, :, ireco] = (np.rollaxis(spatial, 0, spatial.ndim)
-                                                   * np.rollaxis(spectral, 0, spectral.ndim)  
+                                                   * np.rollaxis(spectral, 0, spectral.ndim)
                                                    * self.edisp[:, ireco] * etrue_band)
         # Integration in etrue
         sum_model = np.sum(self.convolve_edisp, axis=2)

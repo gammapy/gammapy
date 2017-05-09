@@ -30,9 +30,6 @@ def common_sky_region_select_test_routines(obs_table, selection):
     if type == 'sky_box' and any(l < Angle(0., 'deg') for l in lon_range_eff):
         do_wrapping = True
 
-    # observation table
-    skycoord = skycoord_from_table(obs_table)
-
     # test on the selection
     selected_obs_table = obs_table.select_observations(selection)
     skycoord = skycoord_from_table(selected_obs_table)
@@ -118,7 +115,6 @@ def test_select_time_box():
     selection = dict(type='time_box', time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
     time_start = selected_obs_table['TSTART']
-    time_stop = selected_obs_table['TSTOP']
     assert (value_range[0] < time_start).all()
     assert (time_start < value_range[1]).all()
 

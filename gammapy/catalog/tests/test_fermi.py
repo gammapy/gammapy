@@ -11,13 +11,13 @@ from ...utils.testing import requires_data, requires_dependency
 
 MODEL_TEST_DATA_3FGL = [
     (0, PowerLaw, u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1'),
-                  u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
+     u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
     (4, LogParabola, u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1'),
-                     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
+     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
     (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
-                                        u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
+     u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
     (960, PLSuperExpCutoff3FGL, u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
-                                u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
+     u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
 ]
 
 MODEL_TEST_DATA_3FHL = [
@@ -63,8 +63,8 @@ class TestFermi3FGLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert '3FGL J0534.5+2201' in ss # Source name
-        assert '83.637 deg' in ss # RA
+        assert '3FGL J0534.5+2201' in ss  # Source name
+        assert '83.637 deg' in ss  # RA
 
     @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
     def test_spectral_model(self, index, model_type, desired, desired_err):

@@ -533,7 +533,6 @@ class SkyCube(MapBase):
         **kwargs : dict
             Keyword arguments passed to `matplotlib.pyplot.imshow`.
         """
-        import matplotlib.pyplot as plt
         from ipywidgets import interact
 
         if viewer == 'mpl':

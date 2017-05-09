@@ -268,11 +268,6 @@ class FOVCubeBackgroundModel(object):
         bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
             FOVCube background model object.
         """
-        hdu = fits.open(filename)
-        counts_scheme_dict = FOVCube.define_scheme('bg_counts_cube')
-        livetime_scheme_dict = FOVCube.define_scheme('bg_livetime_cube')
-        background_scheme_dict = FOVCube.define_scheme('bg_cube')
-
         try:
             counts_cube = FOVCube.read(filename, format, scheme='bg_counts_cube')
             livetime_cube = FOVCube.read(filename, format, scheme='bg_livetime_cube')
@@ -428,10 +423,8 @@ class FOVCubeBackgroundModel(object):
         #       The values here are good for H.E.S.S.
 
         # energy bins (logarithmic)
-        log_delta_energy = (np.log(energy_max.value)
-                            - np.log(energy_min.value)) / bg_cube_shape[0]
-        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1) * log_delta_energy
-                              + np.log(energy_min.value))
+        log_delta_energy = (np.log(energy_max.value) - np.log(energy_min.value)) / bg_cube_shape[0]
+        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1) * log_delta_energy + np.log(energy_min.value))
         energy_edges = Quantity(energy_edges, energy_min.unit)
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
