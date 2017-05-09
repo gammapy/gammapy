@@ -448,8 +448,7 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
             label_ += '(' + text_add_ + ')'
         if radius is not None:
             shape_ = shape.format(row[glon], row[glat], row[radius])
-            text_ = text.format(row[glon], row[glat] + row[radius]
-                                * label_distance, label_)
+            text_ = text.format(row[glon], row[glat] + row[radius] * label_distance, label_)
         else:
             shape_ = shape.format(row[glon], row[glat])
             text_ = text.format(row[glon], row[glat] + 0.05, label_)

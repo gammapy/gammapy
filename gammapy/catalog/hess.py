@@ -177,21 +177,34 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Map measurement', d['Flux_Map_RSpec_Data'].value / FF, d['Flux_Map_RSpec_Data'].value * FLUX_TO_CRAB)
+            'Map measurement',
+            d['Flux_Map_RSpec_Data'].value / FF,
+            d['Flux_Map_RSpec_Data'].value * FLUX_TO_CRAB,
+        )
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Source model', d['Flux_Map_RSpec_Source'].value / FF, d['Flux_Map_RSpec_Source'].value * FLUX_TO_CRAB)
+            'Source model',
+            d['Flux_Map_RSpec_Source'].value / FF,
+            d['Flux_Map_RSpec_Source'].value * FLUX_TO_CRAB,
+        )
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Other component model', d['Flux_Map_RSpec_Other'].value / FF,
-                                     d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB)
+            'Other component model',
+            d['Flux_Map_RSpec_Other'].value / FF,
+            d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB,
+        )
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Large scale component model', d['Flux_Map_RSpec_LS'].value / FF,
-                                           d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB)
+            'Large scale component model',
+            d['Flux_Map_RSpec_LS'].value / FF,
+            d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB,
+        )
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-            'Total model', d['Flux_Map_RSpec_Total'].value / FF, d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB)
+            'Total model',
+            d['Flux_Map_RSpec_Total'].value / FF,
+            d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB,
+        )
 
         ss += '{:<35s} : {:5.1f} %\n'.format('Containment in RSpec', 100 * d['Containment_RSpec'])
         ss += '{:<35s} : {:5.1f} %\n'.format('Contamination in RSpec', 100 * d['Contamination_RSpec'])

@@ -154,7 +154,7 @@ class CTAObservationSimulation(object):
                                   aeff=perf.aeff,
                                   edisp=perf.rmf)
         obs.obs_id = obs_id
-        
+
         # Set threshold according to the closest energy reco from bkg bins
         idx_min = np.abs(reco_energy.lo - emin).argmin()
         idx_max = np.abs(reco_energy.lo - emax).argmin()

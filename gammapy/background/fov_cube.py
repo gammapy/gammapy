@@ -132,8 +132,6 @@ class FOVCube(object):
                                   len(coordx_edges) - 1))
         else:
             self.data = data
-
-
             # TODO: make this consistent with have the 2d BCK class works
             # self.data = 'TODO'
 
@@ -160,7 +158,7 @@ class FOVCube(object):
         """
         scheme_dict = dict()
 
-        if scheme == None or scheme == '':
+        if scheme is None or scheme == '':
             # default values
             scheme_dict['hdu_fits_name'] = 'DATA'
             scheme_dict['coordx_fits_name'] = 'X'
@@ -646,7 +644,7 @@ class FOVCube(object):
 
         fig.set_size_inches(8., 8., forward=True)
 
-        if not 'cmap' in style_kwargs:
+        if 'cmap' not in style_kwargs:
             style_kwargs['cmap'] = 'afmhot'
 
         image = ax.imshow(data.value,

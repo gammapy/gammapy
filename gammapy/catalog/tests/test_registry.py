@@ -27,6 +27,7 @@ class TestSourceCatalogs:
     @requires_data('gammapy-extra')
     def test_getitem(self):
         cat = self.source_catalogs['2fhl']
+        assert cat.name == '2fhl'
 
         with pytest.raises(KeyError):
             source_catalogs['2FHL']

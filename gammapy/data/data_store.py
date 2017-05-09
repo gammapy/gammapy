@@ -714,7 +714,7 @@ class ObservationList(UserList):
         psf = self[0].make_psf(position, energy, rad)
 
         rad = rad or psf.rad
-        energy = energy or  psf.energy
+        energy = energy or psf.energy
         exposure = psf.exposure
         psf_value = psf.psf_value.T * psf.exposure
 

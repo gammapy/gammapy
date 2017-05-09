@@ -65,12 +65,16 @@ trailing-spaces:
 code-analysis: flake8 pylint
 
 flake8:
-	flake8 $(PROJECT) | grep -v __init__ | grep -v external
+	flake8 $(PROJECT) \
+	       --exclude=gammapy/extern \
+	       --ignore=E501 \
+	       | grep -v __init__ | grep -v external
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 pylint:
-	pylint -E $(PROJECT)/ -d E1103,E0611,E1101 \
+	pylint -E $(PROJECT)/ \
 	       --ignore=_astropy_init.py -f colorized \
+	       -d E1103,E0611,E1101 \
 	       --msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
 
 # TODO: add test and code quality checks for `examples`

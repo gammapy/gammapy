@@ -46,7 +46,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     energies_all = np.logspace(-1, 2, energy_bins + 1)
     energies_lo = energies_all[:-1]
     energies_hi = energies_all[1:]
-    theta_lo = theta_hi = np.linspace(0, 2.2, theta_bins)
+    theta_lo = np.linspace(0, 2.2, theta_bins)
 
     def sigma_energy_theta(energy, theta, sigma):
         # log-linear dependency of sigma with energy
@@ -68,13 +68,11 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     for norm in 302.654 * np.array([1, 0.0406003, 0.444632]):
         norms.append(norm * np.ones((theta_bins, energy_bins)))
 
-    psf = EnergyDependentMultiGaussPSF(Quantity(energies_lo, 'TeV'),
-                                       Quantity(energies_hi, 'TeV'),
-                                       Quantity(theta_lo, 'deg'),
-                                       sigmas, norms
-                                       )
-
-    return psf
+    return EnergyDependentMultiGaussPSF(Quantity(energies_lo, 'TeV'),
+                                        Quantity(energies_hi, 'TeV'),
+                                        Quantity(theta_lo, 'deg'),
+                                        sigmas, norms,
+                                        )
 
 
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
@@ -349,10 +347,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
     dety_bin_edges = np.arange(ndety_bins + 1) * delta_y + dety_range[0]
 
     # energy bins (logarithmic)
-    log_delta_energy = (np.log(energy_band[1].value)
-                        - np.log(energy_band[0].value)) / nenergy_bins
-    energy_bin_edges = np.exp(np.arange(nenergy_bins + 1) * log_delta_energy
-                              + np.log(energy_band[0].value))
+    log_delta_energy = (np.log(energy_band[1].value) - np.log(energy_band[0].value)) / nenergy_bins
+    energy_bin_edges = np.exp(np.arange(nenergy_bins + 1) * log_delta_energy + np.log(energy_band[0].value))
     energy_bin_edges = Quantity(energy_bin_edges, energy_band[0].unit)
     # TODO: this function should be reviewed/re-written, when
     # the following PR is completed:

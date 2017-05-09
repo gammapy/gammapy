@@ -9,7 +9,6 @@ import astropy.units as u
 from ..image import SkyImageList, SkyImage
 from ..image.utils import scale_cube
 
-
 __all__ = [
     'AdaptiveRingBackgroundEstimator',
     'RingBackgroundEstimator',
@@ -130,7 +129,7 @@ class AdaptiveRingBackgroundEstimator(object):
         The on exposure is convolved with different
         ring kernels and stacking the data along the third dimension.
         """
-        exposure  = images['exposure_on'].data
+        exposure = images['exposure_on'].data
         exclusion = images['exclusion'].data
         return scale_cube(exposure * exclusion, kernels)
 

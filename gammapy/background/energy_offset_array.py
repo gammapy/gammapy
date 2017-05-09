@@ -76,27 +76,20 @@ class EnergyOffsetArray(object):
 
     def plot(self, ax=None, **kwargs):
         """Plot Energy_offset Array image (x=offset, y=energy).
-
-        TODO: Currently theta axis is not shown correctly if theta scale is not linear (like square root).
-        Can be fixed by creating a matplotlib square root scale r using contourf or placing tick manually
-
         """
         import matplotlib.pyplot as plt
-
-        kwargs.setdefault('cmap', 'GnBu')
-        #kwargs.setdefault('interpolation', 'None')
-
         ax = plt.gca() if ax is None else ax
 
         offset, energy = self.offset, self.energy.log_centers
         x, y, z = offset.value, energy.value, self.data.value
-        caxes = ax.pcolormesh(x, y, z,  **kwargs)
+        caxes = ax.pcolormesh(x, y, z, **kwargs)
         unit = self.data.unit
-        cbar = ax.figure.colorbar(caxes, ax=ax, label='Value ({0})'.format(unit))
+        cbar = ax.figure.colorbar(caxes, ax=ax, label='Value ({})'.format(unit))
         ax.semilogy()
-        ax.set_xlabel('Offset ({0})'.format(offset.unit))
-        ax.set_ylabel('Energy ({0})'.format(energy.unit))
-        return ax
+        ax.set_xlabel('Offset ({})'.format(offset.unit))
+        ax.set_ylabel('Energy ({})'.format(energy.unit))
+
+        return ax, cbar
 
     @classmethod
     def read(cls, filename, hdu='bkg_2d', data_name="data"):

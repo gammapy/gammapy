@@ -5,7 +5,6 @@ import logging
 from time import time
 import warnings
 from collections import OrderedDict
-from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import numpy as np
@@ -23,7 +22,7 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
 __all__ = [
     'compute_ts_image_multiscale',
     'compute_maximum_ts_image',
-    'TSImageEstimator'
+    'TSImageEstimator',
 ]
 
 log = logging.getLogger(__name__)
@@ -76,7 +75,6 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-
 class TSImageEstimator(object):
     """
     Compute TS image using different optimization methods.
@@ -120,13 +118,14 @@ class TSImageEstimator(object):
     ----------
     [Stewart2009]_
     """
+
     def __init__(self, method='root brentq', error_method='covar', parallel=True,
                  threshold=None, rtol=0.001):
 
-        if not method in ['root brentq', 'root newton', 'leastsq iter']:
+        if method not in ['root brentq', 'root newton', 'leastsq iter']:
             raise ValueError("Not a valid method: '{}'".format(method))
 
-        if not error_method in ['covar', 'conf']:
+        if error_method not in ['covar', 'conf']:
             raise ValueError("Not a valid error method '{}'".format(error_method))
 
         p = OrderedDict()
@@ -222,7 +221,6 @@ class TSImageEstimator(object):
             ts = image_ts.data
             sqrt_ts.data = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return sqrt_ts
-
 
     def run(self, images, kernel, which='all'):
         """
@@ -412,8 +410,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
                 source_kernel = Gaussian2DKernel(sigma, mode='oversample')
             elif morphology == 'Shell2D':
                 model = Shell2D(1, 0, 0, sigma, sigma * width)
-                x_size = _round_up_to_odd_integer(2 * sigma * (1 + width)
-                                                  + kernel.shape[0] / 2)
+                x_size = _round_up_to_odd_integer(2 * sigma * (1 + width) + kernel.shape[0] / 2)
                 source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
             else:
                 raise ValueError('Unknown morphology: {}'.format(morphology))

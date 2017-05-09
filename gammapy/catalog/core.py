@@ -6,12 +6,9 @@ from collections import OrderedDict
 import sys
 from copy import deepcopy
 from pprint import pprint
-import numpy as np
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
-from astropy.coordinates import SkyCoord
-from astropy.table import Table, Row
 from ..utils.array import _is_int
 from .utils import skycoord_from_table
 
@@ -144,7 +141,7 @@ class SourceCatalog(object):
         for alias_column in self._source_name_alias:
             possible_names += row[alias_column].split(',')
 
-        if not name in possible_names:
+        if name not in possible_names:
             self.__dict__.pop('_name_to_index_cache')
             index = self._name_to_index_cache[name]
         return index
@@ -221,7 +218,6 @@ class SourceCatalog(object):
         names = [_.strip() for _ in self.extended_sources_table['Source_Name']]
         idx = range(len(names))
         return dict(zip(names, idx))
-
 
     @staticmethod
     def _make_source_dict(table, idx):

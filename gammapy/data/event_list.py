@@ -8,7 +8,8 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
-from astropy.table import Table, vstack
+from astropy.table import Table
+from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
@@ -117,7 +118,7 @@ class EventList(object):
             list of `~gammapy.data.EventList` to stack
         """
         tables = [_.table for _ in event_lists]
-        stacked_table = vstack(tables, **kwargs)
+        stacked_table = vstack_tables(tables, **kwargs)
         return cls(stacked_table)
 
     def __str__(self):
@@ -762,7 +763,6 @@ class EventListDataset(object):
             event_lists.append(event_list)
             gtis.append(gti)
 
-        from astropy.table import vstack as vstack_tables
         total_event_list = vstack_tables(event_lists, metadata_conflicts='silent')
         total_gti = vstack_tables(gtis, metadata_conflicts='silent')
 

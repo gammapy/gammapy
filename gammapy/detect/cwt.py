@@ -517,7 +517,7 @@ class CWTData(object):
     @property
     def transform_3d(self):
         """3D transform ??? cube (`~gammapy.cube.SkyCube`).
-        
+
         Primordial initialized by zero array. In the course of
         iterations updated by convolution of ``counts - total_background`` with kernel
         for each scale (``total_background = model + background + approx``).
