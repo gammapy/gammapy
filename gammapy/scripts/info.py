@@ -47,9 +47,9 @@ def _print_info_version():
     """Print Gammapy version info."""
     from gammapy import version
     print('\n*** Gammapy version info ***\n')
-    print('version: {0}'.format(version.version))
-    print('release: {0}'.format(version.release))
-    print('githash: {0}'.format(version.githash))
+    print('version: {}'.format(version.version))
+    print('release: {}'.format(version.release))
+    print('githash: {}'.format(version.githash))
     print('')
 
 

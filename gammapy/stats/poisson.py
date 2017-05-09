@@ -229,7 +229,7 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
     elif method == 'direct':
         func = _significance_direct
     else:
-        raise ValueError('Invalid method: {0}'.format(method))
+        raise ValueError('Invalid method: {}'.format(method))
 
     # For low `n_on` values, don't try to compute a significance and return `NaN`.
     n_on = np.atleast_1d(n_on)
@@ -348,7 +348,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
         else:
             return _significance_direct_on_off(n_on, n_off, alpha)
     else:
-        raise ValueError('Invalid method: {0}'.format(method))
+        raise ValueError('Invalid method: {}'.format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
@@ -455,7 +455,7 @@ def sensitivity(mu_bkg, significance, quantity='excess', method='lima'):
     elif method == 'lima':
         return _sensitivity_lima(mu_bkg, significance)
     else:
-        raise ValueError('Invalid method: {0}'.format(method))
+        raise ValueError('Invalid method: {}'.format(method))
 
 
 def _sensitivity_simple(mu_bkg, significance):
@@ -507,14 +507,14 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
     elif method == 'simple':
         n_on_sensitivity = _sensitivity_simple(n_off, alpha, significance)
     else:
-        raise ValueError('Invalid method: {0}'.format(method))
+        raise ValueError('Invalid method: {}'.format(method))
 
     if quantity == 'n_on':
         return n_on_sensitivity
     elif quantity == 'excess':
         return n_on_sensitivity - background(n_off, alpha)
     else:
-        raise ValueError('Invalid quantity: {0}'.format(quantity))
+        raise ValueError('Invalid quantity: {}'.format(quantity))
 
 
 def _sensitivity_simple_on_off(n_off, alpha, significance):

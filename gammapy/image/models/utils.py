@@ -73,7 +73,7 @@ def write_ascii(pars, filename):
     """Write to ASCII"""
     fh = open(filename, 'w')
     for par in pars:
-        fh.write('{0} {1} {2}\n'.format(par.modelname, par.name, par.val))
+        fh.write('{} {} {}\n'.format(par.modelname, par.name, par.val))
 
 
 def write_all(filename='results.json'):

@@ -290,7 +290,7 @@ class TSImageEstimator(object):
                        rtol=p['rtol'])
 
         if p['parallel']:
-            log.info('Using {0} cores to compute TS image.'.format(cpu_count()))
+            log.info('Using {} cores to compute TS image.'.format(cpu_count()))
             pool = Pool()
             results = pool.map(wrap, positions)
             pool.close()
@@ -367,10 +367,12 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
     ts_estimator = TSImageEstimator(**kwargs)
 
     for scale in scales:
-        log.info('Computing {0}TS image for scale {1:.3f} deg and {2}'
+        log.info('Computing {}TS image for scale {:.3f} deg and {}'
                  ' morphology.'.format('residual ' if residual else '',
                                        scale,
-                                       morphology))  # Sample down and require that scale parameters is at least 5 pix
+                                       morphology))
+
+        # Sample down and require that scale parameters is at least 5 pix
         if downsample == 'auto':
             factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
                                     scale < 20 * BINSZ, scale < 40 * BINSZ],
@@ -384,7 +386,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
         else:
             if morphology == 'Shell2D':
                 factor /= 2
-            log.info('Using down sampling factor of {0}'.format(factor))
+            log.info('Using down sampling factor of {}'.format(factor))
             downsampled = True
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]

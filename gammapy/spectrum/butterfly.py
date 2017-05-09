@@ -50,7 +50,7 @@ class SpectrumButterfly(QTable):
 
         ax.set_xlabel('Energy [{}]'.format(self['energy'].unit))
         if energy_power > 0:
-            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, y_lo.unit))
+            ax.set_ylabel('E{} * Flux [{}]'.format(energy_power, y_lo.unit))
         else:
             ax.set_ylabel('Flux [{}]'.format(y_lo.unit))
         ax.set_xscale("log", nonposx='clip')

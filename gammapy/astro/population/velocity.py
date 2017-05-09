@@ -94,7 +94,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     """Distribution by Lyne 1982 and adopted by Paczynski and Faucher.
 
     .. math ::
-        f(v) = A\\frac{4}{\\pi} \\frac{1}{v_{0} \\left[1 + (v / v_{0}) ^ 2 \\right] ^ 2}
+        f(v) = A\\frac{4}{\\pi} \\frac{1}{v_0 \\left[1 + (v / v_0) ^ 2 \\right] ^ 2}
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
 

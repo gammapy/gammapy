@@ -187,7 +187,7 @@ class CountsSpectrum(object):
             ener_val = u.Quantity(show_energy).to(energy_unit).value
             ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value),
                       linestyles='dashed')
-        ax.set_xlabel('Energy [{0}]'.format(energy_unit))
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
         ax.set_ylim(0, 1.2 * max(self.data.data.value))
@@ -220,7 +220,7 @@ class CountsSpectrum(object):
             ener_val = u.Quantity(show_energy).to(energy_unit).value
             ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value),
                       linestyles='dashed')
-        ax.set_xlabel('Energy [{0}]'.format(energy_unit))
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
         return ax

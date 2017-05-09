@@ -70,7 +70,7 @@ class SherpaMultiGaussPSF(object):
             self.pars = json.load(fh)
             fh.close()
         else:
-            raise ValueError('Unknown source: {0}'.format(source))
+            raise ValueError('Unknown source: {}'.format(source))
 
     def __str__(self):
         return json.dumps(self.pars, sort_keys=True, indent=4)
@@ -188,8 +188,8 @@ class HESSMultiGaussPSF(object):
         theta2 = np.asarray(theta2, 'f')
         total = np.zeros_like(theta2)
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars['A_{0}'.format(ii)]
-            sigma = self.pars['sigma_{0}'.format(ii)]
+            A = self.pars['A_{}'.format(ii)]
+            sigma = self.pars['sigma_{}'.format(ii)]
             total += A * np.exp(-theta2 / (2 * sigma ** 2))
         return self.pars['scale'] * total
 
@@ -216,11 +216,11 @@ class HESSMultiGaussPSF(object):
         # scale = self.pars['scale']
         for ii in range(1, self.n_gauss() + 1):
             d = {}
-            A = self.pars['A_{0}'.format(ii)]
-            sigma = self.pars['sigma_{0}'.format(ii)]
+            A = self.pars['A_{}'.format(ii)]
+            sigma = self.pars['sigma_{}'.format(ii)]
             d['ampl'] = A
             d['fwhm'] = gaussian_sigma_to_fwhm * sigma / binsz
-            name = 'psf{0}'.format(ii)
+            name = 'psf{}'.format(ii)
             pars[name] = d
         return pars
 
@@ -234,7 +234,7 @@ class HESSMultiGaussPSF(object):
         elif fmt == 'ascii':
             fh = open(filename, 'w')
             for name, value in self.pars.items():
-                fh.write('{0} {1}\n'.format(name, value))
+                fh.write('{} {}\n'.format(name, value))
             fh.close()
 
     def to_MultiGauss2D(self, normalize=True):
@@ -245,8 +245,8 @@ class HESSMultiGaussPSF(object):
         represents the amplitude at 0."""
         sigmas, norms = [], []
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars['A_{0}'.format(ii)]
-            sigma = self.pars['sigma_{0}'.format(ii)]
+            A = self.pars['A_{}'.format(ii)]
+            sigma = self.pars['sigma_{}'.format(ii)]
             norm = self.pars['scale'] * 2 * A * sigma ** 2
             sigmas.append(sigma)
             norms.append(norm)
@@ -355,7 +355,7 @@ def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs)
     psf = None
     for ii in range(1, 4):
         # Convert sigma and amplitude
-        pars = psf_parameters['psf{0}'.format(ii)]
+        pars = psf_parameters['psf{}'.format(ii)]
         sigma = gaussian_fwhm_to_sigma * pars['fwhm'] * BINSZ / NEW_BINSZ
         ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
         if psf is None:

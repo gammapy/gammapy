@@ -48,7 +48,7 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
         quantiles = list(np.linspace(0, 100, n_bins + 1))
         bin_edges = np.percentile(data, quantiles)
     else:
-        raise ValueError('Invalid option: method = {0}'.format(method))
+        raise ValueError('Invalid option: method = {}'.format(method))
 
     bin_edges[-1] += eps
     return bin_edges
@@ -160,8 +160,8 @@ class FluxProfile(object):
         # Compute number of entries in each profile bin
         p['n_entries'] = g['x'].aggregate(len)
         for name in ['counts', 'background', 'exposure']:
-            p['{0}'.format(name)] = g[name].sum()
-            # p['{0}_mean'.format(name)] = p['{0}_sum'.format(name)] / p['n_entries']
+            p['{}_sum'.format(name)] = g[name].sum()
+            p['{}_mean'.format(name)] = p['{}_sum'.format(name)] / p['n_entries']
         p['excess'] = p['counts'] - p['background']
         p['flux'] = p['excess'] / p['exposure']
 

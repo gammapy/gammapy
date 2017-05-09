@@ -145,7 +145,7 @@ class EffectiveAreaTable(object):
                 'CTA': [1.71e11, 0.0891, 1e5]}
 
         if instrument not in pars.keys():
-            ss = 'Unknown instrument: {0}\n'.format(instrument)
+            ss = 'Unknown instrument: {}\n'.format(instrument)
             ss += 'Valid instruments: HESS, HESS2, CTA'
             raise ValueError(ss)
 
@@ -444,8 +444,8 @@ class EffectiveAreaTable2D(object):
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
-        ax.set_ylabel('Effective Area [{0}]'.format(self.data.data.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
 
@@ -489,7 +489,7 @@ class EffectiveAreaTable2D(object):
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel('Offset ({0})'.format(self.data.axis('offset').unit))
+        ax.set_xlabel('Offset ({})'.format(self.data.axis('offset').unit))
         ax.set_ylabel('Relative Effective Area')
         ax.legend(loc='best')
 
@@ -516,8 +516,8 @@ class EffectiveAreaTable2D(object):
         caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_ylabel('Offset ({0})'.format(offset.unit))
-        ax.set_xlabel('Energy ({0})'.format(energy.unit))
+        ax.set_ylabel('Offset ({})'.format(offset.unit))
+        ax.set_xlabel('Energy ({})'.format(energy.unit))
 
         xmin, xmax = energy.value.min(), energy.value.max()
         ax.set_xlim(xmin, xmax)

@@ -1061,7 +1061,7 @@ class EventListDatasetChecker(object):
         if max_separation > self.accuracy['angle']:
             # TODO: probably we need to print run number and / or other
             # things for this to be useful in a pipeline ...
-            fmt = '{0} not consistent with {1}. Max separation: {2}'
+            fmt = '{} not consistent with {}. Max separation: {}'
             args = [tag1, tag2, max_separation]
             self.logger.warning(fmt.format(*args))
             return False

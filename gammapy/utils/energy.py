@@ -48,7 +48,7 @@ class Energy(Quantity):
                                           dtype=dtype, copy=copy)
 
         if not self.unit.is_equivalent('eV'):
-            raise ValueError("Given unit {0} is not an"
+            raise ValueError("Given unit {} is not an"
                              " energy".format(self.unit.to_string()))
 
         return self
@@ -125,7 +125,7 @@ class Energy(Quantity):
         if fitsunit is None:
             if unit is not None:
                 log.warning("No unit found in the FITS header."
-                            " Setting it to {0}".format(unit))
+                            " Setting it to {}".format(unit))
                 fitsunit = unit
             else:
                 raise ValueError("No unit found in the FITS header."
@@ -147,7 +147,7 @@ class Energy(Quantity):
         cols = fits.ColDefs([col1])
         hdu = fits.BinTableHDU.from_columns(cols)
         hdu.name = 'ENERGIES'
-        hdu.header['TUNIT1'] = "{0}".format(self.unit.to_string('fits'))
+        hdu.header['TUNIT1'] = "{}".format(self.unit.to_string('fits'))
 
         return hdu
 

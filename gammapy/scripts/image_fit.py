@@ -54,28 +54,28 @@ def run_image_fit_sherpa(counts,
     log.info('Clearing the sherpa session')
     sherpa.astro.ui.clean()
 
-    log.info('Reading counts: {0}'.format(counts))
+    log.info('Reading counts: {}'.format(counts))
     sherpa.astro.ui.load_image(counts)
 
-    log.info('Reading exposure: {0}'.format(exposure))
+    log.info('Reading exposure: {}'.format(exposure))
     sherpa.astro.ui.load_table_model('exposure', exposure)
 
-    log.info('Reading background: {0}'.format(background))
+    log.info('Reading background: {}'.format(background))
     sherpa.astro.ui.load_table_model('background', background)
 
     if psf:
-        log.info('Reading PSF: {0}'.format(psf))
+        log.info('Reading PSF: {}'.format(psf))
         SherpaMultiGaussPSF(psf).set()
     else:
         log.warning("No PSF convolution.")
 
     if roi:
-        log.info('Reading ROI: {0}'.format(roi))
+        log.info('Reading ROI: {}'.format(roi))
         sherpa.astro.ui.notice2d(roi)
     else:
         log.info('No ROI selected.')
 
-    log.info('Reading sources: {0}'.format(sources))
+    log.info('Reading sources: {}'.format(sources))
     read_json(sources, sherpa.astro.ui.set_source)
 
     # ---------------------------------------------------------
