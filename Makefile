@@ -15,9 +15,10 @@ help:
 	@echo '     cython           Compile cython files'
 	@echo ''
 	@echo '     trailing-spaces  Remove trailing spaces at the end of lines in *.py files'
-	@echo '     code-analysis    Run code analysis (flake8 and pylint)'
-	@echo '     flake8           Run code analysis (flake8)'
-	@echo '     pylint           Run code analysis (pylint)'
+	@echo '     code-analysis    Run static code analysis (flake8 and pylint)'
+	@echo '     flake8           Run static code analysis (flake8)'
+	@echo '     pylint           Run static code analysis (pylint)'
+	@echo '     pydocstyle       Run docstring checks'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -64,6 +65,9 @@ trailing-spaces:
 
 code-analysis: flake8 pylint
 
+# TODO: fix or silence everything reported here
+# TODO: remove the weird pipe / grep line and configure properly
+# Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
 	       --exclude=gammapy/extern \
@@ -71,11 +75,22 @@ flake8:
 	       | grep -v __init__ | grep -v external
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
+# Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
 	       --ignore=_astropy_init.py -f colorized \
 	       -d E1103,E0611,E1101 \
 	       --msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
+
+# TODO: fix or silence all the issue (and check which codes we really want to ignore if any)
+# TODO: figure out how exclude works (see https://github.com/PyCQA/pydocstyle/issues/175):
+# Should exclude: gammapy/version.py, gammapy/extern
+#	       --match-dir='[^gammapy/extern]' \
+
+pydocstyle:
+	pydocstyle $(PROJECT)/ \
+	       --convention=numpy \
+	       --add-ignore=D410,D104,D102,D100,D200
 
 # TODO: add test and code quality checks for `examples`
 
