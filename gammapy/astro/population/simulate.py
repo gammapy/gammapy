@@ -232,7 +232,8 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     table = Table()
     table['age'] = Column(age, unit='yr', description='Age of the source')
     table['n_ISM'] = Column(n_ISM, unit='cm-3', description='Interstellar medium density')
-    table['spiralarm'] = Column(spiralarm, description='Which spiralarm?')
+    if spiralarms:
+        table['spiralarm'] = Column(spiralarm, description='Which spiralarm?')
 
     table['x_birth'] = Column(x, unit='kpc', description='Galactocentric x coordinate at birth')
     table['y_birth'] = Column(y, unit='kpc', description='Galactocentric y coordinate at birth')
