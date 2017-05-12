@@ -103,14 +103,19 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             pars['emax'] = e_max
         elif spec_type == 'ecpl':
             model_class = ExponentialCutoffPowerLaw
-            from uncertainties import ufloat
             pars['amplitude'] = data['spec_ecpl_norm']
             errs['amplitude'] = data['spec_ecpl_norm_err']
             pars['index'] = data['spec_ecpl_index'] * u.Unit('')
             errs['index'] = data['spec_ecpl_index_err'] * u.Unit('')
-            lambda_ = 1. / ufloat(data['spec_ecpl_e_cut'].to('TeV').value, data['spec_ecpl_e_cut_err'].to('TeV').value)
-            pars['lambda_'] = u.Quantity(lambda_.nominal_value, 'TeV-1')
-            errs['lambda_'] = u.Quantity(lambda_.std_dev, 'TeV-1')
+
+            # from uncertainties import ufloat
+            # lambda_ = 1. / ufloat(data['spec_ecpl_e_cut'].to('TeV').value, data['spec_ecpl_e_cut_err'].to('TeV').value)
+            # pars['lambda_'] = u.Quantity(lambda_.nominal_value, 'TeV-1')
+            # errs['lambda_'] = u.Quantity(lambda_.std_dev, 'TeV-1')
+
+            pars['lambda_'] = 1. / data['spec_ecpl_e_cut']
+            errs['lambda_'] = data['spec_ecpl_e_cut_err'] / data['spec_ecpl_e_cut'] ** 2
+
             pars['reference'] = data['spec_ecpl_e_ref']
         else:
             raise ValueError('Invalid spec_type: {}'.format(spec_type))

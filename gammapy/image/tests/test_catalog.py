@@ -90,7 +90,7 @@ class TestCatalogImageEstimator(object):
 
         assert len(selection.table) == 3
 
-        desired = selection.table['spec_flux_above_1TeV'].sum()
+        desired = selection.table['spec_flux_1TeV'].sum()
         assert_allclose(actual, desired, rtol=1E-3)
 
     @requires_data('gammapy-extra')
