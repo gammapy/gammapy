@@ -74,55 +74,58 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
-        d = self.data
-        spec_type = d['spec_type']
+        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        
+        TODO: how to handle systematic errors? (ignored at the moment)
+        """
+        data = self.data
+        spec_type = data['spec_type']
         pars, errs = {}, {}
-        pars['index'] = d['spec_index'] * u.dimensionless_unscaled
-        errs['index'] = d['spec_index_err'] * u.dimensionless_unscaled
 
         if spec_type == 'pl':
-            pars['reference'] = d['spec_ref']
-            pars['amplitude'] = d['spec_norm']
-            errs['amplitude'] = d['spec_norm_err']
-            model = PowerLaw(**pars)
-        elif spec_type == 'ecpl':
-            pars['amplitude'] = d['spec_norm']
-            pars['reference'] = d['spec_ref']
-            pars['lambda_'] = 1. / d['spec_ecut']
-            errs['amplitude'] = d['spec_norm_err']
-            errs['lambda_'] = d['spec_ecut_err'] / d['spec_ecut'] ** 2
-            model = ExponentialCutoffPowerLaw(**pars)
+            model_class = PowerLaw
+            pars['amplitude'] = data['spec_pl_norm']
+            errs['amplitude'] = data['spec_pl_norm_err']
+            pars['index'] = data['spec_pl_index'] * u.Unit('')
+            errs['index'] = data['spec_pl_index_err'] * u.Unit('')
+            pars['reference'] = data['spec_pl_e_ref']
         elif spec_type == 'pl2':
-            pars['emin'] = d['spec_erange_min']
-            # The PowerLaw2 model needs an `emax` to work.
-            # If none is available, we put a default value here
-            # that is effectively infinity
-            DEFAULT_EMAX = 1e3 * u.TeV
-            if np.isnan(d['spec_erange_max']):
-                pars['emax'] = DEFAULT_EMAX
-            else:
-                pars['emax'] = d['spec_erange_max']
-
-            # TODO: remove this hack once this issue is resolved in gamma-cat
-            # https://github.com/gammapy/gamma-cat/issues/101
-            pars['amplitude'] = d['spec_norm'].value * u.Unit('cm-2 s-1')
-            errs['amplitude'] = d['spec_norm_err'].value * u.Unit('cm-2 s-1')
-            model = PowerLaw2(**pars)
-        elif spec_type == 'none':
-            raise NoDataAvailableError('No spectral model available: {}'.format(self.name))
+            model_class = PowerLaw2
+            pars['amplitude'] = data['spec_pl2_flux']
+            errs['amplitude'] = data['spec_pl2_flux_err']
+            pars['index'] = data['spec_pl2_index'] * u.Unit('')
+            errs['index'] = data['spec_pl2_index_err'] * u.Unit('')
+            pars['emin'] = data['spec_pl2_e_min']
+            e_max = data['spec_pl2_e_max']
+            DEFAULT_E_MAX = u.Quantity(1e5, 'TeV')
+            if np.isnan(e_max.value):
+                e_max = DEFAULT_E_MAX
+            pars['emax'] = e_max
+        elif spec_type == 'ecpl':
+            model_class = ExponentialCutoffPowerLaw
+            from uncertainties import ufloat
+            pars['amplitude'] = data['spec_ecpl_norm']
+            errs['amplitude'] = data['spec_ecpl_norm_err']
+            pars['index'] = data['spec_ecpl_index'] * u.Unit('')
+            errs['index'] = data['spec_ecpl_index_err'] * u.Unit('')
+            lambda_ = 1. / ufloat(data['spec_ecpl_e_cut'].to('TeV').value, data['spec_ecpl_e_cut_err'].to('TeV').value)
+            pars['lambda_'] = u.Quantity(lambda_.nominal_value, 'TeV-1')
+            errs['lambda_'] = u.Quantity(lambda_.std_dev, 'TeV-1')
+            pars['reference'] = data['spec_ecpl_e_ref']
         else:
-            raise NotImplementedError('Unknown spectral model: {!r}'.format(spec_type))
+            raise ValueError('Invalid spec_type: {}'.format(spec_type))
 
+        model = model_class(**pars)
         model.parameters.set_parameter_errors(errs)
+
         return model
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """Source spatial model."""
         d = self.data
+        flux = self.spectral_model.integral(emin, emax)
         morph_type = d['morph_type']
         pars = {}
-        flux = self.spectral_model.integral(emin, emax)
 
         glon = Angle(d['glon']).wrap_at('180d')
         glat = Angle(d['glat']).wrap_at('180d')
@@ -196,6 +199,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         def _del_nan_col(table, colname):
             if np.isfinite(table[colname]).sum() == 0:
                 del table[colname]
+
         for colname in table.colnames:
             _del_nan_col(table, colname)
 
