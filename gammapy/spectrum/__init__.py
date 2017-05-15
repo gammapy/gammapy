@@ -3,7 +3,6 @@
 Spectrum estimation and modeling methods (1-dimensional, with an energy axis).
 """
 from .core import *
-from .butterfly import *
 from .observation import *
 from .cosmic_ray import *
 from .crab import *

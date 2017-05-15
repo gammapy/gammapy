@@ -7,7 +7,7 @@ Plotting Fermi 2FHL and 3FGL spectra
 .. currentmodule:: gammapy.spectrum
 
 In the following we will show how to plot spectra for Fermi 2FHL and 3FGL
-sources, by using the `~gammapy.spectrum.models.SpectralModel`, `~gammapy.spectrum.SpectrumButterfly`
+sources, by using the `~gammapy.spectrum.models.SpectralModel`
 and `~gammapy.spectrum.DifferentialFluxPoints` classes.
 
 
