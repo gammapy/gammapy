@@ -8,7 +8,6 @@ https://github.com/gammapy/gamma-cat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import os
 import numpy as np
 from astropy.tests.helper import ignore_warnings
 from astropy import units as u
@@ -107,15 +106,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             errs['amplitude'] = data['spec_ecpl_norm_err']
             pars['index'] = data['spec_ecpl_index'] * u.Unit('')
             errs['index'] = data['spec_ecpl_index_err'] * u.Unit('')
-
-            # from uncertainties import ufloat
-            # lambda_ = 1. / ufloat(data['spec_ecpl_e_cut'].to('TeV').value, data['spec_ecpl_e_cut_err'].to('TeV').value)
-            # pars['lambda_'] = u.Quantity(lambda_.nominal_value, 'TeV-1')
-            # errs['lambda_'] = u.Quantity(lambda_.std_dev, 'TeV-1')
-
             pars['lambda_'] = 1. / data['spec_ecpl_e_cut']
             errs['lambda_'] = data['spec_ecpl_e_cut_err'] / data['spec_ecpl_e_cut'] ** 2
-
             pars['reference'] = data['spec_ecpl_e_ref']
         else:
             raise ValueError('Invalid spec_type: {}'.format(spec_type))
@@ -253,12 +245,6 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
         filename = str(make_path(filename))
-
-        if 'GAMMA_CAT' not in os.environ:
-            msg = 'The gamma-cat repo is not available. '
-            msg += 'You have to set the GAMMA_CAT environment variable '
-            msg += 'to point to the location for it to be found.'
-            raise GammaCatNotFoundError(msg)
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu=1)
