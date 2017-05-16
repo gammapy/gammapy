@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
-from .butterfly import SpectrumButterfly
 from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
@@ -204,7 +203,7 @@ class SpectrumFitResult(object):
 
     def butterfly(self, energy=None, flux_unit='TeV-1 cm-2 s-1'):
         """
-        Compute butterfly.
+        Compute butterfly table.
 
         Parameters
         ----------
@@ -215,8 +214,8 @@ class SpectrumFitResult(object):
 
         Returns
         -------
-        butterfly : `~gammapy.spectrum.SpectrumButterfly`
-            Butterfly object.
+        table : `~astropy.table.Table`
+            Butterfly info in table (cols: 'energy', 'flux', 'flux_lo', 'flux_hi')
         """
         if energy is None:
             energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
@@ -224,12 +223,12 @@ class SpectrumFitResult(object):
 
         flux, flux_err = self.model.evaluate_error(energy)
 
-        butterfly = SpectrumButterfly()
-        butterfly['energy'] = energy
-        butterfly['flux'] = flux.to(flux_unit)
-        butterfly['flux_lo'] = flux - flux_err.to(flux_unit)
-        butterfly['flux_hi'] = flux + flux_err.to(flux_unit)
-        return butterfly
+        table = Table()
+        table['energy'] = energy
+        table['flux'] = flux.to(flux_unit)
+        table['flux_lo'] = flux - flux_err.to(flux_unit)
+        table['flux_hi'] = flux + flux_err.to(flux_unit)
+        return table
 
     @property
     def expected_source_counts(self):
