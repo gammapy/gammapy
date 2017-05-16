@@ -42,6 +42,13 @@ __all__ = [
 ]
 
 
+def compute_flux_points_ul(quantity, quantity_errp):
+    """Compute UL value for fermi flux points.
+
+    See https://arxiv.org/pdf/1501.02003.pdf (page 30)
+    """
+    return 2 * quantity_errp + quantity
+
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FGL catalog.
 
@@ -337,17 +344,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         # handle upper limits
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         # handle upper limits
         table['eflux_ul'] = np.nan * nuFnu.unit
-        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
-
-        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
-            table[column][is_ul] = np.nan
+        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
+        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
@@ -445,10 +448,8 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         flux_points = FluxPoints(table)
 
@@ -520,10 +521,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         flux_points = FluxPoints(table)
 
@@ -626,16 +625,12 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         # handle upper limits
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         table['eflux_ul'] = np.nan * e2dnde.unit
-        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
-
-        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
-            table[column][is_ul] = np.nan
+        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
+        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         # TODO: remove this computation here.
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
