@@ -151,6 +151,13 @@ We also started to implement a local web app: ``gammapy-catalog-browse``.
 It isn't working well at the moment, and probably now that we started http://gamma-sky.net we'll probably remove it.
 But if anyone is interested to fix and improve ``gammapy-catalog-browse``, we could also keep it.
 
+Content
+=======
+
+.. toctree::
+   :maxdepth: 1
+
+   gammacat
 
 Reference/API
 =============
