@@ -91,6 +91,13 @@ class TestFermi3FGLObject:
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
+    def test_flux_points_ul(self):
+        source = self.cat['3FGL J0000.2-3738']
+        flux_points = source.flux_points
+
+        desired = [4.096391e-09, 6.680059e-10, np.nan, np.nan, np.nan]
+        assert_allclose(flux_points.table['flux_ul'].data, desired, rtol=1e-5)
+
     def test_lightcurve(self):
         lc = self.source.lightcurve
         assert len(lc) == 48
@@ -131,11 +138,11 @@ class TestFermi1FHLObject:
         src = self.cat['1FHL J0153.1+7515']
         flux_points = src.flux_points
         actual = flux_points.table['flux']
-        desired = [5.523017e-11, np.nan, np.nan] * u.Unit('cm-2 s-1')
+        desired = [5.523017e-11, 0, 0] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired)
 
         actual = flux_points.table['flux_ul']
-        desired = [np.nan, 2.081589e-11, 1.299698e-11] * u.Unit('cm-2 s-1')
+        desired = [np.nan, 4.163177e-11, 2.599397e-11] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired, rtol=1e-5)
 
 
@@ -162,12 +169,12 @@ class TestFermi2FHLObject:
         src = self.cat['PKS 2155-304']
         flux_points = src.flux_points
         actual = flux_points.table['flux']
-        desired = [2.866363e-10, 6.118736e-11, np.nan] * u.Unit('cm-2 s-1')
+        desired = [2.866363e-10, 6.118736e-11, 3.257970e-16] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired)
 
         actual = flux_points.table['flux_ul']
-        desired = [np.nan, np.nan, 6.470300e-12] * u.Unit('cm-2 s-1')
-        assert_quantity_allclose(actual, desired)
+        desired = [np.nan, np.nan, 1.294092e-11] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired, rtol=1E-3)
 
 
 @requires_data('gammapy-extra')
