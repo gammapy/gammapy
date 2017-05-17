@@ -17,6 +17,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                        integral_resolution=10):
     """Compute predicted counts cube in energy bins.
 
+    TODO: describe what's passed in.
+    I think it's a surface brighness in e.g. 'cm-2 s-1 TeV-1 sr-1'
+
     Parameters
     ----------
     flux_cube : `SkyCube`
@@ -48,7 +51,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                                                 nbins=integral_resolution)
 
         exposure = exposure_cube.sky_image(ecenter, interpolation='linear')
-        npred = flux_int.data * exposure.data * exposure.solid_angle()
+        solid_angle = exposure.solid_angle()
+        npred = flux_int.data * exposure.data * solid_angle
         data.append(npred)
 
     data = u.Quantity(data, '')

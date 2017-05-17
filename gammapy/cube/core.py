@@ -326,7 +326,16 @@ class SkyCube(MapBase):
             z = np.arange(self.data.shape[0])
         elif mode == 'edges':
             z = np.arange(self.data.shape[0] + 1) - 0.5
+        else:
+            raise ValueError('Invalid mode: {}'.format(mode))
+
         return self.energy_axis.wcs_pix2world(z)
+
+    @property
+    def energy_width(self):
+        """Energy bin width vector (Quantity)"""
+        ebounds = self.energies(mode='edges')
+        return ebounds[1:] - ebounds[:-1]
 
     def cutout(self, position, size):
         """Cut out rectangular piece of a cube.
