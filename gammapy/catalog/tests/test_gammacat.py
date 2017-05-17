@@ -6,6 +6,7 @@ from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
 from ..gammacat import SourceCatalogGammaCat
+from ..gammacat import GammaCatResource, GammaCatResourceIndex
 
 SOURCES = [
     {
@@ -49,7 +50,7 @@ SOURCES = [
 
 @pytest.fixture(scope='session')
 def gammacat():
-    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
+    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz'
     return SourceCatalogGammaCat(filename=filename)
 
 
@@ -119,17 +120,17 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde_1TeV = spectral_model.evaluate_error(e_min)
-        flux_1TeV = spectral_model.integral_error(emin=e_min, emax=e_inf)
-        eflux_1_10TeV = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
+        dnde_1TeV, dnde_1TeV_err = spectral_model.evaluate_error(e_min)
+        flux_1TeV, flux_1TeV_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
+        eflux_1_10TeV, eflux_1_10TeV_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
 
-        assert_quantity_allclose(dnde_1TeV[0], ref['dnde_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV[0], ref['flux_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV[0], ref['eflux_1_10TeV'], rtol=1e-3)
+        assert_quantity_allclose(dnde_1TeV, ref['dnde_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux_1TeV, ref['flux_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV, ref['eflux_1_10TeV'], rtol=1e-3)
 
-        assert_quantity_allclose(dnde_1TeV[1], ref['dnde_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV[1], ref['flux_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV[1], ref['eflux_1_10TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(dnde_1TeV_err, ref['dnde_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(flux_1TeV_err, ref['flux_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV_err, ref['eflux_1_10TeV_err'], rtol=1e-3)
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_flux_points(self, gammacat, ref):
@@ -138,3 +139,108 @@ class TestSourceCatalogObjectGammaCat:
         flux_points = source.flux_points
 
         assert len(flux_points.table) == ref['n_flux_points']
+
+
+class TestGammaCatResource:
+    def setup(self):
+        self.resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
+        self.global_id = '42|2010A&A...516A..62A|2|none'
+
+    def test_global_id(self):
+        assert self.resource.global_id == self.global_id
+
+    def test_eq(self):
+        resource1 = self.resource
+        resource2 = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A')
+
+        assert resource1 == resource1
+        assert resource1 != resource2
+
+    def test_repr(self):
+        expected = ("GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', "
+                    "file_id=2, type='none', location='none')")
+        assert repr(self.resource) == expected
+
+    def test_to_dict(self):
+        expected = OrderedDict([
+            ('source_id', 42), ('reference_id', '2010A&A...516A..62A'),
+            ('file_id', 2), ('type', 'none'), ('location', 'none'),
+        ])
+        assert self.resource.to_dict() == expected
+
+    def test_dict_roundtrip(self):
+        actual = GammaCatResource.from_dict(self.resource.to_dict())
+        assert actual == self.resource
+
+
+class TestGammaCatResourceIndex:
+    def setup(self):
+        self.resource_index = GammaCatResourceIndex([
+            GammaCatResource(source_id=99, reference_id='2014ApJ...780..168A'),
+            GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2, type='sed'),
+            GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=1),
+        ])
+
+    def test_repr(self):
+        assert repr(self.resource_index) == 'GammaCatResourceIndex(n_resources=3)'
+
+    def test_eq(self):
+        resource_index1 = self.resource_index
+        resource_index2 = GammaCatResourceIndex(resource_index1.resources[:-1])
+
+        assert resource_index1 == resource_index1
+        assert resource_index1 != resource_index2
+
+    def test_unique_source_ids(self):
+        expected = [42, 99]
+        assert self.resource_index.unique_source_ids == expected
+
+    def test_unique_reference_ids(self):
+        expected = ['2010A&A...516A..62A', '2014ApJ...780..168A']
+        assert self.resource_index.unique_reference_ids == expected
+
+    def test_global_ids(self):
+        expected = [
+            '99|2014ApJ...780..168A|-1|none',
+            '42|2010A&A...516A..62A|2|sed',
+            '42|2010A&A...516A..62A|1|none',
+        ]
+        assert self.resource_index.global_ids == expected
+
+    def test_to_list(self):
+        result = self.resource_index.to_list()
+        assert isinstance(result, list)
+        assert len(result) == 3
+
+    def test_list_roundtrip(self):
+        data = self.resource_index.to_list()
+        actual = GammaCatResourceIndex.from_list(data)
+        assert actual == self.resource_index
+
+    def test_to_table(self):
+        table = self.resource_index.to_table()
+        assert len(table) == 3
+        assert table.colnames == ['source_id', 'reference_id', 'file_id', 'type', 'location']
+
+    def test_table_roundtrip(self):
+        table = self.resource_index.to_table()
+        actual = GammaCatResourceIndex.from_table(table)
+        assert actual == self.resource_index
+
+    @requires_dependency('pandas')
+    def test_to_pandas(self):
+        df = self.resource_index.to_pandas()
+        df2 = df.query('source_id == 42')
+        assert len(df2) == 2
+
+    @requires_dependency('pandas')
+    def test_pandas_roundtrip(self):
+        df = self.resource_index.to_pandas()
+        actual = GammaCatResourceIndex.from_pandas(df)
+        assert actual == self.resource_index
+
+    @requires_dependency('pandas')
+    def test_query(self):
+        resource_index = self.resource_index.query('type == "sed" and source_id == 42')
+        assert len(resource_index.resources) == 1
+        assert resource_index.resources[0].global_id == '42|2010A&A...516A..62A|2|sed'
