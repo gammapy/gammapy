@@ -50,7 +50,7 @@ SOURCES = [
 
 @pytest.fixture(scope='session')
 def gammacat():
-    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat.fits.gz'
+    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz'
     return SourceCatalogGammaCat(filename=filename)
 
 
@@ -120,17 +120,17 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde_1TeV = spectral_model.evaluate_error(e_min)
-        flux_1TeV = spectral_model.integral_error(emin=e_min, emax=e_inf)
-        eflux_1_10TeV = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
+        dnde_1TeV, dnde_1TeV_err = spectral_model.evaluate_error(e_min)
+        flux_1TeV, flux_1TeV_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
+        eflux_1_10TeV, eflux_1_10TeV_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
 
-        assert_quantity_allclose(dnde_1TeV[0], ref['dnde_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV[0], ref['flux_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV[0], ref['eflux_1_10TeV'], rtol=1e-3)
+        assert_quantity_allclose(dnde_1TeV, ref['dnde_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux_1TeV, ref['flux_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV, ref['eflux_1_10TeV'], rtol=1e-3)
 
-        assert_quantity_allclose(dnde_1TeV[1], ref['dnde_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV[1], ref['flux_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV[1], ref['eflux_1_10TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(dnde_1TeV_err, ref['dnde_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(flux_1TeV_err, ref['flux_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(eflux_1_10TeV_err, ref['eflux_1_10TeV_err'], rtol=1e-3)
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_flux_points(self, gammacat, ref):

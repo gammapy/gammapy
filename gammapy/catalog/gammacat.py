@@ -335,7 +335,7 @@ class GammaCatResource(object):
     >>> from gammapy.catalog.gammacat import GammaCatResource
     >>> resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
     >>> resource
-    GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2, global_id='42-2010A&A...516A..62A-2', location=None)
+    GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2, type='none', location='none')
     """
     _NA_FILL = dict(file_id=-1, type='none', location='none')
 
@@ -444,6 +444,7 @@ class GammaCatResourceIndex(object):
 
     @classmethod
     def from_table(cls, table):
+        """Create from `~astropy.table.Table`."""
         resources = []
         for row in table:
             data = OrderedDict((k, row[k]) for k in table.colnames)
