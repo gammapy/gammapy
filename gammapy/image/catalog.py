@@ -40,14 +40,14 @@ class CatalogImageEstimator(object):
         from astropy import units as u
         from gammapy.image import SkyImage, CatalogImageEstimator
         from gammapy.catalog import SourceCatalogGammaCat
-    
+
         reference = SkyImage.empty(xref=265, yref=-1.5, nxpix=201,
                                    nypix=201, binsz=0.04)
-    
+
         image_estimator = CatalogImageEstimator(reference=reference,
                                                 emin=1 * u.TeV,
                                                 emax=10 * u.TeV)
-    
+
         catalog = SourceCatalogGammaCat()
         result = image_estimator.run(catalog)
         result['flux'].show()
@@ -86,7 +86,7 @@ class CatalogImageEstimator(object):
             except (NotImplementedError, NoDataAvailableError):
                 continue
 
-            if source.pointlike:
+            if source.is_pointlike:
                 # use 5 pixel bbox for point-like models
                 size = BBOX_DELTA2D_PIX * image.wcs_pixel_scale().to('deg')
             else:
@@ -95,7 +95,7 @@ class CatalogImageEstimator(object):
 
             cutout = image.cutout(source.position, size=size)
 
-            if source.pointlike:
+            if source.is_pointlike:
                 solid_angle = 1.
             else:
                 solid_angle = cutout.solid_angle().to('deg2').value
