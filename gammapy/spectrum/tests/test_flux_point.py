@@ -246,12 +246,11 @@ class TestSEDLikelihoodProfile:
         self.sed = SEDLikelihoodProfile.read(filename)
 
     def test_basics(self):
-        # print(self.sed)
         assert 'SEDLikelihoodProfile' in str(self.sed)
 
     @requires_dependency('matplotlib')
     def test_plot(self):
-        ax = self.sed.plot()
+        self.sed.plot()
 
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope='session')
@@ -263,12 +262,10 @@ def flux_points(request):
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 class TestFluxPoints:
+
     @requires_dependency('matplotlib')
     def test_plot(self, flux_points):
-        import matplotlib.pyplot as plt
-        ax = plt.gca()
-        flux_points.plot(ax=ax)
-        flux_points.peek()
+        flux_points.plot()
 
     def test_info(self, flux_points):
         info = str(flux_points)
