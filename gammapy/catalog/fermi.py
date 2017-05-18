@@ -14,7 +14,7 @@ from astropy.modeling.models import Gaussian2D, Disk2D
 from astropy.coordinates import Angle
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
-from ..utils.table import table_standardise
+from ..utils.table import table_standardise_units_inplace
 from ..image import SkyImage
 from ..image.models import Delta2D, Template2D
 from ..spectrum import FluxPoints, compute_flux_points_dnde
@@ -699,7 +699,7 @@ class SourceCatalog3FGL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
@@ -728,7 +728,7 @@ class SourceCatalog1FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
@@ -755,7 +755,7 @@ class SourceCatalog2FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='2FHL Source Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC', '3FGL_Name', '1FHL_Name', 'TeVCat_Name')
@@ -784,7 +784,7 @@ class SourceCatalog3FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
