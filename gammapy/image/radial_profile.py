@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.table import QTable
+from astropy.table import Table
 from .core import SkyImage
 
 __all__ = [
@@ -30,7 +30,7 @@ def radial_profile(image, center, radius):
 
     Returns
     -------
-    table : `~astropy.table.QTable`
+    table : `~astropy.table.Table`
 
         Table with the following fields that define the binning:
 
@@ -145,7 +145,7 @@ def _radial_profile_measure(image, labels, index):
     image = image.data
     labels = labels.data
 
-    table = QTable()
+    table = Table()
     table['N_PIX'] = ndimage.sum(np.ones_like(image), labels, index=index)
     table['SUM'] = ndimage.sum(image, labels, index=index)
     table['MEAN'] = table['SUM'] / table['N_PIX']
