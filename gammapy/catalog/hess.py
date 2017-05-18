@@ -17,10 +17,12 @@ from astropy.tests.helper import ignore_warnings
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.modeling.models import Gaussian2D
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
+from ..image.models import Delta2D, Shell2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -36,6 +38,7 @@ FF = 1e-12
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
+SHELL_WIDTH = 0.05 # Default shell width (fraction of R_out)
 
 
 class HGPSGaussComponent(object):
@@ -57,6 +60,26 @@ class HGPSGaussComponent(object):
     def index(self):
         """Row index of source in catalog"""
         return self.data[self._source_index_key]
+
+    @property
+    def spatial_model(self):
+        """
+        Component spatial model.
+        """
+        d = self.data
+
+        amplitude = d['Flux_Map'].to('cm-2 s-1').value
+        pars = {}
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        pars['x_mean'] = glon.value
+        pars['y_mean'] = glat.value
+        pars['x_stddev'] = d['Size'].to('deg').value
+        pars['y_stddev'] = d['Size'].to('deg').value
+        pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
+        return Gaussian2D(**pars)
+
 
     def __str__(self):
         """Pretty-print source data"""
@@ -385,6 +408,74 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
+
+
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Source spatial model.
+        """
+        d = self.data
+        flux = self.spectral_model.integral(emin, emax)
+        amplitude = flux.to('cm-2 s-1').value
+
+        pars = {}
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        spatial_model = d['Spatial_Model']
+
+        if self.is_pointlike:
+            pars['amplitude'] = amplitude
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
+
+        elif spatial_model == 'Shell':
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            r_out = d['Size'].to('deg').value
+            pars['width'] =  r_out * SHELL_WIDTH
+            pars['r_in'] = r_out * (1 - SHELL_WIDTH)
+            pars['amplitude'] = amplitude
+            return Shell2D(**pars)
+
+        elif spatial_model in ['Gaussian', '2-Gaussian', '3-Gaussian']:
+            amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
+            models = [component.spatial_model for component in self.components]
+
+            for model in models:
+                # weight total flux according to relative amplitude
+                model.amplitude = model.amplitude / amplitude_total * amplitude
+
+            if spatial_model == 'Gaussian':
+                return models[0]
+
+            elif spatial_model == '2-Gaussian':
+                model = models[0] + models[1]
+
+                # use generic bounding box of 2 deg width and height
+                model.bounding_box = ((glat.deg - 2, glat.deg + 2),
+                                      (glon.deg - 2, glon.deg + 2))
+                return model
+
+            elif spatial_model == '3-Gaussian':
+                model = models[0] + models[1] + models[2]
+
+                # use generic bounding box of 2 deg width and height
+                model.bounding_box = ((glat.deg - 2, glat.deg + 2),
+                                      (glon.deg - 2, glon.deg + 2))
+                return model
+
+        else:
+            raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def is_pointlike(self):
+        """Source is pointlike"""
+        d = self.data
+        has_size_ul = np.isfinite(d['Size_UL'])
+        pointlike = d['Spatial_Model'] == 'Point-Like'
+        return pointlike or has_size_ul
 
     @property
     def flux_points(self):
