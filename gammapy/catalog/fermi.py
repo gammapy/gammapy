@@ -649,7 +649,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        if self.pointlike:
+        if self.is_pointlike:
             pars['amplitude'] = amplitude
             pars['x_0'] = glon.value
             pars['y_0'] = glat.value
@@ -681,7 +681,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 raise ValueError('Not a valid spatial model{}'.format(morph_type))
 
     @property
-    def pointlike(self):
+    def is_pointlike(self):
         return self.data['Extended_Source_Name'].strip() == ''
 
 

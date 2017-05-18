@@ -77,7 +77,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def spectral_model(self):
         """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
-        
+
         TODO: how to handle systematic errors? (ignored at the moment)
         """
         data = self.data
@@ -206,7 +206,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return FluxPoints(table)
 
     @property
-    def pointlike(self):
+    def is_pointlike(self):
         """
         Source is pointlike.
         """
@@ -308,8 +308,8 @@ class GammaCatDataCollection(object):
 
 
 class GammaCatResource(object):
-    """Reference for a single resource in gamma-cat. 
-    
+    """Reference for a single resource in gamma-cat.
+
     This can be considered an implementation detail,
     used to assign ``global_id`` and to load resources.
 
@@ -329,7 +329,7 @@ class GammaCatResource(object):
         Resource type (use string 'none' if missing)
     location : str
         Resource location (use string 'none' if missing)
-    
+
     Examples
     --------
     >>> from gammapy.catalog.gammacat import GammaCatResource
@@ -423,7 +423,7 @@ class GammaCatResourceIndex(object):
     @property
     def global_ids(self):
         """List of global resource IDs (`list(str)`).
-        
+
         In original order, not sorted.
         """
         return [resource.global_id for resource in self.resources]
@@ -465,9 +465,9 @@ class GammaCatResourceIndex(object):
 
     def query(self, *args, **kwargs):
         """Query to select subset of resources.
-        
+
         Calls `pandas.DataFrame.query` and passes arguments to that method.
-        
+
         Examples
         --------
         >>> resource_index = GammaCatResourceIndex(...)
