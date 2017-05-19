@@ -585,7 +585,7 @@ class SpectrumObservationList(UserList):
 
 
 class SpectrumObservationStacker(object):
-    r"""Stack `~gammapy.spectrum.SpectrumObervationList`
+    r"""Stack observations in a `~gammapy.spectrum.SpectrumObservationList`.
 
     The stacking of :math:`j` observations is implemented as follows.
     :math:`k` and :math:`l` denote a bin in reconstructed and true energy,

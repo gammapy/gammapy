@@ -45,17 +45,24 @@ DEFAULT_UNIT = OrderedDict([
 class FluxPoints(object):
     """Flux points container.
 
-    For a complete documentation see :ref:`gadf:flux-points`, for an usage
-    example see :ref:`flux-point-computation`.
+    The supported formats are described here: :ref:`gadf:flux-points`
+
+    In summary, the following formats and minimum required columns are:
+
+    * Format ``dnde``: columns ``e_ref`` and ``dnde``
+    * Format ``e2dnde``: columns ``e_ref``, ``e2dnde``
+    * Format ``flux``: columns ``e_min``, ``e_max``, ``flux``
+    * Format ``eflux``: columns ``e_min``, ``e_max``, ``eflux``
 
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Input data table, with the following minimal required columns:
+        Table with flux point data
 
-        * Format `'dnde'`: `'dnde'` and `'e_ref'`
-        * Format `'flux'`: `'flux'`, `'e_min'`, `'e_max'`
-        * Format `'eflux'`: `'eflux'`, `'e_min'`, `'e_max'`
+    Attributes
+    ----------
+    table : `~astropy.table.Table`
+        Table with flux point data
 
     Examples
     --------
@@ -84,7 +91,7 @@ class FluxPoints(object):
         filename : str
             Filename
         kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.read`.
+            Keyword arguments passed to `astropy.table.Table.read`.
         """
         filename = make_path(filename)
         try:
@@ -107,7 +114,7 @@ class FluxPoints(object):
         filename : str
             Filename
         kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`.
+            Keyword arguments passed to `astropy.table.Table.write`.
         """
         filename = make_path(filename)
         try:
@@ -160,17 +167,103 @@ class FluxPoints(object):
         Examples
         --------
 
-        ::
-
-            from gammapy.spectrum import FluxPoints
-            filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-            flux_points = FluxPoints.read(filename)
-            print(flux_points)
-            print(flux_points.drop_ul())
+        >>> from gammapy.spectrum import FluxPoints
+        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        >>> flux_points = FluxPoints.read(filename)
+        >>> print(flux_points)
+        FluxPoints(sed_type="flux", n_points=24)
+        >>> print(flux_points.drop_ul())
+        FluxPoints(sed_type="flux", n_points=19)
         """
-        table = self.table.copy()
-        table_drop_ul = table[~self._is_ul]
+        table_drop_ul = self.table[~self._is_ul]
         return self.__class__(table_drop_ul)
+
+    def to_sed_type(self, sed_type, method='log_center', model=None):
+        """Convert to a different SED type (return new `FluxPoints`).
+
+        See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
+        on the `'lafferty'` method.
+
+        Parameters
+        ----------
+        sed_type : {'dnde'}
+             SED type to convert to.
+        model : `~gammapy.spectrum.SpectralModel`
+            Spectral model assumption.  Note that the value of the amplitude parameter
+            does not matter. Still it is recommended to use something with the right
+            scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
+        method : {'lafferty', 'log_center', 'table'}
+            Flux points `e_ref` estimation method:
+
+                * `'laferty'` Lafferty & Wyatt model-based e_ref
+                * `'log_center'` log bin center e_ref
+                * `'table'` using column 'e_ref' from input flux_points
+
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Flux points including differential quantity columns `dnde`
+            and `dnde_err` (optional), `dnde_ul` (optional).
+
+        Examples
+        --------
+        >>> from astropy import units as u
+        >>> from gammapy.spectrum import FluxPoints
+        >>> from gammapy.spectrum.models import PowerLaw
+        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        >>> flux_points = FluxPoints.read(filename)
+        >>> model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
+        """
+        # TODO: implement other directions. Refactor!
+        if sed_type != 'dnde':
+            raise NotImplementedError
+
+        if model is None:
+            model = PowerLaw(
+                index=2 * u.Unit(''),
+                amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
+                reference=1 * u.TeV,
+            )
+
+        input_table = self.table.copy()
+
+        e_min, e_max = self.e_min, self.e_max
+
+        # Compute e_ref
+        if method == 'table':
+            e_ref = input_table['e_ref'].quantity
+        elif method == 'log_center':
+            e_ref = np.sqrt(e_min * e_max)
+        elif method == 'lafferty':
+            # set e_ref that it represents the mean dnde in the given energy bin
+            e_ref = self._e_ref_lafferty(model, e_min, e_max)
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
+        flux = input_table['flux'].quantity
+        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max)
+
+        # Add to result table
+        table = input_table.copy()
+        table['e_ref'] = e_ref
+        table['dnde'] = dnde
+
+        if 'flux_err' in table.colnames:
+            # TODO: implement better error handling, e.g. MC based method
+            table['dnde_err'] = dnde * table['flux_err'].quantity / flux
+
+        if 'flux_errn' in table.colnames:
+            table['dnde_errn'] = dnde * table['flux_errn'].quantity / flux
+            table['dnde_errp'] = dnde * table['flux_errp'].quantity / flux
+
+        if 'flux_ul' in table.colnames:
+            flux_ul = table['flux_ul'].quantity
+            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
+            table['dnde_ul'] = dnde_ul
+
+        table.meta['SED_TYPE'] = 'dnde'
+        return FluxPoints(table)
 
     @property
     def sed_type(self):
@@ -291,7 +384,7 @@ class FluxPoints(object):
     def e_max(self):
         """Upper bound of energy bin.
 
-        Defined by `e_max` column in `FluxPoints.table`.
+        Defined by ``e_max`` column in ``table``.
 
         Returns
         -------
@@ -299,93 +392,6 @@ class FluxPoints(object):
             Upper bound of energy bin.
         """
         return self.table['e_max'].quantity
-
-    def to_sed_type(self, sed_type, method='log_center', model=None):
-        """Convert to a different SED type (return a new `FluxPoints` object).
-    
-        See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
-        on the `'lafferty'` method.
-    
-        Parameters
-        ----------
-        sed_type : {'dnde'}
-             SED type to convert to.
-        model : `~gammapy.spectrum.SpectralModel`
-            Spectral model assumption.  Note that the value of the amplitude parameter
-            does not matter. Still it is recommended to use something with the right
-            scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
-        method : {'lafferty', 'log_center', 'table'}
-            Flux points `e_ref` estimation method:
-    
-                * `'laferty'` Lafferty & Wyatt model-based e_ref
-                * `'log_center'` log bin center e_ref
-                * `'table'` using column 'e_ref' from input flux_points
-    
-        Returns
-        -------
-        flux_points : `FluxPoints`
-            Flux points including differential quantity columns `dnde`
-            and `dnde_err` (optional), `dnde_ul` (optional).
-    
-        Examples
-        --------
-        >>> from astropy import units as u
-        >>> from gammapy.spectrum import FluxPoints
-        >>> from gammapy.spectrum.models import PowerLaw
-        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-        >>> flux_points = FluxPoints.read(filename)
-        >>> model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
-        >>> flux_point_dnde = flux_points.to_sed_type('dnde', model=model)
-        """
-        # TODO: implement other directions. Refactor!
-        if sed_type != 'dnde':
-            raise NotImplementedError
-
-        if model is None:
-            model = PowerLaw(
-                index=2 * u.Unit(''),
-                amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
-                reference=1 * u.TeV,
-            )
-
-        input_table = self.table.copy()
-
-        e_min, e_max = self.e_min, self.e_max
-
-        # Compute e_ref
-        if method == 'table':
-            e_ref = input_table['e_ref'].quantity
-        elif method == 'log_center':
-            e_ref = np.sqrt(e_min * e_max)
-        elif method == 'lafferty':
-            # set e_ref that it represents the mean dnde in the given energy bin
-            e_ref = self._e_ref_lafferty(model, e_min, e_max)
-        else:
-            raise ValueError('Invalid method: {}'.format(method))
-
-        flux = input_table['flux'].quantity
-        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max)
-
-        # Add to result table
-        table = input_table.copy()
-        table['e_ref'] = e_ref
-        table['dnde'] = dnde
-
-        if 'flux_err' in table.colnames:
-            # TODO: implement better error handling, e.g. MC based method
-            table['dnde_err'] = dnde * table['flux_err'].quantity / flux
-
-        if 'flux_errn' in table.colnames:
-            table['dnde_errn'] = dnde * table['flux_errn'].quantity / flux
-            table['dnde_errp'] = dnde * table['flux_errp'].quantity / flux
-
-        if 'flux_ul' in table.colnames:
-            flux_ul = table['flux_ul'].quantity
-            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
-            table['dnde_ul'] = dnde_ul
-
-        table.meta['SED_TYPE'] = 'dnde'
-        return FluxPoints(table)
 
     @staticmethod
     def _e_ref_lafferty(model, e_min, e_max):
@@ -426,7 +432,7 @@ class FluxPoints(object):
         energy_power : int
             Power of energy to multiply y axis with
         kwargs : dict
-            Keyword arguments passed to :func:`~matplotlib.pyplot.errorbar`
+            Keyword arguments passed to :func:`matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -496,7 +502,6 @@ class FluxPoints(object):
         return ax
 
 
-
 class FluxPointEstimator(object):
     """Flux point estimator.
 
@@ -508,7 +513,7 @@ class FluxPointEstimator(object):
     obs : `~gammapy.spectrum.SpectrumObservation`
         Spectrum observation
     groups : `~gammapy.spectrum.SpectrumEnergyGroups`
-        Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupsMaker`)
+        Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     """
@@ -718,7 +723,7 @@ class FluxPointFitter(object):
     Load flux points from file and fit with a power-law model::
 
         from astropy import units as u
-        from gammapy.spectrum import FluxPoints, FluxPointsFitter
+        from gammapy.spectrum import FluxPoints, FluxPointFitter
         from gammapy.spectrum.models import PowerLaw
 
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
@@ -730,7 +735,7 @@ class FluxPointFitter(object):
             reference=1. * u.TeV,
         )
 
-        fitter = FluxPointsFitter()
+        fitter = FluxPointFitter()
         result = fitter.run(flux_points, model)
         print(result['best_fit_model'])
     """
