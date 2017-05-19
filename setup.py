@@ -124,7 +124,7 @@ setup(
           'sherpa',
       ],
       plotting=[
-          'matplotlib>=1.4',
+          'matplotlib>=1.5',
           'aplpy>=0.9',
       ],
       gui=[

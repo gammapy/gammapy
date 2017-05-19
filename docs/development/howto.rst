@@ -754,26 +754,6 @@ This is a common standpoint, e.g. ``astropy.wcs`` is BSD licensed, but uses the 
 Note that if you distribute Gammapy together with one of the GPL dependencies,
 the whole distribution then falls under the GPL license.
 
-Gammapy plotting style
-----------------------
-
-Figures and plots in the Gammapy docs use the same consistent plotting style,
-that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
-astropy plotting style applying a few minor changes. Here are two examples:
-
-* :ref:`Crab MWL SED plot <crab-mwl-sed>`
-* :ref:`Fermi 3FHL image <fermi-3fhl-image>`
-
-For the Gammapy docs the style is used by default and doesn't have to be set
-explicitly. If you would like to use the style outside the Gammapy docs, add
-the following lines to the beginning of your plotting script or notebook:
-
-.. code-block:: python
-
-	import matplotlib.pyplot as plt
-	from gammapy.utils.mpl_style import gammapy_mpl_style
-	plt.style.use(gammapy_mpl_style)
-
 Changelog
 ---------
 

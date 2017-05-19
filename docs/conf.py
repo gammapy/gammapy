@@ -41,12 +41,6 @@ except ImportError:
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
 
-# Use the Gammapy style when building docs
-from gammapy.utils.mpl_style import gammapy_mpl_style
-
-plot_rcparams = gammapy_mpl_style
-plot_apply_rcparams = True
-
 # Get configuration information from setup.cfg
 try:
     from ConfigParser import ConfigParser
