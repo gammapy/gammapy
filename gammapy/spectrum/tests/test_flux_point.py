@@ -10,18 +10,19 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.modeling import ParameterList
 from ...spectrum import SpectrumResult, SpectrumFit
 from ...spectrum.models import PowerLaw, SpectralModel
-from ..flux_point import (_e_ref_lafferty, _dnde_from_flux,
-                          compute_flux_points_dnde,
-                          FluxPointEstimator, FluxPoints, FluxPointsFitter)
-from ..flux_point import SEDLikelihoodProfile
+from ..flux_point import FluxPoints
+from ..flux_point import FluxPointProfiles
+from ..flux_point import FluxPointFitter
+from ..flux_point import FluxPointEstimator
+from .test_energy_group import seg, obs
 
-E_REF_METHODS = ['table', 'lafferty', 'log_center']
-indices = [0, 1, 2, 3]
 
-FLUX_POINTS_FILES = ['diff_flux_points.ecsv',
-                     'diff_flux_points.fits',
-                     'flux_points.ecsv',
-                     'flux_points.fits']
+FLUX_POINTS_FILES = [
+    'diff_flux_points.ecsv',
+    'diff_flux_points.fits',
+    'flux_points.ecsv',
+    'flux_points.fits',
+]
 
 
 class LWTestModel(SpectralModel):
@@ -80,7 +81,7 @@ def test_e_ref_lafferty():
     model = LWTestModel()
     e_min = np.array([0.0, 0.1, 0.3, 0.6])
     e_max = np.array([0.1, 0.3, 0.6, 1.0])
-    actual = _e_ref_lafferty(model, e_min, e_max)
+    actual = FluxPoints._e_ref_lafferty(model, e_min, e_max)
     assert_allclose(actual, desired, atol=1e-3)
 
 
@@ -94,8 +95,8 @@ def test_dnde_from_flux():
 
     # Get values
     model = XSqrTestModel()
-    e_ref = _e_ref_lafferty(model, e_min, e_max)
-    dnde = _dnde_from_flux(flux, model, e_ref, e_min, e_max)
+    e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+    dnde = FluxPoints._dnde_from_flux(flux, model, e_ref, e_min, e_max)
 
     # Set up test case comparison
     dnde_model = model(e_ref)
@@ -109,7 +110,7 @@ def test_dnde_from_flux():
 
 
 @requires_dependency('scipy')
-@pytest.mark.parametrize('method', E_REF_METHODS)
+@pytest.mark.parametrize('method', ['table', 'lafferty', 'log_center'])
 def test_compute_flux_points_dnde_exp(method):
     """
     Tests against analytical result or result from gammapy.spectrum.powerlaw.
@@ -118,7 +119,6 @@ def test_compute_flux_points_dnde_exp(method):
 
     e_min = [1.0, 10.0] * u.TeV
     e_max = [10.0, 100.0] * u.TeV
-    spectral_index = 2.0
 
     table = Table()
     table.meta['SED_TYPE'] = 'flux'
@@ -134,9 +134,9 @@ def test_compute_flux_points_dnde_exp(method):
         e_ref = [2.0, 20.0] * u.TeV
         table['e_ref'] = e_ref
     elif method == 'lafferty':
-        e_ref = _e_ref_lafferty(model, e_min, e_max)
+        e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
 
-    result = compute_flux_points_dnde(FluxPoints(table), model, method)
+    result = FluxPoints(table).to_sed_type('dnde', model=model, method=method)
 
     # Test energy
     actual = result.e_ref
@@ -148,39 +148,35 @@ def test_compute_flux_points_dnde_exp(method):
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
-def get_test_cases():
-    # TODO: add ECPL model
-    try:
-        from .test_energy_group import seg, obs
-        test_cases = []
-        test_cases.append(
-            dict(model=PowerLaw(index=Quantity(2, ''),
-                                amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
-                                reference=Quantity(1, 'TeV')),
-                 obs=obs(),
-                 seg=seg(obs()),
-                 dnde=2.7465439050126e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                 dnde_err=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 res=-0.11262182922477647,
-                 res_err=0.1536450758523701,
-                 )
+@requires_data('gammapy-extra')
+@requires_dependency('sherpa')
+@requires_dependency('matplotlib')
+@requires_dependency('scipy')
+@pytest.mark.parametrize('config', ['pl'])
+def test_flux_points(config):
+    if config == 'pl':
+        config = dict(
+            model=PowerLaw(
+                index=Quantity(2, ''),
+                amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
+                reference=Quantity(1, 'TeV')
+            ),
+            obs=obs(),
+            seg=seg(obs()),
+            dnde=2.7465439050126e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_err=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            res=-0.11262182922477647,
+            res_err=0.1536450758523701,
         )
-        return test_cases
-    except IOError:
-        return []
+
+    tester = FluxPointTester(config)
+    tester.test_all()
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_dependency('scipy')
-@pytest.mark.parametrize('config', get_test_cases())
-def test_flux_points(config):
-    tester = FluxPointTester(config)
-    tester.test_all()
-
-
-@pytest.mark.parametrize('case', get_test_cases())
 class FluxPointTester:
     def __init__(self, config):
         self.config = config
@@ -194,7 +190,8 @@ class FluxPointTester:
         self.fpe = FluxPointEstimator(
             obs=self.config['obs'],
             groups=self.config['seg'].groups,
-            model=self.best_fit_model)
+            model=self.best_fit_model,
+        )
         self.fpe.compute_points()
 
     def test_all(self):
@@ -208,10 +205,11 @@ class FluxPointTester:
 
     def test_approx_model(self):
         approx_model = self.fpe.compute_approx_model(
-            self.config['model'], self.fpe.groups[3])
-        assert approx_model.parameters['index'].frozen == True
-        assert approx_model.parameters['amplitude'].frozen == False
-        assert approx_model.parameters['reference'].frozen == True
+            self.config['model'], self.fpe.groups[3]
+        )
+        assert approx_model.parameters['index'].frozen is True
+        assert approx_model.parameters['amplitude'].frozen is False
+        assert approx_model.parameters['reference'].frozen is True
 
     def test_values(self):
         flux_points = self.fpe.flux_points
@@ -225,8 +223,10 @@ class FluxPointTester:
         assert_quantity_allclose(actual, desired)
 
     def test_spectrum_result(self):
-        result = SpectrumResult(model=self.best_fit_model,
-                                points=self.fpe.flux_points)
+        result = SpectrumResult(
+            model=self.best_fit_model,
+            points=self.fpe.flux_points,
+        )
 
         actual = result.flux_point_residuals[0][0]
         desired = self.config['res']
@@ -240,14 +240,12 @@ class FluxPointTester:
 
 
 @requires_data('gammapy-extra')
-class TestSEDLikelihoodProfile:
+class TestFluxPointProfiles:
     def setup(self):
         filename = '$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits'
-        self.sed = SEDLikelihoodProfile.read(filename)
+        self.sed = FluxPointProfiles.read(filename)
 
-    def test_basics(self):
-        assert 'SEDLikelihoodProfile' in str(self.sed)
-
+    @pytest.mark.xfail
     @requires_dependency('matplotlib')
     def test_plot(self):
         self.sed.plot()
@@ -262,11 +260,6 @@ def flux_points(request):
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 class TestFluxPoints:
-
-    @requires_dependency('matplotlib')
-    def test_plot(self, flux_points):
-        flux_points.plot()
-
     def test_info(self, flux_points):
         info = str(flux_points)
         assert flux_points.sed_type in info
@@ -316,6 +309,10 @@ class TestFluxPoints:
         assert len(stacked.table) == 2 * len(flux_points.table)
         assert stacked.sed_type == flux_points.sed_type
 
+    @requires_dependency('matplotlib')
+    def test_plot(self, flux_points):
+        flux_points.plot()
+
 
 @requires_data('gammapy-extra')
 def test_compute_flux_points_dnde():
@@ -328,7 +325,7 @@ def test_compute_flux_points_dnde():
 
     # TODO: verify index=2.2, but it seems to give reasonable values
     model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
-    actual_fp = compute_flux_points_dnde(flux_points, model=model, method='log_center')
+    actual_fp = flux_points.to_sed_type('dnde', model=model, method='log_center')
 
     for column in ['dnde', 'dnde_err', 'dnde_ul']:
         actual = actual_fp.table[column].quantity
@@ -338,19 +335,19 @@ def test_compute_flux_points_dnde():
 
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
-class TestFluxPointsFitter:
+class TestFluxPointFitter:
     def setup(self):
         path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
         self.flux_points = FluxPoints.read(path)
 
     def test_fit_pwl(self):
-        fitter = FluxPointsFitter()
+        fitter = FluxPointFitter()
         model = PowerLaw(2.3 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
         result = fitter.run(self.flux_points, model)
 
         index = result['best_fit_model'].parameters['index']
-        amplitude = result['best_fit_model'].parameters['amplitude']
         assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1e-3)
+        amplitude = result['best_fit_model'].parameters['amplitude']
         assert_quantity_allclose(amplitude.quantity, 2.149E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1e-3)
         assert_allclose(result['statval'], 27.183618, rtol=1e-3)
         assert_allclose(result['dof'], 22)

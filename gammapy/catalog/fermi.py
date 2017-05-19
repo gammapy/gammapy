@@ -17,7 +17,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise_units_inplace
 from ..image import SkyImage
 from ..image.models import Delta2D, Template2D
-from ..spectrum import FluxPoints, compute_flux_points_dnde
+from ..spectrum import FluxPoints
 from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
@@ -453,9 +453,9 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
         flux_points = FluxPoints(table)
 
-        flux_points_dnde = compute_flux_points_dnde(
-            flux_points, model=self.spectral_model)
-        return flux_points_dnde
+        # TODO: change this and leave it up to the caller to convert to dnde
+        # See https://github.com/gammapy/gammapy/issues/1034
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):
@@ -526,9 +526,9 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         flux_points = FluxPoints(table)
 
-        flux_points_dnde = compute_flux_points_dnde(
-            flux_points, model=self.spectral_model)
-        return flux_points_dnde
+        # TODO: change this and leave it up to the caller to convert to dnde
+        # See https://github.com/gammapy/gammapy/issues/1034
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):

@@ -30,16 +30,16 @@ def get_config():
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
 def test_spectrum_analysis_iact(tmpdir):
-    conf = get_config()
-    conf['outdir'] = tmpdir
+    config = get_config()
+    config['outdir'] = tmpdir
 
-    ana = SpectrumAnalysisIACT(
-        observations=obs_list(),
-        config=conf
-    )
+    analysis = SpectrumAnalysisIACT(observations=obs_list(), config=config)
+    analysis.run()
+    flux_points = analysis.flux_point_estimator.flux_points
 
-    assert 'IACT' in str(ana)
-    ana.run()
-    actual = ana.flux_point_estimator.flux_points.table[0]['dnde']
-    desired = 7.208219787928114e-08
+    print(flux_points)
+    print(flux_points.table)
+
+    actual = flux_points.table['dnde'].quantity[0]
+    desired = 7.208219780210792e-12 * u.Unit('cm-2 s-1 TeV-1')
     assert_quantity_allclose(actual, desired)

@@ -78,7 +78,6 @@ Content
    :maxdepth: 1
 
    fitting
-   flux_points
    energy_group
    plotting_fermi_spectra
 
