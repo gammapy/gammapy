@@ -116,7 +116,7 @@ def test_cube_pipe(tmpdir):
     actual = np.nansum(cube_maker.exposure_cube.data.to('m2 s').value)
     assert_allclose(actual, 5399539029926424.0, rtol=1e-2)
 
-    assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 0.8996676356375191)
+    assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 0.8996676356375191, rtol=0.03)
 
     assert len(cube_maker.counts_cube.energies()) == 5
     assert len(cube_maker.bkg_cube.energies()) == 5
