@@ -3,14 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from astropy.modeling.models import Gaussian2D
 from astropy.modeling.tests.test_models import Fittable2DModelTester
-from ..models import Sphere2D, Shell2D, Delta2D, Template2D
+from ..models import Delta2D, Gaussian2D, Sphere2D, Shell2D, Template2D
 from ....utils.testing import requires_dependency, requires_data
 
-models_2D = {
+models_2D = [
 
-    Sphere2D: {
+    (Sphere2D, {
         'parameters': [1, 0, 0, 10, False],
         'x_values': [0, 10, 5],
         'y_values': [0, 10, 0],
@@ -18,9 +17,9 @@ models_2D = {
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
         'integral': 4. / 3 * np.pi * 10 ** 3 / (2 * 10),
-    },
+    }),
 
-    Shell2D: {
+    (Shell2D, {
         'parameters': [1, 0, 0, 9, 1, 10, False],
         'x_values': [0],
         'y_values': [9],
@@ -28,9 +27,9 @@ models_2D = {
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
         'integral': 2 * np.pi / 3 * (10 ** 3 - 9 ** 3) / np.sqrt(10 ** 2 - 9 ** 2),
-    },
+    }),
 
-    Sphere2D: {
+    (Sphere2D, {
         'parameters': [(4. / 3 * np.pi * 10 ** 3 / (2 * 10)), 0, 0, 10, True],
         'constraints': {'fixed': {'amplitude': True, 'x_0': True, 'y_0': True}},
         'x_values': [0, 10, 5],
@@ -39,9 +38,9 @@ models_2D = {
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
         'integral': (4. / 3 * np.pi * 10 ** 3 / (2 * 10)),
-    },
+    }),
 
-    Shell2D: {
+    (Shell2D, {
         'parameters': [(2 * np.pi / 3 * (10 ** 3 - 8 ** 3) /
                         np.sqrt(10 ** 2 - 8 ** 2)), 0, 0, 8, 2, 10, True],
         'constraints': {'fixed': {'amplitude': True, 'x_0': True, 'y_0': True, 'width': True}},
@@ -52,14 +51,14 @@ models_2D = {
         'y_lim': [-11, 11],
         'integral': (2 * np.pi / 3 * (10 ** 3 - 8 ** 3) /
                      np.sqrt(10 ** 2 - 8 ** 2)),
-    }
-}
+    })
+]
 
 X_0 = [0, 1, -0.5, 0.012, -0.1245]
 Y_0 = [0, 1, -0.5, -0.0345, 0.35345]
 
 
-@pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))
+@pytest.mark.parametrize(('x_0', 'y_0'), list(zip(X_0, Y_0)))
 def test_delta2d(x_0, y_0):
     y, x = np.mgrid[-3:4, -3:4]
     delta = Delta2D(1, x_0, y_0)
@@ -68,7 +67,7 @@ def test_delta2d(x_0, y_0):
 
 
 @requires_dependency('scipy')
-@pytest.mark.parametrize(('x_0', 'y_0'), zip(X_0, Y_0))
+@pytest.mark.parametrize(('x_0', 'y_0'), list(zip(X_0, Y_0)))
 def test_delta2d_against_gauss(x_0, y_0):
     from scipy.ndimage.filters import gaussian_filter
     width = 5
@@ -81,7 +80,7 @@ def test_delta2d_against_gauss(x_0, y_0):
     values = delta(x, y)
     values_convolved = gaussian_filter(values, width, mode='constant')
     values_gauss = gauss(x, y)
-    assert_allclose(values_convolved, values_gauss, atol=1E-4)
+    assert_allclose(values_convolved, values_gauss, atol=1e-4)
 
 
 @requires_dependency('scipy')
@@ -93,6 +92,6 @@ def test_template2d():
     assert_allclose(template(26.7, 0), 1.1553735159851262)
 
 
-@pytest.mark.parametrize(('model_class', 'test_parameters'), list(models_2D.items()))
+@pytest.mark.parametrize(('model_class', 'test_parameters'), models_2D)
 class TestMorphologyModels(Fittable2DModelTester):
     pass
