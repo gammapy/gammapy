@@ -33,7 +33,7 @@ We're currently using
 
 Currently optional dependencies that are being considered as core dependencies:
 
-* `Sherpa`_ for modeling / fitting (doesn't work with Python 3 yet)
+* `Sherpa`_ for modeling / fitting
 * `scipy library`_ for numerical methods
 * `scikit-image`_ for some image processing tasks
 * `photutils`_ for image photometry
