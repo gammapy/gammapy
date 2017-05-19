@@ -52,6 +52,7 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
         args['counts'] = str(filenames['counts'])
     else:
         args['counts'] = str(filenames['model'])
+
     if psf:
         args['psf'] = filenames['psf']
     else:

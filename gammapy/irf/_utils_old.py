@@ -3,8 +3,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 
-__all__ = ['read_ascii', 'read_json', 'write_all', 'write_ascii', 'write_json']
-
 
 def _name(ii):
     """Use this to make the model name for source number `ii`."""
@@ -42,20 +40,6 @@ def read_json(source, setter):
             _set(name, par, val)
 
 
-def read_ascii(filename, setter):
-    """Read from ASCII file."""
-    lines = open(filename).readlines()
-    tokens = [line.split() for line in lines]
-    names = set([token[0] for token in tokens])
-    pars = set([token[1] for token in tokens])
-    vals = set([token[2] for token in tokens])
-
-    model = _model(names)
-    setter(model)
-    for name, par, val in zip(names, pars, vals):
-        _set(name, par, val)
-
-
 def write_json(pars, filename):
     """Write to JSON file."""
     d = {}
@@ -69,16 +53,8 @@ def write_json(pars, filename):
     json.dump(d, open(filename, 'w'), sort_keys=True, indent=4)
 
 
-def write_ascii(pars, filename):
-    """Write to ASCII"""
-    fh = open(filename, 'w')
-    for par in pars:
-        fh.write('{} {} {}\n'.format(par.modelname, par.name, par.val))
-
-
 def write_all(filename='results.json'):
     """Dump source, fit results and conf results to a JSON file.
-
     http://www.astropython.org/snippet/2010/7/Save-sherpa-fit-and-conf-results-to-a-JSON-file
     """
     import sherpa.astro.ui as sau
