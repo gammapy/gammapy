@@ -1,13 +1,10 @@
-"""Example how to make a Cube analysis from a 2D background model.
-"""
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
 from ...extern.pathlib import Path
-from ...utils.testing import requires_dependency, requires_data, pytest
+from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import Energy
 from ...data import DataStore
 from ...image import SkyImage
@@ -16,7 +13,7 @@ from .. import StackedObsCubeMaker
 from .. import SkyCube
 
 
-def make_empty_cube(image_size, energy, center, data_unit=None):
+def make_empty_cube(image_size, energy, center, data_unit=''):
     """
     Make an empty `SkyCube` from a given `SkyImage` and an energy binning.
 
@@ -43,11 +40,10 @@ def make_empty_cube(image_size, energy, center, data_unit=None):
     )
 
 
-# Temp xfail for this: https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
-@pytest.mark.xfail
 @requires_dependency('reproject')
 @requires_data('gammapy-extra')
 def test_cube_pipe(tmpdir):
+    """Example how to make a Cube analysis from a 2D background model."""
     tmpdir = str(tmpdir)
     outdir = tmpdir
     outdir2 = outdir + '/background'
@@ -93,23 +89,31 @@ def test_cube_pipe(tmpdir):
     exclusion_mask = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
     ref_cube_skymask.data = np.tile(exclusion_mask.data, (5, 1, 1))
-    # Pb with the load psftable for one of the run that is not implemented yet...
+    # TODO: Pb with the load psftable for one of the run that is not implemented yet...
     data_store.hdu_table.remove_row(14)
 
     # Cube Analysis
-    cube_maker = StackedObsCubeMaker(empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
-                                     offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
-                                     exclusion_mask=ref_cube_skymask, save_bkg_scale=True)
+    cube_maker = StackedObsCubeMaker(
+        empty_cube_images=ref_cube_images, empty_exposure_cube=ref_cube_exposure,
+        offset_band=offset_band, data_store=data_store, obs_table=data_store.obs_table,
+        exclusion_mask=ref_cube_skymask, save_bkg_scale=True,
+    )
     cube_maker.make_cubes(make_background_image=True, radius=10.)
 
     assert_allclose(cube_maker.counts_cube.data.sum(), 4898.0, atol=3)
     assert_allclose(cube_maker.bkg_cube.data.sum(), 4260.120595293951, atol=3)
+
     cube_maker.significance_cube.data[np.where(np.isinf(cube_maker.significance_cube.data))] = 0
-    assert_allclose(np.nansum(cube_maker.significance_cube.data), 67613.24519908393, atol=3)
-    assert_allclose(cube_maker.excess_cube.data.sum(), 637.8794047060486, atol=3)
-    assert_quantity_allclose(np.nansum(cube_maker.exposure_cube.data), Quantity(4891844242766714.0, "m2 s"),
-                             atol=Quantity(3, "m2 s"))
-    assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 0.8956177614218819)
+    actual = np.nansum(cube_maker.significance_cube.data)
+    assert_allclose(actual, 65777.69960178432, atol=3)
+
+    actual = cube_maker.excess_cube.data.sum()
+    assert_allclose(actual, 637.8794047060486, atol=3)
+
+    actual = np.nansum(cube_maker.exposure_cube.data.to('m2 s').value)
+    assert_allclose(actual, 5399539029926424.0, atol=3)
+
+    assert_allclose(cube_maker.table_bkg_scale[0]["bkg_scale"], 0.8996676356375191)
 
     assert len(cube_maker.counts_cube.energies()) == 5
     assert len(cube_maker.bkg_cube.energies()) == 5
