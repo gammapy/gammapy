@@ -455,8 +455,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
         # TODO: change this and leave it up to the caller to convert to dnde
         # See https://github.com/gammapy/gammapy/issues/1034
-        from ..spectrum.flux_point import compute_flux_points_dnde
-        return compute_flux_points_dnde(flux_points, model=self.spectral_model)
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):
@@ -529,8 +528,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         # TODO: change this and leave it up to the caller to convert to dnde
         # See https://github.com/gammapy/gammapy/issues/1034
-        from ..spectrum.flux_point import compute_flux_points_dnde
-        return compute_flux_points_dnde(flux_points, model=self.spectral_model)
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):

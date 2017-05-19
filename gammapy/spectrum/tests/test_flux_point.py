@@ -16,8 +16,6 @@ from ..flux_point import FluxPointFitter
 from ..flux_point import FluxPointEstimator
 from .test_energy_group import seg, obs
 
-# TODO: remove these from the public API!
-from ..flux_point import _e_ref_lafferty, _dnde_from_flux, compute_flux_points_dnde
 
 FLUX_POINTS_FILES = [
     'diff_flux_points.ecsv',
@@ -83,7 +81,7 @@ def test_e_ref_lafferty():
     model = LWTestModel()
     e_min = np.array([0.0, 0.1, 0.3, 0.6])
     e_max = np.array([0.1, 0.3, 0.6, 1.0])
-    actual = _e_ref_lafferty(model, e_min, e_max)
+    actual = FluxPoints._e_ref_lafferty(model, e_min, e_max)
     assert_allclose(actual, desired, atol=1e-3)
 
 
@@ -97,8 +95,8 @@ def test_dnde_from_flux():
 
     # Get values
     model = XSqrTestModel()
-    e_ref = _e_ref_lafferty(model, e_min, e_max)
-    dnde = _dnde_from_flux(flux, model, e_ref, e_min, e_max)
+    e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+    dnde = FluxPoints._dnde_from_flux(flux, model, e_ref, e_min, e_max)
 
     # Set up test case comparison
     dnde_model = model(e_ref)
@@ -136,9 +134,9 @@ def test_compute_flux_points_dnde_exp(method):
         e_ref = [2.0, 20.0] * u.TeV
         table['e_ref'] = e_ref
     elif method == 'lafferty':
-        e_ref = _e_ref_lafferty(model, e_min, e_max)
+        e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
 
-    result = compute_flux_points_dnde(FluxPoints(table), model, method)
+    result = FluxPoints(table).to_sed_type('dnde', model=model, method=method)
 
     # Test energy
     actual = result.e_ref
@@ -327,7 +325,7 @@ def test_compute_flux_points_dnde():
 
     # TODO: verify index=2.2, but it seems to give reasonable values
     model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
-    actual_fp = compute_flux_points_dnde(flux_points, model=model, method='log_center')
+    actual_fp = flux_points.to_sed_type('dnde', model=model, method='log_center')
 
     for column in ['dnde', 'dnde_err', 'dnde_ul']:
         actual = actual_fp.table[column].quantity

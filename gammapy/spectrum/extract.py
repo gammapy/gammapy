@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class SpectrumExtraction(object):
-    """Creating input data to 1D spectrum fitting
+    """Creating input data to 1D spectrum fitting.
 
     This class is responsible for extracting a
     `~gammapy.spectrum.SpectrumObservation` from a
