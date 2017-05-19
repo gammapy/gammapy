@@ -21,15 +21,15 @@ spiral arm model.
 
 .. code-block:: python
 
-	import astropy.units as u
-	from gammapy.astro.population import make_base_catalog_galactic
+    import astropy.units as u
+    from gammapy.astro.population import make_base_catalog_galactic
 
-	max_age = 1E6 * u.yr
-	SN_rate = 3. / (100. * u.yr)
-	n_sources = int(max_age * SN_rate)
-	table = make_base_catalog_galactic(
-	    n_sources=n_sources,
-	    rad_dis='L06',
+    max_age = 1E6 * u.yr
+    SN_rate = 3. / (100. * u.yr)
+    n_sources = int(max_age * SN_rate)
+    table = make_base_catalog_galactic(
+        n_sources=n_sources,
+        rad_dis='L06',
         vel_dis='F06B',
         max_age=max_age,
         spiralarms=True,
