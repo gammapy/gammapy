@@ -13,11 +13,64 @@ from ..core import SkyImage
 
 __all__ = [
     'morph_types',
+    'Delta2D',
+    # TODO: we need our own model, so that we can add in stuff like XML I/O
+    # Copy over the Astropy version and use that throughout Gammapy
+    # 'Gaussian2D',
     'Shell2D',
     'Sphere2D',
-    'Delta2D',
-    'Template2D'
+    'Template2D',
 ]
+
+
+class Delta2D(Fittable2DModel):
+    """Two dimensional delta function .
+
+    This model can be used for a point source morphology.
+
+    Parameters
+    ----------
+    amplitude : float
+        Peak value of the point source
+    x_0 : float
+        x position center of the point source
+    y_0 : float
+        y position center of the point source
+
+    Notes
+    -----
+    Model formula:
+
+    .. math::
+
+        f(x, y) = \\cdot \\left \\{
+                    \\begin{array}{ll}
+                        A & :  x = x_0 \\ \\mathrm{and} \\ y = y_0 \\\\
+                        0 & : else
+                    \\end{array}
+                \\right.
+    """
+    amplitude = Parameter('amplitude')
+    x_0 = Parameter('x_0')
+    y_0 = Parameter('y_0')
+
+    def __init__(self, amplitude, x_0, y_0, **constraints):
+        super(Delta2D, self).__init__(amplitude=amplitude, x_0=x_0,
+                                      y_0=y_0, **constraints)
+
+    @staticmethod
+    def evaluate(x, y, amplitude, x_0, y_0):
+        """Two dimensional delta model function using a local rectangular pixel
+        approximation.
+        """
+        _, grad_x = np.gradient(x)
+        grad_y, _ = np.gradient(y)
+        x_diff = np.abs((x - x_0) / grad_x)
+        y_diff = np.abs((y - y_0) / grad_y)
+
+        x_val = np.select([x_diff < 1], [1 - x_diff], 0)
+        y_val = np.select([y_diff < 1], [1 - y_diff], 0)
+        return x_val * y_val * amplitude
 
 
 class Shell2D(Fittable2DModel):
@@ -43,10 +96,6 @@ class Shell2D(Fittable2DModel):
         If set the amplitude parameter corresponds to the integral of the
         function. If not set the 'amplitude' parameter corresponds to the
         peak value of the function (value at :math:`r = r_{in}`).
-
-    See Also
-    --------
-    Sphere2D, Delta2D, Gaussian2D
 
     Notes
     -----
@@ -94,9 +143,7 @@ class Shell2D(Fittable2DModel):
         plt.colorbar(label='Brightness (A.U.)')
         plt.grid(False)
         plt.show()
-
     """
-
     amplitude = Parameter('amplitude')
     x_0 = Parameter('x_0')
     y_0 = Parameter('y_0')
@@ -180,10 +227,6 @@ class Sphere2D(Fittable2DModel):
         function. If not set the 'amplitude' parameter corresponds to the
         peak value of the function (value at :math:`r = 0`).
 
-    See Also
-    --------
-    Shell2D, Delta2D, Gaussian2D
-
     Notes
     -----
     Model formula with integral normalization:
@@ -208,7 +251,6 @@ class Sphere2D(Fittable2DModel):
                 \\end{array}
             \\right.
 
-
     Examples
     --------
     .. plot::
@@ -226,9 +268,7 @@ class Sphere2D(Fittable2DModel):
         plt.colorbar(label='Brightness (A.U.)')
         plt.grid(False)
         plt.show()
-
     """
-
     amplitude = Parameter('amplitude')
     x_0 = Parameter('x_0')
     y_0 = Parameter('y_0')
@@ -274,62 +314,6 @@ class Sphere2D(Fittable2DModel):
                 (self.x_0 - self.r_0, self.x_0 + self.r_0))
 
 
-class Delta2D(Fittable2DModel):
-    """Two dimensional delta function .
-
-    This model can be used for a point source morphology.
-
-    Parameters
-    ----------
-    amplitude : float
-        Peak value of the point source
-    x_0 : float
-        x position center of the point source
-    y_0 : float
-        y position center of the point source
-
-    Notes
-    -----
-    Model formula:
-
-    .. math::
-
-        f(x, y) = \\cdot \\left \\{
-                    \\begin{array}{ll}
-                        A & :  x = x_0 \\ \\mathrm{and} \\ y = y_0 \\\\
-                        0 & : else
-                    \\end{array}
-                \\right.
-
-    See Also
-    --------
-    Shell2D, Sphere2D, Gaussian2D
-
-    """
-
-    amplitude = Parameter('amplitude')
-    x_0 = Parameter('x_0')
-    y_0 = Parameter('y_0')
-
-    def __init__(self, amplitude, x_0, y_0, **constraints):
-        super(Delta2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                      y_0=y_0, **constraints)
-
-    @staticmethod
-    def evaluate(x, y, amplitude, x_0, y_0):
-        """Two dimensional delta model function using a local rectangular pixel
-        approximation.
-        """
-        _, grad_x = np.gradient(x)
-        grad_y, _ = np.gradient(y)
-        x_diff = np.abs((x - x_0) / grad_x)
-        y_diff = np.abs((y - y_0) / grad_y)
-
-        x_val = np.select([x_diff < 1], [1 - x_diff], 0)
-        y_val = np.select([y_diff < 1], [1 - y_diff], 0)
-        return x_val * y_val * amplitude
-
-
 class Template2D(Fittable2DModel):
     """Two dimensional table model.
 
@@ -337,11 +321,6 @@ class Template2D(Fittable2DModel):
     ----------
     amplitude : float
         Amplitude of the template model.
-
-    See Also
-    --------
-    Shell2D, Sphere2D, Gaussian2D
-
     """
     amplitude = Parameter('amplitude')
 
@@ -353,7 +332,7 @@ class Template2D(Fittable2DModel):
     def _interpolate_data(self):
         """Interpolate data using `~scipy.interpolate.RegularGridInterpolator`."""
         from scipy.interpolate import RegularGridInterpolator
-        #TODO: move e.g. to SkyImage.interpolate()
+        # TODO: move e.g. to SkyImage.interpolate()
 
         y = np.arange(self.image.data.shape[0])
         x = np.arange(self.image.data.shape[1])
@@ -373,19 +352,19 @@ class Template2D(Fittable2DModel):
         return interpolate
 
     @classmethod
-    def read(cls, filename):
-        """
-        Read spatial template model from fits image.
+    def read(cls, filename, **kwargs):
+        """Read spatial template model from FITS image.
 
         Parameters
         ----------
         filename : str
             Fits image filename.
         """
-        template = SkyImage.read(filename)
+        template = SkyImage.read(filename, **kwargs)
         return cls(template)
 
     def evaluate(self, x, y, amplitude):
+        # TODO: don't hardcode Galactic frame!!!
         coord = SkyCoord(x, y, frame='galactic', unit='deg')
         x_pix, y_pix = self.image.wcs_skycoord_to_pixel(coord)
         values = self._interpolate_data(y_pix, x_pix)
@@ -401,6 +380,7 @@ class Template2D(Fittable2DModel):
         y_0 = center.data.lat.deg
         return ((y_0 - height / 2, y_0 + height / 2),
                 (x_0 - width, x_0 + height / 2))
+
 
 morph_types = OrderedDict()
 """Available morphology types."""
