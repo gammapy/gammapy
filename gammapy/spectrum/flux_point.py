@@ -396,7 +396,7 @@ class FluxPoints(object):
     @staticmethod
     def _e_ref_lafferty(model, e_min, e_max):
         """Helper for `to_sed_type`.
-        
+
         Compute e_ref that the value at e_ref corresponds
         to the mean value between e_min and e_max.
         """

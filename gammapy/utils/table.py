@@ -13,7 +13,7 @@ __all__ = [
 
 def table_standardise_units_copy(table):
     """Standardise units for all columns in a table in a copy.
-    
+
     Calls `~gammapy.utils.units.standardise_unit`.
 
     Parameters

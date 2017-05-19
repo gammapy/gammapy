@@ -27,7 +27,7 @@ hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
 
 class MeyerCrabModel(SpectralModel):
     """Meyer 2010 log polynomial Crab spectral model.
-    
+
     See 2010A%26A...523A...2M, Appendix D.
     """
 
