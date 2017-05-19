@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Differential and integral flux point computations."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from collections import OrderedDict
@@ -12,11 +11,10 @@ from ..utils.fits import table_from_row_data
 from ..utils.table import table_standardise_units_copy
 
 __all__ = [
-    'compute_flux_points_dnde',
     'FluxPoints',
+    # 'FluxPointProfiles',
     'FluxPointEstimator',
-    'FluxPointsFitter',
-    'SEDLikelihoodProfile',
+    'FluxPointFitter',
 ]
 
 log = logging.getLogger(__name__)
@@ -67,10 +65,55 @@ class FluxPoints(object):
     """
 
     def __init__(self, table):
-        table = table_standardise_units_copy(table)
+        self.table = table_standardise_units_copy(table)
         # validate that the table is a valid representation
         # of the given flux point sed type
-        self.table = self._validate_table(table)
+        self._validate_table(self.table)
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read flux points.
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`.
+        """
+        filename = make_path(filename)
+        try:
+            table = Table.read(str(filename), **kwargs)
+        except IORegistryError:
+            kwargs.setdefault('format', 'ascii.ecsv')
+            table = Table.read(str(filename), **kwargs)
+
+        if 'SED_TYPE' not in table.meta.keys():
+            sed_type = cls._guess_sed_type(table)
+            table.meta['SED_TYPE'] = sed_type
+
+        return cls(table=table)
+
+    def write(self, filename, **kwargs):
+        """Write flux points.
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.write`.
+        """
+        filename = make_path(filename)
+        try:
+            self.table.write(str(filename), **kwargs)
+        except IORegistryError:
+            kwargs.setdefault('format', 'ascii.ecsv')
+            self.table.write(str(filename), **kwargs)
+
+    def __repr__(self):
+        fmt = '{}(sed_type="{}", n_points={})'
+        return fmt.format(self.__class__.__name__, self.sed_type, len(self.table))
 
     @property
     def sed_type(self):
@@ -96,9 +139,12 @@ class FluxPoints(object):
             if unit.is_equivalent(default_unit):
                 return sed_type
 
-    def _validate_table(self, table):
+    @staticmethod
+    def _validate_table(table):
         """Validate input table."""
-        table = Table(table)
+        # TODO: do we really want to error out on tables that don't have `SED_TYPE` in meta?
+        # If yes, then this needs to be documented in the docstring,
+        # and the workaround pointed out (to add the meta key before creating FluxPoints).
         sed_type = table.meta['SED_TYPE']
         required = set(REQUIRED_COLUMNS[sed_type])
 
@@ -106,7 +152,6 @@ class FluxPoints(object):
             missing = required.difference(table.colnames)
             raise ValueError("Missing columns for sed type '{}':"
                              " {}".format(sed_type, missing))
-        return table
 
     def _get_y_energy_unit(self, y_unit):
         """Get energy part of the given y unit."""
@@ -154,62 +199,6 @@ class FluxPoints(object):
             return self.table['is_ul'].data.astype('bool')
         except KeyError:
             return np.isnan(self.table[self.sed_type])
-
-    def __str__(self):
-        """
-        String representation of the flux points class.
-        """
-        info = ''
-        info += "Flux points of type '{}'".format(self.sed_type)
-        return info
-
-    def info(self):
-        """
-        Print flux points info.
-        """
-        print(self)
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read flux points.
-
-        Parameters
-        ----------
-        filename : str
-            Filename
-        kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.read`.
-
-        """
-        filename = make_path(filename)
-        try:
-            table = Table.read(str(filename), **kwargs)
-        except IORegistryError:
-            kwargs.setdefault('format', 'ascii.ecsv')
-            table = Table.read(str(filename), **kwargs)
-
-        if 'SED_TYPE' not in table.meta.keys():
-            sed_type = cls._guess_sed_type(table)
-            table.meta['SED_TYPE'] = sed_type
-
-        return cls(table=table)
-
-    def write(self, filename, **kwargs):
-        """Write flux points.
-
-        Parameters
-        ----------
-        filename : str
-            Filename
-        kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`.
-        """
-        filename = make_path(filename)
-        try:
-            self.table.write(str(filename), **kwargs)
-        except IORegistryError:
-            kwargs.setdefault('format', 'ascii.ecsv')
-            self.table.write(str(filename), **kwargs)
 
     @property
     def e_ref(self):
@@ -294,9 +283,9 @@ class FluxPoints(object):
         flux_points : `FluxPoints`
             Flux points without upper limit points.
         """
-        tables = []
         reference = flux_points[0].table
 
+        tables = []
         for _ in flux_points:
             table = _.table
             for colname in reference.colnames:
@@ -304,6 +293,7 @@ class FluxPoints(object):
                 if column.unit:
                     table[colname] = table[colname].quantity.to(column.unit)
             tables.append(table[reference.colnames])
+
         table_stacked = vstack(tables)
         table_stacked.meta['SED_TYPE'] = reference.meta['SED_TYPE']
 
@@ -491,8 +481,10 @@ def _dnde_from_flux(flux, model, e_ref, e_min, e_max):
 
 
 class FluxPointEstimator(object):
-    """
-    Flux point estimator.
+    """Flux point estimator.
+
+    Computes flux points for a given spectrum observation dataset
+    (a 1-dim on/off observation), energy binning and spectral model.
 
     Parameters
     ----------
@@ -511,17 +503,13 @@ class FluxPointEstimator(object):
         self.flux_points = None
 
     def __str__(self):
-        s = 'FluxPointEstimator:\n'
+        s = '{}:\n'.format(self.__class__.__name__)
         s += str(self.obs) + '\n'
         s += str(self.groups) + '\n'
         s += str(self.model) + '\n'
         return s
 
     def compute_points(self):
-        meta = OrderedDict(
-            METHOD='TODO',
-            SED_TYPE='dnde'
-        )
         rows = []
         for group in self.groups:
             if group.bin_type != 'normal':
@@ -531,8 +519,12 @@ class FluxPointEstimator(object):
             row = self.compute_flux_point(group)
             rows.append(row)
 
-        self.flux_points = FluxPoints(table_from_row_data(rows=rows,
-                                                          meta=meta))
+        meta = OrderedDict([
+            ('method', 'TODO'),
+            ('SED_TYPE', 'dnde'),
+        ])
+        table = table_from_row_data(rows=rows, meta=meta)
+        self.flux_points = FluxPoints(table)
 
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
@@ -544,7 +536,9 @@ class FluxPointEstimator(object):
         energy_ref = self.compute_energy_ref(energy_group)
 
         return self.fit_point(
-            model=model, energy_group=energy_group, energy_ref=energy_ref,
+            model=model,
+            energy_group=energy_group,
+            energy_ref=energy_ref,
         )
 
     def compute_energy_ref(self, energy_group):
@@ -620,24 +614,33 @@ class FluxPointEstimator(object):
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
-        diff_flux, diff_flux_err = res.model.evaluate_error(energy_ref)
-        return OrderedDict(
-            e_ref=energy_ref,
-            e_min=e_min,
-            e_max=e_max,
-            dnde=diff_flux.to('m-2 s-1 TeV-1'),
-            dnde_err=diff_flux_err.to('m-2 s-1 TeV-1'),
-        )
+        dnde, dnde_err = res.model.evaluate_error(energy_ref)
+
+        # TODO: should take default unit from above!
+        dnde_unit = 'm-2 s-1 TeV-1'
+
+        return OrderedDict([
+            ('e_ref', energy_ref),
+            ('e_min', e_min),
+            ('e_max', e_max),
+            ('dnde', dnde.to(dnde_unit)),
+            ('dnde_err', dnde_err.to(dnde_unit)),
+        ])
 
 
-class SEDLikelihoodProfile(object):
-    """SED likelihood profile.
+class FluxPointProfiles(object):
+    """Flux point likelihood profiles.
 
     See :ref:`gadf:likelihood_sed`.
 
     TODO: merge this class with the classes in ``fermipy/castro.py``,
     which are much more advanced / feature complete.
     This is just a temp solution because we don't have time for that.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table holding the data
     """
 
     def __init__(self, table):
@@ -645,21 +648,14 @@ class SEDLikelihoodProfile(object):
 
     @classmethod
     def read(cls, filename, **kwargs):
+        """Read from file."""
         filename = make_path(filename)
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
-    def __str__(self):
-        s = self.__class__.__name__ + '\n'
-        s += str(self.table)
-        return s
-
-    def plot(self, ax=None):
-        import matplotlib.pyplot as plt
-        if ax is None:
-            ax = plt.gca()
-            # TODO
-
+    def plot(self, ax):
+        # TODO: copy code from fermipy, don't start from scratch!
+        raise NotImplementedError
 
 def chi2_flux_points(flux_points, gp_model):
     """
@@ -688,7 +684,7 @@ def chi2_flux_points_assym(flux_points, gp_model):
     return np.nansum(stat_per_bin), stat_per_bin
 
 
-class FluxPointsFitter(object):
+class FluxPointFitter(object):
     """
     Fit a set of flux points with a parametric model.
 
@@ -734,12 +730,14 @@ class FluxPointsFitter(object):
             raise ValueError("'{stat}' is not a valid fit statistic, please choose"
                              " either 'chi2' or 'chi2assym'")
 
-        if not ul_handling == 'ignore':
+        if ul_handling != 'ignore':
             raise NotImplementedError('No handling of upper limits implemented.')
 
-        self.parameters = OrderedDict(optimizer=optimizer,
-                                      error_estimator=error_estimator,
-                                      ul_handling=ul_handling)
+        self.parameters = OrderedDict([
+            ('optimizer', optimizer),
+            ('error_estimator', error_estimator),
+            ('ul_handling', ul_handling),
+        ])
 
     def _setup_sherpa_fit(self, data, model):
         """Fit flux point using sherpa"""
@@ -838,12 +836,14 @@ class FluxPointsFitter(object):
         result : `~collections.OrderedDict`
             Dictionary with fit results and debug output.
         """
-        result = OrderedDict()
-
         best_fit_model = self.fit(data, model)
         best_fit_model = self.estimate_errors(data, best_fit_model)
-        result['best_fit_model'] = best_fit_model
-        result['dof'] = self.dof(data, model)
-        result['statval'] = self.statval(data, model)[0]
-        result['statval/dof'] = result['statval'] / result['dof']
-        return result
+        dof = self.dof(data, model)
+        statval = self.statval(data, model)[0]
+
+        return OrderedDict([
+            ('best_fit_model', best_fit_model),
+            ('dof', dof),
+            ('statval', statval),
+            ('statval/dof', statval / dof),
+        ])
