@@ -12,14 +12,6 @@ from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.modeling import Parameter, ParameterList
 
-# This cannot be made a delayed import because the pytest matrix fails if it is
-# https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
-# TODO: figure out why!???
-try:
-    from .sherpa_utils import SherpaExponentialCutoffPowerLaw
-except ImportError:
-    pass
-
 __all__ = [
     'SpectralModel',
     'PowerLaw',
@@ -741,6 +733,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         name : str, optional
             Name of the sherpa model instance
         """
+        from .sherpa_utils import SherpaExponentialCutoffPowerLaw
         model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
         model.gamma = pars['index'].value
