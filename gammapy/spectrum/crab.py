@@ -1,17 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Published Crab nebula reference spectra.
-
-The Crab is often used as a standard candle in gamma-ray astronomy.
-Statements like "this source has a flux of 10 % Crab" or
-"our sensitivity is 2 % Crab" are common.
-
-Here we provide a reference of what the Crab flux actually is according
-to several publications:
-
-* 'HEGRA' : http://adsabs.harvard.edu/abs/2000ApJ...539..317A
-* 'HESS PL' and 'HESS ECPL' : http://adsabs.harvard.edu/abs/2006A%26A...457..899A
-* 'Meyer' :  http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
@@ -23,39 +10,27 @@ __all__ = [
 ]
 
 # HESS publication: 2006A&A...457..899A
-#'int_flux' = 2.26e-11
 hess_pl = {'amplitude': 3.45e-11 * u.Unit('1 / (cm2 s TeV)'),
            'index': 2.63,
-           'reference' : 1 * u.TeV}
+           'reference': 1 * u.TeV}
 
-# Note that for ecpl, the diff_flux is not
-# the differential flux at 1 TeV, that you
-# get by multiplying with exp(-e / cutoff)
-# int_flux: 2.27e-11
 hess_ecpl = {'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
              'index': 2.39,
              'lambda_': 1 / (14.3 * u.TeV),
              'reference': 1 * u.TeV}
 
 # HEGRA publication : 2004ApJ...614..897A
-# int_flux': 1.75e-11
 hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
          'index': 2.62,
          'reference': 1 * u.TeV}
 
-# Meyer et al. publication: 2010arXiv1008.4524M
-# diff_flux and index were calculated numerically
-# by hand at 1 TeV as a finite differene
-meyer = {'diff_flux': 3.3457e-11 * u.Unit('1 / (cm2 s TeV)'),
-         'index': 2.5362,
-         'int_flux': 2.0744e-11}
 
-
-#TODO: make this a general LogPolynomial spectral model
 class MeyerCrabModel(SpectralModel):
+    """Meyer 2010 log polynomial Crab spectral model.
+    
+    See 2010A%26A...523A...2M, Appendix D.
     """
-    Log polynomial model as used by 2010arXiv1008.4524M.
-    """
+
     def __init__(self):
         coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475,
                                  -0.53616, -10.2708])
@@ -73,15 +48,16 @@ class MeyerCrabModel(SpectralModel):
 
 
 class CrabSpectrum(object):
-    """
-    Crab spectral model.
+    """Crab nebula spectral model.
+
+    The Crab nebula is often used as a standard candle in gamma-ray astronomy.
+    Fluxes and sensitivities are often quoted relative to the Crab spectrum.
 
     The following references are available:
 
-    * 'meyer', 2010arXiv1008.4524M
-    * 'hegra', 2004ApJ...614..897A
-    * 'hess_pl', 2006A&A...457..899A
-    * 'hess_ecpl', 2006A&A...457..899A
+    * 'meyer', http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
+    * 'hegra', http://adsabs.harvard.edu/abs/2000ApJ...539..317A
+    * 'hess_pl' and 'hess_ecpl': http://adsabs.harvard.edu/abs/2006A%26A...457..899A
 
     Parameters
     ----------
@@ -90,44 +66,42 @@ class CrabSpectrum(object):
 
     Examples
     --------
-    Plot the 'hess_ecpl' reference crab spectrum between 1 TeV and 100 TeV:
+    Let's first import what we need::
 
-        >>> from gammapy.spectrum import CrabSpectrum
-        >>> import astropy.units as u
-        >>> crab_hess_ecpl = CrabSpectrum('hess_ecpl')
-        >>> crab_hess_ecpl.model.plot([1, 100] * u.TeV)
+        import astropy.units as u
+        from gammapy.spectrum import CrabSpectrum
+        from gammapy.spectrum.models import PowerLaw
 
-    Use a reference crab spectrum as unit to measure flux:
+    Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 
-        >>> from astropy import units as u
-        >>> from gammapy.spectrum import CrabSpectrum
-        >>> from gammapy.spectrum.models import PowerLaw
-        >>>
-        >>> # define power law model
-        >>> amplitude = 1e-12 * u.Unit('1 / (cm2 s TeV)')
-        >>> index = 2.3
-        >>> reference = 1 * u.TeV
-        >>> pwl = PowerLaw(index, amplitude, reference)
-        >>>
-        >>> # define crab reference
+        crab_hess_ecpl = CrabSpectrum('hess_ecpl')
+        crab_hess_ecpl.model.plot([1, 100] * u.TeV)
+
+    Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
+
+        >>> pwl = PowerLaw(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
         >>> crab = CrabSpectrum('hess_pl').model
-        >>>
-        >>> # compute flux at 10 TeV in crab units
         >>> energy = 10 * u.TeV
-        >>> flux_cu = (pwl(energy) / crab(energy)).to('%')
-        >>> print(flux_cu)
+        >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')
+        >>> print(dnde_cu)
         6.19699156377 %
 
-    And the same for integral fluxes:
+    And the same for integral fluxes (between 1 and 10 TeV)::
 
         >>> # compute integral flux in crab units
         >>> emin, emax = [1, 10] * u.TeV
         >>> flux_int_cu = (pwl.integral(emin, emax) / crab.integral(emin, emax)).to('%')
         >>> print(flux_int_cu)
         3.5350582166 %
-
     """
+
+    references = [
+        'meyer', 'hegra', 'hess_pl', 'hess_ecpl',
+    ]
+    """Available references (see class docstring)."""
+
     def __init__(self, reference='meyer'):
+
         if reference == 'meyer':
             model = MeyerCrabModel()
         elif reference == 'hegra':
@@ -137,7 +111,8 @@ class CrabSpectrum(object):
         elif reference == 'hess_ecpl':
             model = ExponentialCutoffPowerLaw(**hess_ecpl)
         else:
-            raise ValueError("Unknown reference, choose one of the following:"
-                             "'meyer', 'hegra', 'hess_pl' or 'hess_ecpl'")
+            fmt = 'Invalid reference: {!r}. Choices: {!r}'
+            raise ValueError(fmt.format(reference, self.references))
+
         self.model = model
         self.reference = reference
