@@ -66,4 +66,5 @@ dev/crab
 # Data files and images are usually generated
 *.png
 *.fits
+*.fits.gz
 *.root
