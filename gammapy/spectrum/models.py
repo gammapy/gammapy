@@ -34,12 +34,9 @@ class SpectralModel(object):
     `~gammapy.spectrum.models.PowerLaw`.
     """
 
-    def __call__(self, energy):
-        """Call evaluate method of derived classes"""
-        kwargs = dict()
-        for par in self.parameters.parameters:
-            kwargs[par.name] = par.quantity
-        return self.evaluate(energy, **kwargs)
+    def __repr__(self):
+        fmt = '{}()'
+        return fmt.format(self.__class__.__name__)
 
     def __str__(self):
         """String representation"""
@@ -54,6 +51,13 @@ class SpectralModel(object):
             covar = self.parameters.covariance_to_table()
             ss += '\n\t'.join(covar.pformat())
         return ss
+
+    def __call__(self, energy):
+        """Call evaluate method of derived classes"""
+        kwargs = dict()
+        for par in self.parameters.parameters:
+            kwargs[par.name] = par.quantity
+        return self.evaluate(energy, **kwargs)
 
     def _parse_uarray(self, uarray):
         from uncertainties import unumpy
