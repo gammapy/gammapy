@@ -3,6 +3,7 @@
 Cube analysis utility functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy import units as u
 from ..utils.energy import EnergyBounds
 from ..spectrum import LogEnergyAxis
@@ -10,12 +11,13 @@ from .core import SkyCube
 
 __all__ = [
     'compute_npred_cube',
+    'compute_npred_cube_simple',
 ]
 
 
 def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                        integral_resolution=10):
-    """Compute predicted counts cube in energy bins.
+    """Compute predicted counts cube.
 
     TODO: describe what's passed in.
     I think it's a surface brighness in e.g. 'cm-2 s-1 TeV-1 sr-1'
@@ -23,9 +25,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     Parameters
     ----------
     flux_cube : `SkyCube`
-        Differential flux cube.
+        Differential flux cube
     exposure_cube : `SkyCube`
-        Instrument exposure cube.
+        Exposure cube
     integral_resolution : int (optional)
         Number of integration steps in energy bin when computing integral flux.
 
@@ -33,11 +35,12 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     -------
     npred_cube : `SkyCube`
         Predicted counts cube in energy bins.
+
+    See also
+    --------
+    compute_npred_cube_simple
     """
-    if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
-        raise ValueError('flux_cube and exposure cube must have the same shape!\n'
-                         'flux_cube: {}\nexposure_cube: {}'
-                         ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
+    _validate_inputs(flux_cube, exposure_cube)
 
     energy_axis = LogEnergyAxis(energy_bins, mode='edges')
     wcs = exposure_cube.wcs.deepcopy()
@@ -58,3 +61,44 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     data = u.Quantity(data, '')
 
     return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)
+
+
+def compute_npred_cube_simple(flux_cube, exposure_cube):
+    """Compute npred cube.
+
+    Multiplies flux and exposure and pixel solid angle and energy bin width
+
+    This function is over 10 times faster than the one above
+    # and gives slightly different results!
+    # TODO: merge the two functions (or expose a uniform API, colling into other functions). Add tests and benchmark a bit!
+
+
+    TODO: remove this function and instead fix the one in Gammapy (and add tests there)!
+    This function was only added here to debug `gammapy.cube.utils.compute_npred_cube`
+    After debugging the results almost match (differences due to integration method in energy)
+
+    The one remaining issue with the function in Gammapy is that it gives NaN where flux = 0
+    This must have to do with the integration method in energy and should be fixed.
+
+    See also
+    --------
+    compute_npred_cube
+    """
+    _validate_inputs(flux_cube, exposure_cube)
+
+    solid_angle = exposure_cube.sky_image_ref.solid_angle()
+    de = exposure_cube.energy_width
+    flux = flux_cube.data
+    exposure = exposure_cube.data
+    npred = flux * exposure * solid_angle * de[:, np.newaxis, np.newaxis]
+
+    npred_cube = SkyCube.empty_like(exposure_cube)
+    npred_cube.data = npred.to('')
+    return npred_cube
+
+
+def _validate_inputs(flux_cube, exposure_cube):
+    if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
+        raise ValueError('flux_cube and exposure cube must have the same shape!\n'
+                         'flux_cube: {0}\nexposure_cube: {1}'
+                         ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
