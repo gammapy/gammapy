@@ -1,27 +1,19 @@
 """
-Example how to simulate a 3D n_pred / n_obs cube.
+An example how to simulate a 3D n_pred / n_obs cube.
 
 Using CTA IRFs.
-
-
-Filename: ../../gammapy-extra/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits
-No.    Name         Type      Cards   Dimensions   Format
-  0  PRIMARY     PrimaryHDU       8   ()
-  1  EFFECTIVE AREA  BinTableHDU     51   1R x 5C   [21E, 21E, 6E, 6E, 126E]
-  2  POINT SPREAD FUNCTION  BinTableHDU     68   1R x 10C   [21E, 21E, 6E, 6E, 126E, 126E, 126E, 126E, 126E, 126E]
-  3  ENERGY DISPERSION  BinTableHDU     54   1R x 7C   [60E, 60E, 300E, 300E, 6E, 6E, 108000E]
-  4  BACKGROUND  BinTableHDU     57   1R x 7C   [12E, 12E, 12E, 12E, 21E, 21E, 3024E]
-
 """
 import numpy as np
 import astropy.units as u
 import yaml
 from astropy.coordinates import SkyCoord, Angle
-from gammapy.cube import SkyCube, make_exposure_cube, compute_npred_cube
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from gammapy.image.models import Shell2D
+from gammapy.cube import SkyCube, CombinedModel3D
+from gammapy.cube import make_exposure_cube, compute_npred_cube
+from gammapy.cube.utils import compute_npred_cube_simple
 
 
 def get_irfs(config):
@@ -38,6 +30,7 @@ def get_irfs(config):
     edisp = edisp_fov.to_energy_dispersion(offset=offset)
 
     # TODO: read background once it's working!
+    # bkg = Background3D.read(filename, hdu='BACKGROUND')
 
     return dict(psf=psf, aeff=aeff, edisp=edisp)
 
@@ -59,41 +52,6 @@ def make_ref_cube(config):
                    'eunit': 'TeV'}
 
     return SkyCube.empty(**WCS_SPEC, **ENERGY_SPEC)
-
-
-class Model3D(object):
-    def __init__(self, spatial_model, spectral_model):
-        self.spatial_model = spatial_model
-        self.spectral_model = spectral_model
-
-    def evaluate(self, lon, lat, energy):
-        """Return differential surface brightness cube.
-        
-        Units: cm-2 s-1 TeV-1 sr-1
-        """
-        # shape = (*lon.shape, energy.size - 1)
-        a = self.spatial_model(lon.deg, lat.deg) * u.Unit('deg-2')
-        b = self.spectral_model(energy)
-        return a * b[:, np.newaxis, np.newaxis]
-
-    def evaluate_cube(self, ref_cube):
-        """Return differential surface brightness cube.
-
-        Units: cm-2 s-1 TeV-1 sr-1
-        """
-        ref_sky_image = ref_cube.sky_image_ref
-        coords = ref_sky_image.coordinates()
-        lon = coords.data.lon
-        lat = coords.data.lat
-        energy = ref_cube.energies(mode='center')
-
-        data = self.evaluate(lon, lat, energy)
-
-        # TODO: saving to FITS doesn't work if there's a scale != 1. Fix SkyCube.write!
-        # For now we force scale to 1 here by converting to explicit units
-        data = data.to('cm-2 s-1 TeV-1 sr-1')
-
-        return SkyCube(data=data, wcs=ref_cube.wcs, energy_axis=ref_cube.energy_axis)
 
 
 def get_model(config):
@@ -123,30 +81,7 @@ def get_model(config):
             lambda_=config['model']['cutoff'] * u.Unit('TeV-1'),
         )
 
-    return Model3D(spatial_model, spectral_model)
-
-
-def compute_npred_cube_simple(flux_cube, exposure_cube):
-    """Compute npred cube.
-    
-    Multiplies flux and exposure and pixel solid angle and energy bin width
-    
-    TODO: remove this function and instead fix the one in Gammapy (and add tests there)!
-    This function was only added here to debug `gammapy.cube.utils.compute_npred_cube`
-    After debugging the results almost match (differences due to integration method in energy)
-    
-    The one remaining issue with the function in Gammapy is that it gives NaN where flux = 0
-    This must have to do with the integration method in energy and should be fixed.
-    """
-    solid_angle = exposure_cube.sky_image_ref.solid_angle()
-    de = exposure_cube.energy_width
-    flux = flux_cube.data
-    exposure = exposure_cube.data
-    npred = flux * exposure * solid_angle * de[:, np.newaxis, np.newaxis]
-
-    npred_cube = SkyCube.empty_like(exposure_cube)
-    npred_cube.data = npred.to('')
-    return npred_cube
+    return CombinedModel3D(spatial_model, spectral_model)
 
 
 def compute_spatial_model_integral(model, image):
@@ -209,8 +144,20 @@ def main():
 
     flux_cube = model.evaluate_cube(ref_cube)
 
-    # npred_cube = compute_npred_cube(flux_cube, exposure_cube, energy_bins=flux_cube.energies('edges'))
-    npred_cube = compute_npred_cube_simple(flux_cube, exposure_cube)
+    from time import time
+    t0 = time()
+    npred_cube = compute_npred_cube(
+        flux_cube, exposure_cube,
+        energy_bins=flux_cube.energies('edges'),
+        integral_resolution=2,
+    )
+    t1 = time()
+    npred_cube_simple = compute_npred_cube_simple(flux_cube, exposure_cube)
+    t2 = time()
+    print('npred_cube: ', t1 - t0)
+    print('npred_cube_simple: ', t2 - t1)
+    print('npred_cube sum: {}'.format(np.nansum(npred_cube.data.to('').data)))
+    print('npred_cube_simple sum: {}'.format(np.nansum(npred_cube_simple.data.to('').data)))
 
     # TODO: apply PSF convolution here
     # kernels = irfs['psf'].kernels(npred_cube)
