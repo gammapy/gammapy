@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord
+from ...utils.testing import requires_dependency
 from ...image.models import Shell2D
 from ...spectrum.models import PowerLaw
 from ..core import SkyCube
@@ -52,6 +53,7 @@ class TestCombinedModel3D:
         assert_quantity_allclose(actual, expected)
         assert actual.shape == (5, 3, 4)
 
+    @requires_dependency('scipy')
     def test_evaluate_cube(self):
         ref_cube = make_ref_cube()
         cube = self.model.evaluate_cube(ref_cube)
