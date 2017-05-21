@@ -27,6 +27,7 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Brigitta Sipocz
 - Christoph Deil
 - Johannes King
+- Roberta Zanin (new)
 - Rubén López-Coto (new)
 
 Pull requests
@@ -36,6 +37,15 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1040] Add combined 3D model and simple npred function (Christoph Deil)
+- [#1038] Remove gammapy.utils.mpl_style (Christoph Deil)
+- [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
+- [#1032] Improve table unit standardisation and flux points (Christoph Deil)
+- [#1031] Add HGPS catalog spatial models (Axel Donath)
+- [#1029] Add 3D model simulation example (Roberta Zanin)
+- [#1027] Add gamma-cat resource and resource index classes (Christoph Deil)
+- [#1026] Fix Fermi catalog flux points upper limits (Axel Donath)
+- [#1025] Remove spectrum butterfly class (Christoph Deil)
 - [#1021] Fix spiralarm=False case in make_base_catalog_galactic (Ruben Lopez-Coto)
 - [#1014] Introduce TSImageEstimator class (Axel Donath)
 - [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
