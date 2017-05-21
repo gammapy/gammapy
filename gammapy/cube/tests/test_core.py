@@ -11,9 +11,29 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
 from ...data import EventList
-from ...datasets import FermiGalacticCenter, FermiVelaRegion
+from ...datasets import FermiGalacticCenter
 from ...spectrum.models import PowerLaw2
-from .. import SkyCube, compute_npred_cube
+from .. import SkyCube
+
+
+def make_test_spectral_model():
+    emin, emax = 1 * u.TeV, 100 * u.TeV,
+    return PowerLaw2(
+        amplitude=1e-12 * u.Unit('1 / (s sr cm2)'),
+        index=2,
+        emin=emin,
+        emax=emax,
+    )
+
+
+def make_test_sky_cube():
+    model = make_test_spectral_model()
+    emin = model.parameters['emin'].value
+    emax = model.parameters['emax'].value
+    cube = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=3, nypix=3)
+    data = model(cube.energies()).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
+    cube.data = data
+    return cube
 
 
 @requires_dependency('scipy')
@@ -162,21 +182,9 @@ class TestSkyCube(object):
 
 @requires_dependency('scipy')
 class TestSkyCubeInterpolation(object):
-    def setup(self):
-        emin, emax = 1 * u.TeV, 100 * u.TeV,
-        pwl = PowerLaw2(
-            amplitude=1e-12 * u.Unit('1 / (s sr cm2)'),
-            index=2,
-            emin=emin,
-            emax=emax,
-        )
-
-        cube = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=3, nypix=3)
-        data = pwl(cube.energies()).reshape(-1, 1, 1) * np.ones(cube.data.shape[1:])
-        cube.data = data
-
-        self.sky_cube = cube
-        self.pwl = pwl
+    def setup_class(self):
+        self.sky_cube = make_test_sky_cube()
+        self.pwl = make_test_spectral_model()
 
     def test_sky_image(self):
         energy = 50 * u.TeV
@@ -192,8 +200,10 @@ class TestSkyCubeInterpolation(object):
     def test_reproject(self):
         emin = 1 * u.TeV
         emax = 100 * u.TeV
-        ref = SkyCube.empty(emin=emin, emax=emax, enumbins=4, nxpix=6, nypix=6,
-                            binsz=0.01)
+        ref = SkyCube.empty(
+            emin=emin, emax=emax, enumbins=4,
+            nxpix=6, nypix=6, binsz=0.01,
+        )
         reprojected = self.sky_cube.reproject(ref)
 
         # Check if reprojection conserves total flux
@@ -204,52 +214,6 @@ class TestSkyCubeInterpolation(object):
         flux_rep = (integral_rep.data * integral_rep.solid_angle()).sum()
 
         assert_quantity_allclose(flux, flux_rep)
-
-    @requires_dependency('scipy')
-    @requires_dependency('reproject')
-    def test_analytical_npred_cube(self):
-        # Choose exposure such that exposure * flux_int integrates to unity
-        energies = [1, 100] * u.TeV
-        exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1e12)
-        exposure_cube.data *= u.Unit('cm2 s')
-
-        solid_angle = exposure_cube.sky_image_ref.solid_angle()
-
-        # Integral resolution is 1 as this is a true powerlaw case
-        npred_cube = compute_npred_cube(self.sky_cube, exposure_cube,
-                                        energies, integral_resolution=2)
-        actual = npred_cube.data[0]
-        assert_quantity_allclose(actual, solid_angle.value)
-
-
-@requires_dependency('scipy')
-@requires_dependency('reproject')
-@requires_data('gammapy-extra')
-def test_compute_npred_cube():
-    fermi_vela = FermiVelaRegion()
-
-    background = fermi_vela.diffuse_model()
-    exposure = fermi_vela.exposure_cube()
-
-    # Re-project background cube
-    repro_bg_cube = background.reproject(exposure)
-
-    # Define energy band required for output
-    energies = [10, 500] * u.GeV
-
-    # Compute the predicted counts cube
-    npred_cube = compute_npred_cube(repro_bg_cube, exposure, energies,
-                                    integral_resolution=5)
-
-    # Convolve with Energy-dependent Fermi LAT PSF
-    psf = fermi_vela.psf()
-    kernels = psf.kernels(npred_cube)
-    convolved_npred_cube = npred_cube.convolve(kernels)
-
-    actual = convolved_npred_cube.data.value.sum()
-    desired = fermi_vela.background_image().data.sum()
-
-    assert_allclose(actual, desired, rtol=0.001)
 
 
 @requires_dependency('scipy')
