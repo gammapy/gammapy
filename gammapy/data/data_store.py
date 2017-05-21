@@ -413,7 +413,8 @@ class DataStore(object):
         subhdut_grpd = subhdut.group_by('OBS_ID')
         colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
         temp = np.zeros(len(colnames), dtype=int)
-        rows = list()
+
+        rows = []
         for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
             # This is needed to get the column order right
             group.add_index('HDU_CLASS')

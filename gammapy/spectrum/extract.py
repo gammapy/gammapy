@@ -212,7 +212,7 @@ class SpectrumExtraction(object):
             psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
 
         center_energies = self._on_vector.energy.nodes
-        areascal = list()
+        areascal = []
         for index, energy in enumerate(center_energies):
             try:
                 correction = psf.integral(energy,

@@ -7,10 +7,8 @@ import astropy.units as u
 from ..testing import requires_dependency
 from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
-
-def get_test_arrays():
-    data_arrays = list()
-    data_arrays.append(dict(
+configs = [
+    dict(
         tag='1D linear',
         data=np.arange(10),
         axes=[
@@ -18,22 +16,21 @@ def get_test_arrays():
         ],
         linear_val={'x-axis': 8.5},
         linear_res=8.5,
-    ))
-    data_arrays.append(dict(
+    ),
+    dict(
         tag='2D log-linear',
         data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
         axes=[
-            BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy',
-                                    interpolation_mode='log'),
+            BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log'),
             DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name='offset')
         ],
         linear_val={'energy': 4.54 * u.TeV, 'offset': 0.23 * u.deg},
         linear_res=6.184670234285248 * u.cm ** 2,
-    ))
-    return data_arrays
+    ),
+]
 
 
-@pytest.mark.parametrize('config', get_test_arrays())
+@pytest.mark.parametrize('config', configs)
 @requires_dependency('scipy')
 def test_nddata(config):
     tester = NDDataArrayTester(config)

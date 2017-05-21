@@ -125,7 +125,7 @@ class ObservationStats(Stats):
         a_on_backup = 0
         a_off = 0
         a_off_backup = 0
-        obs_id = list()
+        obs_id = []
         livetime = 0
         alpha = 0
         alpha_backup = 0

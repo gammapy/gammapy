@@ -134,7 +134,7 @@ class SpectrumFit(object):
         `~gammapy.spectrum.SpectrumFit` with observation threshold taken into
         account.
         """
-        true_range = list()
+        true_range = []
         for binrange, obs in zip(self.bins_in_fit_range, self.obs_list):
             idx = np.where(binrange)[0]
             e_min = obs.e_reco[idx[0]]
@@ -145,7 +145,7 @@ class SpectrumFit(object):
 
     def _apply_fit_range(self):
         """Mark bins within desired fit range for each observation."""
-        self._bins_in_fit_range = list()
+        self._bins_in_fit_range = []
         for obs in self.obs_list:
             # Take into account fit range
             energy = obs.e_reco
@@ -175,7 +175,7 @@ class SpectrumFit(object):
 
         The result is stored as ``predicted_counts`` attribute.
         """
-        predicted_counts = list()
+        predicted_counts = []
         for obs in self.obs_list:
             mu_sig = self._predict_counts_helper(obs,
                                                  self.model,
@@ -236,7 +236,7 @@ class SpectrumFit(object):
         The result is stored as attribute ``statval``, bin outside the fit
         range are set to 0.
         """
-        statval = list()
+        statval = []
         for obs, npred in zip(self.obs_list, self.predicted_counts):
             on_stat, off_stat = self._calc_statval_helper(obs, npred)
             statvals = (on_stat, off_stat)
@@ -330,7 +330,7 @@ class SpectrumFit(object):
         parvals : `~astropy.units.Quantity`
             Parameter values
         """
-        likelihood = list()
+        likelihood = []
         self.model = model
         for val in parvals:
             self.model.parameters[parname].value = val
@@ -401,7 +401,6 @@ class SpectrumFit(object):
         will change the model parameters and statval again
         """
         from . import SpectrumFitResult
-        results = list()
 
         model = self.model.copy()
         if self.background_model is not None:
@@ -412,6 +411,7 @@ class SpectrumFit(object):
 
         statname = self.stat
 
+        results = []
         for idx, obs in enumerate(self.obs_list):
             fit_range = self.true_fit_range[idx]
             statval = np.sum(self.statval[idx])
@@ -448,13 +448,7 @@ class SpectrumFit(object):
     def _est_errors_sherpa(self):
         """Wrapper around Sherpa error estimator."""
         covar = self._sherpa_fit.est_errors()
-        covar_axis = list()
-
-        for par in covar.parnames:
-            name = par.split('.')[-1]
-            covar_axis.append(name)
-
-        self.covar_axis = covar_axis
+        self.covar_axis = [par.split('.')[-1] for par in covar.parnames]
         self.covariance = copy.deepcopy(covar.extra_output)
 
     def run(self, outdir=None):

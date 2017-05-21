@@ -118,7 +118,7 @@ class NDDataArray(object):
         kwargs : dict
             Keys are the axis names, Values the evaluation points
         """
-        node = list()
+        node = []
         for axis in self.axes:
             lookup_val = Quantity(kwargs.pop(axis.name))
             temp = axis.find_node(lookup_val)
@@ -146,7 +146,7 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        values = list()
+        values = []
         for axis in self.axes:
             # Extract values for each axis, default: nodes
             temp = Quantity(kwargs.pop(axis.name, axis.nodes))

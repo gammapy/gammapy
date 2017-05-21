@@ -133,7 +133,7 @@ class ReflectedRegionsFinder(object):
     def find_regions(self):
         """Find reflected regions."""
         curr_angle = self._angle + self._min_ang + self.min_distance_input
-        reflected_regions = list()
+        reflected_regions = []
         while curr_angle < self._max_angle:
             test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
             test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)

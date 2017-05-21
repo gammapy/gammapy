@@ -52,15 +52,15 @@ def stats(target, mask):
 @pytest.fixture(scope='session')
 def stats_stacked(target, mask):
     obs_list = get_obs_list()
-    obs_stats = list()
     bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs_list)
     bge.run()
-    for obs, bg in zip(obs_list, bge.result):
-        obs_stats.append(ObservationStats.from_obs(obs, bg))
 
-    return ObservationStats.stack(obs_stats)
+    return ObservationStats.stack([
+        ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)
+
+    ])
 
 
 # TODO: parametrize tests using single and stacked stats!

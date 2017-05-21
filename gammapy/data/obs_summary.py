@@ -280,17 +280,14 @@ class ObservationSummary(object):
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
-        labels = list()
-        values = list()
-        for index in range(len(self.gamma_rate)):
-            labels.append(str(int(self.obs_id[index])))
-            values.append(index + 0.5)
 
-        ax.plot(values, self.gamma_rate, "o", **kwargs)
+        xtick_vals, xtick_labels = self._get_xtick_info()
+
+        ax.plot(xtick_vals, self.gamma_rate, "o", **kwargs)
         ax.set_xlabel('Observation Ids')
 
-        ax.set_xticks(values)
-        ax.set_xticklabels(labels, rotation=-22.5)
+        ax.set_xticks(xtick_vals)
+        ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel('$\gamma$ rate ({})'.format(self.gamma_rate.unit))
         ax.axis([0, len(self.gamma_rate),
                  0., np.amax(self.gamma_rate.value) * 1.2])
@@ -312,19 +309,22 @@ class ObservationSummary(object):
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
-        labels = list()
-        values = list()
-        for index in range(len(self.bg_rate)):
-            labels.append(str(int(self.obs_id[index])))
-            values.append(index + 0.5)
 
-        ax.plot(values, self.bg_rate, "o", **kwargs)
+        xtick_vals, xtick_labels = self._get_xtick_info()
+
+        ax.plot(xtick_vals, self.bg_rate, "o", **kwargs)
         ax.set_xlabel('Observation Ids')
 
-        ax.set_xticks(values)
-        ax.set_xticklabels(labels, rotation=-22.5)
+        ax.set_xticks(xtick_vals)
+        ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel('Background rate ({})'.format(self.bg_rate.unit))
         ax.axis([0, len(self.bg_rate),
                  0., np.amax(self.bg_rate.value) * 1.2])
         ax.set_title('Background rates')
         return ax
+
+    def _get_xtick_info(self):
+        idxs = list(range(len(self.obs_stats)))
+        vals = [idx + 0.5 for idx in idxs]
+        labels = [str(int(self.obs_id[idx])) for idx in idxs]
+        return vals, labels
