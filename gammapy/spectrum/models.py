@@ -30,7 +30,8 @@ class SpectralModel(object):
     """Spectral model base class.
 
     Derived classes should store their parameters as
-    `~gammapy.spectrum.models.ParameterList`, see for example return pardict
+    `~gammapy.utils.modeling.ParameterList`
+    See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
 
@@ -220,7 +221,7 @@ class SpectralModel(object):
              energy_power=0, n_points=100, **kwargs):
         """Plot `~gammapy.spectrum.SpectralModel`
 
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+        kwargs are forwarded to `matplotlib.pyplot.errorbar`
 
         Parameters
         ----------
@@ -262,9 +263,9 @@ class SpectralModel(object):
     def plot_error(self, energy_range, ax=None,
                    energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                    energy_power=0, n_points=100, **kwargs):
-        """Plot error `~gammapy.spectrum.SpectralModel`
+        """Plot error `~gammapy.spectrum.SpectralModel`.
 
-        kwargs are forwarded to :func:`~matplotlib.pyplot.fill_between`
+        kwargs are forwarded to `matplotlib.pyplot.fill_between`
 
         Parameters
         ----------
