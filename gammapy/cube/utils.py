@@ -20,7 +20,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     """Compute predicted counts cube.
 
     TODO: describe what's passed in.
-    I think it's a surface brighness in e.g. 'cm-2 s-1 TeV-1 sr-1'
+    I think it's a surface brightness in e.g. 'cm-2 s-1 TeV-1 sr-1'
 
     Parameters
     ----------
@@ -39,6 +39,29 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     See also
     --------
     compute_npred_cube_simple
+
+    Examples
+    --------
+    Load an example dataset::
+
+        from gammapy.datasets import FermiGalacticCenter
+        from gammapy.utils.energy import EnergyBounds
+        from gammapy.irf import EnergyDependentTablePSF
+        from gammapy.cube import SkyCube, compute_npred_cube
+        
+        filenames = FermiGalacticCenter.filenames()
+        flux_cube = SkyCube.read(filenames['diffuse_model'], format='fermi-background')
+        exposure_cube = SkyCube.read(filenames['exposure_cube'], format='fermi-exposure')
+        psf = EnergyDependentTablePSF.read(filenames['psf'])
+        
+    Compute an ``npred`` cube and a PSF-convolved version::
+
+        flux_cube = flux_cube.reproject(exposure_cube)
+        energy_bounds = EnergyBounds([10, 30, 100, 500], 'GeV')
+        npred_cube = compute_npred_cube(flux_cube, exposure_cube, energy_bounds)
+        
+        kernels = psf.kernels(npred_cube)
+        npred_cube_convolved = npred_cube.convolve(kernels)
     """
     _validate_inputs(flux_cube, exposure_cube)
 
@@ -47,8 +70,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     energy_centers = EnergyBounds(energy_bins).log_centers
 
+    # TODO: find a nicer way to do the iteration: make an empty 3D cube, then fill slice by slice
     data = []
-    # TODO: find a nicer way to do the iteration
     for ecenter, emin, emax in zip(energy_centers, energy_bins[:-1], energy_bins[1:]):
         flux_int = flux_cube.sky_image_integral(emin, emax, interpolation='linear',
                                                 nbins=integral_resolution)
