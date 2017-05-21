@@ -11,7 +11,7 @@ __all__ = [
 
 class CombinedModel3D(object):
     """Combine spatial and spectral model into a 3D model.
-    
+
     TODO: give move infos and an example how spatial models
     must be normalised to integrate to 1 and caveats about
     binning effects, i.e. how too small bins or very small
@@ -26,7 +26,7 @@ class CombinedModel3D(object):
     TODO: This is a prototype, and the evaluation scheme might change!
     Feedback on what you'd like to do and whether this class is working
     for you or not is highly welcome!!!
-    
+
     Parameters
     ----------
     spatial_model : `~gammapy.image.models.SpatialModel`
@@ -36,7 +36,56 @@ class CombinedModel3D(object):
 
     Examples
     --------
-    TODO
+    Create a `CombinedModel3D`, i.e. one that factors into a spatial
+    and position-independent spectral part::
+
+        import astropy.units as u
+        from gammapy.image.models import Shell2D
+        from gammapy.spectrum.models import PowerLaw
+        from gammapy.cube.models import CombinedModel3D
+
+        spatial_model = Shell2D(
+            amplitude=1, x_0=3, y_0=4, r_in=5, width=6, normed=True,
+        )
+        spectral_model = PowerLaw(
+            index=2, amplitude=1 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.Unit('TeV'),
+        )
+        model = CombinedModel3D(spatial_model, spectral_model)
+
+    Look at the model you created::
+
+        >>> model
+        CombinedModel3D(spatial_model=<Shell2D(amplitude=1.0, x_0=3.0, y_0=4.0, r_in=5.0, width=6.0)>, spectral_model=PowerLaw())
+        >>> print(model.spectral_model)
+        PowerLaw
+
+        Parameters:
+
+               name     value   error       unit      min  max  frozen
+            --------- --------- ----- --------------- ---- ---- ------
+                index 2.000e+00   nan                    0 None  False
+            amplitude 1.000e+00   nan 1 / (cm2 s TeV)    0 None  False
+            reference 1.000e+00   nan             TeV None None   True
+
+        >>> print(model.spatial_model)
+        Model: Shell2D
+        Inputs: ('x', 'y')
+        Outputs: ('z',)
+        Model set size: 1
+        Parameters:
+            amplitude x_0 y_0 r_in width
+            --------- --- --- ---- -----
+                  1.0 3.0 4.0  5.0   6.0
+
+    Evaluate the model at a given point::
+
+        >>> import astropy.units as u
+        >>> model.evaluate(lon=0.1 * u.deg, lat=0.2 * u.deg, energy='1 TeV')
+        <Quantity [[[ 0.00334177]]] 1 / (cm2 deg2 s TeV)>
+
+    Evaluate the model on a sky cube::
+
+        >>> # TODO: add example.
     """
 
     def __init__(self, spatial_model, spectral_model):
@@ -52,7 +101,7 @@ class CombinedModel3D(object):
     # see sherpy_.CombinedModel3D(e_lo, e_hi, x, y)
     def evaluate(self, lon, lat, energy):
         """Evaluate the model at given points.
-        
+
         Return differential surface brightness cube.
         At the moment in units: ``cm-2 s-1 TeV-1 sr-1``
 
@@ -66,7 +115,7 @@ class CombinedModel3D(object):
             Spatial coordinates
         energy : `~astropy.units.Quantity`
             Energy coordinate
-        
+
         Returns
         -------
         value : `~astropy.units.Quantity`
@@ -91,12 +140,12 @@ class CombinedModel3D(object):
 
     def evaluate_cube(self, ref_cube):
         """Evaluate the model on coordinates given by a reference sky cube.
-        
+
         Parameters
         ----------
         ref_cube : `~gammapy.cube.SkyCube`
             Reference sky cube
-        
+
         Returns
         -------
         model_cube : `~gammapy.cube.SkyCube`
