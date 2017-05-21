@@ -2,6 +2,11 @@
 An example how to simulate a 3D n_pred / n_obs cube.
 
 Using CTA IRFs.
+
+TODOs:
+* For `compute_npred_cube` we're getting ``NaN`` values where flux == 0.
+  This shouldn't happen and is bad. Figure out what's going on and fix!
+
 """
 import numpy as np
 import astropy.units as u
@@ -12,8 +17,8 @@ from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from gammapy.image.models import Shell2D
 from gammapy.cube import SkyCube, CombinedModel3D
-from gammapy.cube import make_exposure_cube, compute_npred_cube
-from gammapy.cube.utils import compute_npred_cube_simple
+from gammapy.cube import make_exposure_cube
+from gammapy.cube.utils import compute_npred_cube, compute_npred_cube_simple
 
 
 def get_irfs(config):
@@ -126,7 +131,7 @@ def main():
         ref_cube=ref_cube,
         offset_max=Angle(config['selection']['ROI']),
     )
-    exposure_cube.data = exposure_cube.data.to('m2 s')
+    # exposure_cube.data = exposure_cube.data.to('m2 s')
 
     # Define model and do some quick checks
     model = get_model(config)
@@ -148,7 +153,7 @@ def main():
     t0 = time()
     npred_cube = compute_npred_cube(
         flux_cube, exposure_cube,
-        energy_bins=flux_cube.energies('edges'),
+        ebounds=flux_cube.energies('edges'),
         integral_resolution=2,
     )
     t1 = time()

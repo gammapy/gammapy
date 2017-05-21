@@ -16,15 +16,14 @@ def test_analytical_npred_cube():
     sky_cube = make_test_sky_cube()
 
     # Choose exposure such that exposure * flux_int integrates to unity
-    energies = [1, 100] * u.TeV
-    exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1e12)
-    exposure_cube.data *= u.Unit('cm2 s')
+    exposure_cube = SkyCube.empty(enumbins=4, nxpix=3, nypix=3, fill=1e12, unit='cm2 s')
+    ebounds = [1, 100] * u.TeV
 
     solid_angle = exposure_cube.sky_image_ref.solid_angle()
 
     # Integral resolution is 1 as this is a true powerlaw case
-    npred_cube = compute_npred_cube(sky_cube, exposure_cube, energies, integral_resolution=2)
-    actual = npred_cube.data[0]
+    npred_cube = compute_npred_cube(sky_cube, exposure_cube, ebounds, integral_resolution=2)
+    actual = npred_cube.data[0].value
     assert_quantity_allclose(actual, solid_angle.value)
 
 
@@ -41,11 +40,10 @@ def test_compute_npred_cube():
     repro_bg_cube = background.reproject(exposure)
 
     # Define energy band required for output
-    energies = [10, 500] * u.GeV
+    ebounds = [10, 500] * u.GeV
 
     # Compute the predicted counts cube
-    npred_cube = compute_npred_cube(repro_bg_cube, exposure, energies,
-                                    integral_resolution=5)
+    npred_cube = compute_npred_cube(repro_bg_cube, exposure, ebounds, integral_resolution=5)
 
     # Convolve with Energy-dependent Fermi LAT PSF
     psf = fermi_vela.psf()

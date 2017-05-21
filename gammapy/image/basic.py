@@ -438,14 +438,14 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         from ..cube import compute_npred_cube
 
         p = self.parameters
-        erange = u.Quantity([p['emin'], p['emax']])
+        energy_band = u.Quantity([p['emin'], p['emax']])
 
         background_cube = self._total_background_cube(dataset)
         exposure_cube = dataset.exposure.reproject(background_cube)
         psf = dataset.psf
 
         # compute npred cube
-        npred_cube = compute_npred_cube(background_cube, exposure_cube, energy_bins=erange)
+        npred_cube = compute_npred_cube(background_cube, exposure_cube, ebounds=energy_band)
 
         # extract the only image from the npred_cube
         npred_total = npred_cube.sky_image_idx(0)
@@ -457,7 +457,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         npred_total.data /= (norm.mean()) ** 2
 
         # convolve with PSF kernel
-        psf_mean = psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
+        psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
         kernel = psf_mean.kernel(npred_total)
         npred_total = npred_total.convolve(kernel)
         return npred_total
