@@ -296,12 +296,12 @@ class SkyCube(MapBase):
                 raise ValueError("'energies' must be instance of Energy or EnergyBounds, "
                                  "but {} was given.".format(type(energies)))
             energy_axis = LogEnergyAxis(energies, mode=mode)
-            data = np.ones_like(reference.data)
+            data = np.ones(reference.data.shape)
             data = data * np.ones(enumbins).reshape((-1, 1, 1))
 
         elif isinstance(reference, SkyCube):
             energy_axis = reference.energy_axis
-            data = np.ones_like(reference.data.value)
+            data = np.ones(reference.data.shape)
 
         else:
             raise ValueError("'reference' must be instance of SkyImage or SkyCube")
