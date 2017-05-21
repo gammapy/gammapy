@@ -82,10 +82,9 @@ class LogEnergyAxis(object):
 
 
 class CountsPredictor(object):
-    """Calculate npred
+    """Calculate number of predicted counts (``npred``).
 
-    The true and reconstruced energy binning are inferred from the provided
-    IRFs.
+    The true and reconstructed energy binning are inferred from the provided IRFs.
 
     Parameters
     ----------

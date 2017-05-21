@@ -90,6 +90,7 @@ class CountsSpectrum(object):
 
     @classmethod
     def read(cls, filename, hdu1='COUNTS', hdu2='EBOUNDS', **kwargs):
+        """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename), **kwargs)
         try:
@@ -114,7 +115,7 @@ class CountsSpectrum(object):
         return Table([channel, counts], names=names, meta=meta)
 
     def to_hdulist(self):
-        """Convert to `~astropy.io.fits.HDUList`
+        """Convert to `~astropy.io.fits.HDUList`.
 
         This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by
         ``to_table``, in order to store the energy axis
@@ -125,17 +126,18 @@ class CountsSpectrum(object):
         return fits.HDUList([prim_hdu, hdu, ebounds])
 
     def write(self, filename, **kwargs):
+        """Write to file."""
         filename = make_path(filename)
         self.to_hdulist().writeto(str(filename), **kwargs)
 
     def fill(self, events):
-        """Fill with list of events
+        """Fill with list of events.
 
         TODO: Move to `~gammapy.utils.nddata.NDDataArray`
 
         Parameters
         ----------
-        events: `~astropy.units.Quantity`, `gammapy.data.EventList`,
+        events : `~astropy.units.Quantity`, `gammapy.data.EventList`,
             List of event energies
         """
         if isinstance(events, EventList):
@@ -153,7 +155,7 @@ class CountsSpectrum(object):
 
     def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
              show_energy=None, **kwargs):
-        """Plot as datapoint
+        """Plot as data points.
 
         kwargs are forwarded to `~matplotlib.pyplot.errorbar`
 
@@ -194,7 +196,7 @@ class CountsSpectrum(object):
         return ax
 
     def plot_hist(self, ax=None, energy_unit='TeV', show_energy=None, **kwargs):
-        """Plot as histogram
+        """Plot as histogram.
 
         kwargs are forwarded to `~matplotlib.pyplot.hist`
 
@@ -234,12 +236,11 @@ class CountsSpectrum(object):
         return ax
 
     def copy(self):
-        """A deep copy of self.
-        """
+        """A deep copy of self."""
         return deepcopy(self)
 
     def rebin(self, parameter):
-        """Rebin
+        """Rebin.
 
         Parameters
         ----------
@@ -269,10 +270,10 @@ class CountsSpectrum(object):
 
 
 class PHACountsSpectrum(CountsSpectrum):
-    """OGIP PHA equivalent
+    """OGIP PHA equivalent.
 
-    The ``bkg`` flag controls wheater the PHA counts spectrum represents a
-    background estimate or not (this slightly affectes the FITS header
+    The ``bkg`` flag controls whether the PHA counts spectrum represents a
+    background estimate or not (this slightly affects the FITS header
     information when writing to disk).
 
     Parameters
@@ -390,10 +391,10 @@ class PHACountsSpectrum(CountsSpectrum):
         self.quality[idx] = 1
 
     def rebin(self, parameter):
-        """Rebin
+        """Rebin.
 
-        see `~gammapy.spectrum.CountsSpectrum`, this function treats the
-        quality vector correctly
+        See `~gammapy.spectrum.CountsSpectrum`.
+        This function treats the quality vector correctly
         """
         retval = super(PHACountsSpectrum, self).rebin(parameter)
         split_indices = np.arange(parameter, len(self.data.data), parameter)
@@ -424,7 +425,7 @@ class PHACountsSpectrum(CountsSpectrum):
             return self.backscal
 
     def to_table(self):
-        """Write"""
+        """Convert to `~astropy.table.Table`."""
         table = super(PHACountsSpectrum, self).to_table()
 
         table['QUALITY'] = self.quality
@@ -463,7 +464,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='SPECTRUM', hdu2='EBOUNDS'):
-        """Read"""
+        """Create from `~astropy.io.fits.HDUList`."""
         counts_table = fits_table_to_table(hdulist[hdu1])
         ebounds = fits_table_to_table(hdulist[2])
         emin = ebounds['E_MIN'].quantity
@@ -482,6 +483,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @classmethod
     def read(cls, filename, hdu1='SPECTRUM', hdu2='EBOUNDS', **kwargs):
+        """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename), **kwargs)
         try:
@@ -493,7 +495,7 @@ class PHACountsSpectrum(CountsSpectrum):
             raise ValueError(msg)
 
     def to_sherpa(self, name):
-        """Return `~sherpa.astro.data.DataPHA`
+        """Convert to `sherpa.astro.data.DataPHA`.
 
         Parameters
         ----------
@@ -528,11 +530,11 @@ class PHACountsSpectrum(CountsSpectrum):
 
 
 class PHACountsSpectrumList(list):
-    """List of `~gammapy.spectrum.PHACountsSpectrum`
+    """List of `~gammapy.spectrum.PHACountsSpectrum` objects.
 
-    All spectra must have the same energy binning. This represent the PHA type
-    II data format. See
-    https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
+    All spectra must have the same energy binning.
+    This represent the PHA type II data format.
+    See https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
     """
 
     def write(self, outdir, **kwargs):
@@ -541,15 +543,14 @@ class PHACountsSpectrumList(list):
         self.to_hdulist().writeto(str(outdir), **kwargs)
 
     def to_hdulist(self):
-        """Create `~astropy.fits.HDUList`"""
+        """Convert to `~astropy.io.fits.HDUList`"""
         prim_hdu = fits.PrimaryHDU()
         hdu = table_to_fits_table(self.to_table())
         ebounds = energy_axis_to_ebounds(self[0].energy.bins)
         return fits.HDUList([prim_hdu, hdu, ebounds])
 
     def to_table(self):
-        """Create `~astropy.table.Table`
-        """
+        """Convert to `~astropy.table.Table`."""
         is_bkg = self[0].is_bkg
         nbins = self[0].energy.nbins
         spec_num = np.empty([len(self), 1], dtype=np.int16)
@@ -566,16 +567,16 @@ class PHACountsSpectrumList(list):
             quality[idx] = t['QUALITY'].data
             backscal[idx] = t['BACKSCAL'].data
             backfile.append('bkg.fits[{}]'.format(idx))
-        names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
+
         meta = self[0].to_table().meta
         meta['hduclas4'] = 'TYPE:II'
         meta['ancrfile'] = 'arf.fits'
         meta['respfile'] = 'rmf.fits'
         meta.pop('OBS_ID')
 
-        table = Table([spec_num, channel, counts, quality, backscal],
-                      names=names,
-                      meta=meta)
+        data = [spec_num, channel, counts, quality, backscal]
+        names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
+        table = Table(data, names=names, meta=meta)
 
         if not is_bkg:
             table.meta.pop('backfile')
@@ -585,7 +586,7 @@ class PHACountsSpectrumList(list):
 
     @classmethod
     def read(cls, filename):
-        """Read from file"""
+        """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
         speclist = cls.from_hdulist(hdulist)
@@ -593,7 +594,7 @@ class PHACountsSpectrumList(list):
 
     @classmethod
     def from_hdulist(cls, hdulist):
-        """Create from `~astropy.fits.HDUList`"""
+        """Create from `~astropy.io.fits.HDUList`."""
         energy = ebounds_to_energy_axis(hdulist[2])
         kwargs = dict(
             energy_lo=energy[:-1],

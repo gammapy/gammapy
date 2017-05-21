@@ -64,7 +64,7 @@ class SpectrumExtraction(object):
         self.observations = SpectrumObservationList()
 
     def run(self, outdir=None, use_sherpa=False):
-        """Run all steps
+        """Run all steps.
 
         Parameters
         ----------
@@ -92,37 +92,54 @@ class SpectrumExtraction(object):
             return True
 
     def process(self, obs, bkg):
-        """Process one observation"""
+        """Process one observation.
+        
+        Parameters
+        ----------
+        obs : `~gammapy.data.DataStoreObservation`
+            Observation
+        bkg : `~gammapy.background.BackgroundEstimate`
+            Background estimate
+        
+        Returns
+        -------
+        spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
+            Spectrum observation
+        """
         log.info('Process observation\n {}'.format(obs))
         self.make_empty_vectors(obs, bkg)
         self.extract_counts(bkg)
         self.extract_irfs(obs)
+
         if self.containment_correction:
             self.apply_containment_correction(obs, bkg)
-        spectrum_observation = SpectrumObservation(on_vector=self._on_vector,
-                                                   aeff=self._aeff,
-                                                   off_vector=self._off_vector,
-                                                   edisp=self._edisp)
+
+        spectrum_observation = SpectrumObservation(
+            on_vector=self._on_vector,
+            aeff=self._aeff,
+            off_vector=self._off_vector,
+            edisp=self._edisp,
+        )
 
         try:
             spectrum_observation.hi_threshold = obs.aeff.high_threshold
             spectrum_observation.lo_threshold = obs.aeff.low_threshold
         except AttributeError:
-            log.warn('No thresholds defined for obs {}'.format(obs))
-            pass
+            log.warning('No thresholds defined for obs {}'.format(obs))
+
         return spectrum_observation
 
     def make_empty_vectors(self, obs, bkg):
-        """Create empty vectors
+        """Create empty vectors.
 
-        This method copies over all meta info and sets up the energy binning
+        This method copies over all meta info and sets up the energy binning.
 
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
-            observation
+            Observation
         bkg : `~gammapy.background.BackgroundEstimate`
-            background esimate
+            Background estimate
         """
         log.info('Update observation meta info')
         # Copy over existing meta information
@@ -145,35 +162,33 @@ class SpectrumExtraction(object):
         self._off_vector.backscal = bkg.a_off
 
     def extract_counts(self, bkg):
-        """Fill on and off vector for one observation
+        """Fill on and off vector for one observation.
 
         Parameters
         ----------
         bkg : `~gammapy.background.BackgroundEstimate`
-            background esimate
+            Background estimate
         """
         log.info('Fill events')
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
     def extract_irfs(self, obs):
-        """Extract IRFs
+        """Extract IRFs.
 
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
-            observation
+            Observation
         """
         log.info('Extract IRFs')
         offset = self._on_vector.offset
-        self._aeff = obs.aeff.to_effective_area_table(offset,
-                                                      energy=self.e_true)
-        self._edisp = obs.edisp.to_energy_dispersion(offset,
-                                                     e_reco=self.e_reco,
-                                                     e_true=self.e_true)
+        self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
+        self._edisp = obs.edisp.to_energy_dispersion(
+            offset, e_reco=self.e_reco, e_true=self.e_true)
 
     def apply_containment_correction(self, obs, bkg):
-        """Apply containment correction
+        """Apply PSF containment correction.
 
         Parameters
         ----------
@@ -205,7 +220,7 @@ class SpectrumExtraction(object):
                                           bkg.on_region.radius)
             except:
                 msg = 'Containment correction failed for bin {}, energy {}.'
-                log.warn(msg.format(index, energy))
+                log.warning(msg.format(index, energy))
                 correction = 1
             finally:
                 areascal.append(correction)
@@ -214,24 +229,24 @@ class SpectrumExtraction(object):
         self._off_vector.areascal = areascal
 
     def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
-        """Set energy threshold
+        """Compute and set the safe energy threshold.
 
         Set the high and low energy threshold for each observation based on a
         chosen method.
 
-        Available methods for setting the low energy threshold
+        Available methods for setting the low energy threshold:
 
         * area_max : Set energy threshold at x percent of the maximum effective
           area (x given as kwargs['percent'])
 
-        Available methods for setting the high energy threshold
+        Available methods for setting the high energy threshold:
 
         * TBD
 
         Parameters
         ----------
         method_lo_threshold : {'area_max'}
-            method for defining the low energy threshold
+            Method for defining the low energy threshold
         """
         # TODO: This should be a method on SpectrumObservation
         # TODO: define method for the high energy threshold
@@ -249,7 +264,7 @@ class SpectrumExtraction(object):
                     method_lo_threshold))
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
-        """Write results to disk
+        """Write results to disk.
 
         Parameters
         ----------
@@ -265,4 +280,4 @@ class SpectrumExtraction(object):
         outdir.mkdir(exist_ok=True, parents=True)
         self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
 
-    # TODO : add more debug plots etc. here
+        # TODO : add more debug plots etc. here

@@ -40,7 +40,6 @@ class SpectralModel(object):
         return fmt.format(self.__class__.__name__)
 
     def __str__(self):
-        """String representation"""
         ss = self.__class__.__name__
         ss += '\n\nParameters: \n\n\t'
 
@@ -58,6 +57,7 @@ class SpectralModel(object):
         kwargs = dict()
         for par in self.parameters.parameters:
             kwargs[par.name] = par.quantity
+
         return self.evaluate(energy, **kwargs)
 
     def _parse_uarray(self, uarray):
@@ -74,13 +74,12 @@ class SpectralModel(object):
         return energy
 
     def evaluate_error(self, energy):
-        """
-        Evaluate spectral model with error propagation.
+        """Evaluate spectral model with error propagation.
 
         Parameters
         ----------
-        energy : `~astropy.units.quantity`
-            Energy at which to evaluate.
+        energy : `~astropy.units.Quantity`
+            Energy at which to evaluate
 
         Returns
         -------
@@ -95,8 +94,7 @@ class SpectralModel(object):
         return self._parse_uarray(uarray) * unit
 
     def integral(self, emin, emax, **kwargs):
-        """
-        Integrate spectral model numerically.
+        """Integrate spectral model numerically.
 
         .. math::
 
@@ -117,8 +115,7 @@ class SpectralModel(object):
         return integrate_spectrum(self, emin, emax, **kwargs)
 
     def integral_error(self, emin, emax, **kwargs):
-        """
-        Integrate spectral model numerically with error propagation.
+        """Integrate spectral model numerically with error propagation.
 
         Parameters
         ----------
@@ -144,8 +141,7 @@ class SpectralModel(object):
         return self._parse_uarray(uarray) * unit
 
     def energy_flux(self, emin, emax, **kwargs):
-        """
-        Compute energy flux in given energy range.
+        """Compute energy flux in given energy range.
 
         .. math::
 
@@ -157,7 +153,6 @@ class SpectralModel(object):
             Lower and upper bound of integration range.
         **kwargs : dict
             Keyword arguments passed to `integrate_spectrum`
-
         """
 
         def f(x):
@@ -166,8 +161,7 @@ class SpectralModel(object):
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def energy_flux_error(self, emin, emax, **kwargs):
-        """
-        Compute energy flux in given energy range with error propagation.
+        """Compute energy flux in given energy range with error propagation.
 
         .. math::
 
@@ -184,7 +178,6 @@ class SpectralModel(object):
         -------
         energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
             Tuple of energy flux and energy flux error.
-
         """
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
@@ -199,14 +192,14 @@ class SpectralModel(object):
         return self._parse_uarray(uarray) * unit
 
     def to_dict(self):
-        """Serialize to dict"""
+        """Convert to dict."""
         retval = self.parameters.to_dict()
         retval['name'] = self.__class__.__name__
         return retval
 
     @classmethod
     def from_dict(cls, val):
-        """Serialize from dict"""
+        """Create from dict."""
         classname = val.pop('name')
         parameters = ParameterList.from_dict(val)
         kwargs = dict()
@@ -219,9 +212,9 @@ class SpectralModel(object):
     def plot(self, energy_range, ax=None,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, n_points=100, **kwargs):
-        """Plot `~gammapy.spectrum.SpectralModel`
+        """Plot spectral model curve.
 
-        kwargs are forwarded to `matplotlib.pyplot.errorbar`
+        kwargs are forwarded to `matplotlib.pyplot.plot`
 
         Parameters
         ----------
@@ -233,7 +226,6 @@ class SpectralModel(object):
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-
         energy_power : int, optional
             Power of energy to multiply flux axis with
         n_points : int, optional
@@ -257,13 +249,14 @@ class SpectralModel(object):
         y = self._plot_scale_flux(energy, flux, energy_power)
 
         ax.plot(energy.value, y.value, **kwargs)
+
         self._plot_format_ax(ax, energy, y, energy_power)
         return ax
 
     def plot_error(self, energy_range, ax=None,
                    energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                    energy_power=0, n_points=100, **kwargs):
-        """Plot error `~gammapy.spectrum.SpectralModel`.
+        """Plot spectral model error band.
 
         kwargs are forwarded to `matplotlib.pyplot.fill_between`
 
@@ -308,7 +301,9 @@ class SpectralModel(object):
         # This was sometimes causing incorrect error bands because y == 0
         # at high energies for exponential cutoff power-law spectra.
         where = (y_hi > 0) & (y_lo > 0) & (energy >= energy_range[0]) & (energy <= energy_range[1])
+
         ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
+
         self._plot_format_ax(ax, energy, y_lo, energy_power)
         return ax
 
@@ -318,27 +313,24 @@ class SpectralModel(object):
             ax.set_ylabel('E{} * Flux [{}]'.format(energy_power, y.unit))
         else:
             ax.set_ylabel('Flux [{}]'.format(y.unit))
+
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
 
     def _plot_scale_flux(self, energy, flux, energy_power):
         eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
-
-        y = (flux * np.power(energy, energy_power)
-             ).to(flux.unit * eunit ** energy_power)
-        return y
+        y = flux * np.power(energy, energy_power)
+        return y.to(flux.unit * eunit ** energy_power)
 
     def to_sherpa(self, name='default'):
-        """Convert to Sherpa model
+        """Convert to Sherpa model.
 
         To be implemented by subclasses
         """
         raise NotImplementedError('{}'.format(self.__class__.__name__))
 
     def spectral_index(self, energy, epsilon=1e-5):
-        """
-        Compute spectral index at given energy using a local powerlaw
-        approximation.
+        """Compute spectral index at given energy.
 
         Parameters
         ----------
@@ -357,10 +349,9 @@ class SpectralModel(object):
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
     def inverse(self, value, emin=0.1 * u.TeV, emax=100 * u.TeV):
-        """
-        Return energy for a given function value of the spectral model.
+        """Return energy for a given function value of the spectral model.
 
-        Uses numerical root finding algorithm.
+        Calls the `scipy.optimize.brentq` numerical root finding method.
 
         Parameters
         ----------
@@ -370,6 +361,11 @@ class SpectralModel(object):
             Lower bracket value in case solution is not unique.
         emax : `~astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
+
+        Returns
+        -------
+        energy : `~astropy.units.Quantity`
+            Energies at which the model has the given ``value``.
         """
         from scipy.optimize import brentq
 
@@ -382,9 +378,11 @@ class SpectralModel(object):
 
             energy = brentq(f, emin.to('TeV').value, emax.to('TeV').value)
             energies.append(energy)
+
         return energies * u.TeV
 
     def copy(self):
+        """A deep copy."""
         return copy.deepcopy(self)
 
 
@@ -414,11 +412,11 @@ class PowerLaw(SpectralModel):
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
+        """Evaluate the model (static function)."""
         return amplitude * np.power((energy / reference), -index)
 
     def integral(self, emin, emax, **kwargs):
-        r"""
-        Integrate power law analytically.
+        r"""Integrate power law analytically.
 
         .. math::
 
@@ -426,12 +424,10 @@ class PowerLaw(SpectralModel):
             \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
             \right \vert _{E_{min}}^{E_{max}}
 
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
+            Lower and upper bound of integration range
         """
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
@@ -448,12 +444,10 @@ class PowerLaw(SpectralModel):
             upper = np.power((emax / pars['reference'].quantity), val)
             lower = np.power((emin / pars['reference'].quantity), val)
 
-        integral = prefactor * (upper - lower)
-        return integral
+        return prefactor * (upper - lower)
 
     def integral_error(self, emin, emax, **kwargs):
-        r"""
-        Integrate power law analytically with error propagation.
+        r"""Integrate power law analytically with error propagation.
 
         Parameters
         ----------
@@ -487,16 +481,13 @@ class PowerLaw(SpectralModel):
         return self._parse_uarray(uarray) * unit
 
     def energy_flux(self, emin, emax):
-        r"""
-        Compute energy flux in given energy range analytically.
+        r"""Compute energy flux in given energy range analytically.
 
         .. math::
-
 
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
             \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
             \right \vert _{E_{min}}^{E_{max}}
-
 
         Parameters
         ----------
@@ -518,8 +509,7 @@ class PowerLaw(SpectralModel):
             return prefactor * (upper - lower)
 
     def energy_flux_error(self, emin, emax, **kwargs):
-        r"""
-        Compute energy flux in given energy range analytically with error propagation.
+        r"""Compute energy flux in given energy range analytically with error propagation.
 
         Parameters
         ----------
@@ -553,7 +543,7 @@ class PowerLaw(SpectralModel):
         return self._parse_uarray(uarray) * unit
 
     def to_sherpa(self, name='default'):
-        """Return Sherpa `~sherpa.models.PowLaw1d`
+        """Convert to `sherpa.models.PowLaw1D`.
 
         Parameters
         ----------
@@ -568,8 +558,7 @@ class PowerLaw(SpectralModel):
         return model
 
     def inverse(self, value):
-        """
-        Return energy for a given function value of the spectral model.
+        """Return energy for a given function value of the spectral model.
 
         Parameters
         ----------
@@ -582,11 +571,9 @@ class PowerLaw(SpectralModel):
 
 
 class PowerLaw2(SpectralModel):
-    r"""
-    Spectral power-law model with integral as norm parameter
+    r"""Spectral power-law model with integral as amplitude parameter.
 
-    See http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
-    for further details.
+    See also: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 
     .. math::
 
@@ -603,7 +590,6 @@ class PowerLaw2(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
-
     """
 
     def __init__(self, amplitude, index, emin, emax):
@@ -616,13 +602,13 @@ class PowerLaw2(SpectralModel):
 
     @staticmethod
     def evaluate(energy, amplitude, index, emin, emax):
+        """Evaluate the model (static function)."""
         top = -index + 1
         bottom = emax ** (-index + 1) - emin ** (-index + 1)
         return amplitude * (top / bottom) * np.power(energy, -index)
 
     def integral(self, emin, emax):
-        r"""
-        Integrate power law analytically.
+        r"""Integrate power law analytically.
 
         .. math::
 
@@ -634,12 +620,13 @@ class PowerLaw2(SpectralModel):
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-
         """
         pars = self.parameters
+
         temp1 = np.power(emax, -pars['index'].value + 1)
         temp2 = np.power(emin, -pars['index'].value + 1)
         top = temp1 - temp2
+
         temp1 = np.power(pars['emax'].quantity, -pars['index'].value + 1)
         temp2 = np.power(pars['emin'].quantity, -pars['index'].value + 1)
         bottom = temp1 - temp2
@@ -647,8 +634,7 @@ class PowerLaw2(SpectralModel):
         return pars['amplitude'].quantity * top / bottom
 
     def integral_error(self, emin, emax, **kwargs):
-        r"""
-        Integrate power law analytically with error propagation.
+        r"""Integrate power law analytically with error propagation.
 
         Parameters
         ----------
@@ -669,15 +655,16 @@ class PowerLaw2(SpectralModel):
         temp1 = np.power(emax.value, -upars['index'] + 1)
         temp2 = np.power(emin.value, -upars['index'] + 1)
         top = temp1 - temp2
+
         temp1 = np.power(upars['emax'], -upars['index'] + 1)
         temp2 = np.power(upars['emin'], -upars['index'] + 1)
         bottom = temp1 - temp2
+
         uarray = upars['amplitude'] * top / bottom
         return self._parse_uarray(uarray) * unit
 
     def inverse(self, value):
-        """
-        Return energy for a given function value of the spectral model.
+        """Return energy for a given function value of the spectral model.
 
         Parameters
         ----------
@@ -722,6 +709,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, lambda_):
+        """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
         try:
             cutoff = np.exp(-energy * lambda_)
@@ -731,7 +719,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         return pwl * cutoff
 
     def to_sherpa(self, name='default'):
-        """Return Sherpa `~sherpa.models.Arithmetic model`
+        """Convert to a `~sherpa.models.ArithmeticModel`.
 
         Parameters
         ----------
@@ -741,6 +729,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         from .sherpa_utils import SherpaExponentialCutoffPowerLaw
         model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
+
         model.gamma = pars['index'].value
         model.ref = pars['reference'].quantity.to('keV').value
         model.ampl = pars['amplitude'].quantity.to('cm-2 s-1 keV-1').value
@@ -753,7 +742,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
 
-    Note that the parmatrization is different from `ExponentialCutoffPowerLaw`:
+    Note that the parametrization is different from `ExponentialCutoffPowerLaw`:
 
     .. math::
 
@@ -782,6 +771,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, ecut):
+        """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
         try:
             cutoff = np.exp((reference - energy) / ecut)
@@ -793,7 +783,6 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
 class PLSuperExpCutoff3FGL(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 3FGL.
-
 
     .. math::
 
@@ -817,6 +806,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     """
 
     def __init__(self, index_1, index_2, amplitude, reference, ecut):
+        # TODO: order or parameters is different from argument list / docstring. Make uniform!
         self.parameters = ParameterList([
             Parameter('amplitude', amplitude, parmin=0),
             Parameter('reference', reference, frozen=0),
@@ -827,6 +817,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
+        """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
             cutoff = np.exp((reference / ecut) ** (index_2)
@@ -869,6 +860,8 @@ class LogParabola(SpectralModel):
 
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
+        """Evaluate the model (static function)."""
+        # TODO: can this comment be removed?
         # cast dimensionless values as np.array, because of bug in Astropy < v1.2
         # https://github.com/astropy/astropy/issues/4764
         try:
@@ -990,6 +983,9 @@ class TableModel(SpectralModel):
         return cls(energy=energy, values=values, scale_logy=False)
 
     def evaluate(self, energy, amplitude):
+        """Evaluate the model (static function)."""
+        # What's with all this checking?
+        # TODO: Try `np.asanyarray` and always return an array (even for scalar input)?
         is_array = True
         try:
             len(energy)
@@ -1024,9 +1020,9 @@ class TableModel(SpectralModel):
 
     def plot(self, energy_range, ax=None, energy_unit='TeV',
              n_points=100, **kwargs):
-        """Plot `~gammapy.spectrum.TableModel`
+        """Plot spectral model curve.
 
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+        kwargs are forwarded to :func:`~matplotlib.pyplot.plot`
 
         Parameters
         ----------
@@ -1048,21 +1044,21 @@ class TableModel(SpectralModel):
         ax = plt.gca() if ax is None else ax
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(
-            emin, emax, n_points, energy_unit)
+        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
 
-        y = self.interpy(
-            np.log10(energy.to('eV').value)) * self.parameters['amplitude'].quantity
+        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['amplitude'].quantity
         if self.scale_logy:
             y = np.power(10, y)
 
         ax.plot(energy.value, y, **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy.unit))
 
+        ax.set_xlabel('Energy [{}]'.format(energy.unit))
         ax.set_ylabel('Table model')
+
         ax.set_xscale("log", nonposx='clip')
         if self.scale_logy:
             ax.set_yscale("log", nonposy='clip')
+
         return ax
 
 
@@ -1258,6 +1254,7 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameters = ParameterList(param_list)
 
     def evaluate(self, energy, **kwargs):
+        """Evaluate the model at a given energy."""
         # assign redshift value and remove it from dictionnary
         # since it does not belong to the spectral model
         parameter = kwargs[self.parameter_name]

@@ -71,6 +71,19 @@ class SpectrumFit(object):
         self._check_valid_fit()
         self._apply_fit_range()
 
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\nSource model {}'.format(self.model)
+        ss += '\nStat {}'.format(self.stat)
+        ss += '\nForward Folded {}'.format(self.forward_folded)
+        ss += '\nFit range {}'.format(self.fit_range)
+        if self.background_model is not None:
+            ss += '\nBackground model {}'.format(self.background_model)
+        ss += '\nBackend {}'.format(self.method)
+        ss += '\nError Backend {}'.format(self.err_method)
+
+        return ss
+
     @staticmethod
     def _convert_obs_list(obs_list):
         """Helper function to accept different inputs for obs_list."""
@@ -102,19 +115,6 @@ class SpectrumFit(object):
         For each observation the statval per bin is returned.
         """
         return self._statval
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += '\nSource model {}'.format(self.model)
-        ss += '\nStat {}'.format(self.stat)
-        ss += '\nForward Folded {}'.format(self.forward_folded)
-        ss += '\nFit range {}'.format(self.fit_range)
-        if self.background_model is not None:
-            ss += '\nBackground model {}'.format(self.background_model)
-        ss += '\nBackend {}'.format(self.method)
-        ss += '\nError Backend {}'.format(self.err_method)
-
-        return ss
 
     @property
     def fit_range(self):
@@ -245,18 +245,18 @@ class SpectrumFit(object):
         self._restrict_statval()
 
     def _calc_statval_helper(self, obs, prediction):
-        """Calculate statval one observation.
+        """Calculate ``statval`` for one observation.
 
         Parameters
         ----------
         obs : `~gammapy.spectrum.SpectrumObservation`
             Measured counts
-        prediction : tuple of `~np.array`
+        prediction : tuple of `~numpy.ndarray`
             Predicted (on counts, off counts)
 
         Returns
         ------
-        statsval : tuple or `~np.array`
+        statsval : tuple of `~numpy.ndarray`
             Statval for (on, off)
         """
         # Off stat = 0 by default
@@ -358,7 +358,7 @@ class SpectrumFit(object):
         if self.method == 'sherpa':
             self._fit_sherpa()
         else:
-            raise NotImplementedError('{}'.format(self.method))
+            raise NotImplementedError('method: {}'.format(self.method))
 
     def _fit_sherpa(self):
         """Wrapper around sherpa minimizer."""
@@ -418,6 +418,7 @@ class SpectrumFit(object):
             stat_per_bin = self.statval[idx]
             npred_src = copy.deepcopy(self.predicted_counts[idx][0])
             npred_bkg = copy.deepcopy(self.predicted_counts[idx][1])
+
             results.append(SpectrumFitResult(
                 model=model,
                 fit_range=fit_range,
@@ -438,6 +439,7 @@ class SpectrumFit(object):
             self._est_errors_sherpa()
         else:
             raise NotImplementedError('{}'.format(self.err_method))
+
         for res in self.result:
             res.covar_axis = self.covar_axis
             res.covariance = self.covariance
@@ -447,9 +449,11 @@ class SpectrumFit(object):
         """Wrapper around Sherpa error estimator."""
         covar = self._sherpa_fit.est_errors()
         covar_axis = list()
+
         for par in covar.parnames:
             name = par.split('.')[-1]
             covar_axis.append(name)
+
         self.covar_axis = covar_axis
         self.covariance = copy.deepcopy(covar.extra_output)
 
@@ -467,11 +471,14 @@ class SpectrumFit(object):
         self.est_errors()
 
         if outdir is not None:
-            outdir = make_path(outdir)
-            outdir.mkdir(exist_ok=True, parents=True)
+            self._write_result(outdir)
 
-            # Assume only one model is fit to all data
-            modelname = self.result[0].model.__class__.__name__
-            filename = outdir / 'fit_result_{}.yaml'.format(modelname)
-            log.info('Writing {}'.format(filename))
-            self.result[0].to_yaml(filename)
+    def _write_result(self, outdir):
+        outdir = make_path(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
+
+        # Assume only one model is fit to all data
+        modelname = self.result[0].model.__class__.__name__
+        filename = outdir / 'fit_result_{}.yaml'.format(modelname)
+        log.info('Writing {}'.format(filename))
+        self.result[0].to_yaml(filename)

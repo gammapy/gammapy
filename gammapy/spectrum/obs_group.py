@@ -9,6 +9,9 @@ from ..extern.pathlib import Path
 from ..data import ObservationGroupAxis, ObservationGroups, ObservationTable
 from ..spectrum import SpectrumObservationList, SpectrumObservation
 
+# TODO: remove this whole file?
+# Replace it with docs how to do something like this using just Astropy Table or pandas DataFrame?
+
 __all__ = [
     'SpectrumObservationGrouping',
     'group_obs_table',
