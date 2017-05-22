@@ -484,22 +484,9 @@ class EnergyDispersion(object):
         matrix = np.concatenate([row for row in matrix])
         matrix = matrix.astype(SherpaFloat)
 
-        # TODO: Not sure if we need this if statement
-        if f_chan.ndim > 1 and n_chan.ndim > 1:
-            f_chan = []
-            n_chan = []
-            for grp, fch, nch, in izip(n_grp, f_chan, n_chan):
-                for i in xrange(grp):
-                    f_chan.append(fch[i])
-                    n_chan.append(nch[i])
-
-            f_chan = numpy.asarray(f_chan, SherpaUInt)
-            n_chan = numpy.asarray(n_chan, SherpaUInt)
-        else:
-            if len(n_grp) == len(f_chan):
-                good = n_grp > 0
-                f_chan = f_chan[good]
-                n_chan = n_chan[good]
+        good = n_grp > 0
+        f_chan = f_chan[good]
+        n_chan = n_chan[good]
 
         return DataRMF(
             name=name,
