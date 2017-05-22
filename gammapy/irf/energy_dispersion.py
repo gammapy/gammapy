@@ -60,7 +60,7 @@ class EnergyDispersion(object):
 
         return ss
 
-    def apply(self, data, e_reco=None, e_true=None):
+    def apply(self, data):
         """Apply energy dispersion.
 
         Computes the matrix product of ``data``
@@ -79,7 +79,7 @@ class EnergyDispersion(object):
         """
         if len(data) != self.e_true.nbins:
             raise ValueError("Input size {} does not match true energy axis {}".format(
-                len(data), len(true_nodes)))
+                len(data), self.e_true.nbins))
         return np.dot(data, self.data.data)
 
     @property
@@ -484,22 +484,9 @@ class EnergyDispersion(object):
         matrix = np.concatenate([row for row in matrix])
         matrix = matrix.astype(SherpaFloat)
 
-        # TODO: Not sure if we need this if statement
-        if f_chan.ndim > 1 and n_chan.ndim > 1:
-            f_chan = []
-            n_chan = []
-            for grp, fch, nch, in izip(n_grp, f_chan, n_chan):
-                for i in xrange(grp):
-                    f_chan.append(fch[i])
-                    n_chan.append(nch[i])
-
-            f_chan = numpy.asarray(f_chan, SherpaUInt)
-            n_chan = numpy.asarray(n_chan, SherpaUInt)
-        else:
-            if len(n_grp) == len(f_chan):
-                good = n_grp > 0
-                f_chan = f_chan[good]
-                n_chan = n_chan[good]
+        good = n_grp > 0
+        f_chan = f_chan[good]
+        n_chan = n_chan[good]
 
         return DataRMF(
             name=name,

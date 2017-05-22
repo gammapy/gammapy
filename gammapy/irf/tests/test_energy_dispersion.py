@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import Angle
 import astropy.units as u
@@ -47,7 +48,10 @@ class TestEnergyDispersion:
         actual = self.edisp.apply(counts)
         assert_allclose(actual[0], 3.9877484855864265)
 
-        actual = self.edisp.apply(counts, e_true=self.e_true)
+        counts = np.arange(len(self.e_true) - 4)
+        with pytest.raises(ValueError) as exc:
+            self.edisp.apply(counts)
+        assert str(len(counts)) in str(exc.value)
         assert_allclose(actual[0], 3.9877484855864265)
 
     @requires_dependency('matplotlib')
