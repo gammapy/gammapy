@@ -60,7 +60,7 @@ class EnergyDispersion(object):
 
         return ss
 
-    def apply(self, data, e_reco=None, e_true=None):
+    def apply(self, data):
         """Apply energy dispersion.
 
         Computes the matrix product of ``data``
@@ -79,7 +79,7 @@ class EnergyDispersion(object):
         """
         if len(data) != self.e_true.nbins:
             raise ValueError("Input size {} does not match true energy axis {}".format(
-                len(data), len(true_nodes)))
+                len(data), self.e_true.nbins))
         return np.dot(data, self.data.data)
 
     @property
