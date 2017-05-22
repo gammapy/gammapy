@@ -270,7 +270,7 @@ class CountsSpectrum(object):
 
 
 class PHACountsSpectrum(CountsSpectrum):
-    """OGIP PHA equivalent.
+    """Counts spectrum corresponding to OGIP PHA format.
 
     The ``bkg`` flag controls whether the PHA counts spectrum represents a
     background estimate or not (this slightly affects the FITS header
@@ -282,7 +282,7 @@ class PHACountsSpectrum(CountsSpectrum):
         Lower bin edges of energy axis
     energy_hi : `~astropy.units.Quantity`
         Upper bin edges of energy axis
-    data : `~numpy.array`, list, optional
+    data : array-like, optional
         Counts
     quality : int, array-like, optional
         Mask bins in safe energy range (1 = bad, 0 = good)

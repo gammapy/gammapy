@@ -7,8 +7,7 @@ __all__ = ['cov_to_corr']
 
 
 def cov_to_corr(covariance):
-    """
-    Compute correlation matrix from covariance matrix.
+    """Compute correlation matrix from covariance matrix.
 
     The correlation matrix :math:`c` is related to the covariance matrix :math:`\\sigma` by:
 
@@ -18,13 +17,13 @@ def cov_to_corr(covariance):
 
     Parameters
     ----------
-    covariance : `numpy.array`
-        Covariance matrix.
+    covariance : `~numpy.ndarray`
+        Covariance matrix
 
     Returns
     -------
-    correlation : `numpy.array`
-        Correlation matrix.
+    correlation : `~numpy.ndarray`
+        Correlation matrix
     """
     diagonal = np.sqrt(covariance.diagonal())
     return (covariance.T / diagonal).T / diagonal

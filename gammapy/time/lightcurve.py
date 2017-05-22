@@ -93,7 +93,7 @@ class LightCurve(QTable):
 
         Returns
         -------
-        fvar, fvar_err : `numpy.array`
+        fvar, fvar_err : `~numpy.ndarray`
             Fractional excess variance.
 
         References

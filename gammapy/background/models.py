@@ -88,7 +88,7 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
 
     Returns
     -------
-    idx : `~numpy.array`
+    idx : `~numpy.ndarray`
         Table row indices of the events that are outside the pie
     """
     sources = _add_column_and_sort_table(sources, pointing_position)
