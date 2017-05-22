@@ -8,13 +8,6 @@ from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
 
-# This cannot be made a delayed import because the pytest matrix fails if it is
-# https://travis-ci.org/gammapy/gammapy/jobs/194204926#L1915
-try:
-    from .sherpa_utils import SherpaModel, SherpaStat
-except ImportError:
-    pass
-
 __all__ = [
     'SpectrumFit',
 ]
@@ -365,6 +358,7 @@ class SpectrumFit(object):
         from sherpa.fit import Fit
         from sherpa.data import Data1DInt
         from sherpa.optmethods import NelderMead
+        from .sherpa_utils import SherpaModel, SherpaStat
 
         binning = self.obs_list[0].e_reco
         # The sherpa data object is not usued in the fit. It is set to the
