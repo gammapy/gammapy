@@ -164,9 +164,9 @@ def main():
     print('npred_cube sum: {}'.format(np.nansum(npred_cube.data.to('').data)))
     print('npred_cube_simple sum: {}'.format(np.nansum(npred_cube_simple.data.to('').data)))
 
-    # TODO: apply PSF convolution here
-    # kernels = irfs['psf'].kernels(npred_cube)
-    # npred_cube_convolved = npred_cube.convolve(kernels)
+    # Apply PSF convolution here
+    kernels = irfs['psf'].kernels(npred_cube_simple)
+    npred_cube_convolved = npred_cube_simple.convolve(kernels)
 
     # TODO: apply EDISP here!
 
@@ -177,12 +177,13 @@ def main():
     # Debugging output
 
     print('npred_cube sum: {}'.format(np.nansum(npred_cube.data.to('').data)))
+    print('npred_cube_convolved sum: {}'.format(np.nansum(npred_cube_convolved.data.to('').data)))
     # TODO: check that sum after PSF convolution or applying EDISP are the same
 
     exposure_cube.write('exposure_cube.fits.gz', overwrite=True)
     flux_cube.write('flux_cube.fits.gz', overwrite=True)
     npred_cube.write('npred_cube.fits.gz', overwrite=True)
-    # npred_cube_convolved.write('npred_cube_convolved.fits', overwrite=True)
+    npred_cube_convolved.write('npred_cube_convolved.fits.gz', overwrite=True)
 
 
 if __name__ == '__main__':

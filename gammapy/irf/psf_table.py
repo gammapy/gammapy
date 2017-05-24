@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
@@ -13,6 +14,10 @@ __all__ = [
     'TablePSF',
     'EnergyDependentTablePSF',
 ]
+
+
+log = logging.getLogger(__name__)
+
 
 # Default PSF spline keyword arguments
 # TODO: test and document
@@ -420,6 +425,26 @@ class EnergyDependentTablePSF(object):
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
 
+    def __str__(self):
+        ss = 'EnergyDependentTablePSF\n'
+        ss += '-----------------------\n'
+        ss += '\nAxis info:\n'
+        ss += '  ' + array_stats_str(self.rad.to('deg'), 'rad')
+        ss += '  ' + array_stats_str(self.energy, 'energy')
+        # ss += '  ' + array_stats_str(self.exposure, 'exposure')
+
+        # ss += 'integral = {}\n'.format(self.integral())
+
+        ss += '\nContainment info:\n'
+        # Print some example containment radii
+        fractions = [0.68, 0.95]
+        energies = Quantity([10, 100], 'GeV')
+        for fraction in fractions:
+            rads = self.containment_radius(energies=energies, fraction=fraction)
+            for energy, rad in zip(energies, rads):
+                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(100 * fraction, energy, rad)
+        return ss
+
     @classmethod
     def from_fits(cls, hdu_list):
         """Create `EnergyDependentTablePSF` from ``gtpsf`` format HDU list.
@@ -530,6 +555,12 @@ class EnergyDependentTablePSF(object):
         table_psf = TablePSF(self.rad, psf_value, **kwargs)
         return table_psf
 
+    # TODO: improve this method to work also if there are energy bins where PSF is bad
+    # Currently it fails because TablePSF.kernel calls containment, which can be `NaN`.
+    # Options:
+    # 1. Let the caller specify the kernel size and don't compute containment
+    # 2. try-except the TablePSF.kernel call and just return a single pixel with `NaN` as kernel where none is available
+    # Don't forget to add a test!
     def kernels(self, cube, **kwargs):
         """
         Make a set of 2D kernel images, representing the PSF at different energies.
@@ -554,8 +585,11 @@ class EnergyDependentTablePSF(object):
         kernels = []
         for emin, emax in zip(energies[:-1], energies[1:]):
             energy_band = Quantity([emin, emax])
-            psf = self.table_psf_in_energy_band(energy_band, **kwargs)
-            kernel = psf.kernel(cube.sky_image_ref)
+            try:
+                psf = self.table_psf_in_energy_band(energy_band, **kwargs)
+                kernel = psf.kernel(cube.sky_image_ref)
+            except ValueError:
+                kernel = np.nan * np.ones((1, 1))  # Dummy, means "no kernel available"
             kernels.append(kernel)
         return kernels
 
@@ -586,6 +620,16 @@ class EnergyDependentTablePSF(object):
 
         # TODO: warn if `energy_band` is outside available data.
         energy_idx_min, energy_idx_max = self._energy_index(energy_band)
+
+        # TODO: improve this, probably by evaluating the PSF (i.e. interpolating in energy) onto a new energy grid
+        # This is a bit of a hack, but makes sure that a PSF is given, by forcing at least one slice:
+        if energy_idx_max - energy_idx_min < 2:
+            # log.warning('Dubious case of PSF energy binning')
+            # Note that below always range stop of `energy_idx_max - 1` is used!
+            # That's why we put +2 here to make sure we have at least one bin.
+            energy_idx_max = max(energy_idx_min + 2, energy_idx_max)
+            # Make sure we don't step out of the energy array (doesn't help much)
+            energy_idx_max = min(energy_idx_max, len(self.energy))
 
         # TODO: extract this into a utility function `npred_weighted_mean()`
 
@@ -653,26 +697,6 @@ class EnergyDependentTablePSF(object):
 
         psf = self.table_psf_at_energy(energy)
         return psf.integral(rad_min, rad_max)
-
-    def __str__(self):
-        ss = 'EnergyDependentTablePSF\n'
-        ss += '-----------------------\n'
-        ss += '\nAxis info:\n'
-        ss += '  ' + array_stats_str(self.rad.to('deg'), 'offset')
-        ss += '  ' + array_stats_str(self.energy, 'energy')
-        ss += '  ' + array_stats_str(self.exposure, 'exposure')
-
-        # ss += 'integral = {}\n'.format(self.integral())
-
-        ss += '\nContainment info:\n'
-        # Print some example containment radii
-        fractions = [0.68, 0.95]
-        energies = Quantity([10, 100], 'GeV')
-        for fraction in fractions:
-            rads = self.containment_radius(energies=energies, fraction=fraction)
-            for energy, rad in zip(energies, rads):
-                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(100 * fraction, energy, rad)
-        return ss
 
     def info(self):
         """Print basic info"""
