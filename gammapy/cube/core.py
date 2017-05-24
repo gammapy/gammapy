@@ -153,6 +153,7 @@ class SkyCube(MapBase):
         meta = fits_header_to_meta_dict(header)
         data = hdu.data
 
+
         # TODO: check and give reference for fermi data units
         # TODO: choose format automatically
         if format == 'fermi-background':
