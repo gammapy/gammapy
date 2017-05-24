@@ -1,11 +1,12 @@
 
-from gammapy.cube import CombinedModel3D
+from gammapy.cube import CombinedModel3D, SkyCube
 from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from gammapy.image.models import Shell2D, Sphere2D
-
+import astropy.units as u
 
 __all__ = [
     'get_model',
+    'make_ref_cube',
 ]
 
 
@@ -50,4 +51,21 @@ def get_model(config):
     model = CombinedModel3D(spatial_model, spectral_model)
     return model
 
+def make_ref_cube(config):
+    WCS_SPEC = {'nxpix': config['binning']['nxpix'],
+                'nypix': config['binning']['nypix'],
+                'binsz': config['binning']['binsz'],
+                'xref': config['pointing']['ra'],
+                'yref': config['pointing']['dec'],
+                'proj': config['binning']['proj'],
+                'coordsys': config['binning']['coordsys']}
+
+    # define reconstructed energy binning
+    ENERGY_SPEC = {'mode': 'edges',
+                   'enumbins': config['binning']['enumbins'],
+                   'emin': config['selection']['emin'],
+                   'emax': config['selection']['emax'],
+                   'eunit': 'TeV'}
+
+    return SkyCube.empty(**WCS_SPEC, **ENERGY_SPEC)
 
