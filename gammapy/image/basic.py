@@ -324,7 +324,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
     .. code::
 
-        from astropy import unit as u
+        from astropy import units as u
         from gammapy.image import SkyImage, FermiLATBasicImageEstimator
         from gammapy.datasets import FermiLATDataset
 
