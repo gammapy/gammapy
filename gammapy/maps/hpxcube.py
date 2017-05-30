@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .hpxmap import HpxMap
+from .hpx import HPXGeom
 
 __all__ = [
     'HpxCube',
@@ -10,27 +12,35 @@ __all__ = [
 
 
 class HpxCube(HpxMap):
-    """Representation of a 2D or 3D map using HEALPIX.
+    """Representation of a N+2D map using HEALPIX.  This class uses a
+    numpy array to represent the sequence of HEALPix image planes.  As
+    such it can only be used for maps with the same geometry (NSIDE
+    and HPX_REG) in every plane.
 
     Parameters
     ----------
     hpx : `~gammapy.maps.hpx.HPXGeom`
-        HEALPIX geometry
+        HEALPIX geometry object.
     data : `~numpy.ndarray`
-        HEALPIX data
+        HEALPIX data array.  If none then an empty array will be
+        allocated.
+
     """
 
     def __init__(self, hpx, data=None):
 
+        npix = np.unique(hpx.npix)
+        if len(npix) > 1:
+            raise Exception('HpxCube can only be instantiated from a '
+                            'HPX geometry with the same nside in '
+                            'every plane.')
+
+        shape = tuple(list(hpx._shape) + [npix[0]])
         if data is None:
-
-            npix = np.unique(hpx.npix)
-            if len(npix) > 1:
-                raise Exception('HpxCube can only be instantiated from a '
-                                'HPX geometry with the same nside in '
-                                'every plane.')
-
-            data = np.zeros([npix[0]] + list(hpx._shape))
+            data = np.zeros(shape)
+        elif data.shape != shape:
+            raise ValueError('Wrong shape for input data array. Expected {} '
+                             'but got {}'.format(shape, data.shape))
 
         HpxMap.__init__(self, hpx, data)
         self._wcs2d = None
@@ -47,30 +57,43 @@ class HpxCube(HpxMap):
         axes : list
             List of axes for non-spatial dimensions.
         """
-        hpx = HPX.create_from_header(hdu.header, ebins)
+        hpx = HPXGeom.from_header(hdu.header, axes)
+        shape = tuple([ax.nbin for ax in axes])
+        shape_data = shape + tuple(np.unique(hpx.npix))
+
+        # FIXME: We need to assert here if the file is incompatible
+        # with an ND-array
+        # TODO: Should we support extracting slices?
+
         colnames = hdu.columns.names
         cnames = []
-        if hpx.conv.convname == 'FGST_SRCMAP_SPARSE':
-            keys = hdu.data.field('KEY')
+        if hdu.header['INDXSCHM'] == 'SPARSE':
+            pix = hdu.data.field('PIX')
             vals = hdu.data.field('VALUE')
-            nebin = len(ebins)
-            data = np.zeros((nebin, hpx.npix))
-            data.flat[keys] = vals
+            if 'CHANNEL' in hdu.data.columns.names:
+                chan = hdu.data.field('CHANNEL')
+                chan = np.unravel_index(chan, shape)
+                idx = chan + (pix,)
+            else:
+                idx = (pix,)
+
+            data = np.zeros(shape_data)
+            data[idx] = vals
         else:
             for c in colnames:
                 if c.find(hpx.conv.colstring) == 0:
                     cnames.append(c)
-            nebin = len(cnames)
-            data = np.ndarray((nebin, hpx.npix))
-            for i, cname in enumerate(cnames):
-                data[i, 0:] = hdu.data.field(cname)
-        return cls(data, hpx)
+            nbin = len(cnames)
+            data = np.ndarray(shape_data)
+            if len(cnames) == 1:
+                data[:] = hdu.data.field(cnames[0])
+            else:
+                for i, cname in enumerate(cnames):
+                    idx = np.unravel_index(i, shape)
+                    data[idx] = hdu.data.field(cname)
+        return cls(hpx, data)
 
-    def make_image_hdu(self, name=None, **kwargs):
-        kwargs['extname'] = name
-        return self.hpx.make_hdu(self.counts, **kwargs)
-
-    def make_wcs(self, sum_ebins=False, proj='CAR', oversample=2,
+    def make_wcs(self, sum_bands=False, proj='CAR', oversample=2,
                  normalize=True):
         """Make a WCS object and convert HEALPIX data into WCS projection.
 
@@ -80,8 +103,8 @@ class HpxCube(HpxMap):
 
         Parameters
         ----------
-        sum_ebins : bool
-           sum energy bins over energy bins before reprojecting
+        sum_bands : bool
+           sum over non-spatial dimensions before reprojecting
         proj  : str
            WCS-projection
         oversample : int
@@ -149,7 +172,8 @@ class HpxCube(HpxMap):
                     hpx_data[i], wcs_data[i], normalize)
                 pass
 
-            wcs_data.reshape((self.counts.shape[0], self._hpx2wcs.npix[0], self._hpx2wcs.npix[1]))
+            wcs_data.reshape(
+                (self.counts.shape[0], self._hpx2wcs.npix[0], self._hpx2wcs.npix[1]))
             # replace the WCS with a 3D one
             wcs = self.hpx.make_wcs(3, proj=self._wcs_proj,
                                     energies=self.hpx.ebins,
@@ -176,12 +200,10 @@ class HpxCube(HpxMap):
                        self.hpx.copy_and_drop_axes())
 
     def get_by_coord(self, coords, interp=None):
-        """TODO."""
         pix = self.hpx.coord_to_pix(coords)
         return self.get_by_pix(pix)
 
     def get_by_pix(self, pix):
-        """TODO."""
         pix = self.hpx[pix]
         if self.data.ndim == 2:
             return self.data[:, pix]
@@ -198,9 +220,9 @@ class HpxCube(HpxMap):
             return hp.pixelfunc.get_interp_val(self.data, theta,
                                                phi, nest=self.hpx.nest)
         else:
-            return self._interpolate_cube(lon, lat, egy, interp_log)
+            return self._interpolate_cube(coords)
 
-    def _interpolate_cube(self, lon, lat, egy=None, interp_log=True):
+    def _interpolate_cube(self, coords):
         """Perform interpolation on a HEALPIX cube.
 
         If egy is None, then interpolation will be performed
