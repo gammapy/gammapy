@@ -250,6 +250,7 @@ def _significance_simple(n_on, mu_bkg):
 
 def _significance_lima(n_on, mu_bkg):
     # import IPython; IPython.embed()
+
     term_a = sign(n_on - mu_bkg) * sqrt(2)
     term_b = sqrt(n_on * log(n_on / mu_bkg) - n_on + mu_bkg)
     return term_a * term_b
