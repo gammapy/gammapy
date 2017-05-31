@@ -11,10 +11,11 @@ from ..off_data_background_maker import OffDataBackgroundMaker
 @requires_data('gammapy-extra')
 def test_background_model(tmpdir):
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-    bgmaker = OffDataBackgroundMaker(data_store, outdir=str(tmpdir))
+    runlist_filename = str(tmpdir.join('run.lis'))
+    bgmaker = OffDataBackgroundMaker(data_store, outdir=str(tmpdir), run_list=runlist_filename)
 
     bgmaker.select_observations(selection='all')
-    table = Table.read('run.lis', format='ascii.csv')
+    table = Table.read(runlist_filename, format='ascii.csv')
     assert table['OBS_ID'][1] == 23526
 
     bgmaker.group_observations()
