@@ -156,6 +156,15 @@ class TestGammaCatResource:
         assert resource1 == resource1
         assert resource1 != resource2
 
+    def test_lt(self):
+        resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
+
+        assert resource < GammaCatResource(source_id=43, reference_id='2010A&A...516A..62A', file_id=2)
+        assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62B', file_id=2)
+        assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=3)
+
+        assert resource > GammaCatResource(source_id=41, reference_id='2010A&A...516A..62A', file_id=2)
+
     def test_repr(self):
         expected = ("GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', "
                     "file_id=2, type='none', location='none')")
@@ -206,6 +215,14 @@ class TestGammaCatResourceIndex:
             '42|2010A&A...516A..62A|1|none',
         ]
         assert self.resource_index.global_ids == expected
+
+    def test_sort(self):
+        expected = [
+            '42|2010A&A...516A..62A|1|none',
+            '42|2010A&A...516A..62A|2|sed',
+            '99|2014ApJ...780..168A|-1|none',
+        ]
+        assert self.resource_index.sort().global_ids == expected
 
     def test_to_list(self):
         result = self.resource_index.to_list()

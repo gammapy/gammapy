@@ -368,6 +368,15 @@ class GammaCatResource(object):
             self.location == other.location
         )
 
+    def __lt__(self, other):
+        return (
+            self.source_id < other.source_id or
+            self.reference_id < other.reference_id or
+            self.file_id < other.file_id or
+            self.type < other.type or
+            self.location < other.location
+        )
+
     def to_dict(self):
         """Convert to `collections.OrderedDict`."""
         data = OrderedDict()
@@ -427,6 +436,10 @@ class GammaCatResourceIndex(object):
         In original order, not sorted.
         """
         return [resource.global_id for resource in self.resources]
+
+    def sort(self):
+        """Return a sorted copy (leave self unchanged)."""
+        return self.__class__(sorted(self.resources))
 
     def to_list(self):
         """Convert to list of dict."""
