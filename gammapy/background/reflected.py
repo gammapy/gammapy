@@ -288,23 +288,29 @@ class ReflectedRegionsBackgroundEstimator(object):
             result = np.asarray(self.result)[idx]
             result = np.atleast_1d(result)
 
-        handles = []
-        if cmap is None:
-            cmap = plt.get_cmap('viridis')
+        cmap = cmap or plt.get_cmap('viridis')
         colors = cmap(np.linspace(0, 1, len(self.obs_list)))
+
+        handles = []
         for idx_ in np.arange(len(obs_list)):
             obs = obs_list[idx_]
-            for off in result[idx_].off_region:
-                tmp = off.to_pixel(wcs=wcs)
-                off_patch = tmp.as_patch(alpha=0.8, color=colors[idx_],
-                                         label='Obs {}'.format(obs.obs_id))
-                handle = ax.add_patch(off_patch)
-            handles.append(handle)
 
-            test_pointing = obs.pointing_radec
-            ax.scatter(test_pointing.galactic.l.degree, test_pointing.galactic.b.degree,
-                       transform=ax.get_transform('galactic'),
-                       marker='+', color=colors[idx_], s=300, linewidths=3)
+            off_regions = result[idx_].off_region
+            for off in off_regions:
+                off_patch = off.to_pixel(wcs=wcs).as_patch(
+                    alpha=0.8, color=colors[idx_],
+                    label='Obs {}'.format(obs.obs_id),
+                )
+                handle = ax.add_patch(off_patch)
+            if off_regions:
+                handles.append(handle)
+
+            test_pointing = obs.pointing_radec.galactic
+            ax.scatter(
+                test_pointing.l.degree, test_pointing.b.degree,
+                transform=ax.get_transform('galactic'),
+                marker='+', color=colors[idx_], s=300, linewidths=3,
+            )
 
         ax.legend(handles=handles)
 
