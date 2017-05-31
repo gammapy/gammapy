@@ -124,7 +124,7 @@ class SpectrumExtraction(object):
         try:
             spectrum_observation.hi_threshold = obs.aeff.high_threshold
             spectrum_observation.lo_threshold = obs.aeff.low_threshold
-        except AttributeError:
+        except KeyError:
             log.warning('No thresholds defined for obs {}'.format(obs))
 
         return spectrum_observation
