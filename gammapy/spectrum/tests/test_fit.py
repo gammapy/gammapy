@@ -293,22 +293,20 @@ class TestSpectralFit:
         actual = read_result.model.evaluate_error(1 * u.TeV)
         assert_quantity_allclose(actual, desired)
 
+    def test_sherpa_fit(self, tmpdir):
+        # this is to make sure that the written PHA files work with sherpa
+        import sherpa.astro.ui as sau
+        from sherpa.models import PowLaw1D
 
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
-def test_sherpa_fit(tmpdir):
-    # this is to make sure that the written PHA files work with sherpa
-    import sherpa.astro.ui as sau
-    from sherpa.models import PowLaw1D
-
-    filename = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
-    sau.load_pha(filename)
-    sau.set_stat('wstat')
-    model = PowLaw1D('powlaw1d.default')
-    model.ref = 1e9
-    model.ampl = 1
-    model.gamma = 2
-    sau.set_model(model * 1e-20)
-    sau.fit()
-    assert_allclose(model.pars[0].val, 2.0033101181778026)
-    assert_allclose(model.pars[2].val, 2.2991681244938498)
+        self.obs_list.write(tmpdir, use_sherpa=True)
+        filename = tmpdir / 'pha_obs23523.fits'
+        sau.load_pha(str(filename))
+        sau.set_stat('wstat')
+        model = PowLaw1D('powlaw1d.default')
+        model.ref = 1e9
+        model.ampl = 1
+        model.gamma = 2
+        sau.set_model(model * 1e-20)
+        sau.fit()
+        assert_allclose(model.pars[0].val, 2.0881699260935838)
+        assert_allclose(model.pars[2].val, 1.6234222129479836)
