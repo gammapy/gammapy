@@ -12,35 +12,25 @@ from ..hpxcube import HpxCube
 pytest.importorskip('healpy')
 
 
-def make_test_cubes():
-
-    data = np.random.uniform(0, 1, 3072)
-    m0 = HpxCube(HPXGeom(16, False, 'GAL'), data)
-    m1 = HpxCube(HPXGeom(16, False, 'GAL', axes=[np.linspace(0., 3., 4)]))
-    m2 = HpxCube(HPXGeom(16, False, 'GAL', region='DISK(110.,75.,10.)',
-                         axes=[np.linspace(0., 3., 4)]))
-    m3 = HpxCube(HPXGeom(16, False, 'GAL', region='DISK(110.,75.,10.)',
-                         axes=[np.linspace(0., 3., 4), np.linspace(0., 2., 3)]))
-    return m0, m1, m2, m3
+hpx_test_geoms = [(8, False, 'GAL', None, None),
+                  (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
+                  (8, False, 'GAL', 'DISK(110.,75.,10.)',
+                   [MapAxis(np.logspace(0., 3., 4))]),
+                  (8, False, 'GAL', 'DISK(110.,75.,10.)',
+                   [MapAxis(np.logspace(0., 3., 4), name='axis0'),
+                    MapAxis(np.logspace(0., 2., 3), name='axis1')])
+                  ]
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         [(8, False, 'GAL', None, None),
-                          (8, False, 'GAL', None, [
-                           MapAxis(np.logspace(0., 3., 4))]),
-                          (8, False, 'GAL', 'DISK(110.,75.,10.)',
-                           [MapAxis(np.logspace(0., 3., 4))]),
-                          (8, False, 'GAL', 'DISK(110.,75.,10.)',
-                           [MapAxis(np.logspace(0., 3., 4), name='axis0'),
-                            MapAxis(np.logspace(0., 2., 3))])
-                          ])
+                         hpx_test_geoms)
 def test_hpxcube_init(nside, nested, coordsys, region, axes):
 
-    shape = []
-    if axes:
-        shape = [ax.nbin for ax in axes]
     geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
-    shape += [np.unique(geom.npix)]
+    shape = [np.unique(geom.npix)]
+    if axes:
+        shape += [ax.nbin for ax in axes]
+    shape = shape[::-1]
     data = np.random.uniform(0, 1, shape)
     m = HpxCube(geom)
     assert(m.data.shape == data.shape)
@@ -49,15 +39,7 @@ def test_hpxcube_init(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         [(8, False, 'GAL', None, None),
-                          (8, False, 'GAL', None, [
-                           MapAxis(np.logspace(0., 3., 4))]),
-                          (8, False, 'GAL', 'DISK(110.,75.,10.)',
-                           [MapAxis(np.logspace(0., 3., 4))]),
-                          (8, False, 'GAL', 'DISK(110.,75.,10.)',
-                           [MapAxis(np.logspace(0., 3., 4), name='axis0'),
-                            MapAxis(np.logspace(0., 2., 3))])
-                          ])
+                         hpx_test_geoms)
 def test_hpxcube_read_write(tmpdir, nside, nested, coordsys, region, axes):
 
     filename = str(tmpdir / 'skycube.fits')
@@ -70,3 +52,24 @@ def test_hpxcube_read_write(tmpdir, nside, nested, coordsys, region, axes):
     m.write(filename, sparse=True)
     m2 = HpxCube.read(filename)
     assert_allclose(m.data, m2.data)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_get_by_pix(nside, nested, coordsys, region, axes):
+    m = HpxCube(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    data = np.linspace(0, m.data.size-1.0,m.data.size).reshape(m.data.shape)
+    m.data[...] = data
+    pix = m.hpx.get_pixels()
+    assert_allclose(np.ravel(m.data), m.get_by_pix(pix))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_get_by_coord(nside, nested, coordsys, region, axes):
+    m = HpxCube(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    data = np.linspace(0, m.data.size-1.0,m.data.size).reshape(m.data.shape)
+    m.data[...] = data
+    coords = m.hpx.get_coords()
+    assert_allclose(np.ravel(m.data), m.get_by_coord(coords))
+

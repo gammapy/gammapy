@@ -511,12 +511,12 @@ class HPXGeom(MapGeom):
 
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
-            coords = [np.degrees(np.pi / 2. - theta), np.degrees(phi)]
+            coords = [np.degrees(phi), np.degrees(np.pi / 2. - theta)]
             coords = tuple(coords + vals)
         else:
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
-            coords = (np.degrees(np.pi / 2. - theta), np.degrees(phi))
+            coords = (np.degrees(phi), np.degrees(np.pi / 2. - theta))
 
         return coords
 
@@ -550,10 +550,8 @@ class HPXGeom(MapGeom):
 
     @property
     def npix(self):
-        """Number of pixels in each band.
-
-        For partial-sky geometries this can be less than the
-        number of pixels for the band NSIDE.
+        """Number of pixels in each band.  For partial-sky geometries this can
+        be less than the number of pixels for the band NSIDE.
         """
         return self._npix
 
@@ -584,14 +582,25 @@ class HPXGeom(MapGeom):
         return self.__class__(2 ** order, self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
-    def make_swapped_hpx(self):
-        """TODO.
+    def to_swapped(self):
+        """Make a copy of this geometry with a swapped ORDERING.  (NEST->RING
+        or vice versa)
+
+        Returns
+        -------
+        geom : `~HPXGeom`
+            A HEALPix geoemtry object.
         """
         return self.__class__(self.nside, not self.nest, self.coordsys,
                               self.region, self.axes, self.conv)
 
     def copy_and_drop_axes(self):
-        """TODO.
+        """Make a copy of the spatial component of this geometry.
+
+        Returns
+        -------
+        geom : `~HPXGeom`
+            A HEALPix geoemtry object.
         """
         return self.__class__(self.nside[0], not self.nest, self.coordsys,
                               self.region, None, self.conv)
@@ -710,6 +719,8 @@ class HPXGeom(MapGeom):
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
 
+        # FIXME: For some sparse maps we may want to allow EXPLICIT
+        # with an empty region string
         indxschm = kwargs.get(
             'indxschm', 'EXPLICIT' if self._region else 'IMPLICIT')
         cards = [
@@ -1043,13 +1054,16 @@ class HPXGeom(MapGeom):
         elif self.nside.shape == self._maxpix.shape:
             return unravel_hpx_index(self._ipix, self._maxpix)
         else:
-            maxpix = np.ravel(
-                self._maxpix * np.arange(self.npix.size))[None, :]
-            maxpix = maxpix * \
-                np.ones([self._npix[0]] + list(self._shape), dtype=int)
+
+            maxpix = np.ravel(self._maxpix) * np.arange(self.npix.size)
+            maxpix = maxpix.reshape(self._maxpix.shape)[None, ...]
+            # maxpix = np.ravel(self._maxpix *
+            #                  np.arange(self.npix.size))[None, ...]
+            maxpix = maxpix * np.ones([self._npix.flat[0]] +
+                                      list(self._shape), dtype=int)
             maxpix = np.ravel(maxpix.T)
-            ipix = np.ravel(
-                self._ipix[None, :] * np.ones(self._shape, dtype=int)[..., None])
+            ipix = np.ravel(self._ipix[None, :] *
+                            np.ones(self._shape, dtype=int)[..., None])
             return unravel_hpx_index(ipix + maxpix, self._maxpix)
 
     def get_coords(self):
@@ -1069,8 +1083,8 @@ class HPXGeom(MapGeom):
     def get_skydirs(self):
         """Get the sky coordinates of all the pixels in this geometry. """
         coords = self.get_coords()
-        frame = 'galactic' if self.hpx.coordsys == 'GAL' else 'icrs'
-        return SkyCoord(ra=coords[0], dec=coords[1], unit='deg', frame=frame)
+        frame = 'galactic' if self.coordsys == 'GAL' else 'icrs'
+        return SkyCoord(coords[0], coords[1], unit='deg', frame=frame)
 
     def skydir_to_pixel(self, skydir):
         """Return the pixel index of a SkyCoord object."""
@@ -1095,19 +1109,19 @@ class HpxToWcsMapping(object):
 
     Parameters
     ----------
-    TODO
+    hpx : `~HPXGeom`
+        HEALPix geometry object.
+
+    wcs : `~gammapy.maps.wcs.WCSGeom`
+        WCS geometry object.
     """
 
-    def __init__(self, hpx, wcs, mapping_data=None):
+    def __init__(self, hpx, wcs, ipix, mult_val, npix):
         self._hpx = hpx
         self._wcs = wcs
-        if mapping_data is None:
-            self._ipix, self._mult_val, self._npix = make_hpx_to_wcs_mapping(
-                self.hpx, self.wcs.wcs)
-        else:
-            self._ipix = mapping_data['ipix']
-            self._mult_val = mapping_data['mult_val']
-            self._npix = mapping_data['npix']
+        self._ipix = ipix
+        self._mult_val = mult_val
+        self._npix = npix
         self._lmap = self._hpx[self._ipix]
         self._valid = self._lmap > 0
 
@@ -1167,6 +1181,11 @@ class HpxToWcsMapping(object):
         hdulist.writeto(fitsfile, clobber=clobber)
 
     @classmethod
+    def create(cls, hpx, wcs):
+        ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
+        return cls(hpx, wcs, ipix, mult_val, npix)
+
+    @classmethod
     def read(cls, filename):
         """Read a FITS file and use it to make a mapping."""
         from fermipy.skymap import Map
@@ -1184,9 +1203,9 @@ class HpxToWcsMapping(object):
 
         Parameters
         ----------
-        hpx_data : TODO
+        hpx_data : `~numpy.ndarray`
             The input HEALPIX data
-        wcs_data : TODO
+        wcs_data : `~numpy.ndarray`
             The data array being filled
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins

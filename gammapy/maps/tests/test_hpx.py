@@ -170,35 +170,35 @@ def test_hpx_get_coords():
     # 2D all-sky
     hpx = HPXGeom(16, False, 'GAL')
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([87.075819,  87.075819,  87.075819]))
-    assert_allclose(c[1][:3], np.array([45.,  135.,  225.]))
+    assert_allclose(c[0][:3], np.array([45.,  135.,  225.]))
+    assert_allclose(c[1][:3], np.array([87.075819,  87.075819,  87.075819]))
 
     # 3D all-sky
     hpx = HPXGeom(16, False, 'GAL', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([87.075819,  87.075819,  87.075819]))
-    assert_allclose(c[1][:3], np.array([45.,  135.,  225.]))
+    assert_allclose(c[0][:3], np.array([45.,  135.,  225.]))
+    assert_allclose(c[1][:3], np.array([87.075819,  87.075819,  87.075819]))
     assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([76.813533,  76.813533,  76.07742]))
-    assert_allclose(c[1][:3], np.array([107.5,  112.5,  106.57894737]))
+    assert_allclose(c[0][:3], np.array([107.5,  112.5,  106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533,  76.813533,  76.07742]))
 
     # 3D partial-sky
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([76.813533,  76.813533,  76.07742]))
-    assert_allclose(c[1][:3], np.array([107.5,  112.5,  106.57894737]))
+    assert_allclose(c[0][:3], np.array([107.5,  112.5,  106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533,  76.813533,  76.07742]))
     assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
     hpx = HPXGeom([16, 32, 64], False, 'GAL',
                   region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([75.340734,  75.340734,  75.340734]))
-    assert_allclose(c[1][:3], np.array([117.,  103.5,  112.5]))
+    assert_allclose(c[0][:3], np.array([117.,  103.5,  112.5]))
+    assert_allclose(c[1][:3], np.array([75.340734,  75.340734,  75.340734]))
     assert_allclose(c[2][:3], np.array([0.5,  1.5,  1.5]))
 
 

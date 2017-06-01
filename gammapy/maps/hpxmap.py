@@ -246,7 +246,7 @@ class HpxMap(object):
         Parameters
         ----------
         coords : tuple
-            TODO
+            Tuple of coordinate vectors for each dimension of the map.
 
         Returns
         -------
@@ -257,13 +257,14 @@ class HpxMap(object):
         pass
 
     @abc.abstractmethod
-    def get_by_pix(self, coords, interp=None):
+    def get_by_pix(self, pix, interp=None):
         """Return map values at the given pixel coordinates.
 
         Parameters
         ----------
-        coords : tuple
-            TODO
+        pix : tuple
+            Tuple of pixel index vectors for each dimension of the map.
+
         Returns
         ----------
         vals : `~numpy.ndarray`
