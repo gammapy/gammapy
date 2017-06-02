@@ -6,10 +6,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ..utils.energy import EnergyBounds
 from .core import SkyCube
-from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
-from ..image.models import Shell2D, Sphere2D
-from gammapy.cube.sherpa_ import CombinedModel3D
-import astropy.units as u
 
 __all__ = [
     'compute_npred_cube',
@@ -127,11 +123,8 @@ def compute_npred_cube_simple(flux_cube, exposure_cube):
     return npred_cube
 
 
-
 def _validate_inputs(flux_cube, exposure_cube):
     if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
         raise ValueError('flux_cube and exposure cube must have the same shape!\n'
                          'flux_cube: {0}\nexposure_cube: {1}'
                          ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
-
-
