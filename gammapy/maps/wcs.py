@@ -72,14 +72,19 @@ class WCSGeom(MapGeom):
         """TODO."""
         return self._npix
 
+    @property
+    def axes(self):
+        """List of non-spatial axes."""
+        return self._axes
+
     @classmethod
-    def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT'):
+    def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
         """TODO."""
         npix = np.array(npix, ndmin=1)
         crpix = npix / 2. + 0.5
         wcs = create_wcs(skydir, coordsys, projection,
                          cdelt, crpix)
-        return cls(wcs, npix)
+        return cls(wcs, npix, axes)
 
     @classmethod
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
@@ -131,7 +136,7 @@ class WCSGeom(MapGeom):
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
-               cdelt=1.0, crpix=1., naxis=2, energies=None):
+               cdelt=1.0, crpix=1., axes=None):
     """Create a WCS object.
 
     Parameters
@@ -146,11 +151,14 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
         TODO
     crpix : float or (float,float)
         In the first case the same value is used for x and y axes
-    naxis : {2, 3}
-       Number of dimensions of the projection.
-    energies : array-like
-       Array of energies that defines the third dimension if naxis=3.
+    axes : list
+        List of non-spatial axes
     """
+
+    naxis = 2
+    if axes is not None:
+        naxis += len(axes)
+
     w = WCS(naxis=naxis)
 
     if coordsys == 'CEL':
@@ -176,12 +184,13 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     w.wcs.cdelt[1] = cdelt
 
     w = WCS(w.to_header())
-    if naxis == 3 and energies is not None:
-        w.wcs.crpix[2] = 1
-        w.wcs.crval[2] = energies[0]
-        w.wcs.cdelt[2] = energies[1] - energies[0]
-        w.wcs.ctype[2] = 'Energy'
-        w.wcs.cunit[2] = 'MeV'
+    # FIXME: Figure out what to do here
+    # if naxis == 3 and energies is not None:
+    #    w.wcs.crpix[2] = 1
+    #    w.wcs.crval[2] = energies[0]
+    #    w.wcs.cdelt[2] = energies[1] - energies[0]
+    #    w.wcs.ctype[2] = 'Energy'
+    #    w.wcs.cunit[2] = 'MeV'
 
     return w
 

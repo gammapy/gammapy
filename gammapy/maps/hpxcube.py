@@ -4,19 +4,22 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .hpxmap import HpxMap
-from .hpx import HPXGeom
+from .hpx import HPXGeom, HpxToWcsMapping
 
 __all__ = [
-    'HpxCube',
+    'HpxMapND',
 ]
 
 
-class HpxCube(HpxMap):
+class HpxMapND(HpxMap):
     """Representation of a N+2D map using HEALPIX with two spatial
     dimensions and N non-spatial dimensions.  This class uses a numpy
     array to represent the sequence of HEALPix image planes.  As such
     it can only be used for maps with the same geometry (NSIDE and
-    HPX_REG) in every plane.
+    HPX_REG) in every plane.  Following the convention of WCS-based
+    maps this class uses a column-wise ordering for the data array
+    with the spatial dimension being tied to the last index of the
+    array.
 
     Parameters
     ----------
@@ -32,7 +35,7 @@ class HpxCube(HpxMap):
 
         npix = np.unique(hpx.npix)
         if len(npix) > 1:
-            raise Exception('HpxCube can only be instantiated from a '
+            raise Exception('HpxMapND can only be instantiated from a '
                             'HPX geometry with the same nside in '
                             'every plane.')
 
@@ -49,7 +52,7 @@ class HpxCube(HpxMap):
 
     @classmethod
     def from_hdu(cls, hdu, axes):
-        """Make a HpxCube object from a FITS HDU.
+        """Make a HpxMapND object from a FITS HDU.
 
         Parameters
         ----------
@@ -94,7 +97,7 @@ class HpxCube(HpxMap):
                     data[idx] = hdu.data.field(cname)
         return cls(hpx, data)
 
-    def make_wcs_mapping(self, sum_bands=False, proj='CAR', oversample=2):
+    def make_wcs_mapping(self, sum_bands=False, proj='AIT', oversample=2):
         """Make a HEALPix to WCS mapping object.
 
         Parameters
@@ -117,72 +120,35 @@ class HpxCube(HpxMap):
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
-        self._wcs2d = self.hpx.make_wcs(2, proj=proj, oversample=oversample)
-        self._hpx2wcs = HpxToWcsMapping(self.hpx, self._wcs2d)
-        return wcs, wcs_data
+        self._wcs2d = self.hpx.make_wcs(proj=proj, oversample=oversample,
+                                        drop_axes=True)
+        self._hpx2wcs = HpxToWcsMapping.create(self.hpx, self._wcs2d)
 
-    def to_wcs(self, sum_bands=False, normalize=True):
-        """Make a WCS object and convert HEALPIX data into WCS projection.
+    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
 
-        Parameters
-        ----------
-        hpx_in  : `~numpy.ndarray`
-           HEALPIX input data
-        sum_bands : bool
-           sum over non-spatial axes before reprojecting
-        normalize  : bool
-           True -> preserve integral by splitting HEALPIX values between bins
+        from .wcsnd import WcsMapND
 
-        Returns
-        -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object
-        data : `~numpy.ndarray`
-            Reprojected data
-        """
+        # FIXME: Check whether the old mapping is still valid and reuse it
+        self.make_wcs_mapping(oversample=oversample)
+        hpx_data = self.data
 
-        if self._hpx2wcs is None:
-            self.make_wcs_cache()
-            # raise Exception('HpxMap.convert_to_cached_wcs() called '
-            #                'before make_wcs_from_hpx()')
-
-        if len(self.data.shape) == 1:
-            wcs_data = np.ndarray(self._hpx2wcs.npix)
-            loop_ebins = False
-            hpx_data = self.data
-        elif len(self.data.shape) == 2:
-            if sum_bands:
-                wcs_data = np.ndarray(self._hpx2wcs.npix)
-                hpx_data = self.data.sum(0)
-                loop_ebins = False
-            else:
-                wcs_data = np.ndarray((self.counts.shape[0],
-                                       self._hpx2wcs.npix[0],
-                                       self._hpx2wcs.npix[1]))
-                hpx_data = self.data
-                loop_ebins = True
+        if sum_bands:
+            hpx_data = np.apply_over_axes(np.sum, hpx_data,
+                                          axes=np.arange(hpx_data.ndim - 1))
+            wcs_shape = tuple(self._hpx2wcs.npix)
+            wcs_data = np.zeros(wcs_shape).T
+            wcs = self.hpx.make_wcs(proj=proj,
+                                    oversample=oversample,
+                                    drop_axes=True)
         else:
-            dim = len(self.data.shape)
-            raise Exception('Wrong dimension for HpxMap: {}'.format(dim))
+            wcs_shape = tuple(self._hpx2wcs.npix) + self.hpx._shape
+            wcs_data = np.zeros(wcs_shape).T
+            wcs = self.hpx.make_wcs(proj=proj,
+                                    oversample=oversample,
+                                    drop_axes=False)
 
-        if loop_ebins:
-            for i in range(hpx_data.shape[0]):
-                self._hpx2wcs.fill_wcs_map_from_hpx_data(
-                    hpx_data[i], wcs_data[i], normalize)
-
-            wcs_data.reshape(
-                (self.counts.shape[0], self._hpx2wcs.npix[0], self._hpx2wcs.npix[1]))
-            # replace the WCS with a 3D one
-            wcs = self.hpx.make_wcs(3, proj=self._wcs_proj,
-                                    energies=self.hpx.ebins,
-                                    oversample=self._wcs_oversample)
-        else:
-            self._hpx2wcs.fill_wcs_map_from_hpx_data(
-                hpx_data, wcs_data, normalize)
-            wcs_data.reshape(self._hpx2wcs.npix)
-            wcs = self._wcs2d
-
-        return wcs, wcs_data
+        self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
+        return WcsMapND(wcs, wcs_data)
 
     def get_pixel_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
@@ -192,11 +158,11 @@ class HpxCube(HpxMap):
         """Sum over all non-spatial dimensions."""
         # We sum over axis 0 in the array,
         # and drop the energy binning in the hpx object
-        return HpxCube(self.hpx.copy_and_drop_axes(),
-                       np.apply_over_axes(np.sum, self.data,
-                                          axes=np.arange(self.data.ndim - 1)))
+        return self.__class__(self.hpx.copy_and_drop_axes(),
+                              np.apply_over_axes(np.sum, self.data,
+                                                 axes=np.arange(self.data.ndim - 1)))
 
-    def get_by_coord(self, coords, interp=None):
+    def get_by_coords(self, coords, interp=None):
         pix = self.hpx.coord_to_pix(coords)
         return self.get_by_pix(pix)
 
@@ -215,13 +181,7 @@ class HpxCube(HpxMap):
         """Interpolate map values.
         """
         import healpy as hp
-        if self.data.ndim == 1:
-            theta = np.pi / 2. - np.radians(lat)
-            phi = np.radians(lon)
-            return hp.pixelfunc.get_interp_val(self.data, theta,
-                                               phi, nest=self.hpx.nest)
-        else:
-            return self._interpolate_cube(coords)
+        raise NotImplementedError
 
     def _interpolate_cube(self, coords):
         """Perform interpolation on a HEALPIX cube.
@@ -230,34 +190,7 @@ class HpxCube(HpxMap):
         on the existing energy planes.
         """
         import healpy as hp
-        shape = np.broadcast(lon, lat, egy).shape
-        lon = lon * np.ones(shape)
-        lat = lat * np.ones(shape)
-        theta = np.pi / 2. - np.radians(lat)
-        phi = np.radians(lon)
-        vals = []
-        for i, _ in enumerate(self.hpx.evals):
-            v = hp.pixelfunc.get_interp_val(self.counts[i], theta,
-                                            phi, nest=self.hpx.nest)
-            vals += [np.expand_dims(np.array(v, ndmin=1), -1)]
-
-        vals = np.concatenate(vals, axis=-1)
-
-        if egy is None:
-            return vals.T
-
-        egy = egy * np.ones(shape)
-
-        if interp_log:
-            xvals = utils.val_to_pix(np.log(self.hpx.evals), np.log(egy))
-        else:
-            xvals = utils.val_to_pix(self.hpx.evals, egy)
-
-        vals = vals.reshape((-1, vals.shape[-1]))
-        xvals = np.ravel(xvals)
-        v = map_coordinates(vals, [np.arange(vals.shape[0]), xvals],
-                            order=1)
-        return v.reshape(shape)
+        raise NotImplementedError
 
     def swap_scheme(self):
         """Return a new map with the opposite scheme (ring or nested).
@@ -284,7 +217,7 @@ class HpxCube(HpxMap):
         import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
-        shape = self.counts.shape
+        shape = self.data.shape
 
         if preserve_counts:
             power = -2.

@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis
 from ..hpx import HPXGeom
-from ..hpxcube import HpxCube
+from ..hpxcube import HpxMapND
 
 pytest.importorskip('healpy')
 
@@ -32,9 +32,9 @@ def test_hpxcube_init(nside, nested, coordsys, region, axes):
         shape += [ax.nbin for ax in axes]
     shape = shape[::-1]
     data = np.random.uniform(0, 1, shape)
-    m = HpxCube(geom)
+    m = HpxMapND(geom)
     assert(m.data.shape == data.shape)
-    m = HpxCube(geom, data)
+    m = HpxMapND(geom, data)
     assert_allclose(m.data, data)
 
 
@@ -43,22 +43,22 @@ def test_hpxcube_init(nside, nested, coordsys, region, axes):
 def test_hpxcube_read_write(tmpdir, nside, nested, coordsys, region, axes):
 
     filename = str(tmpdir / 'skycube.fits')
-    m = HpxCube(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
     data = np.random.poisson(0.1, m.data.shape)
     m.data[...] = data
     m.write(filename)
-    m2 = HpxCube.read(filename)
+    m2 = HpxMapND.read(filename)
     assert_allclose(m.data, m2.data)
     m.write(filename, sparse=True)
-    m2 = HpxCube.read(filename)
+    m2 = HpxMapND.read(filename)
     assert_allclose(m.data, m2.data)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxcube_get_by_pix(nside, nested, coordsys, region, axes):
-    m = HpxCube(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
-    data = np.linspace(0, m.data.size-1.0,m.data.size).reshape(m.data.shape)
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    data = np.linspace(0, m.data.size - 1.0, m.data.size).reshape(m.data.shape)
     m.data[...] = data
     pix = m.hpx.get_pixels()
     assert_allclose(np.ravel(m.data), m.get_by_pix(pix))
@@ -66,10 +66,16 @@ def test_hpxcube_get_by_pix(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_get_by_coord(nside, nested, coordsys, region, axes):
-    m = HpxCube(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
-    data = np.linspace(0, m.data.size-1.0,m.data.size).reshape(m.data.shape)
+def test_hpxcube_get_by_coords(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    data = np.linspace(0, m.data.size - 1.0, m.data.size).reshape(m.data.shape)
     m.data[...] = data
     coords = m.hpx.get_coords()
-    assert_allclose(np.ravel(m.data), m.get_by_coord(coords))
+    assert_allclose(np.ravel(m.data), m.get_by_coords(coords))
 
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_to_wcs(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    m_wcs = m.to_wcs(sum_bands=False, oversample=2,normalize=False)
+    m_wcs = m.to_wcs(sum_bands=True, oversample=2,normalize=False)

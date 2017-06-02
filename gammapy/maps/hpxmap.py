@@ -7,6 +7,7 @@ from astropy.extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.utils.misc import InheritDocstrings
+from .base import MapBase
 from .hpx import HpxToWcsMapping
 from .geom import MapAxis
 
@@ -57,12 +58,10 @@ def find_and_read_bands(hdulist, extname=None):
     return axes
 
 
-class HpxMeta(InheritDocstrings, abc.ABCMeta):
-    pass
-
-
-@six.add_metaclass(HpxMeta)
-class HpxMap(object):
+# class HpxMeta(InheritDocstrings, abc.ABCMeta):
+#    pass
+#@six.add_metaclass(HpxMeta)
+class HpxMap(MapBase):
     """Base class for HEALPIX map classes.
 
     Parameters
@@ -75,20 +74,14 @@ class HpxMap(object):
     """
 
     def __init__(self, hpx, data):
-        self._data = data
-        self._hpx = hpx
+        MapBase.__init__(self, hpx, data)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @property
     def hpx(self):
         """HEALPix geometry object."""
-        return self._hpx
-
-    @property
-    def data(self):
-        """Array of data values."""
-        return self._data
+        return self.geom
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -174,104 +167,32 @@ class HpxMap(object):
             hdulist += [self.hpx.make_bands_hdu(extname=extname_bands)]
         return fits.HDUList(hdulist)
 
-    def make_wcs_from_hpx(self, sum_ebins=False, proj='CAR', oversample=2,
-                          normalize=True):
-        """Make a WCS object and convert HEALPIX data into WCS projection.
-
-        NOTE: this re-calculates the mapping, if you have already
-        calculated the mapping it is much faster to use
-        convert_to_cached_wcs() instead
-
-        Parameters
-        ----------
-        sum_ebins  : bool
-           sum energy bins over energy bins before reprojecting
-        proj : str
-           WCS-projection
-        oversample : int
-           Oversampling factor for WCS map
-        normalize  : bool
-           True -> preserve integral by splitting HEALPIX values between bins
-
-        Returns
-        -------
-        wcs : `~gammapy.maps.wcs.WCSGeom`
-            WCS geometry
-        wcs_data : `~numpy.ndarray`
-            WCS data
-        """
-
-        # FIXME: This should just return a WCSMap object
-
-        self._wcs_proj = proj
-        self._wcs_oversample = oversample
-        self._wcs_2d = self.hpx.make_wcs(2, proj=proj, oversample=oversample)
-        self._hpx2wcs = HpxToWcsMapping(self.hpx, self._wcs_2d)
-        wcs, wcs_data = self.convert_to_cached_wcs(self.counts, sum_ebins,
-                                                   normalize)
-        return wcs, wcs_data
-
     @abc.abstractmethod
-    def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
+    def to_wcs(self, sum_bands=False, normalize=True):
         """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
         ----------
-        hpx_in : `~numpy.ndarray`
-            HEALPIX input data
-        sum_ebins : bool
-            Sum energy bins over energy bins before reprojecting
+        sum_bands : bool
+            Sum over non-spatial axes before reprojecting.  If False
+            then the WCS map will have the same dimensionality as the
+            HEALPix one.
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins
 
         Returns
         -------
-        (WCS object, np.ndarray() with reprojected data)
+        wcs : `~astropy.wcs.WCS`
+            WCS object
+        data : `~numpy.ndarray`
+            Reprojected data
+
         """
         pass
 
     def get_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
         return self.hpx.get_skydirs()
-
-    @abc.abstractmethod
-    def sum_over_axes(self):
-        """Reduce to a 2D image by dropping non-spatial dimensions."""
-        pass
-
-    @abc.abstractmethod
-    def get_by_coord(self, coords, interp=None):
-        """Return map values at the given map coordinates.
-
-        Parameters
-        ----------
-        coords : tuple
-            Tuple of coordinate vectors for each dimension of the map.
-
-        Returns
-        -------
-        vals : `~numpy.ndarray`
-           Values of pixels in the flattened map.
-           np.nan used to flag coords outside of map
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_by_pix(self, pix, interp=None):
-        """Return map values at the given pixel coordinates.
-
-        Parameters
-        ----------
-        pix : tuple
-            Tuple of pixel index vectors for each dimension of the map.
-
-        Returns
-        ----------
-        vals : `~numpy.ndarray`
-           Values of pixels in the flattened map
-           np.nan used to flag coords outside of map
-        """
-        pass
 
     def swap_scheme(self):
         """TODO.
@@ -335,7 +256,7 @@ class HpxMap(object):
             writing pixels with non-zero amplitude.
         """
 
-        # FIXME: Should this be a method of HpxCube?
+        # FIXME: Should this be a method of HpxMapND?
         # FIXME: Should we assign extname in this method?
 
         data = self.data

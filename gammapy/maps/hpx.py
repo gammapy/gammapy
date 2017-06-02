@@ -962,14 +962,14 @@ class HPXGeom(MapGeom):
             raise Exception(
                 'Did not recognize region type: {}'.format(tokens[0]))
 
-    def make_wcs(self, naxis=2, proj='CAR', axes=None, oversample=2):
+    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
         ----------
-        naxis : int
-            Set the number of axes that will be extracted from the
-            HEALPIX geometry.  If None then all dimensions of the
+        drop_axes : bool
+            Drop non-spatial axes from the
+            HEALPIX geometry.  If False then all dimensions of the
             HEALPIX geometry will be copied to the WCS geometry.
         proj : str
             Projection type of WCS geometry.
@@ -982,6 +982,11 @@ class HPXGeom(MapGeom):
         wcs : `~gammapy.maps.wcs.WCSGeom`
             WCS geometry
         """
+        if drop_axes:
+            naxis = 2
+        else:
+            naxis = self.ndim
+
         if naxis < 2 or naxis > self.ndim:
             raise ValueError('naxis must be between 2 or the total number '
                              'of dimensions.')
@@ -1014,15 +1019,20 @@ class HPXGeom(MapGeom):
 
         if allsky:
             w.wcs.crpix[0] = 2 * crpix
-            npix = (2 * npixels, npixels)
+            npix = [2 * npixels, npixels]
         else:
             w.wcs.crpix[0] = crpix
-            npix = (npixels, npixels)
+            npix = [npixels, npixels]
+
+        for ax in self.axes[:max(naxis - 2, 0)]:
+            npix += [ax.nbin]
 
         w.wcs.crpix[1] = crpix
         w.wcs.cdelt[0] = -pixsize / oversample
         w.wcs.cdelt[1] = pixsize / oversample
 
+        # FIXME: Do we need to fill header keywords for all
+        # non-spatial dimensions?
         if naxis == 3:
             w.wcs.crpix[2] = 1
             w.wcs.ctype[2] = 'Energy'
@@ -1031,8 +1041,7 @@ class HPXGeom(MapGeom):
             #    w.wcs.cdelt[2] = 10 ** energies[1] - 10 ** energies[0]
 
         w = WCS(w.to_header())
-        wcs_proj = WCSGeom(w, npix)
-        return wcs_proj
+        return WCSGeom(w, tuple(npix))
 
     def get_pixels(self):
         """Get multi-dimensional indices for all pixels in this geometry.
@@ -1123,7 +1132,7 @@ class HpxToWcsMapping(object):
         self._mult_val = mult_val
         self._npix = npix
         self._lmap = self._hpx[self._ipix]
-        self._valid = self._lmap > 0
+        self._valid = self._lmap >= 0
 
     @property
     def hpx(self):
@@ -1210,14 +1219,28 @@ class HpxToWcsMapping(object):
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins
         """
-        # FIXME, there really ought to be a better way to do this
-        hpx_data_flat = hpx_data.flatten()
-        wcs_data_flat = np.zeros((wcs_data.size))
-        lmap_valid = self._lmap[self._valid]
-        wcs_data_flat[self._valid] = hpx_data_flat[lmap_valid]
+
+        # FIXME: Do we want to flatten mapping arrays?
+
+        # HPX images have (1,N) dimensionality by convention
+        hpx_data = np.squeeze(hpx_data)
+
+        valid = np.where(self._valid.reshape(self._npix))
+        lmap = self._lmap[self._valid]
+        mult_val = self._mult_val[self._valid]
+
+        wcs_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
+        wcs_slice = tuple(wcs_slice + list(valid)[::-1])
+
+        hpx_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
+        hpx_slice = tuple(hpx_slice + [lmap])
+
         if normalize:
-            wcs_data_flat *= self._mult_val
-        wcs_data.flat = wcs_data_flat
+            wcs_data[wcs_slice] = mult_val * hpx_data[hpx_slice]
+        else:
+            wcs_data[wcs_slice] = hpx_data[hpx_slice]
+
+        return wcs_data
 
     def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):
         """Create and fill a WCS map from the HEALPIX data using the pre-calculated mappings.

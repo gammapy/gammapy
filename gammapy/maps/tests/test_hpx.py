@@ -158,7 +158,14 @@ def test_hpx_get_ref_dir():
 
 
 def test_hpx_make_wcs():
+
+    ax0 = np.linspace(0., 3., 4)
+    
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
+    wcs = hpx.make_wcs()
+    assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
+
+    hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
     wcs = hpx.make_wcs()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
 
