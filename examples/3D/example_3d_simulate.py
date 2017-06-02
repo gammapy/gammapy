@@ -12,12 +12,11 @@ import astropy.units as u
 import numpy as np
 import yaml
 from astropy.coordinates import SkyCoord, Angle
-from .configuration import get_model, make_ref_cube
-
 from gammapy.cube import make_exposure_cube
 from gammapy.cube.utils import compute_npred_cube, compute_npred_cube_simple
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.irf import EnergyDependentMultiGaussPSF
+from configuration import get_model_gammapy, make_ref_cube
 
 
 def get_irfs(config):
@@ -38,9 +37,6 @@ def get_irfs(config):
     # bkg = Background3D.read(filename, hdu='BACKGROUND')
 
     return dict(psf=psf, aeff=aeff, edisp=edisp)
-
-
-
 
 
 def compute_spatial_model_integral(model, image):
@@ -89,9 +85,8 @@ def main():
     exposure_cube.data = exposure_cube.data.to('m2 s')
     print(exposure_cube)
 
-
     # Define model and do some quick checks
-    model = get_model(config)
+    model = get_model_gammapy(config)
     spatial_integral = compute_spatial_model_integral(model.spatial_model, exposure_cube.sky_image_ref)
     print('Spatial integral (should be 1): ', spatial_integral)
     flux_integral = model.spectral_model.integral(emin='1 TeV', emax='10 TeV')
@@ -143,10 +138,8 @@ def main():
     npred_cube.write('npred_cube.fits.gz', overwrite=True)
     npred_cube_convolved.write('npred_cube_convolved.fits.gz', overwrite=True)
 
-    #npred_cube2 = SkyCube.read('npred_cube.fits.gz')
-   # print(npred_cube2)
-
-
+    # npred_cube2 = SkyCube.read('npred_cube.fits.gz')
+    # print(npred_cube2)
 
 
 if __name__ == '__main__':
