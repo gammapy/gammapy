@@ -103,9 +103,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     The following images will be computed:
 
-        * counts
-        * exposure
-        * background
+    * counts
+    * exposure
+    * background
 
     Parameters
     ----------
