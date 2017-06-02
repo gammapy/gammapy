@@ -27,8 +27,8 @@ model:
   pivot_energy1: 1
   prefactor1: 1
   index1: 2.75
-  template1: Sphere2D
+  template1: Shell2D
   ra1: 245.488
   dec1: -50.2708
-  rad: 0.33
-
+  rin1: 0.33
+  width1: 0.2
