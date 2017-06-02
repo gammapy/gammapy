@@ -1,23 +1,16 @@
-import yaml
 import numpy as np
-import astropy.units as u
-from gammapy.cube import SkyCube
-from gammapy.extern.pathlib import Path
-from astropy.coordinates import SkyCoord, Angle
-from examples.configuration import get_model, make_ref_cube
-
+import yaml
+from astropy.coordinates import SkyCoord
+from configuration import get_model, make_ref_cube
 from sherpa.estmethods import Covariance
+from sherpa.fit import Fit
 from sherpa.optmethods import NelderMead
 from sherpa.stats import Cash
-from sherpa.fit import Fit
 
-from gammapy.cube.sherpa_ import (
-    CombinedModel3DInt,
-    CombinedModel3DIntConvolveEdisp,
-    NormGauss2DInt,
-)
+from gammapy.cube import SkyCube
+from gammapy.extern.pathlib import Path
 
-from sherpa.models import PowLaw1D, TableModel
+
 def load_cubes(config):
     #Load the different cubes needed for the analysis
     #counts cube
@@ -58,26 +51,49 @@ def main():
 
     cubes = load_cubes(config)
     print('which available cubes:', cubes)
+
+    # converting data SkyCube to sherpa-format cube
+    counts = cubes['counts'].to_sherpa_data3d(dstype='Data3DInt')
+    print('counts: ', counts)
     # Define a 2D gaussian for the spatial model
-    spatial_model = NormGauss2DInt('spatial-model')
+    #spatial_model = NormGauss2DInt('spatial-model')
 
     # Define a power law for the spectral model
-    spectral_model = PowLaw1D('spectral-model')
+    #spectral_model = PowLaw1D('spectral-model')
 
     coord = cubes['counts'].sky_image_ref.coordinates(mode="edges")
     energies = cubes['counts'].energies(mode='edges').to("TeV")
     print('my energy bins: ', energies)
     #import IPython; IPython.embed();
 
-    source_model = get_model(config)
-    source_model_cube = source_model.evaluate_cube(ref_cube)
-    model = source_model_cube #+ background_model
+    source_model = get_model(config = config, coord = coord, energies = energies,
+                            exposure_cube = cubes['exposure'], psf_cube = None)
 
+    print(source_model)
+    #source_model_cube = source_model.evaluate_cube(ref_cube)
+    model = source_model #+ background_model
     print('------------------------------------')
     print('model ', model)
+
     print('------------------------------------ fitting')
+
+
+   # source_model2 = CombinedModel3DInt(
+   #     coord=coord,
+   #     energies=energies,
+   #     use_psf=False,
+   #     exposure=cubes['exposure'],
+   #     psf=None,
+   #     spatial_model=spatial_model,
+   #     spectral_model=spectral_model,
+   # )
+
+
+    #print('source_model2: ', source_model2)
+
+
     fit = Fit(
-        data=cubes['counts'],
+        data=counts,
         model=model,
         stat=Cash(),
         method=NelderMead(),
@@ -87,15 +103,9 @@ def main():
     print(fit_results.format())
 
     print('------------------------------------ end fitting')
-    source_model2 = CombinedModel3DInt(
-        coord=coord,
-        energies=energies,
-        use_psf=True,
-        exposure=cubes['exposure'],
-        psf=psf_3d,
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
-    )
+
+
+
 
 if __name__ == '__main__':
     main()

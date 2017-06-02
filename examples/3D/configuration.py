@@ -1,5 +1,6 @@
 
-from gammapy.cube import CombinedModel3D, SkyCube
+from gammapy.cube import SkyCube, CombinedModel3D #CombinedModel3DInt, SkyCube
+from gammapy.cube.sherpa_ import CombinedModel3DInt, CombinedModel3DInt_roberta
 from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from gammapy.image.models import Shell2D, Sphere2D
 import astropy.units as u
@@ -10,7 +11,10 @@ __all__ = [
 ]
 
 
-def get_model(config):
+def get_model(config, coord, energies, exposure_cube, psf_cube):
+
+    use_psf = config['model']['use_psf']
+
     if config['model']['template1'] == 'Shell2D':
         spatial_model = Shell2D(
             amplitude=1,
@@ -48,7 +52,20 @@ def get_model(config):
             lambda_=config['model']['cutoff'] * u.Unit('TeV-1'),
         )
 
-    model = CombinedModel3D(spatial_model, spectral_model)
+    spectral_model_sherpa = spectral_model.to_sherpa()
+
+
+    model = CombinedModel3DInt_roberta(spatial_model = spatial_model,
+                                       spectral_model = spectral_model_sherpa,
+                                       exposure = exposure_cube,
+                                       coord = coord,
+                                       energies = energies,
+                                       use_psf = use_psf,
+                                       psf = psf_cube,
+                                      )
+
+    #model = CombinedModel3D(spectral_model, spatial_model)
+
     return model
 
 def make_ref_cube(config):
@@ -62,7 +79,7 @@ def make_ref_cube(config):
 
     # define reconstructed energy binning
     ENERGY_SPEC = {'mode': 'edges',
-                   'enumbins': config['binning']['enumbins'],
+                    'enumbins': config['binning']['enumbins'],
                    'emin': config['selection']['emin'],
                    'emax': config['selection']['emax'],
                    'eunit': 'TeV'}

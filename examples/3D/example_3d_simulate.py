@@ -8,17 +8,17 @@ TODOs:
   This shouldn't happen and is bad. Figure out what's going on and fix!
 
 """
-import numpy as np
 import astropy.units as u
+import numpy as np
 import yaml
 from astropy.coordinates import SkyCoord, Angle
-from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from .configuration import get_model, make_ref_cube
 
-from gammapy.cube import SkyCube, CombinedModel3D
 from gammapy.cube import make_exposure_cube
 from gammapy.cube.utils import compute_npred_cube, compute_npred_cube_simple
-from examples.configuration import get_model, make_ref_cube
+from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.irf import EnergyDependentMultiGaussPSF
+
 
 def get_irfs(config):
     filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
