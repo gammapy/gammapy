@@ -206,6 +206,26 @@ class Shell2D(Fittable2DModel):
         return ((self.y_0 - r_out, self.y_0 + r_out),
                 (self.x_0 - r_out, self.x_0 + r_out))
 
+    def to_sherpa(self, name='default'):
+        """Convert to a `~sherpa.models.ArithmeticModel`.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
+        from sherpa.astro.models import Shell2D
+        model = Shell2D(name=name)
+
+        model.xpos = self.x_0.value
+        model.ypos = self.y_0.value
+        model.ampl = self.amplitude.value
+        # Note: we checked, the Sherpa `r0` is our `r_in`.
+        model.r0 = self.r_in.value
+        model.width = self.width.value
+
+        return model
+
 
 class Sphere2D(Fittable2DModel):
     """Projected homogeneous radiating sphere model.
