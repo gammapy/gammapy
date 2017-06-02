@@ -8,17 +8,15 @@ TODOs:
   This shouldn't happen and is bad. Figure out what's going on and fix!
 
 """
-import numpy as np
 import astropy.units as u
+import numpy as np
 import yaml
 from astropy.coordinates import SkyCoord, Angle
-from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
-from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
-from gammapy.image.models import Shell2D
-from gammapy.cube import SkyCube, CombinedModel3D
 from gammapy.cube import make_exposure_cube
 from gammapy.cube.utils import compute_npred_cube, compute_npred_cube_simple
+from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.irf import EnergyDependentMultiGaussPSF
+from configuration import get_model_gammapy, make_ref_cube
 
 
 def get_irfs(config):
@@ -29,6 +27,7 @@ def get_irfs(config):
     psf_fov = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
     psf = psf_fov.to_energy_dependent_table_psf(theta=offset)
 
+    print(' psf', psf)
     aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
     edisp_fov = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
@@ -38,55 +37,6 @@ def get_irfs(config):
     # bkg = Background3D.read(filename, hdu='BACKGROUND')
 
     return dict(psf=psf, aeff=aeff, edisp=edisp)
-
-
-def make_ref_cube(config):
-    WCS_SPEC = {'nxpix': config['binning']['nxpix'],
-                'nypix': config['binning']['nypix'],
-                'binsz': config['binning']['binsz'],
-                'xref': config['pointing']['ra'],
-                'yref': config['pointing']['dec'],
-                'proj': config['binning']['proj'],
-                'coordsys': config['binning']['coordsys']}
-
-    # define reconstructed energy binning
-    ENERGY_SPEC = {'mode': 'edges',
-                   'enumbins': config['binning']['enumbins'],
-                   'emin': config['selection']['emin'],
-                   'emax': config['selection']['emax'],
-                   'eunit': 'TeV'}
-
-    return SkyCube.empty(**WCS_SPEC, **ENERGY_SPEC)
-
-
-def get_model(config):
-    if config['model']['template1'] == 'Shell2D':
-        spatial_model = Shell2D(
-            amplitude=1,
-            x_0=config['model']['ra1'],
-            y_0=config['model']['dec1'],
-            r_in=config['model']['rin1'],
-            width=config['model']['width1'],
-            # Note: for now we need spatial models that are normalised
-            # to integrate to 1 or results will be incorrect!!!
-            normed=True,
-        )
-
-    if config['model']['spectrum1'] == 'pl':
-        spectral_model = PowerLaw(
-            amplitude=config['model']['prefactor1'] * u.Unit('cm-2 s-1 TeV-1'),
-            index=config['model']['index1'],
-            reference=config['model']['pivot_energy1'] * u.Unit('TeV'),
-        )
-    if config['model']['spectrum1'] == 'ecpl':
-        spectral_model = ExponentialCutoffPowerLaw(
-            amplitude=config['model']['prefactor1'] * u.Unit('cm-2 s-1 TeV-1'),
-            index=config['model']['index1'],
-            reference=config['model']['pivot_energy1'] * u.Unit('TeV'),
-            lambda_=config['model']['cutoff'] * u.Unit('TeV-1'),
-        )
-
-    return CombinedModel3D(spatial_model, spectral_model)
 
 
 def compute_spatial_model_integral(model, image):
@@ -131,10 +81,12 @@ def main():
         ref_cube=ref_cube,
         offset_max=Angle(config['selection']['ROI']),
     )
-    # exposure_cube.data = exposure_cube.data.to('m2 s')
+    print('exposure sum: {}'.format(np.nansum(exposure_cube.data)))
+    exposure_cube.data = exposure_cube.data.to('m2 s')
+    print(exposure_cube)
 
     # Define model and do some quick checks
-    model = get_model(config)
+    model = get_model_gammapy(config)
     spatial_integral = compute_spatial_model_integral(model.spatial_model, exposure_cube.sky_image_ref)
     print('Spatial integral (should be 1): ', spatial_integral)
     flux_integral = model.spectral_model.integral(emin='1 TeV', emax='10 TeV')
@@ -180,10 +132,14 @@ def main():
     print('npred_cube_convolved sum: {}'.format(np.nansum(npred_cube_convolved.data.to('').data)))
     # TODO: check that sum after PSF convolution or applying EDISP are the same
 
-    exposure_cube.write('exposure_cube.fits.gz', overwrite=True)
+
+    exposure_cube.write('exposure_cube.fits', overwrite=True, format='fermi-exposure')
     flux_cube.write('flux_cube.fits.gz', overwrite=True)
     npred_cube.write('npred_cube.fits.gz', overwrite=True)
     npred_cube_convolved.write('npred_cube_convolved.fits.gz', overwrite=True)
+
+    # npred_cube2 = SkyCube.read('npred_cube.fits.gz')
+    # print(npred_cube2)
 
 
 if __name__ == '__main__':
