@@ -4,7 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter

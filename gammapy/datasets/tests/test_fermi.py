@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 

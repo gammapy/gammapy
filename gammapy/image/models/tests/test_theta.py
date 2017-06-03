@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_almost_equal
-from astropy.tests.helper import pytest
+import pytest
 from ....utils.testing import requires_dependency
 from ...models import Gauss2DPDF, MultiGauss2D, ThetaCalculator, ThetaCalculatorScipy
 

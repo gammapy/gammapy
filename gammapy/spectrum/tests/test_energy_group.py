@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroupMaker, calculate_flux_point_binning
