@@ -459,11 +459,16 @@ class CompoundSpectralModel(SpectralModel):
         self.model2 = model2
         self.operator = operator
 
+    @property
+    def parameters(self):
+        val = self.model1.parameters.parameters + self.model2.parameters.parameters
+        return ParameterList(val)
+
     def __str__(self):
         ss = self.__class__.__name__
-        ss += 'Component 1\n{}'.format(self.model1)
-        ss += 'Component 2\n{}'.format(self.model1)
-        ss += 'Operator \n{}'.format(self.operator)
+        ss += '\n    Component 1 : {}'.format(self.model1)
+        ss += '\n    Component 2 : {}'.format(self.model2)
+        ss += '\n    Operator : {}'.format(self.operator)
         return ss
 
     def __call__(self, energy):
