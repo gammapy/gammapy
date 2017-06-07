@@ -109,6 +109,46 @@ TEST_MODELS = [
     ),
 ]
 
+# Add compound models
+TEST_MODELS.append(dict(
+    name='compound1',
+    model=TEST_MODELS[0]['model'] * 5,
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 5,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 5,
+))
+
+TEST_MODELS.append(dict(
+    name='compound2',
+    model=5 * TEST_MODELS[0]['model'],
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 5,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 5,
+))
+
+TEST_MODELS.append(dict(
+    name='compound3',
+    model= TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 2,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 2,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 2,
+))
+
+TEST_MODELS.append(dict(
+    name='compound4',
+    model= TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
+    val_at_2TeV= 0.9 * TEST_MODELS[0]['val_at_2TeV'],
+    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'), 
+    eflux_1_10TeV=2.6322140512045697 * u.Unit('TeV cm-2 s-1'),
+))
+
+TEST_MODELS.append(dict(
+    name='compound5',
+    model= TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
+    val_at_2TeV= 0.5 * TEST_MODELS[0]['val_at_2TeV'],
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 0.5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 0.5,
+))
 # The table model imports scipy.interpolate in `__init__`,
 # so we skip it if scipy is not available
 try:
@@ -146,6 +186,7 @@ def test_models(spectrum):
     # inverse for TableModel is not implemented
     if not isinstance(model, TableModel):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
+
     model.to_dict()
 
 
