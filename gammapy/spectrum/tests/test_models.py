@@ -189,6 +189,8 @@ def test_models(spectrum):
 
     model.to_dict()
 
+    assert '' in str(model)
+
 
 @requires_dependency('matplotlib')
 @requires_dependency('sherpa')
