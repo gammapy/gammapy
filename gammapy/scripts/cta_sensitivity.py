@@ -1,110 +1,107 @@
-#-*- coding: utf-8 -*-
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-"""
-Compute the CTA sensitivity for a fixed observation config
-Authors: J. Lefaucheur (LUTh), B. Khelifi (APC)
-Date: 31/05/2017
-Version: 0.1
-
-Note: For the moment, only the differential point-like sensitivity is computed
-ToDo: - make the computation for any source size
-      - compute the integral sensitivity
-      - Add options to use different spectral shape?
-
-Inputs:
-    - filename: str
-        IRF filename (full path, in general there are here: ../datasets/cta/)
-        e.g. ../datasets/cta/CTA-Performance-South-20170323/CTA-Performance-South-20deg-30m_20170323.fits
-    - livetime: u.h
-        Livetime (object with the units of time), e.g. 5*u.h
-Optionnal inputs:
-    - slope: float (>0)
-        Index of the spectral shape (Power-law)
-    - alpha: float
-        On/OFF normalisation
-    - sigma: float
-        minimun significance
-    - gamma_min: float
-        Minimum number of gamma-rays
-    - bkg_sys: float
-        Fraction of Background systematics relative to the number of ON counts
-    - verbosity: int
-        level of print out [int: 0/1/2(debug)]. In the debug mode, stats for each bin are printed and the computed \
-        sensitivity curve is superposed with the one stored in the IRF fits file
-
-"""
-
-# Inputs :
-
-# IRFs :
-#  - taux de fond en énergie reconstruite
-#  - matrice de dispersion en énergie
-#  - surface efficace en énergie vraie
-# Paramètres :
-#  - nsigma, alpha, temps, ngamma_min et systématiques fond
-
-# Taux de fond, calcul de nombre de gamma
-
-# calcul du flux avec la double intégrale et le nombre de gamma
-
+from __future__ import absolute_import, division, print_function, unicode_literals
+from ..stats import significance_on_off
+from ..spectrum.models import PowerLaw
+from ..spectrum.utils import CountsPredictor
+from ..scripts import CTAPerf
+from ..utils.scripts import get_parser, set_up_logging_from_args
+from astropy.table import Table
+import logging
 import astropy.units as u
 import numpy as np
-import matplotlib.pyplot as plt
-import sys
 
-from gammapy.stats import significance_on_off
-from gammapy.spectrum.models import PowerLaw
-from gammapy.spectrum.utils import CountsPredictor
-from gammapy.scripts import CTAPerf
-from gammapy.utils.scripts import get_parser, set_up_logging_from_args
+log = logging.getLogger(__name__)
 
+__all__ = ['SensiEstimator']
 
-class cta_sensi_estim(object):
+class SensiEstimator(object):
+    """Compute the sensitivity at 0.5 degrees and XXX zenith angle
+
+    note:: For the moment, only the differential point-like sensitivity is computed at a fixed offset
+    todo:: - make the computation for any source size
+          - compute the integral sensitivity
+        - Add options to use different spectral shape?
+
+    Parameters
+    ----------
+    irfobject: `~gammapy.scripts.CTAPerf`
+        IRF object
+    livetime: `~astropy.units.Quantity`
+        Livetime (object with the units of time), e.g. 5*u.h
+    slope: `float`, optional
+        Index of the spectral shape (Power-law), should be positive (>0)
+    alpha: `float`, optional
+        On/OFF normalisation
+    sigma: `float`, optional
+        Minimum significance
+    gamma_min: `float`, optional
+        Minimum number of gamma-rays
+    bkg_sys: `float`, optional
+        Fraction of Background systematics relative to the number of ON counts
+
+    Examples
+    --------
+        >>> import cta_sensitivity
+        >>> from ..scripts import CTAPerf
+        >>> irffile = '$GAMMAPY_EXTRA/datasets/cta/CTA-Performance-North-20170327/CTA-Performance-North-20deg-average-30m_20170327.fits'
+        >>> ctairf = CTAPerf.read(irffile)
+        >>> livetime = 0.5
+        >>> sens = cta_sensitivity.SensiEstimator(irfobject=ctairf,livetime=livetime)
+        >>> sens.run()
+        >>> sens.plot()
+        >>> sensi.print_results()
+
+        Or
+
+        :gp-extra-notebook:`cta_sensitivity`
+
     """
-    Parameters:
-        - filename: str
-            IRF filename (full path, in general there are here: ../datasets/cta/)
-            e.g. ../datasets/cta/CTA-Performance-South-20170323/CTA-Performance-South-20deg-30m_20170323.fits
-        - livetime: u.h
-            Livetime (object with the units of time), e.g. 5*u.h
-    Optional Parameters:
-        - slope: float (>0)
-            Index of the spectral shape (Power-law)
-        - alpha: float
-            On/OFF normalisation
-        - sigma: float
-            minimun significance
-        - gamma_min: float
-            Minimum number of gamma-rays
-        - bkg_sys: float
-            Fraction of Background systematics relative to the number of ON counts
-        - verbosity: int
-            level of print out [int: 0/1/2(debug)]. In the debug mode, stats for each bin are printed and the computed \
-            sensitivity curve is superposed with the one stored in the IRF fits file
-    """
 
-    def __init__(self,irffile,livetime,slope=2.,alpha=0.2,sigma=5.,gamma_min=10.,bkg_sys=0.05, verbosity=0):
-        self.filename = irffile
+    def __init__(self,irfobject,livetime,slope=2.,alpha=0.2,sigma=5.,gamma_min=10.,bkg_sys=0.05):
+        self.irf = irfobject
         self.livetime = (livetime*u.Unit('h')).to('s')
         self.slope = slope
         self.alpha = alpha
         self.sigma = sigma
         self.gamma_min = gamma_min
         self.bkg_sys = bkg_sys
-        self.verbosity = verbosity
+
         self.energy = None
         self.diff_sens = None
-        # Reading of the IRFs
-        self.cta_perf = CTAPerf.read(self.filename)
 
     def get_bkg(self, bkg_rate):
+        """Return the Background rate for each energy bin
+
+        Parameters
+        ----------
+        bkg_rate: `~gammapy.scripts.BgRateTable`
+            Table of background rate
+
+        Returns
+        -------
+        rate: `~numpy.array`
+            Return an array of background rate (bins in reconstructed energy)
+        """
         bkg = bkg_rate.data.data * self.livetime
         return bkg.value * u.Unit('')
 
-    # Cf. np.vectorize for an time optimisation of this function
-    # For the moment, search by dichotomy
     def get_excess(self, bkg_counts):
+        """Compute the gamma-ray excess for each energy bin
 
+        Parameters
+        ----------
+        bkg_counts: `~numpy.array`
+            Array of background rate (bins in reconstructed energy)
+
+        Returns
+        -------
+        count: `~numpy.array`
+            Return an array of gamma-ray excess (bins in reconstructed energy)
+
+        note:: For the moment, search by dichotomy
+        todo:: Cf. np.vectorize for an time optimisation of this function
+        """
         excess = np.zeros(len(bkg_counts))
         for icount in range(len(bkg_counts)):
     
@@ -118,11 +115,10 @@ class cta_sensi_estim(object):
         
             start = coarse_excess[max(idx-1,0)]
             stop = coarse_excess[min(idx+1, len(coarse_sigma)-1)]
-            #if self.verbosity == 2:
-            #    print('# {}, {}'.format(start, stop))
-            #    print('{}, {}'.format(idx, len(coarse_sigma)-1))
+            #log.debug('# {}, {}'.format(start, stop))
+            #log.debug('{}, {}'.format(idx, len(coarse_sigma)-1))
             if start == stop:
-                print('LOGICAL ERROR> Impossible to find a number of gamma!')
+                log.warning('LOGICAL ERROR> Impossible to find a number of gamma!')
                 excess[icount] = -1
                 continue
         
@@ -138,24 +134,44 @@ class cta_sensi_estim(object):
             else:
                 excess[icount] = max(self.gamma_min, self.bkg_sys * bkg_counts[icount])
 
-            if self.verbosity > 0 :
-                print('N_ex={}, N_fineEx={}, N_bkg={}, N_bkgsys={}, Sigma={}'.format(excess[icount],fine_excess[idx], \
-                    bkg_counts[icount],self.bkg_sys * bkg_counts[icount],fine_sigma[idx]))
+            log.debug('N_ex={}, N_fineEx={}, N_bkg={}, N_bkgsys={}, Sigma={}'.format(excess[icount],fine_excess[idx], \
+                bkg_counts[icount],self.bkg_sys * bkg_counts[icount],fine_sigma[idx]))
 
         return excess
 
-    # Return differential fluxes
     def get_1TeV_differential_flux(self, excess_counts, sp_model, aeff, edisp):
+        """Compute the differential fluxes at 1 TeV
+
+        Parameters
+        ----------
+        excess_counts: `~numpy.array`
+            Array of gamma-ray excess (bins in reconstructed energy)
+        sp_model: `spectrum.models.PowerLaw`
+            Power Law object
+        aeff: `~gammapy.irf.EffectiveAreaTable`
+            Effective area
+        edisp: `~gammapy.irf.EnergyDispersion2D`
+            Energy dispersion
+
+        Returns
+        -------
+        flux: `~astropy.units.Quantity`
+            Return an array of 1TeV fluxes (bins in reconstructed energy)
+        """
+
         # Compute expected excess
         predictor = CountsPredictor(sp_model, aeff=aeff, edisp=edisp, livetime=self.livetime)
         predictor.run()
         counts = predictor.npred.data.data.value
+
         # Conversion in flux
         flux = excess_counts / counts * u.Unit('1 / (cm2 TeV s)')
 
         return flux
 
     def run(self):
+        """Do the computation
+        """
 
         # Creation of the spectal shape
         norm = 1 * u.Unit('1 / (cm2 s TeV)')
@@ -164,21 +180,23 @@ class cta_sensi_estim(object):
         model = PowerLaw(index=index, amplitude=norm, reference=ref)
 
         # Get the bins in reconstructed  energy
-        reco_energy = self.cta_perf.bkg.energy
+        reco_energy = self.irf.bkg.energy
 
         # Start the computation
-        bkg_counts = self.get_bkg(self.cta_perf.bkg)
+        bkg_counts = self.get_bkg(self.irf.bkg)
         excess_counts = self.get_excess(bkg_counts)
 
-        Phi0 = self.get_1TeV_differential_flux(excess_counts, model, self.cta_perf.aeff, self.cta_perf.rmf)
+        Phi0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
+        TeVtoErg = 1.60218
         diff_flux = (Phi0 * model.evaluate(energy=reco_energy.log_center(), index=index, amplitude=1, reference=ref) * \
-                     reco_energy.log_center() ** 2 * 1.60218).to('erg / (cm2 s)')
+                     reco_energy.log_center() ** 2 * TeVtoErg).to('erg / (cm2 s)')
 
         self.energy = reco_energy.log_center()
         self.diff_sens = diff_flux
 
-    # Plot the result
     def plot(self):
+        """Plot the result"""
+        import matplotlib.pyplot as plt
 
         ax = plt.gca()
         ax.plot(self.energy.value, self.diff_sens.value, color='red', label='GammaPy')
@@ -187,31 +205,40 @@ class cta_sensi_estim(object):
         ax.grid(True)
         ax.set_xlabel('Reco Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Sensitivity [{}]'.format(self.diff_sens.unit))
-        if self.verbosity > 0:
+        if log.getEffectiveLevel() == 10 :
             self.cta_perf.sens.plot(color='black', label="ROOT")
             plt.legend()
-        # ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
-
-        print("\n #################################\n\033[34;1m   Emid        Sensi[{}]\033[0m".format(self.diff_sens.unit))
-        for icount in range(len(self.energy)):
-            print("{} {}".format(self.energy[icount].value, self.diff_sens[icount].value))
-        print("\n")
-
-        if self.verbosity > 0:
-            print("\n #######################\n  REFERENCE \n   Emid         Sensi[erg/cm2/s]")
-            for icount in range(len(self.cta_perf.sens.energy.log_center())):
-                print("{} {}".format(self.cta_perf.sens.energy.log_center()[icount].value, \
-                                     self.cta_perf.sens.data.data[icount].value))
-            print("\n")
-
         plt.show()
 
 
-def cta_sensitivity_main(args=None):
+    def print_results(self):
+        """Print the result
 
-#    parser = get_parser(sensi_estim)
-#    parser = argparse.ArgumentParser(description='Store the PSFs from Mc simulation in a 4D numpy table')
-    parser = get_parser(description=cta_sensi_estim.__doc__, function=cta_sensi_estim)
+        Returns
+        =======
+        array: `astropy.table.Table`
+            Table containing [RecoEnergy, DiffFlux]
+        """
+
+        diff_sensi = Table([self.energy, self.diff_sens],\
+                           names=('ENERGY', 'FLUX'), meta={'Energy': 'Differential flux'},\
+                           dtype = ('float64', 'float64'))
+        diff_sensi['ENERGY'].unit = self.energy.unit
+        diff_sensi['FLUX'].unit = self.diff_sens.unit
+
+        if log.getEffectiveLevel() == 10 :
+            ref_diff_sensi = Table([self.irf.sens.energy.log_center(), self.irf.sens.data.data], \
+                               names=('ENERGY', 'FLUX'), meta={'Energy': 'Differential flux'}, \
+                               dtype=('float64', 'float64'))
+            ref_diff_sensi['ENERGY'].unit = self.irf.sens.energy.log_center().unit
+            ref_diff_sensi['FLUX'].unit = self.diff_sens.unit
+            log.debug(ref_diff_sensi)
+
+        return diff_sensi
+
+def CTASensitivityMain(args=None):
+    """Function to compute the CTA sensitivity at 0.5 degrees"""
+    parser = get_parser(description=SensiEstimator.__doc__, function=SensiEstimator)
     parser.add_argument('irffile', type=str,
                         help='IRF file (containing the path)')
     parser.add_argument('livetime', type=float,
@@ -226,25 +253,26 @@ def cta_sensitivity_main(args=None):
                         help='Optional: minimum number of gamma-rays')
     parser.add_argument('-bkg_sys', type=float, default=0.05,
                         help='Optional: Fraction of Background systematics relative to the number of ON counts')
-    parser.add_argument("-verbosity", type=int, default=0,
-                        help="Optional: verbose level [0/1/2(debug)]")
+    parser.add_argument("-l", "--loglevel", default='info',
+                    choices=['debug', 'info', 'warning', 'error', 'critical'],
+                    help="Set the logging level")
     args = parser.parse_args(args)
-#    print(args)
-
     set_up_logging_from_args(args)
 
 
-    sensi = cta_sensi_estim(irffile=args.irffile,
+    IRFs = CTAPerf.read(args.filename)
+
+    sensi = SensiEstimator( irfobject=IRFs,
                             livetime=args.livetime,
                             slope=args.slope,
                             alpha=args.alpha,
                             sigma=args.sigma,
                             gamma_min=args.gamma_min,
-                            bkg_sys=args.bkg_sys,
-                            verbosity=args.verbosity)
+                            bkg_sys=args.bkg_sys)
     sensi.run()
     sensi.plot()
+    sensi.print_results()
 
 
 if __name__ == '__main__':
-    cta_sensitivity_main()
+    CTASensitivityMain()
