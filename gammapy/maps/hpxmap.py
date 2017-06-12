@@ -102,9 +102,10 @@ class HpxMap(MapBase):
             Map object
 
         """
-        hdulist = fits.open(filename)
-        return cls.from_hdulist(hdulist, **kwargs)
-
+        with fits.open(filename) as hdulist:
+            hpx_map = cls.from_hdulist(hdulist, **kwargs)
+        return hpx_map
+            
     @classmethod
     def from_hdulist(cls, hdulist, **kwargs):
         """Make a HpxMap object from a FITS HDUList.

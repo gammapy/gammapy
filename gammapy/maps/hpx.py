@@ -1200,12 +1200,13 @@ class HpxToWcsMapping(object):
         from fermipy.skymap import Map
         index_map = Map.read(filename)
         mult_map = Map.read(filename, hdu=1)
-        ff = fits.open(filename)
-        hpx = HPXGeom.from_header(ff[0])
-        mapping_data = dict(ipix=index_map.counts,
-                            mult_val=mult_map.counts,
-                            npix=mult_map.counts.shape)
-        return cls(hpx, index_map.wcs, mapping_data)
+
+        with fits.open(filename) as ff:
+            hpx = HPXGeom.from_header(ff[0])
+            ipix=index_map.counts
+            mult_val=mult_map.counts
+            npix=mult_map.counts.shape
+        return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
         """Fill the WCS map from the hpx data using the pre-calculated mappings.
