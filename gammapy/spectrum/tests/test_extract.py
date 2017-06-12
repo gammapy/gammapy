@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+import pytest
 import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
@@ -24,11 +24,11 @@ def extraction():
     # Restrict true energy range covered by HAP exporter
     e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
-    extraction = SpectrumExtraction(bkg_estimate=bkg_estimate(),
-                                    obs_list=obs_list(),
-                                    e_true=e_true
-                                    )
-    return extraction
+    return SpectrumExtraction(
+        bkg_estimate=bkg_estimate(),
+        obs_list=obs_list(),
+        e_true=e_true,
+    )
 
 
 @requires_dependency('scipy')
@@ -95,19 +95,18 @@ class TestSpectrumExtraction:
     @requires_dependency('sherpa')
     def test_sherpa(self, tmpdir, extraction):
         """Same as above for files to be used with sherpa"""
-        extraction.run(outdir=tmpdir, use_sherpa=True)
-
         import sherpa.astro.ui as sau
+
+        extraction.run(outdir=tmpdir, use_sherpa=True)
         sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
         arf = sau.get_arf()
+
         actual = arf._arf._specresp
         desired = extraction.observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
     def test_define_energy_threshold(self, extraction):
         # TODO: Find better API for this
-        extraction.define_energy_threshold(method_lo_threshold="area_max",
-                                           percent=10)
-        assert_quantity_allclose(extraction.observations[0].lo_threshold,
-                                 0.6812920690579611 * u.TeV,
-                                 rtol=1e-3)
+        extraction.define_energy_threshold(method_lo_threshold="area_max", percent=10)
+        actual = extraction.observations[0].lo_threshold
+        assert_quantity_allclose(actual, 0.6812920690579611 * u.TeV, rtol=1e-3)

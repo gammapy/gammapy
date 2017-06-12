@@ -7,27 +7,28 @@ binning:
   enumbins: 10
 
 pointing:
-  ra: 83.63
-  dec: 22.01  
-  livetime: 1 hour
+  ra: 245.488
+  dec: -50.2708
+  livetime: 50 hour
 
 selection:
   offset_fov: 2
   emin: 0.05
-  emax: 100
+  emax: 50
   ROI: 5 deg
 
 logging:
   working_dir: .
 
-model: 
-  source1: 'Crab'
+model:
+  use_psf: False
+  source1: 'N877'
   spectrum1: pl
   pivot_energy1: 1
-  prefactor1: 2e-12
-  index1: 2.2
+  prefactor1: 1
+  index1: 2.75
   template1: Shell2D
-  ra1: 83.63
-  dec1: 22.01
-  rin1: 0.3
-  width1: 0.1
+  ra1: 245.488
+  dec1: -50.2708
+  rin1: 0.33
+  width1: 0.2

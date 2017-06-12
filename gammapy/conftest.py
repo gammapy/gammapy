@@ -22,14 +22,14 @@ PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
 PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
 PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
 PYTEST_HEADER_MODULES['astropy'] = 'astropy'
+PYTEST_HEADER_MODULES['regions'] = 'regions'
+PYTEST_HEADER_MODULES['healpy'] = 'healpy'
 PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
 PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
 PYTEST_HEADER_MODULES['naima'] = 'naima'
 PYTEST_HEADER_MODULES['reproject'] = 'reproject'
 PYTEST_HEADER_MODULES['photutils'] = 'photutils'
 PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
-PYTEST_HEADER_MODULES['regions'] = 'regions'
-PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
 
 def pytest_configure(config):

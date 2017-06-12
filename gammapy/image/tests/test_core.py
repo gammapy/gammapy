@@ -7,7 +7,8 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy import units as u
 from astropy.units import Quantity
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data

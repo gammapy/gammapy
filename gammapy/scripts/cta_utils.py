@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 import astropy.units as u
 from ..spectrum import SpectrumObservation
@@ -132,22 +132,21 @@ class CTAObservationSimulation(object):
 
         on_counts += bkg_counts  # evts in ON region
 
-        meta = dict(EXPOSURE=livetime.to('s').value)
-
         on_vector = PHACountsSpectrum(
             data=on_counts,
             backscal=1,
             energy_lo=reco_energy.lo,
             energy_hi=reco_energy.hi,
-            meta=meta,
         )
 
+        on_vector.livetime = livetime
         off_vector = PHACountsSpectrum(energy_lo=reco_energy.lo,
                                        energy_hi=reco_energy.hi,
                                        data=off_counts,
                                        backscal=1. / alpha,
                                        is_bkg=True,
                                        )
+        off_vector.livetime = livetime
 
         obs = SpectrumObservation(on_vector=on_vector,
                                   off_vector=off_vector,

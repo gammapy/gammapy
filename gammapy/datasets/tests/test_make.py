@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import numpy as np
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...datasets import (make_test_psf, make_test_observation_table,
@@ -43,14 +44,14 @@ def test_make_test_observation_table():
     # test: assert if RA is in the interval (0, 360) deg:
     ra_min = Angle(0, 'deg')
     ra_max = Angle(360, 'deg')
-    assert (ra_min < obs_table['RA']).all()
-    assert (obs_table['RA'] < ra_max).all()
+    assert (ra_min < obs_table['RA'].quantity).all()
+    assert (obs_table['RA'].quantity < ra_max).all()
 
     # test: assert if dec is in the interval (-90, 90) deg:
     dec_min = Angle(-90, 'deg')
     dec_max = Angle(90, 'deg')
-    assert (dec_min < obs_table['DEC']).all()
-    assert (obs_table['DEC'] < dec_max).all()
+    assert (dec_min < obs_table['DEC'].quantity).all()
+    assert (obs_table['DEC'].quantity < dec_max).all()
 
 
 def test_make_test_bg_cube_model():
