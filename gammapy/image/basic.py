@@ -384,13 +384,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         """
         galactic_diffuse = dataset.galactic_diffuse
 
-        # add margin of 1 pixel
         margin = galactic_diffuse.sky_image_ref.wcs_pixel_scale()
-
-        footprint = self.reference.footprint(mode='edges')
-        width = footprint['width'] + margin[1]
-        height = footprint['height'] + margin[0]
-
+        width = self.reference.width + margin[1]
+        height = self.reference.height + margin[0]
         cutout = galactic_diffuse.cutout(position=self.reference.center,
                                          size=(height, width))
         return cutout

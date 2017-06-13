@@ -344,8 +344,9 @@ class Template2D(Fittable2DModel):
     """
     amplitude = Parameter('amplitude')
 
-    def __init__(self, image, amplitude=1., **constraints):
+    def __init__(self, image, amplitude=1., frame='galactic', **constraints):
         self.image = image
+        self.frame = frame
         super(Template2D, self).__init__(amplitude=amplitude, **constraints)
 
     @lazyproperty
@@ -392,10 +393,9 @@ class Template2D(Fittable2DModel):
 
     @property
     def bounding_box(self):
-        footprint = self.image.footprint()
-        width = footprint['width'].deg
-        height = footprint['height'].deg
-        center = footprint['center']
+        width = self.image.width.deg
+        height = self.image.height.deg
+        center = self.image.center
         x_0 = center.data.lon.wrap_at('180d').deg
         y_0 = center.data.lat.deg
         return ((y_0 - height / 2, y_0 + height / 2),

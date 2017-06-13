@@ -423,16 +423,30 @@ class SkyImage(MapBase):
         for key, (x, y) in zip(keys, pixcoord):
             footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        width_low = footprint['lower left'].separation(footprint['lower right'])
-        width_up = footprint['upper left'].separation(footprint['upper right'])
-        footprint['width'] = Angle([width_low, width_up]).max()
-
-        height_left = footprint['lower left'].separation(footprint['upper left'])
-        height_right = footprint['lower right'].separation(footprint['upper right'])
-        footprint['height'] = Angle([height_right, height_left]).max()
-
-        footprint['center'] = self.center
         return footprint
+
+    @property
+    def width(self):
+        """
+        Maximum angular width of the image.
+        """
+        coordinates = self.coordinates('edges')
+        lon, lat = coordinates.data.lon.wrap_at('180d'), coordinates.data.lat
+
+        left, right = lon[:, 1], lon[:, -1]
+
+        width = left - right
+        return width.max()
+
+    @property
+    def height(self):
+        coordinates = self.coordinates('edges')
+        lon, lat = coordinates.data.lon.wrap_at('180d'), coordinates.data.lat
+
+        top, bottom = lat[-1, :], lat[1, :]
+
+        height = top - bottom
+        return height.max()
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """Boundary pixel coordinates on another reference image.
