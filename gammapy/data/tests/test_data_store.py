@@ -75,6 +75,19 @@ def test_datastore_load_all(data_manager):
     assert_allclose(event_lists[0].table['ENERGY'][0], 1.1156039)
     assert_allclose(event_lists[-1].table['ENERGY'][0], 1.0204216)
 
+@requires_data('gammapy-extra')
+@requires_dependency('yaml')
+def test_datastore_obslist(data_manager):
+    """Test loading data and IRF files via the DataStore"""
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    obslist = data_store.obs_list([23523, 23592])
+    assert obslist[0].obs_id == 23523
+
+    with pytest.raises(ValueError):
+        obslist = data_store.obs_list([11111, 23592])
+
+    obslist = data_store.obs_list([11111, 23523], skip_missing=True)
+    assert obslist[0].obs_id == 23523
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
