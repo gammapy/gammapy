@@ -431,22 +431,32 @@ class SkyImage(MapBase):
         Maximum angular width of the image.
         """
         coordinates = self.coordinates('edges')
-        lon, lat = coordinates.data.lon.wrap_at('180d'), coordinates.data.lat
+        left, right = coordinates[:, 0], coordinates[:, -1]
+        width = left.separation(right)
 
-        left, right = lon[:, 1], lon[:, -1]
+        width_max = width.max()
 
-        width = left - right
-        return width.max()
+        if left.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - width_max
+        else:
+            return width_max
 
     @property
     def height(self):
+        """
+        Maximum angular height of the image.
+        """
         coordinates = self.coordinates('edges')
-        lon, lat = coordinates.data.lon.wrap_at('180d'), coordinates.data.lat
+        top, bottom = coordinates[-1, :], coordinates[0, :]
 
-        top, bottom = lat[-1, :], lat[1, :]
+        height = top.separation(bottom)
 
-        height = top - bottom
-        return height.max()
+        height_max = height.max()
+
+        if top.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - height_max
+        else:
+            return height_max
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """Boundary pixel coordinates on another reference image.
