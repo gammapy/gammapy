@@ -42,7 +42,7 @@ class MapBase(object):
     def data(self, val):
         if val.shape != self.data.shape:
             raise Exception('Wrong shape.')
-        self._counts = val
+        self._data = val
 
     @abc.abstractmethod
     def sum_over_axes(self):

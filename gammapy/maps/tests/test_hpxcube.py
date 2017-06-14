@@ -27,7 +27,7 @@ hpx_test_geoms = [(8, False, 'GAL', None, None),
 def test_hpxcube_init(nside, nested, coordsys, region, axes):
 
     geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
-    shape = [np.unique(geom.npix)]
+    shape = [int(np.unique(geom.npix))]
     if axes:
         shape += [ax.nbin for ax in axes]
     shape = shape[::-1]
