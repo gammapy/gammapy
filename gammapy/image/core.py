@@ -423,16 +423,40 @@ class SkyImage(MapBase):
         for key, (x, y) in zip(keys, pixcoord):
             footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        width_low = footprint['lower left'].separation(footprint['lower right'])
-        width_up = footprint['upper left'].separation(footprint['upper right'])
-        footprint['width'] = Angle([width_low, width_up]).max()
-
-        height_left = footprint['lower left'].separation(footprint['upper left'])
-        height_right = footprint['lower right'].separation(footprint['upper right'])
-        footprint['height'] = Angle([height_right, height_left]).max()
-
-        footprint['center'] = self.center
         return footprint
+
+    @property
+    def width(self):
+        """
+        Maximum angular width of the image.
+        """
+        coordinates = self.coordinates('edges')
+        left, right = coordinates[:, 0], coordinates[:, -1]
+        width = left.separation(right)
+
+        width_max = width.max()
+
+        if left.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - width_max
+        else:
+            return width_max
+
+    @property
+    def height(self):
+        """
+        Maximum angular height of the image.
+        """
+        coordinates = self.coordinates('edges')
+        top, bottom = coordinates[-1, :], coordinates[0, :]
+
+        height = top.separation(bottom)
+
+        height_max = height.max()
+
+        if top.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - height_max
+        else:
+            return height_max
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """Boundary pixel coordinates on another reference image.
