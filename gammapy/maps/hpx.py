@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Utilities for dealing with HEALPix projections and mappings
-"""
+"""Utilities for dealing with HEALPix projections and mappings."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import re
@@ -436,7 +434,6 @@ class HPXGeom(MapGeom):
         -------
         idx_local : `~numpy.ndarray`
             An array of local HEALPIX pixel indices.
-
         """
         # Convert to tuple representation
         if (isinstance(sliced, int) or
@@ -550,7 +547,9 @@ class HPXGeom(MapGeom):
 
     @property
     def npix(self):
-        """Number of pixels in each band.  For partial-sky geometries this can
+        """Number of pixels in each band.
+
+        For partial-sky geometries this can
         be less than the number of pixels for the band NSIDE.
         """
         return self._npix
@@ -718,7 +717,6 @@ class HPXGeom(MapGeom):
 
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
-
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
         indxschm = kwargs.get(
@@ -770,7 +768,6 @@ class HPXGeom(MapGeom):
         ----------
         extname : str
             The HDU extension name
-
         """
 
         # if self.conv.bands_hdu == 'EBOUNDS':

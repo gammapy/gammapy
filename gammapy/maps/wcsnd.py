@@ -1,26 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.wcs import WCS
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from ..image.utils import make_header
 from .base import MapBase
-from .wcs import WCSGeom, create_wcs
+from .wcs import WCSGeom
 
 __all__ = [
-    'WcsMap', 'WcsMapND'
+    'WcsMap',
+    'WcsMapND',
 ]
 
 
 class WcsMap(MapBase):
-
     def __init__(self, wcs, data=None):
         MapBase.__init__(self, wcs, data)
 
 
 class WcsMapND(WcsMap):
-
     def __init__(self, wcs, data=None):
         WcsMap.__init__(self, wcs, data)
 
@@ -45,7 +41,6 @@ class WcsMapND(WcsMap):
         raise NotImplementedError
 
     def plot(self, ax=None):
-
         import matplotlib.pyplot as plt
 
         if ax is None:

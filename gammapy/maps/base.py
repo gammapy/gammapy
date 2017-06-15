@@ -15,7 +15,9 @@ class MapMeta(InheritDocstrings, abc.ABCMeta):
 
 @six.add_metaclass(MapMeta)
 class MapBase(object):
-    """Abstract map class.  This can represent WCS- or HEALPIX-based maps
+    """Abstract map class.
+
+    This can represent WCS- or HEALPIX-based maps
     with 2 spatial dimensions and N non-spatial dimensions.
 
     Parameters
@@ -66,7 +68,6 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map.
            np.nan used to flag coords outside of map
-
         """
         pass
 
@@ -86,6 +87,5 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map
            np.nan used to flag coords outside of map
-
         """
         pass

@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
 from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
@@ -147,7 +146,6 @@ def test_hpx_get_region_size():
 
 
 def test_hpx_get_ref_dir():
-
     refdir = HPXGeom.get_ref_dir('DISK(110.,75.,2.)', 'GAL')
     assert_allclose(refdir.l.deg, 110.)
     assert_allclose(refdir.b.deg, 75.)
@@ -158,9 +156,8 @@ def test_hpx_get_ref_dir():
 
 
 def test_hpx_make_wcs():
-
     ax0 = np.linspace(0., 3., 4)
-    
+
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
     wcs = hpx.make_wcs()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
@@ -171,42 +168,41 @@ def test_hpx_make_wcs():
 
 
 def test_hpx_get_coords():
-
     ax0 = np.linspace(0., 3., 4)
 
     # 2D all-sky
     hpx = HPXGeom(16, False, 'GAL')
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([45.,  135.,  225.]))
-    assert_allclose(c[1][:3], np.array([87.075819,  87.075819,  87.075819]))
+    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
 
     # 3D all-sky
     hpx = HPXGeom(16, False, 'GAL', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([45.,  135.,  225.]))
-    assert_allclose(c[1][:3], np.array([87.075819,  87.075819,  87.075819]))
+    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
     assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([107.5,  112.5,  106.57894737]))
-    assert_allclose(c[1][:3], np.array([76.813533,  76.813533,  76.07742]))
+    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
 
     # 3D partial-sky
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([107.5,  112.5,  106.57894737]))
-    assert_allclose(c[1][:3], np.array([76.813533,  76.813533,  76.07742]))
+    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
     assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
     hpx = HPXGeom([16, 32, 64], False, 'GAL',
                   region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([117.,  103.5,  112.5]))
-    assert_allclose(c[1][:3], np.array([75.340734,  75.340734,  75.340734]))
-    assert_allclose(c[2][:3], np.array([0.5,  1.5,  1.5]))
+    assert_allclose(c[0][:3], np.array([117., 103.5, 112.5]))
+    assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
+    assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
 
 def test_make_hpx_to_wcs_mapping():

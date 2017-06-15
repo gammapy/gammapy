@@ -1,4 +1,3 @@
-
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
@@ -29,8 +28,7 @@ def bin_to_val(edges, bins):
 
 
 def val_to_pix(edges, x):
-    """Convert axis coordinates ``x`` to pixel coordinates.
-    """
+    """Convert axis coordinates ``x`` to pixel coordinates."""
     return np.interp(x, edges, np.arange(len(edges)).astype(float))
 
 
@@ -74,6 +72,7 @@ class MapAxis(object):
     @classmethod
     def from_nodes(cls, x, **kwargs):
         """Generate an axis object from a sequence of nodes (bin centers).
+
         This will create a sequence of bins with edges half-way
         between the node values.
 
@@ -81,7 +80,6 @@ class MapAxis(object):
         ----------
         x : `~numpy.ndarray`
             Axis nodes (bin center).
-
         """
         binning = kwargs.setdefault('binning', 'log')
         x = np.array(x, ndmin=1)
@@ -180,8 +178,7 @@ class MapCoords(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class MapGeom(object):
-    """Base class for WCS and HEALPIX geometries.
-    """
+    """Base class for WCS and HEALPIX geometries."""
 
     @abc.abstractmethod
     def coord_to_pix(self, coords):
@@ -200,7 +197,6 @@ class MapGeom(object):
         -------
         pix : tuple
             Tuple of pixel indices in image and band dimensions.
-
         """
         pass
 

@@ -13,7 +13,9 @@ __all__ = [
 
 class HpxMapND(HpxMap):
     """Representation of a N+2D map using HEALPIX with two spatial
-    dimensions and N non-spatial dimensions.  This class uses a numpy
+    dimensions and N non-spatial dimensions.
+
+    This class uses a numpy
     array to represent the sequence of HEALPix image planes.  As such
     it can only be used for maps with the same geometry (NSIDE and
     HPX_REG) in every plane.  Following the convention of WCS-based
@@ -26,9 +28,8 @@ class HpxMapND(HpxMap):
     hpx : `~gammapy.maps.hpx.HPXGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
-        HEALPIX data array.  If none then an empty array will be
-        allocated.
-
+        HEALPIX data array.
+        If none then an empty array will be allocated.
     """
 
     def __init__(self, hpx, data=None):
@@ -178,8 +179,7 @@ class HpxMapND(HpxMap):
         return self.data[pix_local]
 
     def _interp_by_coord(self, coords):
-        """Interpolate map values.
-        """
+        """Interpolate map values."""
         import healpy as hp
         raise NotImplementedError
 
