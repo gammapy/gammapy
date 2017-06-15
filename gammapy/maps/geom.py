@@ -1,3 +1,4 @@
+
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
@@ -8,6 +9,7 @@ from astropy.coordinates import SkyCoord
 __all__ = [
     'MapCoords',
     'MapGeom',
+    'MapAxis',
 ]
 
 
@@ -29,7 +31,80 @@ def bin_to_val(edges, bins):
 def val_to_pix(edges, x):
     """Convert axis coordinates ``x`` to pixel coordinates.
     """
-    return np.interp(x, edges, np.arange(len(center)).astype(float))
+    return np.interp(x, edges, np.arange(len(edges)).astype(float))
+
+
+class MapAxis(object):
+    def __init__(self, bin_edges, binning='log', name='', quantity_type='integral',
+                 center=None):
+        self._bin_edges = bin_edges
+        self._name = name
+        self._quantity_type = quantity_type
+
+        if center is not None:
+            self._center = center
+        elif binning == 'log':
+            self._center = np.exp(0.5 * (np.log(self.edges[1:]) +
+                                         np.log(self.edges[:-1])))
+        elif binning == 'lin':
+            self._center = 0.5 * (self.edges[1:] + self.edges[:-1])
+        else:
+            raise ValueError('Invalid binning type: {}'.format(binning))
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def quantity_type(self):
+        return self._quantity_type
+
+    @property
+    def edges(self):
+        return self._bin_edges
+
+    @property
+    def center(self):
+        return self._center
+
+    @property
+    def nbin(self):
+        return len(self._bin_edges) - 1
+
+    @classmethod
+    def from_nodes(cls, x, **kwargs):
+        """Generate an axis object from a sequence of nodes (bin centers).
+        This will create a sequence of bins with edges half-way
+        between the node values.
+
+        Parameters
+        ----------
+        x : `~numpy.ndarray`
+            Axis nodes (bin center).
+
+        """
+        binning = kwargs.setdefault('binning', 'log')
+        x = np.array(x, ndmin=1)
+        if binning == 'log':
+            x = np.log(x)
+
+        if len(x) == 1:
+            delta = np.array(1.0, ndmin=1)
+        else:
+            delta = x[1:] - x[:-1]
+
+        edges = 0.5 * (x[1:] + x[:-1])
+        edges = np.insert(edges, 0, x[0] - 0.5 * delta[0])
+        edges = np.append(edges, x[-1] + 0.5 * delta[-1])
+
+        if binning == 'log':
+            edges = np.exp(edges)
+            x = np.exp(x)
+
+        return cls(edges, center=x, **kwargs)
+
+    def set_name(self, name):
+        self._name = name
 
 
 class MapCoords(object):
@@ -78,7 +153,8 @@ class MapCoords(object):
             return cls.from_lonlat(skydir.l.deg, skydir.b.deg, *args,
                                    coordsys='GAL')
         else:
-            raise Exception('Unrecognized coordinate frame: {}'.format(skydir.frame.name))
+            raise Exception(
+                'Unrecognized coordinate frame: {}'.format(skydir.frame.name))
 
     @classmethod
     def from_tuple(cls, coords, **kwargs):
