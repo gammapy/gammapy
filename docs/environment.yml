@@ -6,7 +6,6 @@ channels:
 
 dependencies:
   - python=3.5
-  - pip
   - cython
   - numpy
   - uncertainties
@@ -18,3 +17,11 @@ dependencies:
   - regions
   - reproject
   - aplpy
+  # There's a problem with Sphinx 1.6 with astropy-helpers
+  # For now, we pin the Sphinx version to something that works
+  - sphinx==1.5.6
+  # We don't really need to pip-install something.
+  # This is just an attempt to work around this issue:
+  # https://github.com/rtfd/readthedocs.org/issues/2827
+  - pip:
+      - antigravity
