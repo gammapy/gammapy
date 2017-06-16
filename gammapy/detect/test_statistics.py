@@ -49,7 +49,7 @@ def _extract_array(array, shape, position):
         The position of the small array's center with respect to the
         large array.
     """
-    x_width = shape[0] // 2
+    x_width = shape[1] // 2
     y_width = shape[0] // 2
     y_lo = position[0] - y_width
     y_hi = position[0] + y_width + 1
@@ -93,11 +93,20 @@ class TSImageEstimator(object):
 
     error_method : ['covar', 'conf']
         Error estimation method.
+    error_sigma : int (1)
+        Sigma for flux error.
+    ul_method : ['covar', 'conf']
+        Upper limit estimation method.
+    ul_sigma : int (2)
+        Sigma for flux upper limits.
     parallel : bool (True)
         Whether to use multiple cores for parallel processing.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
+    rtol : float (0.001)
+        Relative precision of the flux estimate. Used as a stopping criterion for
+        the amplitude fit.
 
     Notes
     -----
@@ -119,8 +128,8 @@ class TSImageEstimator(object):
     [Stewart2009]_
     """
 
-    def __init__(self, method='root brentq', error_method='covar', parallel=True,
-                 threshold=None, rtol=0.001):
+    def __init__(self, method='root brentq', error_method='covar', error_sigma=1,
+                 ul_method='covar', ul_sigma=2, parallel=True, threshold=None, rtol=0.001):
 
         if method not in ['root brentq', 'root newton', 'leastsq iter']:
             raise ValueError("Not a valid method: '{}'".format(method))
@@ -131,6 +140,9 @@ class TSImageEstimator(object):
         p = OrderedDict()
         p['method'] = method
         p['error_method'] = error_method
+        p['error_sigma'] = error_sigma
+        p['ul_method'] = ul_method
+        p['ul_sigma'] = ul_sigma
         p['parallel'] = parallel
         p['threshold'] = threshold
         p['rtol'] = rtol
@@ -178,8 +190,9 @@ class TSImageEstimator(object):
         mask.data = mask.data.astype(int)
 
         # mask boundary
-        slice_ = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
-        mask.data[slice_, slice_] = 1
+        slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
+        slice_y = slice(kernel.shape[0] // 2, -kernel.shape[0] // 2 + 1)
+        mask.data[slice_y, slice_x] = 1
 
         # Positions where exposure == 0 are not processed
         mask.data = (images['exposure'].data > 0) & mask.data
@@ -253,7 +266,7 @@ class TSImageEstimator(object):
             kernel = CustomKernel(kernel)
 
         if which == 'all':
-            which = ['ts', 'sqrt_ts', 'flux', 'flux_err', 'niter']
+            which = ['ts', 'sqrt_ts', 'flux', 'flux_err', 'flux_ul', 'niter']
 
         for name in which:
             result[name] = SkyImage.empty_like(images['counts'], fill=np.nan)
@@ -279,15 +292,14 @@ class TSImageEstimator(object):
         # Compute null statistics for the whole image
         c_0_image = _cash_cython(counts, background)
 
-        if 'flux_err' not in which:
-            error_method = 'none'
-        else:
-            error_method = p['error_method']
+        error_method = p['error_method'] if 'flux_err' in which else 'none'
+        ul_method = p['ul_method'] if 'flux_ul' in which else 'none'
 
         wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
                        c_0_image=c_0_image, kernel=kernel, flux=flux, method=p['method'],
                        error_method=error_method, threshold=p['threshold'],
-                       rtol=p['rtol'])
+                       error_sigma=p['error_sigma'], ul_method=ul_method,
+                       ul_sigma=p['ul_sigma'], rtol=p['rtol'])
 
         if p['parallel']:
             log.info('Using {} cores to compute TS image.'.format(cpu_count()))
@@ -300,8 +312,14 @@ class TSImageEstimator(object):
 
         # Set TS values at given positions
         j, i = zip(*positions)
-        for name in ['ts', 'flux', 'flux_err', 'niter']:
+        for name in ['ts', 'flux', 'niter']:
             result[name].data[j, i] = [_[name] for _ in results]
+
+        if 'flux_err' in which:
+            result['flux_err'].data[j, i] = [_['flux_err'] for _ in results]
+
+        if 'flux_ul' in which:
+            result['flux_ul'].data[j, i] = [_['flux_ul'] for _ in results]
 
         # Compute sqrt(TS) values
         if 'sqrt_ts' in which:
@@ -481,7 +499,7 @@ def compute_maximum_ts_image(ts_image_results):
 
 
 def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
-              method, error_method, threshold, rtol):
+              method, error_method, error_sigma, ul_method, ul_sigma, threshold, rtol):
     """Compute TS value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -539,12 +557,21 @@ def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
     result['ts'] = (c_0 - c_1) * np.sign(amplitude)
     result['flux'] = amplitude * FLUX_FACTOR
     result['niter'] = niter
+
     if error_method == 'covar':
         flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
-        result['flux_err'] = flux_err
+        result['flux_err'] = flux_err * error_sigma
     elif error_method == 'conf':
-        flux_err = _compute_flux_err_conf(amplitude, counts_, background_, model, c_1)
+        flux_err = _compute_flux_err_conf(amplitude, counts_, background_, model,
+                                          c_1, error_sigma)
         result['flux_err'] = FLUX_FACTOR * flux_err
+
+    if ul_method == 'covar':
+        result['flux_ul'] = result['flux'] + ul_sigma * result['flux_err']
+    elif ul_method == 'conf':
+        flux_ul = _compute_flux_err_conf(amplitude, counts_, background_, model,
+                                         c_1, ul_sigma)
+        result['flux_ul'] = FLUX_FACTOR * flux_ul + result['flux']
     return result
 
 
@@ -676,14 +703,14 @@ def _compute_flux_err_covar(x, counts, background, model):
         return np.sqrt(1. / stat.sum())
 
 
-def _compute_flux_err_conf(amplitude, counts, background, model, c_1):
+def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigma):
     """
-    Compute amplitude errors using inverse likelihood profile method.
+    Compute amplitude errors using likelihood profile method.
     """
     from scipy.optimize import brentq
 
     def ts_diff(x, counts, background, model):
-        return (c_1 + 1) - f_cash(x, counts, background, model)
+        return (c_1 + error_sigma ** 2) - f_cash(x, counts, background, model)
 
     args = (counts, background, model)
 
