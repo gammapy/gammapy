@@ -212,20 +212,34 @@ class DataStore(object):
             data_store=self,
         )
 
-    def obs_list(self, obs_id):
+    def obs_list(self, obs_id, skip_missing=False):
         """Generate a `~gammapy.data.ObservationList`.
 
         Parameters
         ----------
         obs_id : list
             Observation IDs.
+        skip_missing : bool, optional
+            Skip missing observations, default: False
 
         Returns
         -------
         obs : `~gammapy.data.ObservationList`
             List of `~gammapy.data.DataStoreObservation`
         """
-        return ObservationList(self.obs(_) for _ in obs_id)
+        obslist = ObservationList()
+        for _ in obs_id:
+            try:
+                obs = self.obs(_)
+            except ValueError as err:
+                if skip_missing:
+                    log.warn('Obs {} not in store, skip.'.format(_))
+                    continue
+                else:
+                    raise err
+            else:
+                obslist.append(obs)
+        return obslist
 
     def load_all(self, hdu_type=None, hdu_class=None):
         """Load a given file type for all observations.
