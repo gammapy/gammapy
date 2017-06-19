@@ -12,7 +12,6 @@ from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-
     'table_from_row_data',
     'table_to_fits_table',
     'fits_table_to_table',
@@ -223,6 +222,9 @@ def fits_header_to_meta_dict(header):
     return meta
 
 
+# TODO: remove type = 'qtable' to avoid issues?
+# see https://github.com/astropy/astropy/issues/6098
+# see https://github.com/gammapy/gammapy/issues/980
 def table_from_row_data(rows, type='qtable', **kwargs):
     """Helper function to create table objects from row data.
 
@@ -335,10 +337,8 @@ def fits_table_to_table(tbhdu):
     table : `~astropy.table.Table`
         astropy table containing the desired columns
     """
-
     data = tbhdu.data
     header = tbhdu.header
-
     table = Table(data, meta=header)
 
     # Copy over column meta-data

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import QTable, Table
+from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel
 from ..utils.energy import EnergyBounds
@@ -129,7 +129,7 @@ class SingleObsImageMaker(object):
 
         Returns
         -------
-        table : `astropy.table.QTable`
+        table : `astropy.table.Table`
             Two columns: offset in the FOV "theta" and expected counts "npred"
         """
         energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
@@ -147,7 +147,7 @@ class SingleObsImageMaker(object):
             norm = np.sum(spectrum * energy_band)
             npred /= norm
 
-        table = QTable()
+        table = Table()
         table['theta'] = offset
         table['npred'] = npred
 
@@ -320,8 +320,8 @@ class StackedObsImageMaker(object):
         nmax : int
             Number of runs to process
         """
-
         total_counts = SkyImage.empty_like(self.empty_image, name='counts')
+
         if make_background_image:
             total_bkg = SkyImage.empty_like(self.empty_image, name='bkg')
             total_exposure = SkyImage.empty_like(self.empty_image, name='exposure')

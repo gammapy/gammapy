@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.utils.decorators import lazyproperty
 from astropy.table import Table, Column
 import astropy.units as u
-from .butterfly import SpectrumButterfly
 from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
 from ..utils.energy import EnergyBounds
-from .. import stats
 
 __all__ = [
     'SpectrumFitResult',
@@ -206,7 +203,7 @@ class SpectrumFitResult(object):
 
     def butterfly(self, energy=None, flux_unit='TeV-1 cm-2 s-1'):
         """
-        Compute butterfly.
+        Compute butterfly table.
 
         Parameters
         ----------
@@ -217,8 +214,8 @@ class SpectrumFitResult(object):
 
         Returns
         -------
-        butterfly : `~gammapy.spectrum.SpectrumButterfly`
-            Butterfly object.
+        table : `~astropy.table.Table`
+            Butterfly info in table (cols: 'energy', 'flux', 'flux_lo', 'flux_hi')
         """
         if energy is None:
             energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
@@ -226,12 +223,12 @@ class SpectrumFitResult(object):
 
         flux, flux_err = self.model.evaluate_error(energy)
 
-        butterfly = SpectrumButterfly()
-        butterfly['energy'] = energy
-        butterfly['flux'] = flux.to(flux_unit)
-        butterfly['flux_lo'] = flux - flux_err.to(flux_unit)
-        butterfly['flux_hi'] = flux + flux_err.to(flux_unit)
-        return butterfly
+        table = Table()
+        table['energy'] = energy
+        table['flux'] = flux.to(flux_unit)
+        table['flux_lo'] = flux - flux_err.to(flux_unit)
+        table['flux_hi'] = flux + flux_err.to(flux_unit)
+        return table
 
     @property
     def expected_source_counts(self):
@@ -285,8 +282,7 @@ class SpectrumFitResult(object):
         return ax0, ax1
 
     def plot_counts(self, ax):
-        """Plot predicted and detected counts"""
-
+        """Plot predicted and detected counts."""
         self.expected_source_counts.plot(ax=ax,
                                          label='mu_source')
 
@@ -306,8 +302,7 @@ class SpectrumFitResult(object):
         ax.set_title('')
 
     def plot_residuals(self, ax):
-        """Plot residuals"""
-
+        """Plot residuals."""
         self.residuals.plot(ax=ax, ecolor='black', fmt='none')
         xx = ax.get_xlim()
         yy = [0, 0]
@@ -331,7 +326,7 @@ class SpectrumResult(object):
     Parameters
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
-        Best Fit model 
+        Best Fit model
     points : `~gammapy.spectrum.FluxPoints`, optional
         Flux points
     """
@@ -348,7 +343,7 @@ class SpectrumResult(object):
 
         Returns
         -------
-        residuals : np.array 
+        residuals : np.array
             Residuals
         residuals_err : np.array
             Residuals error
@@ -356,7 +351,7 @@ class SpectrumResult(object):
         e_ref = self.points.table['e_ref'].quantity
         points = self.points.table['dnde'].quantity
         points_err = self.points.get_flux_err()
-        
+
         # Deal with asymetric errors
         if type(points_err) == tuple:
             points_err = np.sqrt(points_err[0] * points_err[1])
@@ -454,7 +449,7 @@ class SpectrumResult(object):
         x = self.points.e_ref
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
-        
+
         ax.axhline(0, color='black')
 
         ax.set_xlabel('Energy [{}]'.format(energy_unit))

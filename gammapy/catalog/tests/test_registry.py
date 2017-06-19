@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
+import pytest
 from ...utils.testing import requires_data
 from ..registry import source_catalogs, SourceCatalogRegistry
 from .test_core import make_test_catalog
@@ -27,6 +27,7 @@ class TestSourceCatalogs:
     @requires_data('gammapy-extra')
     def test_getitem(self):
         cat = self.source_catalogs['2fhl']
+        assert cat.name == '2fhl'
 
         with pytest.raises(KeyError):
             source_catalogs['2FHL']

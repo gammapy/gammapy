@@ -40,7 +40,6 @@ class NormGauss2DInt(ArithmeticModel):
         The normgauss2dint model uses the error function to evaluate the
         the gaussian. This corresponds to an integration over bins.
         """
-
         return self.normgauss2d(p, xlo, xhi, ylo, yhi)
 
     def normgauss2d(self, p, xlo, xhi, ylo, yhi):
@@ -423,10 +422,12 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         # Convolve by the energy resolution
         etrue_band = self.true_energy.bands
         for ireco in range(self.dim_Ereco):
-            self.convolve_edisp[:, :, :, ireco] = np.moveaxis(spatial, 0, -1) * np.moveaxis(spectral, 0, -1) * \
-                                                  self.edisp[:, ireco] * etrue_band
+            self.convolve_edisp[:, :, :, ireco] = (np.rollaxis(spatial, 0, spatial.ndim)
+                                                   * np.rollaxis(spectral, 0, spectral.ndim)
+                                                   * self.edisp[:, ireco] * etrue_band)
         # Integration in etrue
-        model = np.moveaxis(np.sum(self.convolve_edisp, axis=2), -1, 0)
+        sum_model = np.sum(self.convolve_edisp, axis=2)
+        model = np.rollaxis(sum_model, -1, 0)
         if not self.select_region:
             return model.ravel()
         else:

@@ -12,6 +12,7 @@ from .core import SkyImage
 from .lists import SkyImageList
 
 __all__ = [
+    'BasicImageEstimator',
     'IACTBasicImageEstimator',
     'FermiLATBasicImageEstimator',
 ]
@@ -87,7 +88,10 @@ class BasicImageEstimator(object):
         images.check_required(['counts', 'background', 'exposure'])
         flux = SkyImage.empty_like(images['counts'], name='flux')
         excess = images['counts'].data - images['background'].data
-        flux.data = (excess / images['exposure'].data)
+
+        with np.errstate(invalid='ignore', divide='ignore'):
+            flux.data = (excess / images['exposure'].data)
+
         is_zero = images['exposure'].data == 0
         flux.data[is_zero] = 0
         return flux
@@ -99,9 +103,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     The following images will be computed:
 
-        * counts
-        * exposure
-        * background
+    * counts
+    * exposure
+    * background
 
     Parameters
     ----------
@@ -183,7 +187,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     def psf(self, observations):
         """Mean point spread function kernel image.
-        
+
         Parameters
         ----------
         observations : `~gammapy.data.ObservationList`
@@ -295,9 +299,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
 
 class FermiLATBasicImageEstimator(BasicImageEstimator):
-    """
-    Make basic (counts, exposure and background) Fermi sky images in given
-    energy band.
+    """Estimate basic sky images for Fermi-LAT data.
+
+    Can compute the following images: counts, exposure, background
 
     TODO: allow different background estimation methods
     TODO: add examples
@@ -320,7 +324,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
     .. code::
 
-        from astropy import unit as u
+        from astropy import units as u
         from gammapy.image import SkyImage, FermiLATBasicImageEstimator
         from gammapy.datasets import FermiLATDataset
 
@@ -335,7 +339,6 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         result = image_estimator.run(dataset)
         result['counts'].show()
-
     """
 
     def __init__(self, reference, emin, emax, spectral_model=None):
@@ -381,13 +384,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         """
         galactic_diffuse = dataset.galactic_diffuse
 
-        # add margin of 1 pixel
         margin = galactic_diffuse.sky_image_ref.wcs_pixel_scale()
-
-        footprint = self.reference.footprint(mode='edges')
-        width = footprint['width'] + margin[1]
-        height = footprint['height'] + margin[0]
-
+        width = self.reference.width + margin[1]
+        height = self.reference.height + margin[0]
         cutout = galactic_diffuse.cutout(position=self.reference.center,
                                          size=(height, width))
         return cutout
@@ -435,14 +434,14 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         from ..cube import compute_npred_cube
 
         p = self.parameters
-        erange = u.Quantity([p['emin'], p['emax']])
+        energy_band = u.Quantity([p['emin'], p['emax']])
 
         background_cube = self._total_background_cube(dataset)
         exposure_cube = dataset.exposure.reproject(background_cube)
         psf = dataset.psf
 
         # compute npred cube
-        npred_cube = compute_npred_cube(background_cube, exposure_cube, energy_bins=erange)
+        npred_cube = compute_npred_cube(background_cube, exposure_cube, ebounds=energy_band)
 
         # extract the only image from the npred_cube
         npred_total = npred_cube.sky_image_idx(0)
@@ -454,7 +453,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         npred_total.data /= (norm.mean()) ** 2
 
         # convolve with PSF kernel
-        psf_mean = psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
+        psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
         kernel = psf_mean.kernel(npred_total)
         npred_total = npred_total.convolve(kernel)
         return npred_total

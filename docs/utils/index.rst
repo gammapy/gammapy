@@ -173,9 +173,6 @@ Reference/API
 .. automodapi:: gammapy.utils.units
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.utils.mpl_style
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
 

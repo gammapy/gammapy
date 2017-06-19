@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table, Column, vstack
-from astropy.coordinates import Angle
 from astropy.io import ascii
 from astropy.units import Quantity
 from ..extern.pathlib import Path
@@ -83,12 +82,12 @@ class ObservationGroups(object):
 
     @property
     def n_groups(self):
-        """Number of groups (int)"""
+        """Number of groups (int)."""
         return len(self.obs_groups_table)
 
     @property
     def list_of_groups(self):
-        """List of groups (`~numpy.ndarray`)"""
+        """List of groups (`~numpy.ndarray`)."""
         return self.obs_groups_table['GROUP_ID'].data
 
     @staticmethod
@@ -198,9 +197,13 @@ class ObservationGroups(object):
             try:
                 split_name_min = axes[i_col].name.rsplit("_", 1)
                 split_name_max = axes[i_col + 1].name.rsplit("_", 1)
-                if (split_name_min[-1] == 'MIN'
-                    and split_name_max[-1] == 'MAX'
-                    and split_name_min[0] == split_name_max[0]):
+
+                do_split = (
+                    split_name_min[-1] == 'MIN' and
+                    split_name_max[-1] == 'MAX' and
+                    split_name_min[0] == split_name_max[0]
+                )
+                if do_split:
                     min_values = axes[i_col].bins
                     max_values = axes[i_col + 1].bins
                     edges = np.unique(np.append(min_values, max_values))
@@ -216,8 +219,7 @@ class ObservationGroups(object):
 
     @classmethod
     def read(cls, filename):
-        """
-        Read observation group definitions from ECSV file.
+        """Read observation group definitions from ECSV file.
 
         Using `~astropy.table.Table` and `~astropy.io.ascii`.
 
@@ -236,8 +238,7 @@ class ObservationGroups(object):
         return cls(axes=axes)
 
     def write(self, outfile, overwrite=False):
-        """
-        Write observation group definitions to ECSV file.
+        """Write observation group definitions to ECSV file.
 
         Using `~astropy.table.Table` and `~astropy.io.ascii`.
 
@@ -255,7 +256,7 @@ class ObservationGroups(object):
 
     @property
     def info(self):
-        """Info string (str)"""
+        """Info string (str)."""
         s = ''
         # loop over observation axes
         for i_axis in range(len(self.axes)):
@@ -265,7 +266,7 @@ class ObservationGroups(object):
         return s
 
     def info_group(self, group_id):
-        """Group info string
+        """Group info string.
 
         Parameters
         ----------
@@ -303,8 +304,7 @@ class ObservationGroups(object):
         return s
 
     def apply(self, obs_table):
-        """
-        Group observations in a list according to the defined groups.
+        """Group observations in a list according to the defined groups.
 
         The method returns the same observation table with an extra
         column in the 1st position indicating the group ID of each
@@ -447,14 +447,14 @@ class ObservationGroupAxis(object):
 
     @property
     def n_bins(self):
-        """Number of bins (int)"""
+        """Number of bins (int)."""
         if self.fmt == 'edges':
             return len(self.bins) - 1
         elif self.fmt == 'values':
             return len(self.bins)
 
     def get_bin(self, bin_id):
-        """Get bin (int, float or `~astropy.units.Quantity`-like)
+        """Get bin (int, float or `~astropy.units.Quantity`-like).
 
         Value or tuple of bin edges (depending on the ``fmt`` parameter)
         for the specified bin.
@@ -476,7 +476,7 @@ class ObservationGroupAxis(object):
 
     @property
     def get_bins(self):
-        """List of bins (int, float or `~astropy.units.Quantity`-like)
+        """List of bins (int, float or `~astropy.units.Quantity`-like).
 
         List of bin edges or values (depending on the ``fmt`` parameter)
         for all bins.
@@ -516,8 +516,8 @@ class ObservationGroupAxis(object):
 
     @property
     def info(self):
-        """Info string (str)"""
-        s = "{0} {1} {2}".format(self.name, self.fmt, self.bins)
+        """Info string (str)."""
+        s = "{} {} {}".format(self.name, self.fmt, self.bins)
         return s
 
 

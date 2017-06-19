@@ -4,7 +4,9 @@ from astropy.units import Quantity
 from .core import SkyCube
 from ..spectrum import LogEnergyAxis
 
-__all__ = ['SkyCubeImages']
+__all__ = [
+    'SkyCubeImages',
+]
 
 
 class SkyCubeImages(object):

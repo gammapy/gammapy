@@ -231,7 +231,7 @@ class ParameterList(object):
         """
         names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
-                   'error': '.3e',}
+                   'error': '.3e', }
         table = Table(self.to_list_of_dict(), names=names)
 
         for name in formats:

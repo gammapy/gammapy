@@ -88,7 +88,7 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
 
     Returns
     -------
-    idx : `~numpy.array`
+    idx : `~numpy.ndarray`
         Table row indices of the events that are outside the pie
     """
     sources = _add_column_and_sort_table(sources, pointing_position)
@@ -268,11 +268,6 @@ class FOVCubeBackgroundModel(object):
         bg_cube_model : `~gammapy.background.FOVCubeBackgroundModel`
             FOVCube background model object.
         """
-        hdu = fits.open(filename)
-        counts_scheme_dict = FOVCube.define_scheme('bg_counts_cube')
-        livetime_scheme_dict = FOVCube.define_scheme('bg_livetime_cube')
-        background_scheme_dict = FOVCube.define_scheme('bg_cube')
-
         try:
             counts_cube = FOVCube.read(filename, format, scheme='bg_counts_cube')
             livetime_cube = FOVCube.read(filename, format, scheme='bg_livetime_cube')
@@ -332,8 +327,7 @@ class FOVCubeBackgroundModel(object):
 
     @classmethod
     def set_cube_binning(cls, detx_edges, dety_edges, energy_edges):
-        """
-        Set cube binning from function parameters.
+        """Set cube binning from function parameters.
 
         Parameters
         ----------
@@ -429,10 +423,8 @@ class FOVCubeBackgroundModel(object):
         #       The values here are good for H.E.S.S.
 
         # energy bins (logarithmic)
-        log_delta_energy = (np.log(energy_max.value)
-                            - np.log(energy_min.value)) / bg_cube_shape[0]
-        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1) * log_delta_energy
-                              + np.log(energy_min.value))
+        log_delta_energy = (np.log(energy_max.value) - np.log(energy_min.value)) / bg_cube_shape[0]
+        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1) * log_delta_energy + np.log(energy_min.value))
         energy_edges = Quantity(energy_edges, energy_min.unit)
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
@@ -471,8 +463,7 @@ class FOVCubeBackgroundModel(object):
             self.livetime_cube.data += events.observation_live_time_duration
 
     def smooth(self):
-        """
-        Smooth background cube model.
+        """Smooth background cube model.
 
         Smooth method:
 
@@ -496,8 +487,6 @@ class FOVCubeBackgroundModel(object):
         6. fill the values of the image back in the cube
         """
         from scipy import ndimage
-
-        # smooth images
 
         # integral of original images
         integral_images = self.background_cube.integral_images
@@ -584,7 +573,7 @@ class EnergyOffsetBackgroundModel(object):
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1", data_err=bg_rate_err)
 
     def write(self, filename, **kwargs):
-        """Write `EnergyOffsetBackgroundModel` to FITS file.
+        """Write to FITS file.
 
         Parameters
         ----------
@@ -594,7 +583,7 @@ class EnergyOffsetBackgroundModel(object):
         self.to_table().write(filename, format='fits', **kwargs)
 
     def to_table(self):
-        """Convert `EnergyOffsetBackgroundModel` to astropy table format.
+        """Convert to `~astropy.table.Table`.
 
         Returns
         -------
@@ -618,7 +607,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def read(cls, filename):
-        """Create `EnergyOffsetBackgroundModel` from FITS file.
+        """Create from FITS file.
 
         Parameters
         ----------
@@ -630,12 +619,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def from_table(cls, table):
-        """Create `EnergyOffsetBackgroundModel` from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-        """
+        """Create from `~astropy.table.Table`."""
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())

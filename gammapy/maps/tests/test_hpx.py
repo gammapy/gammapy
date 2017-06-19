@@ -1,38 +1,35 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import textwrap
-
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
-import astropy.units as u
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
-
 from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
+pytest.importorskip('healpy')
+
+
 def test_unravel_hpx_index():
-    npix = np.array([2,7])
-    assert_allclose(unravel_hpx_index(np.array([0,4]),npix),
+    npix = np.array([2, 7])
+    assert_allclose(unravel_hpx_index(np.array([0, 4]), npix),
                     (np.array([0, 2]), np.array([0, 1])))
-    npix = np.array([[2,7],[3,1]])
-    assert_allclose(unravel_hpx_index(np.array([0,3,10]), npix),
+    npix = np.array([[2, 7], [3, 1]])
+    assert_allclose(unravel_hpx_index(np.array([0, 3, 10]), npix),
                     (np.array([0, 1, 1]), np.array([0, 0, 1]),
                      np.array([0, 1, 0])))
 
 
 def test_ravel_hpx_index():
-    npix = np.array([2,7])
+    npix = np.array([2, 7])
     idx = (np.array([0, 2]), np.array([0, 1]))
-    assert_allclose(ravel_hpx_index(idx ,npix), np.array([0,4]))
-    npix = np.array([[2,7],[3,1]])
-    idx = (np.array([0, 1, 1]), np.array([0, 0, 1]), np.array([0, 1, 0]) )
-    assert_allclose(ravel_hpx_index(idx,npix), np.array([0,3,10]))
-                            
+    assert_allclose(ravel_hpx_index(idx, npix), np.array([0, 4]))
+    npix = np.array([[2, 7], [3, 1]])
+    idx = (np.array([0, 1, 1]), np.array([0, 0, 1]), np.array([0, 1, 0]))
+    assert_allclose(ravel_hpx_index(idx, npix), np.array([0, 3, 10]))
+
 
 def test_hpx_global_to_local():
-
     ax0 = np.linspace(0., 1., 3)
     ax1 = np.linspace(0., 1., 3)
 
@@ -40,14 +37,14 @@ def test_hpx_global_to_local():
     hpx = HPXGeom(16, False, 'GAL')
     assert_allclose(hpx[0], np.array([0]))
     assert_allclose(hpx[633], np.array([633]))
-    assert_allclose(hpx[0,633], np.array([0,633]))
-    assert_allclose(hpx[np.array([0,633])], np.array([0,633]))
+    assert_allclose(hpx[0, 633], np.array([0, 633]))
+    assert_allclose(hpx[np.array([0, 633])], np.array([0, 633]))
 
     # 3D All-sky
     hpx = HPXGeom(16, False, 'GAL', axes=[ax0])
-    assert_allclose(hpx[(np.array([177,177]),np.array([0,1]))],
-                    np.array([177,177+3072]))
-    
+    assert_allclose(hpx[(np.array([177, 177]), np.array([0, 1]))],
+                    np.array([177, 177 + 3072]))
+
     # 2D Partial-sky
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
     assert_allclose(hpx[0, 633, 706], np.array([-1, 0, 2]))
@@ -75,16 +72,15 @@ def test_hpx_global_to_local():
                     np.array([-1, 0, 2, 6]))
 
     # 4D Partial-sky w/ variable bin size
-    hpx = HPXGeom([[16,32],[32, 64]], False, 'GAL',
-                  region='DISK(110.,75.,2.)', axes=[ax0,ax1])
+    hpx = HPXGeom([[16, 32], [32, 64]], False, 'GAL',
+                  region='DISK(110.,75.,2.)', axes=[ax0, ax1])
     assert_allclose(hpx[3263], np.array([1]))
     assert_allclose(hpx[28356], np.array([11]))
-    assert_allclose(hpx[(np.array([46]),np.array([0]),np.array([0]))],
+    assert_allclose(hpx[(np.array([46]), np.array([0]), np.array([0]))],
                     np.array([0]))
 
 
 def test_hpx_coord_to_pix():
-
     lon = np.array([110.25, 114., 105.])
     lat = np.array([75.3, 75.3, 74.6])
     z0 = np.array([0.5, 1.5, 2.5])
@@ -129,38 +125,87 @@ def test_hpx_coord_to_pix():
 
 
 def test_hpx_nside_to_order():
-
     assert_allclose(nside_to_order(64), np.array([6]))
     assert_allclose(nside_to_order(np.array([10, 32, 42, 64, 128, 256])),
                     np.array([-1, 5, -1, 6, 7, 8]))
 
     order = np.linspace(1, 10, 10).astype(int)
-    nside = 2**order
+    nside = 2 ** order
     assert_allclose(nside_to_order(nside), order)
     assert_allclose(nside_to_order(nside).reshape((2, 5)),
                     order.reshape((2, 5)))
 
 
 def test_hpx_get_pixel_size_from_nside():
-
     assert_allclose(get_pixel_size_from_nside(np.array([1, 2, 4])),
                     np.array([32.0, 16.0, 8.0]))
 
 
 def test_hpx_get_region_size():
-
     assert_allclose(HPXGeom.get_region_size('DISK(110.,75.,2.)'), 2.0)
 
 
+def test_hpx_get_ref_dir():
+    refdir = HPXGeom.get_ref_dir('DISK(110.,75.,2.)', 'GAL')
+    assert_allclose(refdir.l.deg, 110.)
+    assert_allclose(refdir.b.deg, 75.)
+
+    refdir = HPXGeom.get_ref_dir(None, 'GAL')
+    assert_allclose(refdir.l.deg, 0.)
+    assert_allclose(refdir.b.deg, 0.)
+
+
 def test_hpx_make_wcs():
+    ax0 = np.linspace(0., 3., 4)
 
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
     wcs = hpx.make_wcs()
-    assert_allclose(wcs.wcs.wcs.crval, np.array([110.,   75.]))
+    assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
+
+    hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
+    wcs = hpx.make_wcs()
+    assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
+
+
+def test_hpx_get_coords():
+    ax0 = np.linspace(0., 3., 4)
+
+    # 2D all-sky
+    hpx = HPXGeom(16, False, 'GAL')
+    c = hpx.get_coords()
+    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
+
+    # 3D all-sky
+    hpx = HPXGeom(16, False, 'GAL', axes=[ax0])
+    c = hpx.get_coords()
+    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
+    assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
+
+    # 2D partial-sky
+    hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
+    c = hpx.get_coords()
+    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
+
+    # 3D partial-sky
+    hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
+    c = hpx.get_coords()
+    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
+    assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
+
+    # 3D partial-sky w/ variable bin size
+    hpx = HPXGeom([16, 32, 64], False, 'GAL',
+                  region='DISK(110.,75.,2.)', axes=[ax0])
+    c = hpx.get_coords()
+    assert_allclose(c[0][:3], np.array([117., 103.5, 112.5]))
+    assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
+    assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
 
 def test_make_hpx_to_wcs_mapping():
-
     ax0 = np.linspace(0., 1., 3)
     hpx = HPXGeom(16, False, 'GAL', region='DISK(110.,75.,2.)')
     # FIXME construct explicit WCS projection here
@@ -170,42 +215,44 @@ def test_make_hpx_to_wcs_mapping():
                     np.array([67, 46, 46, 46, 67, 46, 46, 28,
                               45, 45, 28, 28, 45, 45, 45, 28]))
     assert_allclose(hpx2wcs[1],
-                    np.array([0.5, 0.2, 0.2,  0.2,  0.5,  0.2,  0.2,  0.25,
-                              0.2, 0.2, 0.25, 0.25, 0.2,  0.2,  0.2,  0.25]))
+                    np.array([0.5, 0.2, 0.2, 0.2, 0.5, 0.2, 0.2, 0.25,
+                              0.2, 0.2, 0.25, 0.25, 0.2, 0.2, 0.2, 0.25]))
 
-    hpx = HPXGeom([8, 16], False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
+    hpx = HPXGeom([8, 16], False, 'GAL',
+                  region='DISK(110.,75.,2.)', axes=[ax0])
     hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
     assert_allclose(hpx2wcs[0],
-                    np.array([[15,  6,  6,  6, 15,  6,  6,  6,
-                               15, 15,  6,  6, 15, 15, 15,  6],
+                    np.array([[15, 6, 6, 6, 15, 6, 6, 6,
+                               15, 15, 6, 6, 15, 15, 15, 6],
                               [67, 46, 46, 46, 67, 46, 46, 28,
                                45, 45, 28, 28, 45, 45, 45, 28]]))
 
-def test_hpx_from_header():
 
-    pars = {'HPX_REG' : 'DISK(110.,75.,2.)', 'EXTNAME' : 'SKYMAP',
-            'NSIDE' : 2**6, 'ORDER' : 6, 'PIXTYPE' : 'HEALPIX',
-            'ORDERING' : 'RING', 'COORDSYS' : 'CEL',
-            'TTYPE1' : 'PIX', 'TFORM1' : 'K',
-            'TTYPE2' : 'CHANNEL1', 'TFORM2' : 'D',
-            'INDXSCHM' : 'EXPLICIT'}
+def test_hpx_from_header():
+    pars = {
+        'HPX_REG': 'DISK(110.,75.,2.)',
+        'EXTNAME': 'SKYMAP',
+        'NSIDE': 2 ** 6,
+        'ORDER': 6,
+        'PIXTYPE': 'HEALPIX',
+        'ORDERING': 'RING',
+        'COORDSYS': 'CEL',
+        'TTYPE1': 'PIX',
+        'TFORM1': 'K',
+        'TTYPE2': 'CHANNEL1',
+        'TFORM2': 'D',
+        'INDXSCHM': 'EXPLICIT',
+    }
     header = fits.Header()
     header.update(pars)
     hpx = HPXGeom.from_header(header)
 
-    assert(hpx.coordsys == pars['COORDSYS'])
-    assert(hpx.nest == False)
-    assert_allclose(hpx.nside,np.array([64]))
+    assert hpx.coordsys == pars['COORDSYS']
+    assert hpx.nest is False
+    assert_allclose(hpx.nside, np.array([64]))
 
 
 def test_hpx_make_header():
-
     hpx = HPXGeom(16, False, 'GAL')
     header = hpx.make_header()
-
-
-def test_hpx_make_header():
-
-    hpx = HPXGeom(16, False, 'GAL')
-    header = hpx.make_header()
-
+    # TODO: assert on something

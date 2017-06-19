@@ -9,7 +9,7 @@ from ....utils.testing import requires_dependency
 from ...source import Pulsar, SimplePulsar
 
 pulsar = Pulsar()
-time = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
+time = Quantity([1e2, 1e4, 1e6, 1e8], 'yr')
 
 
 def get_atnf_catalog_sample():
@@ -71,8 +71,7 @@ def test_Pulsar_energy_integrated():
     for t_ in time:
         energy = quad(lumi, 0, t_.cgs.value, epsrel=0.01)[0]
         energies.append(energy)
-    # The last value is quite inaccurate, because integration is over
-    # several decades
+    # The last value is quite inaccurate, because integration is over several decades
     assert_allclose(energies, pulsar.energy_integrated(time).value, rtol=0.2)
 
 

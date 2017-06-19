@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import sys
 from collections import OrderedDict
 import numpy as np
 from astropy.utils.console import ProgressBar
@@ -9,7 +8,8 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
-from astropy.table import Table, vstack
+from astropy.table import Table
+from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
@@ -29,6 +29,8 @@ log = logging.getLogger(__name__)
 
 class EventList(object):
     """Event list.
+
+    Data format specification: ref:`gadf:iact-events`
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
 
@@ -62,7 +64,6 @@ class EventList(object):
 
     Examples
     --------
-
     To load an example H.E.S.S. event list:
 
     >>> from gammapy.data import EventList
@@ -89,7 +90,9 @@ class EventList(object):
 
     @classmethod
     def read(cls, filename, **kwargs):
-        """Read :ref:`gadf:iact-events`
+        """Read from FITS file.
+
+        Format specification: :ref:`gadf:iact-events`
 
         Parameters
         ----------
@@ -105,9 +108,9 @@ class EventList(object):
 
     @classmethod
     def stack(cls, event_lists, **kwargs):
-        """Stack `~gammapy.data.EventList`
+        """Stack (concatenate) list of event lists.
 
-        calling `~astropy.table.vstack`
+        Calls `~astropy.table.vstack`.
 
         Parameters
         ----------
@@ -115,7 +118,7 @@ class EventList(object):
             list of `~gammapy.data.EventList` to stack
         """
         tables = [_.table for _ in event_lists]
-        stacked_table = vstack(tables, **kwargs)
+        stacked_table = vstack_tables(tables, **kwargs)
         return cls(stacked_table)
 
     def __str__(self):
@@ -136,7 +139,7 @@ class EventList(object):
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`)
+        """Event times (`~astropy.time.Time`).
 
         Notes
         -----
@@ -151,7 +154,7 @@ class EventList(object):
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
 
         TODO: the `radec` and `galactic` properties should be cached as table columns
         """
@@ -160,7 +163,7 @@ class EventList(object):
 
     @property
     def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)
+        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
 
         Note: uses the ``GLON`` and ``GLAT`` columns.
         If only ``RA`` and ``DEC`` are present use the explicit
@@ -189,12 +192,12 @@ class EventList(object):
     # Maybe the EventList or EventListDataset should have an `observation` object member?
     @property
     def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)"""
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
         return _earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`)
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
 
         The wall time, including dead-time.
         """
@@ -202,7 +205,7 @@ class EventList(object):
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`)
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
 
         The dead-time-corrected observation time.
 
@@ -213,7 +216,7 @@ class EventList(object):
 
     @property
     def observation_dead_time_fraction(self):
-        """Dead-time fraction (float)
+        """Dead-time fraction (float).
 
         Defined as dead-time over observation time.
 
@@ -229,7 +232,7 @@ class EventList(object):
 
     @property
     def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         time = self.time
         location = self.observatory_earth_location
         altaz_frame = AltAz(obstime=time, location=location)
@@ -239,14 +242,14 @@ class EventList(object):
 
     @property
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self.table.meta
         lon, lat = info['RA_PNT'], info['DEC_PNT']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     @property
     def offset(self):
-        """Event offset (`~astropy.coordinates.Angle`)"""
+        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
         position = self.radec
         center = self.pointing_radec
         offset = center.separation(position)
@@ -254,7 +257,7 @@ class EventList(object):
 
     @property
     def energy(self):
-        """Event energies (`~astropy.units.Quantity`)"""
+        """Event energies (`~astropy.units.Quantity`)."""
         return self.table['ENERGY'].quantity
 
     def select_row_subset(self, row_specifier):
@@ -331,7 +334,7 @@ class EventList(object):
         return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
-        """Select events in interval.
+        """Select events in time interval.
         """
         time = self.time
         mask = (time_interval[0] <= time)
@@ -359,16 +362,14 @@ class EventList(object):
         return self.select_row_subset(mask)
 
     def select_sky_ring(self, center, inner_radius, outer_radius):
-        """Select events in sky circle.
+        """Select events in ring region on the sky.
 
         Parameters
         ----------
         center : `~astropy.coordinates.SkyCoord`
             Sky ring center
-        inner_radius : `~astropy.coordinates.Angle`
-            Sky ring inner radius
-        outer_radius : `~astropy.coordinates.Angle`
-            Sky ring outer radius
+        inner_radius, outer_radius : `~astropy.coordinates.Angle`
+            Sky ring inner and outer radius
 
         Returns
         -------
@@ -392,7 +393,7 @@ class EventList(object):
         return self.__class__(selected)
 
     def select_circular_region(self, region):
-        """Select events in circular regions
+        """Select events in circular regions.
 
         TODO: Extend to support generic regions
 
@@ -406,14 +407,13 @@ class EventList(object):
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-
         if not isinstance(region, list):
             region = list([region])
         mask = self.filter_circular_region(region)
         return self.select_row_subset(mask)
 
     def filter_circular_region(self, region):
-        """Create selection mask for event in given circular regions
+        """Create selection mask for event in given circular regions.
 
         TODO: Extend to support generic regions
 
@@ -528,41 +528,32 @@ class EventList(object):
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
     def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
-        """
-        A plot showing counts as a function of energy.
+        """Plot counts as a function of energy."""
+        from ..spectrum import CountsSpectrum
 
-        Convert to a `~gammapy.spectrum.CountsSpectrum` internally
-        """
         if ebounds is None:
             emin = np.min(self['ENERGY'].quantity)
             emax = np.max(self['ENERGY'].quantity)
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
-        from ..spectrum import CountsSpectrum
         spec = CountsSpectrum(energy=ebounds)
         spec.fill(self)
         spec.plot(ax=ax, **kwargs)
         return ax
 
     def plot_offset_hist(self, ax=None):
-        """
-        A plot showing counts as a function of camera offset. Not implemented.
-        """
+        """Plot counts as a function of camera offset."""
         raise NotImplementedError
 
     def plot_energy_offset(self, ax=None):
-        """
-        A plot showing energy dependence as a function of  camera offset. Not implemented.
-        """
+        """Plot energy dependence as a function of camera offset."""
         raise NotImplementedError
 
     def plot_time(self, ax=None):
-        """
-        Plots an event rate time curve
+        """Plots an event rate time curve.
 
         Parameters
         ----------
-
         ax : `~matplotlib.axes.Axes` or None
             Axes
 
@@ -609,16 +600,13 @@ class EventList(object):
         return ax
 
     def plot_time_map(self, ax=None):
-        """
-        A time map showing for each event the time between the previous and following event.
+        """A time map showing for each event the time between the previous and following event.
 
-        The use and implementation are described here
-
+        The use and implementation are described here:
         https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
 
         Parameters
         ----------
-
         ax : `~matplotlib.axes.Axes` or None
             Axes
 
@@ -641,7 +629,6 @@ class EventList(object):
             events = ds.obs(obs_id=23523).events
             events.plot_time_map()
             plt.show()
-
         """
         import matplotlib.pyplot as plt
 
@@ -687,8 +674,7 @@ class EventListDataset(object):
 
     @classmethod
     def from_hdu_list(cls, hdu_list):
-        """Create `EventList` from a `~astropy.io.fits.HDUList`.
-        """
+        """Create `EventList` from a `~astropy.io.fits.HDUList`."""
         # TODO: This doesn't work because FITS / Table is not integrated.
         # Maybe the easiest solution for now it to write the hdu_list
         # to an in-memory buffer with StringIO and then read it
@@ -701,9 +687,7 @@ class EventListDataset(object):
 
     @classmethod
     def read(cls, filename):
-        """Read event list from FITS file.
-        """
-        # return EventList.from_hdu_list(fits.open(filename))
+        """Read event list from FITS file."""
         event_list = EventList.read(filename)
 
         try:
@@ -779,7 +763,6 @@ class EventListDataset(object):
             event_lists.append(event_list)
             gtis.append(gti)
 
-        from astropy.table import vstack as vstack_tables
         total_event_list = vstack_tables(event_lists, metadata_conflicts='silent')
         total_gti = vstack_tables(gtis, metadata_conflicts='silent')
 
@@ -859,8 +842,7 @@ class EventListDataset(object):
 class EventListDatasetChecker(object):
     """Event list dataset checker.
 
-    TODO: link to defining standard documents,
-     especially the CTA event list spec.
+    Data format specification: ref:`gadf:iact-events`
 
     Having such a checker is useful at the moment because
     the CTA data formats are quickly evolving and there's
@@ -938,7 +920,7 @@ class EventListDatasetChecker(object):
         return ok
 
     def _check_times_gtis(self):
-        """Check GTI info"""
+        """Check GTI info."""
         # TODO:
         # Check that required info is there
         for colname in ['START', 'STOP']:
@@ -1069,7 +1051,7 @@ class EventListDatasetChecker(object):
         return self._check_separation(separation, 'ALT / AZ', 'RA / DEC')
 
     def _check_coordinates_field_of_view(self):
-        """Check if DETX / DETY matches ALT / AZ"""
+        """Check if DETX / DETY matches ALT / AZ."""
         # TODO: implement
         return True
 
@@ -1079,7 +1061,7 @@ class EventListDatasetChecker(object):
         if max_separation > self.accuracy['angle']:
             # TODO: probably we need to print run number and / or other
             # things for this to be useful in a pipeline ...
-            fmt = '{0} not consistent with {1}. Max separation: {2}'
+            fmt = '{} not consistent with {}. Max separation: {}'
             args = [tag1, tag2, max_separation]
             self.logger.warning(fmt.format(*args))
             return False

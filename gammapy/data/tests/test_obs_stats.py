@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
@@ -43,8 +43,8 @@ def mask():
 def stats(target, mask):
     obs = get_obs(23523)
     bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
-                                             exclusion_mask=mask,
-                                             obs_list=obs)
+                                              exclusion_mask=mask,
+                                              obs_list=obs)
     bg = bge.process(obs)
     return ObservationStats.from_obs(obs, bg)
 
@@ -52,15 +52,15 @@ def stats(target, mask):
 @pytest.fixture(scope='session')
 def stats_stacked(target, mask):
     obs_list = get_obs_list()
-    obs_stats = list()
     bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs_list)
     bge.run()
-    for obs, bg in zip(obs_list, bge.result):
-        obs_stats.append(ObservationStats.from_obs(obs, bg))
 
-    return ObservationStats.stack(obs_stats)
+    return ObservationStats.stack([
+        ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)
+
+    ])
 
 
 # TODO: parametrize tests using single and stacked stats!

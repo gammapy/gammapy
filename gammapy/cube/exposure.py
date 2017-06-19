@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from .core import SkyCube
 
 __all__ = [
-    'make_exposure_cube'
+    'make_exposure_cube',
 ]
 
 

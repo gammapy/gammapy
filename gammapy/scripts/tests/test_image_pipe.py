@@ -1,8 +1,8 @@
-"""Example how to make an acceptance curve and background model image.
-"""
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.coordinates import SkyCoord, Angle
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_data, requires_dependency, pytest
+from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import Energy
 from ...data import DataStore
 from ...image import SkyImage
@@ -10,11 +10,10 @@ from ...background import OffDataBackgroundMaker
 from ...scripts import StackedObsImageMaker
 
 
-# Temp xfail for this: https://github.com/gammapy/gammapy/pull/899#issuecomment-281001655
-@pytest.mark.xfail
 @requires_dependency('reproject')
 @requires_data('gammapy-extra')
 def test_image_pipe(tmpdir):
+    """Example how to make an acceptance curve and background model image."""
     tmpdir = str(tmpdir)
     from subprocess import call
     outdir = tmpdir
@@ -74,6 +73,6 @@ def test_image_pipe(tmpdir):
     assert_allclose(images['exposure'].data.sum(), 54190569251987.68, atol=3)
     assert_allclose(images['significance'].lookup(center), 33.707901541600634, atol=3)
     assert_allclose(images['excess'].data.sum(), 346.8486363336217, atol=3)
-    assert_allclose(image_maker.table_bkg_scale[0]["bkg_scale"], 0.7495491394090461)
-    assert_allclose(image_maker.table_bkg_scale[1]["bkg_scale"], 0.725116527521305)
-    assert_allclose(image_maker.table_bkg_scale["N_counts"][0], 525.0583940319832)
+    assert_allclose(image_maker.table_bkg_scale[0]["bkg_scale"], 0.7502867380744898, rtol=0.03)
+    assert_allclose(image_maker.table_bkg_scale[1]["bkg_scale"], 0.7402389407935327, rtol=0.03)
+    assert_allclose(image_maker.table_bkg_scale["N_counts"][0], 525.0583940319832, rtol=0.03)

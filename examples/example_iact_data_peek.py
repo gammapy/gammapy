@@ -2,12 +2,6 @@
 """
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
-from gammapy.utils.mpl_style import gammapy_mpl_style
-
-# TODO: Update once this issue is resolved:
-# https://github.com/astropy/astropy/issues/4140
-# plt.style.use(gammapy_mpl_style)
-plt.rcParams.update(gammapy_mpl_style)
 
 fig, axes = plt.subplots(2, 4, figsize=(20, 8))
 axes = axes.flat

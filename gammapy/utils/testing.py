@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 
+import os
+import pytest
 from astropy.coordinates import Angle
-from astropy.tests.helper import pytest
-from astropy.utils import minversion
 from numpy.testing import assert_array_less, assert_allclose
 
 from ..data import DataManager
@@ -14,13 +13,9 @@ from ..datasets import gammapy_extra
 __all__ = [
     'requires_dependency',
     'requires_data',
-#    'SHERPA_LT_4_8',
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
 ]
-
-# Does not work with current sherpa version string ('ciao4.9+1.g1ebebb7')
-#SHERPA_LT_4_8 = not minversion('sherpa', '4.8.2+81')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()

@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """This module contains helper classes for the sherpa backend of
-`~gammapy.spectrum.SpectrumFit"""
-
+`~gammapy.spectrum.SpectrumFit.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from sherpa.models import ArithmeticModel, modelCacher1d, Parameter
 from sherpa.stats import Likelihood
-
 
 __all__ = [
     'SherpaModel',
@@ -27,18 +25,18 @@ class SherpaModel(ArithmeticModel):
 
     def __init__(self, fit):
         self.fit = fit
-        
+
         sherpa_name = 'sherpa_model'
         par_list = list()
         for par in self.fit.model.parameters.parameters:
             sherpa_par = par.to_sherpa(modelname='source')
-            #setattr(self, name, sherpa_par)
+            # setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
 
         if fit.stat != 'wstat' and self.fit.background_model is not None:
             for par in self.fit.background_model.parameters.parameters:
                 sherpa_par = par.to_sherpa(modelname='background')
-                #setattr(self, name, sherpa_par)
+                # setattr(self, name, sherpa_par)
                 par_list.append(sherpa_par)
 
         ArithmeticModel.__init__(self, sherpa_name, par_list)
@@ -52,7 +50,7 @@ class SherpaModel(ArithmeticModel):
         for idx, par in enumerate(p):
             # Special case background model
             if idx >= n_src:
-                self.fit.background_model.parameters.parameters[idx-n_src].value = par
+                self.fit.background_model.parameters.parameters[idx - n_src].value = par
             else:
                 self.fit.model.parameters.parameters[idx].value = par
 
@@ -84,7 +82,8 @@ class SherpaStat(Likelihood):
 
 
 class SherpaExponentialCutoffPowerLaw(ArithmeticModel):
-    """Exponential CutoffPowerLaw
+    """Exponential CutoffPowerLaw.
+
     Note that the cutoff is given in units '1/TeV' in order to bring the Sherpa
     optimizers into a valid range. All other parameters still have units 'keV'
     and 'cm2'.

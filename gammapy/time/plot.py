@@ -9,31 +9,6 @@ __all__ = [
 ]
 
 
-def plot_time_difference_distribution(time, ax=None):
-    """Plot event time difference distribution.
-
-    Parameters
-    ----------
-    time : `~astropy.time.Time`
-        Event times (must be sorted)
-    ax : `~matplotlib.axes.Axes` or None
-        Axes
-    Returns
-    -------
-    ax : `~matplotlib.axes.Axes`
-        Axes
-    """
-    import matplotlib.pyplot as plt
-
-    if ax is None:
-        ax = plt.gcf()
-
-    td = time[1:] - time[:-1]
-
-    # TODO: implement!
-    raise NotImplementedError
-
-
 def plot_fermi_3fgl_light_curve(source_name, time_start=None, time_end=None, ax=None):
     """Plot flux as a function of time for a fermi 3FGL object.
 

@@ -1,17 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import copy
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+import pytest
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import assert_quantity_allclose
-from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
-from ...data import DataStore, Target, ObservationList
-from ...datasets import gammapy_extra
-from ...image import SkyImage
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 from ...background.tests.test_reflected import bkg_estimator, obs_list
 
@@ -30,17 +24,16 @@ def extraction():
     # Restrict true energy range covered by HAP exporter
     e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
-    extraction = SpectrumExtraction(bkg_estimate=bkg_estimate(),
-                                    obs_list=obs_list(),
-                                    e_true=e_true
-                                    )
-    return extraction
+    return SpectrumExtraction(
+        bkg_estimate=bkg_estimate(),
+        obs_list=obs_list(),
+        e_true=e_true,
+    )
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
-
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
                                                   sigma=24.98,
@@ -79,6 +72,15 @@ class TestSpectrumExtraction:
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)
         assert_allclose(containment_actual, results['containment'], rtol=1e-3)
 
+    def test_alpha(self, obs_list, bkg_estimate):
+        bkg_estimate[0].a_off = 0
+        bkg_estimate[1].a_off = 2
+        extraction = SpectrumExtraction(obs_list=obs_list,
+                                        bkg_estimate=bkg_estimate,
+                                        max_alpha=0.2)
+        extraction.run()
+        assert len(extraction.observations) == 0
+
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
         extraction.run(outdir=tmpdir)
@@ -93,19 +95,18 @@ class TestSpectrumExtraction:
     @requires_dependency('sherpa')
     def test_sherpa(self, tmpdir, extraction):
         """Same as above for files to be used with sherpa"""
-        extraction.run(outdir=tmpdir, use_sherpa=True)
-
         import sherpa.astro.ui as sau
+
+        extraction.run(outdir=tmpdir, use_sherpa=True)
         sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
         arf = sau.get_arf()
+
         actual = arf._arf._specresp
         desired = extraction.observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
     def test_define_energy_threshold(self, extraction):
         # TODO: Find better API for this
-        extraction.define_energy_threshold(method_lo_threshold="area_max",
-                                           percent=10)
-        assert_quantity_allclose(extraction.observations[0].lo_threshold,
-                                 0.6812920690579611 * u.TeV,
-                                 rtol=1e-3)
+        extraction.define_energy_threshold(method_lo_threshold="area_max", percent=10)
+        actual = extraction.observations[0].lo_threshold
+        assert_quantity_allclose(actual, 0.6812920690579611 * u.TeV, rtol=1e-3)

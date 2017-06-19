@@ -1,10 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 import astropy.units as u
 import numpy as np
-from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
+from ...utils.testing import (
+    requires_dependency,
+    requires_data,
+)
+from ...utils.random import get_random_state
 from ...datasets import gammapy_extra
 from ...spectrum import (
     PHACountsSpectrum,
@@ -14,21 +19,9 @@ from ...spectrum import (
     SpectrumFitResult,
     models,
 )
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-)
-from ...utils.random import get_random_state
-
-try:
-    import sherpa
-
-    SHERPA_LT_4_9 = not '4.9' in sherpa.__version__
-except ImportError:
-    SHERPA_LT_4_9 = True
 
 
-@pytest.mark.skipif('SHERPA_LT_4_9')
+@requires_dependency('sherpa')
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
@@ -101,8 +94,6 @@ class TestFit:
         assert 'Background' in str(fit)
 
         fit.fit()
-        print('\nSOURCE\n {}'.format(fit.model))
-        print('\nBKG\n {}'.format(fit.background_model))
         assert_allclose(fit.result[0].model.parameters['index'].value,
                         1.996272386763962)
         assert_allclose(fit.background_model.parameters['index'].value,
@@ -166,15 +157,13 @@ class TestFit:
         # TODO: add assert, see issue 294
 
 
-@pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_LT_4_9')
+@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
 
     def setup(self):
-        self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
         self.pwl = models.PowerLaw(index=2 * u.Unit(''),
                                    amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -305,23 +294,20 @@ class TestSpectralFit:
         actual = read_result.model.evaluate_error(1 * u.TeV)
         assert_quantity_allclose(actual, desired)
 
+    def test_sherpa_fit(self, tmpdir):
+        # this is to make sure that the written PHA files work with sherpa
+        import sherpa.astro.ui as sau
+        from sherpa.models import PowLaw1D
 
-
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
-def test_sherpa_fit(tmpdir):
-    # this is to make sure that the written PHA files work with sherpa
-    import sherpa.astro.ui as sau
-    from sherpa.models import PowLaw1D
-
-    filename = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
-    sau.load_pha(filename)
-    sau.set_stat('wstat')
-    model = PowLaw1D('powlaw1d.default')
-    model.ref = 1e9
-    model.ampl = 1
-    model.gamma = 2
-    sau.set_model(model * 1e-20)
-    sau.fit()
-    assert_allclose(model.pars[0].val, 2.0033101181778026)
-    assert_allclose(model.pars[2].val, 2.2991681244938498)
+        self.obs_list.write(tmpdir, use_sherpa=True)
+        filename = tmpdir / 'pha_obs23523.fits'
+        sau.load_pha(str(filename))
+        sau.set_stat('wstat')
+        model = PowLaw1D('powlaw1d.default')
+        model.ref = 1e9
+        model.ampl = 1
+        model.gamma = 2
+        sau.set_model(model * 1e-20)
+        sau.fit()
+        assert_allclose(model.pars[0].val, 2.0881699260935838)
+        assert_allclose(model.pars[2].val, 1.6234222129479836)

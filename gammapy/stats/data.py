@@ -98,7 +98,7 @@ def make_stats(signal, background, area_factor, weight_method="background",
     elif weight_method == "n_off":
         weight = n_off
     else:
-        raise ValueError("Invalid weight_method: {0}".format(weight_method))
+        raise ValueError("Invalid weight_method: {}".format(weight_method))
 
     # Compute exposure
     a_on = weight
@@ -139,7 +139,7 @@ def combine_stats(stats_1, stats_2, weight_method="none"):
         weight_1 = stats_1.n_off
         weight_2 = stats_2.n_off
     else:
-        raise ValueError("Invalid weight_method: {0}".format(weight_method))
+        raise ValueError("Invalid weight_method: {}".format(weight_method))
 
     # Compute exposure
     a_on = weight_1 * stats_1.a_on + weight_2 * stats_2.a_on

@@ -10,7 +10,7 @@ __all__ = [
 
 def standardise_unit(unit):
     """Standardise unit.
-    
+
     Changes applied by this function:
 
     * Drop "photon" == "ph" from the unit

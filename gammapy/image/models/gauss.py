@@ -292,7 +292,7 @@ class MultiGauss2D(object):
         # So instead I'll find a theta_max myself so that theta
         # is in the interval [0, theta_max] and then use good ol brentq
         if not containment_fraction < self.integral:
-            raise ValueError('containment_fraction = {0} not possible for integral = {1}'
+            raise ValueError('containment_fraction = {} not possible for integral = {}'
                              ''.format(containment_fraction, self.integral))
         from scipy.optimize import brentq
 
@@ -401,7 +401,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     Examples
     --------
-
     A simple example for an image consisting of three Gaussians
     with zero covariance matrix:
 

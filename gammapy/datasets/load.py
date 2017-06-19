@@ -40,7 +40,7 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     if extra_info:
         out = dict()
         for name in ['counts', 'model', 'source', 'background', 'exposure']:
-            filename = str(path / '{0}.fits.gz'.format(name))
+            filename = str(path / '{}.fits.gz'.format(name))
             if return_filenames:
                 out[name] = filename
             else:
@@ -80,7 +80,7 @@ def load_tev_spectrum(source_name):
     if source_name == 'crab':
         filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_hess_spec.txt')
     else:
-        raise ValueError('Data not available for source: {0}'.format(source_name))
+        raise ValueError('Data not available for source: {}'.format(source_name))
 
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_lo', 'flux_hi'])
@@ -88,7 +88,7 @@ def load_tev_spectrum(source_name):
     return table
 
 
-def load_crab_flux_points(component='both', with_fermi_flare=False):
+def load_crab_flux_points(component='both'):
     """Load published Crab pulsar and nebula flux points.
 
     Besides the usual flux point columns, this table contains
@@ -127,11 +127,7 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     Aleksic et al. ApJ 742 2011, Aliu et al. Science 334 2011,
     Aleksic et al. Astron. Astrophys. 540 2012
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
-
     """
-    if with_fermi_flare:
-        raise NotImplementedError
-
     filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
 
     with warnings.catch_warnings():
@@ -147,7 +143,7 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     elif component == 'both':
         pass
     else:
-        raise ValueError('Invalid component: {0}'.format(component))
+        raise ValueError('Invalid component: {}'.format(component))
 
     return table
 
@@ -174,7 +170,7 @@ def load_diffuse_gamma_spectrum(reference):
     elif reference == 'Fermi2':
         filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi2.txt')
     else:
-        raise ValueError('Data not available for reference: {0}'.format(reference))
+        raise ValueError('Data not available for reference: {}'.format(reference))
 
     return _read_diffuse_gamma_spectrum_fermi(filename)
 
@@ -222,7 +218,7 @@ def load_electron_spectrum(reference):
         filename = str(dir / 'electron_spectrum_fermi.txt')
         return _read_electron_spectrum_fermi(filename)
     else:
-        raise ValueError('Data not available for reference: {0}'.format(reference))
+        raise ValueError('Data not available for reference: {}'.format(reference))
 
 
 def _read_electron_spectrum_hess(filename):

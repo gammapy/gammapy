@@ -4,13 +4,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import warnings
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.utils import lazyproperty
-
 from .core import gammapy_extra
 from ..data import EventList
 from ..cube import SkyCube
@@ -61,7 +59,7 @@ class FermiGalacticCenter(object):
     def filenames():
         """Dictionary of available file names."""
         base_dir = gammapy_extra.dir / 'test_datasets/unbundled/fermi'
-        result = dict()
+        result = OrderedDict()
         result['psf'] = str(base_dir / 'psf.fits')
         result['counts'] = str(base_dir / 'fermi_counts.fits.gz')
         result['diffuse_model'] = str(base_dir / 'gll_iem_v02_cutout.fits')
@@ -108,10 +106,9 @@ class FermiVelaRegion(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
-
         base_dir = gammapy_extra.dir / 'datasets/vela_region'
 
-        result = dict()
+        result = OrderedDict()
         result['counts_cube'] = str(base_dir / 'counts_vela.fits')
         result['exposure_cube'] = str(base_dir / 'exposure_vela.fits')
         result['background_image'] = str(base_dir / 'background_vela.fits')
@@ -224,7 +221,7 @@ def load_lat_psf_performance(performance_file):
     filename = gammapy_extra.filename('test_datasets/unbundled/fermi//fermi_irf_data.fits')
     hdus = fits.open(filename)
 
-    perf_files = dict()
+    perf_files = OrderedDict()
     perf_files['P7REP_SOURCE_V15_68'] = hdus[1]
     perf_files['P7REP_SOURCE_V15_95'] = hdus[4]
     perf_files['P7SOURCEV6_68'] = hdus[3]
@@ -241,8 +238,7 @@ def load_lat_psf_performance(performance_file):
 
 
 class FermiLATDataset(object):
-    """
-    Fermi dataset container class, with lazy data access.
+    """Fermi dataset container class, with lazy data access.
 
     Parameters
     ----------
@@ -266,9 +262,7 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def filenames(self):
-        """
-        Absolut path filenames.
-        """
+        """Absolute path filenames."""
         filenames = OrderedDict()
         filenames_config = self.config['filenames']
 
@@ -281,8 +275,7 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def exposure(self):
-        """
-        Exposure cube.
+        """Exposure cube.
 
         Returns
         -------
@@ -303,13 +296,12 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def counts(self):
-        """
-        Counts cube.
+        """Counts cube.
 
         Returns
         -------
         cube : `~gammapy.cube.SkyCube` or `~gammapy.cube.SkyCubeHealpix`
-            Counts cube.
+            Counts cube
         """
         try:
             filename = self.filenames['counts']
@@ -327,14 +319,7 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def background(self):
-        """
-        Predicted total background counts cube.
-
-        Returns
-        -------
-        cube : `~gammapy.cube.SkyCube`
-            Predicted total background counts cube.
-        """
+        """Predicted total background counts (`~gammapy.cube.SkyCube`)."""
         try:
             filename = self.filenames['background']
         except KeyError:
@@ -346,14 +331,7 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def galactic_diffuse(self):
-        """
-        Diffuse galactic background model flux cube.
-
-        Returns
-        -------
-        cube : `~gammapy.cube.SkyCube`
-            Diffuse galactic background cube.
-        """
+        """Diffuse galactic model (`~gammapy.cube.SkyCube`)."""
         try:
             filename = self.filenames['galdiff']
             cube = SkyCube.read(filename, format='fermi-background')
@@ -365,12 +343,11 @@ class FermiLATDataset(object):
 
     @lazyproperty
     def isotropic_diffuse(self):
-        """
-        Isotropic diffuse background model table.
+        """Isotropic diffuse background model table.
 
         Returns
         -------
-        spectral_model : `~gammapy.spectrum.models.TabelModel`
+        spectral_model : `~gammapy.spectrum.models.TableModel`
             Isotropic diffuse background model.
         """
         table = self._read_iso_diffuse_table()
@@ -396,44 +373,25 @@ class FermiLATDataset(object):
 
     @property
     def events(self):
-        """
-        Event list.
-
-        Returns
-        -------
-        events : `~gammapy.data.EventList`
-            Event list.
-        """
+        """Event list (`~gammapy.data.EventList`)."""
         return EventList.read(self.filenames['events'])
 
     @property
     def psf(self):
-        """
-        PSF info.
-
-        Returns
-        -------
-        psf : `~gammapy.irf.EnergyDependentTablePSF`
-            PSF model.
-        """
+        """PSF (`~gammapy.irf.EnergyDependentTablePSF`)."""
         return EnergyDependentTablePSF.read(self.filenames['psf'])
 
     def info(self):
-        """
-        Print Summary info about the dataset.
-        """
+        """Print summary info about the dataset."""
         print(self)
 
     def __str__(self):
-        """
-        Summary info string about the dataset.
-        """
-        import yaml
-        info = 'Fermi-LAT {name} dataset'.format(name=self.name)
-        info += '\n' + len(info) * '=' + '\n'
-
-        info += 'Filenames:\n'
+        """Summary info string about the dataset."""
+        info = self.__class__.__name__
+        info += '\n\n\tname: {name} \n\n'.format(name=self.name)
+        info += 'Filenames:\n\n'
         for name in sorted(self.config['filenames']):
             filename = self.config['filenames'][name]
-            info += "  {name:8s}: {filename}\n".format(name=name, filename=filename)
+            info += "\t{name:8s} : {filename}\n".format(name=name, filename=filename)
+
         return info

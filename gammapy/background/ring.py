@@ -9,7 +9,6 @@ import astropy.units as u
 from ..image import SkyImageList, SkyImage
 from ..image.utils import scale_cube
 
-
 __all__ = [
     'AdaptiveRingBackgroundEstimator',
     'RingBackgroundEstimator',
@@ -20,10 +19,9 @@ __all__ = [
 
 
 class AdaptiveRingBackgroundEstimator(object):
-    """
-    Adaptive ring background algorithm.
+    """Adaptive ring background algorithm.
 
-    This alogrithm extends the standard `RingBackground` method by adpating the
+    This algorithm extends the standard `RingBackground` method by adapting the
     size of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
     where the area to estimate the background from is limited.
 
@@ -66,12 +64,10 @@ class AdaptiveRingBackgroundEstimator(object):
     See Also
     --------
     RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
-
     """
 
     def __init__(self, r_in, r_out_max, width, stepsize=0.02 * u.deg,
                  threshold_alpha=0.1, theta=0.22 * u.deg, method='fixed_width'):
-
         # input validation
         if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
@@ -81,8 +77,7 @@ class AdaptiveRingBackgroundEstimator(object):
                                       method=method, theta=theta)
 
     def kernels(self, image):
-        """
-        Ring kernels according to the specified method.
+        """Ring kernels according to the specified method.
 
         Parameters
         ----------
@@ -118,11 +113,9 @@ class AdaptiveRingBackgroundEstimator(object):
         return kernels
 
     def _alpha_approx_cube(self, cubes):
-        """
-        Compute alpha as on_exposure / off_exposure.
+        """Compute alpha as on_exposure / off_exposure.
 
-        Where off_exposure < 0,
-        alpha is set to infinity.
+        Where off_exposure < 0, alpha is set to infinity.
         """
         exposure_on = cubes['exposure_on']
         exposure_off = cubes['exposure_off']
@@ -131,19 +124,17 @@ class AdaptiveRingBackgroundEstimator(object):
         return alpha_approx
 
     def _exposure_off_cube(self, images, kernels):
-        """
-        Compute off exposure cube.
+        """Compute off exposure cube.
 
         The on exposure is convolved with different
         ring kernels and stacking the data along the third dimension.
         """
-        exposure  = images['exposure_on'].data
+        exposure = images['exposure_on'].data
         exclusion = images['exclusion'].data
         return scale_cube(exposure * exclusion, kernels)
 
     def _exposure_on_cube(self, images, kernels):
-        """
-        Compute on exposure cube.
+        """Compute on exposure cube.
 
         Calculated by convolving the on exposure with a tophat
         of radius theta, and stacking all images along the third dimension.
@@ -161,8 +152,7 @@ class AdaptiveRingBackgroundEstimator(object):
         return exposure_on_cube
 
     def _off_cube(self, images, kernels):
-        """
-        Compute off cube.
+        """Compute off cube.
 
         Calculated by convolving the raw counts with different ring kernels
         and stacking the data along the third dimension.
@@ -172,8 +162,7 @@ class AdaptiveRingBackgroundEstimator(object):
         return scale_cube(counts * exclusion, kernels)
 
     def _reduce_cubes(self, cubes):
-        """
-        Compute off and off exposure map.
+        """Compute off and off exposure map.
 
         Calulated by reducing the cubes. The data is
         iterated along the third axis (i.e. increasing ring sizes), the value
@@ -197,8 +186,7 @@ class AdaptiveRingBackgroundEstimator(object):
         return exposure_off, off
 
     def run(self, images):
-        """
-        Run adaptive ring background algorithm.
+        """Run adaptive ring background algorithm.
 
         Parameters
         ----------
@@ -214,7 +202,7 @@ class AdaptiveRingBackgroundEstimator(object):
         images.check_required(required)
         wcs = images['counts'].wcs.copy()
 
-        cubes = {}
+        cubes = OrderedDict()
 
         kernels = self.kernels(images['counts'])
 
@@ -273,15 +261,13 @@ class RingBackgroundEstimator(object):
     See Also
     --------
     gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
-
     """
 
     def __init__(self, r_in, width):
         self.parameters = dict(r_in=r_in, width=width)
 
     def kernel(self, image):
-        """
-        Ring kernel.
+        """Ring kernel.
 
         Parameters
         ----------
@@ -304,8 +290,7 @@ class RingBackgroundEstimator(object):
         return ring
 
     def run(self, images):
-        """
-        Run ring background algorithm.
+        """Run ring background algorithm.
 
         Required sky images: {required}
 

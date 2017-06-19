@@ -6,26 +6,28 @@ import numpy as np
 from ..image import SkyImage, SkyImageList
 from ..stats import significance, significance_on_off
 
-__all__ = ['compute_lima_image', 'compute_lima_on_off_image']
+__all__ = [
+    'compute_lima_image',
+    'compute_lima_on_off_image',
+]
 
 log = logging.getLogger(__name__)
 
 
 def compute_lima_image(counts, background, kernel, exposure=None):
-    """
-    Compute Li&Ma significance and flux images for known background.
+    """Compute Li & Ma significance and flux images for known background.
 
     If exposure is given the corresponding flux image is computed and returned.
 
     Parameters
     ----------
-    counts : `~numpy.ndarray`
+    counts : `~gammapy.image.SkyImage`
         Counts image
-    background : `~numpy.ndarray`
+    background : `~gammapy.image.SkyImage`
         Background image
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~numpy.ndarray`
+    exposure : `~gammapy.image.SkyImage`
         Exposure image
 
     Returns
@@ -67,22 +69,21 @@ def compute_lima_image(counts, background, kernel, exposure=None):
 
 
 def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
-    """
-    Compute Li&Ma significance and flux images for on-off observations.
+    """Compute Li & Ma significance and flux images for on-off observations.
 
     Parameters
     ----------
-    n_on : `~numpy.ndarray`
+    n_on : `~gammapy.image.SkyImage`
         Counts image
-    n_off : `~numpy.ndarray`
+    n_off : `~gammapy.image.SkyImage`
         Off counts image
-    a_on : `~numpy.ndarray`
+    a_on : `~gammapy.image.SkyImage`
         Relative background efficiency in the on region
-    a_off : `~numpy.ndarray`
+    a_off : `~gammapy.image.SkyImage`
         Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~numpy.ndarray`
+    exposure : `~gammapy.image.SkyImage`
         Exposure image
 
     Returns

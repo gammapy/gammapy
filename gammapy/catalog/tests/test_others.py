@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
+import pytest
 from ...utils.testing import requires_data
 from ... import datasets
 
@@ -24,15 +24,4 @@ def test_load_catalog_green(tmpdir):
 
     # Check if catalog can be serialised to FITS
     filename = str(tmpdir / 'green_test.fits')
-    catalog.write(filename)
-
-
-@pytest.mark.xfail
-@requires_data('gammapy-extra')
-def test_load_catalog_tevcat(tmpdir):
-    catalog = datasets.load_catalog_tevcat()
-    assert len(catalog) == 173
-
-    # Check if catalog can be serialised to FITS
-    filename = str(tmpdir / 'tevcat_test.fits')
     catalog.write(filename)

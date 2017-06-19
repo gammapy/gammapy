@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 import astropy.units as u
 from ..spectrum import SpectrumObservation
 from ..spectrum.utils import CountsPredictor
 from ..spectrum.core import PHACountsSpectrum
 from ..utils.random import get_random_state
-
-from ..spectrum.models import AbsorbedSpectralModel, TableModel
 
 __all__ = [
     'Target',
@@ -24,37 +22,12 @@ class Target(object):
         Name of the source
     model : `~gammapy.spectrum.models.SpectralModel`
         Model of the source
-    redshift : `~astropy.units.Quantity`
-        Redshift of the source
-    ebl_model_name: `str`
-        EBL model (franceschini, dominguez, finke or None)
     """
 
     def __init__(self, name=None,
-                 model=None,
-                 redshift=None,
-                 ebl_model_name=None):
+                 model=None):
         self.name = name
         self.model = model
-        self.redshift = redshift
-        self.ebl_model_name = ebl_model_name
-        self.abs_model = None
-        filename = None
-        if ebl_model_name in 'franceschini':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
-        elif ebl_model_name in 'dominguez':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz'
-        elif ebl_model_name in 'finke':
-            filename = '$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz'
-        else:
-            pass
-
-        if redshift is not None:
-            absorption = TableModel.read_xspec_model(filename, redshift)
-            self.abs_model = AbsorbedSpectralModel(spectral_model=model,
-                                                   table_model=absorption)
-        else:
-            self.abs_model = model
 
     def __str__(self):
         """Target report (`str`)."""
@@ -62,7 +35,6 @@ class Target(object):
         ss += 'Name={}\n'.format(self.name)
         for par in self.model.parameters.parameters:
             ss += '{}={} {}\n'.format(par.name, str(par.value), par.unit)
-        ss += 'Redshift={}'.format(self.redshift)
         return ss
 
     def from_fermi_lat_catalogue(name):
@@ -116,7 +88,7 @@ class CTAObservationSimulation(object):
     """
 
     @staticmethod
-    def simulate_obs(perf, target, obs_param):
+    def simulate_obs(perf, target, obs_param, obs_id=0):
         """
         Simulate observation with given parameters
 
@@ -128,13 +100,15 @@ class CTAObservationSimulation(object):
             Source
         obs_param : `~gammapy.scripts.ObservationParameters`
             Observation parameters
+        obs_id : `int`, optional
+            Observation Id
         """
         livetime = obs_param.livetime
         alpha = obs_param.alpha.value
         emin = obs_param.emin
         emax = obs_param.emax
 
-        model = target.abs_model
+        model = target.model
 
         # Compute expected counts
         reco_energy = perf.bkg.energy
@@ -145,6 +119,10 @@ class CTAObservationSimulation(object):
                                            edisp=perf.rmf)
         predicted_counts.run()
         npred = predicted_counts.npred
+        # set negative values to zero (interpolation issue)
+        idx = np.where(npred.data.data < 0.)
+        npred.data.data[idx] = 0
+
         # Randomise counts
         rand = get_random_state('random-seed')
         on_counts = rand.poisson(npred.data.data.value)  # excess
@@ -154,26 +132,27 @@ class CTAObservationSimulation(object):
 
         on_counts += bkg_counts  # evts in ON region
 
-        counts_kwargs = dict(energy_lo=reco_energy.lo,
-                             energy_hi=reco_energy.hi,
-                             livetime=livetime,
-                             creator='gammapy')
-        on_vector = PHACountsSpectrum(data=on_counts,
-                                      backscal=1,
-                                      **counts_kwargs)
+        on_vector = PHACountsSpectrum(
+            data=on_counts,
+            backscal=1,
+            energy_lo=reco_energy.lo,
+            energy_hi=reco_energy.hi,
+        )
 
+        on_vector.livetime = livetime
         off_vector = PHACountsSpectrum(energy_lo=reco_energy.lo,
                                        energy_hi=reco_energy.hi,
                                        data=off_counts,
-                                       livetime=livetime,
                                        backscal=1. / alpha,
                                        is_bkg=True,
-                                       creator='gammapy')
+                                       )
+        off_vector.livetime = livetime
 
         obs = SpectrumObservation(on_vector=on_vector,
                                   off_vector=off_vector,
                                   aeff=perf.aeff,
                                   edisp=perf.rmf)
+        obs.obs_id = obs_id
 
         # Set threshold according to the closest energy reco from bkg bins
         idx_min = np.abs(reco_energy.lo - emin).argmin()
@@ -191,8 +170,8 @@ class CTAObservationSimulation(object):
 
         # Spectrum plot
         energy_range = [0.01 * u.TeV, 100 * u.TeV]
-        target.abs_model.plot(ax=ax1, energy_range=energy_range,
-                              label='Model')
+        target.model.plot(ax=ax1, energy_range=energy_range,
+                          label='Model')
         plt.text(0.55, 0.65, target.__str__(),
                  style='italic', transform=ax1.transAxes, fontsize=7,
                  bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10})

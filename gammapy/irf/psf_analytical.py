@@ -226,9 +226,9 @@ class EnergyDependentMultiGaussPSF(object):
                     psf = self.psf_at_energy_and_theta(energy[idx_energy], theta[idx_theta])
                     radius[idx_theta, idx_energy] = psf.containment_radius(fraction)
                 except ValueError:
-                    log.debug("Computing containment failed for E = {0:.2f}"
-                              " and Theta={1:.2f}".format(energy[idx_energy], theta[idx_theta]))
-                    log.debug("Sigmas: {0} Norms: {1}".format(psf.sigmas, psf.norms))
+                    log.debug("Computing containment failed for E = {:.2f}"
+                              " and Theta={:.2f}".format(energy[idx_energy], theta[idx_theta]))
+                    log.debug("Sigmas: {} Norms: {}".format(psf.sigmas, psf.norms))
                     radius[idx_theta, idx_energy] = np.nan
 
         return Angle(radius, 'deg')

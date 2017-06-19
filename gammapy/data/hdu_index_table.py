@@ -56,8 +56,7 @@ class HDULocation(object):
         return path
 
     def exists(self):
-        """Check if HDU exists.
-        """
+        """Check if HDU exists."""
         raise NotImplementedError
 
     def get_hdu(self):

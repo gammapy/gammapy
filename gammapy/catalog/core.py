@@ -4,11 +4,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import sys
+from copy import deepcopy
 from pprint import pprint
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from ..utils.array import _is_int
+from .utils import skycoord_from_table
 
 __all__ = [
     'SourceCatalog',
@@ -33,8 +35,10 @@ class SourceCatalogObject(object):
     _source_name_key = 'Source_Name'
     _source_index_key = 'catalog_row_index'
 
-    def __init__(self, data):
+    def __init__(self, data, data_extended=None):
         self.data = data
+        if data_extended:
+            self.data_extended = data_extended
 
     @property
     def name(self):
@@ -64,6 +68,13 @@ class SourceCatalogObject(object):
         Print summary info about the object.
         """
         print(self)
+
+    @property
+    def position(self):
+        """
+        `~astropy.coordinates.SkyCoord`
+        """
+        return skycoord_from_table(self.data)
 
 
 class SourceCatalog(object):
@@ -130,7 +141,7 @@ class SourceCatalog(object):
         for alias_column in self._source_name_alias:
             possible_names += row[alias_column].split(',')
 
-        if not name in possible_names:
+        if name not in possible_names:
             self.__dict__.pop('_name_to_index_cache')
             index = self._name_to_index_cache[name]
         return index
@@ -189,11 +200,27 @@ class SourceCatalog(object):
         source : `SourceCatalogObject`
             Source object
         """
-        data = self._make_source_dict(index)
-        source = self.source_object_class(data)
+        data = self._make_source_dict(self.table, index)
+        data[self._source_index_key] = index
+
+        try:
+            name_extended = data['Extended_Source_Name'].strip()
+            idx = self._lookup_extended_source_idx[name_extended]
+            data_extended = self._make_source_dict(self.extended_sources_table, idx)
+        except KeyError:
+            data_extended = None
+
+        source = self.source_object_class(data, data_extended)
         return source
 
-    def _make_source_dict(self, idx):
+    @lazyproperty
+    def _lookup_extended_source_idx(self):
+        names = [_.strip() for _ in self.extended_sources_table['Source_Name']]
+        idx = range(len(names))
+        return dict(zip(names, idx))
+
+    @staticmethod
+    def _make_source_dict(table, idx):
         """Make one source data dict.
 
         Parameters
@@ -206,10 +233,9 @@ class SourceCatalog(object):
         data : `~collections.OrderedDict`
             Source data
         """
-
         data = OrderedDict()
-        for colname in self.table.colnames:
-            col = self.table[colname]
+        for colname in table.colnames:
+            col = table[colname]
 
             if isinstance(col, Quantity):
                 val = col[idx]
@@ -219,20 +245,44 @@ class SourceCatalog(object):
                     val = Quantity(val, col.unit)
 
             data[colname] = val
-
-        data[self._source_index_key] = idx
         return data
 
     def info(self):
-        """
-        Print info string.
-        """
+        """Print info string."""
         print(self)
 
     def __str__(self):
-        """
-        Info string
-        """
+        """Info string."""
         ss = self.description
         ss += ' with {} objects.'.format(len(self.table))
         return ss
+
+    @property
+    def positions(self):
+        """
+        `~astropy.coordinates.SkyCoord`
+        """
+        return skycoord_from_table(self.table)
+
+    def select_image_region(self, image):
+        """
+        Select all source within an image
+
+        Parameters
+        ----------
+        image : `~gammapy.image.SkyImage`
+            Sky image
+
+        Returns
+        -------
+        catalog : `SourceCatalog`
+            Source catalog selection.
+        """
+        catalog = self.copy()
+        selection = image.contains(self.positions)
+        catalog.table = catalog.table[selection]
+        return catalog
+
+    def copy(self):
+        """Copy catalog"""
+        return deepcopy(self)

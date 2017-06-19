@@ -10,4 +10,4 @@ def test_cov_to_corr():
     x = np.array([[0, 2], [1, 1], [2, 0]]).T
     covariance = np.cov(x)
     correlation = cov_to_corr(covariance)
-    assert_allclose(correlation, np.corrcoef(x), rtol=1E-12)
+    assert_allclose(correlation, np.corrcoef(x), rtol=1e-12)

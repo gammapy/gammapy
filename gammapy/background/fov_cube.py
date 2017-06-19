@@ -132,8 +132,6 @@ class FOVCube(object):
                                   len(coordx_edges) - 1))
         else:
             self.data = data
-
-
             # TODO: make this consistent with have the 2d BCK class works
             # self.data = 'TODO'
 
@@ -160,7 +158,7 @@ class FOVCube(object):
         """
         scheme_dict = dict()
 
-        if scheme == None or scheme == '':
+        if scheme is None or scheme == '':
             # default values
             scheme_dict['hdu_fits_name'] = 'DATA'
             scheme_dict['coordx_fits_name'] = 'X'
@@ -646,7 +644,7 @@ class FOVCube(object):
 
         fig.set_size_inches(8., 8., forward=True)
 
-        if not 'cmap' in style_kwargs:
+        if 'cmap' not in style_kwargs:
             style_kwargs['cmap'] = 'afmhot'
 
         image = ax.imshow(data.value,
@@ -824,19 +822,6 @@ class FOVCube(object):
         bin_volume = delta_energy * (delta_y * delta_x).to('sr')
 
         return bin_volume
-
-    # TODO: remove?
-    # def set_zero_level(self):
-    #     """Setting level 0 of the cube to something very small.
-    #
-    #     Also for NaN values: they may appear in the 1st few E bins,
-    #     where no stat is present: (0 events/ 0 livetime = NaN)
-    #     """
-    #     zero_level = Quantity(1.e-10, self.data.unit)
-    #     zero_level_mask = self.data < zero_level
-    #     self.data[zero_level_mask] = zero_level
-    #     nan_mask = np.isnan(self.data)
-    #     self.data[nan_mask] = zero_level
 
     def fill_events(self, event_lists):
         """Fill events histogram.

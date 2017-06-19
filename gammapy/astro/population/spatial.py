@@ -33,15 +33,13 @@ __all__ = [
     'ZMIN', 'ZMAX',
 ]
 
-
 # Simulation range used for random number drawing
 RMIN, RMAX = Quantity([0, 20], 'kpc')
 ZMIN, ZMAX = Quantity([-0.5, 0.5], 'kpc')
 
 
 class Paczynski1990(Fittable1DModel):
-    """
-    Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
+    """Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
 
     .. math ::
         f(r) = A r_{exp}^{-2} \\exp \\left(-\\frac{r}{r_{exp}} \\right)
@@ -75,9 +73,7 @@ class Paczynski1990(Fittable1DModel):
 
 
 class CaseBattacharya1998(Fittable1DModel):
-    """
-    Radial distribution of the surface density of supernova remnants in the
-    galaxy - Case & Battacharya 1998.
+    """Radial distribution of the surface density of supernova remnants in the galaxy - Case & Battacharya 1998.
 
     .. math ::
         f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ \\alpha \\exp
@@ -117,8 +113,7 @@ class CaseBattacharya1998(Fittable1DModel):
 
 
 class YusifovKucuk2004(Fittable1DModel):
-    """
-    Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
+    """Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
 
     .. math ::
         f(r) = A \\left ( \\frac{r + r_1}{r_{\\odot} + r_1} \\right )^a \\exp
@@ -163,8 +158,7 @@ class YusifovKucuk2004(Fittable1DModel):
 
 
 class YusifovKucuk2004B(Fittable1DModel):
-    """
-    Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
+    """Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
 
     .. math ::
         f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ a
@@ -204,8 +198,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 
 
 class FaucherKaspi2006(Fittable1DModel):
-    """
-    Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
+    """Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
 
     .. math ::
         f(r) = A \\frac{1}{\\sqrt{2 \pi} \sigma} \\exp
@@ -245,8 +238,7 @@ class FaucherKaspi2006(Fittable1DModel):
 
 
 class Lorimer2006(Fittable1DModel):
-    """
-    Radial distribution of the suface density of pulsars in the galaxy - Lorimer 2006.
+    """Radial distribution of the surface density of pulsars in the galaxy - Lorimer 2006.
 
     .. math ::
         f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ B \\exp
@@ -286,8 +278,7 @@ class Lorimer2006(Fittable1DModel):
 
 
 class Exponential(Fittable1DModel):
-    """
-    Exponential distribution.
+    """Exponential distribution.
 
     .. math ::
         f(z) = A \\exp \\left(- \\frac{|z|}{z_0} \\right)
@@ -321,8 +312,7 @@ class Exponential(Fittable1DModel):
 
 
 class LogSpiral(object):
-    """
-    Logarithmic spiral.
+    """Logarithmic spiral.
 
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral
     """
@@ -402,7 +392,7 @@ class LogSpiral(object):
 
 
 class FaucherSpiral(LogSpiral):
-    r"""Milky way spiral arm used in Faucher et al. (2006).
+    """Milky way spiral arm used in Faucher et al (2006).
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
@@ -413,8 +403,7 @@ class FaucherSpiral(LogSpiral):
     spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
     def _blur(self, radius, theta, amount=0.07, random_state='random-seed'):
-        """
-        Blur the positions around the centroid of the spiralarm.
+        """Blur the positions around the centroid of the spiralarm.
 
         The given positions are blurred by drawing a displacement in radius from
         a normal distribution, with sigma = amount * radius. And a direction
@@ -442,8 +431,7 @@ class FaucherSpiral(LogSpiral):
 
     def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc'),
                        random_state='random-seed'):
-        """
-        Correction of source distribution towards the galactic center.
+        """Correction of source distribution towards the galactic center.
 
         To avoid spiralarm features near the Galactic Center, the position angle theta
         is blurred by a certain amount towards the GC.
@@ -499,7 +487,7 @@ class FaucherSpiral(LogSpiral):
 
 
 class ValleeSpiral(LogSpiral):
-    r"""Milky way spiral arm model from Vallee (2008).
+    """Milky way spiral arm model from Vallee (2008).
 
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
@@ -507,9 +495,9 @@ class ValleeSpiral(LogSpiral):
     p = Quantity(12.8, 'deg')  # pitch angle in deg
     m = 4  # number of spiral arms
     r_sun = Quantity(7.6, 'kpc')  # distance sun to Galactic center in kpc
-    r_0 = Quantity(2.1, 'kpc')   # spiral inner radius in kpc
+    r_0 = Quantity(2.1, 'kpc')  # spiral inner radius in kpc
     theta_0 = Quantity(-20, 'deg')  # Norma spiral arm start angle
-    bar_radius = Quantity(3.0, 'kpc')   # Radius of the galactic bar (not equal r_0!)
+    bar_radius = Quantity(3.0, 'kpc')  # Radius of the galactic bar (not equal r_0!)
 
     spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
 

@@ -13,7 +13,10 @@ from ..background import fill_acceptance_image
 from ..cube import SkyCube
 from .exposure import make_exposure_cube
 
-__all__ = ['SingleObsCubeMaker', 'StackedObsCubeMaker']
+__all__ = [
+    'SingleObsCubeMaker',
+    'StackedObsCubeMaker',
+]
 
 log = logging.getLogger(__name__)
 
@@ -77,8 +80,7 @@ class SingleObsCubeMaker(object):
         self.counts_cube.fill_events(self.events)
 
     def make_bkg_cube(self, bkg_norm=True):
-        """
-        Make the background image for one observation from a bkg model.
+        """Make the background image for one observation from a bkg model.
 
         Parameters
         ----------
@@ -111,8 +113,7 @@ class SingleObsCubeMaker(object):
                 self.table_bkg_scale.add_row([self.obs_id, scale])
 
     def background_norm_factor(self):
-        """Determine the scaling factor to apply to the background
-        images on the whole reco energy range.
+        """Determine background scaling factor.
 
         Compares the events in the counts cube and the bkg cube
         outside the exclusion regions.
@@ -129,9 +130,7 @@ class SingleObsCubeMaker(object):
         return scale
 
     def make_exposure_cube(self):
-        """
-        Compute the exposure cube.
-        """
+        """Compute the exposure cube."""
         self.exposure_cube = make_exposure_cube(
             pointing=self.obs_center,
             livetime=self.livetime,
@@ -220,8 +219,9 @@ class StackedObsCubeMaker(object):
             self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale"])
 
     def make_cubes(self, make_background_image=False, bkg_norm=True, radius=10):
-        """Compute the total counts, bkg, exposure, excess and
-        significance cubes for a set of observation.
+        """Compute all cubes for a given set of observation.
+
+        Cubes computed: total counts, bkg, exposure, excess, significance.
 
         Parameters
         ----------
@@ -232,7 +232,6 @@ class StackedObsCubeMaker(object):
         radius : float
             Disk radius in pixels for the significance image
         """
-
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             cube_images = SingleObsCubeMaker(obs=obs,
@@ -278,8 +277,7 @@ class StackedObsCubeMaker(object):
 
     # Define a method for the mean psf from a list of observation
     def make_mean_psf_cube(self, ref_cube, spectral_index=2.3):
-        """
-        Compute the mean psf for a set of observation for different energy bands.
+        """Compute the mean PSF for a set of observation for different energy bands.
 
         Parameters
         ----------

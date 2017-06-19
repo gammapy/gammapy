@@ -14,8 +14,7 @@ __all__ = [
 
 
 class SNR(object):
-    """
-    Simple supernova remnant (SNR) evolution model.
+    """Simple supernova remnant (SNR) evolution model.
 
     The model is based on the Sedov-Taylor solution for strong explosions.
 
@@ -33,7 +32,6 @@ class SNR(object):
         Ejecta mass (g)
     t_stop : `~astropy.units.Quantity`
         Post-shock temperature where gamma-ray emission stops.
-
     """
 
     def __init__(self, e_sn=Quantity(1e51, 'erg'), theta=Quantity(0.1),
@@ -53,8 +51,7 @@ class SNR(object):
             self.age = age
 
     def radius(self, t=None):
-        """
-        Outer shell radius at age t.
+        """Outer shell radius at age t.
 
         Parameters
         ----------
@@ -90,8 +87,7 @@ class SNR(object):
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
-        """
-        Shock radius at age t during free expansion phase.
+        """Shock radius at age t during free expansion phase.
 
         Parameters
         ----------
@@ -105,8 +101,7 @@ class SNR(object):
         return Quantity(0.01, 'pc/yr') * term_1 * term_2 * t
 
     def _radius_sedov_taylor(self, t):
-        """
-        Shock radius  at age t  during Sedov Taylor phase.
+        """Shock radius  at age t  during Sedov Taylor phase.
 
         Parameters
         ----------
@@ -118,8 +113,7 @@ class SNR(object):
         return R_FE * (t / self.sedov_taylor_begin) ** (2. / 5)
 
     def radius_inner(self, t, fraction=0.0914):
-        """
-        Inner radius  at age t  of the SNR shell.
+        """Inner radius  at age t  of the SNR shell.
 
         Parameters
         ----------
@@ -130,8 +124,7 @@ class SNR(object):
         return self.radius(t) * (1 - fraction)
 
     def luminosity_tev(self, t=None, energy_min=Quantity(1, 'TeV')):
-        """
-        Gamma-ray luminosity above ``energy_min`` at age ``t``.
+        """Gamma-ray luminosity above ``energy_min`` at age ``t``.
 
         The luminosity is assumed constant in a given age interval and zero
         before and after. The assumed spectral index is 2.1.
@@ -176,9 +169,7 @@ class SNR(object):
 
     @lazyproperty
     def sedov_taylor_begin(self):
-        """
-        Characteristic time scale when the Sedov-Taylor phase of the SNR's
-        evolution begins.
+        """Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution begins.
 
         Notes
         -----
@@ -201,8 +192,7 @@ class SNR(object):
 
     @lazyproperty
     def sedov_taylor_end(self):
-        """
-        Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution ends.
+        """Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution ends.
 
         Notes
         -----
@@ -223,11 +213,9 @@ class SNR(object):
 
 
 class SNRTrueloveMcKee(SNR):
-    """
-    SNR model according to Truelove & McKee (1999).
+    """SNR model according to Truelove & McKee (1999).
 
     Reference: http://adsabs.harvard.edu/abs/1999ApJS..120..299T
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -238,8 +226,7 @@ class SNRTrueloveMcKee(SNR):
         self.t_c = self.e_sn ** (-1. / 2) * self.m_ejecta ** (5. / 6) * self.rho_ISM ** (-1. / 3)
 
     def radius(self, t=None):
-        """
-        Outer shell radius at age t.
+        """Outer shell radius at age t.
 
         Parameters
         ----------
@@ -285,8 +272,7 @@ class SNRTrueloveMcKee(SNR):
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
-        """
-        Shock radius at age t during free expansion phase.
+        """Shock radius at age t during free expansion phase.
 
         Parameters
         ----------
@@ -297,8 +283,7 @@ class SNRTrueloveMcKee(SNR):
         return 1.12 * self.r_c * (t / self.t_c) ** (2. / 3)
 
     def _radius_sedov_taylor(self, t):
-        """
-        Shock radius  at age t during Sedov Taylor phase.
+        """Shock radius  at age t during Sedov Taylor phase.
 
         Parameters
         ----------
@@ -311,15 +296,14 @@ class SNRTrueloveMcKee(SNR):
 
     @lazyproperty
     def sedov_taylor_begin(self):
-        """
-        Characteristic time scale when the Sedov-Taylor phase of the SNR's
-        evolution begins given by :math:`t_{ST} \\approx 0.52 t_{ch}`
+        """Characteristic time scale when the Sedov-Taylor phase starts.
+
+        Given by :math:`t_{ST} \\approx 0.52 t_{ch}`.
         """
         return 0.52 * self.t_c
 
     def radius_reverse_shock(self, t):
-        """
-        Reverse shock radius at age t .
+        """Reverse shock radius at age t.
 
         Parameters
         ----------
@@ -348,6 +332,7 @@ class SNRTrueloveMcKee(SNR):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
+
         # Time when reverse shock reaches the "core"
         t_core = 0.25 * self.t_c
 

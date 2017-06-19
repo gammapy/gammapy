@@ -57,6 +57,7 @@ class SourceCatalogRegistry(object):
 
     @property
     def catalog_names(self):
+        """Catalog names (`list`)."""
         return list(self._available_catalogs.keys())
 
     def register(self, name, factory, args=()):

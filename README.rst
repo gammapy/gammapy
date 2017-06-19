@@ -19,7 +19,11 @@ Status shields
 
 * .. image:: http://img.shields.io/travis/gammapy/gammapy.svg?branch=master
     :target: https://travis-ci.org/gammapy/gammapy
-    :alt: Test Status
+    :alt: Test Status Travis-CI
+
+* .. image:: https://ci.appveyor.com/api/projects/status/duo8wgufg35b7cga?svg=true
+    :target: https://ci.appveyor.com/project/cdeil/gammapy/branch/master
+    :alt: Test Status Appveyor
 
 * .. image:: https://img.shields.io/coveralls/gammapy/gammapy.svg
     :target: https://coveralls.io/r/gammapy/gammapy
@@ -29,16 +33,11 @@ Status shields
     :target: https://landscape.io/github/gammapy/gammapy/master
     :alt: Code Health
 
-* .. image:: http://img.shields.io/badge/benchmarks-asv-green.svg?style=flat
-    :target: http://gammapy.github.io/gammapy-benchmarks/
-    :alt: Benchmarks
-
 * .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
     :target: http://docs.gammapy.org/en/latest/
     :alt: Documentation Status
 
 * .. image:: http://img.shields.io/pypi/l/gammapy.svg
-    :target: https://pypi.python.org/pypi/gammapy/
     :alt: License
 
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version

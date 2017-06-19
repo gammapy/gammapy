@@ -3,12 +3,11 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table
-from ..datasets.core import gammapy_extra
+from ..utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
     'load_catalog_green',
-    'load_catalog_tevcat',
     'SourceCatalogATNF',
     'SourceCatalogObjectATNF',
 ]
@@ -33,31 +32,11 @@ def load_catalog_green():
     catalog : `~astropy.table.Table`
         Source catalog
     """
-    filename = gammapy_extra.filename('datasets/catalogs/Green_2014-05.fits.gz')
+    filename = make_path('$GAMMAPY_EXTRA/datasets/catalogs/Green_2014-05.fits.gz')
     return Table.read(filename)
 
 
-def load_catalog_tevcat():
-    """Load TeVCat source catalog.
-
-    `TeVCat <http://tevcat.uchicago.edu/>`__ is an online catalog
-    for TeV astronomy.
-
-    Unfortunately the TeVCat is not available in electronic format.
-
-    This is a dump of TeVCat as of 2014-09-24 created by scraping their
-    web page using the script available
-    `here <https://github.com/astropy/astroquery/pull/41>`__.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
-    """
-    filename = gammapy_extra.filename('datasets/catalogs/tevcat.fits.gz')
-    return Table.read(filename)
-
-
+# TODO: remove, or integrate with gammapy.astro.source.Pulsar !
 class SourceCatalogObjectATNF(SourceCatalogObject):
     """One source from the ATNF pulsar catalog.
     """
@@ -84,6 +63,5 @@ class SourceCatalogATNF(SourceCatalog):
     source_object_class = SourceCatalogObjectATNF
 
     def __init__(self, filename=None):
-        if not filename:
-            filename = gammapy_extra.filename('datasets/catalogs/ATNF_v1.54.fits.gz')
-            self.table = Table.read(filename)
+        filename = filename or make_path('$GAMMAPY_EXTRA/datasets/catalogs/ATNF_v1.54.fits.gz')
+        self.table = Table.read(filename)

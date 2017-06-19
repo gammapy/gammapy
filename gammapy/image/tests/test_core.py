@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-from astropy.table import Table
-from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+from astropy.table import Table
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy import units as u
 from astropy.units import Quantity
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
@@ -86,6 +85,7 @@ class _TestImage:
                  0.39006849765871243, 0.15740361210066894, 0.05573613025356901]
             ]
         elif proj == 'AIT':
+            nan = np.nan
             return [
                 [nan, nan, nan, nan, nan, nan],
                 [nan, 0.96302079, 1.02533278, 1.06937617, 1.11576917, nan],
@@ -274,7 +274,7 @@ class TestSkyImagePoisson:
         separation = image.center.separation(image_upsampled.center)
 
         # check WCS
-        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1e-17, 'deg'))
 
         # check data shape
         assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
@@ -296,7 +296,7 @@ class TestSkyImagePoisson:
         image_cropped = image.crop(((2, 2), (2, 2)))
 
         separation = image.center.separation(image_cropped.center)
-        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1e-17, 'deg'))
 
         # check data shape
         assert image_cropped.data.shape == (5, 5)
@@ -321,6 +321,14 @@ class TestSkyImage:
         center = self.image.center
         assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
         assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
+
+    def test_width(self):
+        width = self.image.width
+        assert_quantity_allclose(width, 2 * u.deg, rtol=1e-3)
+
+    def test_height(self):
+        height = self.image.height
+        assert_allclose(height, 1 * u.deg, rtol=1e-3)
 
     @requires_dependency('scipy')
     @pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])

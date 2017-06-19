@@ -39,7 +39,7 @@ General documentation
   :maxdepth: 1
 
   about
-  install
+  install/index
   getting-started
   tutorials/index
   dataformats/index
@@ -77,6 +77,7 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
+* April 28, 2017 --- Gammapy **0.6** release. See changelog: :ref:`gammapy_0p6_release`
 * February 2017 --- `Gammapy workshop in Paris <https://github.com/gammapy/gammapy-meetings/blob/master/2017-02_Paris.md>`__
 * November 22, 2016 --- Gammapy **0.5** release. See changelog: :ref:`gammapy_0p5_release`
 * July 2016 --- `Gammapy poster at Gamma 2016`_

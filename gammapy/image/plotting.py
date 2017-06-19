@@ -667,7 +667,7 @@ def illustrate_colormap(cmap, **kwargs):
     show_cmap.set_xticklabels([])
     show_cmap.set_yticklabels([])
     show_cmap.set_yticks([])
-    show_cmap.set_title('RGB & Gray Luminance of colormap {0}'.format(cmap.name))
+    show_cmap.set_title('RGB & Gray Luminance of colormap {}'.format(cmap.name))
 
     # Show colormap gray
     show_cmap_gray = figure.add_axes([0.1, 0.72, 0.8, 0.09])

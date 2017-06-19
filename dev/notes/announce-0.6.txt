@@ -1,0 +1,32 @@
+Title: Gammapy 0.6 release
+
+
+Dear all,
+
+Gammapy version 0.6 has been released.
+
+If you use conda or pip, you can upgrade to this latest stable version using:
+
+    conda install -c astropy gammapy
+    pip install gammapy --upgrade
+
+Gammapy is a Python package for gamma-ray astronomy.
+
+* Docs: http://docs.gammapy.org/
+* Code: https://github.com/gammapy/gammapy
+* Mailing list: https://groups.google.com/forum/#!forum/gammapy
+
+Information about this release (features, fixes, contributors):
+http://docs.gammapy.org/en/latest/changelog.html
+
+Detailed information about installation (and updating):
+http://docs.gammapy.org/en/latest/install/index.html
+
+If you're completely new to Gammapy, the best place to start is the tutorial notebooks:
+https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
+
+If you have any questions, feedback or issue, don't hesitate to write to the Gammapy mailing list,
+or to file an issue on Github.
+
+Cheers,
+Christoph for the Gammapy team

@@ -12,6 +12,7 @@ __all__ = [
     'get_resampled_wcs'
 ]
 
+
 def get_wcs_ctype(wcs):
     """
     Get celestial coordinate type of WCS instance.
@@ -34,6 +35,7 @@ def get_wcs_ctype(wcs):
         return 'icrs'
     else:
         raise TypeError("Can't determine WCS coordinate type.")
+
 
 def get_resampled_wcs(wcs, factor, downsampled):
     """
@@ -135,8 +137,7 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     unit_x = bin_edges_x.unit
     unit_y = bin_edges_y.unit
     if unit_x != unit_y:
-        ss_error = "Units of X ({0}) and Y ({1}) bins do not match!".format(
-            unit_x, unit_y)
+        ss_error = "Units of X ({}) and Y ({}) bins do not match!".format(unit_x, unit_y)
         ss_error += " Is this expected?"
         raise ValueError(ss_error)
 

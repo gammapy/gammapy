@@ -39,15 +39,15 @@ from ..extern.pathlib import Path
 from .. import stats
 
 __all__ = [
-    'IterativeSourceDetector',
+    # TODO: not working, so not part of the docs yet
+    # 'IterativeSourceDetector',
 ]
 
 log = logging.getLogger(__name__)
 
 
 class FitFailedError(object):
-    """Fit failed error.
-    """
+    """Fit failed error."""
     pass
 
 
@@ -103,25 +103,25 @@ class IterativeSourceDetector(object):
         log.debug('Running source detection')
 
         for _ in range(self.max_sources):
-            log.debug('Starting iteration number {0}'.format(_))
+            log.debug('Starting iteration number {}'.format(_))
             debug_folder = self.debug_output_folder + '/' + str(_)
             if self.debug_output_folder:
                 Path(debug_folder).mkdir()
-                log.info('mkdir {0}'.format(debug_folder))
+                log.info('mkdir {}'.format(debug_folder))
 
             self.compute_iter_images()
             if self.debug_output_folder:
                 # Save per iteration images
                 for name in ['background']:
-                    filename = '{0}/{1}.fits'.format(debug_folder, name)
-                    log.info('Writing {0}'.format(filename))
+                    filename = '{}/{}.fits'.format(debug_folder, name)
+                    log.info('Writing {}'.format(filename))
                     fits.writeto(filename, self.iter_images[name], clobber=self.overwrite)
 
                 # Save per iteration and scale images
                 for name in ['significance']:
                     for scale in self.scales:
-                        filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
-                        log.info('Writing {0}'.format(filename))
+                        filename = '{}/{}_{}.fits'.format(debug_folder, name, scale)
+                        log.info('Writing {}'.format(filename))
                         fits.writeto(filename, self.iter_images[name][scale], clobber=self.overwrite)
 
             self.find_peaks()
@@ -132,7 +132,7 @@ class IterativeSourceDetector(object):
 
             self.guess_source_parameters()
             if self.debug_output_folder:
-                filename = '{0}/{1}'.format(debug_folder, 'sources_guess.reg')
+                filename = '{}/{}'.format(debug_folder, 'sources_guess.reg')
                 self.save_regions(filename, selection='guess')
 
             try:
@@ -248,7 +248,7 @@ class IterativeSourceDetector(object):
             return cash
 
         source = self.sources_guess[-1]
-        log.debug('Source parameters before fit: {0}'.format(source))
+        log.debug('Source parameters before fit: {}'.format(source))
         pars = source.copy()
         pars['error_xpos'] = 0.01
         pars['error_ypos'] = 0.01
@@ -261,7 +261,7 @@ class IterativeSourceDetector(object):
         minuit.migrad(ncall=self.max_ncall)
 
         source = minuit.values
-        log.debug('Source parameters  after fit: {0}'.format(source))
+        log.debug('Source parameters  after fit: {}'.format(source))
 
         if not minuit.migrad_ok():
             # If fit doesn't converge we simply abort
@@ -311,23 +311,23 @@ class IterativeSourceDetector(object):
             excess = excess_image[mask].sum()
             flux_image = (self.images['counts'] - self.iter_images['background']) / self.images['exposure']
             flux = flux_image[mask].sum()
-        log.debug('Flux estimation for source region radius: {0}'.format(radius))
-        log.debug('npix: {0}'.format(npix))
-        log.debug('counts: {0}'.format(counts))
-        log.debug('background: {0}'.format(background))
-        log.debug('excess: {0}'.format(excess))
-        log.debug('exposure: {0}'.format(exposure))
-        log.debug('flux: {0}'.format(flux))
+        log.debug('Flux estimation for source region radius: {}'.format(radius))
+        log.debug('npix: {}'.format(npix))
+        log.debug('counts: {}'.format(counts))
+        log.debug('background: {}'.format(background))
+        log.debug('excess: {}'.format(excess))
+        log.debug('exposure: {}'.format(exposure))
+        log.debug('flux: {}'.format(flux))
         return flux
 
     def save_fits(self, filename):
         """Save source catalog to FITS file."""
-        log.info('Writing source detections in FITS format to {0}'.format(filename))
+        log.info('Writing source detections in FITS format to {}'.format(filename))
         # TODO
 
     def save_regions(self, filename, selection='fit'):
         """Save ds9 region file."""
-        log.info('Writing source detections in ds9 region format to {0}'.format(filename))
+        log.info('Writing source detections in ds9 region format to {}'.format(filename))
         if selection == 'fit':
             sources = self.sources
             color = 'green'
@@ -335,7 +335,7 @@ class IterativeSourceDetector(object):
             sources = self.sources_guess
             color = 'magenta'
         else:
-            raise ValueError('Unknown selection: {0}'.format(selection))
+            raise ValueError('Unknown selection: {}'.format(selection))
         with open(filename, 'w') as outfile:
             outfile.write('image\n')
             for ii, source in enumerate(sources):
@@ -343,14 +343,14 @@ class IterativeSourceDetector(object):
                 data = dict(xpos=source['xpos'], ypos=source['ypos'])
                 N_SIGMA = 3
                 data['radius'] = N_SIGMA * source['sigma']
-                data['name'] = 'Source {0}'.format(ii)
+                data['name'] = 'Source {}'.format(ii)
                 data['color'] = color
                 text = fmt.format(**data)
                 outfile.write(text)
 
     def save_json(self, filename):
         """Save source catalog to JSON file."""
-        log.info('Writing source detections in JSON format to {0}'.format(filename))
+        log.info('Writing source detections in JSON format to {}'.format(filename))
         import json
         data = dict(sources=self.sources, sources_guess=self.sources_guess)
         # TODO: this fails because data contains np.float32 values, which are not JSON serializable:

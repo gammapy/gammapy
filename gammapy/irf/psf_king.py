@@ -150,7 +150,7 @@ class PSFKing(object):
     @staticmethod
     def evaluate_direct(r, gamma, sigma):
         """Evaluate the PSF model.
-        
+
         Formula is given here: :ref:`gadf:psf_king`.
 
         Parameters

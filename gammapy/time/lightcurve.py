@@ -3,12 +3,11 @@
 Lightcurve and elementary temporal functions
 """
 from collections import OrderedDict
+import numpy as np
 from astropy.table import QTable
 from astropy.units import Quantity
 from astropy.time import Time
 import astropy.units as u
-import numpy as np
-
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
 
@@ -94,7 +93,7 @@ class LightCurve(QTable):
 
         Returns
         -------
-        fvar, fvar_err : `numpy.array`
+        fvar, fvar_err : `~numpy.ndarray`
             Fractional excess variance.
 
         References
@@ -118,17 +117,17 @@ class LightCurve(QTable):
         fvar_err = sigxserr / (2 * fvar)
 
         return fvar, fvar_err
-	
+
     def compute_chisq(self):
         """Calculate the chi-square test for `LightCurve`.
 
-        Chisquare test is a variability estimator. It computes 
-        deviations from the expected value here mean value 
+        Chisquare test is a variability estimator. It computes
+        deviations from the expected value here mean value
 
         Returns
         -------
-        ChiSq, P-value : tuple of float or `~numpy.ndarray` 
-	    Tuple of Chi-square and P-value
+        ChiSq, P-value : tuple of float or `~numpy.ndarray`
+            Tuple of Chi-square and P-value
         """
         import scipy.stats as stats
         flux = self['FLUX']

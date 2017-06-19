@@ -30,7 +30,6 @@ def make_counts_image(event_file,
                       out_file,
                       overwrite):
     """Bin events into an image."""
-
     log.info('Reading {}'.format(event_file))
     events = EventList.read(event_file)
 

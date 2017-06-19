@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy.convolution import Tophat2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import compute_ts_image, compute_lima_image, compute_lima_on_off_image
+from ...detect import TSImageEstimator, compute_lima_image, compute_lima_on_off_image
 from ...image import SkyImageList
 
 
@@ -12,7 +12,7 @@ from ...image import SkyImageList
 @requires_data('gammapy-extra')
 def test_compute_lima_image():
     """
-    Test Li&Ma image against TS image for Tophat kernel
+    Test Li & Ma image against TS image for Tophat kernel
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
     images = SkyImageList.read(filename)
@@ -22,19 +22,18 @@ def test_compute_lima_image():
         images['counts'], images['background'], kernel, images['exposure'],
     )
     kernel.normalize('integral')
-    result_ts = compute_ts_image(
-        images['counts'], images['background'], images['exposure'], kernel,
-    )
+    ts_estimator = TSImageEstimator()
+    result_ts = ts_estimator.run(images, kernel)
 
-    assert_allclose(result_ts['sqrt_ts'], result_lima['significance'], atol=1E-3)
-    assert_allclose(result_ts['amplitude'], result_lima['flux'], atol=3E-12)
+    assert_allclose(result_ts['sqrt_ts'], result_lima['significance'], atol=1e-3)
+    assert_allclose(result_ts['flux'], result_lima['flux'], atol=3e-12)
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_compute_lima_on_off_image():
     """
-    Test Li&Ma image with snippet from the H.E.S.S. survey data.
+    Test Li & Ma image with snippet from the H.E.S.S. survey data.
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/survey/hess_survey_snippet.fits.gz'
     images = SkyImageList.read(filename)
@@ -52,4 +51,4 @@ def test_compute_lima_on_off_image():
 
     # Set boundary to NaN in reference image
     images['Significance'].data[np.isnan(results['significance'])] = np.nan
-    assert_allclose(results['significance'], images['Significance'], atol=1E-5)
+    assert_allclose(results['significance'], images['Significance'], atol=1e-5)

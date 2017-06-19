@@ -3,10 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.scripts import make_path
-from ...datasets import gammapy_extra
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...spectrum import (
     PHACountsSpectrum,
@@ -18,27 +17,28 @@ from ...spectrum import (
 )
 
 
-def get_test_obs():
-    test_obs = list()
-    if not gammapy_extra.is_available:
-        return test_obs
-    try:
-        import scipy
-    except ImportError:
-        return test_obs
-
-    # 1 : Obs read from file
-    obs_1 = SpectrumObservation.read(
-        gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits'))
-    test_obs.append(dict(
-        obs=obs_1,
+@requires_dependency('scipy')
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_spectrum_observation_1():
+    """Obs read from file"""
+    obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
+    pars = dict(
         total_on=172,
         livetime=1581.73681640625 * u.second,
         npred=214.55242978860932,
         excess=167.36363636363637,
-        excess_safe_range=135)
+        excess_safe_range=135,
     )
-    # 2 : Simulated obs without background
+    tester = SpectrumObservationTester(obs, pars)
+    tester.test_all()
+
+
+@requires_dependency('scipy')
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_spectrum_observation_2():
+    """Simulated obs without background"""
     energy = np.logspace(-2, 2, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy)
@@ -49,58 +49,58 @@ def get_test_obs():
     sim = SpectrumSimulation(aeff=aeff, edisp=edisp, source_model=source_model,
                              livetime=livetime)
     sim.simulate_obs(seed=2309, obs_id=2309)
-    test_obs.append(dict(
-        obs=sim.obs,
+    obs = sim.obs
+
+    pars = dict(
         total_on=821,
         livetime=livetime,
         npred=291.84115011604587,
         excess=821,
-        excess_safe_range=821)
+        excess_safe_range=821,
     )
+    tester = SpectrumObservationTester(obs, pars)
+    tester.test_all()
 
-    # 3 : obs without edisp
+
+@requires_dependency('scipy')
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_spectrum_observation_3():
+    """obs without edisp"""
     energy = np.logspace(-1, 1, 20) * u.TeV
     livetime = 2 * u.h
     on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
                                   energy_hi=energy[1:],
                                   data=np.arange(19),
                                   backscal=1)
-    on_vector.livetime = livetime 
+    on_vector.livetime = livetime
     on_vector.obs_id = 2
     aeff = EffectiveAreaTable(energy_lo=energy[:-1],
                               energy_hi=energy[1:],
                               data=np.ones(19) * 1e5 * u.m ** 2)
-    obs_3 = SpectrumObservation(on_vector=on_vector, aeff=aeff)
-    test_obs.append(dict(
-        obs=obs_3,
+    obs = SpectrumObservation(on_vector=on_vector, aeff=aeff)
+    pars = dict(
         total_on=171,
         livetime=livetime,
         npred=1425.6,
         excess=171,
-        excess_safe_range=171)
+        excess_safe_range=171,
     )
-
-    return test_obs
-
-
-@pytest.mark.parametrize('obs', get_test_obs())
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_spectrum_observation(obs):
-    tester = SpectrumObservationTester(obs)
+    tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
 
 
 class SpectrumObservationTester:
-    def __init__(self, obs_dict):
-        self.obs = obs_dict.pop('obs')
-        self.vals = obs_dict
+    def __init__(self, obs, vals):
+        self.obs = obs
+        self.vals = vals
 
     def test_all(self):
         self.test_basic()
         self.test_stats_table()
         self.test_total_stats()
         self.test_stats_in_safe_range()
+        self.test_to_sherpa()
         self.test_peek()
         self.test_npred()
 
@@ -129,6 +129,12 @@ class SpectrumObservationTester:
         assert_quantity_allclose(stats.energy_max, self.obs.hi_threshold)
         assert_allclose(stats.excess, self.vals['excess_safe_range'], atol=1e-3)
 
+    @requires_dependency('sherpa')
+    def test_to_sherpa(self):
+        # This method is not used anywhere but could be useful in the future
+        sherpa_obs = self.obs.to_sherpa()
+        assert sherpa_obs.counts[10] == self.obs.on_vector.data.data[10].value
+
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.obs.peek()
@@ -138,8 +144,7 @@ class SpectrumObservationTester:
 @requires_data('gammapy-extra')
 class TestSpectrumObservationStacker:
     def setup(self):
-        self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
         # Change threshold to make stuff more interesting
         self.obs_list.obs(23523).lo_threshold = 1.2 * u.TeV
@@ -188,8 +193,7 @@ class TestSpectrumObservationStacker:
 @requires_data('gammapy-extra')
 class TestSpectrumObservationList:
     def setup(self):
-        self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
     def test_stack_method(self):
         stacked_obs = self.obs_list.stack()

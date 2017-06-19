@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
@@ -47,8 +48,6 @@ def test_lightcurve_chisq():
     assert_quantity_allclose(pval, 0.07189777249646509)
 
 
-
-
 # TODO: Reuse fixtures from spectrum tests
 @pytest.fixture(scope='session')
 def spec_extraction():
@@ -56,9 +55,7 @@ def spec_extraction():
     obs_ids = [23523, 23526]
     obs_list = data_store.obs_list(obs_ids)
 
-    target_position = SkyCoord(ra=83.63308,
-                               dec=22.01450,
-                               unit='deg')
+    target_position = SkyCoord(ra=83.63308, dec=22.01450, unit='deg')
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
     target = Target(on_region=on_region, name='Crab', tag='ana_crab')
@@ -111,16 +108,16 @@ def test_lightcurve_estimator():
 
     assert_quantity_allclose(len(lc), 2)
 
-    # TODO: 
+    # TODO:
     # The uncommented values are with containment correction, this does not
     # work at the moment, try to reproduce them later
-    #assert_allclose(lc['FLUX'][0].value, 5.70852574714e-11, rtol=1e-2)
+    # assert_allclose(lc['FLUX'][0].value, 5.70852574714e-11, rtol=1e-2)
     assert_allclose(lc['FLUX'][0].value, 2.8517243785145818e-11, rtol=1e-2)
-    #assert_allclose(lc['FLUX'][-1].value, 6.16718031281e-11, rtol=1e-2)
+    # assert_allclose(lc['FLUX'][-1].value, 6.16718031281e-11, rtol=1e-2)
     assert_allclose(lc['FLUX'][-1].value, 2.8626063613082577e-11, rtol=1e-2)
 
     assert_allclose(lc['FLUX_ERR'][0].value, 5.43450927144e-12, rtol=1e-2)
-    #assert_allclose(lc['FLUX_ERR'][-1].value, 5.91581572415e-12, rtol=1e-2)
+    # assert_allclose(lc['FLUX_ERR'][-1].value, 5.91581572415e-12, rtol=1e-2)
     assert_allclose(lc['FLUX_ERR'][-1].value, 5.288113122707022e-12, rtol=1e-2)
 
     # same but with threshold equal to 2 TeV
@@ -130,7 +127,7 @@ def test_lightcurve_estimator():
         energy_range=[2, 100] * u.TeV,
     )
 
-    #assert_allclose(lc['FLUX'][0].value, 1.02122885108e-11, rtol=1e-2)
+    # assert_allclose(lc['FLUX'][0].value, 1.02122885108e-11, rtol=1e-2)
     assert_allclose(lc['FLUX'][0].value, 1.826273620432445e-12, rtol=1e-2)
 
     # TODO: add test exercising e_reco selection

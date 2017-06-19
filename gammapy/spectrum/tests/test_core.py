@@ -3,15 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from astropy.tests.helper import pytest, assert_quantity_allclose
-from ...utils.testing import requires_data, requires_dependency
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
+from ...utils.testing import requires_dependency
 from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
 
 
 @requires_dependency('scipy')
 class TestCountsSpectrum:
-
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3] * u.ct
         self.bins = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
@@ -35,7 +35,7 @@ class TestCountsSpectrum:
         bins = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
         with pytest.raises(ValueError):
             CountsSpectrum(data=self.counts, energy_lo=bins.lower_bounds,
-                          energy_hi=bins.upper_bounds)
+                           energy_hi=bins.upper_bounds)
 
     def test_evaluate(self):
         test_e = self.bins[2] + 0.1 * u.TeV
@@ -62,14 +62,13 @@ class TestCountsSpectrum:
         with pytest.raises(ValueError):
             rebinned_spec = self.spec.rebin(4)
 
-        actual = rebinned_spec.data.evaluate(energy = [2, 3, 5] * u.TeV)
+        actual = rebinned_spec.data.evaluate(energy=[2, 3, 5] * u.TeV)
         desired = [0, 7, 20] * u.ct
         assert (actual == desired).all()
 
 
 @requires_dependency('scipy')
 class TestPHACountsSpectrum:
-
     def setup(self):
         counts = [1, 2, 5, 6, 1, 7, 23, 2]
         self.binning = EnergyBounds.equal_log_spacing(1, 10, 8, 'TeV')
@@ -126,4 +125,3 @@ class TestPHACountsSpectrum:
         assert (spec_rebinned.quality == [1, 0, 0, 1]).all()
         assert_quantity_allclose(spec_rebinned.hi_threshold, 5.623413251903491 * u.TeV)
         assert_quantity_allclose(spec_rebinned.lo_threshold, 1.778279410038922 * u.TeV)
-

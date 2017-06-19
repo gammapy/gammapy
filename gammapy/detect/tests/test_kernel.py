@@ -19,7 +19,6 @@ class TestKernelBackgroundEstimator(object):
         background_kernel = np.ones((5, 3))
 
         # Loads prepared inputs into estimator
-
         self.kbe = KernelBackgroundEstimator(
             kernel_src=source_kernel,
             kernel_bkg=background_kernel,
@@ -75,7 +74,7 @@ class TestKernelBackgroundEstimator(object):
 
         # Call the run_iteration code as this is what is explicitly being tested
         result = self.kbe._run_iteration(images)
-        mask, background = result['exclusion'].data, result['background'].data
+        background = result['background'].data
 
         # Check background, should be 42 uniformly within 10%
         assert_allclose(background, 42 * np.ones((10, 10)), rtol=0.1)

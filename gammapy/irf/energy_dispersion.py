@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import Angle
@@ -19,7 +20,7 @@ __all__ = [
 class EnergyDispersion(object):
     """Energy dispersion matrix.
 
-    see :ref:`gadf:ogip-rmf` 
+    Data format specification: :ref:`gadf:ogip-rmf`
 
     Parameters
     ----------
@@ -51,8 +52,7 @@ class EnergyDispersion(object):
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
-        if meta is not None:
-            self.meta = Bunch(meta)
+        self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -60,7 +60,7 @@ class EnergyDispersion(object):
 
         return ss
 
-    def apply(self, data, e_reco=None, e_true=None):
+    def apply(self, data):
         """Apply energy dispersion.
 
         Computes the matrix product of ``data``
@@ -79,7 +79,7 @@ class EnergyDispersion(object):
         """
         if len(data) != self.e_true.nbins:
             raise ValueError("Input size {} does not match true energy axis {}".format(
-                len(data), len(true_nodes)))
+                len(data), self.e_true.nbins))
         return np.dot(data, self.data.data)
 
     @property
@@ -92,7 +92,7 @@ class EnergyDispersion(object):
 
     @property
     def pdf_matrix(self):
-        """PDF matrix `~numpy.ndarray`
+        """PDF matrix `~numpy.ndarray`.
 
         Rows (first index): True Energy
         Columns (second index): Reco Energy
@@ -100,7 +100,7 @@ class EnergyDispersion(object):
         return self.data.data.value
 
     def pdf_in_safe_range(self, lo_threshold, hi_threshold):
-        """PDF matrix with bins outside threshold set to 0
+        """PDF matrix with bins outside threshold set to 0.
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class EnergyDispersion(object):
 
     @classmethod
     def read(cls, filename, hdu1='MATRIX', hdu2='EBOUNDS', **kwargs):
-        """Read from file
+        """Read from file.
 
         Parameters
         ----------
@@ -218,8 +218,7 @@ class EnergyDispersion(object):
             raise ValueError(msg)
 
     def to_hdulist(self, **kwargs):
-        """
-        Convert RM to FITS HDU list format.
+        """Convert RMF to FITS HDU list format.
 
         Parameters
         ----------
@@ -272,8 +271,6 @@ class EnergyDispersion(object):
         The output table is in the OGIP RMF format.
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
         """
-        table = Table()
-
         rows = self.pdf_matrix.shape[0]
         n_grp = []
         f_chan = np.ndarray(dtype=np.object, shape=rows)
@@ -291,7 +288,7 @@ class EnergyDispersion(object):
             n_chan_temp = np.asarray([val.size for val in groups])
             try:
                 f_chan_temp = np.asarray([val[0] for val in groups])
-            except(IndexError):
+            except IndexError:
                 f_chan_temp = np.zeros(1)
 
             n_grp.append(n_grp_temp)
@@ -299,39 +296,44 @@ class EnergyDispersion(object):
             n_chan[i] = n_chan_temp
             matrix[i] = row[pos]
 
+        n_grp = np.asarray(n_grp, dtype=np.int16)
+
+        # Get total number of groups and channel subsets
+        numgrp, numelt = 0, 0
+        for val, val2 in zip(n_grp, n_chan):
+            numgrp += np.sum(val)
+            numelt += np.sum(val2)
+
+        table = Table()
+
         table['ENERG_LO'] = self.e_true.lo
         table['ENERG_HI'] = self.e_true.hi
-        table['N_GRP'] = np.asarray(n_grp, dtype=np.int16)
+        table['N_GRP'] = n_grp
         table['F_CHAN'] = f_chan
         table['N_CHAN'] = n_chan
         table['MATRIX'] = matrix
 
-        # Get total number of groups and channel subsets
-        numgrp, numelt = 0, 0
-        for val, val2 in zip(table['N_GRP'], table['N_CHAN']):
-            numgrp += np.sum(val)
-            numelt += np.sum(val2)
+        table.meta = OrderedDict([
+            ('name', 'MATRIX'),
+            ('chantype', 'PHA'),
+            ('hduclass', 'OGIP'),
+            ('hduclas1', 'RESPONSE'),
+            ('hduclas2', 'RSP_MATRIX'),
+            ('detchans', self.e_reco.nbins),
+            ('numgrp', numgrp),
+            ('numelt', numelt),
+            ('tlmin4', 0),
+        ])
 
-        meta = dict(name='MATRIX',
-                    chantype='PHA',
-                    hduclass='OGIP',
-                    hduclas1='RESPONSE',
-                    hduclas2='RSP_MATRIX',
-                    detchans=self.e_reco.nbins,
-                    numgrp=numgrp,
-                    numelt=numelt,
-                    tlmin4=0,
-                    )
-
-        table.meta = meta
         return table
 
     def write(self, filename, **kwargs):
+        """Write to file."""
         filename = make_path(filename)
         self.to_hdulist().writeto(str(filename), **kwargs)
 
     def get_resolution(self, e_true):
-        """Get energy resolution for a given true energy
+        """Get energy resolution for a given true energy.
 
         Resolution is the 1 sigma containment of the energy dispersion PDF.
 
@@ -348,7 +350,7 @@ class EnergyDispersion(object):
         return np.sqrt(var)
 
     def get_bias(self, e_true):
-        r"""Get reconstruction bias for a given true energy
+        r"""Get reconstruction bias for a given true energy.
 
         Bias is defined as
 
@@ -367,8 +369,7 @@ class EnergyDispersion(object):
         return bias
 
     def _get_mean(self, e_true):
-        r"""Get mean log reconstructed energy
-        """
+        """Get mean log reconstructed energy."""
         # Reconstructed energy is 1st moment of PDF
         pdf = self.data.evaluate(e_true=e_true)
         norm = np.sum(pdf)
@@ -376,7 +377,7 @@ class EnergyDispersion(object):
         return temp / norm
 
     def _extent(self):
-        """Extent (x0, x1, y0, y1) for plotting (4x float)
+        """Extent (x0, x1, y0, y1) for plotting (4x float).
 
         x stands for true energy and y for reconstructed energy
         """
@@ -385,8 +386,7 @@ class EnergyDispersion(object):
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, show_energy=None, add_cbar=False, **kwargs):
-        """
-        Plot PDF matrix.
+        """Plot PDF matrix.
 
         Parameters
         ----------
@@ -437,7 +437,7 @@ class EnergyDispersion(object):
     def plot_bias(self, ax=None, **kwargs):
         """Plot reconstruction bias.
 
-        see :func:`~gammapy.irf.EnergyDispersion.get_bias`
+        See `~gammapy.irf.EnergyDispersion.get_bias` method.
 
         Parameters
         ----------
@@ -458,7 +458,7 @@ class EnergyDispersion(object):
         return ax
 
     def to_sherpa(self, name):
-        """Return `~sherpa.astro.data.DataARF`
+        """Convert to `sherpa.astro.data.DataARF`.
 
         Parameters
         ----------
@@ -484,24 +484,11 @@ class EnergyDispersion(object):
         matrix = np.concatenate([row for row in matrix])
         matrix = matrix.astype(SherpaFloat)
 
-        # TODO: Not sure if we need this if statement
-        if f_chan.ndim > 1 and n_chan.ndim > 1:
-            f_chan = []
-            n_chan = []
-            for grp, fch, nch, in izip(n_grp, f_chan, n_chan):
-                for i in xrange(grp):
-                    f_chan.append(fch[i])
-                    n_chan.append(nch[i])
+        good = n_grp > 0
+        f_chan = f_chan[good]
+        n_chan = n_chan[good]
 
-            f_chan = numpy.asarray(f_chan, SherpaUInt)
-            n_chan = numpy.asarray(n_chan, SherpaUInt)
-        else:
-            if len(n_grp) == len(f_chan):
-                good = n_grp > 0
-                f_chan = f_chan[good]
-                n_chan = n_chan[good]
-
-        kwargs = dict(
+        return DataRMF(
             name=name,
             energ_lo=table['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
             energ_hi=table['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
@@ -510,18 +497,16 @@ class EnergyDispersion(object):
             n_chan=n_chan,
             f_chan=f_chan,
             detchans=self.e_reco.nbins,
-            e_min=self.e_reco.data[:-1].to('keV').value,
-            e_max=self.e_reco.data[1:].to('keV').value,
+            e_min=self.e_reco.lo.to('keV').value,
+            e_max=self.e_reco.hi.to('keV').value,
             offset=0,
         )
-
-        return DataRMF(**kwargs)
 
 
 class EnergyDispersion2D(object):
     """Offset-dependent energy dispersion matrix.
 
-    See :ref:`gadf:edisp_2d`
+    Data format specification: :ref:`gadf:edisp_2d`
 
     Parameters
     ----------
@@ -561,7 +546,7 @@ class EnergyDispersion2D(object):
     >>> print(rmf)
     EnergyDispersion
     NDDataArray summary info
-    e_true         : size =    60, min =  0.105 TeV, max = 19.136 TeV 
+    e_true         : size =    60, min =  0.105 TeV, max = 19.136 TeV
     e_reco         : size =    60, min =  0.105 TeV, max = 19.136 TeV
     Data           : size =  3600, min =  0.000, max =  0.266
     """
@@ -582,6 +567,13 @@ class EnergyDispersion2D(object):
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
+
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.data)
+
+        return ss
 
     @property
     def e_true(self):
@@ -612,9 +604,9 @@ class EnergyDispersion2D(object):
              Bin edges of true energy axis
          migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
              Bin edges of migra axis
-         bias : float or `~np.array`
+         bias : float or `~numpy.ndarray`
              Center of Gaussian energy dispersion, bias
-         sigma : float or `~np.array`
+         sigma : float or `~numpy.ndarray`
              RMS width of Gaussian energy dispersion, resolution
          offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`, optional
              Bin edges of offset
@@ -640,8 +632,7 @@ class EnergyDispersion2D(object):
 
     @classmethod
     def from_table(cls, table):
-        """Create from `~astropy.table.Table`
-        """
+        """Create from `~astropy.table.Table`."""
         e_lo = table['ETRUE_LO'].quantity.squeeze()
         e_hi = table['ETRUE_HI'].quantity.squeeze()
         o_lo = table['THETA_LO'].quantity.squeeze()
@@ -656,6 +647,7 @@ class EnergyDispersion2D(object):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='edisp_2d'):
+        """Create from `~astropy.io.fits.HDUList`."""
         hdu = hdulist[hdu]
         table = fits_table_to_table(hdu)
         return cls.from_table(table)
@@ -691,7 +683,7 @@ class EnergyDispersion2D(object):
         Returns
         -------
         edisp : `~gammapy.irf.EnergyDispersion`
-            Energy disperion matrix
+            Energy dispersion matrix
         """
         offset = Angle(offset)
         e_true = self.e_true.bins if e_true is None else e_true
@@ -699,19 +691,18 @@ class EnergyDispersion2D(object):
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
-        rm = []
-
+        data = []
         for energy in e_true.log_centers:
             vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
-            rm.append(vec)
+            data.append(vec)
 
-        rm = np.asarray(rm)
-        e_lo, e_hi = (e_true[:-1], e_true[1:])
+        data = np.asarray(data)
+        e_lo, e_hi = e_true[:-1], e_true[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
         return EnergyDispersion(e_true_lo=e_lo, e_true_hi=e_hi,
                                 e_reco_lo=ereco_lo, e_reco_hi=ereco_hi,
-                                data=rm)
+                                data=data)
 
     def get_response(self, offset, e_true, e_reco=None, migra_step=5e-3):
         """Detector response R(Delta E_reco, E_true)
@@ -736,7 +727,6 @@ class EnergyDispersion2D(object):
         rv : `~numpy.ndarray`
             Redistribution vector
         """
-
         e_true = Energy(e_true)
 
         # Default: e_reco nodes = migra nodes * e_true nodes
@@ -758,7 +748,7 @@ class EnergyDispersion2D(object):
         mrec_max = self.migra.hi[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
-        # Compute energy dispersion probabilty dP/dm for each element of migration array
+        # Compute energy dispersion probability dP/dm for each element of migration array
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
 
         # Compute normalized cumulative sum to prepare integration
@@ -822,7 +812,7 @@ class EnergyDispersion2D(object):
         return ax
 
     def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
-        """Plot migration as a function of true energy for a given offset
+        """Plot migration as a function of true energy for a given offset.
 
         Parameters
         ----------
@@ -887,9 +877,3 @@ class EnergyDispersion2D(object):
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
-
-        return ss

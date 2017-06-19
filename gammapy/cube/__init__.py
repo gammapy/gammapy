@@ -6,4 +6,5 @@ from .core import *
 from .images import *
 from .exposure import *
 from .utils import *
+from .models import *
 from .cube_pipe import *

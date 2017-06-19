@@ -19,8 +19,7 @@ VMIN, VMAX = Quantity([0, 4000], 'km/s')
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
-    """
-    Maxwellian pulsar velocity distribution.
+    """Maxwellian pulsar velocity distribution.
 
     .. math ::
         f(v) = A \\sqrt{ \\frac{2}{\\pi}} \\frac{v ^ 2}{\\sigma ^ 3 }
@@ -84,7 +83,7 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
 
     @staticmethod
     def evaluate(v, amplitude, sigma_1, sigma_2, w):
-        """One dimensional Faucher-Guigere & Kaspi 2006 velocity model function"""
+        """One dimensional Faucher-Guigere & Kaspi 2006 velocity model function."""
         A = amplitude * np.sqrt(2 / np.pi) * v ** 2
         term1 = (w / sigma_1 ** 3) * np.exp(-v ** 2 / (2 * sigma_1 ** 2))
         term2 = (1 - w) / sigma_2 ** 3 * np.exp(-v ** 2 / (2 * sigma_2 ** 2))
@@ -95,7 +94,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     """Distribution by Lyne 1982 and adopted by Paczynski and Faucher.
 
     .. math ::
-        f(v) = A\\frac{4}{\\pi} \\frac{1}{v_{0} \\left[1 + (v / v_{0}) ^ 2 \\right] ^ 2}
+        f(v) = A\\frac{4}{\\pi} \\frac{1}{v_0 \\left[1 + (v / v_0) ^ 2 \\right] ^ 2}
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
 
@@ -115,7 +114,7 @@ class Paczynski1990Velocity(Fittable1DModel):
 
     @staticmethod
     def evaluate(v, amplitude, v_0):
-        """One dimensional Paczynski 1990 velocity model function"""
+        """One dimensional Paczynski 1990 velocity model function."""
         return amplitude * 4. / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
 
 

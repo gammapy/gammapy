@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
-from astropy.tests.helper import pytest
+import pytest
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
@@ -30,7 +30,7 @@ class TestEventListHESS:
         assert '{:1.5f}'.format(lon) == '16.50022 deg'
         assert '{:1.5f}'.format(lat) == '-23.27178 deg'
         assert '{:1.5f}'.format(height) == '1835.00000 m'
-        
+
     def test_stack(self):
         event_lists = [self.events] * 3
         stacked_list = EventList.stack(event_lists)
@@ -72,7 +72,8 @@ def test_EventListDataset():
     assert len(dset.event_list.table) == 49
     # TODO: test all methods ... get ~ 100% test coverage
     # even without running the following test.
- 
+
+
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_EventListDatasetChecker():

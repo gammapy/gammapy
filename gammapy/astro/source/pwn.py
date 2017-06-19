@@ -14,8 +14,7 @@ __all__ = [
 
 
 class PWN(object):
-    """
-    Simple pulsar wind nebula (PWN) evolution model.
+    """Simple pulsar wind nebula (PWN) evolution model.
 
     Parameters
     ----------
@@ -48,8 +47,7 @@ class PWN(object):
             self.age = age
 
     def _radius_free_expansion(self, t):
-        """
-        Radius at age t during free expansion phase.
+        """Radius at age t during free expansion phase.
 
         Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
         """
@@ -58,8 +56,7 @@ class PWN(object):
 
     @lazyproperty
     def _collision_time(self):
-        """
-        Time of collision between the PWN and the reverse shock of the SNR.
+        """Time of collision between the PWN and the reverse shock of the SNR.
 
         Returns
         -------
@@ -76,8 +73,7 @@ class PWN(object):
         return Quantity(fsolve(time_coll, 4e3), 'yr')
 
     def radius(self, t=None):
-        """
-        Radius of the PWN at age t.
+        """Radius of the PWN at age t.
 
         Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
 
@@ -113,8 +109,7 @@ class PWN(object):
         return Quantity(r, 'cm')
 
     def magnetic_field(self, t=None):
-        """
-        Estimation of the magnetic field inside the PWN.
+        """Estimate of the magnetic field inside the PWN.
 
         By assuming that a certain fraction of the spin down energy is
         converted to magnetic field energy an estimation of the magnetic
@@ -125,7 +120,6 @@ class PWN(object):
         t : `~astropy.units.Quantity`
             Time after birth of the SNR.
         """
-
         if t is not None:
             validate_physical_type('t', t, 'time')
         elif hasattr(self, 'age'):
@@ -136,8 +130,7 @@ class PWN(object):
                        (4. / 3 * np.pi * self.radius(t) ** 3))
 
     def luminosity_tev(self, t=None, fraction=0.1):
-        """
-        Simple luminosity evolution model.
+        """Simple luminosity evolution model.
 
         Assumes that the luminosity is just a fraction of the total energy content
         of the pulsar. No cooling is considered and therefore the estimate is very bad.

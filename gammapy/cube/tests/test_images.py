@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
-from astropy.tests.helper import pytest
+import pytest
 from astropy.io import fits
 from astropy import units as u
 from ...datasets import FermiGalacticCenter
@@ -41,7 +41,7 @@ class TestBlockReduceHDU:
         self.energy = [1, 3, 10, 30, 100] * u.TeV
         self.cube_images = [self.image for _ in self.energy]
         self.cube = SkyCubeImages(images=self.cube_images, wcs=self.image.wcs,
-                                 energy=self.energy).to_cube()
+                                  energy=self.energy).to_cube()
 
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_cube(self, operation):

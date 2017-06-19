@@ -1,32 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Power law spectrum helper functions.
 
-This `gammapy.spectrum.powerlaw` module contains a bunch of helper functions for computations
-concerning power laws that are standalone and in their separate namespace
-(i.e. not imported into the `gammapy.spectrum` namespace).
-Their main purpose is to serve as building blocks for implementing other code in Gammapy
-that depends on power laws, e.g. interpolation or extrapolation or integration
-of spectra or spectral cubes.
-
-End users will rarely need to use the functions here, the `gammapy.spectrum.models.PowerLaw` class,
-which is a `gammapy.spectrum.models.SpectralModel` sub-class provides the common functionality
-with a convenient API, that can be somewhat slower though than the functions here, because it
-uses `~astropy.units.Quantity` objects.
-
-TODO: probably it doesn't make sense to keep ``power_law_evaluate`` here ... it's a direct duplication
-of the staticmethod ``PowerLaw.evaluate``.
-
-Examples
---------
-
-All the functions contain the ``powerlaw_`` prefix and are pretty long,
-so we suggest importing them directly and using them like this:
-
->>> from gammapy.spectrum.powerlaw import power_law_evaluate
->>> power_law_evaluate(energy=42, norm=4.2e-11, gamma=2.3, energy_ref=1)
-7.758467093729267e-15
+* Not part of the public Gammapy API!
+* To be used only within Gammapy, and only in cases where the
+  ``PowerLaw`` and ``PowerLaw2`` classes in ``gammapy.spectrum.models``
+  are too slow or don't contain some functionality.
+* The reason to keep this as standalone functions is speed, i.e.
+  no spectral model instantiation takes place, and there's
+  no handling of quantities here.
+* We might want to completely remove this module and expose the functionality
+  directly on the spectral model classes some day.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 
 __all__ = [
@@ -84,8 +70,7 @@ def power_law_pivot_energy(energy_ref, f0, d_gamma, cov):
 
     Reference: http://arxiv.org/pdf/0910.4881
     """
-    pivot_energy = energy_ref * np.exp(cov / (f0 * d_gamma ** 2))
-    return pivot_energy
+    return energy_ref * np.exp(cov / (f0 * d_gamma ** 2))
 
 
 def power_law_df_over_f(e, e0, f0, df0, dg, cov):
@@ -103,10 +88,6 @@ def power_law_df_over_f(e, e0, f0, df0, dg, cov):
 
 def _power_law_conversion_factor(g, e, e1, e2):
     """Conversion factor between differential and integral flux."""
-    # In gamma-ray astronomy only falling power-laws are used.
-    # Here we force this, i.e. give "correct" input even if the
-    # user gives a spectral index with an incorrect sign.
-    g = np.abs(g)
     term1 = e / (-g + 1)
     term2 = (e2 / e) ** (-g + 1) - (e1 / e) ** (-g + 1)
     return term1 * term2
@@ -159,7 +140,6 @@ def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
         Energy band minimum
     e2 : array_like
         Energy band maximum
-
     """
     g1 = 1. - g
     g2 = 2. - g
@@ -213,12 +193,6 @@ def power_law_I_from_points(e1, e2, f1, f2):
 
 def power_law_f_from_points(e1, e2, f1, f2, e):
     """Linear interpolation"""
-    e1 = np.asarray(e1, float)
-    e2 = np.asarray(e2, float)
-    f1 = np.asarray(f1, float)
-    f2 = np.asarray(f2, float)
-    e = np.asarray(e, float)
-
     logdy = np.log(f2 / f1)
     logdx = np.log(e2 / e1)
     logy = np.log(f1) + np.log(e / e1) * (logdy / logdx)
@@ -252,8 +226,7 @@ def power_law_I_with_err(f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0,
 
 
 def power_law_compatibility(par_low, par_high):
-    """Quantify spectral compatibility of power-law
-    measurements in two energy bands.
+    """Quantify compatibility of power-law measurements in two energy bands.
 
     Reference: 2008ApJ...679.1299F Equation (2)
 
@@ -266,7 +239,7 @@ def power_law_compatibility(par_low, par_high):
     where e is the pivot energy, f is the flux density
     and g the spectral index
     """
-    # Unpack power-law paramters
+    # Unpack power-law parameters
     e_high, f_high, f_err_high, g_high, g_err_high = par_high
     e_low, f_low, f_err_low, g_low, g_err_low = par_low
 
@@ -276,11 +249,16 @@ def power_law_compatibility(par_low, par_high):
     # with a power law, i.e. a straight line in the log_e, log_f plot
     g_match = -log_delta_f / log_delta_e
 
-    # sigma is the number of standar deviations the match index
+    # sigma is the number of standard deviations the match index
     # is different from the measured index in one band.
     # (see Funk et al. (2008ApJ...679.1299F) eqn. 2)
     sigma_low = (g_match - g_low) / g_err_low
     sigma_high = (g_match - g_high) / g_err_high
-    sigma_comb = np.sqrt(sigma_low ** 2 + sigma_high ** 2)
+    sigma_combined = np.sqrt(sigma_low ** 2 + sigma_high ** 2)
 
-    return g_match, sigma_low, sigma_high, sigma_comb
+    return OrderedDict([
+        ('g_match', g_match),
+        ('sigma_low', sigma_low),
+        ('sigma_high', sigma_high),
+        ('sigma_combined', sigma_combined),
+    ])

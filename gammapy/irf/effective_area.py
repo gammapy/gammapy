@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from ..extern.bunch import Bunch
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
@@ -57,14 +57,14 @@ class EffectiveAreaTable(object):
     Find energy where the effective area is at 10% of its maximum value
 
     >>> import numpy as np
-    >>> from gammapy.irf import EffectiveAreaTable
     >>> import astropy.units as u
-    >>> energy = np.logspace(-1,2) * u.TeV
+    >>> from gammapy.irf import EffectiveAreaTable
+    >>> energy = np.logspace(-1, 2) * u.TeV
     >>> aeff_max = aeff.max_area
     >>> print(aeff_max).to('m2')
     156909.413371 m2
-    >>> ener = aeff.find_energy(0.1 * aeff_max)
-    >>> print(ener)
+    >>> energy_threshold = aeff.find_energy(0.1 * aeff_max)
+    >>> print(energy_threshold)
     0.185368478744 TeV
     """
 
@@ -72,8 +72,7 @@ class EffectiveAreaTable(object):
         axes = [BinnedDataAxis(energy_lo, energy_hi,
                                interpolation_mode='log', name='energy')]
         self.data = NDDataArray(axes=axes, data=data)
-        if meta is not None:
-            self.meta = Bunch(meta)
+        self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     @property
     def energy(self):
@@ -145,7 +144,7 @@ class EffectiveAreaTable(object):
                 'CTA': [1.71e11, 0.0891, 1e5]}
 
         if instrument not in pars.keys():
-            ss = 'Unknown instrument: {0}\n'.format(instrument)
+            ss = 'Unknown instrument: {}\n'.format(instrument)
             ss += 'Valid instruments: HESS, HESS2, CTA'
             raise ValueError(ss)
 
@@ -159,28 +158,33 @@ class EffectiveAreaTable(object):
 
         data = value * u.cm ** 2
 
-        return cls(energy_lo=energy.lower_bounds,
-                   energy_hi=energy.upper_bounds, data=data)
+        return cls(
+            energy_lo=energy.lower_bounds,
+            energy_hi=energy.upper_bounds,
+            data=data,
+        )
 
     @classmethod
     def from_table(cls, table):
-        """ARF reader"""
-        energy_col = 'ENERG'
-        data_col = 'SPECRESP'
+        """Create from `~astropy.table.Table` in ARF format.
 
-        energy_lo = table['{}_LO'.format(energy_col)].quantity
-        energy_hi = table['{}_HI'.format(energy_col)].quantity
-        data = table['{}'.format(data_col)].quantity
+        Data format specification: :ref:`gadf:ogip-arf`        
+        """
+        energy_lo = table['ENERG_LO'].quantity
+        energy_hi = table['ENERG_HI'].quantity
+        data = table['SPECRESP'].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='SPECRESP'):
+        """Create from `~astropy.io.fits.HDUList`."""
         fits_table = hdulist[hdu]
         table = fits_table_to_table(fits_table)
         return cls.from_table(table)
 
     @classmethod
     def read(cls, filename, hdu='SPECRESP', **kwargs):
+        """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename), **kwargs)
         try:
@@ -191,24 +195,30 @@ class EffectiveAreaTable(object):
             raise ValueError(msg)
 
     def to_table(self):
-        """Convert to `~astropy.table.Table`.
+        """Convert to `~astropy.table.Table` in ARF format.
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        ener_lo = self.energy.lo
-        ener_hi = self.energy.hi
-        data = self.evaluate_fill_nan()
-        names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
-        meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
-                    hduclas2='SPECRESP')
-        return Table([ener_lo, ener_hi, data], names=names, meta=meta)
+        table = Table()
+        table.meta = OrderedDict([
+            ('name', 'SPECRESP'),
+            ('hduclass', 'OGIP'),
+            ('hduclas1', 'RESPONSE'),
+            ('hduclas2', 'SPECRESP'),
+        ])
+        table['ENERG_LO'] = self.energy.lo
+        table['ENERG_HI'] = self.energy.hi
+        table['SPECRESP'] = self.evaluate_fill_nan()
+        return table
 
     def to_hdulist(self):
+        """Convert to `~astropy.io.fits.HDUList`."""
         hdu = table_to_fits_table(self.to_table())
         prim_hdu = fits.PrimaryHDU()
         return fits.HDUList([prim_hdu, hdu])
 
     def write(self, filename, **kwargs):
+        """Write to file."""
         filename = make_path(filename)
         self.to_hdulist().writeto(str(filename), **kwargs)
 
@@ -230,7 +240,7 @@ class EffectiveAreaTable(object):
 
     @property
     def max_area(self):
-        """Maximum effective area"""
+        """Maximum effective area."""
         cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
         return cleaned_data.max()
 
@@ -261,7 +271,7 @@ class EffectiveAreaTable(object):
         return energy * self.energy.unit
 
     def to_sherpa(self, name):
-        """Return `~sherpa.astro.data.DataARF`
+        """Convert to `~sherpa.astro.data.DataARF`
 
         Parameters
         ----------
@@ -269,16 +279,13 @@ class EffectiveAreaTable(object):
             Instance name
         """
         from sherpa.astro.data import DataARF
-
         table = self.to_table()
-        kwargs = dict(
+        return DataARF(
             name=name,
             energ_lo=table['ENERG_LO'].quantity.to('keV').value,
             energ_hi=table['ENERG_HI'].quantity.to('keV').value,
             specresp=table['SPECRESP'].quantity.to('cm2').value,
         )
-
-        return DataARF(**kwargs)
 
 
 class EffectiveAreaTable2D(object):
@@ -332,8 +339,7 @@ class EffectiveAreaTable2D(object):
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
-        if meta is not None:
-            self.meta = Bunch(meta)
+        self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     @property
     def energy(self):
@@ -346,38 +352,38 @@ class EffectiveAreaTable2D(object):
     @property
     def low_threshold(self):
         """Low energy threshold"""
-        return self.meta.LO_THRES * u.TeV
+        return self.meta['LO_THRES'] * u.TeV
 
     @property
     def high_threshold(self):
         """High energy threshold"""
-        return self.meta.HI_THRES * u.TeV
+        return self.meta['HI_THRES'] * u.TeV
 
     @classmethod
     def from_table(cls, table):
-        """Read from table.
-        
+        """Read from `~astropy.table.Table`.
+
         Data format specification: :ref:`gadf:aeff_2d`
         """
-        energy_lo = table['ENERG_LO'].quantity[0]
-        energy_hi = table['ENERG_HI'].quantity[0]
-        offset_lo = table['THETA_LO'].quantity[0]
-        offset_hi = table['THETA_HI'].quantity[0]
-        data = table['EFFAREA'].quantity[0].transpose()
         return cls(
-            energy_lo=energy_lo, energy_hi=energy_hi,
-            offset_lo=offset_lo, offset_hi=offset_hi,
-            data=data, meta=table.meta,
+            energy_lo=table['ENERG_LO'].quantity[0],
+            energy_hi=table['ENERG_HI'].quantity[0],
+            offset_lo=table['THETA_LO'].quantity[0],
+            offset_hi=table['THETA_HI'].quantity[0],
+            data=table['EFFAREA'].quantity[0].transpose(),
+            meta=table.meta,
         )
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):
+        """Create from `~astropy.io.fits.HDUList`."""
         fits_table = hdulist[hdu]
         table = fits_table_to_table(fits_table)
         return cls.from_table(table)
 
     @classmethod
     def read(cls, filename, hdu='EFFECTIVE AREA'):
+        """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
         try:
@@ -388,7 +394,7 @@ class EffectiveAreaTable2D(object):
             raise ValueError(msg)
 
     def to_effective_area_table(self, offset, energy=None):
-        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`
+        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.
 
         Parameters
         ----------
@@ -401,11 +407,13 @@ class EffectiveAreaTable2D(object):
             energy = self.energy.bins
 
         energy = EnergyBounds(energy)
-
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
-        return EffectiveAreaTable(energy_lo=energy.lower_bounds,
-                                  energy_hi=energy.upper_bounds,
-                                  data=area)
+
+        return EffectiveAreaTable(
+            energy_lo=energy.lower_bounds,
+            energy_hi=energy.upper_bounds,
+            data=area,
+        )
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.
@@ -424,7 +432,6 @@ class EffectiveAreaTable2D(object):
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-
             Axis
         """
         import matplotlib.pyplot as plt
@@ -444,15 +451,15 @@ class EffectiveAreaTable2D(object):
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
-        ax.set_ylabel('Effective Area [{0}]'.format(self.data.data.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
 
         return ax
 
     def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
-        """Plot effective area versus offset for a given energy
+        """Plot effective area versus offset for a given energy.
 
         Parameters
         ----------
@@ -489,15 +496,14 @@ class EffectiveAreaTable2D(object):
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel('Offset ({0})'.format(self.data.axis('offset').unit))
+        ax.set_xlabel('Offset ({})'.format(self.data.axis('offset').unit))
         ax.set_ylabel('Relative Effective Area')
         ax.legend(loc='best')
 
         return ax
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot effective area image.
-        """
+        """Plot effective area image."""
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
@@ -516,8 +522,8 @@ class EffectiveAreaTable2D(object):
         caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_ylabel('Offset ({0})'.format(offset.unit))
-        ax.set_xlabel('Energy ({0})'.format(energy.unit))
+        ax.set_ylabel('Offset ({})'.format(offset.unit))
+        ax.set_xlabel('Energy ({})'.format(energy.unit))
 
         xmin, xmax = energy.value.min(), energy.value.max()
         ax.set_xlim(xmin, xmax)

@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
 Maps (2D and 3D).
 
@@ -7,3 +8,9 @@ This is work in progress, we're prototyping.
 * Not mentioned to users in the HTML docs at this point
 * Contributions and feedback welcome!
 """
+from .base import *
+from .geom import *
+from .hpx import *
+from .hpxcube import *
+from .hpxmap import *
+from .wcs import *

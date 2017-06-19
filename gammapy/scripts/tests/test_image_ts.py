@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
-from astropy.tests.helper import pytest
+import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ...image import SkyImageList
 from ..image_ts import image_ts_main
@@ -33,6 +33,6 @@ def test_command_line_gammapy_image_ts(tmpdir, scale):
     opts = dict(rtol=1e-2, atol=1e-5, equal_nan=True)
     assert_allclose(actual['ts'].data, expected['ts'].data, **opts)
     assert_allclose(actual['sqrt_ts'].data, expected['sqrt_ts'].data, **opts)
-    assert_allclose(actual['amplitude'].data, expected['amplitude'].data, **opts)
+    assert_allclose(actual['flux'].data, expected['amplitude'].data, **opts)
 
     assert 'niter' in actual.names

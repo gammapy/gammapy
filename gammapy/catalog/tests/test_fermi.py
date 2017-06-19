@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
 from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL,
                                 PLSuperExpCutoff3FGL)
@@ -11,13 +12,13 @@ from ...utils.testing import requires_data, requires_dependency
 
 MODEL_TEST_DATA_3FGL = [
     (0, PowerLaw, u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1'),
-                  u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
+     u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
     (4, LogParabola, u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1'),
-                     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
+     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
     (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
-                                        u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
+     u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
     (960, PLSuperExpCutoff3FGL, u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
-                                u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
+     u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
 ]
 
 MODEL_TEST_DATA_3FHL = [
@@ -63,8 +64,8 @@ class TestFermi3FGLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert '3FGL J0534.5+2201' in ss # Source name
-        assert '83.637 deg' in ss # RA
+        assert '3FGL J0534.5+2201' in ss  # Source name
+        assert '83.637 deg' in ss  # RA
 
     @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
     def test_spectral_model(self, index, model_type, desired, desired_err):
@@ -89,7 +90,14 @@ class TestFermi3FGLObject:
         assert 'flux_ul' in flux_points.table.colnames
 
         desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
-        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
+
+    def test_flux_points_ul(self):
+        source = self.cat['3FGL J0000.2-3738']
+        flux_points = source.flux_points
+
+        desired = [4.096391e-09, 6.680059e-10, np.nan, np.nan, np.nan]
+        assert_allclose(flux_points.table['flux_ul'].data, desired, rtol=1e-5)
 
     def test_lightcurve(self):
         lc = self.source.lightcurve
@@ -131,12 +139,12 @@ class TestFermi1FHLObject:
         src = self.cat['1FHL J0153.1+7515']
         flux_points = src.flux_points
         actual = flux_points.table['flux']
-        desired = [5.523017e-11, np.nan, np.nan] * u.Unit('cm-2 s-1')
+        desired = [5.523017e-11, 0, 0] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired)
 
         actual = flux_points.table['flux_ul']
-        desired = [np.nan, 2.081589e-11, 1.299698e-11] * u.Unit('cm-2 s-1')
-        assert_quantity_allclose(actual, desired, rtol=1E-5)
+        desired = [np.nan, 4.163177e-11, 2.599397e-11] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired, rtol=1e-5)
 
 
 @requires_data('gammapy-extra')
@@ -162,12 +170,12 @@ class TestFermi2FHLObject:
         src = self.cat['PKS 2155-304']
         flux_points = src.flux_points
         actual = flux_points.table['flux']
-        desired = [2.866363e-10, 6.118736e-11, np.nan] * u.Unit('cm-2 s-1')
+        desired = [2.866363e-10, 6.118736e-11, 3.257970e-16] * u.Unit('cm-2 s-1')
         assert_quantity_allclose(actual, desired)
 
         actual = flux_points.table['flux_ul']
-        desired = [np.nan, np.nan, 6.470300e-12] * u.Unit('cm-2 s-1')
-        assert_quantity_allclose(actual, desired)
+        desired = [np.nan, np.nan, 1.294092e-11] * u.Unit('cm-2 s-1')
+        assert_quantity_allclose(actual, desired, rtol=1E-3)
 
 
 @requires_data('gammapy-extra')
@@ -211,7 +219,7 @@ class TestFermi3FHLObject:
         assert 'flux_ul' in flux_points.table.colnames
 
         desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10, 4.30737078315e-11]
-        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1E-5)
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FHL)
     def test_crab_alias(self, name):

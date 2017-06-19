@@ -24,13 +24,13 @@ from ..image.core import SkyImage, MapBase
 from ..spectrum import LogEnergyAxis
 from ..spectrum.utils import _trapz_loglog
 
-__all__ = ['SkyCube']
+__all__ = [
+    'SkyCube',
+]
 
 
 class SkyCube(MapBase):
-    """
-    Sky cube with dimensions lon, lat and energy.
-
+    """Sky cube with dimensions lon, lat and energy.
 
     .. note::
 
@@ -76,9 +76,7 @@ class SkyCube(MapBase):
 
     @lazyproperty
     def _interpolate_data(self):
-        """
-        Interpolate data using `~scipy.interpolate.RegularGridInterpolator`)
-        """
+        """Interpolate data using `~scipy.interpolate.RegularGridInterpolator`."""
         from scipy.interpolate import RegularGridInterpolator
 
         # set up log interpolation
@@ -102,7 +100,7 @@ class SkyCube(MapBase):
 
     @classmethod
     def read_hdu(cls, hdu_list):
-        """Read sky cube from HDU.
+        """Read sky cube from HDU list.
 
         Parameters
         ----------
@@ -163,7 +161,7 @@ class SkyCube(MapBase):
             data = Quantity(data, '1 / (cm2 MeV s sr)')
             name = 'flux'
         elif format == 'fermi-counts':
-            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
+            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'])
             energy_axis = LogEnergyAxis(energy, mode='edges')
             data = Quantity(data, 'count')
             name = 'counts'
@@ -180,8 +178,7 @@ class SkyCube(MapBase):
         return obj
 
     def fill_events(self, events, weights=None):
-        """
-        Fill events (modifies ``data`` attribute).
+        """Fill events (modifies ``data`` attribute).
 
         Parameters
         ----------
@@ -202,8 +199,7 @@ class SkyCube(MapBase):
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enumbins=10, eunit='TeV', mode='edges', **kwargs):
-        """
-        Create empty sky cube with log equal energy binning from the scratch.
+        """Create empty sky cube with log equal energy binning from the scratch.
 
         Parameters
         ----------
@@ -233,7 +229,6 @@ class SkyCube(MapBase):
         -------
         empty_cube : `SkyCube`
             Empty sky cube object.
-
         """
         image = SkyImage.empty(**kwargs)
 
@@ -250,9 +245,7 @@ class SkyCube(MapBase):
 
     @classmethod
     def empty_like(cls, reference, energies=None, unit='', fill=0):
-        """
-        Create an empty sky cube with the same WCS and energy specification
-        as given reference.
+        """Create an empty sky cube with a given WCS and energy specification.
 
         Parameters
         ----------
@@ -285,7 +278,6 @@ class SkyCube(MapBase):
             energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
             cube = SkyCube.empty_like(reference=image, energies=energies)
 
-
         Returns
         -------
         empty_cube : `SkyCube`
@@ -304,12 +296,12 @@ class SkyCube(MapBase):
                 raise ValueError("'energies' must be instance of Energy or EnergyBounds, "
                                  "but {} was given.".format(type(energies)))
             energy_axis = LogEnergyAxis(energies, mode=mode)
-            data = np.ones_like(reference.data)
+            data = np.ones(reference.data.shape)
             data = data * np.ones(enumbins).reshape((-1, 1, 1))
 
         elif isinstance(reference, SkyCube):
             energy_axis = reference.energy_axis
-            data = np.ones_like(reference.data.value)
+            data = np.ones(reference.data.shape)
 
         else:
             raise ValueError("'reference' must be instance of SkyImage or SkyCube")
@@ -318,8 +310,7 @@ class SkyCube(MapBase):
                    energy_axis=energy_axis)
 
     def energies(self, mode='center'):
-        """
-        Energy coordinate vector.
+        """Energy coordinate vector.
 
         Parameters
         ----------
@@ -335,12 +326,21 @@ class SkyCube(MapBase):
             z = np.arange(self.data.shape[0])
         elif mode == 'edges':
             z = np.arange(self.data.shape[0] + 1) - 0.5
+        else:
+            raise ValueError('Invalid mode: {}'.format(mode))
+
         return self.energy_axis.wcs_pix2world(z)
 
+    @property
+    def energy_width(self):
+        """Energy bin width vector (Quantity)"""
+        ebounds = self.energies(mode='edges')
+        return ebounds[1:] - ebounds[:-1]
+
     def cutout(self, position, size):
-        """
-        Cut out rectangular piece of a cube. See `~gammapy.image.SkyImage.cutout()`
-        for details.
+        """Cut out rectangular piece of a cube.
+
+        See `~gammapy.image.SkyImage.cutout()` for details.
         """
         out = []
         for energy in self.energies():
@@ -371,7 +371,7 @@ class SkyCube(MapBase):
         x, y = self.sky_image_ref.wcs_skycoord_to_pixel(position)
         z = self.energy_axis.wcs_world2pix(energy)
         # TODO: check order, so that it corresponds to data axis order
-        return (x, y, z)
+        return x, y, z
 
     def wcs_pixel_to_skycoord(self, x, y, z):
         """Convert pixel to world coordinates.
@@ -392,11 +392,10 @@ class SkyCube(MapBase):
         """
         position = self.sky_image_ref.wcs_pixel_to_skycoord(x, y)
         energy = self.energy_axis.wcs_pix2world(z)
-        return (position, energy)
+        return position, energy
 
     def to_sherpa_data3d(self, dstype='Data3D'):
-        """
-        Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
+        """Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
 
         Parameters
         ----------
@@ -422,7 +421,7 @@ class SkyCube(MapBase):
                              ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
                              self.data.value.ravel().shape)
 
-        if dstype == 'Data3D':
+        elif dstype == 'Data3D':
             coordinates = self.sky_image_ref.coordinates()
             ra = coordinates.data.lon.degree
             dec = coordinates.data.lat.degree
@@ -438,8 +437,7 @@ class SkyCube(MapBase):
             raise ValueError('Invalid sherpa data type.')
 
     def sky_image(self, energy, interpolation=None):
-        """
-        Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given energy.
+        """Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given energy.
 
         Parameters
         ----------
@@ -469,8 +467,7 @@ class SkyCube(MapBase):
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
     def sky_image_idx(self, idx):
-        """
-        Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given index.
+        """Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given index.
 
         Parameters
         ----------
@@ -488,26 +485,23 @@ class SkyCube(MapBase):
 
     @lazyproperty
     def sky_image_ref(self):
-        """
-        Empty reference `~gammapy.image.SkyImage`.
+        """Empty reference `~gammapy.image.SkyImage`.
 
         Examples
         --------
         Can be used to access the spatial information of the cube:
 
-            >>> from gammapy.cube import SkyCube
-            >>> cube = SkyCube.empty()
-            >>> coords = cube.sky_image_ref.coordinates()
-            >>> solid_angle = cube.sky_image_ref.solid_angle()
-
+        >>> from gammapy.cube import SkyCube
+        >>> cube = SkyCube.empty()
+        >>> coords = cube.sky_image_ref.coordinates()
+        >>> solid_angle = cube.sky_image_ref.solid_angle()
         """
         wcs = self.wcs.celestial
         data = np.zeros_like(self.data[0])
         return SkyImage(name=self.name, data=data, wcs=wcs)
 
     def lookup(self, position, energy, interpolation=None):
-        """
-        Lookup value in the cube at given sky position and energy.
+        """Lookup value in the cube at given sky position and energy.
 
         Parameters
         ----------
@@ -535,8 +529,7 @@ class SkyCube(MapBase):
         return vals
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
-        """
-        Show sky cube in image viewer.
+        """Show sky cube in image viewer.
 
         Parameters
         ----------
@@ -549,7 +542,6 @@ class SkyCube(MapBase):
         **kwargs : dict
             Keyword arguments passed to `matplotlib.pyplot.imshow`.
         """
-        import matplotlib.pyplot as plt
         from ipywidgets import interact
 
         if viewer == 'mpl':
@@ -573,8 +565,7 @@ class SkyCube(MapBase):
             raise ValueError('Invalid viewer: {}'.format(viewer))
 
     def plot_rgb(self, ax=None, fig=None, **kwargs):
-        """
-        Plot sky cube as RGB image.
+        """Plot sky cube as RGB image.
 
         Parameters
         ----------
@@ -622,8 +613,7 @@ class SkyCube(MapBase):
         return ax
 
     def sky_image_integral(self, emin, emax, nbins=10, per_decade=False, interpolation='linear'):
-        """
-        Integrate cube along the energy axes using the log-log trapezoidal rule.
+        """Integrate cube along the energy axes using the log-log trapezoidal rule.
 
         Parameters
         ----------
@@ -653,16 +643,36 @@ class SkyCube(MapBase):
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)
         else:
-            zmin = np.rint(self.energy_axis.wcs_world2pix(emin)).astype('int')
-            zmax = np.rint(self.energy_axis.wcs_world2pix(emax)).astype('int')
-            energy = self.energies()[zmin:zmax]
-            data = self.data[zmin:zmax]
+            energy_slice = self._get_energy_slice_for_energy_range(emin, emax)
+            energy = self.energies()[energy_slice]
+            data = self.data[energy_slice]
+
         integral = _trapz_loglog(data, energy, axis=0)
         name = 'integrated {}'.format(self.name)
         return SkyImage(name=name, data=integral, wcs=self.wcs.celestial)
 
+    # TODO: is this the rounding we want? document what it does!
+    def _get_energy_slice_for_energy_range(self, emin, emax):
+        idx_min = np.rint(self.energy_axis.wcs_world2pix(emin)).astype('int')
+        idx_max = np.rint(self.energy_axis.wcs_world2pix(emax)).astype('int')
+        return slice(idx_min, idx_max)
+
+    def sky_image_sum(self, emin, emax):
+        """Sum cube along the energy axis.
+
+        Similar to the ``sky_image_integral`` method,
+        but not doing interpolation / integration.
+
+        Just selects a subset of energy bins and sums those.
+        This is useful for counts.
+        """
+        sky_image = self.sky_image_ref()
+        energy_slice = self._get_energy_slice_for_energy_range(emin, emax)
+        sky_image.data = self.data[energy_slice].sum(axis=1)
+        return sky_image
+
     def reproject(self, reference, mode='interp', *args, **kwargs):
-        """Spatially reprojects a `SkyCube` onto a reference.
+        """Reproject spatial dimensions onto a reference image.
 
         Parameters
         ----------
@@ -697,8 +707,7 @@ class SkyCube(MapBase):
                               energy_axis=self.energy_axis)
 
     def convolve(self, kernels, **kwargs):
-        """
-        Convolve cube with a given set of kernels.
+        """Convolve cube with a given set of kernels.
 
         Parameters
         ----------
@@ -726,14 +735,12 @@ class SkyCube(MapBase):
                               energy_axis=self.energy_axis)
 
     def to_fits(self, format):
-        """Writes SkyCube to FITS hdu_list.
+        """Write to FITS HDU list.
 
         Parameters
         ----------
         format : {'fermi-counts', 'fermi-background', 'fermi-exposure'}
             Fits file format.
-
-
 
         Returns
         -------
@@ -754,14 +761,12 @@ class SkyCube(MapBase):
             energy_table['E_MAX'] = energies[1:]
             energy_table.meta['name'] = 'EBOUNDS'
             energy_hdu = table_to_fits_table(energy_table)
-
         elif format in ['fermi-exposure', 'fermi-background']:
             # for BinTableHDU's the data must be added via a Table object
             energy_table = Table()
             energy_table['Energy'] = self.energies()
             energy_table.meta['name'] = 'ENERGIES'
             energy_hdu = table_to_fits_table(energy_table)
-
         else:
             raise ValueError('Not a valid cube fits format')
 
@@ -769,16 +774,14 @@ class SkyCube(MapBase):
         return hdu_list
 
     def to_images(self):
-        """Convert to `~gammapy.cube.SkyCubeImages`.
-        """
+        """Convert to `~gammapy.cube.SkyCubeImages`."""
         from .images import SkyCubeImages
         energies = self.energies(mode='center')
         images = [self.sky_image(energy) for energy in energies]
         return SkyCubeImages(self.name, images, self.wcs, energies)
 
     def spectrum(self, region):
-        """
-        Extract spectrum in a given sky region.
+        """Extract spectrum in a given sky region.
 
         Parameters
         ----------
@@ -806,8 +809,7 @@ class SkyCube(MapBase):
         return spectrum
 
     def region_mask(self, region):
-        """
-        Create a boolean cube mask for a region.
+        """Create a boolean cube mask for a region.
 
         The mask is:
 
@@ -844,7 +846,6 @@ class SkyCube(MapBase):
         self.to_fits(format).writeto(filename, **kwargs)
 
     def __str__(self):
-        # Copied from `spectral-cube` package
         ss = "Sky cube {} with shape={}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
             ss += ":\n"
@@ -861,9 +862,7 @@ class SkyCube(MapBase):
         return ss
 
     def info(self):
-        """
-        Print summary info about the cube.
-        """
+        """Print summary info about the cube."""
         print(repr(self))
 
     @staticmethod

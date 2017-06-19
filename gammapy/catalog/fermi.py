@@ -10,14 +10,14 @@ from astropy.table import QTable, Table
 from astropy.time import Time
 from astropy.utils.data import download_file
 from astropy.tests.helper import ignore_warnings
+from astropy.modeling.models import Gaussian2D, Disk2D
+from astropy.coordinates import Angle
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
-from ..utils.table import table_standardise
+from ..utils.table import table_standardise_units_inplace
 from ..image import SkyImage
-from ..spectrum import (
-    FluxPoints,
-    compute_flux_points_dnde
-)
+from ..image.models import Delta2D, Template2D
+from ..spectrum import FluxPoints
 from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
@@ -42,9 +42,15 @@ __all__ = [
 ]
 
 
-class SourceCatalogObject3FGL(SourceCatalogObject):
+def compute_flux_points_ul(quantity, quantity_errp):
+    """Compute UL value for fermi flux points.
+
+    See https://arxiv.org/pdf/1501.02003.pdf (page 30)
     """
-    One source from the Fermi-LAT 3FGL catalog.
+    return 2 * quantity_errp + quantity
+
+class SourceCatalogObject3FGL(SourceCatalogObject):
+    """One source from the Fermi-LAT 3FGL catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
@@ -60,15 +66,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     """
 
     def __str__(self, info='all'):
-        """
-        Summary info string.
+        """Summary info string.
 
         Parameters
         ----------
         info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
             Comma separated list of options
         """
-
         if info == 'all':
             info = 'basic,position,spectral,lightcurve'
 
@@ -275,9 +279,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.SpectralModel`)."""
         spec_type = self.data['SpectrumType'].strip()
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux_Density']
@@ -318,9 +320,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         e_ref = self._ebounds.log_centers
@@ -344,17 +344,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         # handle upper limits
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         # handle upper limits
         table['eflux_ul'] = np.nan * nuFnu.unit
-        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
-
-        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
-            table[column][is_ul] = np.nan
+        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
+        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
@@ -365,8 +361,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`).
-        """
+        """Lightcurve (`~gammapy.time.LightCurve`)."""
         flux = self.data['Flux_History']
 
         # Flux error is given as asymmetric high/low
@@ -439,9 +434,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Integral flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
@@ -455,31 +448,27 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         flux_points = FluxPoints(table)
 
-        flux_points_dnde = compute_flux_points_dnde(
-            flux_points, model=self.spectral_model)
-        return flux_points_dnde
+        # TODO: change this and leave it up to the caller to convert to dnde
+        # See https://github.com/gammapy/gammapy/issues/1034
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model `~gammapy.spectrum.models.SpectralModel`."""
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux']
         pars['emin'], pars['emax'] = self.energy_range
         pars['index'] = self.data['Spectral_Index'] * u.dimensionless_unscaled
         errs['amplitude'] = self.data['Unc_Flux']
         errs['index'] = self.data['Unc_Spectral_Index'] * u.dimensionless_unscaled
-        pwl = PowerLaw2(**pars)
-        pwl.parameters.set_parameter_errors(errs)
-        return pwl
+        model = PowerLaw2(**pars)
+        model.parameters.set_parameter_errors(errs)
+        return model
 
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
@@ -518,9 +507,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Integral flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         table['e_min'] = self._ebounds.lower_bounds
@@ -534,22 +521,18 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         flux_points = FluxPoints(table)
 
-        flux_points_dnde = compute_flux_points_dnde(
-            flux_points, model=self.spectral_model)
-        return flux_points_dnde
+        # TODO: change this and leave it up to the caller to convert to dnde
+        # See https://github.com/gammapy/gammapy/issues/1034
+        return flux_points.to_sed_type('dnde', model=self.spectral_model)
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux50']
         pars['emin'], pars['emax'] = self.energy_range
@@ -558,9 +541,9 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         errs['amplitude'] = self.data['Unc_Flux50']
         errs['index'] = self.data['Unc_Spectral_Index'] * u.dimensionless_unscaled
 
-        pwl = PowerLaw2(**pars)
-        pwl.parameters.set_parameter_errors(errs)
-        return pwl
+        model = PowerLaw2(**pars)
+        model.parameters.set_parameter_errors(errs)
+        return model
 
 
 class SourceCatalogObject3FHL(SourceCatalogObject):
@@ -591,9 +574,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """
-        Best fit spectral model `~gammapy.spectrum.models.SpectralModel`.
-        """
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         d = self.data
         spec_type = d['SpectrumType'].strip()
         pars, errs = {}, {}
@@ -619,9 +600,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """
-        Flux points (`~gammapy.spectrum.FluxPoints`).
-        """
+        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta['SED_TYPE'] = 'flux'
         e_ref = self._ebounds.log_centers
@@ -646,21 +625,64 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         # handle upper limits
         table['flux_ul'] = np.nan * flux_err.unit
-        table['flux_ul'][is_ul] = table['flux_errp'][is_ul]
-
-        for column in ['flux', 'flux_errp', 'flux_errn']:
-            table[column][is_ul] = np.nan
+        flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
+        table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         table['eflux_ul'] = np.nan * e2dnde.unit
-        table['eflux_ul'][is_ul] = table['eflux_errp'][is_ul]
-
-        for column in ['eflux', 'eflux_errp', 'eflux_errn']:
-            table[column][is_ul] = np.nan
+        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
+        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         # TODO: remove this computation here.
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
         return FluxPoints(table)
+
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Source spatial model.
+        """
+        d = self.data
+        flux = self.spectral_model.integral(emin, emax)
+        amplitude = flux.to('cm-2 s-1').value
+
+        pars = {}
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        if self.is_pointlike:
+            pars['amplitude'] = amplitude
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
+        else:
+            de = self.data_extended
+            morph_type = de['Spatial_Function'].strip()
+
+            if morph_type == 'RadialDisk':
+                pars['x_0'] = glon.value
+                pars['y_0'] = glat.value
+                pars['R_0'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] = amplitude / (np.pi * pars['R_0'] ** 2)
+                return Disk2D(**pars)
+            elif morph_type == 'SpatialMap':
+                filename = de['Spatial_Filename'].strip()
+                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17/Templates/'
+                template = Template2D.read(base + filename)
+                template.amplitude = amplitude
+                return template
+            elif morph_type == 'RadialGauss':
+                pars['x_mean'] = glon.value
+                pars['y_mean'] = glat.value
+                pars['x_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['y_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
+                return Gaussian2D(**pars)
+            else:
+                raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def is_pointlike(self):
+        return self.data['Extended_Source_Name'].strip() == ''
 
 
 class SourceCatalog3FGL(SourceCatalog):
@@ -677,7 +699,7 @@ class SourceCatalog3FGL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
@@ -706,7 +728,7 @@ class SourceCatalog1FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
@@ -733,7 +755,7 @@ class SourceCatalog2FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='2FHL Source Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC', '3FGL_Name', '1FHL_Name', 'TeVCat_Name')
@@ -762,7 +784,7 @@ class SourceCatalog3FHL(SourceCatalog):
 
         with ignore_warnings():  # ignore FITS units warnings
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
-        table_standardise(table)
+        table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
         source_name_alias = ('ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM')
@@ -882,7 +904,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     elif catalog == '2PC':
         url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)
@@ -938,7 +960,7 @@ def fetch_fermi_extended_sources(catalog):
     elif catalog == '1FHL':
         url = BASE_URL + '1FHL/LAT_extended_sources_v12.tar'
     else:
-        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss = 'Invalid catalog: {}\n'.format(catalog)
         raise ValueError(ss)
 
     filename = download_file(url, cache=True)

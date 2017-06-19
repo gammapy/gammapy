@@ -18,63 +18,106 @@ Summary
 
 For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/milestones/0.7
 
+- Dropped support for Python 3.4. (probably everything still works with Python 3.4, but we don't
+  test with Python 3.4 anymore in our continuous integration).
+
+**Contributors:**
+
+- Axel Donath
+- Brigitta Sipocz
+- Christoph Deil
+- Johannes King
+- Roberta Zanin (new)
+- Rubén López-Coto (new)
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
+
+- [#1040] Add combined 3D model and simple npred function (Christoph Deil)
+- [#1038] Remove gammapy.utils.mpl_style (Christoph Deil)
+- [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
+- [#1032] Improve table unit standardisation and flux points (Christoph Deil)
+- [#1031] Add HGPS catalog spatial models (Axel Donath)
+- [#1029] Add 3D model simulation example (Roberta Zanin)
+- [#1027] Add gamma-cat resource and resource index classes (Christoph Deil)
+- [#1026] Fix Fermi catalog flux points upper limits (Axel Donath)
+- [#1025] Remove spectrum butterfly class (Christoph Deil)
+- [#1021] Fix spiralarm=False case in make_base_catalog_galactic (Ruben Lopez-Coto)
+- [#1014] Introduce TSImageEstimator class (Axel Donath)
+- [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
+- [#845] Add background model component to SpectrumFit (Johannes King)
 
 .. _gammapy_0p6_release:
 
-0.6 (Mar 3, 2017)
------------------
+0.6 (April 28, 2017)
+--------------------
 
 Summary
 +++++++
 
-- Not released yet. For plans and progress for Gammapy 0.6, see https://github.com/gammapy/gammapy/milestones/0.6
-- XXX contributors (XXX new)
-- 3 months of work (from November 22, 2016 to March 3, 2017)
-- XXX pull requests (not all listed below)
+- Released on April 28, 2017 (`Gammapy 0.6 on PyPI <https://pypi.python.org/pypi/gammapy/0.6>`__)
+- 14 contributors (5 new)
+- 5 months of work (from November 22, 2016 to April 28, 2017)
+- 147 pull requests (not all listed below)
 
 **What's new?**
 
 - Release and installation
     - Until now, we had a roughly bi-yearly release cycle for Gammapy.
       Starting now, we will make stable releases more often, to ship features and fixes to Gammapy users more quickly.
-    - Gammapy 0.6 requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.3+, Sherpa 4.9.0+
-      (most things will still work with older Astropy and Sherpa, but we dropped testing
-      for older versions from our continuous integration)
-    - Gammapy now available via Macports (``port install py35-gammapy``)
+    - Gammapy 0.6 requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.3+, Sherpa 4.9.0+ .
+      Most things will still work with older Astropy and Sherpa, but we dropped testing
+      for older versions from our continuous integration.
+    - Gammapy is now available via Macports, a package manager for Mac OS (``port install py35-gammapy``)
 - Documentation
-    - Many tutorial Jupyter notebooks added and existing ones improved
+    - Added many tutorials as Jupyter notebooks (linked to from the docs front-page)
     - Misc docs improvements and new getting started notebooks
-    - Separate section added for developer documentation, and extended developer documentation
-- **CTA**
-    - tbd: point out docs and examples
-    - better support for CTA IRFs
-- **Fermi-LAT**
-    - reference dataset: https://github.com/gammapy/gammapy-fermi-lat-data
-    - data access and first analysis example (tbd)
-- ``gammapy.catalog``
-    - Access to ``gamma-cat``
+- For CTA
+    - Better support for CTA IRFs
+    - A notebook showing how to analyse some simulated CTA data (preliminary files from first data challenge)
+    - Better support and documentation for CTA will be the focus of the next release (0.7), coming in a few weeks.
+- For Fermi-LAT
+    - Introduced a reference dataset: https://github.com/gammapy/gammapy-fermi-lat-data
+    - Added convenience class to work with Fermi-LAT datasets
+- gammapy.catalog
+    - Add support for gamma-cat, an open data collection and source catalog for gamma-ray astronomy
+      (https://github.com/gammapy/gamma-cat)
     - Access to more Fermi-LAT catalogs (1FHL, 2FHL, 3FHL)
-- ``gammapy.spectrum``
-    - much improved flux point class
+- gammapy.spectrum
+    - Better flux point class
+    - Add flux point SED fitter
     - EBL-absorbed spectral models
     - Improved spectrum simulation class
-    - Misc fixes and improvements (e.g. for energy dispersion)
-- ``gammapy.image``
-    - image radial and box profiles
-- ``gammapy.time``
-    - tbd: improved documentation using Fermi-LAT and gamma-cat lightcurves
-- ``gammapy.irf``:
+- gammapy.image
+    - Add image radial and box profiles
+    - Add adaptive ring background estimation
+    - Add adaptive image smooth algorithm
+- gammapy.cube
+    - Add prototype for 3D analysis of IACT data (work in progress)
+- gammapy.time
+    - Add prototype lightcurve estimator for IACT data (work in progress)
+- gammapy.irf
     - Many IRF classes now rewritten to use the generic ``NDDataArray`` and axis classes
-- ``gammapy.utils``:
-    - Add ``gammapy.utils.modeling`` with support for XML models (work in progress)
+    - Better handling of energy dispersion
+- gammapy.utils
+    - Add gammapy.utils.modeling (work in progress)
+    - Add gammapy.utils.sherpa (generic interface to sherpa for fitting, with models
+      and likelihood function defined in Gammapy) (work in progress)
+- Many small bugfixes and improvements throughout the codebase and documentation
 
 **Contributors:**
 
+- Arjun Voruganti (new)
 - Arpit Gogia (new)
 - Axel Donath
 - Brigitta Sipocz
 - Christoph Deil
 - Dirk Lennarz
+- Fabio Acero (new)
 - Johannes King
 - Julien Lefaucheur
 - Lars Mohrmann (new)
@@ -90,7 +133,24 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
+- [#1006] Add possibilty to skip runs based on alpha in SpectrumExtraction (Johannes King)
+- [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)
+- [#1001] Add SpectrumAnalysisIACT (Johannes King)
+- [#997] Add compute_chisq method to lightcurve class (Nachiketa Chakraborty)
+- [#994] Improve Gammapy installation docs (Christoph Deil)
+- [#988] Add spectral model absorbed by EBL that can be fit (Julien Lefaucheur)
+- [#985] Improve error methods on spectral models (Axel Donath)
+- [#979] Add flux point fitter class (Axel Donath)
+- [#976] Fixes to Galactic population simulation (Christoph Deil)
+- [#975] Add PLSuperExpCutoff3FGL spectral model (Axel Donath)
+- [#966] Remove SkyMask (merge with SkyImage) (Christoph Deil)
+- [#950] Add light curve computation (Julien Lefaucheur)
+- [#933] Change IRF plotting from imshow to pcolormesh (Axel Donath)
+- [#932] Change NDDataArray default_interp_kwargs to extrapolate (Johannes King)
+- [#919] Fix Double plot issue in notebooks and improve events.peek() (Fabio Acero)
+- [#911] Improve EnergyDispersion2D get_response and tests (Régis Terrier)
 - [#906] Fix catalog getitem to work with numpy int index (Zé Vinícius)
+- [#898] Add printout for 3FGL catalog objects (Arjun Voruganti)
 - [#893] Add Fermi-LAT 3FGL catalog object lightcurve property (Arpit Gogia)
 - [#888] Improve CTA IRF and simulation classes (point-like analysis) (Julien Lefaucheur)
 - [#885] Improve spectral model uncertainty handling (Axel Donath)

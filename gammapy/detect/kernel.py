@@ -16,18 +16,16 @@ __all__ = [
 
 
 class KernelBackgroundEstimator(object):
-    """
-    Estimate background and exclusion mask iteratively.
+    """Estimate background and exclusion mask iteratively.
 
-    Starting from an initial background estimate and exclusion mask (both provided,
-    optionally) the algorithm works as following:
+    Starting from an initial background estimate and exclusion mask
+    (both provided, optionally) the algorithm works as follows:
 
-        1. Compute significance image
-        2. Create exclusion mask by thresholding significance image
-        3. Compute improved background estimate based on new exclusion mask
+    1. Compute significance image
+    2. Create exclusion mask by thresholding significance image
+    3. Compute improved background estimate based on new exclusion mask
 
-    The steps are executed repeatedly until the exclusion mask does not change
-    anymore.
+    The steps are executed repeatedly until the exclusion mask does not change anymore.
 
     For flexibility the algorithm takes arbitrary source and background kernels.
 
@@ -49,7 +47,6 @@ class KernelBackgroundEstimator(object):
         Default False.
     base_dir : str (optional)
         Base of filenames if save_intermediate_results = True. Default 'temp'.
-
 
     See Also
     --------
@@ -77,7 +74,7 @@ class KernelBackgroundEstimator(object):
 
         Parameters
         ----------
-        images : `gammapy.image.SkyImageList`
+        images : `~gammapy.image.SkyImageList`
             Input sky images.
         niter_min : int
             Minimum number of iterations, to prevent early termination of the
@@ -89,20 +86,19 @@ class KernelBackgroundEstimator(object):
 
         Returns
         -------
-        images : `gammapy.image.SkyImageList`
+        images : `~gammapy.image.SkyImageList`
             List of sky images containing 'background', 'exclusion' mask and
             'significance' images.
         """
         images.check_required(['counts'])
-        wcs = images['counts'].wcs.copy()
         p = self.parameters
 
         # initial mask, if not present
-        if not 'exclusion' in images.names:
+        if 'exclusion' not in images.names:
             images['exclusion'] = SkyImage.empty_like(images['counts'], fill=1)
 
         # initial background estimate, if not present
-        if not 'background' in images.names:
+        if 'background' not in images.names:
             log.info('Estimating initial background.')
             images['background'] = self._estimate_background(images['counts'],
                                                              images['exclusion'])
@@ -131,9 +127,9 @@ class KernelBackgroundEstimator(object):
         return result
 
     def _is_converged(self, result, result_previous):
-        """
-        Check convercence by comparing the exclusion masks between two
-        subsequent iterations.
+        """Check convergence.
+
+        Criterion: exclusion masks unchanged in subsequent iterations.
         """
         from scipy.ndimage.morphology import binary_fill_holes
         mask = result['exclusion'].data == result_previous['exclusion'].data
@@ -159,8 +155,6 @@ class KernelBackgroundEstimator(object):
 
     # TODO: make more flexible, e.g. allow using TS images tec.
     def _estimate_significance(self, counts, background):
-        """
-        """
         kernel = CustomKernel(self.kernel_src)
         images_lima = compute_lima_image(counts, background, kernel=kernel)
         return images_lima['significance']
@@ -193,8 +187,7 @@ class KernelBackgroundEstimator(object):
         return SkyImageList([images['counts'], background, exclusion, significance])
 
     def images_stack_show(self, dpi=120):
-        """
-        Show image stack.
+        """Show image stack.
 
         Parameters
         ----------
@@ -214,13 +207,13 @@ class KernelBackgroundEstimator(object):
             ax_bkg = fig.add_subplot(niter_max + 1, 2, 2 * idx + 1, projection=wcs)
             bkg = images['background']
             bkg.plot(ax=ax_bkg, vmin=0)
-            ax_bkg.set_title('Background, N_iter = {0}'.format(idx),
+            ax_bkg.set_title('Background, N_iter = {}'.format(idx),
                              fontsize='small')
 
             ax_sig = fig.add_subplot(niter_max + 1, 2, 2 * idx + 2, projection=wcs)
             sig = images['significance']
             sig.plot(ax=ax_sig, vmin=0, vmax=20)
-            ax_sig.set_title('Significance, N_Iter = {0}'.format(idx),
+            ax_sig.set_title('Significance, N_Iter = {}'.format(idx),
                              fontsize='small')
             mask = images['exclusion'].data
             ax_sig.contour(mask, levels=[0], linewidths=2, colors='green')

@@ -78,7 +78,6 @@ Content
    :maxdepth: 1
 
    fitting
-   flux_points
    energy_group
    plotting_fermi_spectra
 
@@ -89,7 +88,4 @@ Reference/API
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.spectrum.models
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.powerlaw
     :no-inheritance-diagram:

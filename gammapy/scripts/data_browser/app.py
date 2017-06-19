@@ -5,8 +5,10 @@ Useful tutorial to make a Flask apps: https://github.com/hplgit/web4sciapps
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from astropy.extern.six import BytesIO
+
 try:
     import matplotlib
+
     matplotlib.use('Agg')
 except ImportError:
     pass
@@ -28,14 +30,13 @@ app.secret_key = 'development key'
 Bootstrap(app)
 app.config['BOOTSTRAP_SERVE_LOCAL'] = True
 
-
 # TODO: communicating via app.config doesn't work!?
 dir = '/Users/deil/work/_Data/hess/HESSFITS/fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std/'
 # dir = app.config['GAMMAPY_DATA_DIR']
 datastore = DataStore(dir=dir)
 
-
 obs_id_choices = [23037, 23038]
+
 
 class ObsForm(Form):
     obs_id = SelectField(
@@ -43,6 +44,7 @@ class ObsForm(Form):
         choices=list(zip(obs_id_choices, [str(_) for _ in obs_id_choices])),
         validators=[InputRequired()]
     )
+
 
 @app.route('/test/', methods=['GET', 'POST'])
 def view_test():
@@ -56,7 +58,7 @@ def view_test():
 
     if form.validate_on_submit():
         idx = form.obs_id.data
-        session['obs_id'] = idx # obs_id_list[idx][0]
+        session['obs_id'] = idx  # obs_id_list[idx][0]
         redirect(url_for('view_test'))
 
     return render_template('test.html',
@@ -131,7 +133,6 @@ def view_image(image_type, obs_id):
         # Return a dummy image ... not sure if that's a useful thing to do ...
         ax.plot([1, 3, 2, 4, obs_id])
 
-
     img = BytesIO()
     fig.savefig(img)
     img.seek(0)
@@ -147,12 +148,11 @@ def view_image(image_type, obs_id):
 
 
 topbar = Navbar('',
-    View('About', 'view_about'),
-    View('Data', 'view_data'),
-    View('Events', 'view_events'),
-    View('IRFs', 'view_irfs'),
-)
-
+                View('About', 'view_about'),
+                View('Data', 'view_data'),
+                View('Events', 'view_events'),
+                View('IRFs', 'view_irfs'),
+                )
 
 nav = Nav()
 nav.register_element('top', topbar)

@@ -68,8 +68,7 @@ class PSF3DChecker(object):
     def check_nan(self):
         """Check for `NaN` values in PSF.
         """
-
-        # genarate array for easier handling
+        # generate array for easier handling
         values = np.swapaxes(self.psf.psf_value, 0, 2)
         fail_count = 0
 
@@ -110,7 +109,6 @@ class PSF3DChecker(object):
 
         For each energy / offset, the PSF should integrate to 1.
         """
-
         # generate array for easier handling
         values = np.swapaxes(self.psf.psf_value, 0, 2)
 
@@ -160,7 +158,6 @@ class PSF3DChecker(object):
 
         TODO: describe what this actually does!?
         """
-
         # set fraction to check for
         fraction = self.config['containment_fraction']
 

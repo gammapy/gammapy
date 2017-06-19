@@ -46,14 +46,12 @@ class DataStore(object):
 
     Examples
     --------
-
     Here's an example how to create a `DataStore` to access H.E.S.S. data:
 
     >>> from gammapy.data import DataStore
     >>> dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     >>> data_store = DataStore.from_dir(dir)
     >>> data_store.info()
-
     """
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
     """Default HDU table filename."""
@@ -75,7 +73,7 @@ class DataStore(object):
 
     @classmethod
     def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None, name=None):
-        """Construct `DataStore` from HDU and observation index table files."""
+        """Construct from HDU and observation index table files."""
         if hdu_table_filename:
             log.debug('Reading {}'.format(hdu_table_filename))
             hdu_table = HDUIndexTable.read(str(hdu_table_filename), format='fits')
@@ -98,7 +96,7 @@ class DataStore(object):
 
     @classmethod
     def from_dir(cls, base_dir, name=None):
-        """Create a `DataStore` from a directory.
+        """Create from a directory.
 
         This assumes that the HDU and observations index tables
         have the default filename.
@@ -113,7 +111,7 @@ class DataStore(object):
 
     @classmethod
     def from_config(cls, config):
-        """Create a `DataStore` from a config dict."""
+        """Create from a config dict."""
         base_dir = config['base_dir']
         name = config.get('name', cls.DEFAULT_NAME)
         hdu_table_filename = config.get('hduindx', cls.DEFAULT_HDU_TABLE)
@@ -178,13 +176,13 @@ class DataStore(object):
                 store = cls.from_name(val)
             except KeyError as e2:
                 raise ValueError('Not able to contruct DataStore using key:'
-                                 ' {0}.\nErrors\nfrom_dir: {1}\nfrom_name: {2}'
+                                 ' {}.\nErrors\nfrom_dir: {}\nfrom_name: {}'
                                  .format(val, e1, e2))
 
         return store
 
     def info(self, file=None):
-        """Print some info"""
+        """Print some info."""
         if not file:
             stream = sys.stdout
 
@@ -214,23 +212,37 @@ class DataStore(object):
             data_store=self,
         )
 
-    def obs_list(self, obs_id):
+    def obs_list(self, obs_id, skip_missing=False):
         """Generate a `~gammapy.data.ObservationList`.
 
         Parameters
         ----------
         obs_id : list
             Observation IDs.
+        skip_missing : bool, optional
+            Skip missing observations, default: False
 
         Returns
         -------
         obs : `~gammapy.data.ObservationList`
             List of `~gammapy.data.DataStoreObservation`
         """
-        return ObservationList(self.obs(_) for _ in obs_id)
+        obslist = ObservationList()
+        for _ in obs_id:
+            try:
+                obs = self.obs(_)
+            except ValueError as err:
+                if skip_missing:
+                    log.warn('Obs {} not in store, skip.'.format(_))
+                    continue
+                else:
+                    raise err
+            else:
+                obslist.append(obs)
+        return obslist
 
     def load_all(self, hdu_type=None, hdu_class=None):
-        """Load a given file type for all observations
+        """Load a given file type for all observations.
 
         Parameters
         ----------
@@ -248,7 +260,7 @@ class DataStore(object):
         return self.load_many(obs_ids=obs_ids, hdu_type=hdu_type, hdu_class=hdu_class)
 
     def load_many(self, obs_ids, hdu_type=None, hdu_class=None):
-        """Load a given file type for certain observations in an obs_table
+        """Load a given file type for certain observations in an observation table.
 
         Parameters
         ----------
@@ -348,7 +360,7 @@ class DataStore(object):
         return file_available
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, clobber=False):
-        """Create a new `~gammapy.data.DataStore` containing a subset of observations
+        """Create a new `~gammapy.data.DataStore` containing a subset of observations.
 
         Parameters
         ----------
@@ -394,7 +406,7 @@ class DataStore(object):
         subobstable.write(str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=clobber)
 
     def data_summary(self, obs_id=None, summed=False):
-        """Create a summary `~astropy.table.Table` with HDU size information
+        """Create a summary `~astropy.table.Table` with HDU size information.
 
         Parameters
         ----------
@@ -415,7 +427,8 @@ class DataStore(object):
         subhdut_grpd = subhdut.group_by('OBS_ID')
         colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
         temp = np.zeros(len(colnames), dtype=int)
-        rows = list()
+
+        rows = []
         for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
             # This is needed to get the column order right
             group.add_index('HDU_CLASS')
@@ -463,12 +476,11 @@ class DataStoreObservation(object):
         location : `~gammapy.data.HDULocation`
             HDU location
         """
-        location = self.data_store.hdu_table.hdu_location(
+        return self.data_store.hdu_table.hdu_location(
             obs_id=self.obs_id,
             hdu_type=hdu_type,
             hdu_class=hdu_class,
         )
-        return location
 
     def load(self, hdu_type=None, hdu_class=None):
         """Load data file as appropriate object.
@@ -521,14 +533,14 @@ class DataStoreObservation(object):
     # TODO: maybe the obs table row info should be put in a separate object?
     @lazyproperty
     def _obs_info(self):
-        """Observation information"""
+        """Observation information."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         data = OrderedDict(zip(row.colnames, row.as_void()))
         return data
 
     @lazyproperty
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self._obs_info
         lon, lat = info['RA_PNT'], info['DEC_PNT']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
@@ -553,14 +565,14 @@ class DataStoreObservation(object):
 
     @lazyproperty
     def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self._obs_info
         alt, az = info['ALT_PNT'], info['AZ_PNT']
         return SkyCoord(az, alt, unit='deg', frame='altaz')
 
     @lazyproperty
     def pointing_zen(self):
-        """Pointing zenith angle sky (`~astropy.units.Quantity`)"""
+        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
         info = self._obs_info
         zen = info['ZEN_PNT']
         return Quantity(zen, unit='deg')
@@ -568,20 +580,20 @@ class DataStoreObservation(object):
 
     @lazyproperty
     def target_radec(self):
-        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self._obs_info
         lon, lat = info['RA_OBJ'], info['DEC_OBJ']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     @lazyproperty
     def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)"""
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
         info = self._obs_info
         return _earth_location_from_dict(info)
 
     @lazyproperty
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`)
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
 
         The wall time, including dead-time.
         """
@@ -590,7 +602,7 @@ class DataStoreObservation(object):
 
     @lazyproperty
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`)
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
 
         The dead-time-corrected observation time.
 
@@ -602,7 +614,7 @@ class DataStoreObservation(object):
 
     @lazyproperty
     def observation_dead_time_fraction(self):
-        """Dead-time fraction (float)
+        """Dead-time fraction (float).
 
         Defined as dead-time over observation time.
 
@@ -659,7 +671,6 @@ class DataStoreObservation(object):
         psf : `~gammapy.irf.EnergyDependentTablePSF`
             Energy dependent psf table
         """
-
         offset = position.separation(self.pointing_radec)
         energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
         rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
@@ -682,9 +693,9 @@ class DataStoreObservation(object):
 
 
 class ObservationList(UserList):
-    """List of `~gammapy.data.DataStoreObservation`
+    """List of `~gammapy.data.DataStoreObservation`.
 
-    Could be extended to hold a more generic class of observations
+    Could be extended to hold a more generic class of observations.
     """
 
     def __str__(self):
@@ -695,8 +706,7 @@ class ObservationList(UserList):
         return s
 
     def make_mean_psf(self, position, energy=None, rad=None):
-        """Make energy-dependent mean PSF for a given position and a set of
-        observations.
+        """Compute mean energy-dependent PSF.
 
         Parameters
         ----------
@@ -719,7 +729,7 @@ class ObservationList(UserList):
         psf = self[0].make_psf(position, energy, rad)
 
         rad = rad or psf.rad
-        energy = energy or  psf.energy
+        energy = energy or psf.energy
         exposure = psf.exposure
         psf_value = psf.psf_value.T * psf.exposure
 
@@ -737,7 +747,7 @@ class ObservationList(UserList):
     def make_mean_edisp(self, position, e_true, e_reco,
                         low_reco_threshold=Energy(0.002, "TeV"),
                         high_reco_threshold=Energy(150, "TeV")):
-        """Make mean edisp for a given position and a set of observations.
+        """Compute mean energy dispersion.
 
         Compute the mean edisp of a set of observations j at a given position
 
@@ -761,10 +771,9 @@ class ObservationList(UserList):
         stacked_edisp : `~gammapy.irf.EnergyDispersion`
             Stacked EDISP for a set of observation
         """
-
-        list_aeff = list()
-        list_edisp = list()
-        list_livetime = list()
+        list_aeff = []
+        list_edisp = []
+        list_livetime = []
         list_low_threshold = [low_reco_threshold] * len(self)
         list_high_threshold = [high_reco_threshold] * len(self)
 

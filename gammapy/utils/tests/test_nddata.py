@@ -1,16 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from ..testing import requires_dependency
 from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
-
-def get_test_arrays():
-    data_arrays = list()
-    data_arrays.append(dict(
+configs = [
+    dict(
         tag='1D linear',
         data=np.arange(10),
         axes=[
@@ -18,22 +17,21 @@ def get_test_arrays():
         ],
         linear_val={'x-axis': 8.5},
         linear_res=8.5,
-    ))
-    data_arrays.append(dict(
+    ),
+    dict(
         tag='2D log-linear',
         data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
         axes=[
-            BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy',
-                                    interpolation_mode='log'),
+            BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log'),
             DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name='offset')
         ],
         linear_val={'energy': 4.54 * u.TeV, 'offset': 0.23 * u.deg},
         linear_res=6.184670234285248 * u.cm ** 2,
-    ))
-    return data_arrays
+    ),
+]
 
 
-@pytest.mark.parametrize('config', get_test_arrays())
+@pytest.mark.parametrize('config', configs)
 @requires_dependency('scipy')
 def test_nddata(config):
     tester = NDDataArrayTester(config)
@@ -63,7 +61,7 @@ class NDDataArrayTester:
     def test_wrong_init(self):
         wrong_data = np.arange(8).reshape(4, 2)
         with pytest.raises(ValueError):
-            nddata = NDDataArray(axes=self.axes, data=wrong_data)
+            NDDataArray(axes=self.axes, data=wrong_data)
 
     def test_find_node(self):
         kwargs = {}

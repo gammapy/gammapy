@@ -16,9 +16,8 @@ from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.fits import table_from_row_data
-from ..utils.energy import EnergyBounds
 from ..data import ObservationStats
-from .observation import SpectrumObservation, SpectrumObservationList
+from .observation import SpectrumObservationList
 
 __all__ = [
     'SpectrumEnergyGroupMaker',
@@ -28,7 +27,6 @@ __all__ = [
 
 # TODO: improve the code so that this isn't needed!
 INVALID_GROUP_INDEX = -99
-
 
 # TODO: this is used for input at the moment,
 # but for output the `bin_type` field is used.
@@ -109,8 +107,7 @@ class SpectrumEnergyGroupMaker(object):
 
     # Methods to compute total ranges
     def compute_range_safe(self):
-        """Apply safe energy range of observation to ``groups``.
-        """
+        """Apply safe energy range of observation to ``groups``."""
         bins = self.obs.on_vector.bins_in_safe_range
         underflow = bins[0] - 1
         # If no low threshold is set no underflow bin is needed
@@ -125,8 +122,7 @@ class SpectrumEnergyGroupMaker(object):
             self.groups.make_and_replace_merged_group(overflow, max_bin, 'overflow')
 
     def set_energy_range(self, emin=None, emax=None):
-        """Apply energy range to ``groups``.
-        """
+        """Apply energy range to ``groups``."""
         if emin:
             self.groups.apply_energy_min(emin)
         if emax:
@@ -134,8 +130,7 @@ class SpectrumEnergyGroupMaker(object):
 
     # Methods to compute groupings
     def compute_groups_fixed(self, ebounds):
-        """Compute grouping for a given fixed energy binning.
-        """
+        """Compute grouping for a given fixed energy binning."""
         self.groups.apply_energy_min(energy=ebounds[0])
         self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
@@ -161,7 +156,7 @@ class SpectrumEnergyGroup(object):
         self.energy_max = energy_max
 
     def to_dict(self):
-        """Data as `~collections.OrderedDict`."""
+        """Convert to `~collections.OrderedDict`."""
         data = OrderedDict()
         data['energy_group_idx'] = self.energy_group_idx
         data['bin_idx_min'] = self.bin_idx_min
@@ -197,6 +192,14 @@ class SpectrumEnergyGroups(UserList):
     A helper class used by the `gammapy.spectrum.SpectrumEnergyMaker`.
     """
 
+    def __str__(self):
+        ss = 'SpectrumEnergyGroups:\n'
+        ss += '\nInfo including underflow- and overflow bins:\n'
+        ss += 'Number of groups: {}\n'.format(len(self))
+        ss += 'Bin range: {}\n'.format(self.bin_idx_range)
+        ss += 'Energy range: {}\n'.format(self.energy_range)
+        return ss
+
     @classmethod
     def from_total_table(cls, table):
         """Create list of SpectrumEnergyGroup objects from table."""
@@ -230,7 +233,7 @@ class SpectrumEnergyGroups(UserList):
 
     @classmethod
     def from_groups_table(cls, table):
-        """TODO: document"""
+        """Create from energy groups in `~astropy.table.Table` format."""
         groups = cls()
         for row in table:
             group = SpectrumEnergyGroup(
@@ -265,6 +268,7 @@ class SpectrumEnergyGroups(UserList):
                 row['bin_idx'] = bin_idx
                 row['bin_type'] = group.bin_type
                 rows.append(row)
+
         names = ['energy_group_idx', 'bin_idx', 'bin_type']
         return Table(rows=rows, names=names)
 
@@ -291,7 +295,7 @@ class SpectrumEnergyGroups(UserList):
 
     @property
     def bin_idx_range(self):
-        """Range of bin indices (left and right inclusive)"""
+        """Range of bin indices (left and right inclusive)."""
         left = self[0].bin_idx_min
         right = self[-1].bin_idx_max
         return left, right
@@ -322,21 +326,22 @@ class SpectrumEnergyGroups(UserList):
         return idx_min, idx_max
 
     def apply_energy_min(self, energy):
-        """Modify list in-place to apply a min energy cut.
-        """
+        """Modify list in-place to apply a min energy cut."""
         idx_min = 0
         idx_max = self.find_list_idx(energy)
         self.make_and_replace_merged_group(idx_min, idx_max, bin_type='underflow')
 
     def apply_energy_max(self, energy):
-        """Modify list in-place to apply a max energy cut.
-        """
+        """Modify list in-place to apply a max energy cut."""
         idx_min = self.find_list_idx(energy)
         idx_max = len(self) - 1
         self.make_and_replace_merged_group(idx_min, idx_max, bin_type='overflow')
 
     def apply_energy_binning(self, ebounds):
-        """TODO: document"""
+        """Apply an energy binning.
+        
+        TODO: document method.
+        """
         for energy_range in EnergyRange.list_from_ebounds(ebounds):
             list_idx_min, list_idx_max = self.find_list_idx_range(energy_range)
 
@@ -359,9 +364,9 @@ class SpectrumEnergyGroups(UserList):
         if self[list_idx].bin_type == 'overflow':
             list_idx -= 1
 
-        if (list_idx < 0):
+        if list_idx < 0:
             raise IndexError('list_idx {} < 0'.format(list_idx))
-        if (list_idx >= len(self)):
+        if list_idx >= len(self):
             raise IndexError('list_idx {} > len(self) {}'.format(list_idx))
 
         return list_idx
@@ -400,21 +405,6 @@ class SpectrumEnergyGroups(UserList):
             energy_min=left_group.energy_min,
             energy_max=right_group.energy_max,
         )
-
-    def __str__(self):
-        ss = 'SpectrumEnergyGroups:\n'
-        ss += '\nInfo including underflow- and overflow bins:\n'
-        ss += 'Number of groups: {}\n'.format(len(self))
-        ss += 'Bin range: {}\n'.format(self.bin_idx_range)
-        ss += 'Energy range: {}\n'.format(self.energy_range)
-
-        # TODO
-        # ss += '\nInfo excluding underflow- and overflow bins:\n'
-        # ss += 'Number of groups: {}\n'.format(len(self))
-        # ss += 'Bin range: {}\n'.format(self.bin_idx_range)
-        # ss += 'Energy range: {}\n'.format(self.energy_range)
-
-        return ss
 
 
 class EnergyRange(object):
@@ -458,7 +448,7 @@ class EnergyRange(object):
 
     @classmethod
     def list_from_ebounds(cls, ebounds):
-        """TODO: document.
+        """Create list of ``EnergyRange`` from array of energy bounds.
 
         Examples
         --------
@@ -477,7 +467,7 @@ class EnergyRange(object):
 
 
 def calculate_flux_point_binning(obs_list, min_signif):
-    """Compute energy binning.
+    """Compute energy binning for flux points.
 
     This is useful to get an energy binning to use with
     :func:`~gammapy.spectrum.FluxPoints` Each bin in the

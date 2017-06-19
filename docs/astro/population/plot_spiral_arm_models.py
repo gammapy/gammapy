@@ -1,12 +1,9 @@
 """Plot Milky Way spiral arm models."""
 import numpy as np
 import matplotlib.pyplot as plt
-
 from astropy.units import Quantity
 from gammapy.astro.population.spatial import ValleeSpiral, FaucherSpiral
-from gammapy.utils.mpl_style import gammapy_mpl_style
 
-plt.style.use(gammapy_mpl_style)
 
 fig = plt.figure(figsize=(7, 8))
 rect = [0.12, 0.12, 0.85, 0.85]

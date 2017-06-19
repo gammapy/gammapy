@@ -1,21 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Define observers and convenience functions to convert celestial
+"""Location of gamma-ray observatories.
+
+TODO: Define observers and convenience functions to convert celestial
 SkyCoords to the horizontal altitude-azimuth system.
+Or show how to do that in the docs.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.coordinates import Angle, EarthLocation
 from ..extern.bunch import Bunch
 
-__all__ = ['observatory_locations']
+__all__ = [
+    'observatory_locations',
+]
 
 
 def _obs_loc(lon, lat, height):
-    location = EarthLocation(lon=Angle(lon, unit='deg'),
-                             lat=Angle(lat, unit='deg'),
-                             height=Quantity(height, 'm'),
-                             )
-    return location
+    return EarthLocation(
+        lon=Angle(lon, unit='deg'),
+        lat=Angle(lat, unit='deg'),
+        height=Quantity(height, 'm'),
+    )
 
 
 # TODO: make this appear in the Sphinx docs!

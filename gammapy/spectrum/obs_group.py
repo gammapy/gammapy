@@ -9,6 +9,9 @@ from ..extern.pathlib import Path
 from ..data import ObservationGroupAxis, ObservationGroups, ObservationTable
 from ..spectrum import SpectrumObservationList, SpectrumObservation
 
+# TODO: remove this whole file?
+# Replace it with docs how to do something like this using just Astropy Table or pandas DataFrame?
+
 __all__ = [
     'SpectrumObservationGrouping',
     'group_obs_table',
@@ -87,7 +90,7 @@ class SpectrumObservationGrouping(object):
         self.stacked_obs_table = None
 
     def stack_groups(self):
-        """Stack observations in each group """
+        """Stack observations in each group."""
         stacked_obs = list()
 
         sorted_table = self.obs_table.group_by('GROUP_ID')
@@ -105,21 +108,20 @@ class SpectrumObservationGrouping(object):
         self.stacked_observations = SpectrumObservationList(stacked_obs)
 
     def make_observation_table(self):
-        """Create observation table for the stacked observations"""
+        """Create observation table for the stacked observations."""
         phafile = [str(o.meta.ogip_dir / o.meta.phafile) for o in self.stacked_observations]
         col1 = Column(data=phafile, name='PHAFILE')
         # Todo: Put meta information about the groups in the table
         self.stacked_obs_table = ObservationTable([col1])
 
     def write(self):
-        """Write stacked observations and observation table"""
-
+        """Write stacked observations and observation table."""
         self.stacked_observations.write_ogip()
         self.stacked_obs_table.write('observation_table_stacked.fits',
                                      overwrite=True)
 
     def run(self):
-        """Run all steps"""
+        """Run all steps."""
         self.stack_groups()
         self.make_observation_table()
         self.write()

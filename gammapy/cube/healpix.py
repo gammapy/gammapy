@@ -9,7 +9,9 @@ from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from .core import SkyCube
 
-__all__ = ['SkyCubeHealpix']
+__all__ = [
+    'SkyCubeHealpix',
+]
 
 
 class SkyCubeHealpix(object):
@@ -58,7 +60,7 @@ class SkyCubeHealpix(object):
             scheme = header.get('ORDERING', 'ring').lower()
             wcs = WCSHealpix(nside, scheme=scheme)
         elif format == 'fermi-counts':
-            energy = EnergyBounds.from_ebounds(hdulist['EBOUNDS'], unit='keV')
+            energy = EnergyBounds.from_ebounds(hdulist['EBOUNDS'])
             energy_axis = LogEnergyAxis(energy, mode='edges')
             data = hdulist['SKYMAP'].data
             data = np.vstack([data[energy] for energy in data.columns.names])

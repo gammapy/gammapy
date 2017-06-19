@@ -1,7 +1,8 @@
-#Licensed under a 3 - clause BSD style license - see LICENSE.rst
+# Licensed under a 3 - clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
+from collections import OrderedDict
 import logging
+import astropy.units as u
 from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
 from .utils import CountsPredictor
@@ -52,9 +53,9 @@ class SpectrumSimulation(object):
 
     @property
     def npred_source(self):
-        """Predicted source `~gammapy.spectrum.CountsSpectrum`
+        """Predicted source `~gammapy.spectrum.CountsSpectrum`.
 
-        calls :func:`gammapy.spectrum.utils.CountsPredictor`
+        Calls :func:`gammapy.spectrum.utils.CountsPredictor`.
         """
         predictor = CountsPredictor(livetime=self.livetime,
                                     aeff=self.aeff,
@@ -65,9 +66,9 @@ class SpectrumSimulation(object):
 
     @property
     def npred_background(self):
-        """Predicted background `~gammapy.spectrum.CountsSpectrum`
+        """Predicted background (`~gammapy.spectrum.CountsSpectrum`).
 
-        calls :func:`gammapy.spectrum.utils.CountsPredictor`
+        Calls :func:`gammapy.spectrum.utils.CountsPredictor`.
         """
         predictor = CountsPredictor(livetime=self.livetime,
                                     aeff=self.aeff,
@@ -78,7 +79,7 @@ class SpectrumSimulation(object):
 
     @property
     def e_reco(self):
-        """Reconstruced energy binning"""
+        """Reconstructed energy binning."""
         if self.edisp is not None:
             temp = self.edisp.e_reco.bins
         else:
@@ -86,10 +87,10 @@ class SpectrumSimulation(object):
         return EnergyBounds(temp)
 
     def run(self, seed):
-        """Simulate `~gammapy.spectrum.SpectrumObservationList`
+        """Simulate `~gammapy.spectrum.SpectrumObservationList`.
 
-        The seeds will be set as observation id. Previously produced results
-        will be overwritten.
+        The seeds will be set as observation ID.
+        Previously produced results will be overwritten.
 
         Parameters
         ----------
@@ -107,7 +108,7 @@ class SpectrumSimulation(object):
             self.result.append(self.obs)
 
     def reset(self):
-        """Clear all results"""
+        """Clear all results."""
         self.result = SpectrumObservationList()
         self.obs = None
         self.on_vector = None
@@ -137,7 +138,7 @@ class SpectrumSimulation(object):
         self.obs = obs
 
     def simulate_source_counts(self, rand):
-        """Simulate source `~gammapy.spectrum.PHACountsSpectrum`
+        """Simulate source `~gammapy.spectrum.PHACountsSpectrum`.
 
         Source counts are added to the on vector.
 
@@ -157,13 +158,13 @@ class SpectrumSimulation(object):
         self.on_vector = on_vector
 
     def simulate_background_counts(self, rand):
-        """Simulate background `~gammapy.spectrum.PHACountsSpectrum`
+        """Simulate background `~gammapy.spectrum.PHACountsSpectrum`.
 
-        Background counts are added to the on vector. Furthermore
-        background counts divided by alpha are added to the off vector.
+        Background counts are added to the on vector.
+        Furthermore background counts divided by alpha are added to the off vector.
 
-        TODO: At the moment the source IRFs are used. Make it possible to pass
-        dedicated background IRFs.
+        TODO: At the moment the source IRFs are used.
+        Make it possible to pass dedicated background IRFs.
 
         Parameters
         ----------
@@ -187,8 +188,7 @@ class SpectrumSimulation(object):
         self.off_vector = off_vector
 
     def _get_meta(self):
-        """Meta info added to simulated counts spectra"""
-        return dict(
-            CREATOR=self.__class__.__name__
-        )
-
+        """Meta info added to simulated counts spectra."""
+        meta = OrderedDict()
+        meta['CREATOR'] = self.__class__.__name__
+        return meta

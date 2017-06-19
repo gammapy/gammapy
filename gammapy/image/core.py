@@ -34,7 +34,7 @@ _DEFAULT_WCS_MODE = 'all'
 @six.add_metaclass(abc.ABCMeta)
 class MapBase(object):
     """Map base class.
-    
+
     This is just a temp solution to put code that's common
     between `SkyImage` and `SkyCube`.
     """
@@ -42,7 +42,7 @@ class MapBase(object):
     @property
     def is_mask(self):
         """Is this a mask (check values, not dtype).
-        
+
         """
         if self.data.dtype == bool:
             return True
@@ -75,6 +75,7 @@ class SkyImage(MapBase):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
+
     _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
     _ax_idx = _AxisIndex(x=1, y=0)
 
@@ -422,21 +423,43 @@ class SkyImage(MapBase):
         for key, (x, y) in zip(keys, pixcoord):
             footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        width_low = footprint['lower left'].separation(footprint['lower right'])
-        width_up = footprint['upper left'].separation(footprint['upper right'])
-        footprint['width'] = Angle([width_low, width_up]).max()
-
-        height_left = footprint['lower left'].separation(footprint['upper left'])
-        height_right = footprint['lower right'].separation(footprint['upper right'])
-        footprint['height'] = Angle([height_right, height_left]).max()
-
-        footprint['center'] = self.center
         return footprint
 
-    def _get_boundaries(self, image_ref, image, wcs_check):
+    @property
+    def width(self):
         """
-        Get boundary coordinates of one image in the pixel coordinate system
-        of another reference image.
+        Maximum angular width of the image.
+        """
+        coordinates = self.coordinates('edges')
+        left, right = coordinates[:, 0], coordinates[:, -1]
+        width = left.separation(right)
+
+        width_max = width.max()
+
+        if left.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - width_max
+        else:
+            return width_max
+
+    @property
+    def height(self):
+        """
+        Maximum angular height of the image.
+        """
+        coordinates = self.coordinates('edges')
+        top, bottom = coordinates[-1, :], coordinates[0, :]
+
+        height = top.separation(bottom)
+
+        height_max = height.max()
+
+        if top.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - height_max
+        else:
+            return height_max
+
+    def _get_boundaries(self, image_ref, image, wcs_check):
+        """Boundary pixel coordinates on another reference image.
         """
         ymax, xmax = image.data.shape
         ymax_ref, xmax_ref = image_ref.data.shape
@@ -633,8 +656,8 @@ class SkyImage(MapBase):
         shape = self.data.shape
 
         if not (np.mod(shape, factor) == 0).all():
-            raise ValueError('Data shape {0} is not divisable by {1} in all axes.'
-                             'Pad image prior to downsamling to correct'
+            raise ValueError('Data shape {} is not divisible by {} in all axes.'
+                             'Pad image prior to downsampling to correct'
                              ' shape.'.format(shape, factor))
 
         data = block_reduce(self.data, (factor, factor), method)
@@ -792,7 +815,6 @@ class SkyImage(MapBase):
         image : `~gammapy.image.SkyImage`
             Image reprojected onto ``reference``.
         """
-
         from reproject import reproject_interp, reproject_exact
 
         if isinstance(reference, SkyImage):
@@ -891,7 +913,7 @@ class SkyImage(MapBase):
         if add_cbar:
             unit = self.unit or 'A.U.'
             label = self.name or 'None'
-            cbar = fig.colorbar(caxes, ax=ax, label='{0} ({1})'.format(label.title(), unit))
+            cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label.title(), unit))
         else:
             cbar = None
 
@@ -1230,7 +1252,6 @@ class SkyImage(MapBase):
         """
         Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
         """
-
         coordinates = self.coordinates(mode='edges')
         lon = coordinates.data.lon.radian
         lat = coordinates.data.lat.radian

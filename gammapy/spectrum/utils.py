@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
-from .. utils.energy import EnergyBounds
 
 __all__ = [
     'LogEnergyAxis',
@@ -39,14 +38,14 @@ class LogEnergyAxis(object):
 
     def __init__(self, energy, mode='center'):
         from scipy.interpolate import RegularGridInterpolator
-        
+
         if mode == 'center':
             z = np.arange(len(energy))
         elif mode == 'edges':
             z = np.arange(len(energy)) - 0.5
         else:
             raise ValueError('Not a valid mode.')
-        
+
         self.mode = mode
         self._eunit = energy.unit
 
@@ -54,7 +53,7 @@ class LogEnergyAxis(object):
         kwargs = dict(bounds_error=False, fill_value=None, method='linear')
         self._z_to_log_e = RegularGridInterpolator((z,), log_e, **kwargs)
         self._log_e_to_z = RegularGridInterpolator((log_e,), z, **kwargs)
-        
+
     def wcs_world2pix(self, energy):
         """
         Convert energy to pixel coordinates.
@@ -83,10 +82,9 @@ class LogEnergyAxis(object):
 
 
 class CountsPredictor(object):
-    """Calculate npred
+    """Calculate number of predicted counts (``npred``).
 
-    The true and reconstruced energy binning are inferred from the provided
-    IRFs.
+    The true and reconstructed energy binning are inferred from the provided IRFs.
 
     Parameters
     ----------
@@ -135,6 +133,7 @@ class CountsPredictor(object):
         predictor.npred.plot_hist()
         plt.show()
     """
+
     def __init__(self, model, aeff=None, edisp=None, livetime=None, e_true=None):
         self.model = model
         self.aeff = aeff
@@ -155,7 +154,7 @@ class CountsPredictor(object):
     def integrate_model(self):
         """Integrate model in true energy space"""
         if self.aeff is not None:
-            # TODO: True energy is converted to model amplitude unit. See issue 869 
+            # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
             try:
                 for unit in self.model.parameters['amplitude'].unit.bases:
@@ -190,7 +189,7 @@ class CountsPredictor(object):
         else:
             cts = self.true_counts
             self.e_reco = self.e_true
-        
+
         self.npred = CountsSpectrum(data=cts,
                                     energy_lo=self.e_reco[:-1],
                                     energy_hi=self.e_reco[1:])
@@ -223,7 +222,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     if isinstance(xmin, Quantity):
         unit = xmin.unit
         xmin = xmin.value
-        xmax = xmax.value
+        xmax = xmax.to(unit).value
         is_quantity = True
 
     if np.isscalar(xmin):

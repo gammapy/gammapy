@@ -1,200 +1,204 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import abc
+import re
 import numpy as np
-import healpy as hp
-from scipy.interpolate import RegularGridInterpolator
-from scipy.ndimage.interpolation import map_coordinates
 from astropy.extern import six
 from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
-from .wcs import wcs_to_coords, wcs_to_axes
-from .hpx import HPXGeom, HpxToWcsMapping
+from astropy.utils.misc import InheritDocstrings
+from .base import MapBase
+from .hpx import HpxToWcsMapping
+from .geom import MapAxis
+
+__all__ = [
+    'HpxMap',
+]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HpxMap(object):
-    """Base class for HEALPix map classes.
+def find_and_read_bands(hdulist, extname=None):
+    """  Reads and returns the energy bin edges.
+
+    This works for both the CASE where the energies are in the ENERGIES HDU
+    and the case where they are in the EBOUND HDU
+    """
+    axes = []
+    axis_cols = []
+    if extname is not None and extname in hdulist:
+        hdu = hdulist[extname]
+        for i in range(5):
+            if 'AXCOLS%i' % i in hdu.header:
+                axis_cols += [hdu.header['AXCOLS%i' % i].split(',')]
+            else:
+                break
+    elif 'ENERGIES' in hdulist:
+        hdu = hdulist['ENERGIES']
+        axis_cols = [['ENERGY']]
+    elif 'EBOUNDS' in hdulist:
+        hdu = hdulist['EBOUNDS']
+        axis_cols = [['E_MIN', 'E_MAX']]
+
+    for i, cols in enumerate(axis_cols):
+
+        if 'ENERGY' in cols or 'E_MIN' in cols:
+            name = 'energy'
+        elif re.search('(.+)_MIN', cols[0]):
+            name = re.search('(.+)_MIN', cols[0]).group(1)
+        else:
+            name = cols[0]
+
+        if len(cols) == 2:
+            xmin = np.unique(hdu.data.field(cols[0]))  # / 1E3
+            xmax = np.unique(hdu.data.field(cols[1]))  # / 1E3
+            axes += [MapAxis(np.append(xmin, xmax[-1]), name=name)]
+        else:
+            x = np.unique(hdu.data.field(cols[0]))
+            axes += [MapAxis.from_nodes(x, name=name)]
+
+    return axes
+
+
+# class HpxMeta(InheritDocstrings, abc.ABCMeta):
+#    pass
+#@six.add_metaclass(HpxMeta)
+class HpxMap(MapBase):
+    """Base class for HEALPIX map classes.
 
     Parameters
     ----------
+    hpx : `~gammapy.maps.hpx.HPXGeom`
+        HEALPix geometry object.
+
     data : `~numpy.ndarray`
+        Data array.
     """
-    
+
     def __init__(self, hpx, data):
-        print('here')
-        #MapBase.__init__(self, data)
-        self._data = data
-        self._hpx = hpx
+        MapBase.__init__(self, hpx, data)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @property
     def hpx(self):
-        return self._hpx
-
-    @property
-    def data(self):
-        return self._data
+        """HEALPix geometry object."""
+        return self.geom
 
     @classmethod
-    def read(cls, fitsfile, **kwargs):
+    def read(cls, filename, **kwargs):
         """Read from a FITS file.
 
         Parameters
         ----------
         filename : str
-            File name.
-
+            Name of the FITS file.
         hdu : str
-            The name of the HDU with the map data.
-
-        ebounds : str
-            The name of the HDU with the energy bin data.
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
 
         Returns
         -------
-        hpx_map : `HpxMap`
-            Map object.
-        """
-        hdulist = fits.open(fitsfile)
-        return cls.from_hdulist(hdulist, **kwargs)
+        hpx_map : `~HpxMap`
+            Map object
 
+        """
+        with fits.open(filename) as hdulist:
+            hpx_map = cls.from_hdulist(hdulist, **kwargs)
+        return hpx_map
+            
     @classmethod
     def from_hdulist(cls, hdulist, **kwargs):
-        """Creates and returns an HpxMap object from a FITS HDUList.
+        """Make a HpxMap object from a FITS HDUList.
 
         Parameters
         ----------
         hdulist :  `~astropy.io.fits.HDUList`
-            An HDUList containing HDUs for map data and bands/ebounds.
-
+            HDU list containing HDUs for map data and bands.
         hdu : str
-            The name of the HDU with the map data.
-
-        ebounds : str
-            The name of the HDU with the energy bin data
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
 
         Returns
         -------
         hpx_map : `HpxMap`
-            Map object.
+            Map object
         """
         extname = kwargs.get('hdu', 'SKYMAP')
-        ebins = fits_utils.find_and_read_ebins(hdulist)
-        return cls.from_hdu(hdulist[extname], ebins)
-    
-    def to_image_hdu(self, name=None, **kwargs):
-        kwargs['extname'] = name
-        return self.hpx.make_hdu(self.counts, **kwargs)
 
-    def make_wcs_from_hpx(self, sum_ebins=False, proj='CAR', oversample=2,
-                          normalize=True):
-        """Make a WCS object and convert HEALPix data into WCS projection
+        hdu = hdulist[extname]
+        extname_bands = kwargs.get('hdu_bands', None)
+        if 'BANDSHDU' in hdu.header and extname_bands is None:
+            extname_bands = hdu.header['BANDSHDU']
 
-        NOTE: this re-calculates the mapping, if you have already
-        calculated the mapping it is much faster to use
-        convert_to_cached_wcs() instead
+        axes = find_and_read_bands(hdulist, extname=extname_bands)
+        return cls.from_hdu(hdu, axes)
+
+    def write(self, filename, **kwargs):
+        """Write to a FITS file.
 
         Parameters
         ----------
-        sum_ebins  : bool
-           sum energy bins over energy bins before reprojecting
+        filename : str
+            Output file name.
+        extname : str
+            Set the name of the image extension.  By default this will
+            be set to SKYMAP.
+        extname_bands : str
+            Set the name of the binning extension.  By default this will
+            be set to BANDS.
+        hpxconv : str
+            HEALPix format convention.  This option can be used to
+            write files that are compliant with non-standard HEALPix
+            conventions.
+        sparse : bool
+            Sparsify the map by dropping pixels with zero amplitude.
 
-        proj       : str
-           WCS-projection
+        """
+        hdulist = self.to_hdulist(**kwargs)
+        overwrite = kwargs.get('overwrite', True)
+        hdulist.writeto(filename, overwrite=overwrite)
 
-        oversample : int
-           Oversampling factor for WCS map
+    def to_hdulist(self, **kwargs):
 
-        normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
+        extname = kwargs.get('extname', 'SKYMAP')
+        extname_bands = kwargs.get('extname_bands', self.hpx.conv.bands_hdu)
+        hdulist = [fits.PrimaryHDU(), self.make_hdu(**kwargs)]
+        if self.hpx.axes:
+            hdulist += [self.hpx.make_bands_hdu(extname=extname_bands)]
+        return fits.HDUList(hdulist)
+
+    @abc.abstractmethod
+    def to_wcs(self, sum_bands=False, normalize=True):
+        """Make a WCS object and convert HEALPIX data into WCS projection.
+
+        Parameters
+        ----------
+        sum_bands : bool
+            Sum over non-spatial axes before reprojecting.  If False
+            then the WCS map will have the same dimensionality as the
+            HEALPix one.
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
 
         Returns
         -------
-        wcs : `~gammapy.maps.wcs.WCSGeom`
-        
-        wcs_data : `~numpy.ndarray`
+        wcs : `~astropy.wcs.WCS`
+            WCS object
+        data : `~numpy.ndarray`
+            Reprojected data
+
         """
-        self._wcs_proj = proj
-        self._wcs_oversample = oversample
-        self._wcs_2d = self.hpx.make_wcs(2, proj=proj, oversample=oversample)
-        self._hpx2wcs = HpxToWcsMapping(self.hpx, self._wcs_2d)
-        wcs, wcs_data = self.convert_to_cached_wcs(self.counts, sum_ebins,
-                                                   normalize)
-        return wcs, wcs_data
+        pass
 
-    @abc.abstractmethod
-    def to_cached_wcs(self, hpx_in, sum_ebins=False, normalize=True):
-        """ Make a WCS object and convert HEALPix data into WCS projection
-
-        Parameters
-        ----------
-        hpx_in     : `~numpy.ndarray`
-           HEALPix input data
-        sum_ebins  : bool
-           sum energy bins over energy bins before reprojecting
-        normalize  : bool
-           True -> perserve integral by splitting HEALPix values between bins
-
-        returns (WCS object, np.ndarray() with reprojected data)
-        """
-        return
-
-    def get_pixel_skydirs(self):
+    def get_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
-        sky_coords = self._hpx.get_sky_coords()
-        if self.hpx.coordsys == 'GAL':
-            frame = Galactic
-        else:
-            frame = ICRS
-        return SkyCoord(sky_coords[0], sky_coords[1], frame=frame, unit='deg')
-
-    @abc.abstractmethod
-    def sum_over_axes(self):
-        """ Reduce to a map by droppping non-spatial dimensions."""
-        return
-
-    @abc.abstractmethod
-    def get_by_coord(self, coords, interp=None):
-        """Return map values at the given map coordinates.
-
-        Parameters
-        ----------
-        coords : tuple
-
-        Returns
-        ----------
-        vals : `~numpy.ndarray`
-           Values of pixels in the flattened map, np.nan used to flag
-           coords outside of map
-
-        """
-        return
-
-    @abc.abstractmethod
-    def get_by_pix(self, coords, interp=None):
-        """Return map values at the given pixel coordinates.
-
-        Parameters
-        ----------
-        coords : tuple
-
-        Returns
-        ----------
-        vals : `~numpy.ndarray`
-           Values of pixels in the flattened map, np.nan used to flag
-           coords outside of map
-
-        """
-        return
+        return self.hpx.get_skydirs()
 
     def swap_scheme(self):
+        """TODO.
         """
-        """
+        import healpy as hp
         hpx_out = self.hpx.make_swapped_hpx()
         if self.hpx.nest:
             if self.data.ndim == 2:
@@ -211,8 +215,9 @@ class HpxMap(object):
         return HpxMap(data_out, hpx_out)
 
     def ud_grade(self, order, preserve_counts=False):
+        """TODO.
         """
-        """
+        import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
         nebins = len(new_hpx.evals)
         shape = self.counts.shape
@@ -237,61 +242,64 @@ class HpxMap(object):
         return HpxMap(new_data, new_hpx)
 
     def make_hdu(self, **kwargs):
-        """ Builds and returns a FITs HDU with input data
+        """Make a FITS HDU with input data.
 
         Parameters
         ----------
-        extname   : str
+        extname : str
             The HDU extension name.
-
-        colbase   : str
+        extname_bands : str
+            The HDU extension name for BANDS table.
+        colbase : str
             The prefix for column names
+        sparse : bool
+            Set INDXSCHM to SPARSE and sparsify the map by only
+            writing pixels with non-zero amplitude.
         """
+
+        # FIXME: Should this be a method of HpxMapND?
+        # FIXME: Should we assign extname in this method?
+
         data = self.data
         shape = data.shape
-        extname = kwargs.get('extname', self.conv.extname)
-        convname = kwargs.get('convname', self.conv.convname)
+        extname = kwargs.get('extname', self.hpx.conv.extname)
+        extname_bands = kwargs.get('extname_bands', self.hpx.conv.bands_hdu)
+        convname = kwargs.get('convname', self.hpx.conv.convname)
+        sparse = kwargs.get('sparse', False)
         header = self.hpx.make_header()
-        
-        if shape[-1] != self._npix:
-            raise Exception(
-                "Size of data array does not match number of pixels")
+        conv = self.hpx.conv
+        header['BANDSHDU'] = extname_bands
+
+        if sparse:
+            header['INDXSCHM'] = 'SPARSE'
+
+        # if shape[-1] != self._npix:
+        #    raise ValueError('Size of data array does not match number of pixels')
         cols = []
-        if self._region:
-            header['INDXSCHM'] = 'EXPLICIT'
-            cols.append(fits.Column("PIX", "J", array=self._ipix))
-        else:
-            header['INDXSCHM'] = 'IMPLICIT'
-                        
-        if convname == 'FGST_SRCMAP_SPARSE':
+        if header['INDXSCHM'] == 'EXPLICIT':
+            cols.append(fits.Column('PIX', 'J', array=self.hpx._ipix))
+
+        if header['INDXSCHM'] == 'SPARSE':
             nonzero = data.nonzero()
-            nfilled = len(nonzero[0])
             if len(shape) == 1:
-                nonzero = nonzero[0]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data[
-                            nonzero].astype(float).reshape(1, nfilled)))
-            elif len(shape) == 2:
-                nonzero = self._npix * nonzero[0] + nonzero[1]
-                cols.append(fits.Column("KEY", "%iJ" %
-                                        nfilled, array=nonzero.reshape(1, nfilled)))
-                cols.append(fits.Column("VALUE", "%iE" % nfilled, array=data.flat[
-                            nonzero].astype(float).reshape(1, nfilled)))
+                cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
             else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+                channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
+                cols.append(fits.Column('PIX', 'J', array=nonzero[-1]))
+                cols.append(fits.Column('CHANNEL', 'I', array=channel))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
 
         else:
             if len(shape) == 1:
-                cols.append(fits.Column(self.conv.colname(
-                    indx=i + self.conv.firstcol), "E", array=data.astype(float)))
-            elif len(shape) == 2:
-                for i in range(shape[0]):
-                    cols.append(fits.Column(self.conv.colname(
-                        indx=i + self.conv.firstcol), "E", array=data[i].astype(float)))
+                cols.append(fits.Column(conv.colname(indx=conv.firstcol),
+                                        'E', array=data.astype(float)))
             else:
-                raise Exception("HPX.write_fits only handles 1D and 2D maps")
+                for i, idx in enumerate(np.ndindex(shape[:-1])):
+                    cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
+                                            array=data[idx].astype(float)))
 
         hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
-
         return hdu
