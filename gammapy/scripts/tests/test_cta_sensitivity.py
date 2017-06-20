@@ -1,27 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
-from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
 from gammapy.utils.testing import requires_data, requires_dependency
-from .. import cta_sensitivity
-from .. import CTAPerf
+from ..cta_irf import CTAPerf
+from ..cta_sensitivity import SensiEstimator
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-
 def test_cta_sensitivity():
-    """Test that CTA sensitivity can be well evaluated."""
+    """Run sensitivity estimation for one CTA IRF example."""
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/North_0.5h/irf_file.fits.gz'
+    irf = CTAPerf.read(filename)
 
-    irffile = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/North_0.5h/irf_file.fits.gz'
-    ctairf = CTAPerf.read(irffile)
-    livetime = 0.5
-    sens = cta_sensitivity.SensiEstimator(irfobject=ctairf,livetime=livetime)
+    sens = SensiEstimator(irf=irf, livetime='0.5 hour')
     sens.run()
+    table = sens.diff_sensi_table
 
-    tt = sens.print_results()
-    #actual = sens.diff_sens[np.where(np.abs(sens.energy.value - 1.) < 0.2)][0].value
-    actual = tt[9]  #Diff flux at 1 TeV
-
-    true_value = 6.8452201495e-13 #Diff flux at 1 TeV
-    assert_allclose(actual, true_value, rtol=0.01)
+    # Assert on diff flux at 1 TeV
+    assert_allclose(table[9], 6.8452201495e-13, rtol=0.01)
