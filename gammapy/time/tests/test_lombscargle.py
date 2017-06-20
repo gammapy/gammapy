@@ -1,6 +1,4 @@
 import numpy as np
-# import sys
-# sys.path.insert(0, '/afs/ifh.de/group/amanda/scratch/wegenmat/time-series-analysis/time-series-analysis')
 from lombscargle_gammapy import lomb_scargle, plotting
 
 def test_lombscargle():
@@ -24,7 +22,3 @@ def test_lombscargle():
     plotting(t, mag, dmag, freq, PLS, best_period, quant_pre, quant_cvm, quant_nll, quant_boot, N_bootstraps, PLS_win)
     print('Best period: ' + str(best_period))
     assert np.array([freq, PLS, best_period, quant_pre, quant_cvm, quant_nll, quant_boot, PLS_win]) == True
-
-if __name__ == '__main__':
-    test_lombscargle()
-
