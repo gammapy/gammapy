@@ -1,21 +1,13 @@
-# from lombscargle
 from astropy.stats import LombScargle
-# from PyAstronomy.pyTiming.pyPeriod import Gls
-# from PyAstronomy.pyTiming import pyPeriod
 import numpy as np
-# import matplotlib
-import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib import rc
 from matplotlib import rcParams
 plt.style.use('ggplot')
-# import pylab
-from scipy.stats import beta
-from scipy import optimize
 
 __all__ = [
     'lombscargle',
-    'plotting',
+    'lombscargle_plot',
 ]
 
 def _nll(param,*args):
@@ -79,6 +71,8 @@ def _grid(t, K):
     return grid
 
 def _significance(t, mag, dmag, freq, PLS, FAP, N_bootstraps):
+    from scipy.stats import beta
+    from scipy import optimize
     percentile = 1 - FAP
     # compute pre-defined Beta-Distribution
     a = (3-1)/2
@@ -130,9 +124,18 @@ def lomb_scargle(t, mag, dmag, K, N_bootstraps, FAP):
     if best_period == 0:
         best_period = np.nan
     
-    return freq, PLS, best_period, quant_pre, quant_cvm, quant_nll, quant_boot, PLS_win
+    return {'frequency': freq,
+            'Lomb-Scargle periodogram': PLS,            
+            'detected period': best_period,
+            'pre-defined beta distribution quantil': quant_pre,
+            'CVM-fitted beta distribution quantil': quant_cvm,
+            'NLL-fitted beta distribution quantil': quant_nll,
+            'bootstrap resampled quanti': quant_boot,
+            'spectral window function': PLS_win
+           }
 
-def plotting(t, mag, dmag, freq, PLS, best_period, quant_pre, quant_cvm, quant_nll, quant_boot, N_bootstraps, PLS_win):
+def lombscargle_plot(t, mag, dmag, freq, PLS, best_period, quant_pre, quant_cvm, quant_nll, quant_boot, N_bootstraps, PLS_win):
+    import matplotlib.pyplot as plt
     ### plotting
     # set up the figure & axes for plotting
     fig = plt.figure(figsize=(16, 9))
