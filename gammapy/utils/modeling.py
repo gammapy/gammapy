@@ -216,12 +216,12 @@ class ParameterList(object):
 
     def to_list_of_dict(self):
         result = []
-        for i, parameter in enumerate(self.parameters):
+        for parameter in self.parameters:
             vals = parameter.to_dict()
             if self.covariance is None:
                 vals['error'] = np.nan
             else:
-                vals['error'] = np.sqrt(self.covariance[i, i])
+                vals['error'] = self.error(parameter.name)
             result.append(vals)
         return result
 
@@ -349,6 +349,25 @@ class ParameterList(object):
                 covariance_new[i_new, j_new] = covariance[i, j]
 
         self.covariance = covariance_new
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def error(self, parname):
+        """
+        Return error on a given parameter
+
+        Parameters
+        ----------
+        parname : str
+            Parameter
+        """
+        if self.covariance is None:
+            raise ValueError('Covariance matrix not set.')
+
+        for i, parameter in enumerate(self.parameters):
+            if parameter.name == parname:
+                return np.sqrt(self.covariance[i, i])
+        raise ValueError('Could not find parameter {}'.format(parname))
 
 
 class SourceLibrary(object):

@@ -197,10 +197,8 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        par_errors = result.model.parameters._ufloats
-        assert_allclose(par_errors['index'].s, 0.09787747219456712)
-        assert_allclose(par_errors['amplitude'].s, 2.1992645712596426e-12)
-
+        assert_allclose(result.model.parameters.error('index'), 0.09787747219456712)
+        assert_allclose(result.model.parameters.error('amplitude'), 2.1992645712596426e-12)
         self.fit.result[0].to_table()
 
     def test_areascal(self):
