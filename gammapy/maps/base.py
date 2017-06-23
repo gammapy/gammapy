@@ -63,11 +63,17 @@ class MapBase(object):
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
+        interp : {None, 'linear', 'nearest'}
+            Interpolate data values. None corresponds to 'nearest',
+            but might have advantages in performance, because no
+            interpolator is set up.
+
         Returns
         -------
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map.
            np.nan used to flag coords outside of map
+
         """
         pass
 
@@ -82,6 +88,11 @@ class MapBase(object):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
 
+        interp : {None, 'linear', 'nearest'}
+            Interpolate data values. None corresponds to 'nearest',
+            but might have advantages in performance, because no
+            interpolator is set up.
+
         Returns
         ----------
         vals : `~numpy.ndarray`
@@ -89,3 +100,7 @@ class MapBase(object):
            np.nan used to flag coords outside of map
         """
         pass
+
+#    def create(self):
+#        """Factory method."""
+#        pass

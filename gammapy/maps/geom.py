@@ -12,13 +12,19 @@ __all__ = [
 ]
 
 
-def val_to_bin(edges, x):
+def val_to_bin(edges, x, bounded=False):
     """Convert axis coordinates ``x`` to bin indices.
 
     Returns -1 for values below/above the lower/upper edge.
     """
-    ibin = np.digitize(np.array(x, ndmin=1), edges) - 1
-    ibin[x > edges[-1]] = -1
+    x = np.array(x, ndmin=1)
+    ibin = np.digitize(x, edges) - 1
+
+    if bounded:
+        ibin[x < edges[0]] = 0
+        ibin[x < edges[0]] = len(edges)-1
+    else:
+        ibin[x > edges[-1]] = -1
     return ibin
 
 
@@ -157,7 +163,9 @@ class MapCoords(object):
     @classmethod
     def from_tuple(cls, coords, **kwargs):
         """Create from tuple of coordinate vectors."""
-        if isinstance(coords[0], np.ndarray):
+        if (isinstance(coords[0], np.ndarray) or
+            isinstance(coords[0], list) or
+            np.isscalar(coords[0])):
             return cls.from_lonlat(*coords, **kwargs)
         elif isinstance(coords[0], SkyCoord):
             return cls.from_skydir(*coords, **kwargs)

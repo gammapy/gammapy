@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from .geom import MapCoords, val_to_bin
 from .hpxmap import HpxMap
 from .hpx import HPXGeom, HpxToWcsMapping
 
@@ -164,24 +165,72 @@ class HpxMapND(HpxMap):
                                                  axes=np.arange(self.data.ndim - 1)))
 
     def get_by_coords(self, coords, interp=None):
-        pix = self.hpx.coord_to_pix(coords)
-        return self.get_by_pix(pix)
 
-    def get_by_pix(self, pix):
+        if interp is None:
+            pix = self.hpx.coord_to_pix(coords)
+            return self.get_by_pix(pix)
+        elif interp == 'linear':
+            return self._interp_by_coords(coords, interp)
+        else:
+            raise ValueError('Invalid interpolation method: {}'.format(interp))
+
+    def get_by_pix(self, pix, interp=None):
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
         # FIXME: What to return for pixels outside the map
 
-        # Reverse ordering and convert to local pixel indices
-        pix = pix[::-1]
-        pix_local = tuple(pix[:-1] + (self.hpx[pix[-1]],))
+        if interp is None:
+            # Convert to local pixel indices
+            pix_local = (self.hpx[pix[0]],) + tuple(pix[1:])
+            return self.data.T[pix_local]
+        else:
+            raise NotImplementedError
 
-        return self.data[pix_local]
-
-    def _interp_by_coord(self, coords):
-        """Interpolate map values."""
+    def _interp_by_coords(self, coords, interp):
+        """Linearly interpolate map values."""
         import healpy as hp
-        raise NotImplementedError
+        c = MapCoords.create(coords)
+        theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
+        phi = np.array(np.radians(c.lon), ndmin=1)
+
+        pix_ctr = self.hpx.coord_to_pix(c)[0]
+        pix, wts = hp.pixelfunc.get_interp_weights(self.hpx.nside, theta,
+                                                   phi, nest=self.hpx.nest)
+
+        # Convert to local pixel indices
+        pix_local = [self.hpx[pix]]
+
+        m = pix_local[0] == -1
+        pix_local[0][m] = self.hpx[(
+            pix_ctr * np.ones(pix.shape, dtype=int))[m]]
+
+        if np.any(pix_local[0] == -1):
+            raise ValueError('HPX pixel index out of map bounds.')
+
+        if self.hpx.ndim == 2:
+            return np.sum(self.data.T[pix_local] * wts, axis=0)
+
+        val = np.zeros(theta.shape)
+        # Loop over function values at corners
+        for i, t in enumerate(range(2**len(self.hpx.axes))):
+
+            pix = []
+            wt = np.ones(theta.shape)[None, ...]
+            for j, ax in enumerate(self.hpx.axes):
+
+                idx = val_to_bin(
+                    ax.center[:-1], c[2 + j], bounded=True)[None, ...]
+
+                w = ax.center[idx + 1] - ax.center[idx]
+                if (i & (1 << j)):
+                    wt *= (c[2 + j] - ax.center[idx]) / w
+                    pix += [1 + idx]
+                else:
+                    wt *= (1.0 - (c[2 + j] - ax.center[idx]) / w)
+                    pix += [idx]
+            val += np.sum(wts * wt * self.data.T[pix_local + pix], axis=0)
+
+        return val
 
     def _interpolate_cube(self, coords):
         """Perform interpolation on a HEALPIX cube.
