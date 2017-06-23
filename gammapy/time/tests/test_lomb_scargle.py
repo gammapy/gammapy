@@ -33,7 +33,7 @@ TEST_CASES = [
          sig_criterion = 'boot', significance = 95, n_bootstraps = 100),
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
          n_observations = 1000 / 2, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'pre', significance = 95, n_bootstraps = 'None'),
+         sig_criterion = 'None', significance = 95, n_bootstraps = 'None'),
 ]
 
 @pytest.mark.parametrize('test_case', TEST_CASES)
@@ -51,10 +51,10 @@ def test_lomb_scargle(test_case):
         test_case['period'],
         atol=test_case['dt'],
     )
-    assert np.greater(
+    assert np.any(np.greater(
         result['significance'],
         test_case['significance'],
-    )
+    ))
 
 @pytest.mark.parametrize('test_case', TEST_CASES)
 def test_lomb_scargle_plot(test_case):

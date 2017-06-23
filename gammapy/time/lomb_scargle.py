@@ -10,10 +10,7 @@ __all__ = [
 
 def _nll(param, data):
     """
-    Negative log likelihood function for beta
-    <param>: list for parameters to be fitted.
-    <args>: 1-element array containing the sample data.
-    Return <nll>: negative log-likelihood to be minimized.
+    Negative log likelihood function for beta distribution
     """
     from scipy.stats import beta
     a, b = param
@@ -25,7 +22,8 @@ def _nll(param, data):
 
 
 def _cvm(param, data):
-    """Cramer-von-Mises distance minimization
+    """
+    Cramer-von-Mises distance for beta distribution
     """
     from scipy.stats import beta
     a, b = param
@@ -42,10 +40,9 @@ def _cvm(param, data):
 
 
 def _window_function(time, dt):
-    # TODO: this needs explanation what it does
-    # TODO: rewrite in better way possible?
-    # Remove? Punt this to the user, help a little with a docs example?
-    # Alternative: extra utility function that user can call to compute dt before calling the bootstrap function below.
+    """
+    Generates window function with desired resolution dt
+    """
     n_points = (np.max(time) - np.min(time)) / dt
     t_win = np.linspace(np.min(time), np.max(time), n_points+1, endpoint=True)
     window = np.zeros(len(t_win))
@@ -55,7 +52,9 @@ def _window_function(time, dt):
 
 
 def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
-    # tbd: does the caller need control over seed / bootstrap options?
+    """
+    Returns value of maximum periodogram peak for every bootstrap resampling
+    """
     rand = np.random.RandomState(42)
     max_periods = np.empty(n_bootstraps)
     for idx_run in range(n_bootstraps):
@@ -67,7 +66,9 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
 
 
 def _freq_grid(time, dt):
-    # What is this? -> rename to _freq_grid?
+    """
+    Generates the frequency grid for the periodogram
+    """
     max_period = (np.max(time) - np.min(time)) / 10  # see Halpern ???
     min_period = dt
     n_periods = max_period / min_period
@@ -78,6 +79,9 @@ def _freq_grid(time, dt):
 
 
 def _significance_pre(time, freq, psd_best_period):
+    """
+    Computes significance for the pre-defined beta distribution
+    """
     from scipy.stats import beta
     a = (3-1)/2
     b = (len(time)-3)/2
@@ -87,6 +91,9 @@ def _significance_pre(time, freq, psd_best_period):
 
 
 def _significance_cvm(time, freq, psd, psd_best_period):
+    """
+    Computes significance for the cvm-distance-minimised beta distribution
+    """
     from scipy import optimize
     from scipy.stats import beta
     theta_1 = -1. * (np.mean(psd) * (-np.mean(psd)
@@ -105,6 +112,9 @@ def _significance_cvm(time, freq, psd, psd_best_period):
 
 
 def _significance_nll(time, freq, psd, psd_best_period):
+    """
+    Computes significance for the negative logarithmic likelihood-minimised beta distribution
+    """
     from scipy import optimize
     from scipy.stats import beta
     a = (3-1)/2
@@ -116,6 +126,9 @@ def _significance_nll(time, freq, psd, psd_best_period):
 
 
 def _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps):
+    """
+    Computes significance for the bootstrap-resampling
+    """
     from scipy import stats
     max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
     significance = stats.percentileofscore(max_periods, psd_best_period)
@@ -124,48 +137,54 @@ def _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstra
 
 
 def _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_bootstraps):
+    """
+    Computes significance for all significance criteria
+    """
     significance = np.empty([4])
     significance[0] = _significance_pre(time, freq, psd_best_period)
     significance[1] = _significance_nll(time, freq, psd, psd_best_period)
     significance[2] = _significance_cvm(time, freq, psd, psd_best_period)
-    significance[3] = _significance_boot(time, freq, psd_best_period)
+    significance[3] = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps=100)
 
     return significance
 
 
-def _def_significance(freq, psd, quantile):
-    # TODO: split this out into a utility function?
-    if np.max(psd) > quantile:
-        best_period = freq[np.argmax(psd)]
-    else:
-        best_period = np.nan
-
-    return best_period
-
-
-def lomb_scargle(time, flux, flux_error, dt, criterion, n_bootstraps='None'):
-    """Processs the lomb-scargle-algorithmus in autopower mode.
+def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100):
+    """
+    This function computes the significance of periodogram peaks under certain criteria.
+    To compute the Lomb-Scargle power spectral density,
+    `~astropy.stats.LombScargle` is called.
+    For eyesight inspection, the spectral window function is also returned to evaluate the impcat of sampling on the periodogram.
 
     More high-level docs. Link to a paper or wikipedia?
 
-    This function computes significance bla bla.
-    To compute the Lomb-Scargle power spectral density,
-    `~astropy.stats.LombScargle` is called.
-
-    The function returns a results dictionary with the following conent:
+    The function returns a results dictionary with the following content:
 
     - ``fgrid`` (`~numpy.ndarray`) -- Frequency grid in inverse units of ``t``
-    - ``PSD`` (array) -- power spectral density of the Lomb-Scargle periodogram at the frequencies of ``fgrid``
+    - ``psd`` (`~numpy.ndarray`) -- Power spectral density of the Lomb-Scargle periodogram at the frequencies of ``fgrid``
+    - ``period`` (`float`) -- Location of the highest periodogram peak
+    - ``significance`` (`float`) or (`~numpy.ndarray`) -- Significance of ``period`` under the specified significance criterion. If the significance criterion is not defined, all significance criteria are used and their respective significance for the period is returned
+    - ``swf`` (`~numpy.ndarray`) -- Spectral window function
 
     Parameters
     ----------
     time : `~numpy.ndarray`
-        Time
+        Time array of the light curve
     flux : `~numpy.ndarray`
-        Flux
+        Flux array of the light curve
     flux_err : `~numpy.ndarray`
-        Flux error
-
+        Flux error array of the light curve
+    dt : `float`
+        desired resolution of the periodogram and the window function
+    criterion : `string`
+        significance criterion
+        - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny 1998)
+        - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. 2016)
+        - ``nll`` for negative logarithmic likelihood minimisation
+        - ``boot`` for bootstrap-resampling (see Sueveges 2012 and `astroML.time_series.lomb_scargle_bootstrap`.
+    n_bootstraps : `float`
+        Number of bootstraps resampling
+        
     Returns
     -------
     results : `~collections.OrderedDict`
@@ -188,8 +207,8 @@ def lomb_scargle(time, flux, flux_error, dt, criterion, n_bootstraps='None'):
         significance = _significance_nll(time, freq, psd_data, psd_best_period)
     if criterion == 'boot':
         significance = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps)
-    if criterion == 'all':
-        significance = _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_bootstraps)
+    if criterion == 'None':
+        significance = _significance_all(time, flux, flux_error, freq, psd_data, psd_best_period, n_bootstraps)
 
     # spectral window function
     t_win, window = _window_function(time, dt)
@@ -204,43 +223,62 @@ def lomb_scargle(time, flux, flux_error, dt, criterion, n_bootstraps='None'):
     ])
 
 
-def lomb_scargle_plot(time, flux, flux_error, freq, psd, best_period, significance, psd_win):
-    """TODO: describe
+def lomb_scargle_plot(time, flux, flux_error, freq, psd_data, best_period, significance, psd_win):
+    """
+    This function plots a light curve, its periodogram and spectral window function.
+    The highest period of the periodogram and its significance will be added to the plot.
 
     Parameters
     ----------
-    bla
+    time : `~numpy.ndarray`
+        Time array of the light curve
+    flux : `~numpy.ndarray`
+        Flux array of the light curve
+    flux_err : `~numpy.ndarray`
+        Flux error array of the light curve
+    freq : `~numpy.ndarray`
+        Frequencies for the periodogram
+    psd_data : `~numpy.ndarray`
+        Periodogram peaks of the data
+    best_period : `float`
+        Highest period of the periodogram
+    significance : `float` or `~numpy.ndarray`
+        Significance of ``best_period`` under the specified significance criterion. If the significance criterion is not defined, the maximum significance of all significance criteria is used
+    psd_win : Periodogram peaks of the window function
+        
+    Returns
+    -------
+    plot
     """
     from matplotlib import gridspec
     from matplotlib import rc
     import matplotlib.pyplot as plt
-    # plotting
-    # set up the figure & axes for plotting
-    fig = plt.figure(figsize=(16, 9))
-    # rcParams['axes.labelsize'] = 16
+    # define layout
     rc('text', usetex=True)
     rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+    # set up the figure & axes for plotting
+    fig = plt.figure(figsize=(16, 9))    
     gs = gridspec.GridSpec(3, 1)
     ax1 = fig.add_subplot(gs[0, :])
     ax2 = fig.add_subplot(gs[1, :])
     ax3 = fig.add_subplot(gs[2, :])
-    # plot the raw data
+    # plot the light curve
     ax1.errorbar(time, flux, flux_error, fmt='ok', elinewidth=1.5, capsize=0)
     ax1.set(xlabel=r'\textbf{time} (d)',
             ylabel=r'\textbf{magnitude} (a.u.)')
     # plot the periodogram
-    ax2.plot(1. / freq, psd)
+    ax2.plot(1. / freq, psd_data)
+    # mark the best period and label with significance
     if np.isfinite(best_period):
-        ax2.axvline(best_period, ymin=0, ymax=psd[freq == 1./best_period],
-                    label=r'Detected period p = {:.1f} with {:.2f} significance'.format(best_period, significance))
-
+        ax2.axvline(best_period, ymin=0, ymax=psd_data[freq == 1./best_period],
+                    label=r'Detected period p = {:.1f} with {:.2f} significance'.format(best_period, np.max(significance)))
     ax2.set(  # xlabel=r'\textbf{period} (d)'
             ylabel=r'\textbf{power}',
             xlim=(0, np.max(1. / freq)),
             ylim=(0, 1),
     )
     ax2.legend(loc='upper right')
-    # plot the window function
+    # plot the spectral window function
     ax3.plot(1. / freq, psd_win)
     ax3.set(xlabel=r'\textbf{period} (d)',
             ylabel=r'\textbf{power}',
