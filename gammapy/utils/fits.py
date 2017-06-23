@@ -294,6 +294,10 @@ def table_to_fits_table(table):
 
     # Copy over column meta-data
     for idx, colname in enumerate(table.colnames):
+        # fix the order of the keywords
+        hdu.header['TTYPE' + str(idx + 1)] = hdu.header.pop('TTYPE' + str(idx + 1))
+        hdu.header['TFORM' + str(idx + 1)] = hdu.header.pop('TFORM' + str(idx + 1))
+
         if table[colname].unit is not None:
             hdu.header['TUNIT' + str(idx + 1)] = table[colname].unit.to_string('fits')
 
