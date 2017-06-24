@@ -12,6 +12,26 @@ __all__ = [
 ]
 
 
+def pix_tuple_to_idx(pix):
+    """Convert a tuple of pixel coordinate arrays to a tuple of pixel
+    indices.  Pixel coordinates are rounded to the closest integer
+    value.
+
+    Returns
+    -------
+    idx : `~numpy.ndarray`
+        Array of pixel indices.
+
+    """
+    idx = []
+    for i, p in enumerate(pix):
+        if np.issubdtype(p.dtype, np.integer):
+            idx += [p]
+        else:
+            idx += [0.5 + p.astype(int)]
+    return tuple(idx)
+
+
 def val_to_bin(edges, x, bounded=False):
     """Convert axis coordinates ``x`` to bin indices.
 
@@ -22,7 +42,7 @@ def val_to_bin(edges, x, bounded=False):
 
     if bounded:
         ibin[x < edges[0]] = 0
-        ibin[x < edges[0]] = len(edges)-1
+        ibin[x < edges[0]] = len(edges) - 1
     else:
         ibin[x > edges[-1]] = -1
     return ibin
@@ -165,7 +185,7 @@ class MapCoords(object):
         """Create from tuple of coordinate vectors."""
         if (isinstance(coords[0], np.ndarray) or
             isinstance(coords[0], list) or
-            np.isscalar(coords[0])):
+                np.isscalar(coords[0])):
             return cls.from_lonlat(*coords, **kwargs)
         elif isinstance(coords[0], SkyCoord):
             return cls.from_skydir(*coords, **kwargs)

@@ -37,6 +37,18 @@ class WcsMapND(WcsMap):
     def get_by_pix(self, pix, interp=None):
         raise NotImplementedError
 
+    def fill_by_coords(self, coords, weights=None):
+        raise NotImplementedError
+
+    def fill_by_pix(self, pix, weights=None):
+        raise NotImplementedError
+
+    def set_by_coords(self, coords, vals):
+        raise NotImplementedError
+
+    def set_by_pix(self, pix, vals):
+        raise NotImplementedError
+
     def sum_over_axes(self):
         raise NotImplementedError
 

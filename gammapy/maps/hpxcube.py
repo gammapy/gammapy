@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from .geom import MapCoords, val_to_bin
+from .geom import MapCoords, val_to_bin, pix_tuple_to_idx
 from .hpxmap import HpxMap
 from .hpx import HPXGeom, HpxToWcsMapping
 
@@ -232,14 +232,29 @@ class HpxMapND(HpxMap):
 
         return val
 
-    def _interpolate_cube(self, coords):
-        """Perform interpolation on a HEALPIX cube.
+    def fill_by_coords(self, coords, weights=None):
 
-        If egy is None, then interpolation will be performed
-        on the existing energy planes.
-        """
-        import healpy as hp
-        raise NotImplementedError
+        pix = self.hpx.coord_to_pix(coords)
+        self.fill_by_pix(pix, weights)
+
+    def fill_by_pix(self, pix, weights=None):
+
+        idx = pix_tuple_to_idx(pix)
+        if weights is None:
+            weights = np.ones(idx[0].shape)
+        idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
+        self.data.T[idx_local] += weights
+
+    def set_by_coords(self, coords, vals):
+
+        pix = self.hpx.coord_to_pix(coords)
+        self.set_by_pix(pix, vals)
+
+    def set_by_pix(self, pix, vals):
+
+        idx = pix_tuple_to_idx(pix)
+        idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
+        self.data.T[idx_local] = vals
 
     def swap_scheme(self):
         """Return a new map with the opposite scheme (ring or nested).

@@ -87,6 +87,8 @@ class MapBase(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+            Pixel indices can be either float or integer type.  Float
+            indices will be rounded to the nearest integer.
 
         interp : {None, 'linear', 'nearest'}
             Interpolate data values. None corresponds to 'nearest',
@@ -98,8 +100,86 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map
            np.nan used to flag coords outside of map
+
         """
         pass
+
+    @abc.abstractmethod
+    def fill_by_coords(self, coords, weights=None):
+        """Fill pixels at the given map coordinates with values in `weights`
+        vector.
+
+        Parameters
+        ----------
+        coords : tuple or `~gammapy.maps.geom.MapCoords`
+            `~gammapy.maps.geom.MapCoords` object or tuple of
+            coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+
+        weights : `~numpy.ndarray`
+            Weights vector. If None then a unit weight will be assumed
+            for each element in `coords`.
+        """
+        pass
+
+    @abc.abstractmethod
+    def fill_by_pix(self, pix, weights=None):
+        """Fill pixels at the given pixel coordinates with values in `weights`
+        vector.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+            Pixel indices can be either float or integer type.  Float
+            indices will be rounded to the nearest integer.
+
+        weights : `~numpy.ndarray`
+            Weights vector. If None then a unit weight will be assumed
+            for each element in `pix`.
+        """
+        pass
+
+    @abc.abstractmethod
+    def set_by_coords(self, coords, vals):
+        """Set pixels at the given map coordinates to the values in `vals`
+        vector.
+
+        Parameters
+        ----------
+        coords : tuple or `~gammapy.maps.geom.MapCoords`
+            `~gammapy.maps.geom.MapCoords` object or tuple of
+            coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+
+        vals : `~numpy.ndarray`
+            Values vector.  Pixels at `coords` will be set to these values.
+        """
+        pass
+
+    @abc.abstractmethod
+    def set_by_pix(self, pix, vals):
+        """Set pixels at the given pixel coordinates to the values in `vals`
+        vector.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+            Pixel indices can be either float or integer type.  Float
+            indices will be rounded to the nearest integer.
+
+        vals : `~numpy.ndarray`
+            Values vector. Pixels at `pix` will be set to these values.
+        """
+        pass
+
 
 #    def create(self):
 #        """Factory method."""
