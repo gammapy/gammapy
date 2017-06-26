@@ -98,6 +98,8 @@ def ravel_hpx_index(idx, npix):
     if len(idx) == 1:
         return idx
 
+    # TODO: raise exception for indices that are out of bounds
+
     idx0 = idx[0]
     idx1 = np.ravel_multi_index(idx[1:], npix.shape)
     npix = np.concatenate((np.array([0]), npix.flat[:-1]))
@@ -403,48 +405,16 @@ class HPXGeom(MapGeom):
     def local_to_global(self, idx):
         """Compute a global index (partial-sky) from a global (all-sky)
         index."""
-        pass
+        raise NotImplementedError
 
-    def global_to_local(self, idx):
+    def global_to_local(self, idx_global):
         """Compute a local (partial-sky) index from a global (all-sky)
         index."""
-        pass
-
-    def __getitem__(self, sliced):
-        """This implements the global-to-local index lookup.
-
-        For all-sky maps it just returns the input array.  For
-        partial-sky maps it returns the local indices corresponding to
-        the indices in the input array, and -1 for those pixels that
-        are outside the selected region.  For multi-dimensional maps
-        with a different ``NSIDE`` in each band the global index is an
-        unrolled index for both HEALPIX pixel number and image slice.
-
-        Parameters
-        ----------
-        sliced: `~numpy.ndarray`
-            An array of pixel indices.
-            If this is a tuple, list, or
-            array of integers it will be interpreted as a global
-            (raveled) index.  If this argument is a tuple of lists or
-            arrays it will be interpreted as a list of unraveled index
-            vectors.
-
-        Returns
-        -------
-        idx_local : `~numpy.ndarray`
-            An array of local HEALPIX pixel indices.
-        """
-        # Convert to tuple representation
-        if (isinstance(sliced, int) or
-                (isinstance(sliced, tuple) and isinstance(sliced[0], int)) or
-                isinstance(sliced, np.ndarray)):
-            sliced = unravel_hpx_index(np.array(sliced, ndmin=1), self._maxpix)
 
         if self.nside.size == 1:
-            idx = np.array(sliced[0], ndmin=1)
+            idx = np.array(idx_global[0], ndmin=1)
         else:
-            idx = ravel_hpx_index(sliced, self._maxpix)
+            idx = ravel_hpx_index(idx_global, self._maxpix)
 
         if self._rmap is not None:
             retval = np.empty((idx.size), 'i')
@@ -456,7 +426,60 @@ class HPXGeom(MapGeom):
             retval = idx
 
         if self.nside.size == 1:
-            retval = ravel_hpx_index([retval] + list(sliced[1:]),
+            retval = tuple([retval] + list(idx_global[1:]))
+        else:
+            retval = unravel_hpx_index(retval, self._npix)
+
+        return retval
+
+    def __getitem__(self, idx_global):
+        """This implements the global-to-local index lookup.
+
+        For all-sky maps it just returns the input array.  For
+        partial-sky maps it returns the local indices corresponding to
+        the indices in the input array, and -1 for those pixels that
+        are outside the selected region.  For multi-dimensional maps
+        with a different ``NSIDE`` in each band the global index is an
+        unrolled index for both HEALPIX pixel number and image slice.
+
+        Parameters
+        ----------
+        idx_global: `~numpy.ndarray`
+            An array of global (all-sky) pixel indices.  If this is a
+            tuple, list, or array of integers it will be interpreted
+            as a global (raveled) index.  If this argument is a tuple
+            of lists or arrays it will be interpreted as a list of
+            unraveled index vectors.
+
+        Returns
+        -------
+        idx_local : `~numpy.ndarray`
+            An array of local HEALPIX pixel indices.
+
+        """
+        # Convert to tuple representation
+        if (isinstance(idx_global, int) or
+            (isinstance(idx_global, tuple) and isinstance(idx_global[0], int)) or
+                isinstance(idx_global, np.ndarray)):
+            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1),
+                                           self._maxpix)
+
+        if self.nside.size == 1:
+            idx = np.array(idx_global[0], ndmin=1)
+        else:
+            idx = ravel_hpx_index(idx_global, self._maxpix)
+
+        if self._rmap is not None:
+            retval = np.empty((idx.size), 'i')
+            retval.fill(-1)
+            m = np.in1d(idx.flat, self._ipix)
+            retval[m] = np.searchsorted(self._ipix, idx.flat[m])
+            retval = retval.reshape(idx.shape)
+        else:
+            retval = idx
+
+        if self.nside.size == 1:
+            retval = ravel_hpx_index([retval] + list(idx_global[1:]),
                                      self.npix)
 
         return retval
@@ -1041,12 +1064,12 @@ class HPXGeom(MapGeom):
         return WCSGeom(w, tuple(npix))
 
     def get_pixels(self):
-        """Get multi-dimensional indices for all pixels in this geometry.
+        """Get pixel indices for all pixels in this geometry.
 
         Returns
         -------
         pix : tuple
-            Tuple of index vectors with one element for each
+            Tuple of pixel index vectors with one element for each
             dimension.
         """
         if self._ipix is None:
@@ -1200,9 +1223,9 @@ class HpxToWcsMapping(object):
 
         with fits.open(filename) as ff:
             hpx = HPXGeom.from_header(ff[0])
-            ipix=index_map.counts
-            mult_val=mult_map.counts
-            npix=mult_map.counts.shape
+            ipix = index_map.counts
+            mult_val = mult_map.counts
+            npix = mult_map.counts.shape
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
