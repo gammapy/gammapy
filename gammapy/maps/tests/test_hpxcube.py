@@ -104,3 +104,20 @@ def test_hpxcube_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
     m_wcs = m.to_wcs(sum_bands=False, oversample=2, normalize=False)
     m_wcs = m.to_wcs(sum_bands=True, oversample=2, normalize=False)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_swap_scheme(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    m.data[...] = np.random.poisson(1.0, m.data.shape)
+    m2 = m.to_swapped_scheme()
+    coords = m.hpx.get_coords()
+    assert_allclose(m.get_by_coords(coords), m2.get_by_coords(coords))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_ud_grade(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HPXGeom(nside, nested, coordsys, region=region, axes=axes))
+    m.to_ud_graded(m.hpx.order-1)
