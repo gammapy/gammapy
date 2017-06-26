@@ -4,7 +4,6 @@ from astropy.stats import LombScargle
 
 __all__ = [
     'lomb_scargle',
-    'lomb_scargle_plot',
 ]
 
 
@@ -69,7 +68,7 @@ def _freq_grid(time, dt):
     """
     Generates the frequency grid for the periodogram
     """
-    max_period = (np.max(time) - np.min(time)) / 10  # see Halpern ???
+    max_period = (np.max(time) - np.min(time))
     min_period = dt
     n_periods = max_period / min_period
     periods = np.linspace(min_period, max_period, n_periods)
@@ -151,12 +150,11 @@ def _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_boot
 
 def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100):
     """
-    This function computes the significance of periodogram peaks under certain criteria.
-    To compute the Lomb-Scargle power spectral density,
-    `~astropy.stats.LombScargle` is called.
+    This function computes the significance of periodogram peaks under certain significance criteria.
+    To compute the Lomb-Scargle power spectral density, the astropy object `~astropy.stats.LombScargle` is called.
     For eyesight inspection, the spectral window function is also returned to evaluate the impcat of sampling on the periodogram.
 
-    More high-level docs. Link to a paper or wikipedia?
+    For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
 
     The function returns a results dictionary with the following content:
 
@@ -178,10 +176,12 @@ def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100)
         desired resolution of the periodogram and the window function
     criterion : `string`
         significance criterion
-        - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny 1998)
-        - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. 2016)
+
+        - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
+        - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. (2016))
         - ``nll`` for negative logarithmic likelihood minimisation
-        - ``boot`` for bootstrap-resampling (see Sueveges 2012 and `astroML.time_series.lomb_scargle_bootstrap`.
+        - ``boot`` for bootstrap-resampling (see Süveges (2012) and `astroML.time_series.lomb_scargle_bootstrap <http://www.astroml.org/modules/generated/astroML.time_series.lomb_scargle_bootstrap.html>`_)
+    
     n_bootstraps : `float`
         Number of bootstraps resampling
         
@@ -189,6 +189,19 @@ def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100)
     -------
     results : `~collections.OrderedDict`
         Results dictionary (see description above).
+
+    References
+    ----------
+    .. [1] Lomb (1976), "Least-squares frequency analysis of unequally spaced data", 
+       `Link <https://link.springer.com/article/10.1007%2FBF00648343?LI=true>`_
+    .. [2] Scargle (1982), "Studies in astronomical time series analysis. II - Statistical aspects of spectral analysis of unevenly spaced data",
+       `Link <http://articles.adsabs.harvard.edu/full/1982ApJ...263..835S>`_
+    .. [3] Schwarzenberg-Czerny (1998), "The distribution of empirical periodograms: Lomb-Scargle and PDM spectra",
+       `Link <https://academic.oup.com/mnras/article/301/3/831/1038387/The-distribution-of-empirical-periodograms-Lomb>`_
+    .. [4] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
+       `Link <https://www.jstatsoft.org/article/view/v069i09>`_
+    .. [5] Süveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
+       `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
     """
     # set up lomb-scargle-algorithm
     freq = _freq_grid(time, dt)
@@ -222,65 +235,3 @@ def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100)
         ('swf', psd_win),
     ])
 
-
-def lomb_scargle_plot(time, flux, flux_error, freq, psd_data, best_period, significance, psd_win):
-    """
-    This function plots a light curve, its periodogram and spectral window function.
-    The highest period of the periodogram and its significance will be added to the plot.
-
-    Parameters
-    ----------
-    time : `~numpy.ndarray`
-        Time array of the light curve
-    flux : `~numpy.ndarray`
-        Flux array of the light curve
-    flux_err : `~numpy.ndarray`
-        Flux error array of the light curve
-    freq : `~numpy.ndarray`
-        Frequencies for the periodogram
-    psd_data : `~numpy.ndarray`
-        Periodogram peaks of the data
-    best_period : `float`
-        Highest period of the periodogram
-    significance : `float` or `~numpy.ndarray`
-        Significance of ``best_period`` under the specified significance criterion. If the significance criterion is not defined, the maximum significance of all significance criteria is used
-    psd_win : Periodogram peaks of the window function
-        
-    Returns
-    -------
-    plot
-    """
-    from matplotlib import gridspec
-    from matplotlib import rc
-    import matplotlib.pyplot as plt
-    # define layout
-    rc('text', usetex=True)
-    rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-    # set up the figure & axes for plotting
-    fig = plt.figure(figsize=(16, 9))    
-    gs = gridspec.GridSpec(3, 1)
-    ax1 = fig.add_subplot(gs[0, :])
-    ax2 = fig.add_subplot(gs[1, :])
-    ax3 = fig.add_subplot(gs[2, :])
-    # plot the light curve
-    ax1.errorbar(time, flux, flux_error, fmt='ok', elinewidth=1.5, capsize=0)
-    ax1.set(xlabel=r'\textbf{time} (d)',
-            ylabel=r'\textbf{magnitude} (a.u.)')
-    # plot the periodogram
-    ax2.plot(1. / freq, psd_data)
-    # mark the best period and label with significance
-    if np.isfinite(best_period):
-        ax2.axvline(best_period, ymin=0, ymax=psd_data[freq == 1./best_period],
-                    label=r'Detected period p = {:.1f} with {:.2f} significance'.format(best_period, np.max(significance)))
-    ax2.set(  # xlabel=r'\textbf{period} (d)'
-            ylabel=r'\textbf{power}',
-            xlim=(0, np.max(1. / freq)),
-            ylim=(0, 1),
-    )
-    ax2.legend(loc='upper right')
-    # plot the spectral window function
-    ax3.plot(1. / freq, psd_win)
-    ax3.set(xlabel=r'\textbf{period} (d)',
-            ylabel=r'\textbf{power}',
-            xlim=(0, np.max(1. / freq)),
-    )

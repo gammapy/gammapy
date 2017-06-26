@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ..lomb_scargle import lomb_scargle
+from ..plot_periodogram import plot_periodogram
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     """
@@ -71,23 +72,19 @@ TEST_CASES = [
          sig_criterion = 'None', significance = 95, n_bootstraps = 'None'),
 ]
 
+
 @pytest.mark.parametrize('test_case', TEST_CASES)
-def test_lomb_scargle(test_case):
+def test_lomb_scargle_plot(test_case):
     test_data = simulate_test_data(
         test_case['period'], test_case['amplitude'], test_case['t_length'],
-        test_case['n_data'], test_case['n_observations'], test_case['n_outliers'],
+        test_case['n_data'], test_case['n_observations'], test_case['n_outliers']
     )
     result = lomb_scargle(
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['sig_criterion'], test_case['n_bootstraps'],
     )
-    assert_allclose(
-        result['period'],
-        test_case['period'],
-        atol=test_case['dt'],
+    plot_periodogram(
+        test_data['t'], test_data['y'], test_data['dy'], result['fgrid'],
+        result['psd'], result['swf'], result['period'],
+        result['significance']
     )
-    assert np.any(np.greater(
-        result['significance'],
-        test_case['significance'],
-    ))
-

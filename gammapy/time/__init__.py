@@ -7,3 +7,4 @@ from .simulate import *
 from .lightcurve import *
 from .exptest import *
 from .lomb_scargle import *
+from .plot_periodogram import *
