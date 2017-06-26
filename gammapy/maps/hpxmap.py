@@ -105,7 +105,7 @@ class HpxMap(MapBase):
         with fits.open(filename) as hdulist:
             hpx_map = cls.from_hdulist(hdulist, **kwargs)
         return hpx_map
-            
+
     @classmethod
     def from_hdulist(cls, hdulist, **kwargs):
         """Make a HpxMap object from a FITS HDUList.
@@ -191,55 +191,17 @@ class HpxMap(MapBase):
         """
         pass
 
-    def get_skydirs(self):
-        """Get a list of sky coordinates for the centers of every pixel. """
-        return self.hpx.get_skydirs()
-
-    def swap_scheme(self):
-        """TODO.
+    @abc.abstractmethod
+    def to_swapped_scheme(self):
+        """Return a new map with the opposite scheme (ring or nested).
         """
-        import healpy as hp
-        hpx_out = self.hpx.make_swapped_hpx()
-        if self.hpx.nest:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], n2r=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, n2r=True)
-        else:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], r2n=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, r2n=True)
-        return HpxMap(data_out, hpx_out)
+        pass
 
-    def ud_grade(self, order, preserve_counts=False):
-        """TODO.
+    @abc.abstractmethod
+    def to_ud_graded(self, order, preserve_counts=False):
+        """Upgrade or downgrade the resolution of the map to the chosen order.
         """
-        import healpy as hp
-        new_hpx = self.hpx.ud_graded_hpx(order)
-        nebins = len(new_hpx.evals)
-        shape = self.counts.shape
-
-        if preserve_counts:
-            power = -2.
-        else:
-            power = 0
-
-        if len(shape) == 1:
-            new_data = hp.pixelfunc.ud_grade(self.counts,
-                                             nside_out=new_hpx.nside,
-                                             order_in=new_hpx.ordering,
-                                             order_out=ew_hpx.ordering,
-                                             power=power)
-        else:
-            new_data = np.vstack([hp.pixelfunc.ud_grade(self.counts[i],
-                                                        nside_out=new_hpx.nside,
-                                                        order_in=new_hpx.ordering,
-                                                        order_out=new_hpx.ordering,
-                                                        power=power) for i in range(shape[0])])
-        return HpxMap(new_data, new_hpx)
+        pass
 
     def make_hdu(self, **kwargs):
         """Make a FITS HDU with input data.

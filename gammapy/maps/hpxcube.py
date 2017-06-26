@@ -181,8 +181,9 @@ class HpxMapND(HpxMap):
 
         if interp is None:
             # Convert to local pixel indices
-            pix_local = (self.hpx[pix[0]],) + tuple(pix[1:])
-            return self.data.T[pix_local]
+            idx = pix_tuple_to_idx(pix)
+            idx = self.hpx.global_to_local(idx)
+            return self.data.T[idx]
         else:
             raise NotImplementedError
 
@@ -234,7 +235,7 @@ class HpxMapND(HpxMap):
 
     def fill_by_coords(self, coords, weights=None):
 
-        pix = self.hpx.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords)
         self.fill_by_pix(pix, weights)
 
     def fill_by_pix(self, pix, weights=None):
@@ -247,7 +248,7 @@ class HpxMapND(HpxMap):
 
     def set_by_coords(self, coords, vals):
 
-        pix = self.hpx.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords)
         self.set_by_pix(pix, vals)
 
     def set_by_pix(self, pix, vals):
@@ -256,51 +257,41 @@ class HpxMapND(HpxMap):
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
 
-    def swap_scheme(self):
-        """Return a new map with the opposite scheme (ring or nested).
-        """
-        import healpy as hp
-        hpx_out = self.hpx.make_swapped_hpx()
-        if self.hpx.nest:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], n2r=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, n2r=True)
-        else:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], r2n=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, r2n=True)
-        return self.__class__(hpx_out, data_out)
+    def to_swapped_scheme(self):
 
-    def ud_grade(self, order, preserve_counts=False):
-        """Upgrade or downgrade the resolution of the map to the chosen order.
-        """
+        import healpy as hp
+        hpx_out = self.hpx.to_swapped()
+        map_out = self.__class__(hpx_out)
+        idx = list(self.hpx.get_pixels())
+        msk = np.ravel(self.data > 0)
+        idx = [t[msk] for t in idx]
+
+        if self.hpx.nest:
+            idx_new = tuple([hp.nest2ring(self.hpx.nside, idx[0])] + idx[1:])
+        else:
+            idx_new = tuple([hp.ring2nest(self.hpx.nside, idx[0])] + idx[1:])
+
+        map_out.set_by_pix(idx_new, np.ravel(self.data)[msk])
+        return map_out
+
+    def to_ud_graded(self, order, preserve_counts=False):
+
         import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
-        nebins = len(new_hpx.evals)
-        shape = self.data.shape
+        map_out = self.__class__(new_hpx)
 
-        if preserve_counts:
-            power = -2.
+        idx = list(self.hpx.get_pixels())
+        msk = np.ravel(self.data != 0)
+        idx = [t[msk] for t in idx]
+
+        if self.hpx.nest:
+            idx_new = tuple([hp.nest2ring(self.hpx.nside, idx[0])] + idx[1:])
         else:
-            power = 0
+            idx_new = tuple([hp.ring2nest(self.hpx.nside, idx[0])] + idx[1:])
 
-        if len(shape) == 1:
-            new_data = hp.pixelfunc.ud_grade(self.data,
-                                             nside_out=new_hpx.nside,
-                                             order_in=new_hpx.ordering,
-                                             order_out=ew_hpx.ordering,
-                                             power=power)
-        else:
-            new_data = [hp.pixelfunc.ud_grade(self.data[i],
-                                              nside_out=new_hpx.nside,
-                                              order_in=new_hpx.ordering,
-                                              order_out=new_hpx.ordering,
-                                              power=power)
-                        for i in range(shape[0])]
-            new_data = np.vstack(new_data)
+        map_out.fill_by_pix(idx_new, np.ravel(self.data)[msk])
 
-        return self.__class__(new_hpx, new_data)
+        if not preserve_counts:
+            map_out.data *= (2**order)**2 / (2**self.hpx.order)**2
+
+        return map_out
