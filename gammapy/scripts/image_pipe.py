@@ -216,6 +216,8 @@ class SingleObsImageMaker(object):
         counts_sum = np.sum(counts.data * self.images['exclusion'].data)
         bkg_sum = np.sum(bkg.data * self.images['exclusion'].data)
         scale = counts_sum / bkg_sum
+        if counts_sum>0. and np.isnan(scale):
+            print("counts: {} BKG: {}".format(counts_sum, bkg_sum))
 
         return scale, counts_sum
 
@@ -235,12 +237,22 @@ class SingleObsImageMaker(object):
         image.data = significance(counts.data, bkg.data)
         self.images["significance"] = image
 
-    def excess_image(self):
-        """Compute excess between counts and bkg image."""
+    def excess_image(self, radius=0):
+        """Compute excess between counts and bkg image.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+        """
         total_excess = SkyImage.empty_like(self.empty_image)
         total_excess.data = self.images["counts"].data - self.images["bkg"].data
-        self.images["excess"] = total_excess
-
+        if radius>0 :
+            disk = Tophat2DKernel(radius)
+            disk.normalize('peak')
+            self.images["excess"] = total_excess.convolve(disk.array)
+        else:
+            self.images["excess"] = total_excess
 
 class StackedObsImageMaker(object):
     """Compute stacked images for many observations.
@@ -340,7 +352,7 @@ class StackedObsImageMaker(object):
                 if make_background_image:
                     success = obs_image.bkg_image(bkg_norm)
                     if success is False:
-                        print("\nWARNING: fail to compute a Bkg model for the ObsId #{0}\n".format(obs_id))
+                        print("WARNING: fail to compute a Bkg model for the ObsId #{0}".format(obs_id))
                         continue
                     if self.save_bkg_scale:
                         self.table_bkg_scale.add_row(obs_image.table_bkg_scale[0])
@@ -351,6 +363,7 @@ class StackedObsImageMaker(object):
                 self.used_obs_id.append(obs_id)
                 nruns += 1
 
+        print("Number of selected runs: {}".format(nruns-1))
         self.images['counts'] = total_counts
 
         if make_background_image:
@@ -377,8 +390,19 @@ class StackedObsImageMaker(object):
 
         self.images['significance'] = image
 
-    def excess_image(self):
-        """Compute excess between counts and bkg image."""
+    def excess_image(self, radius=0):
+        """Compute excess between counts and bkg image.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+        """
         total_excess = SkyImage.empty_like(self.empty_image, name='excess')
         total_excess.data = self.images['counts'].data - self.images['bkg'].data
-        self.images['excess'] = total_excess
+        if radius>0 :
+            disk = Tophat2DKernel(radius)
+            disk.normalize('peak')
+            self.images["excess"] = total_excess.convolve(disk.array)
+        else:
+            self.images["excess"] = total_excess

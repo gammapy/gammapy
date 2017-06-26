@@ -6,7 +6,7 @@ import numpy as np
 from regions import CircleSkyRegion
 import astropy.units as u
 from . import PHACountsSpectrum
-from . import SpectrumObservation, SpectrumObservationList
+from . import SpectrumObservation, SpectrumObservationList, SpectrumObservationStacker
 from ..utils.scripts import make_path
 from ..irf import PSF3D
 
@@ -76,6 +76,7 @@ class SpectrumExtraction(object):
         log.info('Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
+                print("Alpha not OK")
                 continue
             self.observations.append(self.process(obs, bkg))
         if outdir is not None:
@@ -281,3 +282,9 @@ class SpectrumExtraction(object):
         self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
 
         # TODO : add more debug plots etc. here
+
+    def peek(self):
+        self.observations.peek()
+
+    def print(self):
+        print(self.observations.stack())

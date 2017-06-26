@@ -74,6 +74,10 @@ class SpectrumAnalysisIACT(object):
             **self.config['extraction'])
 
         self.extraction.run(outdir=self.config['outdir'])
+        # self.extraction.peek() #BKH - 2017/06/26 : for me it crashs
+        print("\n")
+        self.extraction.print()
+        print("\n")
 
     def run_fit(self):
         """Run all step for the spectrum fit."""
