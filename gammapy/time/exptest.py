@@ -7,9 +7,7 @@ __all__ = [
 ]
 
 
-
-
-def exptest(time_delta   ):
+def exptest(time_delta):
     """Compute the level of variability for a certain period of time.
 
     The level of variability is quantified by ``mr``, as defined in Prahl (1999).
@@ -35,7 +33,7 @@ def exptest(time_delta   ):
        `Link <http://adsabs.harvard.edu/abs/1999astro.ph..9399P>`_
     """
     mean_time = np.mean(time_delta)
-    normalized_time_delta = time_delta / mean_time    
+    normalized_time_delta = time_delta / mean_time
     mask = normalized_time_delta < 1
     sum_time = 1 - normalized_time_delta[mask] / 1
     sum_time_all = np.sum([sum_time])
