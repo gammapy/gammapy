@@ -12,6 +12,22 @@ __all__ = [
 ]
 
 
+def skydir_to_lonlat(skydir, coordsys=None):
+
+    if coordsys in ['CEL', 'C']:
+        skydir = skydir.transform_to('icrs')
+    elif coordsys in ['GAL', 'G']:
+        skydir = skydir.transform_to('galactic')
+
+    if skydir.frame.name in ['icrs', 'fk5']:
+        return (skydir.ra.deg, skydir.dec.deg)
+    elif skydir.frame.name in ['galactic']:
+        return (skydir.l.deg, skydir.b.deg)
+    else:
+        raise ValueError('Unrecognized SkyCoord frame: {}',
+                         skydir.frame.name)
+
+
 def pix_tuple_to_idx(pix):
     """Convert a tuple of pixel coordinate arrays to a tuple of pixel
     indices.  Pixel coordinates are rounded to the closest integer

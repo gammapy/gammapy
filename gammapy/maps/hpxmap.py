@@ -8,8 +8,8 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.utils.misc import InheritDocstrings
 from .base import MapBase
-from .hpx import HpxToWcsMapping
-from .geom import MapAxis
+from .hpx import HPXGeom, HpxToWcsMapping, get_nside_from_pixel_size
+from .geom import MapAxis, skydir_to_lonlat
 
 __all__ = [
     'HpxMap',
@@ -58,9 +58,6 @@ def find_and_read_bands(hdulist, extname=None):
     return axes
 
 
-# class HpxMeta(InheritDocstrings, abc.ABCMeta):
-#    pass
-#@six.add_metaclass(HpxMeta)
 class HpxMap(MapBase):
     """Base class for HEALPIX map classes.
 
@@ -82,6 +79,67 @@ class HpxMap(MapBase):
     def hpx(self):
         """HEALPix geometry object."""
         return self.geom
+
+    @classmethod
+    def create(cls, nside=None, nest=True, map_type='HpxMapND', coordsys='CEL',
+               data=None, skydir=None, binsz=None, radius=None, dtype='float32',
+               region=None, axes=None):
+        """Factory method to create an empty map.
+
+        Parameters
+        ----------
+        nest : bool
+
+        coordsys : str
+
+        map_type : str
+            Internal map representation.  Valid types are `HpxMapND` and
+            `HpxMapSparse`.
+
+        nside : int or `~numpy.ndarray`
+            HEALPix NSIDE parameter.  This parameter sets the size of
+            the spatial pixels in the map.
+
+        binsz : float or `~numpy.ndarray`
+            Approximate pixel size in degrees.  An NSIDE will be
+            chosen that correponds to a pixel size closest to this
+            value.  This option is superseded by nside.
+
+        radius : float
+            Radius of the HEALPix geometry.  If None then an all-sky
+            geometry will be created.
+
+        axes : list
+            List of `~MapAxes` objects for each non-spatial dimension.
+
+        """
+        from .hpxcube import HpxMapND
+        from .hpxsparse import HpxMapSparse
+
+        if nside is None and binsz is None:
+            raise ValueError('Either nside or binsz must be defined.')
+
+        if nside is None and binsz is not None:
+            nside = get_nside_from_pixel_size(binsz)
+
+        if skydir is None:
+            skydir = SkyCoord(0.0, 0.0, unit='deg')
+
+        lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
+
+        if region is None and radius is not None:
+            region = 'DISK({:f},{:f},{:f})'.format(lonlat[0],
+                                                   lonlat[1],
+                                                   radius)
+
+        hpx = HPXGeom.create(nside, nest, coordsys=coordsys, region=region,
+                             conv=None, axes=axes)
+        if map_type == 'HpxMapND':
+            return HpxMapND(hpx, data)
+        elif map_type == 'HpxMapSparse':
+            return HpxMapSparse(hpx, data)
+        else:
+            raise ValueError('Unregnized Map type: {}'.format(map_type))
 
     @classmethod
     def read(cls, filename, **kwargs):

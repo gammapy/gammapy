@@ -128,6 +128,27 @@ def coords_to_vec(lon, lat):
     return out
 
 
+def get_nside_from_pixel_size(pixsz):
+    """Get the NSIDE that is closest to the given pixel size.
+
+    Parameters
+    ----------
+    pix : `~numpy.ndarray`
+        Pixel size in degrees.
+
+    Returns
+    -------
+    nside : `~numpy.ndarray`
+        NSIDE parameter.
+    """
+
+    import healpy as hp
+    pixsz = np.array(pixsz, ndmin=1)
+    nside = 2**np.linspace(1, 14, 14, dtype=int)
+    nside_pixsz = np.degrees(hp.nside2resol(nside))
+    return nside[np.argmin(np.abs(nside_pixsz - pixsz[..., None]), axis=-1)]
+
+
 def get_pixel_size_from_nside(nside):
     """Estimate of the pixel size from the HEALPIX nside coordinate.
 
@@ -343,15 +364,21 @@ class HPXGeom(MapGeom):
     region : str
         Region string defining the spatial geometry of the map.  If
         none the map will encompass the whole sky.
+    pix : tuple
+        Explicit list of pixels encompassed by this geometry.  This
+        option supersedes `region`.
     axes : list
         Axes for non-spatial dimensions.
     sparse : bool
         If True defer allocation of partial- to all-sky index mapping arrays.
+
     """
 
     def __init__(self, nside, nest=True,
-                 coordsys='CEL', region=None,
+                 coordsys='CEL', region=None, pix=None,
                  axes=None, conv=HPX_Conv('FGST_CCUBE'), sparse=False):
+
+        # FIXME: Figure out what to do when sparse=True
 
         self._nside = np.array(nside, ndmin=1)
         self._axes = axes if axes is not None else []
@@ -378,11 +405,20 @@ class HPXGeom(MapGeom):
         self._ipix = None
         self._rmap = None
         self._npix = self._maxpix
-        if self._region:
+
+        if pix is not None:
+            self._indxschm = 'EXPLICIT'
+            self._ipix = ravel_hpx_index(pix, self._maxpix)
+        elif self._region:
             self._indxschm = 'EXPLICIT'
             self._create_lookup(self._region)
         else:
             self._indxschm = 'IMPLICIT'
+
+        if self._ipix is not None:
+            self._rmap = {}
+            for i, ipixel in enumerate(self._ipix.flat):
+                self._rmap[ipixel] = i
 
         self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
@@ -398,9 +434,6 @@ class HPXGeom(MapGeom):
         if self.nside.ndim > 1:
             self._npix = self._npix.reshape(self.nside.shape)
         self._ipix = np.concatenate(self._ipix)
-        self._rmap = {}
-        for i, ipixel in enumerate(self._ipix.flat):
-            self._rmap[ipixel] = i
 
     def local_to_global(self, idx):
         """Compute a global index (partial-sky) from a global (all-sky)
@@ -587,6 +620,7 @@ class HPXGeom(MapGeom):
 
     @property
     def region(self):
+        """Region string."""
         return self._region
 
     @property
@@ -595,14 +629,22 @@ class HPXGeom(MapGeom):
         return self.get_pixels()
 
     def ud_graded_hpx(self, order):
-        """TODO.
+        """Upgrade or downgroad the resolution of this geometry to the given
+        order.
+
+        Returns
+        -------
+        geom : `~HPXGeom`
+            A HEALPix geoemtry object.
         """
         if np.any(self.order < 0):
             raise ValueError(
                 'Upgrade and degrade only implemented for standard maps')
 
-        return self.__class__(2 ** order, self.nest, self.coordsys,
-                              self.region, self.axes, self.conv)
+        # FIXME: Pass ipix as argument
+
+        return self.__class__(2 ** order, self.nest, coordsys=self.coordsys,
+                              region=self.region, axes=self.axes, conv=self.conv)
 
     def to_swapped(self):
         """Make a copy of this geometry with a swapped ORDERING.  (NEST->RING
@@ -613,8 +655,11 @@ class HPXGeom(MapGeom):
         geom : `~HPXGeom`
             A HEALPix geoemtry object.
         """
-        return self.__class__(self.nside, not self.nest, self.coordsys,
-                              self.region, self.axes, self.conv)
+
+        # FIXME: Pass ipix as argument
+
+        return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
+                              region=self.region, axes=self.axes, conv=self.conv)
 
     def copy_and_drop_axes(self):
         """Make a copy of the spatial component of this geometry.
@@ -629,7 +674,7 @@ class HPXGeom(MapGeom):
 
     @classmethod
     def create(cls, nside, nest, coordsys='CEL', region=None,
-               axes=None, conv=HPX_Conv('FGST_CCUBE')):
+               axes=None, pix=None, conv=HPX_Conv('FGST_CCUBE')):
         """Create an HPXGeom object.
 
         Parameters
@@ -650,7 +695,8 @@ class HPXGeom(MapGeom):
         geom : `~HPXGeom`
             A HEALPix geoemtry object.
         """
-        return cls(nside, nest, coordsys, region, axes, conv)
+        return cls(nside, nest, coordsys=coordsys, region=region,
+                   axes=axes, pix=pix, conv=conv)
 
     @staticmethod
     def identify_HPX_convention(header):
@@ -694,7 +740,7 @@ class HPXGeom(MapGeom):
             raise ValueError('Could not identify HEALPIX convention')
 
     @classmethod
-    def from_header(cls, header, axes=None):
+    def from_header(cls, header, axes=None, pix=None):
         """Create an HPX object from a FITS header.
 
         Parameters
@@ -703,6 +749,16 @@ class HPXGeom(MapGeom):
             The FITS header
         axes  : list
             List of non-spatial axes
+        pix : tuple
+            List of pixel index vectors defining the pixels
+            encompassed by the geometry.  For EXPLICIT geometries with
+            HPX_REG undefined this tuple defines the geometry.
+
+        Returns
+        -------
+        hpx : `~HPXGeom`
+            HEALPix geometry.
+
         """
         convname = HPXGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
@@ -736,7 +792,37 @@ class HPXGeom(MapGeom):
             except KeyError:
                 region = None
 
-        return cls(nside, nest, coordsys, region, axes=axes, conv=conv)
+        return cls(nside, nest, coordsys=coordsys, region=region,
+                   axes=axes, pix=pix, conv=conv)
+
+    @classmethod
+    def from_hdu(cls, hdu, axes=None):
+        """Create an HPX object from a BinTable HDU.
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            The FITS HDU
+        axes  : list
+            List of non-spatial axes
+
+        Returns
+        -------
+        hpx : `~HPXGeom`
+            HEALPix geometry.
+
+        """
+
+        # FIXME: Need correct handling of IMPLICIT and EXPLICIT maps
+
+        # if HPX region is not defined then geometry is defined by
+        # the set of all pixels in the table
+        if not 'HPX_REG' in hdu.header:
+            pix = (hdu.data.field('PIX'), hdu.data.field('CHANNEL'))
+        else:
+            pix = None
+
+        return cls.from_header(hdu.header, axes=axes, pix=pix)
 
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""

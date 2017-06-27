@@ -295,3 +295,12 @@ class HpxMapND(HpxMap):
             map_out.data *= (2**order)**2 / (2**self.hpx.order)**2
 
         return map_out
+
+    def plot(self, ax=None, normalize=False, proj='AIT', oversample=10):
+        """Quickplot method. This will generate a basic visualization by
+        converting to a rasterized WCS image."""
+
+        m = self.to_wcs(sum_bands=True,
+                        normalize=normalize,
+                        proj=proj, oversample=oversample)
+        return m.plot(ax)
