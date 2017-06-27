@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from .wcs import WCSGeom
-from .geom import MapGeom, MapCoords, MapAxis, val_to_bin, bin_to_val
+from .geom import MapGeom, MapCoords, MapAxis, bin_to_val
 
 # TODO: What should be part of the public API?
 __all__ = [
@@ -527,7 +527,7 @@ class HPXGeom(MapGeom):
 
             bins = []
             for i, ax in enumerate(self.axes):
-                bins += [val_to_bin(ax.edges, c[i + 2])]
+                bins += [ax.coord_to_idx(c[i+2])]
 
             # Ravel multi-dimensional indices
             ibin = np.ravel_multi_index(bins, self._shape)

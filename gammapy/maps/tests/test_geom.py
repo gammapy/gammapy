@@ -39,3 +39,16 @@ def test_mapaxis_pix_to_coord(nodes, interp):
                     axis.pix_to_coord(np.arange(axis.nbin, dtype=float)))
     assert_allclose(np.arange(axis.nbin + 1, dtype=float) - 0.5,
                     axis.coord_to_pix(axis.edges))
+
+
+@pytest.mark.parametrize(('nodes', 'interp'),
+                         mapaxis_test_geoms)
+def test_mapaxis_coord_to_idx(nodes, interp):
+
+    axis = MapAxis.from_nodes(nodes, interp=interp)
+    assert_allclose(np.arange(axis.nbin, dtype=int),
+                    axis.coord_to_idx(axis.center))
+
+    axis = MapAxis.from_edges(nodes, interp=interp)
+    assert_allclose(np.arange(axis.nbin, dtype=int),
+                    axis.coord_to_idx(axis.center))

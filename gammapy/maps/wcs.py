@@ -5,7 +5,7 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
-from .geom import MapGeom, MapCoords, val_to_pix
+from .geom import MapGeom, MapCoords
 
 __all__ = [
     'WCSGeom',
@@ -126,7 +126,7 @@ class WCSGeom(MapGeom):
         c = MapCoords.create(coords)
         pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
         for i, ax in enumerate(self.axes):
-            pix += val_to_pix(ax, c[i + 2])
+            pix += ax.coord_to_pix(c[i + 2])
         return pix
 
     def pix_to_coord(self, pix):

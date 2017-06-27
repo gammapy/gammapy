@@ -4,7 +4,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from .geom import MapCoords, val_to_bin, pix_tuple_to_idx
+from .geom import MapCoords, pix_tuple_to_idx
 from .hpxmap import HpxMap
 from .hpx import HPXGeom, HpxToWcsMapping, ravel_hpx_index, unravel_hpx_index
 

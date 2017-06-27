@@ -49,7 +49,7 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
-def val_to_bin(edges, x, bounded=False):
+def coord_to_idx(edges, x, bounded=False):
     """Convert axis coordinates ``x`` to bin indices.
 
     Returns -1 for values below/above the lower/upper edge.
@@ -71,7 +71,8 @@ def bin_to_val(edges, bins):
 
 
 def coord_to_pix(edges, coord, interp='lin'):
-    """Convert grid coordinates to pixel coordinates."""
+    """Convert grid coordinates to pixel coordinates using the chosen
+    interpolation scheme."""
 
     if interp == 'log':
         fn = np.log
@@ -90,46 +91,44 @@ def coord_to_pix(edges, coord, interp='lin'):
 
 
 def pix_to_coord(edges, pix, interp='lin'):
-    """Convert pixel coordinates to grid coordinates."""
+    """Convert pixel coordinates to grid coordinates using the chosen
+    interpolation scheme."""
 
     if interp == 'log':
         fn0 = np.log
         fn1 = np.exp
     elif interp == 'lin':
         def fn0(t): return t
+
         def fn1(t): return t
     elif interp == 'sqrt':
         fn0 = np.sqrt
+
         def fn1(t): return np.power(t, 2)
     else:
         raise ValueError('Invalid interp: {}'.format(interp))
 
     interp_fn = interp1d(np.arange(len(edges)).astype(float),
-                 fn0(edges),
-                 fill_value='extrapolate')
+                         fn0(edges),
+                         fill_value='extrapolate')
 
     return fn1(interp_fn(pix))
 
 
-def val_to_pix(edges, x):
-    """Convert axis coordinates ``x`` to pixel coordinates."""
-    return np.interp(x, edges, np.arange(len(edges)).astype(float))
-
-
 class MapAxis(object):
     """Class representing an axis of a map.  Provides methods for
-    converting to/from axis and pixel coordinates.  An axis is defined
-    by a sequence of nodes that lie at the center of each bin.  The
-    pixel coordinate at each node is equal to its index in the node
-    array (0, 1, ..).  Bin edges are offset by 0.5 in pixel
-    coordinates from the nodes such that the lower/upper edge of the
-    first bin is (-0.5,0.5).
+    transforming to/from axis and pixel coordinates.  An axis is
+    defined by a sequence of node values that lie at the center of
+    each bin.  The pixel coordinate at each node is equal to its index
+    in the node array (0, 1, ..).  Bin edges are offset by 0.5 in
+    pixel coordinates from the nodes such that the lower/upper edge of
+    the first bin is (-0.5,0.5).
 
     Parameters
     ----------
-    bin_edges : `~numpy.ndarray`
-        Array of bin edges.  For a histogram these correspond to the
-        lower/upper edges of each bin.
+    nodes : `~numpy.ndarray`
+        Array of node values.  These will be interpreted as either bin
+        edges or centers.
 
     interp : str
         Interpolation method used to transform between axis and pixel
@@ -137,22 +136,30 @@ class MapAxis(object):
 
     """
 
-    def __init__(self, bin_edges, interp='log', name='', quantity_type='integral',
-                 nodes=None):
-        self._bin_edges = bin_edges
+    # TODO: Add methods to faciliate FITS I/O.
+    # TODO: Cache an interpolation object?
+
+    def __init__(self, nodes, interp='lin', name='', quantity_type='integral',
+                 node_type='edge'):
         self._name = name
         self._quantity_type = quantity_type
         self._interp = interp
-        self._pix_offset = 0.0
+        self._nodes = nodes
 
-        if nodes is not None:
-            self._nodes = nodes
+        # Set pixel coordinate of first node
+        if node_type == 'edge':
+            self._pix_offset = -0.5
+            nbin = len(nodes) - 1
+        elif node_type == 'center':
+            self._pix_offset = 0.0
+            nbin = len(nodes)
         else:
-            self._nodes = bin_edges
-            self._pix_offset = 0.5
+            raise ValueError('Invalid node type: {}'.format(node_type))
 
-        pix = np.arange(len(self.edges) - 1, dtype=float)
+        pix = np.arange(nbin, dtype=float)
         self._center = self.pix_to_coord(pix)
+        pix = np.arange(nbin + 1, dtype=float) - 0.5
+        self._bin_edges = self.pix_to_coord(pix)
 
     @property
     def name(self):
@@ -175,6 +182,7 @@ class MapAxis(object):
 
     @property
     def nbin(self):
+        """Return number of bins."""
         return len(self._bin_edges) - 1
 
     @classmethod
@@ -191,22 +199,95 @@ class MapAxis(object):
         nodes : `~numpy.ndarray`
             Axis nodes (bin center).
 
+        interp : str
+            Interpolation method used to transform between axis and pixel
+            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+
         """
-        interp = kwargs.setdefault('interp', 'log')
-        pix = np.arange(len(nodes) + 1) - 0.5
-        edges = pix_to_coord(nodes, pix, interp=interp)
-        return cls(edges, nodes=nodes, **kwargs)
+        nodes = np.array(nodes, ndmin=1)
+        if len(nodes) < 1:
+            raise ValueError('Nodes array must have at least one element.')
+
+        return cls(nodes, node_type='center', **kwargs)
+
+    @classmethod
+    def from_edges(cls, edges, **kwargs):
+        """Generate an axis object from a sequence of bin edges.
+
+        This method should be used to construct an axis where the bin
+        edges should lie at specific values (e.g. a histogram).  The
+        number of bins will be one less than the number of edges.
+
+        Parameters
+        ----------
+        edges : `~numpy.ndarray`
+            Axis bin edges.
+
+        interp : str
+            Interpolation method used to transform between axis and pixel
+            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+
+        """
+        if len(edges) < 2:
+            raise ValueError('Edges array must have at least two elements.')
+
+        return cls(edges, node_type='edge', **kwargs)
 
     def set_name(self, name):
         self._name = name
 
     def pix_to_coord(self, pix):
-        pix = pix + self._pix_offset
+        """Transform from pixel to axis coordinates.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+
+        Returns
+        -------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        """
+        pix = pix - self._pix_offset
         return pix_to_coord(self._nodes, pix, interp=self._interp)
 
     def coord_to_pix(self, coord):
+        """Transform from axis to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+
+        """
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
-        return pix - self._pix_offset
+        return pix + self._pix_offset
+
+    def coord_to_idx(self, coord, bounded=False):
+        """Transform from axis coordinate to bin index.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        bounded : bool
+
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Array of bin indices.
+
+        """
+        return coord_to_idx(self.edges, coord, bounded)
 
 
 class MapCoords(object):

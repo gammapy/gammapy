@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from .geom import MapCoords, val_to_bin, pix_tuple_to_idx
+from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
 from .hpx import HPXGeom, HpxToWcsMapping
 
@@ -219,8 +219,8 @@ class HpxMapND(HpxMap):
             wt = np.ones(theta.shape)[None, ...]
             for j, ax in enumerate(self.hpx.axes):
 
-                idx = val_to_bin(
-                    ax.center[:-1], c[2 + j], bounded=True)[None, ...]
+                idx = coord_to_idx(ax.center[:-1],
+                                   c[2 + j], bounded=True)[None, ...]
 
                 w = ax.center[idx + 1] - ax.center[idx]
                 if (i & (1 << j)):
