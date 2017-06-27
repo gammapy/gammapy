@@ -56,7 +56,7 @@ class WcsMapND(WcsMap):
         import matplotlib.pyplot as plt
 
         if ax is None:
-            fig = plt.figure()
+            fig = plt.gcf()
             ax = fig.add_subplot(111, projection=self.geom.wcs)
 
         im = ax.imshow(self.data, interpolation='nearest', cmap='magma',
