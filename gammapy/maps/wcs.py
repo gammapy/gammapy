@@ -89,7 +89,7 @@ class WCSGeom(MapGeom):
     @classmethod
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
-               axes=None):
+               axes=None, skydir=None):
         """TODO."""
         header = make_header(nxpix, nypix, binsz, xref, yref,
                              proj, coordsys, xrefpix, yrefpix)
@@ -120,19 +120,43 @@ class WCSGeom(MapGeom):
         delta[(m0 & my) | (m3 & mx) | m2] = deltay[(m0 & my) | (m3 & mx) | m2]
         return delta
 
+    def get_pixels(self):
+
+        pix = [np.arange(self.npix[0], dtype=int),
+               np.arange(self.npix[1], dtype=int)]
+        for i, ax in enumerate(self.axes):
+            pix += [np.arange(ax.nbin, dtype=int)]
+        pix = np.meshgrid(*pix, indexing='ij')
+        return tuple([np.ravel(t) for t in pix])
+
+    def get_coords(self):
+
+        pix = self.get_pixels()
+        return self.pix_to_coord(pix)
+
     def coord_to_pix(self, coords):
-        """TODO.
-        """
+
         c = MapCoords.create(coords)
         pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
         for i, ax in enumerate(self.axes):
-            pix += ax.coord_to_pix(c[i + 2])
+            pix += [ax.coord_to_pix(c[i + 2])]
         return pix
 
+    def coord_to_idx(self, coords):
+        raise NotImplementedError
+
     def pix_to_coord(self, pix):
-        """TODO.
-        """
-        pass
+
+        coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
+        for i, ax in enumerate(self.axes):
+            coords += [ax.pix_to_coord(pix[i + 2])]
+        return coords
+
+    def pix_to_idx(self, coords):
+        raise NotImplementedError
+
+    def contains(self, coords):
+        raise NotImplementedError
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
