@@ -81,7 +81,7 @@ class HpxMap(MapBase):
         return self.geom
 
     @classmethod
-    def create(cls, nside=None, nest=True, map_type='HpxMapND', coordsys='CEL',
+    def create(cls, nside=None, nest=True, map_type=None, coordsys='CEL',
                data=None, skydir=None, binsz=None, radius=None, dtype='float32',
                region=None, axes=None):
         """Factory method to create an empty map.
@@ -93,8 +93,8 @@ class HpxMap(MapBase):
         coordsys : str
 
         map_type : str
-            Internal map representation.  Valid types are `HpxMapND` and
-            `HpxMapSparse`.
+            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
+            `HpxMapSparse`/`hpx-sparse`.
 
         nside : int or `~numpy.ndarray`
             HEALPix NSIDE parameter.  This parameter sets the size of
@@ -134,10 +134,10 @@ class HpxMap(MapBase):
 
         hpx = HPXGeom.create(nside, nest, coordsys=coordsys, region=region,
                              conv=None, axes=axes)
-        if map_type == 'HpxMapND':
-            return HpxMapND(hpx, data)
-        elif map_type == 'HpxMapSparse':
-            return HpxMapSparse(hpx, data)
+        if map_type in [None,'hpx','HpxMapND']:
+            return HpxMapND(hpx)
+        elif map_type in ['hpx-sparse','HpxMapSparse']:
+            return HpxMapSparse(hpx)
         else:
             raise ValueError('Unregnized Map type: {}'.format(map_type))
 
