@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..geom import MapAxis
+from astropy.coordinates import SkyCoord
+from ..geom import MapAxis, MapCoords
 
 
 mapaxis_test_geoms = [
@@ -52,3 +53,24 @@ def test_mapaxis_coord_to_idx(nodes, interp):
     axis = MapAxis.from_edges(nodes, interp=interp)
     assert_allclose(np.arange(axis.nbin, dtype=int),
                     axis.coord_to_idx(axis.center))
+
+
+def test_mapcoords_create():
+
+    # 2D Scalar
+    coords = MapCoords.create((0.0,0.0))
+
+    # 2D Scalar w/ NaN coordinates
+    coords = MapCoords.create((np.nan,np.nan))
+
+    # 2D Vector w/ NaN coordinates
+    lon, lat = np.array([np.nan,1.0]), np.array([np.nan,3.0])
+    coords = MapCoords.create((lon,lat))
+    assert_allclose(coords.lon,lon)
+    assert_allclose(coords.lat,lat)
+
+    # 2D Vector w/ SkyCoord
+    lon, lat = np.array([0.0,1.0]), np.array([2.0,3.0])
+    coords = MapCoords.create((SkyCoord(lon,lat,unit='deg')))
+    assert_allclose(coords.lon,lon)
+    assert_allclose(coords.lat,lat)

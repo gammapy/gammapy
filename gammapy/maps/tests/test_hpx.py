@@ -4,10 +4,37 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order
+from ..geom import MapAxis
+from ..hpx import HPXGeom, get_pixel_size_from_nside, nside_to_order, lonlat_to_colat
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
 pytest.importorskip('healpy')
+
+hpx_test_geoms = [
+    # 2D All-sky
+    (8, False, 'GAL', None, None),
+    # 3D All-sky
+    (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
+    # 2D Partial-sky
+    (8, False, 'GAL', 'DISK(110.,75.,10.)', None),
+    # 3D Partial-sky
+    (8, False, 'GAL', 'DISK(110.,75.,10.)', [MapAxis(np.logspace(0., 3., 4))]),
+    # 3D Partial-sky w/ variable bin size
+    ([8, 16, 32], False, 'GAL', 'DISK(110.,75.,10.)',
+     [MapAxis(np.logspace(0., 3., 4))]),
+    # 4D Partial-sky w/ variable bin size
+    ([[8, 16, 32], [8, 8, 16]], False, 'GAL', 'DISK(110.,75.,10.)',
+     [MapAxis(np.logspace(0., 3., 3), name='axis0'),
+      MapAxis(np.logspace(0., 2., 4), name='axis1')])
+]
+
+
+def make_test_coords(geom, lon, lat):
+
+    coords = [lon, lat] + [ax.center for ax in geom.axes]
+    coords = np.meshgrid(*coords)
+    coords = tuple([np.ravel(t) for t in coords])
+    return coords
 
 
 def test_unravel_hpx_index():
@@ -78,6 +105,40 @@ def test_hpx_global_to_local():
     assert_allclose(hpx[28356], np.array([11]))
     assert_allclose(hpx[(np.array([46]), np.array([0]), np.array([0]))],
                     np.array([0]))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpx_coord_to_idx(nside, nested, coordsys, region, axes):
+
+    import healpy as hp
+
+    geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
+    lon = np.array([112.5, 135., 105.])
+    lat = np.array([75.3, 75.3, 74.6])
+    coords = make_test_coords(geom, lon, lat)
+    zidx = [ax.coord_to_idx(t) for t, ax in zip(coords[2:], geom.axes)]
+
+    if geom.nside.size > 1:
+        nside = geom.nside[zidx]
+    else:
+        nside = geom.nside
+
+    phi, theta = lonlat_to_colat(coords[0], coords[1])
+    idx = geom.coord_to_idx(coords)
+    assert_allclose(hp.ang2pix(nside, theta, phi), idx[0])
+    for i, z in enumerate(zidx):
+        assert_allclose(z, idx[i + 1])
+
+    lon = np.array([0.0, 5.0, 10.0])
+    lat = np.array([75.3, 75.3, 74.6])
+    coords = make_test_coords(geom, lon, lat)
+    zidx = [ax.coord_to_idx(t) for t, ax in zip(coords[2:], geom.axes)]
+
+    idx = geom.coord_to_idx(coords)
+    if geom.region is not None:
+        assert_allclose(-1 * np.ones(len(coords[0]), dtype=int),
+                        idx[0])
 
 
 def test_hpx_coord_to_pix():
