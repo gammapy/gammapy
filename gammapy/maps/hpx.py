@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from .wcs import WCSGeom
-from .geom import MapGeom, MapCoords, MapAxis, bin_to_val
+from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
 
 # TODO: What should be part of the public API?
 __all__ = [
@@ -105,6 +105,14 @@ def ravel_hpx_index(idx, npix):
     npix = np.concatenate((np.array([0]), npix.flat[:-1]))
 
     return idx0 + np.cumsum(npix)[idx1]
+
+
+def lonlat_to_colat(lon, lat):
+
+    phi = np.radians(lon)
+    theta = (np.pi / 2) - np.radians(lat)
+
+    return phi, theta
 
 
 def coords_to_vec(lon, lat):
@@ -379,6 +387,7 @@ class HPXGeom(MapGeom):
                  axes=None, conv=HPX_Conv('FGST_CCUBE'), sparse=False):
 
         # FIXME: Figure out what to do when sparse=True
+        # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
         self._axes = axes if axes is not None else []
@@ -526,14 +535,20 @@ class HPXGeom(MapGeom):
         if self.axes:
 
             bins = []
+            idxs = []
             for i, ax in enumerate(self.axes):
-                bins += [ax.coord_to_idx(c[i+2])]
+                bins += [ax.coord_to_pix(c[i + 2])]
+                idxs += [ax.coord_to_idx(c[i + 2])]
+
+            # FIXME: Figure out how to handle coordinates out of
+            # bounds of non-spatial dimensions
 
             # Ravel multi-dimensional indices
-            ibin = np.ravel_multi_index(bins, self._shape)
+            #ibin = np.ravel_multi_index(idxs, self._shape,
+            #                            mode='clip')
 
             if self.nside.size > 1:
-                nside = self.nside[ibin]
+                nside = self.nside[idxs]
             else:
                 nside = self.nside
 
@@ -543,6 +558,11 @@ class HPXGeom(MapGeom):
             pix = hp.ang2pix(self.nside, theta, phi, nest=self.nest),
 
         return pix
+
+    def coord_to_idx(self, coords):
+
+        pix = self.coord_to_pix(coords)
+        return self.pix_to_idx(pix)
 
     def pix_to_coord(self, pix):
         import healpy as hp
@@ -572,6 +592,17 @@ class HPXGeom(MapGeom):
             coords = (np.degrees(phi), np.degrees(np.pi / 2. - theta))
 
         return coords
+
+    def pix_to_idx(self, pix):
+
+        # FIXME: Correctly apply bounds on non-spatial pixel
+        # coordinates
+        idx = list(pix_tuple_to_idx(pix))
+        idx_local = self.global_to_local(idx)
+        for i, _ in enumerate(idx):
+            idx[i][idx_local[i] < 0] = -1
+
+        return tuple(idx)
 
     @property
     def axes(self):
@@ -1191,9 +1222,14 @@ class HPXGeom(MapGeom):
             dimension.
 
         """
-        import healpy as hp
         pix = self.get_pixels()
         return self.pix_to_coord(pix)
+
+    def contains(self, coords):
+
+        # FIXME: Check pixel bounds for all dimensions
+        pix = self.global_to_local(self.coord_to_pix(coords))
+        return pix[0] != -1
 
     def get_skydirs(self):
         """Get the sky coordinates of all the pixels in this geometry. """
