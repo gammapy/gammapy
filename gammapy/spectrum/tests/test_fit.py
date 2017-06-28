@@ -10,6 +10,7 @@ from ...utils.testing import (
     requires_data,
 )
 from ...utils.random import get_random_state
+from ...irf import EffectiveAreaTable
 from ...datasets import gammapy_extra
 from ...spectrum import (
     PHACountsSpectrum,
@@ -256,6 +257,19 @@ class TestSpectralFit:
         result = self.fit.result[0]
         assert_quantity_allclose(result.model.parametersr['index'].value,
                                  2.2395184727047788)
+
+    def test_no_edisp(self):
+        obs = self.obs_list[0]
+        # Bring aeff in RECO space
+        data = obs.aeff.data.evaluate(energy=obs.on_vector.energy.nodes)
+        obs.aeff = EffectiveAreaTable(data=data,
+                                      energy_lo=obs.on_vector.energy.lo,
+                                      energy_hi=obs.on_vector.energy.hi)
+        obs.edisp = None
+        fit = SpectrumFit(obs_list=obs, model=self.pwl)
+        fit.fit()
+        assert_quantity_allclose(fit.result[0].model.parameters['index'].value,
+                                 2.2960518556630887, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
