@@ -34,7 +34,7 @@ class SpectrumFit(object):
         Fit range, will be convolved with observation thresholds. If you want to
         control which bins are taken into account in the fit for each
         observations, use :func:`~gammapy.spectrum.SpectrumObservation.qualitiy`
-    background_model : `~gammapy.spectrum.model.SpectralModel`, optional
+    background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
     method : {'sherpa'}
         Optimization backend for the fit

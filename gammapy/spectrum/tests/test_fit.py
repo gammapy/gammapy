@@ -5,13 +5,9 @@ import pytest
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-)
+from ...utils.testing import requires_dependency, requires_data
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
-from ...datasets import gammapy_extra
 from ...spectrum import (
     PHACountsSpectrum,
     SpectrumObservationList,
