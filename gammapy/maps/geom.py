@@ -4,6 +4,7 @@ import abc
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.extern import six
+from astropy.utils.misc import InheritDocstrings
 from astropy.coordinates import SkyCoord
 
 __all__ = [
@@ -45,7 +46,7 @@ def pix_tuple_to_idx(pix):
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
-            idx += [0.5 + p.astype(int)]
+            idx += [(0.5 + p).astype(int)]
     return tuple(idx)
 
 
@@ -268,7 +269,7 @@ class MapAxis(object):
 
         """
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
-        return pix + self._pix_offset
+        return np.array(pix + self._pix_offset,ndmin=1)
 
     def coord_to_idx(self, coord, bounded=False):
         """Transform from axis coordinate to bin index.
@@ -355,7 +356,7 @@ class MapCoords(object):
     def create(cls, data, **kwargs):
         if isinstance(data, cls):
             return data
-        elif isinstance(data, tuple):
+        elif isinstance(data, tuple) or isinstance(data, list):
             return cls.from_tuple(data, **kwargs)
         elif isinstance(data, SkyCoord):
             return cls.from_skydir(data, **kwargs)
@@ -363,9 +364,38 @@ class MapCoords(object):
             raise Exception('Unsupported input type.')
 
 
-@six.add_metaclass(abc.ABCMeta)
+class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
+    pass
+
+
+@six.add_metaclass(MapGeomMeta)
 class MapGeom(object):
     """Base class for WCS and HEALPIX geometries."""
+
+    @abc.abstractmethod
+    def get_pixels(self):
+        """Get pixel indices for all pixels in this geometry.
+
+        Returns
+        -------
+        pix : tuple
+            Tuple of pixel index vectors with one element for each
+            dimension.
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_coords(self):
+        """Get the coordinates of all the pixels in this geometry.
+
+        Returns
+        -------
+        coords : tuple
+            Tuple of coordinate vectors with one element for each
+            dimension.
+
+        """
+        pass
 
     @abc.abstractmethod
     def coord_to_pix(self, coords):
@@ -383,7 +413,30 @@ class MapGeom(object):
         Returns
         -------
         pix : tuple
+            Tuple of pixel coordinates in image and band dimensions.
+        """
+        pass
+
+    @abc.abstractmethod
+    def coord_to_idx(self, coords):
+        """Convert map coordinates to pixel indices.
+
+        Parameters
+        ----------
+        coords : tuple
+            Coordinate values in each dimension of the map.  This can
+            either be a tuple of numpy arrays or a MapCoords object.
+            If passed as a tuple then the ordering should be
+            (longitude, latitude, c_0, ..., c_N) where c_i is the
+            coordinate vector for axis i.
+
+        Returns
+        -------
+        pix : tuple
             Tuple of pixel indices in image and band dimensions.
+            Elements set to -1 correspond to coordinates outside the
+            map.
+
         """
         pass
 
@@ -400,5 +453,40 @@ class MapGeom(object):
         -------
         coords : tuple
             Tuple of map coordinates.
+        """
+        pass
+
+    @abc.abstractmethod
+    def pix_to_idx(self, pix):
+        """Convert pixel coordinates to pixel indices.  Returns -1 for pixel
+        coordinates that lie outside of the map.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        idx : tuple
+            Tuple of pixel indices.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def contains(self, coords):
+        """
+        Check if a given coordinate is contained in the map.
+
+        Parameters
+        ----------
+        coords : tuple
+            Tuple of map coordinates.
+
+        Returns
+        -------
+        containment : `~np.ndarray`
+            Bool array
         """
         pass
