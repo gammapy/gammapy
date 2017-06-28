@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import numpy as np
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
 
@@ -30,6 +31,7 @@ class MapBase(object):
     def __init__(self, geom, data):
         self._data = data
         self._geom = geom
+        self._iter = None
 
     @property
     def data(self):
@@ -45,6 +47,46 @@ class MapBase(object):
         if val.shape != self.data.shape:
             raise Exception('Wrong shape.')
         self._data = val
+
+    @classmethod
+    def create(cls, **kwargs):
+        """Create a new empty map object.
+
+        Parameters
+        ----------
+        map_type : str
+            Internal map representation.  Valid types are `wcs`,
+            `wcs-sparse`,`hpx`, and `hpx-sparse`.
+
+        """
+
+        from .hpxmap import HpxMap
+        from .wcsmap import HpxMap
+
+        map_type = kwargs.setdefault('map_type', 'wcs')
+
+        if 'wcs' in map_type.lower():
+            return WcsMap.create(**kwargs)
+        elif 'hpx' in map_type.lower():
+            return HpxMap.create(**kwargs)
+        else:
+            raise ValueError('Unrecognized map type: {}'.format(map_type))
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+
+        if self._iter is None:
+            self._iter = np.ndenumerate(self.data)
+
+        try:
+            return next(self._iter)
+        except StopIteration:
+            self._iter = None
+            raise
+
+    next = __next__
 
     @abc.abstractmethod
     def sum_over_axes(self):
@@ -179,8 +221,3 @@ class MapBase(object):
             Values vector. Pixels at `pix` will be set to these values.
         """
         pass
-
-
-#    def create(self):
-#        """Factory method."""
-#        pass
