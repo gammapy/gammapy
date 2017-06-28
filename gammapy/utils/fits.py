@@ -294,6 +294,10 @@ def table_to_fits_table(table):
 
     # Copy over column meta-data
     for idx, colname in enumerate(table.colnames):
+        # fix the order of the keywords
+        hdu.header['TTYPE' + str(idx + 1)] = hdu.header.pop('TTYPE' + str(idx + 1))
+        hdu.header['TFORM' + str(idx + 1)] = hdu.header.pop('TFORM' + str(idx + 1))
+
         if table[colname].unit is not None:
             hdu.header['TUNIT' + str(idx + 1)] = table[colname].unit.to_string('fits')
 
@@ -344,9 +348,9 @@ def fits_table_to_table(tbhdu):
     # Copy over column meta-data
     for idx, colname in enumerate(tbhdu.columns.names):
         table[colname].unit = tbhdu.columns[colname].unit
-        description = tbhdu.header.get('TCOMM' + str(idx + 1))
+        description = table.meta.pop('TCOMM' + str(idx + 1), None)
         table[colname].meta['description'] = description
-        ucd = tbhdu.header.get('TUCD' + str(idx + 1))
+        ucd = table.meta.pop('TUCD' + str(idx + 1), None)
         table[colname].meta['ucd'] = ucd
 
     return table

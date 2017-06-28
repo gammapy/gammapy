@@ -42,4 +42,4 @@ def test_SNRTrueloveMcKee_radius():
     """Test SNR RTruelove McKee radius"""
     reference = [0.00000000e+00, 1.95327725e+17, 9.06630987e+17,
                  4.20820826e+18, 1.57916052e+19, 4.11702961e+19]
-    assert_allclose(snr_mckee.radius(t).value, reference)
+    assert_allclose(snr_mckee.radius(t).value, reference, rtol=1e-3)

@@ -5,12 +5,9 @@ import pytest
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-)
+from ...utils.testing import requires_dependency, requires_data
 from ...utils.random import get_random_state
-from ...datasets import gammapy_extra
+from ...irf import EffectiveAreaTable
 from ...spectrum import (
     PHACountsSpectrum,
     SpectrumObservationList,
@@ -197,10 +194,8 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        par_errors = result.model.parameters._ufloats
-        assert_allclose(par_errors['index'].s, 0.09787747219456712)
-        assert_allclose(par_errors['amplitude'].s, 2.1992645712596426e-12)
-
+        assert_allclose(result.model.parameters.error('index'), 0.09787747219456712)
+        assert_allclose(result.model.parameters.error('amplitude'), 2.1992645712596426e-12)
         self.fit.result[0].to_table()
 
     def test_areascal(self):
@@ -258,6 +253,19 @@ class TestSpectralFit:
         result = self.fit.result[0]
         assert_quantity_allclose(result.model.parametersr['index'].value,
                                  2.2395184727047788)
+
+    def test_no_edisp(self):
+        obs = self.obs_list[0]
+        # Bring aeff in RECO space
+        data = obs.aeff.data.evaluate(energy=obs.on_vector.energy.nodes)
+        obs.aeff = EffectiveAreaTable(data=data,
+                                      energy_lo=obs.on_vector.energy.lo,
+                                      energy_hi=obs.on_vector.energy.hi)
+        obs.edisp = None
+        fit = SpectrumFit(obs_list=obs, model=self.pwl)
+        fit.fit()
+        assert_quantity_allclose(fit.result[0].model.parameters['index'].value,
+                                 2.2960518556630887, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)

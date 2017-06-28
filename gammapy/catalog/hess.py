@@ -384,6 +384,23 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         data = self.data
         spec_type = data['Spectral_Model'].strip()
+        return self._spectral_model(spec_type)
+
+    def _spectral_model(self, spec_type):
+        """
+        Create spectral model from source parameters.
+
+        Parameters
+        ----------
+        spec_type : str
+            Spectral model type either 'PL' or 'ECPL'.
+
+        Returns
+        -------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model instance.
+        """
+        data = self.data
 
         pars, errs = {}, {}
 
@@ -408,6 +425,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
+
+
 
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
