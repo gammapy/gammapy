@@ -152,19 +152,19 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print position info."""
         d = self.data
         ss = '\n*** Position info ***\n\n'
-        ss += '{:<20s} : {:.3f} deg\n'.format('RA', d['RAJ2000'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('DEC', d['DEJ2000'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('GLON', d['GLON'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('GLAT', d['GLAT'])
+        ss += '{:<20s} : {:.3f}\n'.format('RA', d['RAJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('DEC', d['DEJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLON', d['GLON'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLAT', d['GLAT'])
 
         ss += '\n'
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
-        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
 
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
-        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
         ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
 
         return ss
@@ -213,6 +213,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return ss
 
     def _info_spectral_points(self):
+        """Print spectral points."""
         d = self.data
         ss = '\n*** Spectral points ***\n\n'
         ss += '{:<15} {:<35} {:<25} {:<20}\n'.format('Energy range', 'Integral flux', 'Energy flux',
@@ -556,21 +557,128 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
-    def __str__(self):
-        """Print summary info."""
+
+    def __str__(self, info='all'):
+        """Summary info string.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral'}
+            Comma separated list of options
+        """
+        if info == 'all':
+            info = 'basic,position,spectral'
+
+        ss = ''
+        ops = info.split(',')
+        if 'basic' in ops:
+            ss += self._info_basic()
+        if 'position' in ops:
+            ss += self._info_position()
+        if 'spectral' in ops:
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_points()
+        return ss
+
+    def _info_basic(self):
+        """Print basic info."""
         d = self.data
+        ss = '\n*** Basic info ***\n\n'
+        ss += '{:<30s} : {}\n'.format('Source', d['Source_Name'])
+        ss += '{:<30s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
+        ss += '{:<30s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
-        ss = 'Source: {}\n'.format(d['Source_Name'])
-        ss += '\n'
+        def get_nonentry_keys(keys):
+            vals = [d[_].strip() for _ in keys]
+            return ', '.join([_ for _ in vals if _ != ''])
 
-        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
-        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
-        ss += 'GLON        : {}\n'.format(d['GLON'])
-        ss += 'GLAT        : {}\n'.format(d['GLAT'])
-        ss += '\n'
-        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+        keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM']
+        associations = get_nonentry_keys(keys)
+        ss += '{:<30s} : {}\n'.format('Associations', associations)
+
+        ss += '{:<30s} : {}\n'.format('Class', d['CLASS'])
+
+        tevcat_flag = d['TEVCAT_FLAG']
+        if tevcat_flag == 'N':
+            tevcat_message = 'No TeV association'
+        elif tevcat_flag == 'P':
+            tevcat_message = 'Small TeV source'
+        elif tevcat_flag == 'E':
+            tevcat_message = 'Extended TeV source (diameter > 40 arcmins)'
+        else:
+            tevcat_message = 'N/A'
+        ss += '{:<30s} : {}\n'.format('TeVCat flag', tevcat_message)
 
         return ss
+
+    def _info_position(self):
+        """Print position info."""
+        d = self.data
+        ss = '\n*** Position info ***\n\n'
+        ss += '{:<20s} : {:.3f}\n'.format('RA', d['RAJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('DEC', d['DEJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLON', d['GLON'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLAT', d['GLAT'])
+
+        ss += '\n'
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
+
+        return ss;
+
+    def _info_spectral_fit(self):
+        """Print spectral data."""
+        d = self.data
+        ss = '\n*** Spectral info ***\n\n'
+
+        ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
+
+        fmt = '{:<45s} : {:.3f}\n'
+        args = ('Detection significance (10 GeV - 2 TeV)', d['Signif_Avg'])
+        ss += fmt.format(*args)
+
+        ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
+
+        spec_type = d['SpectrumType'].strip()
+        if spec_type == 'LogParabola':
+            ss += '{:<45s} : {:.3f} +- {:.3f}\n'.format('alpha', d['Spectral_Index'], d['Unc_Spectral_Index'])
+            ss += '{:<45s} : {:.3f} +- {:.3f}\n'.format('beta', d['beta'], d['Unc_beta'])
+        if spec_type == 'PowerLaw':
+            fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
+            args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+            ss += fmt.format(*args)
+
+        ss += '{:<45s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
+
+        fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
+        args = ('Power Law index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index'], d['Unc_PowerLaw_Index'])
+        ss += fmt.format(*args)
+
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Flux Density at pivot energy', d['Flux_Density'].value, d['Unc_Flux_Density'].value, d['Flux_Density'].unit)
+        ss += fmt.format(*args)
+
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Integral flux (10 GeV - 1 TeV)', d['Flux'].value, d['Unc_Flux'].value, d['Flux'].unit)
+        ss += fmt.format(*args)
+
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Energy flux (10 GeV - TeV)', d['Energy_Flux'].value, d['Unc_Energy_Flux'].value, d['Energy_Flux'].unit)
+        ss += fmt.format(*args)
+
+        return ss
+
+    def _info_spectral_points(self):
+        """Print spectral points."""
+        ss = '\n*** Spectral points ***\n\n'
+
+        t = self._flux_points_table_formatted
+
+        ss += '\n'.join(t.pformat(max_width=-1))
+        #TODO: Print all of the columns, rather than just a few with the "..." in between.
+        return ss + '\n'
 
     @property
     def spectral_model(self):
@@ -597,6 +705,23 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
+
+    @property
+    def _flux_points_table_formatted(self):
+        """Returns formatted version of self.flux_points.table"""
+        table = self.flux_points.table.copy()
+
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn', 'eflux_errp', 'flux_ul', 'eflux_ul',
+                     'dnde']
+
+        table['sqrt_TS'].format = '.1f'
+
+        table['e_ref'].format = '.1f'
+
+        for _ in flux_cols:
+            table[_].format = '.3'
+
+        return table
 
     @property
     def flux_points(self):
@@ -632,9 +757,15 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
         table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
+        # Square root of test statistic
+        ts = self.data['Sqrt_TS_Band']
+        table['sqrt_TS'] = ts
+
+
         # TODO: remove this computation here.
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
+
         return FluxPoints(table)
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
