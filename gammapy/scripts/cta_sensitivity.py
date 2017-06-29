@@ -12,11 +12,11 @@ from ..scripts import CTAPerf
 
 log = logging.getLogger(__name__)
 
-__all__ = ['SensiEstimator']
+__all__ = ['SensitivityEstimator']
 
 
-class SensiEstimator(object):
-    """Estimate differential sensitivity.
+class SensitivityEstimator(object):
+    """Estimate differential sensitivity for the ON/OFF method, ie 1D analysis
 
     Parameters
     ----------
@@ -40,10 +40,10 @@ class SensiEstimator(object):
 
     Compute and plot a sensitivity curve for CTA::
 
-        from gammapy.scripts import CTAPerf, SensiEstimator
-        filename = '$GAMMAPY_EXTRA/datasets/cta/CTA-Performance-North-20170327/CTA-Performance-North-20deg-average-30m_20170327.fits'
-        irf = CTAPerf.read(filename)
-        sens = SensiEstimator(irf=irf, livetime='0.5 hour')
+        from gammapy.scripts import CTAPerf, SensitivityEstimator
+        filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
+        irf1 = CTAPerf.read(filename)
+        sens = SensitivityEstimator(irf=irf1, livetime=5.0*u.Unit('h'))
         sens.run()
         sens.print_results()
         sens.plot()
@@ -52,8 +52,10 @@ class SensiEstimator(object):
 
     Notes
     -----
-
     For the moment, only the differential point-like sensitivity is computed at a fixed offset.
+    This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
+    events for which the significance is 'sigma', and being larger than 'gamma_min' and 'bkg_sys'% larger than the
+    number of background events in the ON region
 
     TODO:
 
@@ -85,10 +87,10 @@ class SensiEstimator(object):
         Returns
         -------
         rate : `~numpy.ndarray`
-            Return an array of background rate (bins in reconstructed energy)
+            Return an array of background counts (bins in reconstructed energy)
         """
         bkg = bkg_rate.data.data * self.livetime
-        return bkg.value * u.Unit('')
+        return bkg.value
 
     def get_excess(self, bkg_counts):
         """Compute the gamma-ray excess for each energy bin.
@@ -175,7 +177,8 @@ class SensiEstimator(object):
         return flux
 
     def run(self):
-        """Do the computation."""
+        """Run the algorithm to compute the differential sensitivity as explained in the document of the class.
+        """
         # Creation of the spectral shape
         norm = 1 * u.Unit('cm-2 s-1 TeV-1')
         index = self.slope
@@ -242,15 +245,15 @@ class SensiEstimator(object):
         if log.getEffectiveLevel() == 10:
             self.cta_perf.sens.plot(color='black', label="ROOT")
             plt.legend()
-        plt.show()
+        return ax
 
 
 def sensitivity_estimate_cli(args=None):
     """Sensitivity estimator command line interface.
 
-    Uses `~gammapy.scripts.SensiEstimator`.
+    Uses `~gammapy.scripts.SensitivityEstimator`.
     """
-    parser = get_parser(description=SensiEstimator.__doc__, function=SensiEstimator)
+    parser = get_parser(description=SensitivityEstimator.__doc__, function=SensitivityEstimator)
     parser.add_argument('irffile', type=str,
                         help='IRF file (containing the path)')
     parser.add_argument('livetime', type=float,
@@ -273,15 +276,17 @@ def sensitivity_estimate_cli(args=None):
 
     IRFs = CTAPerf.read(args.filename)
 
-    sensi = SensiEstimator(irfobject=IRFs,
-                           livetime=args.livetime,
-                           slope=args.slope,
-                           alpha=args.alpha,
-                           sigma=args.sigma,
-                           gamma_min=args.gamma_min,
-                           bkg_sys=args.bkg_sys)
+    sensi = SensitivityEstimator(irf=IRFs,
+                                 livetime=args.livetime * u.Unit('h'),
+                                 slope=args.slope,
+                                 alpha=args.alpha,
+                                 sigma=args.sigma,
+                                 gamma_min=args.gamma_min,
+                                 bkg_sys=args.bkg_sys)
     sensi.run()
+    import matplotlib.pyplot as plt
     sensi.plot()
+    plt.show()
     sensi.print_results()
 
 
