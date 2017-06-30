@@ -12,6 +12,18 @@ __all__ = [
 
 
 class WcsMapND(WcsMap):
+    """Representation of a N+2D map using WCS with two spatial
+    dimensions and N non-spatial dimensions.
+
+    Parameters
+    ----------
+    wcs : `~gammapy.maps.wcs.WCSGeom`
+        WCS geometry object.
+    data : `~numpy.ndarray`
+        Data array. If none then an empty array will be allocated.
+
+    """
+
     def __init__(self, wcs, data=None):
 
         shape = tuple(list(wcs.npix) + [ax.nbin for ax in wcs.axes])
