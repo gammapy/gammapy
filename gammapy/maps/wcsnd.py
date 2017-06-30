@@ -4,20 +4,23 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from .base import MapBase
 from .wcs import WCSGeom
+from .wcsmap import WcsMap
 
 __all__ = [
-    'WcsMap',
     'WcsMapND',
 ]
 
 
-class WcsMap(MapBase):
-    def __init__(self, wcs, data=None):
-        MapBase.__init__(self, wcs, data)
-
-
 class WcsMapND(WcsMap):
     def __init__(self, wcs, data=None):
+
+        shape = tuple(list(wcs.npix) + [ax.nbin for ax in wcs.axes])
+        if data is None:
+            data = np.zeros(shape).T
+        elif data.shape != shape[::-1]:
+            raise ValueError('Wrong shape for input data array. Expected {} '
+                             'but got {}'.format(shape, data.shape))
+
         WcsMap.__init__(self, wcs, data)
 
     @classmethod
