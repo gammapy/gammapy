@@ -26,6 +26,9 @@ class WcsMapND(WcsMap):
 
     def __init__(self, wcs, data=None):
 
+        # FIXME: Update logic for creating array shape once
+        # sparse-support is added to WCSGeom
+        
         shape = tuple(list(wcs.npix) + [ax.nbin for ax in wcs.axes])
         if data is None:
             data = np.zeros(shape).T
