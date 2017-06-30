@@ -82,7 +82,7 @@ class HpxMap(MapBase):
 
     @classmethod
     def create(cls, nside=None, nest=True, map_type=None, coordsys='CEL',
-               data=None, skydir=None, binsz=None, radius=None, dtype='float32',
+               data=None, skydir=None, binsz=None, width=None, dtype='float32',
                region=None, axes=None):
         """Factory method to create an empty map.
 
@@ -105,12 +105,12 @@ class HpxMap(MapBase):
             chosen that correponds to a pixel size closest to this
             value.  This option is superseded by nside.
 
-        radius : float
-            Radius of the HEALPix geometry.  If None then an all-sky
+        width : float
+            Diameter of the HEALPix geometry.  If None then an all-sky
             geometry will be created.
 
         axes : list
-            List of `~MapAxes` objects for each non-spatial dimension.
+            List of `~MapAxis` objects for each non-spatial dimension.
 
         """
         from .hpxcube import HpxMapND
@@ -127,10 +127,10 @@ class HpxMap(MapBase):
 
         lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
 
-        if region is None and radius is not None:
+        if region is None and width is not None:
             region = 'DISK({:f},{:f},{:f})'.format(lonlat[0],
                                                    lonlat[1],
-                                                   radius)
+                                                   width/2.)
 
         hpx = HPXGeom.create(nside, nest, coordsys=coordsys, region=region,
                              conv=None, axes=axes)

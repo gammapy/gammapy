@@ -50,18 +50,46 @@ class MapBase(object):
 
     @classmethod
     def create(cls, **kwargs):
-        """Create a new empty map object.
+        """Create an empty map object.  This method accepts generic options
+        listed below as well as options for `~HpxMap` and `~WcsMap`
+        objects (see `~HpxMap.create` and `~WcsMap.create` for WCS-
+        and HPX-specific options).
 
         Parameters
         ----------
+        coordsys : str
+            Coordinate system, either Galactic ('GAL') or Equatorial
+            ('CEL').
+
         map_type : str
             Internal map representation.  Valid types are `wcs`,
             `wcs-sparse`,`hpx`, and `hpx-sparse`.
 
+        binsz : float or `~numpy.ndarray`
+            Pixel size in degrees.
+
+        skydir : `~astropy.coordinates.SkyCoord`
+            Coordinate of map center.
+
+        axes : list
+            List of `~MapAxis` objects for each non-spatial dimension.
+            If None then the map will be a 2D image.
+
+        dtype : str
+            Data type, default is float32
+
+        unit : str or `~astropy.units.Unit`
+            Data unit.
+
+        Returns
+        -------
+        map : `~MapBase`
+            Empty map object.
+
         """
 
         from .hpxmap import HpxMap
-        from .wcsmap import HpxMap
+        from .wcsmap import WcsMap
 
         map_type = kwargs.setdefault('map_type', 'wcs')
 
