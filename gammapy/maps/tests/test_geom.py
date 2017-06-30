@@ -39,6 +39,15 @@ def test_mapaxis_from_nodes(nodes, interp):
     assert_allclose(axis.center, nodes)
     assert_allclose(axis.nbin, len(nodes))
 
+@pytest.mark.parametrize(('nodes', 'interp'),
+                         mapaxis_geoms)
+def test_mapaxis_from_bounds(nodes, interp):
+
+    axis = MapAxis.from_bounds(nodes[0], nodes[-1], 3,
+                               interp=interp)
+    assert_allclose(axis.edges[0], nodes[0])
+    assert_allclose(axis.edges[-1], nodes[-1])
+    assert_allclose(axis.nbin, 3)
 
 @pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
                          mapaxis_geoms_node_type)

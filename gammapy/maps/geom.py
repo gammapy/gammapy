@@ -5,6 +5,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 __all__ = [
@@ -135,18 +136,22 @@ class MapAxis(object):
         Interpolation method used to transform between axis and pixel
         coordinates.  Valid options are `log`, `lin`, and `sqrt`.
 
+    unit : str
+        String specifying the data units.
+
     """
 
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
     def __init__(self, nodes, interp='lin', name='', quantity_type='integral',
-                 node_type='edge'):
+                 node_type='edge', unit=''):
         self._name = name
         self._quantity_type = quantity_type
         self._interp = interp
         self._nodes = nodes
         self._node_type = node_type
+        self._unit = u.Unit(unit)
 
         # Set pixel coordinate of first node
         if node_type == 'edge':
@@ -186,6 +191,48 @@ class MapAxis(object):
     def nbin(self):
         """Return number of bins."""
         return len(self._bin_edges) - 1
+
+    @property
+    def unit(self):
+        """Return coordinate axis unit."""
+        return self._unit
+
+    @classmethod
+    def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
+        """Generate an axis object from a lower/upper bound and number of
+        bins.
+
+        Parameters
+        ----------
+        lo_bnd : float
+            Lower bound of first axis bin.
+
+        hi_bnd : float
+            Upper bound of last axis bin.
+
+        nbin : int
+            Number of bins.
+
+        interp : str
+            Interpolation method used to transform between axis and pixel
+            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+
+        """
+
+        interp = kwargs.setdefault('interp', 'lin')
+
+        if interp == 'lin':
+            nodes = np.linspace(lo_bnd, hi_bnd, nbin + 1)
+        elif interp == 'log':
+            nodes = np.exp(np.linspace(np.log(lo_bnd),
+                                       np.log(hi_bnd), nbin + 1))
+        elif interp == 'sqrt':
+            nodes = np.linspace(lo_bnd**0.5,
+                                hi_bnd**0.5, nbin + 1)**2.0
+        else:
+            raise ValueError('Invalid interp: {}'.format(interp))
+
+        return cls(nodes, node_type='edge', **kwargs)
 
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
@@ -313,7 +360,7 @@ class MapAxis(object):
         nodes = self._nodes[(idx,)]
         return MapAxis(nodes, interp=self._interp, name=self._name,
                        quantity_type=self._quantity_type,
-                       node_type=self._node_type)
+                       node_type=self._node_type, unit=self._unit)
 
 
 class MapCoords(object):
