@@ -146,6 +146,7 @@ class MapAxis(object):
         self._quantity_type = quantity_type
         self._interp = interp
         self._nodes = nodes
+        self._node_type = node_type
 
         # Set pixel coordinate of first node
         if node_type == 'edge':
@@ -269,7 +270,7 @@ class MapAxis(object):
 
         """
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
-        return np.array(pix + self._pix_offset,ndmin=1)
+        return np.array(pix + self._pix_offset, ndmin=1)
 
     def coord_to_idx(self, coord, bounded=False):
         """Transform from axis coordinate to bin index.
@@ -289,6 +290,30 @@ class MapAxis(object):
 
         """
         return coord_to_idx(self.edges, coord, bounded)
+
+    def slice(self, idx):
+        """Create a new axis object by extracting a slice from this axis.
+
+        Parameters
+        ----------
+        idx : slice
+            Slice object selecting a subselection of the axis.
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis objected.
+        """
+
+        center = self.center[idx]
+        idx = self.coord_to_idx(center)
+        # For edge nodes we need to keep N+1 nodes
+        if self._node_type == 'edge':
+            idx = tuple(list(idx) + [1 + idx[-1]])
+        nodes = self._nodes[(idx,)]
+        return MapAxis(nodes, interp=self._interp, name=self._name,
+                       quantity_type=self._quantity_type,
+                       node_type=self._node_type)
 
 
 class MapCoords(object):
