@@ -76,7 +76,7 @@ def test_hpxcube_get_by_coords(nside, nested, coordsys, region, axes):
     coords = m.hpx.get_coords()
     assert_allclose(np.ravel(m.data), m.get_by_coords(coords))
 
-
+@pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxcube_get_by_coords_interp(nside, nested, coordsys, region, axes):
