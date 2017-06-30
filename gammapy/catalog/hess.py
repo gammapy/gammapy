@@ -123,7 +123,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Comma separated list of options
         """
         if info == 'all':
-            info = 'basic,map,spec,flux_points,components,associations'
+            info = 'basic,associations,map,spec,flux_points,components'
 
         ss = ''
         ops = info.split(',')
@@ -153,6 +153,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n'.format('Identified object', d['Identified_Object'])
         ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
+        return ss
+
+    def _info_associations(self):
+        ss = '\n*** Source associations info ***\n\n'
+        associations = ', '.join(self.associations)
+        ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
     def _info_map(self):
@@ -365,12 +371,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             # Call __str__ directly to
             ss += component.__str__()
             ss += '\n\n'
-        return ss
-
-    def _info_associations(self):
-        ss = '\n*** Source associations info ***\n\n'
-        associations = ', '.join(self.associations)
-        ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
     @property

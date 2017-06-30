@@ -66,6 +66,8 @@ class TestFermi3FGLObject:
         ss = str(self.source)
         assert '3FGL J0534.5+2201' in ss  # Source name
         assert '83.637 deg' in ss  # RA
+        assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
+        assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
 
     @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
     def test_spectral_model(self, index, model_type, desired, desired_err):
@@ -201,8 +203,10 @@ class TestFermi3FHLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert 'Source: 3FHL J0534.5+2201' in ss
-        assert 'RA (J2000)  : 83.63' in ss
+        assert '3FHL J0534.5+2201' in ss  # Source name
+        assert '83.635 deg' in ss # RA
+        assert 'Detection significance (10 GeV - 2 TeV)       : 168.641' in ss
+        assert 'Integral flux (10 GeV - 1 TeV)   : 8.66e-09 +- 1.71e-10 cm-2 s-1' in ss
 
     @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FHL)
     def test_spectral_model(self, index, model_type, desired):
