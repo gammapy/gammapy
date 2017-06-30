@@ -172,7 +172,6 @@ class TablePSF(object):
         -------
         kernel : `~astropy.units.Quantity`
             Kernel 2D image of Quantities
-
         """
         from ..cube import SkyCube
         rad_max = self.containment_radius(containment)

@@ -16,7 +16,7 @@ fig = plt.figure(figsize=(6, 5))
 psf_image = SkyImage.empty()
 energy = 1 * u.GeV
 psf = fermi_psf.table_psf_at_energy(energy=energy)
-psf_image.data = psf.kernel(psf_image).data
+psf_image.data = psf.kernel(psf_image).value
 psf_image.plot(fig=fig, add_cbar=True)
 
 plt.show()
