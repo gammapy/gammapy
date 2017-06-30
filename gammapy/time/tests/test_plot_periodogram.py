@@ -62,14 +62,11 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 
 TEST_CASES = [
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 2, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'boot', significance = 95, n_bootstraps = 100),
+         n_observations = 1000 / 2, n_outliers = 0, dt = 0.1,
+         max_period = 10, criteria = 'boot', n_bootstraps = 100),
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 10, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'boot', significance = 95, n_bootstraps = 100),
-    dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 2, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'None', significance = 95, n_bootstraps = 'None'),
+         n_observations = 1000 / 2, n_outliers = 0, dt = 0.1,
+         max_period = 'None', criteria = 'None', n_bootstraps = 'None'),
 ]
 
 
@@ -80,11 +77,11 @@ def test_lomb_scargle_plot(test_case):
         test_case['n_data'], test_case['n_observations'], test_case['n_outliers']
     )
     result = lomb_scargle(
-        test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
-        test_case['sig_criterion'], test_case['n_bootstraps'],
+        test_data['t'], test_data['y'], test_data['dy'], test_case['dt'], 
+        test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
     plot_periodogram(
-        test_data['t'], test_data['y'], test_data['dy'], result['fgrid'],
+        test_data['t'], test_data['y'], test_data['dy'], result['pgrid'],
         result['psd'], result['swf'], result['period'],
         result['significance']
     )

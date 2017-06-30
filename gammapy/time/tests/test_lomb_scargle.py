@@ -41,6 +41,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
         flux error of observation
     
     """
+
     n_obs = int(n_obs)
     rand = np.random.RandomState(42)
     dt = t_length / n_data
@@ -62,13 +63,10 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 TEST_CASES = [
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
          n_observations = 1000 / 2, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'boot', significance = 95, n_bootstraps = 100),
-    dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 10, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'boot', significance = 95, n_bootstraps = 100),
+         max_period = 10, criteria = 'boot', n_bootstraps = 100),
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
          n_observations = 1000 / 2, n_outliers = 0, dt = 0.01,
-         sig_criterion = 'None', significance = 95, n_bootstraps = 'None'),
+         max_period = 'None', criteria = 'None', n_bootstraps = 'None'),
 ]
 
 @pytest.mark.parametrize('test_case', TEST_CASES)
@@ -78,16 +76,8 @@ def test_lomb_scargle(test_case):
         test_case['n_data'], test_case['n_observations'], test_case['n_outliers'],
     )
     result = lomb_scargle(
-        test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
-        test_case['sig_criterion'], test_case['n_bootstraps'],
+        test_data['t'], test_data['y'], test_data['dy'], test_case['dt'], 
+        test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    assert_allclose(
-        result['period'],
-        test_case['period'],
-        atol=test_case['dt'],
-    )
-    assert np.any(np.greater(
-        result['significance'],
-        test_case['significance'],
-    ))
+    assert_allclose(result['period'], test_case['period'], atol=test_case['dt'],)
 

@@ -42,12 +42,15 @@ def _window_function(time, dt):
     """
     Generates window function with desired resolution dt
     """
-    n_points = (np.max(time) - np.min(time)) / dt
-    t_win = np.linspace(np.min(time), np.max(time), n_points+1, endpoint=True)
-    window = np.zeros(len(t_win))
-    window[np.searchsorted(t_win, time)] = 1
+    time_win = np.rint(time / dt) * dt
+    t_max = np.max(time_win)
+    t_min = np.min(time_win)
+    window_grid = np.arange(t_min, t_max+dt, dt)
+    window_grid = np.rint(window_grid / dt) * dt # round again since np.arange is not robust
+    window = np.zeros(len(window_grid))
+    window[np.searchsorted(window_grid, time_win, side='right')-1] = 1
 
-    return t_win, window
+    return window_grid, window
 
 
 def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
@@ -55,6 +58,8 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     Returns value of maximum periodogram peak for every bootstrap resampling
     """
     rand = np.random.RandomState(42)
+    if n_bootstraps == 'None':
+        n_bootstraps = 100    
     max_periods = np.empty(n_bootstraps)
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
@@ -64,17 +69,19 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     return max_periods
 
 
-def _freq_grid(time, dt):
+def _freq_grid(time, dt, max_period):
     """
     Generates the frequency grid for the periodogram
     """
-    max_period = (np.max(time) - np.min(time))
+    if max_period == 'None':
+        max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
+    else:
+        max_period = np.rint(max_period / dt) * dt
     min_period = dt
-    n_periods = max_period / min_period
-    periods = np.linspace(min_period, max_period, n_periods)
+    periods = np.arange(min_period, max_period+dt, dt)
     grid = 1. / periods
 
-    return grid
+    return grid, periods
 
 
 def _significance_pre(time, freq, psd_best_period):
@@ -89,21 +96,22 @@ def _significance_pre(time, freq, psd_best_period):
     return significance
 
 
-def _significance_cvm(time, freq, psd, psd_best_period):
+def _significance_cvm(freq, psd, psd_best_period):
     """
     Computes significance for the cvm-distance-minimised beta distribution
     """
     from scipy import optimize
     from scipy.stats import beta
+    clip = 0.00001
     theta_1 = -1. * (np.mean(psd) * (-np.mean(psd)
                                      + np.mean(psd)**2
                                      + np.var(psd))
                      ) / (np.var(psd))
     if theta_1 < 0:
-        theta_1 = 0.00001
+        theta_1 = clip
     theta_2 = (theta_1 - theta_1 * np.mean(psd)) / np.mean(psd)
     if theta_2 < 0:
-        theta_2 = 0.00001
+        theta_2 = clip
     cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
     significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1])**len(freq)
 
@@ -143,25 +151,28 @@ def _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_boot
     significance[0] = _significance_pre(time, freq, psd_best_period)
     significance[1] = _significance_nll(time, freq, psd, psd_best_period)
     significance[2] = _significance_cvm(time, freq, psd, psd_best_period)
-    significance[3] = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps=100)
+    significance[3] = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps)
 
     return significance
 
 
-def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100):
+def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n_bootstraps='None'):
     """
-    This function computes the significance of periodogram peaks under certain significance criteria.
+    Compute period and significance of a light curve using Lomb-Scargle PSD.
+
     To compute the Lomb-Scargle power spectral density, the astropy object `~astropy.stats.LombScargle` is called.
     For eyesight inspection, the spectral window function is also returned to evaluate the impcat of sampling on the periodogram.
+    The significance cirteria are both, parametric and non-parametric.
 
     For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
 
     The function returns a results dictionary with the following content:
 
-    - ``fgrid`` (`~numpy.ndarray`) -- Frequency grid in inverse units of ``t``
-    - ``psd`` (`~numpy.ndarray`) -- Power spectral density of the Lomb-Scargle periodogram at the frequencies of ``fgrid``
+    - ``pgrid`` (`~numpy.ndarray`) -- Period grid in units of ``t``
+    - ``psd`` (`~numpy.ndarray`) -- PSD of Lomb-Scargle at frequencies of ``fgrid``
     - ``period`` (`float`) -- Location of the highest periodogram peak
-    - ``significance`` (`float`) or (`~numpy.ndarray`) -- Significance of ``period`` under the specified significance criterion. If the significance criterion is not defined, all significance criteria are used and their respective significance for the period is returned
+    - ``significance`` (`float`) or (`~numpy.ndarray`) -- Significance of ``period`` under specified criteria. 
+      If criteria is not defined, the significance of all criteria is returned.
     - ``swf`` (`~numpy.ndarray`) -- Spectral window function
 
     Parameters
@@ -174,8 +185,11 @@ def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100)
         Flux error array of the light curve
     dt : `float`
         desired resolution of the periodogram and the window function
-    criterion : `string`
-        significance criterion
+    max_period : `float`
+        maximum period to analyse
+    criteria : `list of str`
+        Select which significance methods you'd like to run (by default all are running)
+        Available: `{'pre', 'cvm', 'nll', 'boot'}`
 
         - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
         - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. (2016))
@@ -203,32 +217,36 @@ def lomb_scargle(time, flux, flux_error, dt, criterion='None', n_bootstraps=100)
     .. [5] Süveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
        `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
     """
+
     # set up lomb-scargle-algorithm
-    freq = _freq_grid(time, dt)
-    psd_data = LombScargle(time, flux, flux_error).power(freq)
+    freq, periods = _freq_grid(time, dt, max_period)
+    psd_data = LombScargle(time, flux, flux_err).power(freq)
 
     # find period with highest periodogram peak
     psd_best_period = np.max(psd_data)
-    best_period = 1. / freq[np.argmax(psd_data)]
+    best_period = periods[np.argmax(psd_data)]
 
     # define significance for best period
-    if criterion == 'pre':
-        significance = _significance_pre(time, freq, psd_best_period)
-    if criterion == 'cvm':
-        significance = _significance_cvm(time, freq, psd_data, psd_best_period)
-    if criterion == 'nll':
-        significance = _significance_nll(time, freq, psd_data, psd_best_period)
-    if criterion == 'boot':
-        significance = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps)
-    if criterion == 'None':
-        significance = _significance_all(time, flux, flux_error, freq, psd_data, psd_best_period, n_bootstraps)
+    if criteria == 'None':
+        criteria = ['pre', 'cvm', 'nll', 'boot']
+
+    significance = OrderedDict()
+
+    if 'pre' in criteria:
+        significance['pre'] = _significance_pre(time, freq, psd_best_period)
+    if 'cvm' in criteria:
+        significance['cvm'] =  _significance_cvm(freq, psd_data, psd_best_period)
+    if 'nll' in criteria:
+        significance['nll'] = _significance_nll(time, freq, psd_data, psd_best_period)
+    if 'boot' in criteria:
+        significance['boot'] =  _significance_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
 
     # spectral window function
-    t_win, window = _window_function(time, dt)
-    psd_win = LombScargle(t_win, window, 1).power(freq)
+    time_win, window = _window_function(time, dt)
+    psd_win = LombScargle(time_win, window, 1).power(freq)
 
     return OrderedDict([
-        ('fgrid', freq),
+        ('pgrid', periods),
         ('psd', psd_data),
         ('period', best_period),
         ('significance', significance),

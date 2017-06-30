@@ -7,10 +7,11 @@ __all__ = [
     'plot_periodogram',
 ]
 
-def plot_periodogram(time, flux, flux_error, freq, psd_data, psd_win, best_period='None', significance='None'):
+def plot_periodogram(time, flux, flux_error, periods, psd_data, psd_win, best_period='None', significance='None'):
     """
-    This function plots a light curve, its periodogram and spectral window function.
+    Plot a light curve, its periodogram and spectral window function.
     The highest period of the periodogram and its significance will be added to the plot, if given.
+    If multiple sginificance are forwarded, the lowest one will be used.
 
     Parameters
     ----------
@@ -20,8 +21,8 @@ def plot_periodogram(time, flux, flux_error, freq, psd_data, psd_win, best_perio
         Flux array of the light curve
     flux_err : `~numpy.ndarray`
         Flux error array of the light curve
-    freq : `~numpy.ndarray`
-        Frequencies for the periodogram
+    periods : `~numpy.ndarray`
+        Periods for the periodogram
     psd_data : `~numpy.ndarray`
         Periodogram peaks of the data
     best_period : `float`
@@ -48,20 +49,23 @@ def plot_periodogram(time, flux, flux_error, freq, psd_data, psd_win, best_perio
     ax1.set(xlabel=r'\textbf{time} (d)',
             ylabel=r'\textbf{magnitude} (a.u.)')
     # plot the periodogram
-    ax2.plot(1. / freq, psd_data)
+    ax2.plot(periods, psd_data)
     # mark the best period and label with significance
     if best_period != 'None':
-        ax2.axvline(best_period, ymin=0, ymax=psd_data[freq == 1./best_period],
-                    label=r'Detected period p = {:.1f} with {:.2f} significance'.format(best_period, np.max(significance)))
+        # set precision for period format
+        pre = int(abs(np.floor(np.log10(np.max(np.diff(periods))))))
+        ax2.axvline(best_period, ymin=0, ymax=psd_data[periods == best_period],
+                    label=r'Detected period p = {:.{}f} with {:.2f} significance'.format(best_period, pre, np.min(list(significance.values()))))
     ax2.set(  # xlabel=r'\textbf{period} (d)'
             ylabel=r'\textbf{power}',
-            xlim=(0, np.max(1. / freq)),
+            xlim=(0, np.max(periods)),
             ylim=(0, 1),
     )
     ax2.legend(loc='upper right')
     # plot the spectral window function
-    ax3.plot(1. / freq, psd_win)
+    ax3.plot(periods, psd_win)
     ax3.set(xlabel=r'\textbf{period} (d)',
             ylabel=r'\textbf{power}',
-            xlim=(0, np.max(1. / freq)),
+            xlim=(0, np.max(periods)),
     )
+    plt.savefig('example', bbox_inches='tight')
