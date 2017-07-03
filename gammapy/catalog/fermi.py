@@ -65,6 +65,17 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     be consistent with previous catalogs.
     """
 
+    def info(self, info='all'):
+        """Print info.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
+            Comma separated list of options
+        """
+        ss = self.__str__(info=info)
+        print(ss)
+
     def __str__(self, info='all'):
         """Summary info string.
 
@@ -93,9 +104,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
-        ss += '{:<30s} : {}\n'.format('Source', d['Source_Name'])
-        ss += '{:<30s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
-        ss += '{:<30s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
+        ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
+        ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
+        ss += '{:<20s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -103,13 +114,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM1', 'ASSOC_GAM2', 'ASSOC_GAM3']
         associations = get_nonentry_keys(keys)
-        ss += '{:<30s} : {}\n'.format('Associations', associations)
+        ss += '{:<20s} : {}\n'.format('Associations', associations)
 
         keys = ['0FGL_Name', '1FGL_Name', '2FGL_Name', '1FHL_Name']
         other_names = get_nonentry_keys(keys)
-        ss += '{:<30s} : {}\n'.format('Other names', other_names)
+        ss += '{:<20s} : {}\n'.format('Other names', other_names)
 
-        ss += '{:<30s} : {}\n'.format('Class', d['CLASS1'])
+        ss += '{:<20s} : {}\n'.format('Class', d['CLASS1'])
 
         tevcat_flag = d['TEVCAT_FLAG']
         if tevcat_flag == 'N':
@@ -559,6 +570,17 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
 
+    def info(self, info='all'):
+        """Print info.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral'}
+            Comma separated list of options
+        """
+        ss = self.__str__(info=info)
+        print(ss)
+
     def __str__(self, info='all'):
         """Summary info string.
 
@@ -588,9 +610,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
-        ss += '{:<30s} : {}\n'.format('Source', d['Source_Name'])
-        ss += '{:<30s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
-        ss += '{:<30s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
+        ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
+        ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
+        ss += '{:<20s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -641,11 +663,11 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         d = self.data
         ss = '\n*** Model info ***\n\n'
 
-        fmt = '{:<45s} : {:.3f}\n'
-        args = ('Detection significance (10 GeV - 2 TeV)', d['Signif_Avg'])
+        fmt = '{:<32s} : {:.3f}\n'
+        args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
         ss += fmt.format(*args)
 
-        ss += '{:<45s} : {:.1f}\n\n'.format('Npred', d['Npred'])
+        ss += '{:<32s} : {:.1f}\n\n'.format('Npred', d['Npred'])
 
 
         ss += '{:<32s} : {}\n'.format('Spectrum type', d['SpectrumType'])
