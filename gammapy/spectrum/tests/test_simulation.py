@@ -1,12 +1,39 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
+from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency
 from ...irf import EnergyDispersion, EffectiveAreaTable
-from .. import SpectrumExtraction, SpectrumSimulation
-from ..models import PowerLaw
+from .. import SpectrumExtraction, SpectrumSimulation, SpectrumEventSampler
+from ..models import PowerLaw, ExponentialCutoffPowerLaw
 
+class TestSpectrumEventsSampler:
+    def setup(self):
+        self.seed = 14 
+        # Same event should be in both samples
+        self.result = 1.2933848953863978 * u.TeV
+
+    def test_powerlaw(self):
+        n_events = 100
+        model = PowerLaw(index=2,
+                         amplitude=None,
+                         reference = 1 * u.TeV)
+        sampler = SpectrumEventSampler(n_events=n_events,
+                                       model=model)
+        sampler.draw_events(self.seed)
+        assert_quantity_allclose(sampler.events[1], self.result) 
+
+    def test_ecpl(self):
+        n_events = 10
+        model = ExponentialCutoffPowerLaw(index=2,
+                                          amplitude=None,
+                                          reference = 1 * u.TeV,
+                                          lambda_ = 0.5 / u.TeV)
+        sampler = SpectrumEventSampler(n_events=n_events,
+                                       model=model)
+        sampler.draw_events(self.seed)
+        assert_quantity_allclose(sampler.events[0], self.result)
 
 @requires_dependency('scipy')
 class TestSpectrumSimulation:
