@@ -100,8 +100,6 @@ class SpectralModel(object):
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
 
-        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum`.
-
         If array input for ``emin`` and ``emax`` is given you have to set
         ``intervals=True`` if you want the integral in each energy bin.
 
@@ -110,7 +108,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -122,7 +120,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
@@ -152,7 +150,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
         """
 
         def f(x):
@@ -172,7 +170,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to `func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
