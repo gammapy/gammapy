@@ -1,5 +1,6 @@
 # Licensed under a 3 - clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from collections import OrderedDict
 import logging
 import astropy.units as u
@@ -7,10 +8,12 @@ from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
 from .utils import CountsPredictor
 from .core import PHACountsSpectrum
+from . import models
 from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = [
-    'SpectrumSimulation'
+    'SpectrumSimulation',
+    'SpectrumEventSampler'
 ]
 
 log = logging.getLogger(__name__)
@@ -192,3 +195,99 @@ class SpectrumSimulation(object):
         meta = OrderedDict()
         meta['CREATOR'] = self.__class__.__name__
         return meta
+
+
+class SpectrumEventSampler(object):
+    """Simulate events distribution
+
+    The events will be distributed according to a given
+    `~gammapy.spectrum.models.SpectralModel`.  For a usage example see
+    :gp-extra-notebook:`spectrum_simulation`.
+
+    Parameters
+    ----------
+    model : `~gammapy.spectrum.model.SpectralModel`
+        Spectral model
+    n_events : int
+        Number of events to draw
+    """
+    def __init__(self, model, n_events):
+        self.model = model
+        self.n_events = n_events
+
+        self.events = None
+
+    def draw_events(self, seed):
+        """Draw events from model
+
+        The result is stored as ``events`` attribute
+
+        Parameters
+        ----------
+        seed : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            see :func:~`gammapy.utils.random.get_random_state`
+        """
+        random_state = get_random_state(seed)
+        if isinstance(self.model, models.PowerLaw):
+            events = self._draw_events_powerlaw(random_state,
+                                                self.n_events,
+                                                self.model)
+        else:
+            events = self._draw_events_generic(random_state)
+        self.events = events
+
+    @staticmethod
+    def _draw_events_powerlaw(random_state, n_events, model):
+        """Helper function to draw PWL events
+
+        Uses the transformation method described e.g. in Cowan, section 3.2.
+        http://www.sherrytowers.com/cowan_statistical_data_analysis.pdf
+        """
+        # Get n uniformly distributed numbers
+        r = random_state.uniform(0, 1, n_events)
+        gamma = model.parameters['index'].value
+
+        # transform to PWL distribution
+        p = r ** (1 / (1 - gamma))
+        ref = model.parameters['reference'].quantity
+        events = p * ref
+        return events
+
+    def _draw_events_generic(self, random_state):
+        """Helper function to draw n events from a generic model
+
+        Uses an accept-reject method with an envelopping power law. Therefore
+        the model must be enclosed in a power law. This method is only tested
+        for an ECPL.
+        """
+        # How man events (draw_factor * n_events) are drawn in each turn
+        draw_factor = 2
+        n_events_turn = draw_factor * self.n_events
+
+        # Generate envelopping PWL
+        pars = self.model.parameters
+        pars['amplitude'].value = 1
+        pwl = models.PowerLaw(index=pars['index'].quantity,
+                              amplitude=pars['amplitude'].quantity,
+                              reference=pars['reference'].quantity
+                              )
+
+        drawn_events = 0
+        events = list()
+        while drawn_events < self.n_events:
+            temp_events = self._draw_events_powerlaw(random_state,
+                                                     n_events_turn,
+                                                     pwl)
+
+            # Accept reject
+            uniform = random_state.uniform(0, 1, n_events_turn)
+
+            flux_pwl = pwl(temp_events) * uniform
+            flux_model = self.model(temp_events)
+
+            accepted = np.where(flux_model >= flux_pwl)[0]
+            events = np.append(events, temp_events[accepted])
+            events._unit = temp_events.unit
+            drawn_events = len(events)
+
+        return events[0:self.n_events]
