@@ -296,12 +296,7 @@ class SpectralModel(object):
         y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
         y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
 
-        # The selection on y > 0 is to work around this matplotlib issue:
-        # https://github.com/matplotlib/matplotlib/issues/8623
-        # This was sometimes causing incorrect error bands because y == 0
-        # at high energies for exponential cutoff power-law spectra.
-        where = (y_hi > 0) & (y_lo > 0) & (energy >= energy_range[0]) & (energy <= energy_range[1])
-
+        where = (energy >= energy_range[0]) & (energy <= energy_range[1])
         ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
 
         self._plot_format_ax(ax, energy, y_lo, energy_power)
