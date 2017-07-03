@@ -48,13 +48,16 @@ class CTAIrf(object):
         Point spread function
     bkg : `~gammapy.background.FOVCube`
         Background rate
+    ref_sensi: `~gammapy.irf.SensitivityTable`
+        Reference Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, ref_sensi=None):
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
+        self.ref_sensi = ref_sensi
 
     @classmethod
     def read(cls, filename):
@@ -76,14 +79,17 @@ class CTAIrf(object):
         bkg = FOVCube.from_fits_table(table, scheme='bg_cube')
 
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+
+        table = fits.open(filename)['SENSITIVITY']
+        sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
 
         return cls(
             aeff=aeff,
             bkg=bkg,
             edisp=edisp,
             psf=psf,
+            ref_sensi=sensi,
         )
 
 
@@ -266,7 +272,7 @@ class SensitivityTable(object):
     energy_lo, energy_hi : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
-        Background rate
+        Sensitivity
     """
 
     def __init__(self, energy_lo, energy_hi, data):
@@ -330,7 +336,7 @@ class SensitivityTable(object):
         ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_xlabel('Reco Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Sensitivity [{}]'.format(self.data.data.unit))
 
         return ax
@@ -364,6 +370,8 @@ class CTAPerf(object):
         Background rate
     sens : `~gammapy.scripts.SensitivityTable`
         Sensitivity
+    rmf: `~gammapy.irf.EnergyDispersion`
+        RMF
     """
 
     def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, sens=None, rmf=None):
@@ -375,7 +383,7 @@ class CTAPerf(object):
         self.rmf = rmf
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, offset='0.5 deg'):
         """Read from a FITS file.
 
         Compute RMF at 0.5 deg offset on fly.
@@ -410,7 +418,7 @@ class CTAPerf(object):
         )
 
         rmf = edisp.to_energy_dispersion(
-            offset='0.5 deg', e_reco=e_reco_axis, e_true=e_true_axis,
+            offset=offset, e_reco=e_reco_axis, e_true=e_true_axis,
         )
 
         return cls(
