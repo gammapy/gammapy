@@ -258,7 +258,13 @@ class SpectralModel(object):
                    energy_power=0, n_points=100, **kwargs):
         """Plot spectral model error band.
 
-        kwargs are forwarded to `matplotlib.pyplot.fill_between`
+        .. note::
+
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
+            plotting code and the error band extends to negative values, it is not
+            shown correctly (see https://github.com/matplotlib/matplotlib/issues/8623).
+            To circumvent this issue use ``plt.loglog(nonposx='clip', nonposy='clip')``
+            or ``plt.semilogy(nonposy='clip')``.
 
         Parameters
         ----------
@@ -274,6 +280,9 @@ class SpectralModel(object):
             Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
+        **kwargs : dict
+            Keyword arguments forwarded to `matplotlib.pyplot.fill_between`
+
 
         Returns
         -------
