@@ -14,7 +14,7 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
-from ..utils.modeling import SourceModel, SourceLibrary
+from ..utils.modeling import SourceModel, SourceLibrary, UnknownModelError
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
@@ -148,12 +148,13 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss = '\n*** Morphology info ***\n\n'
         d = self.data
         ss += '{:<25s} : {}\n'.format('Morphology model type', d['morph_type'])
+
+        # TODO: change to morphology model dependent printout
+        # (see spectra printout and `spatial_model` property)
         ss += '{:<25s} : {:.3f}\n'.format('Sigma', d['morph_sigma'])
         ss += '{:<25s} : {:.3f}\n'.format('Sigma error', d['morph_sigma_err'])
         ss += '{:<25s} : {:.3f}\n'.format('Sigma2', d['morph_sigma2'])
         ss += '{:<25s} : {:.3f}\n'.format('Sigma2 error', d['morph_sigma2_err'])
-        # Call these major/minor axis instead?
-        # Signify (gauss) for Sigma above?
 
         ss += '{:<25s} : {:.3f}\n'.format('Position angle', d['morph_pa'])
         ss += '{:<25s} : {:.3f}\n'.format('Position angle error', d['morph_pa_err'])
@@ -273,14 +274,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points info."""
         d = self.data
-        ss = '\n*** Spectral points ***\n'
-        ss += '{:<20s} : {}\n'.format('SED reference id', d['sed_reference_id'])
-        ss += '{:<20s} : {}\n'.format('# spectral points', d['sed_n_points'])
-        # ss += '{:<20s} : {}\n\n'.format('# upper limits', d['sed_n_ul'])
+        ss = '\n*** Spectral points ***\n\n'
+        ss += '{:<25s} : {}\n'.format('SED reference id', d['sed_reference_id'])
+        ss += '{:<25s} : {}\n'.format('Number of spectral points', d['sed_n_points'])
+        ss += '{:<25s} : {}\n\n'.format('Number of upper limits', d['sed_n_ul'])
 
         try:
             ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
-        except TypeError:
+        except NoDataAvailableError:
             ss += '\nNo spectral points available for this source.'
 
         return ss + '\n'
@@ -383,15 +384,12 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
-        try:
-            table = self.flux_points.table.copy()
-            table['e_ref'].format = '.1f'
-            flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_err']
-            for _ in flux_cols:
-                if _ in table: table[_].format = '.3'
-            return table
-        except NoDataAvailableError:
-            raise TypeError("No flux points available for {}".format(self.name))
+        table = self.flux_points.table.copy()
+        table['e_ref'].format = '.1f'
+        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_err']
+        for _ in flux_cols:
+            if _ in table: table[_].format = '.3'
+        return table
 
     @property
     def flux_points(self):
@@ -498,6 +496,9 @@ class SourceCatalogGammaCat(SourceCatalog):
                 source_model = SourceModel.from_gammacat(source)
             except NoDataAvailableError:
                 log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
+                continue
+            except UnknownModelError:
+                log.warning('Skipping source {} (model not defined in gammapy)'.format(source.name))
                 continue
             source_list.append(source_model)
 

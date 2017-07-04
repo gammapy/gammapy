@@ -64,8 +64,8 @@ class TestFermi3FGLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert '3FGL J0534.5+2201' in ss  # Source name
-        assert '83.637 deg' in ss  # RA
+        assert 'Source name          : 3FGL J0534.5+2201' in ss
+        assert 'RA                   : 83.637 deg' in ss
         assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
         assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
 

@@ -49,6 +49,7 @@ def compute_flux_points_ul(quantity, quantity_errp):
     """
     return 2 * quantity_errp + quantity
 
+
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FGL catalog.
 
@@ -304,14 +305,14 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux','flux_errn','flux_errp','eflux','eflux_errn','eflux_errp','flux_ul','eflux_ul','dnde']
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
+                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
         table['sqrt_TS'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:
             table[_].format = '.3'
 
         return table
-
 
     @property
     def flux_points(self):
@@ -348,8 +349,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         # Square root of test statistic
-        ts = self._get_ts_values()
-        table['sqrt_TS'] = ts
+        table['sqrt_TS'] = [self.data['Sqrt_TS' + _] for _ in self._ebounds_suffix]
 
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
@@ -357,10 +357,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _get_flux_values(self, prefix, unit='cm-2 s-1'):
         values = [self.data[prefix + _] for _ in self._ebounds_suffix]
         return u.Quantity(values, unit)
-
-    def _get_ts_values(self, prefix='Sqrt_TS'):
-        values = [self.data[prefix + _] for _ in self._ebounds_suffix]
-        return values
 
     @property
     def lightcurve(self):
@@ -559,7 +555,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
-
     def info(self, info='all'):
         """Print info.
 
@@ -607,6 +602,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
             return ', '.join([_ for _ in vals if _ != ''])
+
         keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM']
         associations = get_nonentry_keys(keys)
         ss += '{:<16s} : {}\n'.format('Associations', associations)
@@ -614,6 +610,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += '{:<16s} : {:.3f}\n'.format('ASSOC_PROB_LR', d['ASSOC_PROB_LR'])
 
         ss += '{:<16s} : {}\n'.format('Class', d['CLASS'])
+
         tevcat_flag = d['TEVCAT_FLAG']
         if tevcat_flag == 'N':
             tevcat_message = 'No TeV association'
@@ -643,7 +640,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
         ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
 
-        return ss;
+        return ss
 
     def _info_spectral_fit(self):
         """Print model data."""
@@ -702,12 +699,16 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss = '\n*** Other info ***\n\n'
         ss += '{:<16s} : {:.3f} {}\n'.format('HEP Energy', d['HEP_Energy'].value, d['HEP_Energy'].unit)
         ss += '{:<16s} : {:.3f}\n'.format('HEP Probability', d['HEP_Prob'])
+
+        # This is the number of Bayesian blocks for most sources,
+        # except -1 means "could not be tested"
         msg = d['Variability_BayesBlocks']
         if msg == 1:
-            msg = 'Not variable'
+            msg = '1 (not variable)'
         elif msg == -1:
             msg = 'Could not be tested'
-        ss += '{:<30s} : {}\n'.format('Variability - Bayesian Blocks', msg)
+        ss += '{:<16s} : {}\n'.format('Bayesian Blocks', msg)
+
         ss += '{:<16s} : {:.3f}\n'.format('Redshift', d['Redshift'])
         ss += '{:<16s} : {:.3} {}\n'.format('NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit)
 
@@ -743,7 +744,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux','flux_errn','flux_errp','eflux','eflux_errn','eflux_errp','flux_ul','eflux_ul','dnde']
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
+                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
         table['sqrt_ts'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:

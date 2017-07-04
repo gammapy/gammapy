@@ -81,7 +81,7 @@ class TestSourceCatalogGammaCat:
         sources = gammacat.to_source_library()
         source = sources.source_list[0]
 
-        assert len(sources.source_list) == 72
+        assert len(sources.source_list) == 74
         assert source.source_name == 'CTA 1'
         assert_allclose(source.spectral_model.parameters['Index'].value, -2.2)
 
