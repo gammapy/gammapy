@@ -9,6 +9,7 @@ from gammapy.stats import significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
 from gammapy.scripts import CTAPerf
+from scipy.optimize import newton
 
 log = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class SensitivityEstimator(object):
         Parameters
         ----------
         bkg_counts : `~numpy.ndarray`
-            Array of background rate (bins in reconstructed energy)
+            Array of background counts (bins in reconstructed energy)
 
         Returns
         -------
@@ -110,47 +111,29 @@ class SensitivityEstimator(object):
 
         Notes
         -----
-        For the moment, search by dichotomy.
-
-        TODO: Cf. np.vectorize for an time optimisation of this function.
+        Find the number of needed gamma excess events using newtons method.
+        Defines a function `significance_on_off(x, off, alpha) - self.sigma`
+        and uses scipy.optimize.newton to find the `x` for which this function
+        is zero.
         """
-        excess = np.zeros(len(bkg_counts))
-        for icount in range(len(bkg_counts)):
 
-            if bkg_counts[icount]<1:
-                excess[icount]=self.gamma_min
+        def target_function(on, off, alpha):
+            return significance_on_off(on, off, alpha, method='lima') - self.sigma
+
+        excess = np.zeros_like(bkg_counts)
+        for energy_bin, bg_count in enumerate(bkg_counts):
+            # if the number of bg events is to small just return the predefined minimum
+            if bg_count < 1:
+                excess[energy_bin] = self.gamma_min
                 continue
 
-            # Coarse search
-            start, stop = -1., 6.
-            coarse_excess = np.logspace(start=start, stop=stop, num=1000)
-            coarse_on = coarse_excess + bkg_counts[icount]
-            coarse_off = np.zeros(len(coarse_on)) + bkg_counts[icount] / self.alpha
-            coarse_sigma = significance_on_off(n_on=coarse_on, n_off=coarse_off, alpha=self.alpha, method='lima')
-            idx = np.abs(coarse_sigma - self.sigma).argmin()
+            off = bg_count / self.alpha
+            # provide a proper start guess for the minimizer
+            on = bg_count + self.gamma_min
+            e = newton(target_function, x0=on, args=(off, self.alpha))
 
-            start = coarse_excess[max(idx - 1, 0)]
-            stop = coarse_excess[min(idx + 1, len(coarse_sigma) - 1)]
-            if start == stop:
-                log.warning('LOGICAL ERROR> Impossible to find a number of gamma!')
-                excess[icount] = -1
-                continue
-
-            # Finer search
-            num = int((stop - start) / 0.1)
-            fine_excess = np.linspace(start=start, stop=stop, num=num)
-            fine_on = fine_excess + bkg_counts[icount]
-            fine_off = np.zeros(len(fine_on)) + bkg_counts[icount] / self.alpha
-            fine_sigma = significance_on_off(n_on=fine_on, n_off=fine_off, alpha=self.alpha, method='lima')
-            idx = np.abs(fine_sigma - self.sigma).argmin()
-            if fine_excess[idx] >= self.gamma_min and fine_excess[idx] >= self.bkg_sys * bkg_counts[icount]:
-                excess[icount] = fine_excess[idx]
-            else:
-                excess[icount] = max(self.gamma_min, self.bkg_sys * bkg_counts[icount])
-
-            log.debug('N_ex={}, N_fineEx={}, N_bkg={}, N_bkgsys={}, Sigma={}'.format(
-                excess[icount], fine_excess[idx], bkg_counts[icount],
-                self.bkg_sys * bkg_counts[icount], fine_sigma[idx]))
+            # excess is defined as the number of on events minues the number of background events
+            excess[energy_bin] = e - bg_count
 
         return excess
 
