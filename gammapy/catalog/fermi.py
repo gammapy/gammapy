@@ -622,6 +622,11 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             tevcat_message = 'N/A'
         ss += '{:<16s} : {}\n'.format('TeVCat flag', tevcat_message)
 
+        fmt = '\n{:<32s} : {:.3f}\n'
+        args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
+        ss += fmt.format(*args)
+        ss += '{:<32s} : {:.1f}\n'.format('Npred', d['Npred'])
+
         return ss
 
     def _info_position(self):
@@ -647,10 +652,15 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         d = self.data
         ss = '\n*** Model info ***\n\n'
 
-        fmt = '{:<32s} : {:.3f}\n'
-        args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
-        ss += fmt.format(*args)
-        ss += '{:<32s} : {:.1f}\n\n'.format('Npred', d['Npred'])
+        if not self.is_pointlike:
+            e = self.data_extended
+            ss += 'Extended source information:\n'
+            ss += '{:<16s} : {}\n'.format('Model form', e['Model_Form'])
+            ss += '{:<16s} : {:.4f}\n'.format('Model semimajor', e['Model_SemiMajor'])
+            ss += '{:<16s} : {:.4f}\n'.format('Model semiminor', e['Model_SemiMinor'])
+            ss += '{:<16s} : {:.4f}\n'.format('Position angle', e['Model_PosAng'])
+            ss += '{:<16s} : {}\n'.format('Spatial function', e['Spatial_Function'])
+            ss += '{:<16s} : {}\n\n'.format('Spatial filename', e['Spatial_Filename'])
 
         ss += '{:<32s} : {}\n'.format('Spectrum type', d['SpectrumType'])
         ss += '{:<32s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
