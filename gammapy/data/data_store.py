@@ -24,8 +24,6 @@ __all__ = [
     'ObservationList',
 ]
 
-format = "%(levelname)8s %(filename)s:%(lineno)s - %(funcName)s --- %(message)s"
-logging.basicConfig(level=logging.INFO, format=format)
 log = logging.getLogger(__name__)
 
 
@@ -287,27 +285,41 @@ class DataStore(object):
         return things
 
     def check_observations(self):
-        """Check all observations regarding their values in events, aeff, edisp, psf
+        """Perform some sanity checks for all observations.
+
+        Returns
+        -------
+        OrderedDict : dictionary containing failure messages for all runs that fail a check.
         """
 
+        results = OrderedDict()
+        nfail = 0
+
         # Loop over all obs_ids in obs_table
-        log.info('Checking all runs listed in the obs_table')
         for obs_id in self.obs_table['OBS_ID']:
+            messages = []
             # Check that events table is not empty
             if len(self.obs(obs_id).events.table) == 0:
-                log.warning('Events table is empty in run: {}'.format(obs_id))
+                messages.append('events table empty')
             # Check that thresholds are meaningful for aeff
             if self.obs(obs_id).aeff.meta['LO_THRES'] >= self.obs(obs_id).aeff.meta['HI_THRES']:
-                log.warning('LO_THRES >= HI_THRES for aeff in run: {}'.format(obs_id))
+                messages.append('LO_THRES >= HI_THRES in effective area meta data')
             # Check that maximum value of aeff is greater than zero
             if np.max(self.obs(obs_id).aeff.data.data) <= 0:
-                log.warning('EFFAREA_MAX <= 0 for aeff in run: {}'.format(obs_id))
-            # Check that maximum value of edisp matrix is greater than zero"
+                messages.append('maximum entry of effective area table <= 0')
+            # Check that maximum value of edisp matrix is greater than zero
             if np.max(self.obs(obs_id).edisp.data.data) <= 0:
-                log.warning('MATRIX_MAX <= 0 for edisp in run: {}'.format(obs_id))
+                messages.append('maximum entry of energy dispersion table <= 0')
             # Check that thresholds are meaningful for psf
             if self.obs(obs_id).psf.energy_thresh_lo >= self.obs(obs_id).psf.energy_thresh_hi:
-                log.warning('LO_THRES greater than HI_THRES for psf in run: {}'.format(obs_id))
+                messages.append('LO_THRES >= HI_THRES in psf meta data')
+            if len(messages) > 0:
+                results[obs_id] = messages
+                nfail += 1
+
+        print('Checks failed for {:d} out of {:d} observations'.format(nfail, len(self.obs_table['OBS_ID'])))
+
+        return results
 
     def check_integrity(self, logger=None):
         """Check integrity, i.e. whether index and observation table match.
