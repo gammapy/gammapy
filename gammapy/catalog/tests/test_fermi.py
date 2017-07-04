@@ -205,7 +205,7 @@ class TestFermi3FHLObject:
         ss = str(self.source)
         assert '3FHL J0534.5+2201' in ss  # Source name
         assert '83.635 deg' in ss # RA
-        assert 'Detection significance (10 GeV - 2 TeV)       : 168.641' in ss
+        assert 'Significance (10 GeV - 2 TeV)    : 168.641' in ss
         assert 'Integral flux (10 GeV - 1 TeV)   : 8.66e-09 +- 1.71e-10 cm-2 s-1' in ss
 
     @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FHL)

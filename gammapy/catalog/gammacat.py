@@ -59,7 +59,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'model', 'reference'}
+        info : {'all', 'basic', 'position', 'model'}
             Comma separated list of options
         """
         ss = self.__str__(info=info)
@@ -70,12 +70,12 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position, 'model', 'reference'}
+        info : {'all', 'basic', 'position, 'model'}
             Comma separated list of options
         """
 
         if info == 'all':
-            info = 'basic,position,model,reference'
+            info = 'basic,position,model'
 
         ss = ''
         ops = info.split(',')
@@ -87,8 +87,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += self._info_morph()
             ss += self._info_spectral_fit()
             ss += self._info_spectral_points()
-        if 'reference' in ops:
-            ss += self._info_reference()
         return ss
 
     def _info_basic(self):
@@ -117,6 +115,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         ss += '\n{:<15s} : {}\n'.format('TGeVCat ID', d['tgevcat_id'])
         ss += '{:<15s} : {}\n'.format('TGeVCat name', d['tgevcat_name'])
+
+        ss += '\n{:<15s} : {}\n'.format('Discoverer', d['discoverer'])
+        ss += '{:<15s} : {}\n'.format('Discovery date', d['discovery_date'])
+        ss += '{:<15s} : {}\n'.format('Seen by', d['seen_by'])
+        ss += '{:<15s} : {}\n'.format('Reference', d['reference_id'])
 
         return ss
 
@@ -158,23 +161,21 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return ss
 
-
     def _info_spectral_fit(self):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
-        ss += '{:<32s} : {:.3f}\n'.format('Significance (*energy range*)', d['significance'])
-        ss += '{:<32s} : {:.3f}\n'.format('Livetime', d['livetime'])
+        ss += '{:<15s} : {:.3f}\n'.format('Significance', d['significance'])
+        ss += '{:<15s} : {:.3f}\n'.format('Livetime', d['livetime'])
 
         spec = d['spec_type']
         str = ''
-        if(spec == 'pl2'):
+        if spec == 'pl2':
             str = '(integral power law)'
         ss += '\n{:<15s} : {} {}\n'.format('Spectrum type', spec, str)
 
         # Spectral model parameters
-        if(spec == 'pl'):
-
+        if spec == 'pl':
             unit = 'cm-2 s-1 TeV-1'
             fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
             args = ('norm', d['spec_pl_norm'].value, d['spec_pl_norm_err'].value, unit)
@@ -192,8 +193,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_pl_e_ref'])
 
-        if(spec == 'pl2'):
-
+        elif spec == 'pl2':
             unit = 'cm-2 s-1'
             fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
             args = ('flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value, unit)
@@ -212,8 +212,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += '{:<15s} : {:.3}\n'.format('e_min', d['spec_pl2_e_min'])
             ss += '{:<15s} : {:.3}\n'.format('e_max', d['spec_pl2_e_max'])
 
-        if(spec == 'ecpl'):
-
+        elif spec == 'ecpl':
             unit = 'cm-2 s-1 TeV-1'
             fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
             args = ('norm', d['spec_ecpl_norm'].value, d['spec_ecpl_norm_err'].value, unit)
@@ -239,11 +238,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_ecpl_e_ref'])
 
+        else:
+            # raise ValueError('Spectral model printout not implemented: {}'.format(spec))
+            ss += '\nSpectral model printout not yet implemented.\n'
+
         ss += '\n{:<20s} : {:.3}\n'.format('energy range min', d['spec_erange_min'])
         ss += '{:<20s} : {:.3}\n'.format('energy range max', d['spec_erange_max'])
         ss += '{:<20s} : {:.3}\n'.format('theta', d['spec_theta'])
 
-        ss = '\n\nDerived fluxes:\n'
+        ss += '\n\nDerived fluxes:\n'
 
         unit = 'cm-2 s-1 TeV-1'
         fmt = '{:<30s} : {:.3} +- {:.3} {} (statistical)\n'
@@ -267,33 +270,20 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return ss
 
-
     def _info_spectral_points(self):
         """Print spectral points info."""
         d = self.data
         ss = '\n*** Spectral points ***\n'
         ss += '{:<20s} : {}\n'.format('SED reference id', d['sed_reference_id'])
         ss += '{:<20s} : {}\n'.format('# spectral points', d['sed_n_points'])
-        ss += '{:<20s} : {}\n\n'.format('# upper limits', d['sed_n_ul'])
+        # ss += '{:<20s} : {}\n\n'.format('# upper limits', d['sed_n_ul'])
 
-        t = self._flux_points_table_formatted
+        try:
+            ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
+        except TypeError:
+            ss += '\nNo spectral points available for this source.'
 
-        ss += '\n'.join(t.pformat(max_width=-1))
         return ss + '\n'
-
-
-    def _info_reference(self):
-        """Print reference info."""
-        d = self.data
-        ss = '\n*** Reference info ***\n\n'
-        ss += '{:<20s} : {}\n'.format('Discoverer', d['discoverer'])
-        ss += '{:<20s} : {}\n'.format('Discovery date', d['discovery_date'])
-        ss += '{:<20s} : {}\n'.format('Seen by', d['seen_by'])
-        ss += '{:<20s} : {}\n'.format('Reference', d['reference_id'])
-
-        return ss
-
-
 
     @property
     def spectral_model(self):
@@ -393,15 +383,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     @property
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
-        table = self.flux_points.table.copy()
-
-        table['e_ref'].format = '.1f'
-
-        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp']
-        for _ in flux_cols:
-            table[_].format = '.3'
-
-        return table
+        try:
+            table = self.flux_points.table.copy()
+            table['e_ref'].format = '.1f'
+            flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_err']
+            for _ in flux_cols:
+                if _ in table: table[_].format = '.3'
+            return table
+        except NoDataAvailableError:
+            raise TypeError("No flux points available for {}".format(self.name))
 
     @property
     def flux_points(self):

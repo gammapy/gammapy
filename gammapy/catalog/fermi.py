@@ -131,7 +131,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             tevcat_message = 'Extended TeV source (diameter > 40 arcmins)'
         else:
             tevcat_message = 'N/A'
-        ss += '{:<30s} : {}\n'.format('TeVCat flag', tevcat_message)
+        ss += '{:<20s} : {}\n'.format('TeVCat flag', tevcat_message)
 
         flag_message = {
             0: 'None',
@@ -155,7 +155,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             12: 'Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see '
                 'Section 3.3 in catalog paper).'
         }
-        ss += '{:<30s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
+        ss += '{:<20s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
 
         return ss
 
@@ -172,7 +172,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += '{:<20s} : {:.4f}\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
         ss += '{:<20s} : {:.4f}\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
         ss += '{:<20s} : {:.2f}\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
-
         ss += '{:<20s} : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
         ss += '{:<20s} : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
         ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
@@ -186,11 +185,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss = '\n*** Spectral info ***\n\n'
 
         ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
-
         fmt = '{:<45s} : {:.3f}\n'
         args = ('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
         ss += fmt.format(*args)
-
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
         spec_type = d['SpectrumType'].strip()
@@ -232,10 +229,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print spectral points."""
         d = self.data
         ss = '\n*** Spectral points ***\n\n'
+        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
 
-        t = self._flux_points_table_formatted
-
-        ss += '\n'.join(t.pformat(max_width=-1))
         return ss + '\n'
 
     def _info_lightcurve(self):
@@ -309,14 +304,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn', 'eflux_errp', 'flux_ul', 'eflux_ul',
-                     'dnde']
-
+        flux_cols = ['flux','flux_errn','flux_errp','eflux','eflux_errn','eflux_errp','flux_ul','eflux_ul','dnde']
         table['sqrt_TS'].format = '.1f'
-
         table['e_ref'].format = '.1f'
-
         for _ in flux_cols:
             table[_].format = '.3'
 
@@ -370,7 +360,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     def _get_ts_values(self, prefix='Sqrt_TS'):
         values = [self.data[prefix + _] for _ in self._ebounds_suffix]
-        return u.Quantity(values)
+        return values
 
     @property
     def lightcurve(self):
@@ -617,16 +607,13 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
             return ', '.join([_ for _ in vals if _ != ''])
-
         keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM']
         associations = get_nonentry_keys(keys)
         ss += '{:<16s} : {}\n'.format('Associations', associations)
         ss += '{:<16s} : {:.3f}\n'.format('ASSOC_PROB_BAY', d['ASSOC_PROB_BAY'])
         ss += '{:<16s} : {:.3f}\n'.format('ASSOC_PROB_LR', d['ASSOC_PROB_LR'])
 
-
         ss += '{:<16s} : {}\n'.format('Class', d['CLASS'])
-
         tevcat_flag = d['TEVCAT_FLAG']
         if tevcat_flag == 'N':
             tevcat_message = 'No TeV association'
@@ -666,14 +653,10 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         fmt = '{:<32s} : {:.3f}\n'
         args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
         ss += fmt.format(*args)
-
         ss += '{:<32s} : {:.1f}\n\n'.format('Npred', d['Npred'])
 
-
         ss += '{:<32s} : {}\n'.format('Spectrum type', d['SpectrumType'])
-
         ss += '{:<32s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
-
         fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
         args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
         ss += fmt.format(*args)
@@ -709,36 +692,26 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = '\n*** Spectral points ***\n\n'
+        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
 
-        t = self._flux_points_table_formatted
-
-        ss += '\n'.join(t.pformat(max_width=-1))
         return ss + '\n'
 
     def _info_other(self):
         """Print other info."""
         d = self.data
         ss = '\n*** Other info ***\n\n'
-
         ss += '{:<16s} : {:.3f} {}\n'.format('HEP Energy', d['HEP_Energy'].value, d['HEP_Energy'].unit)
         ss += '{:<16s} : {:.3f}\n'.format('HEP Probability', d['HEP_Prob'])
-
-        bayes = d['Variability_BayesBlocks']
-        str = bayes
-        if bayes == 1:
-            str = 'Not variable'
-        elif bayes == -1:
-            str = 'Could not be tested'
-        ss += '{:<30s} : {}\n'.format('Variability - Bayesian Blocks', str)
-
+        msg = d['Variability_BayesBlocks']
+        if msg == 1:
+            msg = 'Not variable'
+        elif msg == -1:
+            msg = 'Could not be tested'
+        ss += '{:<30s} : {}\n'.format('Variability - Bayesian Blocks', msg)
         ss += '{:<16s} : {:.3f}\n'.format('Redshift', d['Redshift'])
-        ss += '{:<16s} : {:.3f} {}\n'.format('NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit)
-
-
+        ss += '{:<16s} : {:.3} {}\n'.format('NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit)
 
         return ss
-
-
 
     @property
     def spectral_model(self):
@@ -770,14 +743,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn', 'eflux_errp', 'flux_ul', 'eflux_ul',
-                     'dnde']
-
-        table['sqrt_TS'].format = '.1f'
-
+        flux_cols = ['flux','flux_errn','flux_errp','eflux','eflux_errn','eflux_errp','flux_ul','eflux_ul','dnde']
+        table['sqrt_ts'].format = '.1f'
         table['e_ref'].format = '.1f'
-
         for _ in flux_cols:
             table[_].format = '.3'
 
@@ -818,9 +786,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
         # Square root of test statistic
-        ts = self.data['Sqrt_TS_Band']
-        table['sqrt_TS'] = ts
-
+        table['sqrt_ts'] = self.data['Sqrt_TS_Band']
 
         # TODO: remove this computation here.
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
