@@ -104,6 +104,15 @@ class TestSourceCatalogObjectGammaCat:
         assert 'norm            : 9.1e-14 +- 1.3e-14 cm-2 s-1 TeV-1 (statistical)' in ss
         assert 'Integrated flux (<1 TeV)       : 8.5e-13 +- 1.3e-13 cm-2 s-1 (statistical)' in ss
 
+    def test_data_python_dict(self, gammacat):
+        source = gammacat[0]
+        data = source._data_python_dict
+        assert type(data['ra']) == float
+        assert data['ra'] == 1.649999976158142
+        assert type(data['sed_e_min']) == list
+        assert type(data['sed_e_min'][0]) == float
+        assert_allclose(data['sed_e_min'][0], 0.5600000023841858)
+
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_spectral_model(self, gammacat, ref):
         source = gammacat[ref['name']]
