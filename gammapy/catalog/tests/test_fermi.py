@@ -202,11 +202,13 @@ class TestFermi3FHLObject:
         self.source.pprint()
 
     def test_str(self):
-        ss = str(self.source)
-        assert '3FHL J0534.5+2201' in ss  # Source name
-        assert '83.635 deg' in ss # RA
-        assert 'Significance (10 GeV - 2 TeV)    : 168.641' in ss
-        assert 'Integral flux (10 GeV - 1 TeV)   : 8.66e-09 +- 1.71e-10 cm-2 s-1' in ss
+        source = self.cat['3FHL J2301.9+5855e'] # Picking an extended source
+        ss = str(source)
+        assert 'Source name          : 3FHL J2301.9+5855e' in ss
+        assert 'RA                   : 345.494 deg' in ss
+        assert 'Significance (10 GeV - 2 TeV)    : 7.974' in ss
+        assert 'Integral flux (10 GeV - 1 TeV)   : 1.46e-10 +- 2.57e-11 cm-2 s-1' in ss
+        assert 'Model form       : Disk' in ss
 
     @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FHL)
     def test_spectral_model(self, index, model_type, desired):
