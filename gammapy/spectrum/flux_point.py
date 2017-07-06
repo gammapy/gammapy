@@ -557,7 +557,6 @@ class FluxPointEstimator(object):
             global_model=self.model,
             energy_range=energy_group.energy_range,
         )
-
         energy_ref = self.compute_energy_ref(energy_group)
 
         return self.fit_point(
@@ -617,8 +616,52 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return approx_model
 
+    def compute_flux_point_ul(self, fit, best_fit, ul_sigma=2, negative=False):
+        from scipy.optimize import brentq
+
+        # this is a prototype for fast flux point upper limit
+        # calculation using brentq
+        stat_best_fit = best_fit.statval
+        amplitude = best_fit.model.parameters['amplitude'].value / 1E-12
+        amplitude_max = 1E5 + amplitude
+        if negative:
+            amplitude_max = amplitude
+            amplitude = amplitude_max - 1E5
+
+        def ts_diff(x):
+            fit.model.parameters['amplitude'].value = x * 1E-12
+            fit.predict_counts()
+            fit.calc_statval()
+            return (stat_best_fit + ul_sigma ** 2) - fit.total_stat
+
+        try:
+            result = brentq(ts_diff, amplitude, amplitude_max,
+                            maxiter=100, rtol=1e-2)
+            return 1E-12 * result * fit.model.parameters['amplitude'].unit
+        except (RuntimeError, ValueError):
+            # Where the root finding fails NaN is set as amplitude
+            log.debug('Flux point upper limit computation failed.')
+            return np.nan
+
+    def compute_flux_point_sqrt_ts(self, fit, best_fit):
+        amplitude = best_fit.model.parameters['amplitude'].value
+        stat_best_fit = best_fit.statval
+
+        fit.model.parameters['amplitude'].value = 0
+        fit.predict_counts()
+        fit.calc_statval()
+        stat_null = fit.total_stat
+
+        fit.model.parameters['amplitude'].value = amplitude
+        ts = np.abs(stat_null - stat_best_fit)
+        return np.sign(amplitude) * np.sqrt(ts)
+
     def fit_point(self, model, energy_group, energy_ref):
         from .fit import SpectrumFit
+
+        # Set reference and remove min amplitude
+        model.parameters['reference'].value = energy_ref.to('TeV').value
+        model.parameters['amplitude'].parmin = None
 
         fit = SpectrumFit(self.obs, model)
         erange = energy_group.energy_range
@@ -640,6 +683,13 @@ class FluxPointEstimator(object):
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
         dnde, dnde_err = res.model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
+
+        dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
+        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1., negative=True)
+
+        sqrt_ts_threshold = 1
 
         return OrderedDict([
             ('e_ref', energy_ref),
@@ -647,6 +697,11 @@ class FluxPointEstimator(object):
             ('e_max', e_max),
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
+            ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
+            ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            ('sqrt_ts', sqrt_ts),
+            ('dnde_errp', dnde_errp),
+            ('dnde_errn', dnde_errn)
         ])
 
 

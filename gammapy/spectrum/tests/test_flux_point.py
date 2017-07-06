@@ -166,6 +166,9 @@ def test_flux_points(config):
             seg=seg(obs()),
             dnde=2.7465439050126e-11 * u.Unit('cm-2 s-1 TeV-1'),
             dnde_err=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errn=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errp=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_ul=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
             res=-0.11262182922477647,
             res_err=0.1536450758523701,
         )
