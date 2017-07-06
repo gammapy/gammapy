@@ -158,6 +158,9 @@ class WCSGeom(MapGeom):
     def contains(self, coords):
         raise NotImplementedError
 
+    def to_slice(self, slices):
+        raise NotImplementedError
+
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
                cdelt=1.0, crpix=1., axes=None):

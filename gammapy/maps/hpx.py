@@ -3,7 +3,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import re
+import copy
 import numpy as np
+from astropy.extern import six
 from astropy.extern.six.moves import range
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -94,9 +96,13 @@ def ravel_hpx_index(idx, npix):
     Parameters
     ----------
     idx : tuple of `~numpy.ndarray`
+
+    Returns
+    -------
+    idx : `~numpy.ndarray`
     """
     if len(idx) == 1:
-        return idx
+        return idx[0]
 
     # TODO: raise exception for indices that are out of bounds
 
@@ -346,15 +352,17 @@ def pix_to_upix(pix, nside):
 
 
 class HPXGeom(MapGeom):
-    """Geometry class for HEALPIX maps and cubes.
+    """Geometry class for HEALPIX maps.
 
-    This class performs
-    mapping between partial-sky indices (pixel number within a HEALPIX
-    region) and all-sky indices (pixel number within an all-sky
-    HEALPIX map).  Multi-band HEALPIX geometries use a global indexing
-    scheme that assigns a unique pixel number based on the all-sky
-    index and band index.  In the single-band case the global index is
-    the same as the HEALPIX index.
+    This class performs mapping between partial-sky indices (pixel
+    number within a HEALPIX region) and all-sky indices (pixel number
+    within an all-sky HEALPIX map).  Multi-band HEALPIX geometries use
+    a global indexing scheme that assigns a unique pixel number based
+    on the all-sky index and band index.  In the single-band case the
+    global index is the same as the HEALPIX index.
+
+    By default the constructor will return an all-sky map.
+    Partial-sky maps can be defined with the ``region`` argument.
 
     Parameters
     ----------
@@ -369,21 +377,22 @@ class HPXGeom(MapGeom):
         True -> 'NESTED', False -> 'RING' indexing scheme
     coordsys : str
         Coordinate system, 'CEL' | 'GAL'
-    region : str
-        Region string defining the spatial geometry of the map.  If
-        none the map will encompass the whole sky.
-    pix : tuple
-        Explicit list of pixels encompassed by this geometry.  This
-        option supersedes `region`.
+    region : str or tuple
+        Spatial geometry for partial-sky maps.  If none the map will
+        encompass the whole sky.  String input will be parsed
+        according to HPX_REG header keyword conventions.  Tuple
+        input can be used to define an explicit list of pixels
+        encompassed by the geometry.
     axes : list
         Axes for non-spatial dimensions.
     sparse : bool
-        If True defer allocation of partial- to all-sky index mapping arrays.
+        If True defer allocation of partial- to all-sky index mapping
+        arrays.  This option is only compatible with partial-sky maps
+        with an analytic geometry (e.g. DISK).
 
     """
 
-    def __init__(self, nside, nest=True,
-                 coordsys='CEL', region=None, pix=None,
+    def __init__(self, nside, nest=True, coordsys='CEL', region=None,
                  axes=None, conv=HPX_Conv('FGST_CCUBE'), sparse=False):
 
         # FIXME: Figure out what to do when sparse=True
@@ -407,22 +416,12 @@ class HPXGeom(MapGeom):
         self._order = nside_to_order(self._nside)
         self._nest = nest
         self._coordsys = coordsys
-        self._region = region
         self._maxpix = 12 * self._nside * self._nside
         self._maxpix = self._maxpix * np.ones(self._shape, dtype=int)
 
         self._ipix = None
         self._rmap = None
-        self._npix = self._maxpix
-
-        if pix is not None:
-            self._indxschm = 'EXPLICIT'
-            self._ipix = ravel_hpx_index(pix, self._maxpix)
-        elif self._region:
-            self._indxschm = 'EXPLICIT'
-            self._create_lookup(self._region)
-        else:
-            self._indxschm = 'IMPLICIT'
+        self._create_lookup(region)
 
         if self._ipix is not None:
             self._rmap = {}
@@ -433,16 +432,41 @@ class HPXGeom(MapGeom):
         self._conv = conv
 
     def _create_lookup(self, region):
-        """Create local-to-global and global-to-local pixel lookup tables."""
-        ipix = [self.get_index_list(nside, self._nest, region)
-                for nside in self._nside.flat]
-        self._ipix = [ravel_hpx_index((p, i * np.ones_like(p)),
-                                      np.ravel(self._maxpix)) for i, p in
-                      enumerate(ipix)]
-        self._npix = np.array([len(t) for t in self._ipix])
-        if self.nside.ndim > 1:
-            self._npix = self._npix.reshape(self.nside.shape)
-        self._ipix = np.concatenate(self._ipix)
+        """Create local-to-global pixel lookup table."""
+
+        if isinstance(region, six.string_types):
+            ipix = [self.get_index_list(nside, self._nest, region)
+                    for nside in self._nside.flat]
+            self._ipix = [ravel_hpx_index((p, i * np.ones_like(p)),
+                                          np.ravel(self._maxpix)) for i, p in
+                          enumerate(ipix)]
+            self._region = region
+            self._indxschm = 'EXPLICIT'
+            self._npix = np.array([len(t) for t in self._ipix])
+            if self.nside.ndim > 1:
+                self._npix = self._npix.reshape(self.nside.shape)
+            self._ipix = np.concatenate(self._ipix)
+
+        elif isinstance(region, tuple):
+            self._ipix = ravel_hpx_index(region, self._maxpix)
+            self._region = 'explicit'
+            self._indxschm = 'EXPLICIT'
+            if len(region) == 1:
+                self._npix = np.array([len(region[0])])
+            else:
+                self._npix = np.zeros(self._shape, dtype=int)
+                idx = np.ravel_multi_index(region[1:], self._shape)
+                cnt = np.unique(idx, return_counts=True)
+                self._npix.flat[cnt[0]] = cnt[1]
+
+        elif region is None:
+            self._region = None
+            self._indxschm = 'IMPLICIT'
+            self._npix = self._maxpix
+
+        else:
+            raise ValueError(
+                'Invalid input for region string: {}'.format(region))
 
     def local_to_global(self, idx):
         """Compute a global index (partial-sky) from a global (all-sky)
@@ -544,7 +568,7 @@ class HPXGeom(MapGeom):
             # bounds of non-spatial dimensions
 
             # Ravel multi-dimensional indices
-            #ibin = np.ravel_multi_index(idxs, self._shape,
+            # ibin = np.ravel_multi_index(idxs, self._shape,
             #                            mode='clip')
 
             if self.nside.size > 1:
@@ -604,10 +628,46 @@ class HPXGeom(MapGeom):
 
         return tuple(idx)
 
+    def to_slice(self, slices, drop_axes=True):
+
+        if len(slices) == 0 and self.ndim == 2:
+            return copy.deepcopy(self)
+
+        if len(slices) != self.ndim - 2:
+            raise ValueError
+
+        nside = np.ones(self.shape, dtype=int) * self.nside
+        nside = np.squeeze(nside[slices])
+
+        axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
+        if drop_axes:
+            axes = [ax for ax in axes if ax.nbin > 1]
+            slice_dims = [0] + [i + 1 for i,
+                                ax in enumerate(axes) if ax.nbin > 1]
+        else:
+            slice_dims = np.arange(self.ndim)
+
+        if self.region == 'explicit':
+            idxs = [np.arange(ax.nbin)[s] for ax, s in zip(self.axes, slices)]
+            pix = self.get_pixels()
+            m = np.all([np.in1d(t, i) for i, t in zip(idxs, pix[1:])], axis=0)
+            region = tuple([t[m]
+                            for i, t in enumerate(pix) if i in slice_dims])
+        else:
+            region = self.region
+
+        return HPXGeom(nside, self.nest, self.coordsys, region=region, axes=axes,
+                       conv=self.conv)
+
     @property
     def axes(self):
-        """Non-spatial axes."""
+        """List of non-spatial axes."""
         return self._axes
+
+    @property
+    def shape(self):
+        """Shape of non-spatial axes."""
+        return self._shape
 
     @property
     def ndim(self):
@@ -701,11 +761,11 @@ class HPXGeom(MapGeom):
             A HEALPix geoemtry object.
         """
         return self.__class__(self.nside[0], not self.nest, self.coordsys,
-                              self.region, None, self.conv)
+                              self.region, self.conv)
 
     @classmethod
     def create(cls, nside, nest, coordsys='CEL', region=None,
-               axes=None, pix=None, conv=HPX_Conv('FGST_CCUBE')):
+               axes=None, conv=HPX_Conv('FGST_CCUBE')):
         """Create an HPXGeom object.
 
         Parameters
@@ -727,7 +787,7 @@ class HPXGeom(MapGeom):
             A HEALPix geoemtry object.
         """
         return cls(nside, nest, coordsys=coordsys, region=region,
-                   axes=axes, pix=pix, conv=conv)
+                   axes=axes, conv=conv)
 
     @staticmethod
     def identify_HPX_convention(header):
@@ -824,7 +884,7 @@ class HPXGeom(MapGeom):
                 region = None
 
         return cls(nside, nest, coordsys=coordsys, region=region,
-                   axes=axes, pix=pix, conv=conv)
+                   axes=axes, conv=conv)
 
     @classmethod
     def from_hdu(cls, hdu, axes=None):
@@ -1197,10 +1257,17 @@ class HPXGeom(MapGeom):
                                    for i, t in enumerate(self._maxpix.flat)])
             ibnd = list(np.unravel_index(ibnd, self._shape))
             return tuple([ipix] + ibnd)
-        elif self.nside.shape == self._maxpix.shape:
-            return unravel_hpx_index(self._ipix, self._maxpix)
+        elif self.nside.shape == self._maxpix.shape or self.region == 'explicit':
+            pix = unravel_hpx_index(self._ipix, self._maxpix)
+            if self.ndim == 2:
+                return pix[:1]
+            else:
+                return pix
         else:
 
+            # For fixed nside we only store an ipix vector for the
+            # first plane. Here we construct global pixel index vectors
+            # for all planes
             maxpix = np.ravel(self._maxpix) * np.arange(self.npix.size)
             maxpix = maxpix.reshape(self._maxpix.shape)[None, ...]
             # maxpix = np.ravel(self._maxpix *

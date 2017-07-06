@@ -1,3 +1,4 @@
+
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
@@ -10,11 +11,17 @@ from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
 pytest.importorskip('healpy')
 
-hpx_test_geoms = [
+hpx_allsky_test_geoms = [
     # 2D All-sky
     (8, False, 'GAL', None, None),
     # 3D All-sky
     (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
+    # 4D All-sky
+    (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 3), name='axis0'),
+                             MapAxis(np.logspace(0., 2., 4), name='axis1')]),
+]
+
+hpx_partialsky_test_geoms = [
     # 2D Partial-sky
     (8, False, 'GAL', 'DISK(110.,75.,10.)', None),
     # 3D Partial-sky
@@ -27,6 +34,8 @@ hpx_test_geoms = [
      [MapAxis(np.logspace(0., 3., 3), name='axis0'),
       MapAxis(np.logspace(0., 2., 4), name='axis1')])
 ]
+
+hpx_test_geoms = hpx_allsky_test_geoms + hpx_partialsky_test_geoms
 
 
 def make_test_coords(geom, lon, lat):
@@ -108,8 +117,58 @@ def test_hpx_global_to_local():
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_allsky_test_geoms)
+def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
+
+    geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
+
+    pix0 = geom.get_pixels()
+    pix1 = tuple([t[::10] for t in pix0])
+    geom = HPXGeom(nside, nested, coordsys, region=pix0, axes=axes)
+    assert_allclose(pix0, geom.get_pixels())
+    assert_allclose(len(pix0[0]), np.sum(geom.npix))
+    geom = HPXGeom(nside, nested, coordsys, region=pix1, axes=axes)
+    assert_allclose(pix1, geom.get_pixels())
+    assert_allclose(len(pix1[0]), np.sum(geom.npix))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpx_coord_to_idx(nside, nested, coordsys, region, axes):
+def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
+
+    geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
+    slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
+    geom_slice = geom.to_slice(slices)
+    assert_allclose(geom_slice.ndim, 2)
+    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
+
+    pix = geom.get_pixels()
+    pix_slice = geom_slice.get_pixels()
+    if geom.ndim > 2:
+        m = np.all([np.in1d(t, [1]) for t in pix[1:]], axis=0)
+        assert_allclose(pix_slice, (pix[0][m],))
+    else:
+        assert_allclose(pix_slice, pix)
+
+    # Test slicing with explicit geometry
+    geom = HPXGeom(nside, nested, coordsys, region=tuple(
+        [t[::10] for t in pix]), axes=axes)
+    geom_slice = geom.to_slice(slices)
+    assert_allclose(geom_slice.ndim, 2)
+    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
+
+    pix = geom.get_pixels()
+    pix_slice = geom_slice.get_pixels()
+    if geom.ndim > 2:
+        m = np.all([np.in1d(t, [1]) for t in pix[1:]], axis=0)
+        assert_allclose(pix_slice, (pix[0][m],))
+    else:
+        assert_allclose(pix_slice, pix)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
 
     import healpy as hp
 
@@ -141,7 +200,7 @@ def test_hpx_coord_to_idx(nside, nested, coordsys, region, axes):
                         idx[0])
 
 
-def test_hpx_coord_to_pix():
+def test_hpxgeom_coord_to_pix():
     lon = np.array([110.25, 114., 105.])
     lat = np.array([75.3, 75.3, 74.6])
     z0 = np.array([0.5, 1.5, 2.5])
@@ -206,7 +265,7 @@ def test_hpx_get_region_size():
     assert_allclose(HPXGeom.get_region_size('DISK(110.,75.,2.)'), 2.0)
 
 
-def test_hpx_get_ref_dir():
+def test_hpxgeom_get_ref_dir():
     refdir = HPXGeom.get_ref_dir('DISK(110.,75.,2.)', 'GAL')
     assert_allclose(refdir.l.deg, 110.)
     assert_allclose(refdir.b.deg, 75.)
@@ -216,7 +275,7 @@ def test_hpx_get_ref_dir():
     assert_allclose(refdir.b.deg, 0.)
 
 
-def test_hpx_make_wcs():
+def test_hpxgeom_make_wcs():
     ax0 = np.linspace(0., 3., 4)
 
     hpx = HPXGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
@@ -228,7 +287,7 @@ def test_hpx_make_wcs():
     assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
 
 
-def test_hpx_get_coords():
+def test_hpxgeom_get_coords():
     ax0 = np.linspace(0., 3., 4)
 
     # 2D all-sky
@@ -289,7 +348,7 @@ def test_make_hpx_to_wcs_mapping():
                                45, 45, 28, 28, 45, 45, 45, 28]]))
 
 
-def test_hpx_from_header():
+def test_hpxgeom_from_header():
     pars = {
         'HPX_REG': 'DISK(110.,75.,2.)',
         'EXTNAME': 'SKYMAP',
@@ -313,7 +372,7 @@ def test_hpx_from_header():
     assert_allclose(hpx.nside, np.array([64]))
 
 
-def test_hpx_make_header():
+def test_hpxgeom_make_header():
     hpx = HPXGeom(16, False, 'GAL')
     header = hpx.make_header()
     # TODO: assert on something

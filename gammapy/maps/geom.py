@@ -562,3 +562,26 @@ class MapGeom(object):
             Bool array
         """
         pass
+
+    @abc.abstractmethod
+    def to_slice(self, slices, drop_axes=True):
+        """Create a new geometry by cutting in the non-spatial dimensions of
+        this geometry.
+
+        Parameters
+        ----------
+        slices : tuple
+            Tuple of integers or `slice` objects.  Contains one
+            element for each non-spatial dimension.
+
+        drop_axes : bool
+            Drop axes for which the slice reduces the size of that
+            dimension to one.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Sliced geometry.
+
+        """
+        pass
