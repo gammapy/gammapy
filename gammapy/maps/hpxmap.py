@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.utils.misc import InheritDocstrings
 from .base import MapBase
-from .hpx import HPXGeom, HpxToWcsMapping, get_nside_from_pixel_size
+from .hpx import HpxGeom, HpxToWcsMapping, get_nside_from_pixel_size
 from .geom import MapAxis, skydir_to_lonlat
 
 __all__ = [
@@ -63,7 +63,7 @@ class HpxMap(MapBase):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
         HEALPix geometry object.
 
     data : `~numpy.ndarray`
@@ -132,7 +132,7 @@ class HpxMap(MapBase):
                                                    lonlat[1],
                                                    width/2.)
 
-        hpx = HPXGeom.create(nside, nest, coordsys=coordsys, region=region,
+        hpx = HpxGeom.create(nside, nest, coordsys=coordsys, region=region,
                              conv=None, axes=axes)
         if map_type in [None,'hpx','HpxMapND']:
             return HpxMapND(hpx)

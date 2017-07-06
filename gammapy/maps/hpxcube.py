@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
-from .hpx import HPXGeom, HpxToWcsMapping
+from .hpx import HpxGeom, HpxToWcsMapping
 
 __all__ = [
     'HpxMapND',
@@ -26,7 +26,7 @@ class HpxMapND(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
@@ -63,7 +63,7 @@ class HpxMapND(HpxMap):
         axes : list
             List of axes for non-spatial dimensions.
         """
-        hpx = HPXGeom.from_header(hdu.header, axes)
+        hpx = HpxGeom.from_header(hdu.header, axes)
         shape = tuple([ax.nbin for ax in axes[::-1]])
         shape_data = shape + tuple(np.unique(hpx.npix))
 

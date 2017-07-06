@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .geom import MapCoords, pix_tuple_to_idx
 from .hpxmap import HpxMap
-from .hpx import HPXGeom, HpxToWcsMapping, ravel_hpx_index, unravel_hpx_index
+from .hpx import HpxGeom, HpxToWcsMapping, ravel_hpx_index, unravel_hpx_index
 
 __all__ = [
     'HpxMapSparse',
@@ -21,7 +21,7 @@ class HpxMapSparse(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.

@@ -18,7 +18,7 @@ __all__ = [
     # 'HPX_Conv',
     # 'HPX_FITS_CONVENTIONS',
     # 'HPX_ORDER_TO_PIXSIZE',
-    'HPXGeom',
+    'HpxGeom',
     # 'HpxToWcsMapping',
 ]
 
@@ -246,7 +246,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
        The HEALPIX geometry
     wcs : `~gammapy.maps.wcs.WCSGeom`
        The WCS geometry
@@ -351,7 +351,7 @@ def pix_to_upix(pix, nside):
     return pix + 4 * np.power(nside, 2)
 
 
-class HPXGeom(MapGeom):
+class HpxGeom(MapGeom):
     """Geometry class for HEALPIX maps.
 
     This class performs mapping between partial-sky indices (pixel
@@ -656,7 +656,7 @@ class HPXGeom(MapGeom):
         else:
             region = self.region
 
-        return HPXGeom(nside, self.nest, self.coordsys, region=region, axes=axes,
+        return HpxGeom(nside, self.nest, self.coordsys, region=region, axes=axes,
                        conv=self.conv)
 
     @property
@@ -725,7 +725,7 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        geom : `~HPXGeom`
+        geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
         if np.any(self.order < 0):
@@ -743,7 +743,7 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        geom : `~HPXGeom`
+        geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
 
@@ -757,7 +757,7 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        geom : `~HPXGeom`
+        geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
         return self.__class__(self.nside[0], not self.nest, self.coordsys,
@@ -766,7 +766,7 @@ class HPXGeom(MapGeom):
     @classmethod
     def create(cls, nside, nest, coordsys='CEL', region=None,
                axes=None, conv=HPX_Conv('FGST_CCUBE')):
-        """Create an HPXGeom object.
+        """Create an HpxGeom object.
 
         Parameters
         ----------
@@ -783,7 +783,7 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        geom : `~HPXGeom`
+        geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
         return cls(nside, nest, coordsys=coordsys, region=region,
@@ -847,11 +847,11 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        hpx : `~HPXGeom`
+        hpx : `~HpxGeom`
             HEALPix geometry.
 
         """
-        convname = HPXGeom.identify_HPX_convention(header)
+        convname = HpxGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
 
         if header['PIXTYPE'] != 'HEALPIX':
@@ -899,7 +899,7 @@ class HPXGeom(MapGeom):
 
         Returns
         -------
-        hpx : `~HPXGeom`
+        hpx : `~HpxGeom`
             HEALPix geometry.
 
         """
@@ -1327,7 +1327,7 @@ class HpxToWcsMapping(object):
 
     Parameters
     ----------
-    hpx : `~HPXGeom`
+    hpx : `~HpxGeom`
         HEALPix geometry object.
 
     wcs : `~gammapy.maps.wcs.WCSGeom`
@@ -1411,7 +1411,7 @@ class HpxToWcsMapping(object):
         mult_map = Map.read(filename, hdu=1)
 
         with fits.open(filename) as ff:
-            hpx = HPXGeom.from_header(ff[0])
+            hpx = HpxGeom.from_header(ff[0])
             ipix = index_map.counts
             mult_val = mult_map.counts
             npix = mult_map.counts.shape
