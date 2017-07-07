@@ -157,8 +157,7 @@ class MapBase(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-            Pixel indices can be either float or integer type.  Float
-            indices will be rounded to the nearest integer.
+            Pixel indices can be either float or integer type. 
 
         interp : {None, 'linear', 'nearest'}
             Interpolate data values. None corresponds to 'nearest',
@@ -168,8 +167,28 @@ class MapBase(object):
         Returns
         ----------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map
-           np.nan used to flag coords outside of map
+           Array of pixel values.
+           np.nan used to flag coordinates outside of map
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_by_idx(self, idx):
+        """Return map values at the given pixel indices.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+
+        Returns
+        ----------
+        vals : `~numpy.ndarray`
+           Array of pixel values.
+           np.nan used to flag coordinate outside of map
 
         """
         pass

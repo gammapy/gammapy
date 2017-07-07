@@ -44,6 +44,7 @@ def pix_tuple_to_idx(pix):
     """
     idx = []
     for i, p in enumerate(pix):
+        p = np.asarray(p)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:

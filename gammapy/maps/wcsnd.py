@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord
+from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .base import MapBase
 from .wcs import WCSGeom
 from .wcsmap import WcsMap
@@ -28,7 +29,7 @@ class WcsMapND(WcsMap):
 
         # FIXME: Update logic for creating array shape once
         # sparse-support is added to WCSGeom
-        
+
         shape = tuple(list(wcs.npix) + [ax.nbin for ax in wcs.axes])
         if data is None:
             data = np.zeros(shape).T
@@ -50,10 +51,23 @@ class WcsMapND(WcsMap):
         return cls.from_skydir(skydir, cdelt, npix, coordsys, projection, axes)
 
     def get_by_coords(self, coords, interp=None):
-        raise NotImplementedError
+        if interp is None:
+            pix = self.geom.coord_to_pix(coords)
+            return self.get_by_pix(pix)
+        elif interp == 'linear':
+            raise NotImplementedError
+        else:
+            raise ValueError('Invalid interpolation method: {}'.format(interp))
 
     def get_by_pix(self, pix, interp=None):
-        raise NotImplementedError
+        if interp is None:
+            return self.get_by_idx(pix)
+        else:
+            raise NotImplementedError
+
+    def get_by_idx(self, idx):
+        idx = pix_tuple_to_idx(idx)
+        return self._data[idx]
 
     def fill_by_coords(self, coords, weights=None):
         raise NotImplementedError

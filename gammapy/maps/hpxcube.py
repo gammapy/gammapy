@@ -180,12 +180,14 @@ class HpxMapND(HpxMap):
         # FIXME: What to return for pixels outside the map
 
         if interp is None:
-            # Convert to local pixel indices
-            idx = pix_tuple_to_idx(pix)
-            idx = self.hpx.global_to_local(idx)
-            return self.data.T[idx]
+            return self.get_by_idx(pix)
         else:
             raise NotImplementedError
+
+    def get_by_idx(self, idx):
+        idx = pix_tuple_to_idx(idx)
+        idx = self.hpx.global_to_local(idx)
+        return self.data.T[idx]
 
     def _interp_by_coords(self, coords, interp):
         """Linearly interpolate map values."""

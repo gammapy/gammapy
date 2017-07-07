@@ -51,13 +51,17 @@ class HpxMapSparse(HpxMap):
     def get_by_pix(self, pix, interp=None):
 
         if interp is None:
-            # Convert to local pixel indices
-            idx = pix_tuple_to_idx(pix)
-            idx = self.hpx.global_to_local(idx)
-            idx = ravel_hpx_index(idx, self.hpx.npix)
-            return np.array(self.data[0, idx])
+            return get_by_idx(pix)
         else:
             raise NotImplementedError
+
+    def get_by_idx(self, idx):
+
+        # Convert to local pixel indices
+        idx = pix_tuple_to_idx(idx)
+        idx = self.hpx.global_to_local(idx)
+        idx = ravel_hpx_index(idx, self.hpx.npix)
+        return np.array(self.data[0, idx])
 
     def fill_by_coords(self, coords, weights=None):
 
