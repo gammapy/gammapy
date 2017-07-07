@@ -47,23 +47,86 @@ for working with map objects.
 Constructing with Factory Methods
 ---------------------------------
 
-The `~MapBase` class provides a number of factory methods to facilitate
-creating an empty map object from scratch.
+The `~MapBase` class provides a `~MapBase.create` factory method to
+facilitate creating an empty map object from scratch.  The
+``map_type`` argument can be used to control the pixelization scheme
+(WCS or HPX) and whether the map internally uses a sparse
+representation of the data.
 
 .. code::
 
    from gammapy.maps import MapBase
    from astropy.coordinates import SkyCoord
-   position = SkyCoord(0, 0, frame='galactic', unit='deg')
+   position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
 
-   MapBase.create(binsz=0.1, map_type='wcs')
+   # Create a WCS Map with 0.1 deg pixel size
+   m = MapBase.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0)
 
-   MapBase.create_image()
+   # Create a HPX Map
+   m = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0)
+   
 
-   MapBase.create_cube()
+Get, Set, and Fill Methods
+--------------------------
 
-Get and Set Methods
--------------------
+All map objects have a set of accessor methods provided through the
+abstract `~MapBase` class that can be used to retrieve or update the
+contents of the map.  Accessor methods accept as their first
+argument a tuple of vectors (lists or numpy arrays) with the coordinates of
+pixels within the map expressed in one of three coordinate systems:
+
+* ``idx`` : Pixel indices.  These are explicit pixel indices into the map.  
+* ``pix`` : Coordinates in pixel space.  Pixel coordinates are defined
+  on the interval [0,N-1] where N is the number of pixels along a
+  given map dimension with pixel centers at integer values.  For
+  methods that reference a discrete pixel, pixel coordinates wil be
+  rounded to the nearest pixel index and passed to the corresponding
+  ``idx`` method.
+* ``coord`` : Sky coordinates.  The tuple should contain longitude and
+  latitude in degrees followed by one coordinate array for each
+  non-spatial dimension.
+  
+The coordinate system accepted by a given accessor method can be
+inferred from the suffix of the method name
+(e.g. `~MapBase.get_by_idx`).
+
+The ``get`` methods return the contents of the map for a sequence of
+pixels.  The following demonstrates how one can access the same pixels
+of a WCS map using each of the three coordinate systems:
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   
+   vals = m.get_by_idx( ([49,50],[49,50]) )
+   vals = m.get_by_pix( ([49.0,50.0],[49.0,50.0]) )
+   vals = m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]) )
+
+The ``set`` methods can be used to set pixel values.  The following
+demonstrates how one can set same pixel values:
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   
+   m.set_by_idx( ([49,50],[49,50]), [0.5, 1.5] )
+   m.set_by_pix( ([49.0,50.0],[49.0,50.0]), [0.5, 1.5] )
+   m.set_by_coords( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
+
+Finally the ``fill`` methods can be used to increment the value of a
+set of pixels according to a weights vector.
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   
+   m.fill_by_idx( ([49,50],[49,50]), weights=[0.5, 1.5] )
+   m.fill_by_pix( ([49.0,50.0],[49.0,50.0]), weights=[0.5, 1.5] )
+   m.fill_by_coords( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
+
    
 Slicing Methods
 ---------------
