@@ -44,10 +44,10 @@ class WcsMap(MapBase):
             width = 360.
 
         if nxpix is None:
-            nxpix = int(np.rint(max(width, 360.) / binsz))
+            nxpix = int(np.rint(min(width, 360.) / binsz))
 
         if nypix is None:
-            nypix = int(np.rint(max(width, 180.) / binsz))
+            nypix = int(np.rint(min(width, 180.) / binsz))
 
         if skydir is None:
             skydir = SkyCoord(0.0, 0.0, unit='deg')
