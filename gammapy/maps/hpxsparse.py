@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from scipy.sparse import csr_matrix
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .geom import MapCoords, pix_tuple_to_idx
@@ -29,6 +28,8 @@ class HpxMapSparse(HpxMap):
     """
 
     def __init__(self, hpx, data=None):
+
+        from scipy.sparse import csr_matrix
 
         shape = (1, np.sum(hpx.npix),)
 
