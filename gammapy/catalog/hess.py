@@ -345,7 +345,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         flux_points = self.flux_points.table.copy()
 
         energy_cols = ['e_ref', 'e_min', 'e_max']
-        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp']
+        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']
         flux_points = flux_points[energy_cols + flux_cols]
 
         for _ in energy_cols:
