@@ -8,6 +8,8 @@ from astropy.coordinates import SkyCoord
 from ..wcs import WCSGeom
 from ..geom import MapAxis
 
+pytest.importorskip('scipy')
+
 wcs_test_geoms = [
     (10.0, 'GAL', 'AIT', SkyCoord(110., 75.0, unit='deg', frame='icrs'), None),
     (10.0, 'GAL', 'AIT', SkyCoord(110., 75.0, unit='deg', frame='icrs'),

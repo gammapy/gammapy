@@ -8,6 +8,7 @@ from ..geom import MapAxis
 from ..hpx import HpxGeom, get_pixel_size_from_nside, nside_to_order, lonlat_to_colat
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
+pytest.importorskip('scipy')
 pytest.importorskip('healpy')
 
 hpx_allsky_test_geoms = [

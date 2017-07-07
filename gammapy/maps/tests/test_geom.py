@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoords
 
+pytest.importorskip('scipy')
 
 mapaxis_geoms = [
     (np.array([0.25, 0.75, 1.0, 2.0]), 'lin'),

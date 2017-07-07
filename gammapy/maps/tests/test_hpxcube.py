@@ -7,6 +7,7 @@ from ..geom import MapAxis
 from ..hpx import HpxGeom
 from ..hpxcube import HpxMapND
 
+pytest.importorskip('scipy')
 pytest.importorskip('healpy')
 
 hpx_test_geoms = [

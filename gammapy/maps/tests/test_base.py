@@ -7,6 +7,8 @@ from astropy.coordinates import SkyCoord
 from ..base import MapBase
 from ..geom import MapAxis
 
+pytest.importorskip('scipy')
+
 map_axes = [MapAxis.from_bounds(1.0, 10.0, 3, interp='log'),
             MapAxis.from_bounds(0.1, 1.0, 4, interp='log')]
 
