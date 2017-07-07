@@ -616,7 +616,42 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return approx_model
 
-    def compute_flux_point_ul(self, fit, best_fit, ul_sigma=2, negative=False):
+    def compute_flux_point_ul(self, fit, best_fit, delta_ts=4, negative=False):
+        """
+        Compute upper limits for flux point values.
+
+
+        Parameters
+        ----------
+        fit : `SpectrumFit`
+            Instance of spectrum fit.
+        best_fit : `SpectrumFitResult`
+            Best fit result.
+        delta_ts : float (4)
+            Difference in log-likelihood for given confidence interval.
+            See Example below.
+        negative : bool
+            Compute limit in negative direction.
+
+
+        Examples
+        --------
+        To compute ~95% confidence upper limits (or 2 sigma) you can use:
+
+            from scipy.stats import chi2, norm
+
+            sigma = 2
+            cl = 1 - 2 * norm.sf(sigma) # using two sided p-value
+            delta_ts = chi2.isf(1 - cl, df=1)
+
+
+        Returns
+        -------
+        dnde_ul : `~astropy.units.Quantity`
+            Flux point upper limit.
+
+        """
+
         from scipy.optimize import brentq
 
         # this is a prototype for fast flux point upper limit
@@ -627,16 +662,16 @@ class FluxPointEstimator(object):
 
         if negative:
             amplitude_max = amplitude
-            amplitude_min = amplitude_max - 1E3 * ul_sigma * amplitude_err
+            amplitude_min = amplitude_max - 1E3 * amplitude_err
         else:
-            amplitude_max = amplitude + 1E3 * ul_sigma * amplitude_err
+            amplitude_max = amplitude + 1E3 * amplitude_err
             amplitude_min = amplitude
 
         def ts_diff(x):
             fit.model.parameters['amplitude'].value = x * 1E-12
             fit.predict_counts()
             fit.calc_statval()
-            return (stat_best_fit + ul_sigma ** 2) - fit.total_stat
+            return (stat_best_fit + delta_ts) - fit.total_stat
 
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
@@ -648,6 +683,24 @@ class FluxPointEstimator(object):
             return np.nan * fit.model.parameters['amplitude'].unit
 
     def compute_flux_point_sqrt_ts(self, fit, best_fit):
+        """
+        Compute sqrt(TS) for flux point.
+
+
+        Parameters
+        ----------
+        fit : `SpectrumFit`
+            Instance of spectrum fit.
+        best_fit : `SpectrumFitResult`
+            Best fit result.
+
+
+        Returns
+        -------
+        sqrt_ts : float
+            Sqrt(TS) for flux point.
+
+        """
         amplitude = best_fit.model.parameters['amplitude'].value
         stat_best_fit = best_fit.statval
 
