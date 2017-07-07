@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
-from scipy.interpolate import interp1d
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy import units as u
@@ -77,6 +76,8 @@ def coord_to_pix(edges, coord, interp='lin'):
     """Convert grid coordinates to pixel coordinates using the chosen
     interpolation scheme."""
 
+    from scipy.interpolate import interp1d
+
     if interp == 'log':
         fn = np.log
     elif interp == 'lin':
@@ -96,6 +97,8 @@ def coord_to_pix(edges, coord, interp='lin'):
 def pix_to_coord(edges, pix, interp='lin'):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
+
+    from scipy.interpolate import interp1d
 
     if interp == 'log':
         fn0 = np.log
