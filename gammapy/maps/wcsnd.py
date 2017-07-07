@@ -43,21 +43,12 @@ class WcsMapND(WcsMap):
     def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
         wcs = WCSGeom.from_skydir(skydir, cdelt, npix, coordsys, projection,
                                   axes)
-        return cls(wcs, np.zeros(npix).T)
+        return cls(wcs)
 
     @classmethod
     def from_lonlat(cls, lon, lat, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
         skydir = SkyCoord(lon, lat, unit='deg')
         return cls.from_skydir(skydir, cdelt, npix, coordsys, projection, axes)
-
-    def get_by_coords(self, coords, interp=None):
-        if interp is None:
-            pix = self.geom.coord_to_pix(coords)
-            return self.get_by_pix(pix)
-        elif interp == 'linear':
-            raise NotImplementedError
-        else:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
 
     def get_by_pix(self, pix, interp=None):
         if interp is None:
@@ -69,17 +60,21 @@ class WcsMapND(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self._data[idx]
 
-    def fill_by_coords(self, coords, weights=None):
-        raise NotImplementedError
+    def interp_by_coords(self, coords, interp=None):
+        if interp == 'linear':
+            raise NotImplementedError
+        else:
+            raise ValueError('Invalid interpolation method: {}'.format(interp))
 
-    def fill_by_pix(self, pix, weights=None):
-        raise NotImplementedError
+    def fill_by_idx(self, idx, weights=None):
+        idx = pix_tuple_to_idx(idx)
+        if weights is None:
+            weights = np.ones(idx[0].shape)
+        self.data.T[idx] += weights
 
-    def set_by_coords(self, coords, vals):
-        raise NotImplementedError
-
-    def set_by_pix(self, pix, vals):
-        raise NotImplementedError
+    def set_by_idx(self, idx, vals):
+        idx = pix_tuple_to_idx(idx)
+        self.data.T[idx] = vals
 
     def sum_over_axes(self):
         raise NotImplementedError

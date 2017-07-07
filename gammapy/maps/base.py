@@ -4,6 +4,7 @@ import abc
 import numpy as np
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
+from .geom import pix_tuple_to_idx
 
 __all__ = [
     'MapBase',
@@ -118,10 +119,9 @@ class MapBase(object):
 
     @abc.abstractmethod
     def sum_over_axes(self):
-        """Reduce to a 2D image by dropping non-spatial dimensions."""
+        """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
-    @abc.abstractmethod
     def get_by_coords(self, coords, interp=None):
         """Return map values at the given map coordinates.
 
@@ -145,7 +145,11 @@ class MapBase(object):
            np.nan used to flag coords outside of map
 
         """
-        pass
+        if interp is None:
+            idx = self.geom.coord_to_pix(coords)
+            return self.get_by_idx(idx)
+        else:
+            return self.interp_by_coords(coords, interp=interp)
 
     @abc.abstractmethod
     def get_by_pix(self, pix, interp=None):
@@ -194,6 +198,31 @@ class MapBase(object):
         pass
 
     @abc.abstractmethod
+    def interp_by_coords(self, coords, interp=None):
+        """Interpolate map values at the given map coordinates.
+
+        Parameters
+        ----------
+        coords : tuple or `~gammapy.maps.geom.MapCoords`
+            `~gammapy.maps.geom.MapCoords` object or tuple of
+            coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+
+        interp : {None, 'linear', 'nearest'}
+            Interpolate data values. None corresponds to 'nearest',
+            but might have advantages in performance, because no
+            interpolator is set up.
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+           Values of pixels in the flattened map.
+           np.nan used to flag coords outside of map
+
+        """
+        pass
+
     def fill_by_coords(self, coords, weights=None):
         """Fill pixels at the given map coordinates with values in `weights`
         vector.
@@ -210,9 +239,9 @@ class MapBase(object):
             Weights vector. If None then a unit weight will be assumed
             for each element in `coords`.
         """
-        pass
+        pix = self.geom.coord_to_pix(coords)
+        self.fill_by_idx(pix, weights)
 
-    @abc.abstractmethod
     def fill_by_pix(self, pix, weights=None):
         """Fill pixels at the given pixel coordinates with values in `weights`
         vector.
@@ -230,9 +259,27 @@ class MapBase(object):
             Weights vector. If None then a unit weight will be assumed
             for each element in `pix`.
         """
-        pass
+        idx = pix_tuple_to_idx(pix)
+        return self.fill_by_idx(idx, weights=weights)
 
     @abc.abstractmethod
+    def fill_by_idx(self, idx, weights=None):
+        """Fill pixels at the given pixel indices with values in `weights`
+        vector.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+
+        weights : `~numpy.ndarray`
+            Weights vector. If None then a unit weight will be assumed
+            for each element in `idx`.
+        """
+        pass
+
     def set_by_coords(self, coords, vals):
         """Set pixels at the given map coordinates to the values in `vals`
         vector.
@@ -248,9 +295,9 @@ class MapBase(object):
         vals : `~numpy.ndarray`
             Values vector.  Pixels at `coords` will be set to these values.
         """
-        pass
+        idx = self.geom.coord_to_pix(coords)
+        self.set_by_pix(idx, vals)
 
-    @abc.abstractmethod
     def set_by_pix(self, pix, vals):
         """Set pixels at the given pixel coordinates to the values in `vals`
         vector.
@@ -266,5 +313,23 @@ class MapBase(object):
 
         vals : `~numpy.ndarray`
             Values vector. Pixels at `pix` will be set to these values.
+        """
+        idx = pix_tuple_to_idx(pix)
+        return self.set_by_idx(idx, vals)
+
+    @abc.abstractmethod
+    def set_by_idx(self, idx, vals):
+        """Set pixels at the given pixel indices to the values in `vals`
+        vector.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+
+        vals : `~numpy.ndarray`
+            Values vector. Pixels at `idx` will be set to these values.
         """
         pass

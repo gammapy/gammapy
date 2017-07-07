@@ -40,14 +40,6 @@ class HpxMapSparse(HpxMap):
 
         HpxMap.__init__(self, hpx, data)
 
-    def get_by_coords(self, coords, interp=None):
-
-        if interp is None:
-            pix = self.hpx.coord_to_pix(coords)
-            return self.get_by_pix(pix)
-        else:
-            raise NotImplementedError
-
     def get_by_pix(self, pix, interp=None):
 
         if interp is None:
@@ -63,28 +55,21 @@ class HpxMapSparse(HpxMap):
         idx = ravel_hpx_index(idx, self.hpx.npix)
         return np.array(self.data[0, idx])
 
-    def fill_by_coords(self, coords, weights=None):
+    def interp_by_coords(self, coords, interp=None):
+        raise NotImplementedError
 
-        pix = self.geom.coord_to_pix(coords)
-        self.fill_by_pix(pix, weights)
+    def fill_by_idx(self, idx, weights=None):
 
-    def fill_by_pix(self, pix, weights=None):
-
-        idx = pix_tuple_to_idx(pix)
+        idx = pix_tuple_to_idx(idx)
         if weights is None:
             weights = np.ones(idx[0].shape)
         idx = self.hpx.global_to_local(idx)
         idx = ravel_hpx_index(idx, self.hpx.npix)
         self.data[0, idx] += weights
 
-    def set_by_coords(self, coords, vals):
+    def set_by_idx(self, idx, vals):
 
-        pix = self.geom.coord_to_pix(coords)
-        self.set_by_pix(pix, vals)
-
-    def set_by_pix(self, pix, vals):
-
-        idx = pix_tuple_to_idx(pix)
+        idx = pix_tuple_to_idx(idx)
         idx = self.hpx.global_to_local(idx)
         idx = ravel_hpx_index(idx, self.hpx.npix)
         self.data[0, idx] = vals

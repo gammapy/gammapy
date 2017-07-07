@@ -164,12 +164,9 @@ class HpxMapND(HpxMap):
                               np.apply_over_axes(np.sum, self.data,
                                                  axes=np.arange(self.data.ndim - 1)))
 
-    def get_by_coords(self, coords, interp=None):
+    def interp_by_coords(self, coords, interp=None):
 
-        if interp is None:
-            pix = self.hpx.coord_to_pix(coords)
-            return self.get_by_pix(pix)
-        elif interp == 'linear':
+        if interp == 'linear':
             return self._interp_by_coords(coords, interp)
         else:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
@@ -235,27 +232,17 @@ class HpxMapND(HpxMap):
 
         return val
 
-    def fill_by_coords(self, coords, weights=None):
+    def fill_by_idx(self, idx, weights=None):
 
-        pix = self.geom.coord_to_pix(coords)
-        self.fill_by_pix(pix, weights)
-
-    def fill_by_pix(self, pix, weights=None):
-
-        idx = pix_tuple_to_idx(pix)
+        idx = pix_tuple_to_idx(idx)
         if weights is None:
             weights = np.ones(idx[0].shape)
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] += weights
 
-    def set_by_coords(self, coords, vals):
+    def set_by_idx(self, idx, vals):
 
-        pix = self.geom.coord_to_pix(coords)
-        self.set_by_pix(pix, vals)
-
-    def set_by_pix(self, pix, vals):
-
-        idx = pix_tuple_to_idx(pix)
+        idx = pix_tuple_to_idx(idx)
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
 
