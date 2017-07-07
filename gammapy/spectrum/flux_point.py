@@ -623,10 +623,14 @@ class FluxPointEstimator(object):
         # calculation using brentq
         stat_best_fit = best_fit.statval
         amplitude = best_fit.model.parameters['amplitude'].value / 1E-12
-        amplitude_max = 1E5 + amplitude
+        amplitude_err = best_fit.model.parameters.error('amplitude') / 1E-12
+
         if negative:
             amplitude_max = amplitude
-            amplitude = amplitude_max - 1E5
+            amplitude_min = amplitude_max - 1E3 * ul_sigma * amplitude_err
+        else:
+            amplitude_max = amplitude + 1E3 * ul_sigma * amplitude_err
+            amplitude_min = amplitude
 
         def ts_diff(x):
             fit.model.parameters['amplitude'].value = x * 1E-12
@@ -635,13 +639,13 @@ class FluxPointEstimator(object):
             return (stat_best_fit + ul_sigma ** 2) - fit.total_stat
 
         try:
-            result = brentq(ts_diff, amplitude, amplitude_max,
+            result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
             return 1E-12 * result * fit.model.parameters['amplitude'].unit
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
-            return np.nan
+            return np.nan * fit.model.parameters['amplitude'].unit
 
     def compute_flux_point_sqrt_ts(self, fit, best_fit):
         amplitude = best_fit.model.parameters['amplitude'].value
@@ -656,7 +660,7 @@ class FluxPointEstimator(object):
         ts = np.abs(stat_null - stat_best_fit)
         return np.sign(amplitude) * np.sqrt(ts)
 
-    def fit_point(self, model, energy_group, energy_ref):
+    def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
         # Set reference and remove min amplitude
@@ -688,8 +692,6 @@ class FluxPointEstimator(object):
         dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
         dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1.) - dnde
         dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1., negative=True)
-
-        sqrt_ts_threshold = 1
 
         return OrderedDict([
             ('e_ref', energy_ref),
