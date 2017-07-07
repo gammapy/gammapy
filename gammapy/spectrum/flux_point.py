@@ -743,8 +743,8 @@ class FluxPointEstimator(object):
         sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
 
         dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
-        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, ul_sigma=1., negative=True)
+        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
