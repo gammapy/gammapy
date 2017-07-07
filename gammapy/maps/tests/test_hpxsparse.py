@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ..geom import MapAxis
-from ..hpx import HPXGeom
+from ..hpx import HpxGeom
 from ..hpxsparse import HpxMapSparse
 
 pytest.importorskip('healpy')
@@ -25,6 +25,6 @@ hpx_test_geoms = [
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxcube_init(nside, nested, coordsys, region, axes):
-    geom = HPXGeom(nside, nested, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     m = HpxMapSparse(geom)
     #TODO: Test initialization w/ data array
