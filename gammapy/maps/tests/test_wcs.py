@@ -30,11 +30,13 @@ def test_wcsgeom_init(binsz, coordsys, proj, skydir, axes):
                          wcs_test_geoms)
 def test_wcsgeom_test_pix_to_coord(binsz, coordsys, proj, skydir, axes):
     geom = WCSGeom.create(binsz=binsz, proj=proj, coordsys=coordsys, axes=axes)
-    geom.pix_to_coord(geom.get_pixels())
+    assert_allclose(geom.get_coords()[0],
+                    geom.pix_to_coord(geom.get_pixels())[0])
 
 
 @pytest.mark.parametrize(('binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
-def test_wcsgeom_test_coord_to_pix(binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_test_coord_to_idx(binsz, coordsys, proj, skydir, axes):
     geom = WCSGeom.create(binsz=binsz, proj=proj, coordsys=coordsys, axes=axes)
-    geom.coord_to_pix(geom.get_coords())
+    assert_allclose(geom.get_pixels()[0],
+                    geom.coord_to_idx(geom.get_coords())[0])
