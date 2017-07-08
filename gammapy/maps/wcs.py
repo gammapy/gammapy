@@ -5,7 +5,7 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
-from .geom import MapGeom, MapCoords
+from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
 
 __all__ = [
     'WCSGeom',
@@ -13,11 +13,12 @@ __all__ = [
 
 
 class WCSGeom(MapGeom):
-    """Container for WCS object and image extent.
+    """Geometry class for WCS maps.
 
-    Class that encapsulates both a WCS object and the definition of
-    the image extent (number of pixels).  Also provides a number of
-    helper methods for accessing the properties of the WCS object.
+    This class encapsulates both the WCS transformation object and the
+    the image extent (number of pixels in each dimension).  Also
+    provides a number of helper methods for accessing the properties
+    of the WCS object.
 
     Parameters
     ----------
@@ -27,6 +28,7 @@ class WCSGeom(MapGeom):
         Number of pixels in each spatial dimension
     axes : list
         Axes for non-spatial dimensions
+
     """
 
     def __init__(self, wcs, npix, axes=None):
@@ -38,14 +40,17 @@ class WCSGeom(MapGeom):
         cdelt0 = np.abs(self.wcs.wcs.cdelt[0])
         cdelt1 = np.abs(self.wcs.wcs.cdelt[1])
 
+        self._pix_size = np.array([cdelt0, cdelt1])
+
         self._width = np.array([cdelt0 * self._npix[0],
                                 cdelt1 * self._npix[1]])
-        self._pix_center = np.array([(self._npix[0] - 1.0) / 2.,
-                                     (self._npix[1] - 1.0) / 2.])
-        self._pix_size = np.array([cdelt0, cdelt1])
-        self._skydir = SkyCoord.from_pixel(self._pix_center[0],
-                                           self._pix_center[1],
-                                           self.wcs)
+        self._center_pix = tuple([(self._npix[0] - 1.0) / 2.,
+                                  (self._npix[1] - 1.0) / 2.] +
+                                 [(float(ax.nbin) - 1.0) / 2. for ax in self.axes])
+        self._center_coord = self.pix_to_coord(self._center_pix)
+        self._center_skydir = SkyCoord.from_pixel(self._center_pix[0],
+                                                  self._center_pix[1],
+                                                  self.wcs)
 
     @property
     def wcs(self):
@@ -56,11 +61,6 @@ class WCSGeom(MapGeom):
     def coordsys(self):
         """TODO."""
         return self._coordsys
-
-    @property
-    def skydir(self):
-        """Sky coordinate of the image center (TODO: type?)."""
-        return self._skydir
 
     @property
     def width(self):
@@ -77,20 +77,55 @@ class WCSGeom(MapGeom):
         """List of non-spatial axes."""
         return self._axes
 
-    @classmethod
-    def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
-        """TODO."""
-        npix = np.array(npix, ndmin=1)
-        crpix = npix / 2. + 0.5
-        wcs = create_wcs(skydir, coordsys, projection,
-                         cdelt, crpix)
-        return cls(wcs, npix, axes)
+    @property
+    def center_coord(self):
+        """Map coordinate of the center of the geometry.
+
+        Returns
+        -------
+        coord : tuple
+        """
+        return self._center_coord
+
+    @property
+    def center_pix(self):
+        """Pixel coordinate of the center of the geometry.
+
+        Returns
+        -------
+        pix : tuple
+        """
+        return self._center_pix
+
+    @property
+    def center_skydir(self):
+        """Sky coordinate of the center of the geometry.
+
+        Returns
+        -------
+        pix : `~astropy.coordinates.SkyCoord`
+        """
+        return self._center_skydir
 
     @classmethod
     def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
-               axes=None, skydir=None):
-        """TODO."""
+               axes=None, skydir=None, lonlat=None):
+        """Create a WCSGeom object.
+
+        Returns
+        -------
+        geom : `~WCSGeom`
+            A HEALPix geoemtry object.
+
+        """
+        if lonlat is not None:
+            xref, yref = lonlat
+        elif skydir is not None:
+            xref, yref = skydir_to_lonlat(skydir, coordsys=coordsys)
+        else:
+            xref, yref = (0.0, 0.0)
+
         header = make_header(nxpix, nypix, binsz, xref, yref,
                              proj, coordsys, xrefpix, yrefpix)
         wcs = WCS(header)
@@ -127,7 +162,8 @@ class WCSGeom(MapGeom):
         for i, ax in enumerate(self.axes):
             pix += [np.arange(ax.nbin, dtype=int)]
         pix = np.meshgrid(*pix, indexing='ij')
-        return tuple([np.ravel(t) for t in pix])
+        coords = self.pix_to_coord(pix)
+        return tuple([np.ravel(t[np.isfinite(c)]) for t, c in zip(pix, coords)])
 
     def get_coords(self):
 
@@ -142,9 +178,6 @@ class WCSGeom(MapGeom):
             pix += [ax.coord_to_pix(c[i + 2])]
         return pix
 
-    def coord_to_idx(self, coords):
-        raise NotImplementedError
-
     def pix_to_coord(self, pix):
 
         coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
@@ -152,8 +185,8 @@ class WCSGeom(MapGeom):
             coords += [ax.pix_to_coord(pix[i + 2])]
         return coords
 
-    def pix_to_idx(self, coords):
-        raise NotImplementedError
+    def pix_to_idx(self, pix):
+        return pix_tuple_to_idx(pix)
 
     def contains(self, coords):
         raise NotImplementedError

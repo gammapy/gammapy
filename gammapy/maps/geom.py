@@ -14,6 +14,17 @@ __all__ = [
 ]
 
 
+def coordsys_to_frame(coordsys):
+
+    if coordsys in ['CEL', 'C']:
+        return 'icrs'
+    elif coordsys in ['GAL', 'G']:
+        return 'galactic'
+    else:
+        raise ValueError('Unrecognized coordinate system: {}',
+                         coordsys)
+
+
 def skydir_to_lonlat(skydir, coordsys=None):
 
     if coordsys in ['CEL', 'C']:
@@ -446,7 +457,19 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
 
 @six.add_metaclass(MapGeomMeta)
 class MapGeom(object):
-    """Base class for WCS and HEALPIX geometries."""
+    """Base class for WCS and HEALPix geometries."""
+
+    @abc.abstractproperty
+    def center_coord(self):
+        pass
+
+    @abc.abstractproperty
+    def center_pix(self):
+        pass
+
+    @abc.abstractproperty
+    def center_skydir(self):
+        pass
 
     @abc.abstractmethod
     def get_pixels(self):
@@ -493,7 +516,6 @@ class MapGeom(object):
         """
         pass
 
-    @abc.abstractmethod
     def coord_to_idx(self, coords):
         """Convert map coordinates to pixel indices.
 
@@ -514,7 +536,8 @@ class MapGeom(object):
             map.
 
         """
-        pass
+        pix = self.coord_to_pix(coords)
+        return self.pix_to_idx(pix)
 
     @abc.abstractmethod
     def pix_to_coord(self, pix):

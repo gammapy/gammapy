@@ -125,15 +125,8 @@ class HpxMap(MapBase):
         if skydir is None:
             skydir = SkyCoord(0.0, 0.0, unit='deg')
 
-        lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
-
-        if region is None and width is not None:
-            region = 'DISK({:f},{:f},{:f})'.format(lonlat[0],
-                                                   lonlat[1],
-                                                   width/2.)
-
         hpx = HpxGeom.create(nside, nest, coordsys=coordsys, region=region,
-                             conv=None, axes=axes)
+                             conv=None, axes=axes, skydir=skydir, width=width)
         if map_type in [None,'hpx','HpxMapND']:
             return HpxMapND(hpx)
         elif map_type in ['hpx-sparse','HpxMapSparse']:

@@ -12,6 +12,7 @@ from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
+from .geom import coordsys_to_frame, skydir_to_lonlat
 
 # TODO: What should be part of the public API?
 __all__ = [
@@ -385,6 +386,8 @@ class HpxGeom(MapGeom):
         encompassed by the geometry.
     axes : list
         Axes for non-spatial dimensions.
+    conv : str
+        Convention for FITS serialization format.
     sparse : bool
         If True defer allocation of partial- to all-sky index mapping
         arrays.  This option is only compatible with partial-sky maps
@@ -430,6 +433,10 @@ class HpxGeom(MapGeom):
 
         self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
+        self._center_skydir = self.get_ref_dir(region, self.coordsys)
+        self._center_coord = tuple(list(skydir_to_lonlat(self._center_skydir)) +
+                                   [(float(ax.nbin) - 1.0) / 2. for ax in self.axes])
+        self._center_pix = self.coord_to_pix(self._center_coord)
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
@@ -448,6 +455,10 @@ class HpxGeom(MapGeom):
             self._ipix = np.concatenate(self._ipix)
 
         elif isinstance(region, tuple):
+
+            # FIXME: How to determine reference direction for explicit
+            # geom?
+
             self._ipix = ravel_hpx_index(region, self._maxpix)
             self._region = 'explicit'
             self._indxschm = 'EXPLICIT'
@@ -583,11 +594,6 @@ class HpxGeom(MapGeom):
 
         return pix
 
-    def coord_to_idx(self, coords):
-
-        pix = self.coord_to_pix(coords)
-        return self.pix_to_idx(pix)
-
     def pix_to_coord(self, pix):
         import healpy as hp
         if self.axes:
@@ -686,6 +692,9 @@ class HpxGeom(MapGeom):
 
     @property
     def order(self):
+        """ORDER in each band (NSIDE = 2**ORDER).  Set to -1 for bands with
+        NSIDE that is not a power of 2.
+        """
         return self._order
 
     @property
@@ -713,6 +722,36 @@ class HpxGeom(MapGeom):
     def region(self):
         """Region string."""
         return self._region
+
+    @property
+    def center_coord(self):
+        """Map coordinate of the center of the geometry.
+
+        Returns
+        -------
+        coord : tuple
+        """
+        return self._center_coord
+
+    @property
+    def center_pix(self):
+        """Pixel coordinate of the center of the geometry.
+
+        Returns
+        -------
+        pix : tuple
+        """
+        return self._center_pix
+
+    @property
+    def center_skydir(self):
+        """Sky coordinate of the center of the geometry.
+
+        Returns
+        -------
+        pix : `~astropy.coordinates.SkyCoord`
+        """
+        return self._center_skydir
 
     @property
     def ipix(self):
@@ -764,8 +803,9 @@ class HpxGeom(MapGeom):
                               self.region, self.conv)
 
     @classmethod
-    def create(cls, nside, nest, coordsys='CEL', region=None,
-               axes=None, conv=HPX_Conv('FGST_CCUBE')):
+    def create(cls, nside, nest=True, coordsys='CEL', region=None,
+               axes=None, conv=HPX_Conv('FGST_CCUBE'), skydir=None, width=None,
+               lonlat=None):
         """Create an HpxGeom object.
 
         Parameters
@@ -786,7 +826,19 @@ class HpxGeom(MapGeom):
         geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
-        return cls(nside, nest, coordsys=coordsys, region=region,
+
+        if lonlat is not None:
+            pass
+        elif skydir is not None:
+            lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
+        else:
+            lonlat = (0.0, 0.0)
+
+        if region is None and width is not None:
+            region = 'DISK({:f},{:f},{:f})'.format(
+                lonlat[0], lonlat[1], width / 2.)
+
+        return cls(nside, nest=nest, coordsys=coordsys, region=region,
                    axes=axes, conv=conv)
 
     @staticmethod
@@ -1073,6 +1125,11 @@ class HpxGeom(MapGeom):
             True for 'NESTED', False = 'RING'
         region : str
             HEALPIX region string
+
+        Returns
+        -------
+        ilist : `~numpy.ndarray`
+            List of pixel indices.
         """
         import healpy as hp
         tokens = parse_hpxregion(region)
@@ -1114,9 +1171,9 @@ class HpxGeom(MapGeom):
             Coordinate system
         """
         import healpy as hp
-        frame = 'galactic' if coordsys == 'GAL' else 'icrs'
+        frame = coordsys_to_frame(coordsys)
 
-        if region is None:
+        if region is None or isinstance(region, tuple):
             return SkyCoord(0., 0., frame=frame, unit="deg")
 
         tokens = parse_hpxregion(region)
@@ -1188,7 +1245,7 @@ class HpxGeom(MapGeom):
             raise ValueError('naxis must be between 2 or the total number '
                              'of dimensions.')
 
-        w = WCS(naxis=naxis)
+        w = WCS(naxis=2)
         skydir = self.get_ref_dir(self._region, self.coordsys)
 
         if self.coordsys == 'CEL':
@@ -1230,12 +1287,9 @@ class HpxGeom(MapGeom):
 
         # FIXME: Do we need to fill header keywords for all
         # non-spatial dimensions?
-        if naxis == 3:
-            w.wcs.crpix[2] = 1
-            w.wcs.ctype[2] = 'Energy'
-            # if energies is not None:
-            #    w.wcs.crval[2] = 10 ** energies[0]
-            #    w.wcs.cdelt[2] = 10 ** energies[1] - 10 ** energies[0]
+        #if naxis == 3:
+        #    w.wcs.crpix[2] = 1
+        #    w.wcs.ctype[2] = 'Energy'
 
         w = WCS(w.to_header())
         return WCSGeom(w, tuple(npix))
