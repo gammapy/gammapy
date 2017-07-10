@@ -73,10 +73,10 @@ class SpectrumExtraction(object):
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
         """
-        log.info('Running {}'.format(self))
+        log.info(' Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
-                print("Alpha not OK")
+                log.warn(" Alpha not OK")
                 continue
             self.observations.append(self.process(obs, bkg))
         if outdir is not None:
@@ -107,7 +107,7 @@ class SpectrumExtraction(object):
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        log.info('Process observation\n {}'.format(obs))
+        log.info(' Process observation\n {}'.format(obs))
         self.make_empty_vectors(obs, bkg)
         self.extract_counts(bkg)
         self.extract_irfs(obs)
