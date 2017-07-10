@@ -38,7 +38,7 @@ FF = 1e-12
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
-SHELL_WIDTH = 0.05 # Default shell width (fraction of R_out)
+SHELL_WIDTH = 0.05  # Default shell width (fraction of R_out)
 
 
 class HGPSGaussComponent(object):
@@ -79,7 +79,6 @@ class HGPSGaussComponent(object):
         pars['y_stddev'] = d['Size'].to('deg').value
         pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
         return Gaussian2D(**pars)
-
 
     def __str__(self):
         """Pretty-print source data"""
@@ -123,7 +122,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Comma separated list of options
         """
         if info == 'all':
-            info = 'basic,map,spec,flux_points,components,associations'
+            info = 'basic,associations,map,spec,flux_points,components'
 
         ss = ''
         ops = info.split(',')
@@ -153,6 +152,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n'.format('Identified object', d['Identified_Object'])
         ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
+        return ss
+
+    def _info_associations(self):
+        ss = '\n*** Source associations info ***\n\n'
+        associations = ', '.join(self.associations)
+        ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
     def _info_map(self):
@@ -339,8 +344,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         flux_points = self.flux_points.table.copy()
 
         energy_cols = ['e_ref', 'e_min', 'e_max']
-        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp']
-        flux_points = flux_points[energy_cols + flux_cols]
+        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']
+        cols = energy_cols + flux_cols + ['is_ul']
+        flux_points = flux_points[cols]
 
         for _ in energy_cols:
             flux_points[_].format = '.3f'
@@ -367,12 +373,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             ss += '\n\n'
         return ss
 
-    def _info_associations(self):
-        ss = '\n*** Source associations info ***\n\n'
-        associations = ', '.join(self.associations)
-        ss += 'List of associated objects: {}\n'.format(associations)
-        return ss
-
     @property
     def spectral_model(self):
         """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
@@ -384,6 +384,23 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         data = self.data
         spec_type = data['Spectral_Model'].strip()
+        return self._spectral_model(spec_type)
+
+    def _spectral_model(self, spec_type):
+        """
+        Create spectral model from source parameters.
+
+        Parameters
+        ----------
+        spec_type : str
+            Spectral model type either 'PL' or 'ECPL'.
+
+        Returns
+        -------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model instance.
+        """
+        data = self.data
 
         pars, errs = {}, {}
 
@@ -409,7 +426,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
         Source spatial model.
@@ -434,7 +450,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['x_0'] = glon.value
             pars['y_0'] = glat.value
             r_out = d['Size'].to('deg').value
-            pars['width'] =  r_out * SHELL_WIDTH
+            pars['width'] = r_out * SHELL_WIDTH
             pars['r_in'] = r_out * (1 - SHELL_WIDTH)
             pars['amplitude'] = amplitude
             return Shell2D(**pars)
@@ -467,7 +483,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 return model
 
         else:
-            raise ValueError('Not a valid spatial model{}'.format(morph_type))
+            raise ValueError('Not a valid spatial model{}'.format(spatial_model))
 
     @property
     def is_pointlike(self):
@@ -489,9 +505,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['e_max'] = self.data['Flux_Points_Energy_Max'][mask]
 
         table['dnde'] = self.data['Flux_Points_Flux'][mask]
-        table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
+        table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask]
+        table['is_ul'] = self.data['Flux_Points_Is_UL'][mask]
 
         return FluxPoints(table)
 

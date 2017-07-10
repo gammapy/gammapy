@@ -49,6 +49,7 @@ def compute_flux_points_ul(quantity, quantity_errp):
     """
     return 2 * quantity_errp + quantity
 
+
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FGL catalog.
 
@@ -64,6 +65,17 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     but results are all quoted up to 100 GeV only to
     be consistent with previous catalogs.
     """
+
+    def info(self, info='all'):
+        """Print info.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
+            Comma separated list of options
+        """
+        ss = self.__str__(info=info)
+        print(ss)
 
     def __str__(self, info='all'):
         """Summary info string.
@@ -93,9 +105,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
-        ss += '{:<30s} : {}\n'.format('Source', d['Source_Name'])
-        ss += '{:<30s} : {}\n'.format('Catalog row index (zero-based)', d['catalog_row_index'])
-        ss += '{:<30s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
+        ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
+        ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
+        ss += '{:<20s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -103,13 +115,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM1', 'ASSOC_GAM2', 'ASSOC_GAM3']
         associations = get_nonentry_keys(keys)
-        ss += '{:<30s} : {}\n'.format('Associations', associations)
+        ss += '{:<20s} : {}\n'.format('Associations', associations)
 
         keys = ['0FGL_Name', '1FGL_Name', '2FGL_Name', '1FHL_Name']
         other_names = get_nonentry_keys(keys)
-        ss += '{:<30s} : {}\n'.format('Other names', other_names)
+        ss += '{:<20s} : {}\n'.format('Other names', other_names)
 
-        ss += '{:<30s} : {}\n'.format('Class', d['CLASS1'])
+        ss += '{:<20s} : {}\n'.format('Class', d['CLASS1'])
 
         tevcat_flag = d['TEVCAT_FLAG']
         if tevcat_flag == 'N':
@@ -120,7 +132,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             tevcat_message = 'Extended TeV source (diameter > 40 arcmins)'
         else:
             tevcat_message = 'N/A'
-        ss += '{:<30s} : {}\n'.format('TeVCat flag', tevcat_message)
+        ss += '{:<20s} : {}\n'.format('TeVCat flag', tevcat_message)
 
         flag_message = {
             0: 'None',
@@ -144,7 +156,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             12: 'Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see '
                 'Section 3.3 in catalog paper).'
         }
-        ss += '{:<30s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
+        ss += '{:<20s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
 
         return ss
 
@@ -152,19 +164,18 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Print position info."""
         d = self.data
         ss = '\n*** Position info ***\n\n'
-        ss += '{:<20s} : {:.3f} deg\n'.format('RA', d['RAJ2000'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('DEC', d['DEJ2000'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('GLON', d['GLON'])
-        ss += '{:<20s} : {:.3f} deg\n'.format('GLAT', d['GLAT'])
+        ss += '{:<20s} : {:.3f}\n'.format('RA', d['RAJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('DEC', d['DEJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLON', d['GLON'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLAT', d['GLAT'])
 
         ss += '\n'
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
-        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
-
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
-        ss += '{:<20s} : {:.4f} deg\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
-        ss += '{:<20s} : {:.2f} deg\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (68%)', d['Conf_68_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (68%)', d['Conf_68_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (68%)', d['Conf_68_PosAng'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
         ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
 
         return ss
@@ -175,22 +186,22 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss = '\n*** Spectral info ***\n\n'
 
         ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
-
         fmt = '{:<45s} : {:.3f}\n'
         args = ('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
         ss += fmt.format(*args)
-
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
         spec_type = d['SpectrumType'].strip()
         if spec_type == 'LogParabola':
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         if spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
-            ss += '{:<45s} : {:.0f} +- {:.0f} MeV\n'.format('Cutoff energy', d['Cutoff'], d['Unc_Cutoff'])
+            fmt = '{:<45s} : {:.0f} +- {:.0f} {}\n'
+            args = ('Cutoff energy', d['Cutoff'].value, d['Unc_Cutoff'].value, d['Cutoff'].unit)
+            ss += fmt.format(*args)
         if spec_type == 'PLSuperExpCutoff':
             ss += '{:<45s} : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
 
-        ss += '{:<45s} : {:.0f} MeV\n'.format('Pivot energy', d['Pivot_Energy'])
+        ss += '{:<45s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
 
         ss += '{:<45s} : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
 
@@ -198,58 +209,30 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
         ss += fmt.format(*args)
 
-        fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 MeV^-1 s^-1\n'
-        args = ('Flux Density at pivot energy', d['Flux_Density'], d['Unc_Flux_Density'])
+        unit = 'cm-2 MeV-1 s-1'
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Flux Density at pivot energy', d['Flux_Density'].value, d['Unc_Flux_Density'].value, unit)
         ss += fmt.format(*args)
 
-        fmt = '{:<45s} : {:.3} +- {:.3} cm^-2 s^-1\n'
-        args = ('Integral flux (1 - 100 GeV)', d['Flux1000'], d['Unc_Flux1000'])
+        unit = 'cm-2 s-1'
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Integral flux (1 - 100 GeV)', d['Flux1000'].value, d['Unc_Flux1000'].value, unit)
         ss += fmt.format(*args)
 
-        fmt = '{:<45s} : {:.3} +- {:.3} erg cm^-2 s^-1\n'
-        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'], d['Unc_Energy_Flux100'])
+        unit = 'erg cm-2 s-1'
+        fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
+        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'].value, d['Unc_Energy_Flux100'].value, unit)
         ss += fmt.format(*args)
 
         return ss
 
     def _info_spectral_points(self):
+        """Print spectral points."""
         d = self.data
         ss = '\n*** Spectral points ***\n\n'
-        ss += '{:<15} {:<35} {:<25} {:<20}\n'.format('Energy range', 'Integral flux', 'Energy flux',
-                                                     'Sqrt Test Statistic')
-        flux_table = {
-            '100-300 MeV': [
-                '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux100_300'], d['Unc_Flux100_300'][1]),
-                '{:.3} erg cm^-2 s^-1'.format(d['nuFnu100_300']),
-                '{:.1f}'.format(d['Sqrt_TS100_300'])
-            ],
-            '0.3-1 GeV': [
-                '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux300_1000'], d['Unc_Flux300_1000'][1]),
-                '{:.3} erg cm^-2 s^-1'.format(d['nuFnu300_1000']),
-                '{:.1f}'.format(d['Sqrt_TS300_1000'])
-            ],
-            '1-3 GeV': [
-                '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux1000_3000'], d['Unc_Flux1000_3000'][1]),
-                '{:.3} erg cm^-2 s^-1'.format(d['nuFnu1000_3000']),
-                '{:.1f}'.format(d['Sqrt_TS1000_3000'])
-            ],
-            '3-10 GeV': [
-                '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux3000_10000'], d['Unc_Flux3000_10000'][1]),
-                '{:.3} erg cm^-2 s^-1'.format(d['nuFnu3000_10000']),
-                '{:.1f}'.format(d['Sqrt_TS3000_10000'])
-            ],
-            '10-100 GeV': [
-                '{:.3} +- {:.3} cm^-2 s^-1'.format(d['Flux10000_100000'], d['Unc_Flux10000_100000'][1]),
-                '{:.3} erg cm^-2 s^-1'.format(d['nuFnu10000_100000']),
-                '{:.1f}'.format(d['Sqrt_TS10000_100000'])
-            ]
-        }
-        for k, v in flux_table.items():
-            flux, dist, sqrt = v
-            ss += '{:<15} {:<35} {:<25} {:<20}\n'.format(k, flux, dist, sqrt)
-        ss += '\n'
+        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
 
-        return ss
+        return ss + '\n'
 
     def _info_lightcurve(self):
         """Print lightcurve info."""
@@ -257,7 +240,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss = '\n*** Lightcurve info ***\n\n'
         ss += 'Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n'
 
-        ss += '{:<40s} : {:.3f}\n'.format('Variability index', d['Variability_Index'])
+        ss += '{:<15s} : {:.3f}\n'.format('Variability index', d['Variability_Index'])
 
         if d['Signif_Peak'] == np.nan:
             ss += '{:<40s} : {:.3f}\n'.format('Significance peak (100 MeV - 100 GeV)', d['Signif_Peak'])
@@ -319,6 +302,19 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return model
 
     @property
+    def _flux_points_table_formatted(self):
+        """Returns formatted version of self.flux_points.table"""
+        table = self.flux_points.table.copy()
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
+                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
+        table['sqrt_TS'].format = '.1f'
+        table['e_ref'].format = '.1f'
+        for _ in flux_cols:
+            table[_].format = '.3'
+
+        return table
+
+    @property
     def flux_points(self):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
@@ -351,6 +347,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['eflux_ul'] = np.nan * nuFnu.unit
         eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
         table['eflux_ul'][is_ul] = eflux_ul[is_ul]
+
+        # Square root of test statistic
+        table['sqrt_TS'] = [self.data['Sqrt_TS' + _] for _ in self._ebounds_suffix]
 
         table['dnde'] = (nuFnu * e_ref ** -2).to('TeV-1 cm-2 s-1')
         return FluxPoints(table)
@@ -556,19 +555,172 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
-    def __str__(self):
-        """Print summary info."""
+    def info(self, info='all'):
+        """Print info.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral'}
+            Comma separated list of options
+        """
+        ss = self.__str__(info=info)
+        print(ss)
+
+    def __str__(self, info='all'):
+        """Summary info string.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'position', 'spectral'}
+            Comma separated list of options
+        """
+        if info == 'all':
+            info = 'basic,position,spectral,other'
+
+        ss = ''
+        ops = info.split(',')
+        if 'basic' in ops:
+            ss += self._info_basic()
+        if 'position' in ops:
+            ss += self._info_position()
+        if 'spectral' in ops:
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_points()
+        if 'other' in ops:
+            ss += self._info_other()
+
+        return ss
+
+    def _info_basic(self):
+        """Print basic info."""
         d = self.data
+        ss = '\n*** Basic info ***\n\n'
+        ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
+        ss += '{:<20s} : {}\n'.format('Source name', d['Source_Name'])
+        ss += '{:<20s} : {}\n'.format('Extended name', d['Extended_Source_Name'])
 
-        ss = 'Source: {}\n'.format(d['Source_Name'])
-        ss += '\n'
+        def get_nonentry_keys(keys):
+            vals = [d[_].strip() for _ in keys]
+            return ', '.join([_ for _ in vals if _ != ''])
 
-        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
-        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
-        ss += 'GLON        : {}\n'.format(d['GLON'])
-        ss += 'GLAT        : {}\n'.format(d['GLAT'])
+        keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM']
+        associations = get_nonentry_keys(keys)
+        ss += '{:<16s} : {}\n'.format('Associations', associations)
+        ss += '{:<16s} : {:.3f}\n'.format('ASSOC_PROB_BAY', d['ASSOC_PROB_BAY'])
+        ss += '{:<16s} : {:.3f}\n'.format('ASSOC_PROB_LR', d['ASSOC_PROB_LR'])
+
+        ss += '{:<16s} : {}\n'.format('Class', d['CLASS'])
+
+        tevcat_flag = d['TEVCAT_FLAG']
+        if tevcat_flag == 'N':
+            tevcat_message = 'No TeV association'
+        elif tevcat_flag == 'P':
+            tevcat_message = 'Small TeV source'
+        elif tevcat_flag == 'E':
+            tevcat_message = 'Extended TeV source (diameter > 40 arcmins)'
+        else:
+            tevcat_message = 'N/A'
+        ss += '{:<16s} : {}\n'.format('TeVCat flag', tevcat_message)
+
+        fmt = '\n{:<32s} : {:.3f}\n'
+        args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
+        ss += fmt.format(*args)
+        ss += '{:<32s} : {:.1f}\n'.format('Npred', d['Npred'])
+
+        return ss
+
+    def _info_position(self):
+        """Print position info."""
+        d = self.data
+        ss = '\n*** Position info ***\n\n'
+        ss += '{:<20s} : {:.3f}\n'.format('RA', d['RAJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('DEC', d['DEJ2000'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLON', d['GLON'])
+        ss += '{:<20s} : {:.3f}\n'.format('GLAT', d['GLAT'])
+
+        # TODO: All sources are non-elliptical; just give one number for radius?
         ss += '\n'
-        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semimajor (95%)', d['Conf_95_SemiMajor'])
+        ss += '{:<20s} : {:.4f}\n'.format('Semiminor (95%)', d['Conf_95_SemiMinor'])
+        ss += '{:<20s} : {:.2f}\n'.format('Position angle (95%)', d['Conf_95_PosAng'])
+        ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_num'])
+
+        return ss
+
+    def _info_spectral_fit(self):
+        """Print model data."""
+        d = self.data
+        ss = '\n*** Model info ***\n\n'
+
+        if not self.is_pointlike:
+            e = self.data_extended
+            ss += 'Extended source information:\n'
+            ss += '{:<16s} : {}\n'.format('Model form', e['Model_Form'])
+            ss += '{:<16s} : {:.4f}\n'.format('Model semimajor', e['Model_SemiMajor'])
+            ss += '{:<16s} : {:.4f}\n'.format('Model semiminor', e['Model_SemiMinor'])
+            ss += '{:<16s} : {:.4f}\n'.format('Position angle', e['Model_PosAng'])
+            ss += '{:<16s} : {}\n'.format('Spatial function', e['Spatial_Function'])
+            ss += '{:<16s} : {}\n\n'.format('Spatial filename', e['Spatial_Filename'])
+
+        ss += '{:<32s} : {}\n'.format('Spectrum type', d['SpectrumType'])
+        ss += '{:<32s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
+        fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
+        args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+        ss += fmt.format(*args)
+
+        spec_type = d['SpectrumType'].strip()
+        if spec_type == 'LogParabola':
+            # ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('alpha', d['Spectral_Index'], d['Unc_Spectral_Index'])
+            ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('beta', d['beta'], d['Unc_beta'])
+
+        ss += '{:<32s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
+
+        fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
+        args = ('Power Law index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index'], d['Unc_PowerLaw_Index'])
+        ss += fmt.format(*args)
+
+        unit = 'cm-2 GeV-1 s-1'
+        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
+        args = ('Flux Density at pivot energy', d['Flux_Density'].value, d['Unc_Flux_Density'].value, unit)
+        ss += fmt.format(*args)
+
+        unit = 'cm-2 s-1'
+        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
+        args = ('Integral flux (10 GeV - 1 TeV)', d['Flux'].value, d['Unc_Flux'].value, unit)
+        ss += fmt.format(*args)
+
+        unit = 'erg cm-2 s-1'
+        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
+        args = ('Energy flux (10 GeV - TeV)', d['Energy_Flux'].value, d['Unc_Energy_Flux'].value, unit)
+        ss += fmt.format(*args)
+
+        return ss
+
+    def _info_spectral_points(self):
+        """Print spectral points."""
+        ss = '\n*** Spectral points ***\n\n'
+        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
+
+        return ss + '\n'
+
+    def _info_other(self):
+        """Print other info."""
+        d = self.data
+        ss = '\n*** Other info ***\n\n'
+        ss += '{:<16s} : {:.3f} {}\n'.format('HEP Energy', d['HEP_Energy'].value, d['HEP_Energy'].unit)
+        ss += '{:<16s} : {:.3f}\n'.format('HEP Probability', d['HEP_Prob'])
+
+        # This is the number of Bayesian blocks for most sources,
+        # except -1 means "could not be tested"
+        msg = d['Variability_BayesBlocks']
+        if msg == 1:
+            msg = '1 (not variable)'
+        elif msg == -1:
+            msg = 'Could not be tested'
+        ss += '{:<16s} : {}\n'.format('Bayesian Blocks', msg)
+
+        ss += '{:<16s} : {:.3f}\n'.format('Redshift', d['Redshift'])
+        ss += '{:<16s} : {:.3} {}\n'.format('NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit)
 
         return ss
 
@@ -597,6 +749,19 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
+
+    @property
+    def _flux_points_table_formatted(self):
+        """Returns formatted version of self.flux_points.table"""
+        table = self.flux_points.table.copy()
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
+                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
+        table['sqrt_ts'].format = '.1f'
+        table['e_ref'].format = '.1f'
+        for _ in flux_cols:
+            table[_].format = '.3'
+
+        return table
 
     @property
     def flux_points(self):
@@ -632,9 +797,13 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
         table['eflux_ul'][is_ul] = eflux_ul[is_ul]
 
+        # Square root of test statistic
+        table['sqrt_ts'] = self.data['Sqrt_TS_Band']
+
         # TODO: remove this computation here.
         # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
         table['dnde'] = (e2dnde * e_ref ** -2).to('cm-2 s-1 TeV-1')
+
         return FluxPoints(table)
 
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):

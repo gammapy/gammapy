@@ -696,7 +696,7 @@ class SpectrumObservationStacker(object):
         stacked_quality = np.ones(energy.nbins)
 
         for spec in counts_spectrum_list:
-            stacked_data += spec.counts_in_safe_range
+            stacked_data += spec.counts_in_safe_range.value
             temp = np.logical_and(stacked_quality,
                                   spec.quality)
             stacked_quality = np.array(temp, dtype=int)
@@ -718,7 +718,7 @@ class SpectrumObservationStacker(object):
             bkscal_on_data = obs.on_vector._backscal_array.copy()
 
             bkscal_off_data = obs.off_vector._backscal_array.copy()
-            bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range
+            bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
 
         stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
 
