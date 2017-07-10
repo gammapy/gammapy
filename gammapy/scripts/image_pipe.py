@@ -15,7 +15,6 @@ __all__ = ['SingleObsImageMaker', 'StackedObsImageMaker']
 
 log = logging.getLogger(__name__)
 
-
 class SingleObsImageMaker(object):
     """Compute images for one observation.
 

@@ -26,3 +26,5 @@ from .cta_irf import *
 from .cta_utils import *
 
 from .spectrum_pipe import *
+
+from .cta_sensitivity import *
