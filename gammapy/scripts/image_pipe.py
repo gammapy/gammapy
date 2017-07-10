@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
@@ -12,6 +13,7 @@ from ..image import SkyImage, SkyImageList
 
 __all__ = ['SingleObsImageMaker', 'StackedObsImageMaker']
 
+log = logging.getLogger(__name__)
 
 class SingleObsImageMaker(object):
     """Compute images for one observation.
@@ -77,6 +79,9 @@ class SingleObsImageMaker(object):
 
         if len(self.events.table) > self.ncounts_min:
             self.images['counts'].fill_events(self.events)
+        else:
+            log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
+                     format(len(self.events), self.ncounts_min))
 
     def bkg_image(self, bkg_norm=True):
         """
@@ -87,7 +92,11 @@ class SingleObsImageMaker(object):
         bkg_norm : bool
             If true, apply the scaling factor from the number of counts
             outside the exclusion region to the bkg image
-        """
+ 
+        Returns
+        -------
+        success : bool
+       """
         bkg_image = SkyImage.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = self.obs_center.galactic
@@ -97,11 +106,15 @@ class SingleObsImageMaker(object):
         bkg_image.data = bkg_image.data.value
         if bkg_norm:
             scale, counts = self.background_norm_factor(self.images["counts"], bkg_image)
+            if np.isnan(scale):
+                # print(" *** IS NAN *** {0} {1}".format(scale,counts))
+                return False
             bkg_image.data = scale * bkg_image.data
             if self.save_bkg_scale:
                 self.table_bkg_scale.add_row([self.obs_id, scale, counts])
 
         self.images["bkg"] = bkg_image
+        return True
 
     def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
         """Compute the 1D exposure table for one observation for an offset table.
@@ -202,6 +215,8 @@ class SingleObsImageMaker(object):
         counts_sum = np.sum(counts.data * self.images['exclusion'].data)
         bkg_sum = np.sum(bkg.data * self.images['exclusion'].data)
         scale = counts_sum / bkg_sum
+        if counts_sum>0. and np.isnan(scale):
+            print("counts: {} BKG: {}".format(counts_sum, bkg_sum))
 
         return scale, counts_sum
 
@@ -221,12 +236,22 @@ class SingleObsImageMaker(object):
         image.data = significance(counts.data, bkg.data)
         self.images["significance"] = image
 
-    def excess_image(self):
-        """Compute excess between counts and bkg image."""
+    def excess_image(self, radius=0):
+        """Compute excess between counts and bkg image.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+        """
         total_excess = SkyImage.empty_like(self.empty_image)
         total_excess.data = self.images["counts"].data - self.images["bkg"].data
-        self.images["excess"] = total_excess
-
+        if radius>0 :
+            disk = Tophat2DKernel(radius)
+            disk.normalize('peak')
+            self.images["excess"] = total_excess.convolve(disk.array)
+        else:
+            self.images["excess"] = total_excess
 
 class StackedObsImageMaker(object):
     """Compute stacked images for many observations.
@@ -259,6 +284,8 @@ class StackedObsImageMaker(object):
     save_bkg_scale: bool
         True if you want to save the normalisation of the bkg for each run in a `Table` table_bkg_norm with two columns:
          "OBS_ID" and "bkg_scale"
+    used_obs_id : array of int
+        List of Obs Id used to compute the background and thus all the maps
     """
 
     def __init__(self, empty_image=None, energy_band=None, offset_band=None,
@@ -283,9 +310,10 @@ class StackedObsImageMaker(object):
         self.save_bkg_scale = save_bkg_scale
         if self.save_bkg_scale:
             self.table_bkg_scale = Table(names=["OBS_ID", "bkg_scale", "N_counts"])
-
+        self.used_obs_id = []
+			
     def make_images(self, make_background_image=False, bkg_norm=True,
-                    spectral_index=2.3, for_integral_flux=False, radius=10):
+                    spectral_index=2.3, for_integral_flux=False, radius=10, nmax=-1):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -300,6 +328,8 @@ class StackedObsImageMaker(object):
             True if you want that the total excess / exposure gives the integrated flux
         radius : float
             Disk radius in pixels for the significance image
+        nmax : int
+            Number of runs to process
         """
         total_counts = SkyImage.empty_like(self.empty_image, name='counts')
 
@@ -307,7 +337,10 @@ class StackedObsImageMaker(object):
             total_bkg = SkyImage.empty_like(self.empty_image, name='bkg')
             total_exposure = SkyImage.empty_like(self.empty_image, name='exposure')
 
+        nruns = 0
         for obs_id in self.obs_table['OBS_ID']:
+            if nmax > 0 and nruns > nmax:
+                break
             obs = self.data_store.obs(obs_id)
             obs_image = SingleObsImageMaker(obs, self.empty_image, self.energy_band, self.offset_band,
                                             self.exclusion_mask, self.ncounts_min)
@@ -315,15 +348,21 @@ class StackedObsImageMaker(object):
                 continue
             else:
                 obs_image.counts_image()
-                total_counts.data += obs_image.images['counts'].data
                 if make_background_image:
-                    obs_image.bkg_image(bkg_norm)
+                    success = obs_image.bkg_image(bkg_norm)
+                    if success is False:
+                        print("WARNING: fail to compute a Bkg model for the ObsId #{0}".format(obs_id))
+                        continue
                     if self.save_bkg_scale:
                         self.table_bkg_scale.add_row(obs_image.table_bkg_scale[0])
                     obs_image.exposure_image(spectral_index, for_integral_flux)
                     total_bkg.data += obs_image.images['bkg'].data
                     total_exposure.data += obs_image.images['exposure'].data
+                total_counts.data += obs_image.images['counts'].data
+                self.used_obs_id.append(obs_id)
+                nruns += 1
 
+        print("Number of selected runs: {}".format(nruns-1))
         self.images['counts'] = total_counts
 
         if make_background_image:
@@ -350,8 +389,19 @@ class StackedObsImageMaker(object):
 
         self.images['significance'] = image
 
-    def excess_image(self):
-        """Compute excess between counts and bkg image."""
+    def excess_image(self, radius=0):
+        """Compute excess between counts and bkg image.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+        """
         total_excess = SkyImage.empty_like(self.empty_image, name='excess')
         total_excess.data = self.images['counts'].data - self.images['bkg'].data
-        self.images['excess'] = total_excess
+        if radius>0 :
+            disk = Tophat2DKernel(radius)
+            disk.normalize('peak')
+            self.images["excess"] = total_excess.convolve(disk.array)
+        else:
+            self.images["excess"] = total_excess
