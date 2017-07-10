@@ -73,10 +73,10 @@ class SpectrumExtraction(object):
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
         """
-        log.info(' Running {}'.format(self))
+        log.info('Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
-                log.warn(" Alpha not OK")
+                log.warning("\033[1;33m Alpha not OK for Obs #{}\033[0m".format(obs.obs_id))
                 continue
             self.observations.append(self.process(obs, bkg))
         if outdir is not None:
@@ -86,7 +86,7 @@ class SpectrumExtraction(object):
         """Check if observation fulfills alpha criterion"""
         condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
         if condition:
-            msg = 'Skipping because {} / {} > {}'
+            msg = ' Skipping because {} / {} > {}'
             log.info(msg.format(bkg.a_on, bkg.a_off, self.max_alpha))
             return False
         else:
@@ -107,7 +107,8 @@ class SpectrumExtraction(object):
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        log.info(' Process observation\n {}'.format(obs))
+        print("\n")
+        log.info(' Process observation for Obs #{}'.format(obs.obs_id))
         self.make_empty_vectors(obs, bkg)
         self.extract_counts(bkg)
         self.extract_irfs(obs)
@@ -142,11 +143,11 @@ class SpectrumExtraction(object):
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        log.info('Update observation meta info')
+        log.info(' Update observation meta info')
         # Copy over existing meta information
         meta = OrderedDict(obs._obs_info)
         offset = obs.pointing_radec.separation(bkg.on_region.center)
-        log.info('Offset : {}\n'.format(offset))
+        log.info(' Offset : {:.2f}'.format(offset))
         meta['OFFSET'] = offset.deg
 
         # LIVETIME is called EXPOSURE in the OGIP standard
@@ -170,7 +171,7 @@ class SpectrumExtraction(object):
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        log.info('Fill events')
+        # log.info('Fill events')
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
@@ -182,7 +183,7 @@ class SpectrumExtraction(object):
         obs : `~gammapy.data.DataStoreObservation`
             Observation
         """
-        log.info('Extract IRFs')
+        # log.info('Extract IRFs')
         offset = self._on_vector.offset
         self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
         self._edisp = obs.edisp.to_energy_dispersion(
@@ -203,7 +204,7 @@ class SpectrumExtraction(object):
             raise TypeError("Incorrect region type for containment correction."
                             " Should be CircleSkyRegion.")
 
-        log.info('Apply containment correction')
+        log.info(' Apply containment correction')
         # First need psf
         angles = np.linspace(0., 1.5, 150) * u.deg
         offset = self._on_vector.offset
@@ -277,7 +278,7 @@ class SpectrumExtraction(object):
             Write Sherpa compliant files, default: False
         """
         outdir = make_path(outdir)
-        log.info("Writing OGIP files to {}".format(outdir / ogipdir))
+        log.info(' Writing OGIP files to {}'.format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
         self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
 
