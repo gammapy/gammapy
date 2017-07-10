@@ -27,7 +27,7 @@ class HpxMapSparse(HpxMap):
 
     """
 
-    def __init__(self, hpx, data=None):
+    def __init__(self, hpx, data=None, dtype='float32'):
 
         from scipy.sparse import csr_matrix
 
@@ -35,7 +35,7 @@ class HpxMapSparse(HpxMap):
 
         # TODO : accept sparse matrix for data argument
         if data is None:
-            data = csr_matrix(shape)
+            data = csr_matrix(shape, dtype=dtype)
         else:
             data = csr_matrix(np.ravel(data).reshape((1, -1)))
 

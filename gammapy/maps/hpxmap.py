@@ -81,56 +81,47 @@ class HpxMap(MapBase):
         return self.geom
 
     @classmethod
-    def create(cls, nside=None, nest=True, map_type=None, coordsys='CEL',
-               data=None, skydir=None, binsz=None, width=None, dtype='float32',
+    def create(cls, nside=None, binsz=None, nest=True, map_type=None, coordsys='CEL',
+               data=None, skydir=None, width=None, dtype='float32',
                region=None, axes=None):
-        """Factory method to create an empty map.
+        """Factory method to create an empty HEALPix map.
 
         Parameters
         ----------
-        nest : bool
-
-        coordsys : str
-
-        map_type : str
-            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
-            `HpxMapSparse`/`hpx-sparse`.
-
         nside : int or `~numpy.ndarray`
             HEALPix NSIDE parameter.  This parameter sets the size of
             the spatial pixels in the map.
-
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
             chosen that correponds to a pixel size closest to this
             value.  This option is superseded by nside.
-
+        nest : bool
+            True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
+        coordsys : {'CEL', 'GAL'}, optional
+            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        map_type : str
+            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
+            `HpxMapSparse`/`hpx-sparse`.
         width : float
-            Diameter of the HEALPix geometry.  If None then an all-sky
+            Diameter of the map in degrees.  If None then an all-sky
             geometry will be created.
-
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
-
         """
         from .hpxcube import HpxMapND
         from .hpxsparse import HpxMapSparse
 
-        if nside is None and binsz is None:
-            raise ValueError('Either nside or binsz must be defined.')
-
-        if nside is None and binsz is not None:
-            nside = get_nside_from_pixel_size(binsz)
-
-        if skydir is None:
-            skydir = SkyCoord(0.0, 0.0, unit='deg')
-
-        hpx = HpxGeom.create(nside, nest, coordsys=coordsys, region=region,
+        hpx = HpxGeom.create(nside=nside, binsz=binsz,
+                             nest=nest, coordsys=coordsys, region=region,
                              conv=None, axes=axes, skydir=skydir, width=width)
         if map_type in [None,'hpx','HpxMapND']:
-            return HpxMapND(hpx)
+            return HpxMapND(hpx, dtype=dtype)
         elif map_type in ['hpx-sparse','HpxMapSparse']:
-            return HpxMapSparse(hpx)
+            return HpxMapSparse(hpx, dtype=dtype)
         else:
             raise ValueError('Unregnized Map type: {}'.format(map_type))
 

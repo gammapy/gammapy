@@ -33,7 +33,7 @@ class HpxMapND(HpxMap):
         If none then an empty array will be allocated.
     """
 
-    def __init__(self, hpx, data=None):
+    def __init__(self, hpx, data=None, dtype='float32'):
 
         npix = np.unique(hpx.npix)
         if len(npix) > 1:
@@ -43,7 +43,7 @@ class HpxMapND(HpxMap):
 
         shape = tuple(list(hpx._shape[::-1]) + [npix[0]])
         if data is None:
-            data = np.zeros(shape)
+            data = np.zeros(shape, dtype=dtype)
         elif data.shape != shape:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))

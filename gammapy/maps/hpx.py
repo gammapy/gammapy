@@ -803,19 +803,27 @@ class HpxGeom(MapGeom):
                               self.region, self.conv)
 
     @classmethod
-    def create(cls, nside, nest=True, coordsys='CEL', region=None,
-               axes=None, conv=HPX_Conv('FGST_CCUBE'), skydir=None, width=None,
-               lonlat=None):
+    def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
+               axes=None, conv=HPX_Conv('FGST_CCUBE'), skydir=None, width=None):
         """Create an HpxGeom object.
 
         Parameters
         ----------
-        nside : `~numpy.ndarray`
-            HEALPIX nside parameter
+        nside : int or `~numpy.ndarray`
+            HEALPix NSIDE parameter.  This parameter sets the size of
+            the spatial pixels in the map.
+        binsz : float or `~numpy.ndarray`
+            Approximate pixel size in degrees.  An NSIDE will be
+            chosen that correponds to a pixel size closest to this
+            value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme
-        coordsys : str
-            "CEL" or "GAL"
+        coordsys : {'CEL', 'GAL'}, optional
+            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
         region  : str
             Allows for partial-sky mappings
         axes : list
@@ -827,16 +835,25 @@ class HpxGeom(MapGeom):
             A HEALPix geoemtry object.
         """
 
-        if lonlat is not None:
+        if nside is None and binsz is None:
+            raise ValueError('Either nside or binsz must be defined.')
+
+        if nside is None and binsz is not None:
+            nside = get_nside_from_pixel_size(binsz)
+
+        if skydir is None:
+            lonlat = (0.0, 0.0)
+        elif isinstance(skydir, tuple):
             pass
-        elif skydir is not None:
+        elif isinstance(skydir, SkyCoord):
             lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
         else:
-            lonlat = (0.0, 0.0)
+            raise ValueError(
+                'Invalid type for skydir: {}'.format(type(skydir)))
 
         if region is None and width is not None:
-            region = 'DISK({:f},{:f},{:f})'.format(
-                lonlat[0], lonlat[1], width / 2.)
+            region = 'DISK({:f},{:f},{:f})'.format(lonlat[0], lonlat[1],
+                                                   width / 2.)
 
         return cls(nside, nest=nest, coordsys=coordsys, region=region,
                    axes=axes, conv=conv)
@@ -1236,63 +1253,24 @@ class HpxGeom(MapGeom):
         wcs : `~gammapy.maps.wcs.WCSGeom`
             WCS geometry
         """
-        if drop_axes:
-            naxis = 2
-        else:
-            naxis = self.ndim
 
-        if naxis < 2 or naxis > self.ndim:
-            raise ValueError('naxis must be between 2 or the total number '
-                             'of dimensions.')
-
-        w = WCS(naxis=2)
         skydir = self.get_ref_dir(self._region, self.coordsys)
+        binsz = np.min(get_pixel_size_from_nside(self.nside)) / oversample
+        width = (2.0 * self.get_region_size(self._region) +
+                 np.max(get_pixel_size_from_nside(self.nside)))
 
-        if self.coordsys == 'CEL':
-            w.wcs.ctype[0] = 'RA---{}'.format(proj)
-            w.wcs.ctype[1] = 'DEC--{}'.format(proj)
-            w.wcs.crval[0] = skydir.ra.deg
-            w.wcs.crval[1] = skydir.dec.deg
-        elif self.coordsys == 'GAL':
-            w.wcs.ctype[0] = 'GLON-{}'.format(proj)
-            w.wcs.ctype[1] = 'GLAT-{}'.format(proj)
-            w.wcs.crval[0] = skydir.galactic.l.deg
-            w.wcs.crval[1] = skydir.galactic.b.deg
+        if width > 45.:
+            width = (180., 90.0)
+
+        if drop_axes:
+            axes = None
         else:
-            raise ValueError('Unrecognized coordinate system.')
+            axes = copy.deepcopy(self.axes)
 
-        pixsize = np.min(get_pixel_size_from_nside(self.nside))
-        roisize = self.get_region_size(self._region)
-        allsky = False
-        if roisize > 45:
-            roisize = 90
-            allsky = True
+        geom = WCSGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
+                              axes=axes, skydir=skydir)
 
-        npixels = int(2. * roisize / pixsize) * oversample
-        crpix = npixels / 2.
-
-        if allsky:
-            w.wcs.crpix[0] = 2 * crpix
-            npix = [2 * npixels, npixels]
-        else:
-            w.wcs.crpix[0] = crpix
-            npix = [npixels, npixels]
-
-        for ax in self.axes[:max(naxis - 2, 0)]:
-            npix += [ax.nbin]
-
-        w.wcs.crpix[1] = crpix
-        w.wcs.cdelt[0] = -pixsize / oversample
-        w.wcs.cdelt[1] = pixsize / oversample
-
-        # FIXME: Do we need to fill header keywords for all
-        # non-spatial dimensions?
-        #if naxis == 3:
-        #    w.wcs.crpix[2] = 1
-        #    w.wcs.ctype[2] = 'Energy'
-
-        w = WCS(w.to_header())
-        return WCSGeom(w, tuple(npix))
+        return geom
 
     def get_pixels(self):
         """Get pixel indices for all pixels in this geometry.
