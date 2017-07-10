@@ -13,8 +13,8 @@ __all__ = [
 
 
 class WcsMap(MapBase):
-    def __init__(self, wcs, data=None):
-        MapBase.__init__(self, wcs, data)
+    def __init__(self, geom, data=None):
+        MapBase.__init__(self, geom, data)
 
     @classmethod
     def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
@@ -56,6 +56,8 @@ class WcsMap(MapBase):
         refpix : tuple
             Reference pixel of the projection.  If None then this will
             be chosen to be center of the map.
+        dtype : str, optional
+            Data type, default is float32
 
         Returns
         -------
@@ -66,12 +68,12 @@ class WcsMap(MapBase):
         from .wcsnd import WcsMapND
         #from .wcssparse import WcsMapSparse
 
-        wcs = WCSGeom.create(npix=npix, binsz=binsz, width=width,
-                             proj=proj, skydir=skydir,
-                             coordsys=coordsys, refpix=refpix)
+        geom = WCSGeom.create(npix=npix, binsz=binsz, width=width,
+                              proj=proj, skydir=skydir,
+                              coordsys=coordsys, refpix=refpix, axes=axes)
 
         if map_type in [None, 'wcs', 'WcsMapND']:
-            return WcsMapND(wcs)
+            return WcsMapND(geom, dtype=dtype)
         elif map_type in ['wcs-sparse', 'WcsMapSparse']:
             raise NotImplementedError
         else:

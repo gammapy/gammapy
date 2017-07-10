@@ -206,7 +206,7 @@ class WCSGeom(MapGeom):
         Returns
         -------
         geom : `~WCSGeom`
-            A WCS geoemtry object.
+            A WCS geometry object.
 
         Examples
         --------
@@ -223,7 +223,7 @@ class WCSGeom(MapGeom):
             xref, yref = (0.0, 0.0)
         elif isinstance(skydir, tuple):
             xref, yref = skydir
-        elif skydir is not None:
+        elif isinstance(skydir, SkyCoord):
             xref, yref = skydir_to_lonlat(skydir, coordsys=coordsys)
         else:
             raise ValueError(

@@ -13,8 +13,11 @@ __all__ = [
 
 
 class WcsMapND(WcsMap):
-    """Representation of a N+2D map using WCS with two spatial
-    dimensions and N non-spatial dimensions.
+    """Representation of a N+2D map using WCS with two spatial dimensions
+    and N non-spatial dimensions.  This class uses an ND numpy array
+    to store map values.  For maps with non-spatial dimensions and
+    variable pixel size it will allocate an array with dimensions
+    commensurate with the largest image plane.
 
     Parameters
     ----------
@@ -22,33 +25,26 @@ class WcsMapND(WcsMap):
         WCS geometry object.
     data : `~numpy.ndarray`
         Data array. If none then an empty array will be allocated.
+    dtype : str, optional
+        Data type, default is float32
 
     """
 
-    def __init__(self, wcs, data=None):
+    def __init__(self, wcs, data=None, dtype='float32'):
 
-        # FIXME: Update logic for creating array shape once
-        # sparse-support is added to WCSGeom
+        # TODO: Figure out how to mask pixels for integer data types
 
-        shape = tuple(list(wcs.npix) + [ax.nbin for ax in wcs.axes])
+        shape = tuple([np.max(wcs.npix[0]), np.max(wcs.npix[1])] +
+                      [ax.nbin for ax in wcs.axes])
         if data is None:
-            data = np.zeros(shape).T
+            data = np.nan * np.ones(shape, dtype=dtype).T
+            pix = wcs.get_pixels()
+            data[pix[::-1]] = 0.0
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
         WcsMap.__init__(self, wcs, data)
-
-    @classmethod
-    def from_skydir(cls, skydir, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
-        wcs = WCSGeom.from_skydir(skydir, cdelt, npix, coordsys, projection,
-                                  axes)
-        return cls(wcs)
-
-    @classmethod
-    def from_lonlat(cls, lon, lat, cdelt, npix, coordsys='CEL', projection='AIT', axes=None):
-        skydir = SkyCoord(lon, lat, unit='deg')
-        return cls.from_skydir(skydir, cdelt, npix, coordsys, projection, axes)
 
     def get_by_pix(self, pix, interp=None):
         if interp is None:
