@@ -59,13 +59,32 @@ representation of the data.
    from astropy.coordinates import SkyCoord
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
 
-   # Create a WCS Map with 0.1 deg pixel size
-   m = MapBase.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0)
+   # Create a WCS Map
+   m_wcs = MapBase.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0)
 
    # Create a HPX Map
-   m = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0)
+   m_hpx = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0)
    
+Higher dimensional map objects (cubes and hypercubes) can be
+constructed by passing a list of `~MapAxis` objects for non-spatial
+dimensions with the ``axes`` parameter:
 
+.. code::
+
+   from gammapy.maps import MapBase, MapAxis
+   from astropy.coordinates import SkyCoord
+   position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+   
+   # Create a WCS Map
+   m_wcs = MapBase.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0,
+                          axes=[energy_axis])
+
+   # Create a HPX Map
+   m_hpx = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0,
+                          axes=[energy_axis])
+
+   
 Get, Set, and Fill Methods
 --------------------------
 
@@ -136,6 +155,27 @@ Iterating on a Map
 
 File I/O
 --------
+
+Maps can be written to and read from a FITS file with the ``write``
+and ``read`` methods.
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   m.write('file.fits', extname='IMAGE')
+   m = MapBase.read('test.fits', extname='IMAGE')
+
+Images can be serialized to a sparse data format by passing
+``sparse=True``.  This will write the file to a sparse data table
+appropriate to the pixelization scheme.
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   m.write('file.fits', extname='IMAGE', sparse=True)
+   m = MapBase.read('test.fits', extname='IMAGE')
 
 Using `gammapy.maps`
 ====================
