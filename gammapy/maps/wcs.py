@@ -6,46 +6,99 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
+from .geom import MapAxis
 
 __all__ = [
     'WCSGeom',
 ]
 
 
+def get_shape(param):
+
+    if param is None:
+        return tuple()
+
+    if not isinstance(param, tuple):
+        param = [param]
+    return max([np.array(p, ndmin=1).shape for p in param])
+
+
+def cast_to_shape(param, shape, dtype):
+    """Cast a tuple of parameter arrays to a given shape."""
+
+    if not isinstance(param, tuple):
+        param = [param]
+
+    param = [np.array(p, ndmin=1, dtype=dtype) for p in param]
+
+    if len(param) == 1:
+        param = [param[0].copy(), param[0].copy()]
+
+    for i, p in enumerate(param):
+
+        if p.size > 1 and p.shape != shape:
+            raise ValueError
+
+        if p.shape == shape:
+            continue
+
+        param[i] = p * np.ones(shape, dtype=dtype)
+
+    return tuple(param)
+
+
 class WCSGeom(MapGeom):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and the
-    the image extent (number of pixels in each dimension).  Also
-    provides a number of helper methods for accessing the properties
-    of the WCS object.
+    the image extent (number of pixels in each dimension).  Provides
+    methods for accessing the properties of the WCS object and
+    performing transformations between pixel and world coordinates.
 
     Parameters
     ----------
     wcs : `~astropy.wcs.WCS`
         WCS projection object
-    npix : list
+    npix : tuple
         Number of pixels in each spatial dimension
+    cdelt : tuple
+        Pixel size in each image plane.  If none then a constant pixel size will be used.
     axes : list
         Axes for non-spatial dimensions
 
     """
 
-    def __init__(self, wcs, npix, axes=None):
+    def __init__(self, wcs, npix, cdelt=None, axes=None):
         self._wcs = wcs
-        self._npix = np.array(npix, ndmin=1)
         self._coordsys = get_coordsys(wcs)
         self._axes = axes if axes is not None else []
+        for i, ax in enumerate(self.axes):
+            if isinstance(ax, np.ndarray):
+                self.axes[i] = MapAxis(ax)
+            if self.axes[i].name == '':
+                self.axes[i].set_name('axis%i' % i)
 
-        cdelt0 = np.abs(self.wcs.wcs.cdelt[0])
-        cdelt1 = np.abs(self.wcs.wcs.cdelt[1])
+        self._shape = tuple([ax.nbin for ax in self._axes])
+        if cdelt is None:
+            cdelt = (np.abs(self.wcs.wcs.cdelt[0]),
+                     np.abs(self.wcs.wcs.cdelt[1]))
 
-        self._pix_size = np.array([cdelt0, cdelt1])
+        # Shape to use for WCS transformations
+        wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
+        if np.sum(wcs_shape) > 1 and wcs_shape != self._shape:
+            raise ValueError
 
-        self._width = np.array([cdelt0 * self._npix[0],
-                                cdelt1 * self._npix[1]])
-        self._center_pix = tuple([(self._npix[0] - 1.0) / 2.,
-                                  (self._npix[1] - 1.0) / 2.] +
+        self._npix = cast_to_shape(npix, wcs_shape, int)
+        self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
+        # By convention CRPIX is indexed from 1
+        self._crpix = (1.0 + (self._npix[0] - 1.0) / 2.,
+                       1.0 + (self._npix[1] - 1.0) / 2.)
+        self._width = (self._cdelt[0] * self._npix[0],
+                       self._cdelt[1] * self._npix[1])
+
+        # FIXME: Determine center coord from CRVAL
+        self._center_pix = tuple([(self._npix[0].flat[0] - 1.0) / 2.,
+                                  (self._npix[1].flat[0] - 1.0) / 2.] +
                                  [(float(ax.nbin) - 1.0) / 2. for ax in self.axes])
         self._center_coord = self.pix_to_coord(self._center_pix)
         self._center_skydir = SkyCoord.from_pixel(self._center_pix[0],
@@ -54,22 +107,23 @@ class WCSGeom(MapGeom):
 
     @property
     def wcs(self):
-        """TODO."""
+        """WCS projection object."""
         return self._wcs
 
     @property
     def coordsys(self):
-        """TODO."""
+        """Coordinate system of the projection, either Galactic ('GAL') or
+        Equatorial ('CEL')."""
         return self._coordsys
 
     @property
     def width(self):
-        """Dimensions of the image (TODO: type?)."""
+        """Tuple with image dimension in deg in longitude and latitude."""
         return self._width
 
     @property
     def npix(self):
-        """TODO."""
+        """Tuple with image dimension in pixels in longitude and latitude."""
         return self._npix
 
     @property
@@ -108,62 +162,126 @@ class WCSGeom(MapGeom):
         return self._center_skydir
 
     @classmethod
-    def create(cls, nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
-               proj='CAR', coordsys='CEL', xrefpix=None, yrefpix=None,
-               axes=None, skydir=None, lonlat=None):
-        """Create a WCSGeom object.
+    def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
+               axes=None, skydir=None, width=None):
+        """Create a WCS geometry object.  Pixelization of the map is set with
+        ``binsz`` and one of either ``npix`` or ``width`` arguments.
+        For maps with non-spatial dimensions a different pixelization
+        can be used for each image plane by passing a list or array
+        argument for any of the pixelization parameters.  If both npix
+        and width are None then an all-sky geometry will be created.
+
+        Parameters
+        ----------
+        npix : int or tuple or list
+            Width of the map in pixels. A tuple will be interpreted as
+            parameters for longitude and latitude axes.  For maps with
+            non-spatial dimensions, list input can be used to define a
+            different map width in each image plane.  This option
+            supersedes width.
+        width : float or tuple or list
+            Width of the map in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.  For maps
+            with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.  
+        binsz : float or tuple or list
+            Map pixel size in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.  For maps
+            with non-spatial dimensions, list input can be used to
+            define a different bin size in each image plane.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        coordsys : {'CEL', 'GAL'}, optional
+            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        axes : list
+            List of non-spatial axes.
+        proj : string, optional
+            Any valid WCS projection type. Default is 'CAR' (cartesian).
+        refpix : tuple
+            Reference pixel of the projection.  If None then this will
+            be chosen to be center of the map.
 
         Returns
         -------
         geom : `~WCSGeom`
-            A HEALPix geoemtry object.
+            A WCS geoemtry object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import WCSGeom
+        >>> from gammapy.maps import MapAxis
+        >>> axis = MapAxis.from_bounds(0,1,2)
+        >>> geom = SkyImage.create(npix=(100,100), binsz=0.1)
+        >>> geom = SkyImage.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = SkyImage.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = SkyImage.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
 
         """
-        if lonlat is not None:
-            xref, yref = lonlat
+        if skydir is None:
+            xref, yref = (0.0, 0.0)
+        elif isinstance(skydir, tuple):
+            xref, yref = skydir
         elif skydir is not None:
             xref, yref = skydir_to_lonlat(skydir, coordsys=coordsys)
         else:
-            xref, yref = (0.0, 0.0)
+            raise ValueError(
+                'Invalid type for skydir: {}'.format(type(skydir)))
 
-        header = make_header(nxpix, nypix, binsz, xref, yref,
-                             proj, coordsys, xrefpix, yrefpix)
+        shape = max([get_shape(t) for t in [npix, binsz, width]])
+        binsz = cast_to_shape(binsz, shape, float)
+
+        # If both npix and width are None then create an all-sky geometry
+        if npix is None and width is None:
+            width = (360., 180.)
+
+        if npix is None:
+            width = cast_to_shape(width, shape, float)
+            npix = (np.rint(width[0] / binsz[0]).astype(int),
+                    np.rint(width[1] / binsz[1]).astype(int),)
+        else:
+            npix = cast_to_shape(npix, shape, int)
+
+        # FIXME: Need to propagate refpix
+
+        header = make_header(npix[0].flat[0], npix[1].flat[0],
+                             binsz[0].flat[0], xref, yref,
+                             proj, coordsys, refpix, refpix)
         wcs = WCS(header)
-        return cls(wcs, [nxpix, nypix], axes)
+        return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     def distance_to_edge(self, skydir):
         """Angular distance from the given direction and
         the edge of the projection."""
-        xpix, ypix = skydir.to_pixel(self.wcs, origin=0)
-        deltax = np.array((xpix - self._pix_center[0]) * self._pix_size[0],
-                          ndmin=1)
-        deltay = np.array((ypix - self._pix_center[1]) * self._pix_size[1],
-                          ndmin=1)
-
-        deltax = np.abs(deltax) - 0.5 * self._width[0]
-        deltay = np.abs(deltay) - 0.5 * self._width[1]
-
-        m0 = (deltax < 0) & (deltay < 0)
-        m1 = (deltax > 0) & (deltay < 0)
-        m2 = (deltax < 0) & (deltay > 0)
-        m3 = (deltax > 0) & (deltay > 0)
-        mx = np.abs(deltax) <= np.abs(deltay)
-        my = np.abs(deltay) < np.abs(deltax)
-
-        delta = np.zeros(len(deltax))
-        delta[(m0 & mx) | (m3 & my) | m1] = deltax[(m0 & mx) | (m3 & my) | m1]
-        delta[(m0 & my) | (m3 & mx) | m2] = deltay[(m0 & my) | (m3 & mx) | m2]
-        return delta
+        raise NotImplementedError
 
     def get_pixels(self):
 
-        pix = [np.arange(self.npix[0], dtype=int),
-               np.arange(self.npix[1], dtype=int)]
-        for i, ax in enumerate(self.axes):
-            pix += [np.arange(ax.nbin, dtype=int)]
-        pix = np.meshgrid(*pix, indexing='ij')
+        if self.axes and self.npix[0].size > 1:
+
+            pix = [np.array([], dtype=int) for i in range(2 + len(self.axes))]
+            for i, t in np.ndenumerate(self.npix[0]):
+
+                npix = self.npix[0][i] * self.npix[1][i]
+                o = np.unravel_index(np.arange(npix, dtype=int),
+                                     (self.npix[0][i], self.npix[1][i]))
+                pix[0] = np.concatenate((pix[0], o[0]))
+                pix[1] = np.concatenate((pix[1], o[1]))
+                for j in range(len(self.axes)):
+                    pix[2 + j] = np.concatenate((pix[2 + j],
+                                                 i[j] * np.ones(npix, dtype=int)))
+
+        else:
+            pix = [np.arange(self.npix[0], dtype=int),
+                   np.arange(self.npix[1], dtype=int)]
+            for i, ax in enumerate(self.axes):
+                pix += [np.arange(ax.nbin, dtype=int)]
+            pix = np.meshgrid(*pix, indexing='ij')
+
         coords = self.pix_to_coord(pix)
-        return tuple([np.ravel(t[np.isfinite(c)]) for t, c in zip(pix, coords)])
+        m = np.isfinite(coords[0])
+        return tuple([np.ravel(t[m]) for t in pix])
 
     def get_coords(self):
 
@@ -173,17 +291,42 @@ class WCSGeom(MapGeom):
     def coord_to_pix(self, coords):
 
         c = MapCoords.create(coords)
-        pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
-        for i, ax in enumerate(self.axes):
-            pix += [ax.coord_to_pix(c[i + 2])]
+
+        # Variable Bin Size
+        if self.axes and self.npix[0].size > 1:
+            bins = [ax.coord_to_pix(c[i + 2])
+                    for i, ax in enumerate(self.axes)]
+            idxs = [ax.coord_to_idx(c[i + 2])
+                    for i, ax in enumerate(self.axes)]
+            crpix = [t[idxs] for t in self._crpix]
+            cdelt = [t[idxs] for t in self._cdelt]
+            pix = world2pix(self.wcs, cdelt, crpix, (c.lon, c.lat))
+            pix = tuple(list(pix) + bins)
+        else:
+            pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
+            for i, ax in enumerate(self.axes):
+                pix += [ax.coord_to_pix(c[i + 2])]
+
         return pix
 
     def pix_to_coord(self, pix):
 
-        coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
-        for i, ax in enumerate(self.axes):
-            coords += [ax.pix_to_coord(pix[i + 2])]
-        return coords
+        # Variable Bin Size
+        if self.axes and self.npix[0].size > 1:
+            idxs = pix_tuple_to_idx([pix[2 + i] for i, ax
+                                     in enumerate(self.axes)])
+            vals = [ax.pix_to_coord(pix[2 + i])
+                    for i, ax in enumerate(self.axes)]
+            crpix = [t[idxs] for t in self._crpix]
+            cdelt = [t[idxs] for t in self._cdelt]
+            coords = pix2world(self.wcs, cdelt, crpix, pix[:2])
+            coords += vals
+        else:
+            coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
+            for i, ax in enumerate(self.axes):
+                coords += [ax.pix_to_coord(pix[i + 2])]
+
+        return tuple(coords)
 
     def pix_to_idx(self, pix):
         return pix_tuple_to_idx(pix)
@@ -323,6 +466,48 @@ def offset_to_skydir(skydir, offset_lon, offset_lat,
 
     w = create_wcs(skydir, coordsys, projection)
     return SkyCoord.from_pixel(offset_lon, offset_lat, w, 0)
+
+
+def pix2world(wcs, cdelt, crpix, pix):
+    """Perform pixel to world coordinate transformation for a WCS
+    projection with a given pixel size (CDELT) and reference pixel
+    (CRPIX).  This method can be used to perform WCS transformations
+    for projections with different pixelizations but the same
+    reference coordinate (CRVAL), projection type, and coordinate
+    system.
+
+    Parameters
+    ----------
+    wcs : `astropy.wcs.WCS`
+        WCS transform object.
+
+    cdelt : tuple
+        Tuple of X/Y pixel size in deg.  Each element should have the
+        same length as ``pix``.
+
+    crpix : tuple
+        Tuple of reference pixel parameters in X and Y dimensions.  Each
+        element should have the same length as ``pix``.
+
+    pix : tuple
+        Tuple of pixel coordinates.
+
+    """
+
+    pix_ratio = [np.abs(wcs.wcs.cdelt[0] / cdelt[0]),
+                 np.abs(wcs.wcs.cdelt[1] / cdelt[1])]
+    pix = ((pix[0] - (crpix[0] - 1.0)) / pix_ratio[0] + wcs.wcs.crpix[0] - 1.0,
+           (pix[1] - (crpix[1] - 1.0)) / pix_ratio[1] + wcs.wcs.crpix[1] - 1.0)
+    return wcs.wcs_pix2world(pix[0], pix[1], 0)
+
+
+def world2pix(wcs, cdelt, crpix, coord):
+
+    pix_ratio = [np.abs(wcs.wcs.cdelt[0] / cdelt[0]),
+                 np.abs(wcs.wcs.cdelt[1] / cdelt[1])]
+    pix = wcs.wcs_world2pix(coord[0], coord[1], 0)
+    return ((pix[0] - (wcs.wcs.crpix[0] - 1.0)) * pix_ratio[0] + crpix[0] - 1.0,
+            (pix[1] - (wcs.wcs.crpix[1] - 1.0)) * pix_ratio[1] + crpix[1] - 1.0)
 
 
 def skydir_to_pix(skydir, wcs):
