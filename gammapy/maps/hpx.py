@@ -262,7 +262,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
         tuple(nx,ny) with the shape of the WCS grid
     """
     import healpy as hp
-    npix = wcs.npix[:2]
+    npix = wcs.npix
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
     # method of WCSGeom
@@ -273,7 +273,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
     mask = ~np.any(np.isnan(sky_crds), axis=1)
-    ipix = -1 * np.ones((len(hpx.nside), npix[0] * npix[1]), int)
+    ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1]) ), int)
     m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
     ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[..., None],
@@ -1467,7 +1467,8 @@ class HpxToWcsMapping(object):
         # HPX images have (1,N) dimensionality by convention
         hpx_data = np.squeeze(hpx_data)
 
-        valid = np.where(self._valid.reshape(self._npix))
+        shape = tuple([t.flat[0] for t in self._npix])
+        valid = np.where(self._valid.reshape(shape))
         lmap = self._lmap[self._valid]
         mult_val = self._mult_val[self._valid]
 

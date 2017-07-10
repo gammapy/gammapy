@@ -13,6 +13,15 @@ __all__ = [
     'MapAxis',
 ]
 
+def get_shape(param):
+
+    if param is None:
+        return tuple()
+
+    if not isinstance(param, tuple):
+        param = [param]
+    return max([np.array(p, ndmin=1).shape for p in param])
+
 
 def coordsys_to_frame(coordsys):
 

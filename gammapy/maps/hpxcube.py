@@ -134,20 +134,25 @@ class HpxMapND(HpxMap):
         self.make_wcs_mapping(oversample=oversample)
         hpx_data = self.data
 
+        # FIXME: Need a function to extract a valid shape from npix property
+
         if sum_bands:
             hpx_data = np.apply_over_axes(np.sum, hpx_data,
                                           axes=np.arange(hpx_data.ndim - 1))
-            wcs_shape = tuple(self._hpx2wcs.npix)
+            wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.hpx.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=True)
         else:
-            wcs_shape = tuple(self._hpx2wcs.npix) + self.hpx._shape
+            wcs_shape = tuple([t.flat[0] for t in
+                               self._hpx2wcs.npix]) + self.hpx._shape
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.hpx.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=False)
+
+        # FIXME: Should reimplement instantiating map first and fill data array
 
         self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsMapND(wcs, wcs_data)

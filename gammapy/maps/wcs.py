@@ -6,21 +6,14 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
-from .geom import MapAxis
+from .geom import MapAxis, get_shape
 
 __all__ = [
     'WCSGeom',
 ]
 
 
-def get_shape(param):
 
-    if param is None:
-        return tuple()
-
-    if not isinstance(param, tuple):
-        param = [param]
-    return max([np.array(p, ndmin=1).shape for p in param])
 
 
 def cast_to_shape(param, shape, dtype):
