@@ -73,7 +73,7 @@ class SpectrumExtraction(object):
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
         """
-        log.info('Running {}'.format(self))
+        log.info(' Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
                 log.warning("\033[1;33m Alpha not OK for Obs #{}\033[0m".format(obs.obs_id))
