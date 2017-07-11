@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
+import math
+import copy
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
@@ -521,11 +523,12 @@ class FluxPointEstimator(object):
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     """
 
-    def __init__(self, obs, groups, model):
+    def __init__(self, obs, groups, model, sqrt_ts_threshold=1.):
         self.obs = obs
         self.groups = groups
         self.model = model
         self.flux_points = None
+        self.sqrt_ts_threshold = sqrt_ts_threshold
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -541,7 +544,7 @@ class FluxPointEstimator(object):
                 log.debug('Skipping energy group:\n{}'.format(group))
                 continue
 
-            row = self.compute_flux_point(group)
+            row = self.compute_flux_point(group, self.sqrt_ts_threshold)
             rows.append(row)
 
         meta = OrderedDict([
@@ -551,7 +554,7 @@ class FluxPointEstimator(object):
         table = table_from_row_data(rows=rows, meta=meta)
         self.flux_points = FluxPoints(table)
 
-    def compute_flux_point(self, energy_group):
+    def compute_flux_point(self, energy_group, sqrt_ts_threshold=1.):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
         model = self.compute_approx_model(
             global_model=self.model,
@@ -563,6 +566,7 @@ class FluxPointEstimator(object):
             model=model,
             energy_group=energy_group,
             energy_ref=energy_ref,
+            sqrt_ts_threshold=sqrt_ts_threshold,
         )
 
     def compute_energy_ref(self, energy_group):
@@ -616,7 +620,7 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return approx_model
 
-    def compute_flux_point_ul(self, fit, best_fit, delta_ts=4, negative=False):
+    def compute_flux_point_ul(self, fit, best_fit, delta_ts=1, negative=False):
         """
         Compute upper limits for flux point values.
 
@@ -656,19 +660,21 @@ class FluxPointEstimator(object):
 
         # this is a prototype for fast flux point upper limit
         # calculation using brentq
-        stat_best_fit = best_fit.statval
-        amplitude = best_fit.model.parameters['amplitude'].value / 1E-12
-        amplitude_err = best_fit.model.parameters.error('amplitude') / 1E-12
+
+        stat_best_fit = best_fit.total_stat
+        norma = pow(10, int(math.log10(np.abs(best_fit.model.parameters['amplitude'].value))))
+        amplitude = best_fit.model.parameters['amplitude'].value / norma
+        amplitude_err = best_fit.model.parameters.error('amplitude') / norma
 
         if negative:
             amplitude_max = amplitude
-            amplitude_min = amplitude_max - 1E3 * amplitude_err
+            amplitude_min = amplitude_max - 10 * amplitude_err
         else:
-            amplitude_max = amplitude + 1E3 * amplitude_err
+            amplitude_max = amplitude + 10 * amplitude_err
             amplitude_min = amplitude
 
         def ts_diff(x):
-            fit.model.parameters['amplitude'].value = x * 1E-12
+            fit.model.parameters['amplitude'].value = x * norma
             fit.predict_counts()
             fit.calc_statval()
             return (stat_best_fit + delta_ts) - fit.total_stat
@@ -676,7 +682,7 @@ class FluxPointEstimator(object):
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
-            return 1E-12 * result * fit.model.parameters['amplitude'].unit
+            return norma * result * fit.model.parameters['amplitude'].unit
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
@@ -702,7 +708,8 @@ class FluxPointEstimator(object):
 
         """
         amplitude = best_fit.model.parameters['amplitude'].value
-        stat_best_fit = best_fit.statval
+        # stat_best_fit = best_fit.statval
+        stat_best_fit = best_fit.total_stat
 
         fit.model.parameters['amplitude'].value = 0
         fit.predict_counts()
@@ -735,16 +742,23 @@ class FluxPointEstimator(object):
         fit.est_errors()
 
         # First result contain correct model
-        res = fit.result[0]
+        # res = fit.result[0]
+        best_fit = copy.deepcopy(fit)
+
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
-        dnde, dnde_err = res.model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
+        dnde, dnde_err = fit.model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
-        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1., negative=True)
+        dnde_ul = self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=sqrt_ts_threshold)
+        dnde_errp = self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=1., negative=True)
+
+        from scipy.stats import chi2, norm
+        sigma = 1.5
+        cl = 1 - 2 * norm.sf(sigma)
+        delta_ts = chi2.isf(1 - cl, df=1)
 
         return OrderedDict([
             ('e_ref', energy_ref),
@@ -753,7 +767,8 @@ class FluxPointEstimator(object):
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
-            ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            # ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            ('is_ul', sqrt_ts < delta_ts),
             ('sqrt_ts', sqrt_ts),
             ('dnde_errp', dnde_errp),
             ('dnde_errn', dnde_errn)

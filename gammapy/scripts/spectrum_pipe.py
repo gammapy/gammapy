@@ -94,10 +94,15 @@ class SpectrumAnalysisIACT(object):
         self.egm = SpectrumEnergyGroupMaker(stacked_obs)
         self.egm.compute_groups_fixed(self.config['fp_binning'])
 
+        from scipy.stats import chi2, norm
+        sigma = 3
+        cl = 1 - 2 * norm.sf(sigma)
+        delta_ts = chi2.isf(1 - cl, df=1)
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.observations)
+            obs=self.extraction.observations,
+            sqrt_ts_threshold=delta_ts)
         self.flux_point_estimator.compute_points()
 
     @property

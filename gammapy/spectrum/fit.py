@@ -455,7 +455,7 @@ class SpectrumFit(object):
         outdir : Path, str
             directory to write results files to (if given)
         """
-        log.info('Running {}'.format(self))
+        log.info(' Running {}'.format(self))
 
         self.fit()
         self.est_errors()

@@ -207,8 +207,8 @@ class ObservationStats(Stats):
         ss += 'Excess: {:.2f}\n'.format(self.excess)
         ss += 'Excess / Background: {:.2f}\n'.format(np.divide(self.excess,
                                                                self.background))
-        ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
-        ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
+        ss += 'Gamma rate: {:.2e}\n'.format(self.gamma_rate)
+        ss += 'Bkg rate: {:.2e}\n'.format(self.bg_rate)
         ss += 'Sigma: {:.2f}\n'.format(self.sigma)
 
         return ss
