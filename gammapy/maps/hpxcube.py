@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
-from .hpx import HPXGeom, HpxToWcsMapping
+from .hpx import HpxGeom, HpxToWcsMapping
 
 __all__ = [
     'HpxMapND',
@@ -25,14 +26,14 @@ class HpxMapND(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
         If none then an empty array will be allocated.
     """
 
-    def __init__(self, hpx, data=None):
+    def __init__(self, hpx, data=None, dtype='float32'):
 
         npix = np.unique(hpx.npix)
         if len(npix) > 1:
@@ -42,7 +43,7 @@ class HpxMapND(HpxMap):
 
         shape = tuple(list(hpx._shape[::-1]) + [npix[0]])
         if data is None:
-            data = np.zeros(shape)
+            data = np.zeros(shape, dtype=dtype)
         elif data.shape != shape:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
@@ -62,7 +63,7 @@ class HpxMapND(HpxMap):
         axes : list
             List of axes for non-spatial dimensions.
         """
-        hpx = HPXGeom.from_header(hdu.header, axes)
+        hpx = HpxGeom.from_header(hdu.header, axes)
         shape = tuple([ax.nbin for ax in axes[::-1]])
         shape_data = shape + tuple(np.unique(hpx.npix))
 
@@ -133,20 +134,25 @@ class HpxMapND(HpxMap):
         self.make_wcs_mapping(oversample=oversample)
         hpx_data = self.data
 
+        # FIXME: Need a function to extract a valid shape from npix property
+
         if sum_bands:
             hpx_data = np.apply_over_axes(np.sum, hpx_data,
                                           axes=np.arange(hpx_data.ndim - 1))
-            wcs_shape = tuple(self._hpx2wcs.npix)
+            wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.hpx.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=True)
         else:
-            wcs_shape = tuple(self._hpx2wcs.npix) + self.hpx._shape
+            wcs_shape = tuple([t.flat[0] for t in
+                               self._hpx2wcs.npix]) + self.hpx._shape
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.hpx.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=False)
+
+        # FIXME: Should reimplement instantiating map first and fill data array
 
         self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsMapND(wcs, wcs_data)
@@ -163,80 +169,132 @@ class HpxMapND(HpxMap):
                               np.apply_over_axes(np.sum, self.data,
                                                  axes=np.arange(self.data.ndim - 1)))
 
-    def get_by_coords(self, coords, interp=None):
-        pix = self.hpx.coord_to_pix(coords)
-        return self.get_by_pix(pix)
+    def interp_by_coords(self, coords, interp=None):
 
-    def get_by_pix(self, pix):
+        if interp == 'linear':
+            return self._interp_by_coords(coords, interp)
+        else:
+            raise ValueError('Invalid interpolation method: {}'.format(interp))
+
+    def get_by_pix(self, pix, interp=None):
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
         # FIXME: What to return for pixels outside the map
 
-        # Reverse ordering and convert to local pixel indices
-        pix = pix[::-1]
-        pix_local = tuple(pix[:-1] + (self.hpx[pix[-1]],))
-
-        return self.data[pix_local]
-
-    def _interp_by_coord(self, coords):
-        """Interpolate map values."""
-        import healpy as hp
-        raise NotImplementedError
-
-    def _interpolate_cube(self, coords):
-        """Perform interpolation on a HEALPIX cube.
-
-        If egy is None, then interpolation will be performed
-        on the existing energy planes.
-        """
-        import healpy as hp
-        raise NotImplementedError
-
-    def swap_scheme(self):
-        """Return a new map with the opposite scheme (ring or nested).
-        """
-        import healpy as hp
-        hpx_out = self.hpx.make_swapped_hpx()
-        if self.hpx.nest:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], n2r=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, n2r=True)
+        if interp is None:
+            return self.get_by_idx(pix)
         else:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], r2n=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, r2n=True)
-        return self.__class__(hpx_out, data_out)
+            raise NotImplementedError
 
-    def ud_grade(self, order, preserve_counts=False):
-        """Upgrade or downgrade the resolution of the map to the chosen order.
-        """
+    def get_by_idx(self, idx):
+        idx = pix_tuple_to_idx(idx)
+        idx = self.hpx.global_to_local(idx)
+        return self.data.T[idx]
+
+    def _interp_by_coords(self, coords, interp):
+        """Linearly interpolate map values."""
+        import healpy as hp
+        c = MapCoords.create(coords)
+        theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
+        phi = np.array(np.radians(c.lon), ndmin=1)
+
+        pix_ctr = self.hpx.coord_to_pix(c)[0]
+        pix, wts = hp.pixelfunc.get_interp_weights(self.hpx.nside, theta,
+                                                   phi, nest=self.hpx.nest)
+
+        # Convert to local pixel indices
+        pix_local = [self.hpx[pix]]
+
+        m = pix_local[0] == -1
+        pix_local[0][m] = self.hpx[(
+            pix_ctr * np.ones(pix.shape, dtype=int))[m]]
+
+        if np.any(pix_local[0] == -1):
+            raise ValueError('HPX pixel index out of map bounds.')
+
+        if self.hpx.ndim == 2:
+            return np.sum(self.data.T[pix_local] * wts, axis=0)
+
+        val = np.zeros(theta.shape)
+        # Loop over function values at corners
+        for i, t in enumerate(range(2**len(self.hpx.axes))):
+
+            pix = []
+            wt = np.ones(theta.shape)[None, ...]
+            for j, ax in enumerate(self.hpx.axes):
+
+                idx = coord_to_idx(ax.center[:-1],
+                                   c[2 + j], bounded=True)[None, ...]
+
+                w = ax.center[idx + 1] - ax.center[idx]
+                if (i & (1 << j)):
+                    wt *= (c[2 + j] - ax.center[idx]) / w
+                    pix += [1 + idx]
+                else:
+                    wt *= (1.0 - (c[2 + j] - ax.center[idx]) / w)
+                    pix += [idx]
+            val += np.sum(wts * wt * self.data.T[pix_local + pix], axis=0)
+
+        return val
+
+    def fill_by_idx(self, idx, weights=None):
+
+        idx = pix_tuple_to_idx(idx)
+        if weights is None:
+            weights = np.ones(idx[0].shape)
+        idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
+        self.data.T[idx_local] += weights
+
+    def set_by_idx(self, idx, vals):
+
+        idx = pix_tuple_to_idx(idx)
+        idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
+        self.data.T[idx_local] = vals
+
+    def to_swapped_scheme(self):
+
+        import healpy as hp
+        hpx_out = self.hpx.to_swapped()
+        map_out = self.__class__(hpx_out)
+        idx = list(self.hpx.get_pixels())
+        msk = np.ravel(self.data > 0)
+        idx = [t[msk] for t in idx]
+
+        if self.hpx.nest:
+            idx_new = tuple([hp.nest2ring(self.hpx.nside, idx[0])] + idx[1:])
+        else:
+            idx_new = tuple([hp.ring2nest(self.hpx.nside, idx[0])] + idx[1:])
+
+        map_out.set_by_pix(idx_new, np.ravel(self.data)[msk])
+        return map_out
+
+    def to_ud_graded(self, order, preserve_counts=False):
+
         import healpy as hp
         new_hpx = self.hpx.ud_graded_hpx(order)
-        nebins = len(new_hpx.evals)
-        shape = self.data.shape
+        map_out = self.__class__(new_hpx)
 
-        if preserve_counts:
-            power = -2.
+        idx = list(self.hpx.get_pixels())
+        msk = np.ravel(self.data != 0)
+        idx = [t[msk] for t in idx]
+
+        if self.hpx.nest:
+            idx_new = tuple([hp.nest2ring(self.hpx.nside, idx[0])] + idx[1:])
         else:
-            power = 0
+            idx_new = tuple([hp.ring2nest(self.hpx.nside, idx[0])] + idx[1:])
 
-        if len(shape) == 1:
-            new_data = hp.pixelfunc.ud_grade(self.data,
-                                             nside_out=new_hpx.nside,
-                                             order_in=new_hpx.ordering,
-                                             order_out=ew_hpx.ordering,
-                                             power=power)
-        else:
-            new_data = [hp.pixelfunc.ud_grade(self.data[i],
-                                              nside_out=new_hpx.nside,
-                                              order_in=new_hpx.ordering,
-                                              order_out=new_hpx.ordering,
-                                              power=power)
-                        for i in range(shape[0])]
-            new_data = np.vstack(new_data)
+        map_out.fill_by_pix(idx_new, np.ravel(self.data)[msk])
 
-        return self.__class__(new_hpx, new_data)
+        if not preserve_counts:
+            map_out.data *= (2**order)**2 / (2**self.hpx.order)**2
+
+        return map_out
+
+    def plot(self, ax=None, normalize=False, proj='AIT', oversample=10):
+        """Quickplot method. This will generate a basic visualization by
+        converting to a rasterized WCS image."""
+
+        m = self.to_wcs(sum_bands=True,
+                        normalize=normalize,
+                        proj=proj, oversample=oversample)
+        return m.plot(ax)

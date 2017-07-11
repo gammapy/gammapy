@@ -8,8 +8,8 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.utils.misc import InheritDocstrings
 from .base import MapBase
-from .hpx import HpxToWcsMapping
-from .geom import MapAxis
+from .hpx import HpxGeom, HpxToWcsMapping, get_nside_from_pixel_size
+from .geom import MapAxis, skydir_to_lonlat
 
 __all__ = [
     'HpxMap',
@@ -58,15 +58,12 @@ def find_and_read_bands(hdulist, extname=None):
     return axes
 
 
-# class HpxMeta(InheritDocstrings, abc.ABCMeta):
-#    pass
-#@six.add_metaclass(HpxMeta)
 class HpxMap(MapBase):
     """Base class for HEALPIX map classes.
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HPXGeom`
+    hpx : `~gammapy.maps.hpx.HpxGeom`
         HEALPix geometry object.
 
     data : `~numpy.ndarray`
@@ -82,6 +79,51 @@ class HpxMap(MapBase):
     def hpx(self):
         """HEALPix geometry object."""
         return self.geom
+
+    @classmethod
+    def create(cls, nside=None, binsz=None, nest=True, map_type=None, coordsys='CEL',
+               data=None, skydir=None, width=None, dtype='float32',
+               region=None, axes=None):
+        """Factory method to create an empty HEALPix map.
+
+        Parameters
+        ----------
+        nside : int or `~numpy.ndarray`
+            HEALPix NSIDE parameter.  This parameter sets the size of
+            the spatial pixels in the map.
+        binsz : float or `~numpy.ndarray`
+            Approximate pixel size in degrees.  An NSIDE will be
+            chosen that correponds to a pixel size closest to this
+            value.  This option is superseded by nside.
+        nest : bool
+            True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
+        coordsys : {'CEL', 'GAL'}, optional
+            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        map_type : str
+            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
+            `HpxMapSparse`/`hpx-sparse`.
+        width : float
+            Diameter of the map in degrees.  If None then an all-sky
+            geometry will be created.
+        axes : list
+            List of `~MapAxis` objects for each non-spatial dimension.
+        """
+        from .hpxcube import HpxMapND
+        from .hpxsparse import HpxMapSparse
+
+        hpx = HpxGeom.create(nside=nside, binsz=binsz,
+                             nest=nest, coordsys=coordsys, region=region,
+                             conv=None, axes=axes, skydir=skydir, width=width)
+        if map_type in [None,'hpx','HpxMapND']:
+            return HpxMapND(hpx, dtype=dtype)
+        elif map_type in ['hpx-sparse','HpxMapSparse']:
+            return HpxMapSparse(hpx, dtype=dtype)
+        else:
+            raise ValueError('Unregnized Map type: {}'.format(map_type))
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -105,7 +147,7 @@ class HpxMap(MapBase):
         with fits.open(filename) as hdulist:
             hpx_map = cls.from_hdulist(hdulist, **kwargs)
         return hpx_map
-            
+
     @classmethod
     def from_hdulist(cls, hdulist, **kwargs):
         """Make a HpxMap object from a FITS HDUList.
@@ -191,55 +233,17 @@ class HpxMap(MapBase):
         """
         pass
 
-    def get_skydirs(self):
-        """Get a list of sky coordinates for the centers of every pixel. """
-        return self.hpx.get_skydirs()
-
-    def swap_scheme(self):
-        """TODO.
+    @abc.abstractmethod
+    def to_swapped_scheme(self):
+        """Return a new map with the opposite scheme (ring or nested).
         """
-        import healpy as hp
-        hpx_out = self.hpx.make_swapped_hpx()
-        if self.hpx.nest:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], n2r=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, n2r=True)
-        else:
-            if self.data.ndim == 2:
-                data_out = np.vstack([hp.pixelfunc.reorder(
-                    self.data[i], r2n=True) for i in range(self.data.shape[0])])
-            else:
-                data_out = hp.pixelfunc.reorder(self.data, r2n=True)
-        return HpxMap(data_out, hpx_out)
+        pass
 
-    def ud_grade(self, order, preserve_counts=False):
-        """TODO.
+    @abc.abstractmethod
+    def to_ud_graded(self, order, preserve_counts=False):
+        """Upgrade or downgrade the resolution of the map to the chosen order.
         """
-        import healpy as hp
-        new_hpx = self.hpx.ud_graded_hpx(order)
-        nebins = len(new_hpx.evals)
-        shape = self.counts.shape
-
-        if preserve_counts:
-            power = -2.
-        else:
-            power = 0
-
-        if len(shape) == 1:
-            new_data = hp.pixelfunc.ud_grade(self.counts,
-                                             nside_out=new_hpx.nside,
-                                             order_in=new_hpx.ordering,
-                                             order_out=ew_hpx.ordering,
-                                             power=power)
-        else:
-            new_data = np.vstack([hp.pixelfunc.ud_grade(self.counts[i],
-                                                        nside_out=new_hpx.nside,
-                                                        order_in=new_hpx.ordering,
-                                                        order_out=new_hpx.ordering,
-                                                        power=power) for i in range(shape[0])])
-        return HpxMap(new_data, new_hpx)
+        pass
 
     def make_hdu(self, **kwargs):
         """Make a FITS HDU with input data.
