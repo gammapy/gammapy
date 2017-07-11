@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.io import fits
-from astropy.coordinates import SkyCoord
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping
@@ -217,7 +215,7 @@ class HpxMapND(HpxMap):
 
         val = np.zeros(theta.shape)
         # Loop over function values at corners
-        for i, t in enumerate(range(2**len(self.hpx.axes))):
+        for i, t in enumerate(range(2 ** len(self.hpx.axes))):
 
             pix = []
             wt = np.ones(theta.shape)[None, ...]
@@ -286,14 +284,16 @@ class HpxMapND(HpxMap):
         map_out.fill_by_pix(idx_new, np.ravel(self.data)[msk])
 
         if not preserve_counts:
-            map_out.data *= (2**order)**2 / (2**self.hpx.order)**2
+            map_out.data *= (2 ** order) ** 2 / (2 ** self.hpx.order) ** 2
 
         return map_out
 
     def plot(self, ax=None, normalize=False, proj='AIT', oversample=10):
-        """Quickplot method. This will generate a basic visualization by
-        converting to a rasterized WCS image."""
+        """Quickplot method.
 
+        This will generate a basic visualization by
+        converting to a rasterized WCS image.
+        """
         m = self.to_wcs(sum_bands=True,
                         normalize=normalize,
                         proj=proj, oversample=oversample)

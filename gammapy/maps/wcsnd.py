@@ -1,10 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.coordinates import SkyCoord
-from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
-from .base import MapBase
-from .wcs import WCSGeom
+from .geom import pix_tuple_to_idx
 from .wcsmap import WcsMap
 
 __all__ = [
@@ -27,7 +24,6 @@ class WcsMapND(WcsMap):
         Data array. If none then an empty array will be allocated.
     dtype : str, optional
         Data type, default is float32
-
     """
 
     def __init__(self, wcs, data=None, dtype='float32'):

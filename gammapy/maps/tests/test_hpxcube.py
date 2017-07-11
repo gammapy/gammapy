@@ -77,6 +77,7 @@ def test_hpxcube_get_by_coords(nside, nested, coordsys, region, axes):
     coords = m.hpx.get_coords()
     assert_allclose(np.ravel(m.data), m.get_by_coords(coords))
 
+
 @pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
@@ -94,7 +95,7 @@ def test_hpxcube_fill_by_coords(nside, nested, coordsys, region, axes):
     coords = m.hpx.get_coords()
     m.fill_by_coords(coords, coords[1])
     m.fill_by_coords(coords, coords[1])
-    assert_allclose(np.ravel(m.data),  2.0 * coords[1])
+    assert_allclose(np.ravel(m.data), 2.0 * coords[1])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -103,7 +104,7 @@ def test_hpxcube_set_by_coords(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes))
     coords = m.hpx.get_coords()
     m.set_by_coords(coords, coords[1])
-    assert_allclose(np.ravel(m.data),  coords[1])
+    assert_allclose(np.ravel(m.data), coords[1])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),

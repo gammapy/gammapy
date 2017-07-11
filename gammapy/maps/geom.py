@@ -13,8 +13,8 @@ __all__ = [
     'MapAxis',
 ]
 
-def get_shape(param):
 
+def get_shape(param):
     if param is None:
         return tuple()
 
@@ -24,7 +24,6 @@ def get_shape(param):
 
 
 def coordsys_to_frame(coordsys):
-
     if coordsys in ['CEL', 'C']:
         return 'icrs'
     elif coordsys in ['GAL', 'G']:
@@ -35,7 +34,6 @@ def coordsys_to_frame(coordsys):
 
 
 def skydir_to_lonlat(skydir, coordsys=None):
-
     if coordsys in ['CEL', 'C']:
         skydir = skydir.transform_to('icrs')
     elif coordsys in ['GAL', 'G']:
@@ -59,7 +57,6 @@ def pix_tuple_to_idx(pix):
     -------
     idx : `~numpy.ndarray`
         Array of pixel indices.
-
     """
     idx = []
     for i, p in enumerate(pix):
@@ -95,13 +92,13 @@ def bin_to_val(edges, bins):
 def coord_to_pix(edges, coord, interp='lin'):
     """Convert grid coordinates to pixel coordinates using the chosen
     interpolation scheme."""
-
     from scipy.interpolate import interp1d
 
     if interp == 'log':
         fn = np.log
     elif interp == 'lin':
-        def fn(t): return t
+        def fn(t):
+            return t
     elif interp == 'sqrt':
         fn = np.sqrt
     else:
@@ -117,20 +114,22 @@ def coord_to_pix(edges, coord, interp='lin'):
 def pix_to_coord(edges, pix, interp='lin'):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
-
     from scipy.interpolate import interp1d
 
     if interp == 'log':
         fn0 = np.log
         fn1 = np.exp
     elif interp == 'lin':
-        def fn0(t): return t
+        def fn0(t):
+            return t
 
-        def fn1(t): return t
+        def fn1(t):
+            return t
     elif interp == 'sqrt':
         fn0 = np.sqrt
 
-        def fn1(t): return np.power(t, 2)
+        def fn1(t):
+            return np.power(t, 2)
     else:
         raise ValueError('Invalid interp: {}'.format(interp))
 
@@ -155,14 +154,11 @@ class MapAxis(object):
     nodes : `~numpy.ndarray`
         Array of node values.  These will be interpreted as either bin
         edges or centers.
-
     interp : str
         Interpolation method used to transform between axis and pixel
         coordinates.  Valid options are `log`, `lin`, and `sqrt`.
-
     unit : str
         String specifying the data units.
-
     """
 
     # TODO: Add methods to faciliate FITS I/O.
@@ -230,17 +226,13 @@ class MapAxis(object):
         ----------
         lo_bnd : float
             Lower bound of first axis bin.
-
         hi_bnd : float
             Upper bound of last axis bin.
-
         nbin : int
             Number of bins.
-
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are `log`, `lin`, and `sqrt`.
-
         """
 
         interp = kwargs.setdefault('interp', 'lin')
@@ -251,8 +243,8 @@ class MapAxis(object):
             nodes = np.exp(np.linspace(np.log(lo_bnd),
                                        np.log(hi_bnd), nbin + 1))
         elif interp == 'sqrt':
-            nodes = np.linspace(lo_bnd**0.5,
-                                hi_bnd**0.5, nbin + 1)**2.0
+            nodes = np.linspace(lo_bnd ** 0.5,
+                                hi_bnd ** 0.5, nbin + 1) ** 2.0
         else:
             raise ValueError('Invalid interp: {}'.format(interp))
 
@@ -271,11 +263,9 @@ class MapAxis(object):
         ----------
         nodes : `~numpy.ndarray`
             Axis nodes (bin center).
-
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are `log`, `lin`, and `sqrt`.
-
         """
         nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
@@ -295,11 +285,9 @@ class MapAxis(object):
         ----------
         edges : `~numpy.ndarray`
             Axis bin edges.
-
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are `log`, `lin`, and `sqrt`.
-
         """
         if len(edges) < 2:
             raise ValueError('Edges array must have at least two elements.')
@@ -321,7 +309,6 @@ class MapAxis(object):
         -------
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
-
         """
         pix = pix - self._pix_offset
         return pix_to_coord(self._nodes, pix, interp=self._interp)
@@ -338,7 +325,6 @@ class MapAxis(object):
         -------
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
-
         """
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
         return np.array(pix + self._pix_offset, ndmin=1)
@@ -350,7 +336,6 @@ class MapAxis(object):
         ----------
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
-
         bounded : bool
 
 
@@ -358,7 +343,6 @@ class MapAxis(object):
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
-
         """
         return coord_to_idx(self.edges, coord, bounded)
 
@@ -375,7 +359,6 @@ class MapAxis(object):
         axis : `~MapAxis`
             Sliced axis objected.
         """
-
         center = self.center[idx]
         idx = self.coord_to_idx(center)
         # For edge nodes we need to keep N+1 nodes
@@ -440,7 +423,7 @@ class MapCoords(object):
     def from_tuple(cls, coords, **kwargs):
         """Create from tuple of coordinate vectors."""
         if (isinstance(coords[0], np.ndarray) or
-            isinstance(coords[0], list) or
+                isinstance(coords[0], list) or
                 np.isscalar(coords[0])):
             return cls.from_lonlat(*coords, **kwargs)
         elif isinstance(coords[0], SkyCoord):
@@ -501,7 +484,6 @@ class MapGeom(object):
         coords : tuple
             Tuple of coordinate vectors with one element for each
             dimension.
-
         """
         pass
 
@@ -543,7 +525,6 @@ class MapGeom(object):
             Tuple of pixel indices in image and band dimensions.
             Elements set to -1 correspond to coordinates outside the
             map.
-
         """
         pix = self.coord_to_pix(coords)
         return self.pix_to_idx(pix)
@@ -578,7 +559,6 @@ class MapGeom(object):
         -------
         idx : tuple
             Tuple of pixel indices.
-
         """
         pass
 
@@ -618,6 +598,5 @@ class MapGeom(object):
         -------
         geom : `~MapGeom`
             Sliced geometry.
-
         """
         pass

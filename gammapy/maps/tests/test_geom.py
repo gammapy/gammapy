@@ -11,7 +11,8 @@ pytest.importorskip('scipy')
 mapaxis_geoms = [
     (np.array([0.25, 0.75, 1.0, 2.0]), 'lin'),
     (np.array([0.25, 0.75, 1.0, 2.0]), 'log'),
-    (np.array([0.25, 0.75, 1.0, 2.0]), 'sqrt')]
+    (np.array([0.25, 0.75, 1.0, 2.0]), 'sqrt'),
+]
 
 mapaxis_geoms_node_type = [
     (np.array([0.25, 0.75, 1.0, 2.0]), 'lin', 'edge'),
@@ -26,7 +27,6 @@ mapaxis_geoms_node_type = [
 @pytest.mark.parametrize(('edges', 'interp'),
                          mapaxis_geoms)
 def test_mapaxis_init_from_edges(edges, interp):
-
     axis = MapAxis(edges, interp=interp)
     assert_allclose(axis.edges, edges)
     assert_allclose(axis.nbin, len(edges) - 1)
@@ -35,25 +35,24 @@ def test_mapaxis_init_from_edges(edges, interp):
 @pytest.mark.parametrize(('nodes', 'interp'),
                          mapaxis_geoms)
 def test_mapaxis_from_nodes(nodes, interp):
-
     axis = MapAxis.from_nodes(nodes, interp=interp)
     assert_allclose(axis.center, nodes)
     assert_allclose(axis.nbin, len(nodes))
 
+
 @pytest.mark.parametrize(('nodes', 'interp'),
                          mapaxis_geoms)
 def test_mapaxis_from_bounds(nodes, interp):
-
     axis = MapAxis.from_bounds(nodes[0], nodes[-1], 3,
                                interp=interp)
     assert_allclose(axis.edges[0], nodes[0])
     assert_allclose(axis.edges[-1], nodes[-1])
     assert_allclose(axis.nbin, 3)
 
+
 @pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
                          mapaxis_geoms_node_type)
 def test_mapaxis_pix_to_coord(nodes, interp, node_type):
-
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
     assert_allclose(axis.center,
                     axis.pix_to_coord(np.arange(axis.nbin, dtype=float)))
@@ -64,7 +63,6 @@ def test_mapaxis_pix_to_coord(nodes, interp, node_type):
 @pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
                          mapaxis_geoms_node_type)
 def test_mapaxis_coord_to_idx(nodes, interp, node_type):
-
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
     assert_allclose(np.arange(axis.nbin, dtype=int),
                     axis.coord_to_idx(axis.center))
@@ -73,7 +71,6 @@ def test_mapaxis_coord_to_idx(nodes, interp, node_type):
 @pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
                          mapaxis_geoms_node_type)
 def test_mapaxis_slice(nodes, interp, node_type):
-
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
     saxis = axis.slice(slice(1, 3))
     assert_allclose(saxis.nbin, 2)
@@ -96,7 +93,6 @@ def test_mapaxis_slice(nodes, interp, node_type):
 
 
 def test_mapcoords_create():
-
     # 2D Scalar
     coords = MapCoords.create((0.0, 0.0))
 

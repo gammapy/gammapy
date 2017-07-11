@@ -13,12 +13,8 @@ __all__ = [
 ]
 
 
-
-
-
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""
-
     if not isinstance(param, tuple):
         param = [param]
 
@@ -58,7 +54,6 @@ class WCSGeom(MapGeom):
         Pixel size in each image plane.  If none then a constant pixel size will be used.
     axes : list
         Axes for non-spatial dimensions
-
     """
 
     def __init__(self, wcs, npix, cdelt=None, axes=None):
@@ -495,7 +490,6 @@ def pix2world(wcs, cdelt, crpix, pix):
 
 
 def world2pix(wcs, cdelt, crpix, coord):
-
     pix_ratio = [np.abs(wcs.wcs.cdelt[0] / cdelt[0]),
                  np.abs(wcs.wcs.cdelt[1] / cdelt[1])]
     pix = wcs.wcs_world2pix(coord[0], coord[1], 0)
@@ -602,7 +596,6 @@ def wcs_to_coords(w, shape):
 
 
 def get_map_skydir(filename, maphdu=0):
-
     with fits.open(filename) as hdulist:
         wcs = WCS(hdulist[maphdu].header)
     return wcs_to_skydir(wcs)

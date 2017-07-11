@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..wcs import WCSGeom
 from ..geom import MapAxis
@@ -20,7 +19,7 @@ wcs_allsky_test_geoms = [
     (None, 10.0, 'GAL', 'AIT', skydir, axes1),
     (None, [10.0, 20.0], 'GAL', 'AIT', skydir, axes1),
     (None, 10.0, 'GAL', 'AIT', skydir, axes2),
-    (None, [[10.0, 20.0, 30.0],[10.0, 20.0, 30.0]],
+    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]],
      'GAL', 'AIT', skydir, axes2),
 ]
 

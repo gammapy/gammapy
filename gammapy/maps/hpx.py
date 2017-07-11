@@ -115,10 +115,8 @@ def ravel_hpx_index(idx, npix):
 
 
 def lonlat_to_colat(lon, lat):
-
     phi = np.radians(lon)
     theta = (np.pi / 2) - np.radians(lat)
-
     return phi, theta
 
 
@@ -156,10 +154,9 @@ def get_nside_from_pixel_size(pixsz):
     nside : `~numpy.ndarray`
         NSIDE parameter.
     """
-
     import healpy as hp
     pixsz = np.array(pixsz, ndmin=1)
-    nside = 2**np.linspace(1, 14, 14, dtype=int)
+    nside = 2 ** np.linspace(1, 14, 14, dtype=int)
     nside_pixsz = np.degrees(hp.nside2resol(nside))
     return nside[np.argmin(np.abs(nside_pixsz - pixsz[..., None]), axis=-1)]
 
@@ -183,7 +180,6 @@ def hpx_to_axes(h, npix):
     """
     x = h.ebins
     z = np.arange(npix[-1] + 1)
-
     return x, z
 
 
@@ -273,7 +269,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
     mask = ~np.any(np.isnan(sky_crds), axis=1)
-    ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1]) ), int)
+    ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
     m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
     ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[..., None],
@@ -392,7 +388,6 @@ class HpxGeom(MapGeom):
         If True defer allocation of partial- to all-sky index mapping
         arrays.  This option is only compatible with partial-sky maps
         with an analytic geometry (e.g. DISK).
-
     """
 
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
@@ -532,11 +527,10 @@ class HpxGeom(MapGeom):
         -------
         idx_local : `~numpy.ndarray`
             An array of local HEALPIX pixel indices.
-
         """
         # Convert to tuple representation
         if (isinstance(idx_global, int) or
-            (isinstance(idx_global, tuple) and isinstance(idx_global[0], int)) or
+                (isinstance(idx_global, tuple) and isinstance(idx_global[0], int)) or
                 isinstance(idx_global, np.ndarray)):
             idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1),
                                            self._maxpix)
@@ -649,7 +643,7 @@ class HpxGeom(MapGeom):
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
             slice_dims = [0] + [i + 1 for i,
-                                ax in enumerate(axes) if ax.nbin > 1]
+                                          ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
@@ -785,7 +779,6 @@ class HpxGeom(MapGeom):
         geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
-
         # FIXME: Pass ipix as argument
 
         return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
@@ -918,7 +911,6 @@ class HpxGeom(MapGeom):
         -------
         hpx : `~HpxGeom`
             HEALPix geometry.
-
         """
         convname = HpxGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
@@ -970,9 +962,7 @@ class HpxGeom(MapGeom):
         -------
         hpx : `~HpxGeom`
             HEALPix geometry.
-
         """
-
         # FIXME: Need correct handling of IMPLICIT and EXPLICIT maps
 
         # if HPX region is not defined then geometry is defined by
@@ -1038,7 +1028,6 @@ class HpxGeom(MapGeom):
         extname : str
             The HDU extension name
         """
-
         # if self.conv.bands_hdu == 'EBOUNDS':
         #    return self.make_ebounds_hdu()
         # elif self.conv.bands_hdu == 'ENERGIES':
@@ -1074,7 +1063,6 @@ class HpxGeom(MapGeom):
         extname : str
             The HDU extension name
         """
-
         # TODO: Assert if the number of axes is wrong?
 
         emin = self._axes[0].edges[:-1]
@@ -1319,7 +1307,6 @@ class HpxGeom(MapGeom):
         coords : tuple
             Tuple of coordinate vectors with one element for each
             dimension.
-
         """
         pix = self.get_pixels()
         return self.pix_to_coord(pix)
@@ -1361,7 +1348,6 @@ class HpxToWcsMapping(object):
     ----------
     hpx : `~HpxGeom`
         HEALPix geometry object.
-
     wcs : `~gammapy.maps.wcs.WCSGeom`
         WCS geometry object.
     """

@@ -3,13 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import abc
 import re
 import numpy as np
-from astropy.extern import six
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
-from astropy.utils.misc import InheritDocstrings
 from .base import MapBase
-from .hpx import HpxGeom, HpxToWcsMapping, get_nside_from_pixel_size
-from .geom import MapAxis, skydir_to_lonlat
+from .hpx import HpxGeom
+from .geom import MapAxis
 
 __all__ = [
     'HpxMap',
@@ -17,7 +14,7 @@ __all__ = [
 
 
 def find_and_read_bands(hdulist, extname=None):
-    """  Reads and returns the energy bin edges.
+    """Read and returns the energy bin edges.
 
     This works for both the CASE where the energies are in the ENERGIES HDU
     and the case where they are in the EBOUND HDU
@@ -142,7 +139,6 @@ class HpxMap(MapBase):
         -------
         hpx_map : `~HpxMap`
             Map object
-
         """
         with fits.open(filename) as hdulist:
             hpx_map = cls.from_hdulist(hdulist, **kwargs)
@@ -260,7 +256,6 @@ class HpxMap(MapBase):
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
         """
-
         # FIXME: Should this be a method of HpxMapND?
         # FIXME: Should we assign extname in this method?
 

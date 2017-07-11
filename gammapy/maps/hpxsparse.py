@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.io import fits
-from astropy.coordinates import SkyCoord
-from .geom import MapCoords, pix_tuple_to_idx
+from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
-from .hpx import HpxGeom, HpxToWcsMapping, ravel_hpx_index, unravel_hpx_index
+from .hpx import ravel_hpx_index
 
 __all__ = [
     'HpxMapSparse',
@@ -24,7 +22,6 @@ class HpxMapSparse(HpxMap):
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
-
     """
 
     def __init__(self, hpx, data=None, dtype='float32'):

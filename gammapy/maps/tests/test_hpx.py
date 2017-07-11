@@ -39,7 +39,6 @@ hpx_test_geoms = hpx_allsky_test_geoms + hpx_partialsky_test_geoms
 
 
 def make_test_coords(geom, lon, lat):
-
     coords = [lon, lat] + [ax.center for ax in geom.axes]
     coords = np.meshgrid(*coords)
     coords = tuple([np.ravel(t) for t in coords])
@@ -119,7 +118,6 @@ def test_hpx_global_to_local():
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_allsky_test_geoms)
 def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
-
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
 
     pix0 = geom.get_pixels()
@@ -135,7 +133,6 @@ def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
-
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
     geom_slice = geom.to_slice(slices)
@@ -169,7 +166,6 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
-
     import healpy as hp
 
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
@@ -337,22 +333,22 @@ def test_make_hpx_to_wcs_mapping():
                               67, 28, 28, 28, 45, 45, 45, 45, 28, 28,
                               66, 45, 45, 45, 45, 28]))
     assert_allclose(hpx2wcs[1],
-                    np.array([0.11111111,  0.09090909,  0.09090909,  0.09090909,
-                              0.09090909, 1.,  0.11111111,  0.11111111,  0.09090909,
-                              0.09090909, 0.09090909,  0.09090909,  0.11111111,
-                              0.11111111,  0.11111111, 0.09090909,  0.09090909,
-                              0.09090909,  0.11111111,  0.11111111, 0.11111111,
-                              0.16666667,  0.16666667,  0.16666667,  0.125,
-                              0.125,  0.125,  0.125,  0.16666667,  0.16666667,
-                              1.,  0.125,  0.125,  0.125,  0.125, 0.16666667]))
+                    np.array([0.11111111, 0.09090909, 0.09090909, 0.09090909,
+                              0.09090909, 1., 0.11111111, 0.11111111, 0.09090909,
+                              0.09090909, 0.09090909, 0.09090909, 0.11111111,
+                              0.11111111, 0.11111111, 0.09090909, 0.09090909,
+                              0.09090909, 0.11111111, 0.11111111, 0.11111111,
+                              0.16666667, 0.16666667, 0.16666667, 0.125,
+                              0.125, 0.125, 0.125, 0.16666667, 0.16666667,
+                              1., 0.125, 0.125, 0.125, 0.125, 0.16666667]))
 
     hpx = HpxGeom([8, 16], False, 'GAL',
                   region='DISK(110.,75.,2.)', axes=[ax0])
     hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
     assert_allclose(hpx2wcs[0],
-                    np.array([[15,  6,  6,  6,  6,  6, 15, 15,  6,  6,  6,  6,
-                               15, 15, 15,  6,  6, 6, 15, 15, 15,  6,  6,  6, 15,
-                               15, 15, 15,  6,  6, 15, 15, 15, 15, 15,  6],
+                    np.array([[15, 6, 6, 6, 6, 6, 15, 15, 6, 6, 6, 6,
+                               15, 15, 15, 6, 6, 6, 15, 15, 15, 6, 6, 6, 15,
+                               15, 15, 15, 6, 6, 15, 15, 15, 15, 15, 6],
                               [67, 46, 46, 46, 46, 29, 67, 67, 46, 46, 46, 46,
                                67, 67, 67, 46, 46, 46, 67, 67, 67, 28, 28, 28,
                                45, 45, 45, 45, 28, 28, 66, 45, 45, 45, 45, 28]]))
