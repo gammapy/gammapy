@@ -196,39 +196,39 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime'].value)
 
-        ss += '{:<20s} : {:.1f}\n'.format('Energy threshold', d['Energy_Threshold'])
+        ss += '{:<20s} : {:.2f}\n'.format('Energy threshold', d['Energy_Threshold'])
 
         val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
-        ss += '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Map measurement',
             d['Flux_Map_RSpec_Data'].value / FF,
             d['Flux_Map_RSpec_Data'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Source model',
             d['Flux_Map_RSpec_Source'].value / FF,
             d['Flux_Map_RSpec_Source'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Other component model',
             d['Flux_Map_RSpec_Other'].value / FF,
             d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Large scale component model',
             d['Flux_Map_RSpec_LS'].value / FF,
             d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Total model',
             d['Flux_Map_RSpec_Total'].value / FF,
             d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB,
@@ -252,7 +252,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         lo = d['Energy_Range_Spec_Lo'].value
         hi = d['Energy_Range_Spec_Hi'].value
-        ss += '{:<20s} : {:.1f} to {:.1f} TeV\n'.format('Energy range:', lo, hi)
+        ss += '{:<20s} : {:.2f} to {:.2f} TeV\n'.format('Energy range:', lo, hi)
 
         ss += '{:<20s} : {:.1f}\n'.format('Background', d['Background_Spec'])
         ss += '{:<20s} : {:.1f}\n'.format('Excess', d['Excess_Spec'])
@@ -263,12 +263,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_Int_1TeV'].value
         err = d['Flux_Spec_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Best-fit model flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Flux_Spec_Energy_1_10_TeV'].value
         err = d['Flux_Spec_Energy_1_10_TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 erg cm^-2 s^-1\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 erg cm^-2 s^-1\n'.format(
             'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
 
         # TODO: can we just use the Gammapy model classes here instead of duplicating the code?
@@ -279,21 +279,21 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_spec_pl(self):
         d = self.data
-        ss = '{:<20s} : {:.1f}\n'.format('Pivot energy', d['Energy_Spec_PL_Pivot'])
+        ss = '{:<20s} : {:.2f}\n'.format('Pivot energy', d['Energy_Spec_PL_Pivot'])
 
         val = d['Flux_Spec_PL_Diff_Pivot'].value
         err = d['Flux_Spec_PL_Diff_Pivot_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Flux at pivot energy', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_PL_Int_1TeV'].value
         err = d['Flux_Spec_PL_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'PL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Flux_Spec_PL_Diff_1TeV'].value
         err = d['Flux_Spec_PL_Diff_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'PL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Index_Spec_PL']
@@ -309,12 +309,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_ECPL_Diff_1TeV'].value
         err = d['Flux_Spec_ECPL_Diff_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'ECPL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_ECPL_Int_1TeV'].value
         err = d['Flux_Spec_ECPL_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'ECPL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Index_Spec_ECPL']
@@ -330,7 +330,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         err = err / val ** 2
         val = 1. / val
 
-        ss += '{:<20s} : {:.1f} +/- {:.1f} TeV\n'.format('ECPL E_cut', val, err)
+        ss += '{:<20s} : {:.2f} +/- {:.2f} TeV\n'.format('ECPL E_cut', val, err)
 
         return ss
 
@@ -508,7 +508,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
         table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask]
-        table['is_ul'] = self.data['Flux_Points_Is_UL'][mask]
+        table['is_ul'] = self.data['Flux_Points_Flux_Is_UL'][mask]
 
         return FluxPoints(table)
 
