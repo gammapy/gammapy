@@ -42,6 +42,52 @@ class WcsMapND(WcsMap):
 
         WcsMap.__init__(self, wcs, data)
 
+    @classmethod
+    def from_hdu(cls, hdu, hdu_bands=None):
+        """Make a WcsMapND object from a FITS HDU.
+
+        Parameters
+        ----------
+        hdu : `~astropy.fits.BinTableHDU` or `~astropy.fits.ImageHDU` 
+            The map FITS HDU.
+        hdu_bands : `~astropy.fits.BinTableHDU` 
+            The BANDS table HDU.
+        """
+        geom = WcsGeom.from_header(hdu.header, hdu_bands)
+        shape = tuple([ax.nbin for ax in axes[::-1]])
+        shape_data = shape + tuple(np.unique(hpx.npix))
+
+        # with an ND-array
+        # TODO: Should we support extracting slices?
+
+        colnames = hdu.columns.names
+        cnames = []
+        if isinstance(hdu, fits.BinTableHDU):
+            pix = hdu.data.field('PIX')
+            vals = hdu.data.field('VALUE')
+            if 'CHANNEL' in hdu.data.columns.names:
+                chan = hdu.data.field('CHANNEL')
+                chan = np.unravel_index(chan, shape)
+                idx = chan + (pix,)
+            else:
+                idx = (pix,)
+
+            data = np.zeros(shape_data)
+            data[idx] = vals
+        else:
+            for c in colnames:
+                if c.find(hpx.conv.colstring) == 0:
+                    cnames.append(c)
+            nbin = len(cnames)
+            data = np.ndarray(shape_data)
+            if len(cnames) == 1:
+                data[:] = hdu.data.field(cnames[0])
+            else:
+                for i, cname in enumerate(cnames):
+                    idx = np.unravel_index(i, shape)
+                    data[idx] = hdu.data.field(cname)
+        return cls(hpx, data)
+
     def get_by_pix(self, pix, interp=None):
         if interp is None:
             return self.get_by_idx(pix)
