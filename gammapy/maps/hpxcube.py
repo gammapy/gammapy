@@ -51,18 +51,18 @@ class HpxMapND(HpxMap):
         self._hpx2wcs = None
 
     @classmethod
-    def from_hdu(cls, hdu, axes):
+    def from_hdu(cls, hdu, hdu_bands=None):
         """Make a HpxMapND object from a FITS HDU.
 
         Parameters
         ----------
         hdu : `~astropy.fits.BinTableHDU`
             The FITS HDU
-        axes : list
-            List of axes for non-spatial dimensions.
+        hdu_bands  : `~astropy.fits.BinTableHDU`
+            The BANDS table HDU
         """
-        hpx = HpxGeom.from_header(hdu.header, axes)
-        shape = tuple([ax.nbin for ax in axes[::-1]])
+        hpx = HpxGeom.from_header(hdu.header, hdu_bands)
+        shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
         shape_data = shape + tuple(np.unique(hpx.npix))
 
         # FIXME: We need to assert here if the file is incompatible
