@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
-from .geom import MapAxis, get_shape
+from .geom import MapAxis, get_shape, make_axes_cols, find_and_read_bands
 
 __all__ = [
     'WCSGeom',
@@ -238,6 +238,67 @@ class WCSGeom(MapGeom):
                              proj, coordsys, refpix, refpix)
         wcs = WCS(header)
         return cls(wcs, npix, cdelt=binsz, axes=axes)
+
+    @classmethod
+    def from_header(cls, header, hdu_bands=None):
+        """Create a WCS geometry object from a FITS header.
+
+        Parameters
+        ----------
+        header : `~astropy.io.fits.Header`
+            The FITS header
+        hdu_bands : `~astropy.fits.BinTableHDU` 
+            The BANDS table HDU.
+
+        Returns
+        -------
+        wcs : `~WCSGeom`
+            WCS geometry object.
+        """
+        wcs = WCS(header)
+        axes = find_and_read_bands(hdu_bands)
+        shape = tuple([ax.nbin for ax in axes])
+
+        if hdu_bands is not None and 'NPIX' in hdu_bands.columns.names:
+            npix = hdu_bands.data.field('NPIX').reshape(shape + (2,))
+            npix = (npix[..., 0], npix[..., 1])
+        else:
+            # FIXME: This logic doesn't work for BinTableHDU since
+            # NAXIS isn't filled
+            npix = (header['NAXIS1'], header['NAXIS2'])
+
+        return cls(wcs, npix, axes=axes)
+
+    def make_bands_hdu(self, extname='BANDS'):
+
+        header = self.make_header()
+
+        cols = make_axes_cols(self.axes)
+        if self.npix[0].size > 1:
+            cols += [fits.Column('NPIX', '2I', dim='(2)',
+                                 array=np.vstack((np.ravel(self.npix[0]),
+                                                  np.ravel(self.npix[1]))).T), ]
+            cols += [fits.Column('CDELT', '2E', dim='(2)',
+                                 array=np.vstack((np.ravel(self._cdelt[0]),
+                                                  np.ravel(self._cdelt[1]))).T), ]
+            cols += [fits.Column('CRPIX', '2E', dim='(2)',
+                                 array=np.vstack((np.ravel(self._crpix[0]),
+                                                  np.ravel(self._crpix[1]))).T), ]
+
+        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
+        return hdu
+
+    def make_header(self, **kwargs):
+        header = self.wcs.to_header()
+        self._fill_header_from_axes(header)
+
+        #header['NAXIS'] = 2 + len(self.axes)
+        #header['NAXIS1'] = np.max(self.npix[0])
+        #header['NAXIS2'] = np.max(self.npix[1])
+        # for i, ax in enumerate(self.axes):
+        #    header['NAXIS%i'%(i+3)] = ax.nbin
+
+        return header
 
     def distance_to_edge(self, skydir):
         """Angular distance from the given direction and

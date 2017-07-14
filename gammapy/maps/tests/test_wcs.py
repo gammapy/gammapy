@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..wcs import WCSGeom
 from ..geom import MapAxis
@@ -49,3 +50,25 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_pixels()[0],
                     geom.coord_to_idx(geom.get_coords())[0])
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+    geom0 = WCSGeom.create(npix=npix, binsz=binsz,
+                          proj=proj, coordsys=coordsys, axes=axes)
+
+    shape = (np.max(geom0.npix[0]),np.max(geom0.npix[1]))
+    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_prim = fits.PrimaryHDU(np.zeros(shape).T)
+    hdu_prim.header.update(geom0.make_header())
+
+    filename = str(tmpdir / 'wcsgeom.fits')
+    hdulist = fits.HDUList([hdu_prim, hdu_bands])
+    hdulist.writeto(filename, overwrite=True)
+
+    hdulist = fits.open(filename)
+    geom1 = WCSGeom.from_header(hdulist[0].header, hdulist['BANDS'])
+
+    assert_allclose(geom0.npix, geom1.npix)
+    assert(geom0.coordsys == geom1.coordsys)

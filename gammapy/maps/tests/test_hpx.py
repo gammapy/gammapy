@@ -378,7 +378,22 @@ def test_hpxgeom_from_header():
     assert_allclose(hpx.nside, np.array([64]))
 
 
-def test_hpxgeom_make_header():
-    hpx = HpxGeom(16, False, 'GAL')
-    header = hpx.make_header()
-    # TODO: assert on something
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
+    geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_prim = fits.PrimaryHDU()
+    hdu_prim.header.update(geom0.make_header())
+
+    filename = str(tmpdir / 'hpxgeom.fits')
+    hdulist = fits.HDUList([hdu_prim, hdu_bands])
+    hdulist.writeto(filename, overwrite=True)
+
+    hdulist = fits.open(filename)
+    geom1 = HpxGeom.from_header(hdulist[0].header, hdulist['BANDS'])
+
+    assert_allclose(geom0.nside, geom1.nside)
+    assert_allclose(geom0.npix, geom1.npix)
+    assert_allclose(geom0.nest, geom1.nest)
+    assert(geom0.coordsys == geom1.coordsys)
