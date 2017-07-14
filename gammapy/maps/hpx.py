@@ -12,11 +12,12 @@ from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from .wcs import WCSGeom
 from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
-from .geom import coordsys_to_frame, skydir_to_lonlat
+from .geom import coordsys_to_frame, skydir_to_lonlat, make_axes_cols
+from .geom import find_and_read_bands
 
 # TODO: What should be part of the public API?
 __all__ = [
-    # 'HPX_Conv',
+    # 'HpxConv',
     # 'HPX_FITS_CONVENTIONS',
     # 'HPX_ORDER_TO_PIXSIZE',
     'HpxGeom',
@@ -31,7 +32,7 @@ HPX_ORDER_TO_PIXSIZE = np.array([32.0, 16.0, 8.0, 4.0, 2.0, 1.0,
                                  0.005, 0.002])
 
 
-class HPX_Conv(object):
+class HpxConv(object):
     """Data structure to define how a HEALPIX map is stored to FITS.
     """
 
@@ -47,24 +48,29 @@ class HPX_Conv(object):
     def colname(self, indx):
         return '{}{}'.format(self.colstring, indx)
 
+    @classmethod
+    def create(cls, convname='GADF'):
+        return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
+
 
 # Various conventions for storing HEALPIX maps in FITS files
 HPX_FITS_CONVENTIONS = OrderedDict()
-HPX_FITS_CONVENTIONS['FGST_CCUBE'] = HPX_Conv('FGST_CCUBE')
-HPX_FITS_CONVENTIONS['FGST_LTCUBE'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['GADF'] = HpxConv('GADF', bands_hdu='BANDS')
+HPX_FITS_CONVENTIONS['FGST_CCUBE'] = HpxConv('FGST_CCUBE')
+HPX_FITS_CONVENTIONS['FGST_LTCUBE'] = HpxConv(
     'FGST_LTCUBE', colstring='COSBINS', extname='EXPOSURE', bands_hdu='CTHETABOUNDS')
-HPX_FITS_CONVENTIONS['FGST_BEXPCUBE'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['FGST_BEXPCUBE'] = HpxConv(
     'FGST_BEXPCUBE', colstring='ENERGY', extname='HPXEXPOSURES', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['FGST_SRCMAP'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['FGST_SRCMAP'] = HpxConv(
     'FGST_SRCMAP', extname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['FGST_TEMPLATE'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['FGST_TEMPLATE'] = HpxConv(
     'FGST_TEMPLATE', colstring='ENERGY', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['FGST_SRCMAP_SPARSE'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['FGST_SRCMAP_SPARSE'] = HpxConv(
     'FGST_SRCMAP_SPARSE', colstring=None, extname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['GALPROP'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['GALPROP'] = HpxConv(
     'GALPROP', colstring='Bin', extname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential', coordsys='COORDTYPE')
-HPX_FITS_CONVENTIONS['GALPROP2'] = HPX_Conv(
+HPX_FITS_CONVENTIONS['GALPROP2'] = HpxConv(
     'GALPROP', colstring='Bin', extname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential')
 
@@ -391,7 +397,7 @@ class HpxGeom(MapGeom):
     """
 
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
-                 axes=None, conv=HPX_Conv('FGST_CCUBE'), sparse=False):
+                 axes=None, conv=HpxConv('FGST_CCUBE'), sparse=False):
 
         # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
@@ -643,7 +649,7 @@ class HpxGeom(MapGeom):
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
             slice_dims = [0] + [i + 1 for i,
-                                          ax in enumerate(axes) if ax.nbin > 1]
+                                ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
@@ -797,7 +803,7 @@ class HpxGeom(MapGeom):
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
-               axes=None, conv=HPX_Conv('FGST_CCUBE'), skydir=None, width=None):
+               axes=None, conv=HpxConv('FGST_CCUBE'), skydir=None, width=None):
         """Create an HpxGeom object.
 
         Parameters
@@ -893,15 +899,15 @@ class HpxGeom(MapGeom):
             raise ValueError('Could not identify HEALPIX convention')
 
     @classmethod
-    def from_header(cls, header, axes=None, pix=None):
+    def from_header(cls, header, hdu_bands=None, pix=None):
         """Create an HPX object from a FITS header.
 
         Parameters
         ----------
         header : `~astropy.io.fits.Header`
             The FITS header
-        axes  : list
-            List of non-spatial axes
+        hdu_bands : `~astropy.fits.BinTableHDU` 
+            The BANDS table HDU.
         pix : tuple
             List of pixel index vectors defining the pixels
             encompassed by the geometry.  For EXPLICIT geometries with
@@ -915,6 +921,9 @@ class HpxGeom(MapGeom):
         convname = HpxGeom.identify_HPX_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
 
+        axes = find_and_read_bands(hdu_bands)
+        shape = [ax.nbin for ax in axes]
+
         if header['PIXTYPE'] != 'HEALPIX':
             raise Exception('PIXTYPE != HEALPIX')
         if header['ORDERING'] == 'RING':
@@ -924,7 +933,9 @@ class HpxGeom(MapGeom):
         else:
             raise Exception('ORDERING != RING | NESTED')
 
-        if 'NSIDE' in header:
+        if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
+            nside = hdu_bands.data.field('NSIDE').reshape(shape)
+        elif 'NSIDE' in header:
             nside = header['NSIDE']
         elif 'ORDER' in header:
             nside = 2 ** header['ORDER']
@@ -948,15 +959,15 @@ class HpxGeom(MapGeom):
                    axes=axes, conv=conv)
 
     @classmethod
-    def from_hdu(cls, hdu, axes=None):
+    def from_hdu(cls, hdu, hdu_bands=None):
         """Create an HPX object from a BinTable HDU.
 
         Parameters
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             The FITS HDU
-        axes  : list
-            List of non-spatial axes
+        hdu_bands : `~astropy.io.fits.BinTableHDU`
+            The BANDS table HDU
 
         Returns
         -------
@@ -972,87 +983,52 @@ class HpxGeom(MapGeom):
         else:
             pix = None
 
-        return cls.from_header(hdu.header, axes=axes, pix=pix)
+        return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
+
+        # FIXME: Think of a better name than DEFAULT
+
+        header = fits.Header()
+
+        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['GADF'])
+
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
-        indxschm = kwargs.get(
-            'indxschm', 'EXPLICIT' if self._region else 'IMPLICIT')
-        cards = [
-            fits.Card("TELESCOP", "GLAST"),
-            fits.Card("INSTRUME", "LAT"),
-            fits.Card(self._conv.coordsys, self.coordsys),
-            fits.Card("PIXTYPE", "HEALPIX"),
-            fits.Card("ORDERING", self.ordering),
-            fits.Card("INDXSCHM", indxschm),
-            fits.Card("ORDER", self._order[0]),
-            fits.Card("NSIDE", self._nside[0]),
-            fits.Card("FIRSTPIX", 0),
-            fits.Card("LASTPIX", np.max(self._maxpix[0]) - 1),
-            fits.Card("HPX_CONV", self._conv.convname),
-        ]
+        indxschm = kwargs.get('indxschm',
+                              'EXPLICIT' if self._region else 'IMPLICIT')
 
-        for i, ax in enumerate(self.axes):
+        header["TELESCOP"] = "GLAST"
+        header["INSTRUME"] = "LAT"
+        header[conv.coordsys] = self.coordsys
+        header["PIXTYPE"] = "HEALPIX"
+        header["ORDERING"] = self.ordering
+        header["INDXSCHM"] = indxschm
+        header["ORDER"] = np.max(self._order)
+        header["NSIDE"] = np.max(self._nside)
+        header["FIRSTPIX"] = 0
+        header["LASTPIX"] = np.max(self._maxpix) - 1
+        header["HPX_CONV"] = conv.convname
 
-            if ax.name == 'energy' and ax.quantity_type == 'integral':
-                cards += [fits.Card('AXCOLS%i' % i, 'E_MIN,E_MAX')]
-            elif ax.name == 'energy' and ax.quantity_type == 'differential':
-                cards += [fits.Card('AXCOLS%i' % i, 'ENERGY')]
-            elif ax.quantity_type == 'integral':
-                cards += [fits.Card('AXCOLS%i' % i,
-                                    '{}_MIN,{}_MAX'.format(ax.name.upper(),
-                                                           ax.name.upper()))]
-            elif ax.quantity_type == 'differential':
-                cards += [fits.Card('AXCOLS%i' % i, ax.name.upper)]
-            else:
-                raise ValueError('Invalid quantity type '
-                                 '{}'.format(ax.quantity_type))
+        self._fill_header_from_axes(header)
 
         if self.coordsys == 'CEL':
-            cards.append(fits.Card('EQUINOX', 2000.0,
-                                   'Equinox of RA & DEC specifications'))
+            header['EQUINOX'] = (2000.0,
+                                 'Equinox of RA & DEC specifications')
 
         if self.region:
-            cards.append(fits.Card('HPX_REG', self._region))
+            header['HPX_REG'] = self._region
 
-        return fits.Header(cards)
+        return header
 
     def make_bands_hdu(self, extname='BANDS'):
-        """Make a FITS HDU with the bin boundaries/centers for non-spatial
-        dimensions.
 
-        Parameters
-        ----------
-        extname : str
-            The HDU extension name
-        """
-        # if self.conv.bands_hdu == 'EBOUNDS':
-        #    return self.make_ebounds_hdu()
-        # elif self.conv.bands_hdu == 'ENERGIES':
-        #    return self.make_energies_hdu()
-
-        # Extract variable names
-
-        chan = np.arange(0, self._maxpix.size)
-        cols = [fits.Column('CHANNEL', 'I', array=chan), ]
-        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self.axes])
-        axes_max = np.meshgrid(*[ax.edges[1:] for ax in self.axes])
-        for i, ax in enumerate(self.axes):
-
-            if ax.name == 'energy':
-                axis_prefix = 'E'
-            else:
-                axis_prefix = 'AXIS%i' % i
-
-            cols += [fits.Column('%s_MIN' % axis_prefix,
-                                 'E', array=np.ravel(axes_min[i])), ]
-            cols += [fits.Column('%s_MAX' % axis_prefix,
-                                 'E', array=np.ravel(axes_max[i])), ]
-
-        hdu = fits.BinTableHDU.from_columns(
-            cols, self.make_header(), name=extname)
+        header = self.make_header()
+        cols = make_axes_cols(self.axes)
+        if self.nside.size > 1:
+            cols += [fits.Column('NSIDE', 'I', array=np.ravel(self.nside)), ]
+        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
         return hdu
 
     def make_ebounds_hdu(self, extname='EBOUNDS'):
