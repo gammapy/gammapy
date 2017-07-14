@@ -4,6 +4,7 @@ import abc
 import numpy as np
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
+from astropy.io import fits
 from .geom import pix_tuple_to_idx
 
 __all__ = [
@@ -100,6 +101,57 @@ class MapBase(object):
             return HpxMap.create(**kwargs)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read a map from a FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the FITS file.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
+
+        Returns
+        -------
+        out_map : `~MapBase`
+            Map object
+
+        """
+        with fits.open(filename) as hdulist:
+            out_map = cls.from_hdulist(hdulist, **kwargs)
+        return out_map
+
+    def write(self, filename, **kwargs):
+        """Write to a FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            Output file name.
+        extname : str
+            Set the name of the image extension.  By default this will
+            be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
+            HDU).
+        extname_bands : str
+            Set the name of the bands table extension.  By default this will
+            be set to BANDS.
+        hpxconv : str
+            Format convention for HEALPix maps.  This option can be used to
+            write files that are compliant with non-standard HEALPix
+            conventions.
+        sparse : bool
+            Sparsify the map by dropping pixels with zero amplitude.
+
+        """
+        hdulist = self.to_hdulist(**kwargs)
+        overwrite = kwargs.get('overwrite', True)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def __iter__(self):
         return self

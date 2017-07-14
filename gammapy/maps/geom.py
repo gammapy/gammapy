@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import re
 import numpy as np
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
+from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
@@ -12,6 +14,82 @@ __all__ = [
     'MapGeom',
     'MapAxis',
 ]
+
+
+def make_axes_cols(axes):
+    """Make FITS table columns for map axes.
+
+    Parameters
+    ----------
+    axes : list of `~MapAxis`
+
+    """
+
+    colname = {'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
+               'time': ['TIME', 'T_MIN', 'T_MAX'],
+               }
+
+    size = np.prod([ax.nbin for ax in axes])
+    chan = np.arange(0, size)
+    cols = [fits.Column('CHANNEL', 'I', array=chan), ]
+    axes_ctr = np.meshgrid(*[ax.center for ax in axes])
+    axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
+    axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
+    for i, ax in enumerate(axes):
+
+        names = colname.get(ax.name.lower(),
+                            ['AXIS%i' % i,
+                             'AXIS%i_MIN' % i, 'AXIS%i_MAX' % i])
+        for t, v in zip(names, [axes_ctr, axes_min, axes_max]):
+            cols += [fits.Column(t, 'E', array=np.ravel(v[i]),
+                                 unit=ax.unit.to_string()), ]
+
+    return cols
+
+
+def find_and_read_bands(hdu):
+    """Read and returns the map axes from a BANDS table.
+
+    Returns
+    -------
+    axes : list of `~MapAxis`
+        List of axis objects.
+
+    """
+    if hdu is None:
+        return []
+
+    axes = []
+    axis_cols = []
+    if hdu.name == 'ENERGIES':
+        axis_cols = [['ENERGY']]
+    elif hdu.name == 'EBOUNDS':
+        axis_cols = [['E_MIN', 'E_MAX']]
+    else:
+        for i in range(5):
+            if 'AXCOLS%i' % i in hdu.header:
+                axis_cols += [hdu.header['AXCOLS%i' % i].split(',')]
+            else:
+                break
+
+    for i, cols in enumerate(axis_cols):
+
+        if 'ENERGY' in cols or 'E_MIN' in cols:
+            name = 'energy'
+        elif re.search('(.+)_MIN', cols[0]):
+            name = re.search('(.+)_MIN', cols[0]).group(1)
+        else:
+            name = cols[0]
+
+        if len(cols) == 2:
+            xmin = np.unique(hdu.data.field(cols[0]))  # / 1E3
+            xmax = np.unique(hdu.data.field(cols[1]))  # / 1E3
+            axes += [MapAxis(np.append(xmin, xmax[-1]), name=name)]
+        else:
+            x = np.unique(hdu.data.field(cols[0]))
+            axes += [MapAxis.from_nodes(x, name=name)]
+
+    return axes
 
 
 def get_shape(param):
@@ -464,6 +542,10 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
+    def make_bands_hdu(self):
+        pass
+
+    @abc.abstractmethod
     def get_pixels(self):
         """Get pixel indices for all pixels in this geometry.
 
@@ -600,3 +682,20 @@ class MapGeom(object):
             Sliced geometry.
         """
         pass
+
+    def _fill_header_from_axes(self, header):
+
+        for i, ax in enumerate(self.axes):
+
+            if ax.name == 'energy' and ax.quantity_type == 'integral':
+                header['AXCOLS%i' % i] = 'E_MIN,E_MAX'
+            elif ax.name == 'energy' and ax.quantity_type == 'differential':
+                header['AXCOLS%i' % i] = 'ENERGY'
+            elif ax.quantity_type == 'integral':
+                header['AXCOLS%i' % i] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
+                                                                ax.name.upper())
+            elif ax.quantity_type == 'differential':
+                header['AXCOLS%i' % i] = ax.name.upper
+            else:
+                raise ValueError('Invalid quantity type '
+                                 '{}'.format(ax.quantity_type))
