@@ -289,35 +289,17 @@ class DataStore(object):
 
         Returns
         -------
-        OrderedDict : dictionary containing failure messages for all runs that fail a check.
+        results : OrderedDict
+            dictionary containing failure messages for all runs that fail a check.
         """
 
         results = OrderedDict()
-        nfail = 0
 
         # Loop over all obs_ids in obs_table
         for obs_id in self.obs_table['OBS_ID']:
-            messages = []
-            # Check that events table is not empty
-            if len(self.obs(obs_id).events.table) == 0:
-                messages.append('events table empty')
-            # Check that thresholds are meaningful for aeff
-            if self.obs(obs_id).aeff.meta['LO_THRES'] >= self.obs(obs_id).aeff.meta['HI_THRES']:
-                messages.append('LO_THRES >= HI_THRES in effective area meta data')
-            # Check that maximum value of aeff is greater than zero
-            if np.max(self.obs(obs_id).aeff.data.data) <= 0:
-                messages.append('maximum entry of effective area table <= 0')
-            # Check that maximum value of edisp matrix is greater than zero
-            if np.max(self.obs(obs_id).edisp.data.data) <= 0:
-                messages.append('maximum entry of energy dispersion table <= 0')
-            # Check that thresholds are meaningful for psf
-            if self.obs(obs_id).psf.energy_thresh_lo >= self.obs(obs_id).psf.energy_thresh_hi:
-                messages.append('LO_THRES >= HI_THRES in psf meta data')
+            messages = self.obs(obs_id).check_observation()
             if len(messages) > 0:
                 results[obs_id] = messages
-                nfail += 1
-
-        print('Checks failed for {:d} out of {:d} observations'.format(nfail, len(self.obs_table['OBS_ID'])))
 
         return results
 
@@ -727,6 +709,33 @@ class DataStoreObservation(object):
         psf = EnergyDependentTablePSF(energy=energy, rad=rad,
                                       exposure=exposure, psf_value=psf_value)
         return psf
+
+    def check_observation(self):
+        """Perform some basic sanity checks on this observation.
+
+        Returns
+        -------
+        results : list
+            List with failure messages for the checks that failed
+        """
+        messages = []
+        # Check that events table is not empty
+        if len(self.events.table) == 0:
+            messages.append('events table empty')
+        # Check that thresholds are meaningful for aeff
+        if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
+            messages.append('LO_THRES >= HI_THRES in effective area meta data')
+        # Check that maximum value of aeff is greater than zero
+        if np.max(self.aeff.data.data) <= 0:
+            messages.append('maximum entry of effective area table <= 0')
+        # Check that maximum value of edisp matrix is greater than zero
+        if np.max(self.edisp.data.data) <= 0:
+            messages.append('maximum entry of energy dispersion table <= 0')
+        # Check that thresholds are meaningful for psf
+        if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
+            messages.append('LO_THRES >= HI_THRES in psf meta data')
+
+        return messages
 
 
 class ObservationList(UserList):
