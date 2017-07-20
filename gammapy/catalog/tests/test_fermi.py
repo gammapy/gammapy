@@ -64,8 +64,18 @@ class TestFermi3FGLObject:
 
     def test_str(self):
         ss = str(self.source)
-        assert '3FGL J0534.5+2201' in ss  # Source name
-        assert '83.637 deg' in ss  # RA
+        assert 'Source name          : 3FGL J0534.5+2201' in ss
+        assert 'RA                   : 83.637 deg' in ss
+        assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
+        assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
+
+    def test_data_python_dict(self):
+        data = self.source._data_python_dict
+        assert type(data['RAJ2000']) == float
+        assert data['RAJ2000'] == 83.63719940185547
+        assert type(data['Unc_Flux100_300']) == list
+        assert type(data['Unc_Flux100_300'][0]) == float
+        assert_allclose(data['Unc_Flux100_300'][0], -1.44535601265261e-08)
 
     @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
     def test_spectral_model(self, index, model_type, desired, desired_err):
@@ -200,9 +210,21 @@ class TestFermi3FHLObject:
         self.source.pprint()
 
     def test_str(self):
-        ss = str(self.source)
-        assert 'Source: 3FHL J0534.5+2201' in ss
-        assert 'RA (J2000)  : 83.63' in ss
+        source = self.cat['3FHL J2301.9+5855e'] # Picking an extended source
+        ss = str(source)
+        assert 'Source name          : 3FHL J2301.9+5855e' in ss
+        assert 'RA                   : 345.494 deg' in ss
+        assert 'Significance (10 GeV - 2 TeV)    : 7.974' in ss
+        assert 'Integral flux (10 GeV - 1 TeV)   : 1.46e-10 +- 2.57e-11 cm-2 s-1' in ss
+        assert 'Model form       : Disk' in ss
+
+    def test_data_python_dict(self):
+        data = self.source._data_python_dict
+        assert type(data['RAJ2000']) == float
+        assert data['RAJ2000'] == 83.63483428955078
+        assert type(data['Flux_Band']) == list
+        assert type(data['Flux_Band'][0]) == float
+        assert_allclose(data['Flux_Band'][0], 5.1698894054652555e-09)
 
     @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FHL)
     def test_spectral_model(self, index, model_type, desired):

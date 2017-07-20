@@ -164,10 +164,13 @@ def test_flux_points(config):
             ),
             obs=obs(),
             seg=seg(obs()),
-            dnde=2.7465439050126e-11 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_err=4.755502901867284e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            res=-0.11262182922477647,
-            res_err=0.1536450758523701,
+            dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errp=5.0050e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_ul=3.7998e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            res=-0.1126,
+            res_err=0.1536,
         )
 
     tester = FluxPointTester(config)
@@ -181,6 +184,7 @@ def test_flux_points(config):
 class FluxPointTester:
     def __init__(self, config):
         self.config = config
+        self.rtol = 0.5E-2  # accuracy of 0.5%
         self.setup()
 
     def setup(self):
@@ -217,11 +221,24 @@ class FluxPointTester:
 
         actual = flux_points.table['dnde'].quantity[0]
         desired = self.config['dnde']
-        assert_quantity_allclose(actual, desired)
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
 
         actual = flux_points.table['dnde_err'].quantity[0]
         desired = self.config['dnde_err']
-        assert_quantity_allclose(actual, desired)
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+
+        actual = flux_points.table['dnde_ul'].quantity[0]
+        desired = self.config['dnde_ul']
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+
+        actual = flux_points.table['dnde_errn'].quantity[0]
+        desired = self.config['dnde_errn']
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+
+        actual = flux_points.table['dnde_errp'].quantity[0]
+        desired = self.config['dnde_errp']
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+
 
     def test_spectrum_result(self):
         result = SpectrumResult(
@@ -231,11 +248,11 @@ class FluxPointTester:
 
         actual = result.flux_point_residuals[0][0]
         desired = self.config['res']
-        assert_quantity_allclose(actual, desired)
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
 
         actual = result.flux_point_residuals[1][0]
         desired = self.config['res_err']
-        assert_quantity_allclose(actual, desired)
+        assert_quantity_allclose(actual, desired, rtol=self.rtol)
 
         result.plot(energy_range=[1, 10] * u.TeV)
 

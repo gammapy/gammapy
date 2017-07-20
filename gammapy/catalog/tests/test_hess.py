@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
 from ..hess import SourceCatalogHGPS
@@ -27,8 +26,7 @@ class TestSourceCatalogHGPS:
 class TestSourceCatalogObjectHGPS:
     def setup(self):
         self.cat = SourceCatalogHGPS()
-        # Use HESS J1825-137 as a test source
-        self.source_name = 'HESS J1825-137'
+        self.source_name = 'HESS J1843-033'
         self.source = self.cat[self.source_name]
 
     def test_single_gauss(self):
@@ -50,63 +48,46 @@ class TestSourceCatalogObjectHGPS:
         assert self.source.name == self.source_name
 
     def test_index(self):
-        assert self.source.index == 54
+        assert self.source.index == 64
 
     def test_data(self):
         data = self.source.data
-        assert data['Source_Class'] == 'PWN'
+        assert data['Source_Class'] == 'Unid'
 
     def test_pprint(self):
         self.source.pprint()
 
     def test_str(self):
         ss = self.source.__str__()
-        assert 'Source name          : HESS J1825-137' in ss
-        assert 'Component HGPSC 065:' in ss
+        assert 'Source name          : HESS J1843-033' in ss
+        assert 'Component HGPSC 083:' in ss
 
     def test_model(self):
-        model = self.source.spectral_model
+        source = self.source
+        model = source.spectral_model
         pars = model.parameters
-        assert_quantity_allclose(
-            pars['amplitude'].quantity,
-            u.Quantity(1.716531924e-11, 'TeV-1 cm-2 s-1'),
-        )
-        assert_quantity_allclose(
-            pars['index'].quantity,
-            u.Quantity(2.3770857316, ''),
-        )
-        assert_quantity_allclose(
-            pars['reference'].quantity,
-            u.Quantity(1.1561109149, 'TeV'),
-        )
+        assert_allclose(pars['amplitude'].value, 9.140179932365378e-13)
+        assert_allclose(pars['index'].value, 2.1513476371765137)
+        assert_allclose(pars['reference'].value, 1.867810606956482)
 
-        emin, emax = u.Quantity([1, 1e10], 'TeV')
-        desired = u.Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
-        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+        emin, emax = u.Quantity([1, 1e5], 'TeV')
+        actual = model.integral(emin, emax).value
+        desired = source.data['Flux_Spec_Int_1TeV'].value
+        assert_allclose(actual, desired, rtol=0.01)
 
     def test_ecpl_model(self):
-        model = self.cat['HESS J0835-455'].spectral_model
+        source = self.cat['HESS J0835-455']
+        model = source.spectral_model
         pars = model.parameters
-        assert_quantity_allclose(
-            pars['amplitude'].quantity,
-            u.Quantity(6.408420542586617e-12, 'TeV-1 cm-2 s-1'),
-        )
-        assert_quantity_allclose(
-            pars['index'].quantity,
-            u.Quantity(1.3543991614920847, ''),
-        )
-        assert_quantity_allclose(
-            pars['reference'].quantity,
-            u.Quantity(1.696938754239, 'TeV'),
-        )
-        assert_quantity_allclose(
-            pars['lambda_'].quantity,
-            u.Quantity(0.081517637, 'TeV-1'),
-        )
+        assert_allclose(pars['amplitude'].value, 6.408420542586617e-12)
+        assert_allclose(pars['index'].value, 1.3543991614920847)
+        assert_allclose(pars['reference'].value, 1.696938754239)
+        assert_allclose(pars['lambda_'].value, 0.081517637)
 
-        emin, emax = u.Quantity([1, 1e10], 'TeV')
-        desired = u.Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
-        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+        emin, emax = u.Quantity([1, 1e5], 'TeV')
+        actual = model.integral(emin, emax).value
+        desired = source.data['Flux_Spec_Int_1TeV'].value
+        assert_allclose(actual, desired, rtol=0.01)
 
     @requires_dependency('matplotlib')
     def test_model_plot(self):

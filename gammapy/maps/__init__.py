@@ -12,5 +12,8 @@ from .base import *
 from .geom import *
 from .hpx import *
 from .hpxcube import *
+from .hpxsparse import *
 from .hpxmap import *
 from .wcs import *
+from .wcsnd import *
+from .wcsmap import *
