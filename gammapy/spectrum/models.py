@@ -733,6 +733,27 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
         return model
 
+    @property
+    def e_peak(self):
+        """Peak energy of the spectral model.
+
+        Given by:
+
+        .. math::
+
+            E_{Peak} = \Gamma / \lambda
+
+        Returns
+        -------
+        e_peak : `~astropy.units.Quantity`
+            Peak energy of the spectrum.
+        """
+        p = self.parameters
+        reference = p['reference'].quantity
+        index = p['index'].quantity
+        lambda_ = p['lambda_'].quantity
+        return index / lambda_
+
 
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
@@ -867,6 +888,28 @@ class LogParabola(SpectralModel):
             xx = energy / reference
             exponent = -alpha - beta * log(xx)
         return amplitude * np.power(xx, exponent)
+
+    @property
+    def e_peak(self):
+        """Peak energy of the spectral model.
+
+        Given by:
+
+        .. math::
+
+            E_{Peak} = E_{0} \exp{- \alpha / (2 * \beta)}
+
+        Returns
+        -------
+        e_peak : `~astropy.units.Quantity`
+            Peak energy of the spectrum.
+        """
+        p = self.parameters
+        reference = p['reference'].quantity
+        alpha = p['alpha'].quantity
+        beta = p['beta'].quantity
+        return reference * np.exp(-alpha / (2 * beta))
+
 
 
 class TableModel(SpectralModel):
