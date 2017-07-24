@@ -67,16 +67,16 @@ TEST_MODELS = [
     dict(
         name='ecpl',
         model=ExponentialCutoffPowerLaw(
-            index=2.3 * u.Unit(''),
+            index=1.6 * u.Unit(''),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
         ),
 
-        val_at_2TeV=u.Quantity(0.6650160161581361, 'cm-2 s-1 TeV-1'),
-        integral_1_10TeV=u.Quantity(2.3556579120286796, 'cm-2 s-1'),
-        eflux_1_10TeV=u.Quantity(4.83209019773561, 'TeV cm-2 s-1'),
-        e_peak=23 * u.TeV
+        val_at_2TeV=u.Quantity(1.080321705479446, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(3.765838739678921, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(9.901735870666526, 'TeV cm-2 s-1'),
+        e_peak=4 * u.TeV
     ),
 
     dict(
@@ -105,7 +105,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
-        e_peak=0.1 * u.TeV
+        e_peak=0.74082 * u.TeV
     ),
 ]
 

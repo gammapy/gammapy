@@ -735,24 +735,23 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     @property
     def e_peak(self):
-        """Peak energy of the spectral model.
+        r"""Spectral energy distribution peak energy (`~astropy.utils.Quantity`).
 
-        Given by:
+        This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
 
-            E_{Peak} = \Gamma / \lambda
+            E_{Peak} = (2 - \Gamma) / \lambda
 
-        Returns
-        -------
-        e_peak : `~astropy.units.Quantity`
-            Peak energy of the spectrum.
         """
         p = self.parameters
         reference = p['reference'].quantity
         index = p['index'].quantity
         lambda_ = p['lambda_'].quantity
-        return index / lambda_
+        if index >= 2:
+            return np.nan * reference.unit
+        else:
+            return (2 - index) / lambda_
 
 
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):
@@ -891,24 +890,20 @@ class LogParabola(SpectralModel):
 
     @property
     def e_peak(self):
-        """Peak energy of the spectral model.
+        r"""Spectral energy distribution peak energy (`~astropy.utils.Quantity`).
 
-        Given by:
+        This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
 
-            E_{Peak} = E_{0} \exp{- \alpha / (2 * \beta)}
+            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
 
-        Returns
-        -------
-        e_peak : `~astropy.units.Quantity`
-            Peak energy of the spectrum.
         """
         p = self.parameters
         reference = p['reference'].quantity
         alpha = p['alpha'].quantity
         beta = p['beta'].quantity
-        return reference * np.exp(-alpha / (2 * beta))
+        return reference * np.exp((2 - alpha) / (2 * beta))
 
 
 
