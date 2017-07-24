@@ -995,7 +995,7 @@ def _is_galactic(source_class):
         return 'galactic'
     elif source_class in egal_classes:
         return 'extra-galactic'
-    elif source_class == '':
+    elif (source_class == '') or (source_class == 'unknown'):
         return 'unknown'
     else:
         raise ValueError('Unknown source class: {}'.format(source_class))
