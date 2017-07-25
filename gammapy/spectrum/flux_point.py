@@ -823,7 +823,6 @@ def chi2_flux_points_assym(flux_points, gp_model):
 
     data_err = np.where(model > data, data_errp, data_errn)
     stat_per_bin = ((data - model) / data_err).value ** 2
-
     return np.nansum(stat_per_bin), stat_per_bin
 
 
@@ -918,9 +917,9 @@ class FluxPointFitter(object):
             Best fit model
         """
         p = self.parameters
+        model = model.copy()
 
-        # TODO: make copy of model?
-        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch']:
+        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch', 'levmar']:
             sherpa_fitter = self._setup_sherpa_fit(data, model)
             sherpa_fitter.fit()
         else:
@@ -956,6 +955,7 @@ class FluxPointFitter(object):
         """
         Estimate errors on best fit parameters.
         """
+        model = model.copy()
         sherpa_fitter = self._setup_sherpa_fit(data, model)
         result = sherpa_fitter.est_errors()
         covariance = result.extra_output
@@ -981,8 +981,8 @@ class FluxPointFitter(object):
         """
         best_fit_model = self.fit(data, model)
         best_fit_model = self.estimate_errors(data, best_fit_model)
-        dof = self.dof(data, model)
-        statval = self.statval(data, model)[0]
+        dof = self.dof(data, best_fit_model)
+        statval = self.statval(data, best_fit_model)[0]
 
         return OrderedDict([
             ('best_fit_model', best_fit_model),
