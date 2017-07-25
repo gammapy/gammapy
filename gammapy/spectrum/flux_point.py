@@ -10,6 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.fits import table_from_row_data
 from ..utils.table import table_standardise_units_copy
 from .models import PowerLaw
+from .powerlaw import power_law_integral_flux
 
 __all__ = [
     'FluxPoints',
@@ -178,7 +179,7 @@ class FluxPoints(object):
         table_drop_ul = self.table[~self._is_ul]
         return self.__class__(table_drop_ul)
 
-    def to_sed_type(self, sed_type, method='log_center', model=None):
+    def to_sed_type(self, sed_type, method='log_center', model=None, pwl_approx=False):
         """Convert to a different SED type (return new `FluxPoints`).
 
         See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
@@ -198,6 +199,9 @@ class FluxPoints(object):
                 * `'laferty'` Lafferty & Wyatt model-based e_ref
                 * `'log_center'` log bin center e_ref
                 * `'table'` using column 'e_ref' from input flux_points
+        pwl_approx : bool
+            Use local power law appoximation at e_ref to compute differential flux
+            from the integral flux. This method is used by the Fermi-LAT catalogs.
 
         Returns
         -------
@@ -242,7 +246,7 @@ class FluxPoints(object):
             raise ValueError('Invalid method: {}'.format(method))
 
         flux = input_table['flux'].quantity
-        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max)
+        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx)
 
         # Add to result table
         table = input_table.copy()
@@ -259,11 +263,40 @@ class FluxPoints(object):
 
         if 'flux_ul' in table.colnames:
             flux_ul = table['flux_ul'].quantity
-            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
+            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max, pwl_approx)
             table['dnde_ul'] = dnde_ul
 
         table.meta['SED_TYPE'] = 'dnde'
         return FluxPoints(table)
+
+    @staticmethod
+    def _e_ref_lafferty(model, e_min, e_max):
+        """Helper for `to_sed_type`.
+
+        Compute e_ref that the value at e_ref corresponds
+        to the mean value between e_min and e_max.
+        """
+        flux = model.integral(e_min, e_max)
+        dnde_mean = flux / (e_max - e_min)
+        return model.inverse(dnde_mean)
+
+    @staticmethod
+    def _dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx):
+        """Helper for `to_sed_type`.
+
+        Compute dnde under the assumption that flux equals expected
+        flux from model.
+        """
+        dnde_model = model(e_ref)
+
+        if pwl_approx:
+            index = model.spectral_index(e_ref)
+            flux_model = power_law_integral_flux(f=dnde_model, g=index, e=e_ref,
+                                                 e1=e_min, e2=e_max)
+        else:
+            flux_model = model.integral(e_min, e_max, intervals=True)
+
+        return dnde_model * (flux / flux_model)
 
     @property
     def sed_type(self):
@@ -392,28 +425,6 @@ class FluxPoints(object):
             Upper bound of energy bin.
         """
         return self.table['e_max'].quantity
-
-    @staticmethod
-    def _e_ref_lafferty(model, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute e_ref that the value at e_ref corresponds
-        to the mean value between e_min and e_max.
-        """
-        flux = model.integral(e_min, e_max)
-        dnde_mean = flux / (e_max - e_min)
-        return model.inverse(dnde_mean)
-
-    @staticmethod
-    def _dnde_from_flux(flux, model, e_ref, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute dnde under the assumption that flux equals expected
-        flux from model.
-        """
-        flux_model = model.integral(e_min, e_max)
-        dnde_model = model(e_ref)
-        return dnde_model * (flux / flux_model)
 
     def plot(self, ax=None, sed_type=None, energy_unit='TeV', flux_unit=None,
              energy_power=0, **kwargs):
