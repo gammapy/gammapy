@@ -7,6 +7,7 @@ from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from astropy.table import Table
 import astropy.units as u
+from ...catalog.fermi import SourceCatalog3FGL
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.modeling import ParameterList
 from ...spectrum import SpectrumResult, SpectrumFit
@@ -97,7 +98,7 @@ def test_dnde_from_flux():
     # Get values
     model = XSqrTestModel()
     e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
-    dnde = FluxPoints._dnde_from_flux(flux, model, e_ref, e_min, e_max)
+    dnde = FluxPoints._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx=False)
 
     # Set up test case comparison
     dnde_model = model(e_ref)
@@ -349,6 +350,23 @@ def test_compute_flux_points_dnde():
         actual = actual_fp.table[column].quantity
         desired = desired_fp.table[column].quantity
         assert_quantity_allclose(actual, desired, rtol=1e-12)
+
+
+@requires_data('gammapy-extra')
+def test_compute_flux_points_dnde_fermi():
+    """
+    Test compute_flux_points_dnde on fermi source.
+    """
+    fermi_3fgl = SourceCatalog3FGL()
+    source = fermi_3fgl['3FGL J0835.3-4510']
+
+    flux_points = source.flux_points.to_sed_type('dnde', model=source.spectral_model,
+                                                  method='log_center', pwl_approx=True)
+
+    for column in ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']:
+        actual = flux_points.table['e2' + column].quantity
+        desired = flux_points.table[column].quantity * flux_points.e_ref ** 2
+        assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
 @requires_data('gammapy-extra')
