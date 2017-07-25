@@ -91,8 +91,8 @@ class Parameter(object):
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin or np.finfo(np.float32).min
-        self.parmax = parmax or np.finfo(np.float32).max
+        self.parmin = parmin or np.nan
+        self.parmax = parmax or np.nan
         self.frozen = frozen
 
     @property
@@ -153,11 +153,14 @@ class Parameter(object):
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
+
+        parmin = np.finfo(np.float32).min if np.isnan(self.parmin) else self.parmin
+        parmax = np.finfo(np.float32).max if np.isnan(self.parmax) else self.parmax
+
         par = Parameter(modelname=modelname, name=self.name,
                         val=self.value, units=self.unit,
-                        min=self.parmin, max=self.parmax,
+                        min=parmin, max=parmax,
                         frozen=self.frozen)
-
         return par
 
 
