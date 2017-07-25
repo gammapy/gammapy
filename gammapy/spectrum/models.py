@@ -100,8 +100,6 @@ class SpectralModel(object):
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
 
-        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum`.
-
         If array input for ``emin`` and ``emax`` is given you have to set
         ``intervals=True`` if you want the integral in each energy bin.
 
@@ -110,7 +108,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -122,7 +120,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
@@ -152,7 +150,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
         """
 
         def f(x):
@@ -172,7 +170,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `integrate_spectrum`
+            Keyword arguments passed to `func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
@@ -258,7 +256,19 @@ class SpectralModel(object):
                    energy_power=0, n_points=100, **kwargs):
         """Plot spectral model error band.
 
-        kwargs are forwarded to `matplotlib.pyplot.fill_between`
+        .. note::
+
+            This method calls ``ax.set_yscale("log", nonposy='clip')`` and
+            ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
+            The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
+            when the error band extends to negative values (see also
+            https://github.com/matplotlib/matplotlib/issues/8623).
+
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
+            plotting code and the error band extends to negative values, it is not
+            shown correctly. To circumvent this issue also use
+            ``plt.loglog(nonposx='clip', nonposy='clip')``
+            or ``plt.semilogy(nonposy='clip')``.
 
         Parameters
         ----------
@@ -274,6 +284,9 @@ class SpectralModel(object):
             Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
+        **kwargs : dict
+            Keyword arguments forwarded to `matplotlib.pyplot.fill_between`
+
 
         Returns
         -------
