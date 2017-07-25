@@ -258,10 +258,16 @@ class SpectralModel(object):
 
         .. note::
 
+            This method calls ``ax.set_yscale("log", nonposy='clip')`` and
+            ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
+            The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
+            when the error band extends to negative values (see also
+            https://github.com/matplotlib/matplotlib/issues/8623).
+
             When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
             plotting code and the error band extends to negative values, it is not
-            shown correctly (see https://github.com/matplotlib/matplotlib/issues/8623).
-            To circumvent this issue use ``plt.loglog(nonposx='clip', nonposy='clip')``
+            shown correctly. To circumvent this issue also use
+            ``plt.loglog(nonposx='clip', nonposy='clip')``
             or ``plt.semilogy(nonposy='clip')``.
 
         Parameters
