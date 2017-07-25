@@ -33,7 +33,7 @@ class LWTestModel(SpectralModel):
     def evaluate(x):
         return 1e4 * np.exp(-6 * x)
 
-    def integral(self, xmin, xmax):
+    def integral(self, xmin, xmax, **kwargs):
         return - 1. / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
 
     def inverse(self, y):
@@ -47,7 +47,7 @@ class XSqrTestModel(SpectralModel):
     def evaluate(x):
         return x ** 2
 
-    def integral(self, xmin, xmax):
+    def integral(self, xmin, xmax, **kwargs):
         return 1. / 3 * (xmax ** 3 - xmin ** 2)
 
     def inverse(self, y):
@@ -61,7 +61,7 @@ class ExpTestModel(SpectralModel):
     def evaluate(x):
         return np.exp(x * u.Unit('1 / TeV'))
 
-    def integral(self, xmin, xmax):
+    def integral(self, xmin, xmax, **kwargs):
         return np.exp(xmax * u.Unit('1 / TeV')) - np.exp(xmin * u.Unit('1 / TeV'))
 
     def inverse(self, y):

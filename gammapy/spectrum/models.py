@@ -602,7 +602,7 @@ class PowerLaw2(SpectralModel):
         bottom = emax ** (-index + 1) - emin ** (-index + 1)
         return amplitude * (top / bottom) * np.power(energy, -index)
 
-    def integral(self, emin, emax):
+    def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
 
         .. math::

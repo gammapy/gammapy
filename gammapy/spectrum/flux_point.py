@@ -265,6 +265,28 @@ class FluxPoints(object):
         table.meta['SED_TYPE'] = 'dnde'
         return FluxPoints(table)
 
+    @staticmethod
+    def _e_ref_lafferty(model, e_min, e_max):
+        """Helper for `to_sed_type`.
+
+        Compute e_ref that the value at e_ref corresponds
+        to the mean value between e_min and e_max.
+        """
+        flux = model.integral(e_min, e_max)
+        dnde_mean = flux / (e_max - e_min)
+        return model.inverse(dnde_mean)
+
+    @staticmethod
+    def _dnde_from_flux(flux, model, e_ref, e_min, e_max):
+        """Helper for `to_sed_type`.
+
+        Compute dnde under the assumption that flux equals expected
+        flux from model.
+        """
+        flux_model = model.integral(e_min, e_max, intervals=True)
+        dnde_model = model(e_ref)
+        return dnde_model * (flux / flux_model)
+
     @property
     def sed_type(self):
         """SED type (str).
@@ -392,28 +414,6 @@ class FluxPoints(object):
             Upper bound of energy bin.
         """
         return self.table['e_max'].quantity
-
-    @staticmethod
-    def _e_ref_lafferty(model, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute e_ref that the value at e_ref corresponds
-        to the mean value between e_min and e_max.
-        """
-        flux = model.integral(e_min, e_max)
-        dnde_mean = flux / (e_max - e_min)
-        return model.inverse(dnde_mean)
-
-    @staticmethod
-    def _dnde_from_flux(flux, model, e_ref, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute dnde under the assumption that flux equals expected
-        flux from model.
-        """
-        flux_model = model.integral(e_min, e_max)
-        dnde_model = model(e_ref)
-        return dnde_model * (flux / flux_model)
 
     def plot(self, ax=None, sed_type=None, energy_unit='TeV', flux_unit=None,
              energy_power=0, **kwargs):
