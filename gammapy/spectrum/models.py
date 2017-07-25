@@ -396,6 +396,22 @@ class PowerLaw(SpectralModel):
         :math:`Phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+
+
+    Examples
+    --------
+    This is a example plot of the default `PowerLaw` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PowerLaw
+
+        pwl = PowerLaw()
+        pwl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
+
     """
 
     def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -586,6 +602,20 @@ class PowerLaw2(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
+
+    Examples
+    --------
+    This is an example plot of the default `PowerLaw2` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PowerLaw2
+
+        pwl2 = PowerLaw2()
+        pwl2.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
@@ -694,6 +724,20 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`E_0`
     lambda : `~astropy.units.Quantity`
         :math:`\lambda`
+
+    Examples
+    --------
+    This is an example plot of the default `ExponentialCutoffPowerLaw` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+
+        ecpl = ExponentialCutoffPowerLaw()
+        ecpl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -757,6 +801,20 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+
+    Examples
+    --------
+    This is an example plot of the default `ExponentialCutoffPowerLaw3FGL` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
+
+        ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
+        ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -802,6 +860,20 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+
+    Examples
+    --------
+    This is an example plot of the default `PLSuperExpCutoff3FGL` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PLSuperExpCutoff3FGL
+
+        secpl_3fgl = PLSuperExpCutoff3FGL()
+        secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
     def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
@@ -848,9 +920,23 @@ class LogParabola(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+
+    Examples
+    --------
+    This is an example plot of the default `LogParabola` model:
+
+    .. plot::
+        :include-source:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import LogParabola
+
+        log_parabola = LogParabola()
+        log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV,
+    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
                  alpha=2, beta=1):
         self.parameters = ParameterList([
             Parameter('amplitude', amplitude),
