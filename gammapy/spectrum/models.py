@@ -398,11 +398,12 @@ class PowerLaw(SpectralModel):
         :math:`E_0`
     """
 
-    def __init__(self, index, amplitude, reference):
+    def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=True)
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, parmin=0, frozen=True)
         ])
 
     @staticmethod
@@ -587,12 +588,13 @@ class PowerLaw2(SpectralModel):
         Upper energy limit :math:`E_{0, max}`.
     """
 
-    def __init__(self, amplitude, index, emin, emax):
+    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
+                 emin=0.1 * u.TeV, emax=100 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('index', index, parmin=0),
-            Parameter('emin', emin),
-            Parameter('emax', emax)
+            Parameter('amplitude', amplitude),
+            Parameter('index', index),
+            Parameter('emin', emin, frozen=True),
+            Parameter('emax', emax, frozen=True)
         ])
 
     @staticmethod
@@ -694,12 +696,13 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`\lambda`
     """
 
-    def __init__(self, index, amplitude, reference, lambda_):
+    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, lambda_=0.1 / u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
-            Parameter('lambda_', lambda_, parmin=0)
+            Parameter('lambda_', lambda_)
         ])
 
     @staticmethod
@@ -756,11 +759,12 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         :math:`E_{C}`
     """
 
-    def __init__(self, index, amplitude, reference, ecut):
+    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, ecut=10 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=0),
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut)
         ])
 
@@ -800,14 +804,15 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         :math:`E_{C}`
     """
 
-    def __init__(self, index_1, index_2, amplitude, reference, ecut):
+    def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, ecut=10 * u.TeV):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=0),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut),
-            Parameter('index_1', index_1, parmin=0),
-            Parameter('index_2', index_2, parmin=0),
+            Parameter('index_1', index_1),
+            Parameter('index_2', index_2),
         ])
 
     @staticmethod
@@ -845,9 +850,10 @@ class LogParabola(SpectralModel):
         :math:`\beta`
     """
 
-    def __init__(self, amplitude, reference, alpha, beta):
+    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV,
+                 alpha=2, beta=1):
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
+            Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('alpha', alpha),
             Parameter('beta', beta)

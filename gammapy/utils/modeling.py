@@ -91,8 +91,8 @@ class Parameter(object):
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin
-        self.parmax = parmax
+        self.parmin = parmin or np.finfo(np.float32).min
+        self.parmax = parmax or np.finfo(np.float32).max
         self.frozen = frozen
 
     @property
