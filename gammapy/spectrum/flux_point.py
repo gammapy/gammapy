@@ -985,8 +985,8 @@ class FluxPointFitter(object):
         statval = self.statval(data, best_fit_model)[0]
 
         return OrderedDict([
-            ('best_fit_model', best_fit_model),
-            ('dof', dof),
-            ('statval', statval),
-            ('statval/dof', statval / dof),
+            ('best-fit-model', best_fit_model),
+            ('dof', int(dof)),
+            ('statval', float(statval)),
+            ('statval/dof', float(statval / dof)),
         ])
