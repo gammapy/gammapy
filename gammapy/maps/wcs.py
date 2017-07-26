@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
@@ -108,6 +109,12 @@ class WCSGeom(MapGeom):
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
         return self._width
+
+    @property
+    def pixel_area(self):
+        """Pixel area in deg^2."""
+        # FIXME: Correctly compute solid angle for projection
+        return self._cdelt[0] * self._cdelt[1]
 
     @property
     def npix(self):
@@ -256,18 +263,33 @@ class WCSGeom(MapGeom):
             WCS geometry object.
         """
         wcs = WCS(header)
+        naxis = wcs.naxis
+        for i in range(naxis - 2):
+            wcs = wcs.dropaxis(2)
+
         axes = find_and_read_bands(hdu_bands)
         shape = tuple([ax.nbin for ax in axes])
+
+        # FIXME: Propagate CRPIX
 
         if hdu_bands is not None and 'NPIX' in hdu_bands.columns.names:
             npix = hdu_bands.data.field('NPIX').reshape(shape + (2,))
             npix = (npix[..., 0], npix[..., 1])
+            cdelt = hdu_bands.data.field('CDELT').reshape(shape + (2,))
+            cdelt = (cdelt[..., 0], cdelt[..., 1])
+            crpix = hdu_bands.data.field('CRPIX').reshape(shape + (2,))
+            crpix = (crpix[..., 0], crpix[..., 1])
+        elif 'WCSSHAPE' in header:
+            wcs_shape = eval(header['WCSSHAPE'])
+            npix = (wcs_shape[0], wcs_shape[1])
+            cdelt = None
+            crpix = None
         else:
-            # FIXME: This logic doesn't work for BinTableHDU since
-            # NAXIS isn't filled
             npix = (header['NAXIS1'], header['NAXIS2'])
+            cdelt = None
+            crpix = None
 
-        return cls(wcs, npix, axes=axes)
+        return cls(wcs, npix, cdelt=cdelt, axes=axes)
 
     def make_bands_hdu(self, extname='BANDS'):
 
@@ -291,13 +313,8 @@ class WCSGeom(MapGeom):
     def make_header(self, **kwargs):
         header = self.wcs.to_header()
         self._fill_header_from_axes(header)
-
-        #header['NAXIS'] = 2 + len(self.axes)
-        #header['NAXIS1'] = np.max(self.npix[0])
-        #header['NAXIS2'] = np.max(self.npix[1])
-        # for i, ax in enumerate(self.axes):
-        #    header['NAXIS%i'%(i+3)] = ax.nbin
-
+        header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
+                                              np.max(self.npix[1]))
         return header
 
     def distance_to_edge(self, skydir):
@@ -306,27 +323,41 @@ class WCSGeom(MapGeom):
         raise NotImplementedError
 
     def get_pixels(self):
+        return pix_tuple_to_idx(self._get_pix_coords(mode='center'))
+
+    def _get_pix_coords(self, mode='center'):
+
+        npix = copy.deepcopy(self.npix)
+
+        if mode == 'edge':
+            npix[0] += 1
+            npix[1] += 1
 
         if self.axes and self.npix[0].size > 1:
 
-            pix = [np.array([], dtype=int) for i in range(2 + len(self.axes))]
-            for i, t in np.ndenumerate(self.npix[0]):
+            pix = [np.array([], dtype=float)
+                   for i in range(2 + len(self.axes))]
+            for i, t in np.ndenumerate(npix[0]):
 
-                npix = self.npix[0][i] * self.npix[1][i]
-                o = np.unravel_index(np.arange(npix, dtype=int),
-                                     (self.npix[0][i], self.npix[1][i]))
-                pix[0] = np.concatenate((pix[0], o[0]))
-                pix[1] = np.concatenate((pix[1], o[1]))
+                ntot = npix[0][i] * npix[1][i]
+                o = np.unravel_index(np.arange(ntot, dtype=int),
+                                     (npix[0][i], npix[1][i]))
+                pix[0] = np.concatenate((pix[0], o[0].astype(float)))
+                pix[1] = np.concatenate((pix[1], o[1].astype(float)))
                 for j in range(len(self.axes)):
                     pix[2 + j] = np.concatenate((pix[2 + j],
-                                                 i[j] * np.ones(npix, dtype=int)))
+                                                 i[j] * np.ones(ntot, dtype=float)))
 
         else:
-            pix = [np.arange(self.npix[0], dtype=int),
-                   np.arange(self.npix[1], dtype=int)]
+            pix = [np.arange(npix[0], dtype=float),
+                   np.arange(npix[1], dtype=float)]
             for i, ax in enumerate(self.axes):
-                pix += [np.arange(ax.nbin, dtype=int)]
+                pix += [np.arange(ax.nbin, dtype=float)]
             pix = np.meshgrid(*pix, indexing='ij')
+
+        if mode == 'edges':
+            for i in range(len(pix)):
+                pix[i] -= 0.5
 
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])

@@ -11,6 +11,33 @@ __all__ = [
 ]
 
 
+def find_hdu(hdulist):
+
+    for hdu in hdulist:
+        if hdu.data is not None:
+            return hdu
+
+    raise AttributeError('No Image HDU found.')
+
+
+def find_image_hdu(hdulist):
+
+    for hdu in hdulist:
+        if hdu.data is not None and isinstance(hdu, fits.ImageHDU):
+            return hdu
+
+    raise AttributeError('No Image HDU found.')
+
+
+def find_bintable_hdu(hdulist):
+
+    for hdu in hdulist:
+        if hdu.data is not None and isinstance(hdu, fits.BinTableHDU):
+            return hdu
+
+    raise AttributeError('No BinTable HDU found.')
+
+
 class WcsMap(MapBase):
     """Base class for WCS map classes.
 
@@ -106,9 +133,11 @@ class WcsMap(MapBase):
         wcs_map : `WcsMap`
             Map object
         """
-        extname = kwargs.get('hdu', 'PRIMARY')
-
-        hdu = hdulist[extname]
+        extname = kwargs.get('hdu', None)
+        if extname is None:
+            hdu = find_hdu(hdulist)
+        else:
+            hdu = hdulist[extname]
         extname_bands = kwargs.get('hdu_bands', None)
         if 'BANDSHDU' in hdu.header and extname_bands is None:
             extname_bands = hdu.header['BANDSHDU']
@@ -153,24 +182,53 @@ class WcsMap(MapBase):
         """
         data = self.data
         shape = data.shape
-        header = self.geom.wcs.to_header()
+        header = self.geom.make_header()
 
         if self.geom.axes:
             header['BANDSHDU'] = extname_bands
 
         cols = []
         if sparse:
-            nonzero = data.nonzero()
-            if len(shape) == 1:
+
+            if len(shape) == 2:
+                data_flat = np.ravel(data)
+                data_flat[~np.isfinite(data_flat)] = 0
+                nonzero = np.where(data_flat > 0)
                 cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
                 cols.append(fits.Column('VALUE', 'E',
-                                        array=data[nonzero].astype(float)))
-            else:
-                channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
+                                        array=data_flat[nonzero].astype(float)))
+            elif self.geom.npix[0].size == 1:
+                data_flat = np.ravel(data).reshape(
+                    shape[:-2] + (shape[-1] * shape[-2],))
+                data_flat[~np.isfinite(data_flat)] = 0
+                nonzero = np.where(data_flat > 0)
+                channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
                 cols.append(fits.Column('PIX', 'J', array=nonzero[-1]))
                 cols.append(fits.Column('CHANNEL', 'I', array=channel))
                 cols.append(fits.Column('VALUE', 'E',
-                                        array=data[nonzero].astype(float)))
+                                        array=data_flat[nonzero].astype(float)))
+            else:
+
+                data_flat = []
+                channel = []
+                pix = []
+                for i, _ in np.ndenumerate(self.geom.npix[0]):
+                    data_i = np.ravel(data[i[::-1]])
+                    data_i[~np.isfinite(data_i)] = 0
+                    pix_i = np.where(data_i > 0)
+                    data_i = data_i[pix_i]
+                    data_flat += [data_i]
+                    pix += pix_i
+                    channel += [np.ones(data_i.size, dtype=int) *
+                                np.ravel_multi_index(i[::-1], shape[:-2])]
+                data_flat = np.concatenate(data_flat)
+                pix = np.concatenate(pix)
+                channel = np.concatenate(channel)
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('CHANNEL', 'I', array=channel))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data_flat.astype(float)))
+
             hdu = fits.BinTableHDU.from_columns(cols, header=header,
                                                 name=extname)
         elif primary:
