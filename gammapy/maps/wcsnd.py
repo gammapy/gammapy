@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from .geom import pix_tuple_to_idx
+from .wcsmap import WCSGeom
 from .wcsmap import WcsMap
 
 __all__ = [
@@ -53,40 +55,30 @@ class WcsMapND(WcsMap):
         hdu_bands : `~astropy.fits.BinTableHDU` 
             The BANDS table HDU.
         """
-        geom = WcsGeom.from_header(hdu.header, hdu_bands)
-        shape = tuple([ax.nbin for ax in axes[::-1]])
-        shape_data = shape + tuple(np.unique(hpx.npix))
+        geom = WCSGeom.from_header(hdu.header, hdu_bands)
+        shape = tuple([ax.nbin for ax in geom.axes])
+        shape_wcs = tuple([np.max(geom.npix[0]),
+                           np.max(geom.npix[1])])
+        shape_data = shape_wcs + shape
+        map_out = cls(geom)
 
-        # with an ND-array
         # TODO: Should we support extracting slices?
-
-        colnames = hdu.columns.names
-        cnames = []
         if isinstance(hdu, fits.BinTableHDU):
             pix = hdu.data.field('PIX')
+            pix = np.unravel_index(pix, shape_wcs[::-1])
             vals = hdu.data.field('VALUE')
-            if 'CHANNEL' in hdu.data.columns.names:
+            if 'CHANNEL' in hdu.data.columns.names and shape:
                 chan = hdu.data.field('CHANNEL')
-                chan = np.unravel_index(chan, shape)
-                idx = chan + (pix,)
+                chan = np.unravel_index(chan, shape[::-1])
+                idx = chan + pix
             else:
-                idx = (pix,)
+                idx = pix
 
-            data = np.zeros(shape_data)
-            data[idx] = vals
+            map_out.set_by_idx(idx[::-1], vals)
         else:
-            for c in colnames:
-                if c.find(hpx.conv.colstring) == 0:
-                    cnames.append(c)
-            nbin = len(cnames)
-            data = np.ndarray(shape_data)
-            if len(cnames) == 1:
-                data[:] = hdu.data.field(cnames[0])
-            else:
-                for i, cname in enumerate(cnames):
-                    idx = np.unravel_index(i, shape)
-                    data[idx] = hdu.data.field(cname)
-        return cls(hpx, data)
+            map_out.data = hdu.data
+
+        return map_out
 
     def get_by_pix(self, pix, interp=None):
         if interp is None:
