@@ -88,7 +88,7 @@ class CTAObservationSimulation(object):
     """
 
     @staticmethod
-    def simulate_obs(perf, target, obs_param, obs_id=0):
+    def simulate_obs(perf, target, obs_param, obs_id=0, seed='random-seed'):
         """
         Simulate observation with given parameters
 
@@ -102,6 +102,8 @@ class CTAObservationSimulation(object):
             Observation parameters
         obs_id : `int`, optional
             Observation Id
+        seed : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            see :func:~`gammapy.utils.random.get_random_state`
         """
         livetime = obs_param.livetime
         alpha = obs_param.alpha.value
@@ -124,11 +126,10 @@ class CTAObservationSimulation(object):
         npred.data.data[idx] = 0
 
         # Randomise counts
-        rand = get_random_state('random-seed')
-        on_counts = rand.poisson(npred.data.data.value)  # excess
-        bkg_counts = rand.poisson(bkg_rate_values.value)  # bkg in ON region
-        off_counts = rand.poisson(
-            bkg_rate_values.value / alpha)  # bkg in OFF region
+        random_state = get_random_state(seed)
+        on_counts = random_state.poisson(npred.data.data.value)  # excess
+        bkg_counts = random_state.poisson(bkg_rate_values.value)  # bkg in ON region
+        off_counts = random_state.poisson(bkg_rate_values.value / alpha)  # bkg in OFF region
 
         on_counts += bkg_counts  # evts in ON region
 
