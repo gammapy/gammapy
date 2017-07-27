@@ -409,13 +409,27 @@ class PowerLaw(SpectralModel):
         :math:`Phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+
+
+    Examples
+    --------
+    This is how to plot the default `PowerLaw` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PowerLaw
+
+        pwl = PowerLaw()
+        pwl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
+
     """
 
-    def __init__(self, index, amplitude, reference):
+    def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=True)
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, parmin=0, frozen=True)
         ])
 
     @staticmethod
@@ -598,14 +612,26 @@ class PowerLaw2(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
+
+    Examples
+    --------
+    This is how to plot the default `PowerLaw2` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PowerLaw2
+
+        pwl2 = PowerLaw2()
+        pwl2.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, amplitude, index, emin, emax):
+    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
+                 emin=0.1 * u.TeV, emax=100 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('index', index, parmin=0),
-            Parameter('emin', emin),
-            Parameter('emax', emax)
+            Parameter('amplitude', amplitude),
+            Parameter('index', index),
+            Parameter('emin', emin, frozen=True),
+            Parameter('emax', emax, frozen=True)
         ])
 
     @staticmethod
@@ -705,14 +731,26 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`E_0`
     lambda : `~astropy.units.Quantity`
         :math:`\lambda`
+
+    Examples
+    --------
+    This is how to plot the default `ExponentialCutoffPowerLaw` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+
+        ecpl = ExponentialCutoffPowerLaw()
+        ecpl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, index, amplitude, reference, lambda_):
+    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, lambda_=0.1 / u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
-            Parameter('lambda_', lambda_, parmin=0)
+            Parameter('lambda_', lambda_)
         ])
 
     @staticmethod
@@ -787,13 +825,25 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+
+    Examples
+    --------
+    This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
+
+        ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
+        ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, index, amplitude, reference, ecut):
+    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, ecut=10 * u.TeV):
         self.parameters = ParameterList([
-            Parameter('index', index, parmin=0),
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=0),
+            Parameter('index', index),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut)
         ])
 
@@ -831,16 +881,28 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+
+    Examples
+    --------
+    This is how to plot the default `PLSuperExpCutoff3FGL` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PLSuperExpCutoff3FGL
+
+        secpl_3fgl = PLSuperExpCutoff3FGL()
+        secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, index_1, index_2, amplitude, reference, ecut):
+    def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+                 reference=1 * u.TeV, ecut=10 * u.TeV):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
-            Parameter('reference', reference, frozen=0),
+            Parameter('amplitude', amplitude),
+            Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut),
-            Parameter('index_1', index_1, parmin=0),
-            Parameter('index_2', index_2, parmin=0),
+            Parameter('index_1', index_1),
+            Parameter('index_2', index_2),
         ])
 
     @staticmethod
@@ -876,11 +938,23 @@ class LogParabola(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+
+    Examples
+    --------
+    This is how to plot the default `LogParabola` model:
+
+        from astropy import units as u
+        from gammapy.spectrum.models import LogParabola
+
+        log_parabola = LogParabola()
+        log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
     """
 
-    def __init__(self, amplitude, reference, alpha, beta):
+    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
+                 alpha=2, beta=1):
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0),
+            Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('alpha', alpha),
             Parameter('beta', beta)
@@ -923,7 +997,7 @@ class LogParabola(SpectralModel):
 class TableModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
-    The units returned will be the units of the values array provided at
+    the units returned will be the units of the values array provided at
     initialization. The model will return values interpolated in
     log-space, returning 0 for energies outside of the limits of the provided
     energy array.

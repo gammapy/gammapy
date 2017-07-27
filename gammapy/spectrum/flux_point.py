@@ -729,7 +729,6 @@ class FluxPointEstimator(object):
 
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
-        model.parameters['amplitude'].parmin = None
 
         fit = SpectrumFit(self.obs, model)
         erange = energy_group.energy_range
