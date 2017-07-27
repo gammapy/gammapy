@@ -85,7 +85,7 @@ class Parameter(object):
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
-        if isinstance(value, u.Quantity):
+        if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
             self.quantity = value
         else:
             self.value = value
@@ -102,6 +102,7 @@ class Parameter(object):
 
     @quantity.setter
     def quantity(self, par):
+        par = u.Quantity(par)
         self.value = par.value
         self.unit = par.unit
 

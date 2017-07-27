@@ -400,10 +400,7 @@ class PowerLaw(SpectralModel):
 
     Examples
     --------
-    This is a example plot of the default `PowerLaw` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `PowerLaw` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw
@@ -605,10 +602,7 @@ class PowerLaw2(SpectralModel):
 
     Examples
     --------
-    This is an example plot of the default `PowerLaw2` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `PowerLaw2` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw2
@@ -727,10 +721,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     Examples
     --------
-    This is an example plot of the default `ExponentialCutoffPowerLaw` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `ExponentialCutoffPowerLaw` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw
@@ -804,10 +795,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     Examples
     --------
-    This is an example plot of the default `ExponentialCutoffPowerLaw3FGL` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
@@ -863,10 +851,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
 
     Examples
     --------
-    This is an example plot of the default `PLSuperExpCutoff3FGL` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `PLSuperExpCutoff3FGL` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff3FGL
@@ -923,10 +908,7 @@ class LogParabola(SpectralModel):
 
     Examples
     --------
-    This is an example plot of the default `LogParabola` model:
-
-    .. plot::
-        :include-source:
+    This is how to plot the default `LogParabola` model:
 
         from astropy import units as u
         from gammapy.spectrum.models import LogParabola
@@ -964,7 +946,7 @@ class LogParabola(SpectralModel):
 class TableModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
-    The units returned will be the units of the values array provided at
+    the units returned will be the units of the values array provided at
     initialization. The model will return values interpolated in
     log-space, returning 0 for energies outside of the limits of the provided
     energy array.
