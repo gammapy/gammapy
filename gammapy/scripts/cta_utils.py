@@ -24,8 +24,7 @@ class Target(object):
         Model of the source
     """
 
-    def __init__(self, name=None,
-                 model=None):
+    def __init__(self, name=None, model=None):
         self.name = name
         self.model = model
 
@@ -78,19 +77,11 @@ class CTAObservationSimulation(object):
     """Simulate observation for one IRF and target.
 
     TODO : Should be merge with `~gammapy.spectrum.SpectrumSimulation`
-
-    Parameters
-    ----------
-    perf : `~gammapy.scripts.CTAPerf`
-        CTA performance
-    target : `~gammapy.scripts.Target`
-        Source
     """
 
     @staticmethod
-    def simulate_obs(perf, target, obs_param, obs_id=0):
-        """
-        Simulate observation with given parameters
+    def simulate_obs(perf, target, obs_param, obs_id=0, random_state='random-seed'):
+        """Simulate observation with given parameters.
 
         Parameters
         ----------
@@ -102,6 +93,9 @@ class CTAObservationSimulation(object):
             Observation parameters
         obs_id : `int`, optional
             Observation Id
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         """
         livetime = obs_param.livetime
         alpha = obs_param.alpha.value
@@ -124,11 +118,10 @@ class CTAObservationSimulation(object):
         npred.data.data[idx] = 0
 
         # Randomise counts
-        rand = get_random_state('random-seed')
-        on_counts = rand.poisson(npred.data.data.value)  # excess
-        bkg_counts = rand.poisson(bkg_rate_values.value)  # bkg in ON region
-        off_counts = rand.poisson(
-            bkg_rate_values.value / alpha)  # bkg in OFF region
+        random_state = get_random_state(random_state)
+        on_counts = random_state.poisson(npred.data.data.value)  # excess
+        bkg_counts = random_state.poisson(bkg_rate_values.value)  # bkg in ON region
+        off_counts = random_state.poisson(bkg_rate_values.value / alpha)  # bkg in OFF region
 
         on_counts += bkg_counts  # evts in ON region
 
