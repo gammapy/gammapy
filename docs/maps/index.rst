@@ -84,7 +84,30 @@ dimensions with the ``axes`` parameter:
    m_hpx = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0,
                           axes=[energy_axis])
 
-   
+Multi-resolution maps (maps with a different pixel size or geometry in
+each image plane) can be constructed by passing a vector argument for
+any of the geometry parameters.  This vector must have the same shape as the
+non-spatial dimensions of the map.  The following example demonstrates
+creating an energy cube with a pixel size proportional to the
+Fermi-LAT PSF:
+
+.. code::
+
+   from gammapy.maps import MapBase, MapAxis
+   from astropy.coordinates import SkyCoord
+   position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+
+   binsz = np.sqrt((3.0*(energy_axis.center/100.)**-0.8)**2 + 0.1**2)
+
+   # Create a WCS Map
+   m_wcs = MapBase.create(binsz=binsz, map_type='wcs', skydir=position, width=10.0,
+                          axes=[energy_axis])
+
+   # Create a HPX Map
+   m_hpx = MapBase.create(binsz=binsz, map_type='hpx', skydir=position, width=10.0,
+                          axes=[energy_axis])
+
 Get, Set, and Fill Methods
 --------------------------
 
