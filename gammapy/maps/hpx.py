@@ -480,10 +480,22 @@ class HpxGeom(MapGeom):
             raise ValueError(
                 'Invalid input for region string: {}'.format(region))
 
-    def local_to_global(self, idx):
+    def local_to_global(self, idx_local):
         """Compute a global index (partial-sky) from a global (all-sky)
         index."""
-        raise NotImplementedError
+
+        if self._ipix is None:
+            return idx_local
+
+        if self.nside.size > 1:
+            idx = ravel_hpx_index(idx_local, self._npix)
+        else:
+            idx_local = tuple([idx_local[0]] +
+                              [np.zeros(t.shape, dtype=int)
+                               for t in idx_local[1:]])
+            idx = ravel_hpx_index(idx_local, self._npix)
+
+        return unravel_hpx_index(self._ipix[idx], self._maxpix)
 
     def global_to_local(self, idx_global):
         """Compute a local (partial-sky) index from a global (all-sky)
@@ -602,7 +614,7 @@ class HpxGeom(MapGeom):
             vals = []
             for i, ax in enumerate(self.axes):
                 bins += [pix[1 + i]]
-                vals += [bin_to_val(ax.edges, pix[1 + i])]
+                vals += [ax.pix_to_coord(pix[1 + i])]
 
             # Ravel multi-dimensional indices
             ibin = np.ravel_multi_index(bins, self._shape)
@@ -798,8 +810,8 @@ class HpxGeom(MapGeom):
         geom : `~HpxGeom`
             A HEALPix geoemtry object.
         """
-        return self.__class__(self.nside[0], not self.nest, self.coordsys,
-                              self.region, self.conv)
+        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+                              region=self.region, conv=self.conv)
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
@@ -988,8 +1000,6 @@ class HpxGeom(MapGeom):
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
 
-        # FIXME: Think of a better name than DEFAULT
-
         header = fits.Header()
 
         conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['GADF'])
@@ -998,6 +1008,16 @@ class HpxGeom(MapGeom):
         # with an empty region string
         indxschm = kwargs.get('indxschm',
                               'EXPLICIT' if self._region else 'IMPLICIT')
+
+        if indxschm is None:
+            if self._region is None:
+                indxschm = 'IMPLICIT'
+            elif self.nside.size == 1:
+                indxschm = 'EXPLICIT'
+            else:
+                indxschm = 'LOCAL'
+
+        # FIXME: Set TELESCOP and INSTRUME from convention type
 
         header["TELESCOP"] = "GLAST"
         header["INSTRUME"] = "LAT"
@@ -1236,14 +1256,20 @@ class HpxGeom(MapGeom):
 
         return geom
 
-    def get_pixels(self):
+    def get_pixels(self, local=False):
         """Get pixel indices for all pixels in this geometry.
+
+        Parameters
+        ----------
+        local : bool
+            Flag to return local or global pixel indices.
 
         Returns
         -------
         pix : tuple
             Tuple of pixel index vectors with one element for each
             dimension.
+
         """
         if self._ipix is None:
             ipix = np.concatenate([np.arange(t) for t in self._maxpix.flat])
@@ -1252,13 +1278,11 @@ class HpxGeom(MapGeom):
             ibnd = np.concatenate([i * np.ones(t, dtype=int)
                                    for i, t in enumerate(self._maxpix.flat)])
             ibnd = list(np.unravel_index(ibnd, self._shape))
-            return tuple([ipix] + ibnd)
+            pix = tuple([ipix] + ibnd)
         elif self.nside.shape == self._maxpix.shape or self.region == 'explicit':
             pix = unravel_hpx_index(self._ipix, self._maxpix)
             if self.ndim == 2:
-                return pix[:1]
-            else:
-                return pix
+                pix = pix[:1]
         else:
 
             # For fixed nside we only store an ipix vector for the
@@ -1273,7 +1297,12 @@ class HpxGeom(MapGeom):
             maxpix = np.ravel(maxpix.T)
             ipix = np.ravel(self._ipix[None, :] *
                             np.ones(self._shape, dtype=int)[..., None])
-            return unravel_hpx_index(ipix + maxpix, self._maxpix)
+            pix = unravel_hpx_index(ipix + maxpix, self._maxpix)
+
+        if local:
+            return self.global_to_local(pix)
+        else:
+            return pix
 
     def get_coords(self):
         """Get the coordinates of all the pixels in this geometry.
@@ -1427,15 +1456,19 @@ class HpxToWcsMapping(object):
         # FIXME: Do we want to flatten mapping arrays?
 
         # HPX images have (1,N) dimensionality by convention
-        hpx_data = np.squeeze(hpx_data)
+        # hpx_data = np.squeeze(hpx_data)
 
-        shape = tuple([t.flat[0] for t in self._npix])
+        if self._valid.ndim == 1:
+            shape = tuple([t.flat[0] for t in self._npix])
+        else:
+            shape = hpx_data.shape[:-1] + \
+                tuple([t.flat[0] for t in self._npix])
         valid = np.where(self._valid.reshape(shape))
         lmap = self._lmap[self._valid]
         mult_val = self._mult_val[self._valid]
 
         wcs_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
-        wcs_slice = tuple(wcs_slice + list(valid)[::-1])
+        wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
 
         hpx_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
         hpx_slice = tuple(hpx_slice + [lmap])
