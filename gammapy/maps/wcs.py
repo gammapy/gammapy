@@ -178,7 +178,7 @@ class WcsGeom(MapGeom):
             Width of the map in degrees.  A tuple will be interpreted
             as parameters for longitude and latitude axes.  For maps
             with non-spatial dimensions, list input can be used to
-            define a different map width in each image plane.  
+            define a different map width in each image plane.
         binsz : float or tuple or list
             Map pixel size in degrees.  A tuple will be interpreted
             as parameters for longitude and latitude axes.  For maps
@@ -195,8 +195,8 @@ class WcsGeom(MapGeom):
         proj : string, optional
             Any valid WCS projection type. Default is 'CAR' (cartesian).
         refpix : tuple
-            Reference pixel of the projection.  If None then this will
-            be chosen to be center of the map.
+            Reference pixel of the projection.  If None this will be
+            set to the center of the map.
 
         Returns
         -------
@@ -208,10 +208,10 @@ class WcsGeom(MapGeom):
         >>> from gammapy.maps import WcsGeom
         >>> from gammapy.maps import MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
-        >>> geom = SkyImage.create(npix=(100,100), binsz=0.1)
-        >>> geom = SkyImage.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = SkyImage.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = SkyImage.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
+        >>> geom = WcsGeom.create(npix=(100,100), binsz=0.1)
+        >>> geom = WcsGeom.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = WcsGeom.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
 
         """
         if skydir is None:

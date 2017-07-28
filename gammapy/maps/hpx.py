@@ -55,6 +55,7 @@ class HpxConv(object):
 
 # Various conventions for storing HEALPIX maps in FITS files
 HPX_FITS_CONVENTIONS = OrderedDict()
+HPX_FITS_CONVENTIONS[None] = HpxConv('GADF', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['GADF'] = HpxConv('GADF', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['FGST_CCUBE'] = HpxConv('FGST_CCUBE')
 HPX_FITS_CONVENTIONS['FGST_LTCUBE'] = HpxConv(
@@ -397,7 +398,7 @@ class HpxGeom(MapGeom):
     """
 
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
-                 axes=None, conv=HpxConv('FGST_CCUBE'), sparse=False):
+                 axes=None, conv='GADF', sparse=False):
 
         # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
@@ -815,7 +816,7 @@ class HpxGeom(MapGeom):
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
-               axes=None, conv=HpxConv('FGST_CCUBE'), skydir=None, width=None):
+               axes=None, conv='GADF', skydir=None, width=None):
         """Create an HpxGeom object.
 
         Parameters
@@ -836,14 +837,31 @@ class HpxGeom(MapGeom):
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
         region  : str
-            Allows for partial-sky mappings
+            HPX region string.  Allows for partial-sky maps.
+        width : float
+            Diameter of the map in degrees.  If set the map will
+            encompass all pixels within a circular region centered on
+            ``skydir``.
         axes : list
-            List of axes for non-spatial dimensions
+            List of axes for non-spatial dimensions.
+        conv : str
+            Convention for FITS file format.
 
         Returns
         -------
         geom : `~HpxGeom`
-            A HEALPix geoemtry object.
+            A HEALPix geometry object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import HpxGeom
+        >>> from gammapy.maps import MapAxis
+        >>> axis = MapAxis.from_bounds(0,1,2)
+        >>> geom = HpxGeom.create(nside=16)
+        >>> geom = HpxGeom.create(binsz=0.1, width=10.0)
+        >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis])
+        >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis])
+
         """
 
         if nside is None and binsz is None:
