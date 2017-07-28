@@ -389,5 +389,5 @@ class MapBase(object):
     def fill_poisson(self, mu):
 
         pix = self.geom.get_pixels()
-        mu = np.random.poisson(mu,len(pix[0]))
-        self.fill_by_idx(pix,mu)
+        mu = np.random.poisson(mu, len(pix[0]))
+        self.fill_by_idx(pix, mu)
