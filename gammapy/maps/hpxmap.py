@@ -152,8 +152,18 @@ class HpxMap(MapBase):
         pass
 
     @abc.abstractmethod
-    def to_ud_graded(self, order, preserve_counts=False):
-        """Upgrade or downgrade the resolution of the map to the chosen order.
+    def to_ud_graded(self, nside, preserve_counts=False):
+        """Upgrade or downgrade the resolution of the map to the chosen nside.
+
+        Parameters
+        ----------
+        nside : int
+            NSIDE parameter of the new map.
+
+        preserve_counts : bool
+            Choose whether to preserve counts (total amplitude) or
+            intensity (amplitude per unit solid angle).
+
         """
         pass
 
@@ -181,7 +191,6 @@ class HpxMap(MapBase):
         shape = data.shape
         extname = kwargs.get('extname', conv.extname)
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
-        #convname = kwargs.get('convname', self.hpx.conv.convname)
         extname_bands = conv.bands_hdu
 
         sparse = kwargs.get('sparse', False)
@@ -193,33 +202,38 @@ class HpxMap(MapBase):
         if sparse:
             header['INDXSCHM'] = 'SPARSE'
 
-        # if shape[-1] != self._npix:
-        #    raise ValueError('Size of data array does not match number of pixels')
         cols = []
         if header['INDXSCHM'] == 'EXPLICIT':
             cols.append(fits.Column('PIX', 'J', array=self.hpx._ipix))
+        elif header['INDXSCHM'] == 'LOCAL':
+            cols.append(fits.Column('PIX', 'J',
+                                    array=np.arange(data.shape[-1])))
 
         if header['INDXSCHM'] == 'SPARSE':
-            nonzero = data.nonzero()
+
+            data = data.copy()
+            data[~np.isfinite(data)] = 0
+            nonzero = np.where(data > 0)
+            pix = self.geom.local_to_global(nonzero[::-1])[0]
             if len(shape) == 1:
-                cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
+                cols.append(fits.Column('PIX', 'J', array=pix))
                 cols.append(fits.Column('VALUE', 'E',
                                         array=data[nonzero].astype(float)))
+
             else:
                 channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
-                cols.append(fits.Column('PIX', 'J', array=nonzero[-1]))
+                cols.append(fits.Column('PIX', 'J', array=pix))
                 cols.append(fits.Column('CHANNEL', 'I', array=channel))
                 cols.append(fits.Column('VALUE', 'E',
                                         array=data[nonzero].astype(float)))
 
+        elif len(shape) == 1:
+            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
+                                    'E', array=data.astype(float)))
         else:
-            if len(shape) == 1:
-                cols.append(fits.Column(conv.colname(indx=conv.firstcol),
-                                        'E', array=data.astype(float)))
-            else:
-                for i, idx in enumerate(np.ndindex(shape[:-1])):
-                    cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
-                                            array=data[idx].astype(float)))
+            for i, idx in enumerate(np.ndindex(shape[:-1])):
+                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
+                                        array=data[idx].astype(float)))
 
         hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
         return hdu
