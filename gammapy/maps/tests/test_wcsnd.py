@@ -64,3 +64,15 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     m0.write(filename, sparse=True)
     m1 = WcsMapND.read(filename)
     assert_allclose(m0.data, m1.data)
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsmapnd_fill_by_coords(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+    geom = WCSGeom.create(npix=npix, binsz=binsz,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    m.fill_by_coords(tuple([np.concatenate((t, t)) for t in coords]),
+                     np.concatenate((coords[1], coords[1])))
+    assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])

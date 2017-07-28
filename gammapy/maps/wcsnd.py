@@ -88,7 +88,7 @@ class WcsMapND(WcsMap):
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
-        return self._data[idx]
+        return self._data.T[idx]
 
     def interp_by_coords(self, coords, interp=None):
         if interp == 'linear':
@@ -98,9 +98,14 @@ class WcsMapND(WcsMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        if weights is None:
-            weights = np.ones(idx[0].shape)
-        self.data.T[idx] += weights
+        msk = idx[0] >= 0
+        idx = [t[msk] for t in idx]
+        if weights is not None:
+            weights = weights[msk]
+        idx = np.ravel_multi_index(idx, self.data.T.shape)
+        idx, idx_inv = np.unique(idx, return_inverse=True)
+        weights = np.bincount(idx_inv, weights=weights)
+        self.data.T.flat[idx] += weights
 
     def set_by_idx(self, idx, vals):
         idx = pix_tuple_to_idx(idx)
