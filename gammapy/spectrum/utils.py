@@ -173,7 +173,7 @@ class CountsPredictor(object):
 
     def apply_aeff(self):
         if self.aeff is not None:
-            cts = self.true_flux * self.aeff.data.data
+            cts = (self.true_flux * self.aeff.data.data).decompose()
             if cts.unit.is_equivalent('s-1'):
                 cts *= self.livetime
         else:
@@ -193,7 +193,6 @@ class CountsPredictor(object):
         self.npred = CountsSpectrum(data=cts,
                                     energy_lo=self.e_reco[:-1],
                                     energy_hi=self.e_reco[1:])
-
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     """
