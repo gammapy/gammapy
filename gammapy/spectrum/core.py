@@ -232,6 +232,7 @@ class CountsSpectrum(object):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots(1, 1, figsize=figsize)
+        ax.set_yscale("log")
         self.plot_hist(ax=ax)
         return ax
 
