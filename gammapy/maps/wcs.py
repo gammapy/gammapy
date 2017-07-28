@@ -10,7 +10,7 @@ from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
 from .geom import MapAxis, get_shape, make_axes_cols, find_and_read_bands
 
 __all__ = [
-    'WCSGeom',
+    'WcsGeom',
 ]
 
 
@@ -37,7 +37,7 @@ def cast_to_shape(param, shape, dtype):
     return tuple(param)
 
 
-class WCSGeom(MapGeom):
+class WcsGeom(MapGeom):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and the
@@ -200,12 +200,12 @@ class WCSGeom(MapGeom):
 
         Returns
         -------
-        geom : `~WCSGeom`
+        geom : `~WcsGeom`
             A WCS geometry object.
 
         Examples
         --------
-        >>> from gammapy.maps import WCSGeom
+        >>> from gammapy.maps import WcsGeom
         >>> from gammapy.maps import MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
         >>> geom = SkyImage.create(npix=(100,100), binsz=0.1)
@@ -259,7 +259,7 @@ class WCSGeom(MapGeom):
 
         Returns
         -------
-        wcs : `~WCSGeom`
+        wcs : `~WcsGeom`
             WCS geometry object.
         """
         wcs = WCS(header)

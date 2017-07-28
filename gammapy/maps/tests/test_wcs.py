@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from ..wcs import WCSGeom
+from ..wcs import WcsGeom
 from ..geom import MapAxis
 
 pytest.importorskip('scipy')
@@ -30,14 +30,14 @@ wcs_test_geoms = wcs_allsky_test_geoms
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_init(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_coords()[0],
                     geom.pix_to_coord(geom.get_pixels())[0])
@@ -46,7 +46,7 @@ def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_pixels()[0],
                     geom.coord_to_idx(geom.get_coords())[0])
@@ -55,7 +55,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
-    geom0 = WCSGeom.create(npix=npix, binsz=binsz,
+    geom0 = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
 
     shape = (np.max(geom0.npix[0]),np.max(geom0.npix[1]))
@@ -68,7 +68,7 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     hdulist.writeto(filename, overwrite=True)
 
     hdulist = fits.open(filename)
-    geom1 = WCSGeom.from_header(hdulist[0].header, hdulist['BANDS'])
+    geom1 = WcsGeom.from_header(hdulist[0].header, hdulist['BANDS'])
 
     assert_allclose(geom0.npix, geom1.npix)
     assert(geom0.coordsys == geom1.coordsys)
