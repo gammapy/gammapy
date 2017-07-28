@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis
-from ..wcs import WCSGeom
+from ..wcs import WcsGeom
 from ..wcsnd import WcsMapND
 
 
@@ -41,7 +41,7 @@ wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m0 = WcsMapND(geom)
     m0.fill_poisson(0.5)
@@ -53,7 +53,7 @@ def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
                          wcs_test_geoms)
 def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     filename = str(tmpdir / 'skycube.fits')
     m0 = WcsMapND(geom)
@@ -69,7 +69,7 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsmapnd_fill_by_coords(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
-    geom = WCSGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
     coords = m.geom.get_coords()

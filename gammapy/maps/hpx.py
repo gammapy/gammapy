@@ -10,7 +10,7 @@ from astropy.extern.six.moves import range
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
-from .wcs import WCSGeom
+from .wcs import WcsGeom
 from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skydir_to_lonlat, make_axes_cols
 from .geom import find_and_read_bands
@@ -251,7 +251,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     ----------
     hpx : `~gammapy.maps.hpx.HpxGeom`
        The HEALPIX geometry
-    wcs : `~gammapy.maps.wcs.WCSGeom`
+    wcs : `~gammapy.maps.wcs.WcsGeom`
        The WCS geometry
 
     Returns
@@ -267,7 +267,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     npix = wcs.npix
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
-    # method of WCSGeom
+    # method of WcsGeom
     pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
     pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
     sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
@@ -1234,7 +1234,7 @@ class HpxGeom(MapGeom):
 
         Returns
         -------
-        wcs : `~gammapy.maps.wcs.WCSGeom`
+        wcs : `~gammapy.maps.wcs.WcsGeom`
             WCS geometry
         """
 
@@ -1251,7 +1251,7 @@ class HpxGeom(MapGeom):
         else:
             axes = copy.deepcopy(self.axes)
 
-        geom = WCSGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
+        geom = WcsGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
                               axes=axes, skydir=skydir)
 
         return geom
@@ -1353,7 +1353,7 @@ class HpxToWcsMapping(object):
     ----------
     hpx : `~HpxGeom`
         HEALPix geometry object.
-    wcs : `~gammapy.maps.wcs.WCSGeom`
+    wcs : `~gammapy.maps.wcs.WcsGeom`
         WCS geometry object.
     """
 

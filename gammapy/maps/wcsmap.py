@@ -4,7 +4,7 @@ import numpy as np
 from astropy.io import fits
 from .geom import find_and_read_bands
 from .base import MapBase
-from .wcs import WCSGeom
+from .wcs import WcsGeom
 
 __all__ = [
     'WcsMap',
@@ -43,7 +43,7 @@ class WcsMap(MapBase):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.WCSGeom`
+    geom : `~gammapy.maps.WcsGeom`
         A WCS geometry object.
 
     data : `~numpy.ndarray`
@@ -104,7 +104,7 @@ class WcsMap(MapBase):
         from .wcsnd import WcsMapND
         # from .wcssparse import WcsMapSparse
 
-        geom = WCSGeom.create(npix=npix, binsz=binsz, width=width,
+        geom = WcsGeom.create(npix=npix, binsz=binsz, width=width,
                               proj=proj, skydir=skydir,
                               coordsys=coordsys, refpix=refpix, axes=axes)
 

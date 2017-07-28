@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from .geom import pix_tuple_to_idx
-from .wcsmap import WCSGeom
+from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
 
 __all__ = [
@@ -20,7 +20,7 @@ class WcsMapND(WcsMap):
 
     Parameters
     ----------
-    wcs : `~gammapy.maps.wcs.WCSGeom`
+    wcs : `~gammapy.maps.wcs.WcsGeom`
         WCS geometry object.
     data : `~numpy.ndarray`
         Data array. If none then an empty array will be allocated.
@@ -55,7 +55,7 @@ class WcsMapND(WcsMap):
         hdu_bands : `~astropy.fits.BinTableHDU` 
             The BANDS table HDU.
         """
-        geom = WCSGeom.from_header(hdu.header, hdu_bands)
+        geom = WcsGeom.from_header(hdu.header, hdu_bands)
         shape = tuple([ax.nbin for ax in geom.axes])
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
