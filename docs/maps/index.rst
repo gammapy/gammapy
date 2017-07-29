@@ -176,6 +176,25 @@ Slicing Methods
 Iterating on a Map
 ------------------
 
+Iterating over a map can be performed with the
+`~MapBase.iter_by_coords` and `~MapBase.iter_by_pix` methods.  These
+return an iterator that traverses the map returning (value,
+coordinate) pairs with map and pixel coordinates, respectively.  The
+optional ``buffersize`` argument can be used to split the iteration 
+into chunks of a given size.  The following example illustrates how
+one can use this method to fill a map with a 2D Gaussian:
+
+.. code::
+
+   from astropy.coordinates import SkyCoord
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.05, map_type='wcs', width=10.0)
+   for val, coords in m.iter_by_coords(buffersize=10000):
+       skydir = SkyCoord(coords[0],coords[1], unit='deg')
+       sep = skydir.separation(m.geom.center_skydir).deg
+       new_val = np.exp(-sep**2/2.0)
+       m.set_by_coords(coords, new_val)
+
 File I/O
 --------
 
@@ -184,10 +203,10 @@ and ``read`` methods.
 
 .. code::
 
-   from gammapy.maps import MapBase
+   from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE')
-   m = MapBase.read('test.fits', extname='IMAGE')
+   m = WcsMapND.read('test.fits', extname='IMAGE')
 
 Images can be serialized to a sparse data format by passing
 ``sparse=True``.  This will write the file to a sparse data table
@@ -195,10 +214,10 @@ appropriate to the pixelization scheme.
 
 .. code::
 
-   from gammapy.maps import MapBase
+   from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE', sparse=True)
-   m = MapBase.read('test.fits', extname='IMAGE')
+   m = WcsMapND.read('test.fits', extname='IMAGE')
 
 Using `gammapy.maps`
 ====================
