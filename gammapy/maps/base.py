@@ -33,7 +33,6 @@ class MapBase(object):
     def __init__(self, geom, data):
         self._data = data
         self._geom = geom
-        self._iter = None
 
     @property
     def data(self):
@@ -153,21 +152,45 @@ class MapBase(object):
         overwrite = kwargs.get('overwrite', True)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    def __iter__(self):
-        return self
+    @abc.abstractmethod
+    def iter_by_pix(self, buffersize=1):
+        """Iterate over elements of the map returning a tuple with values and
+        pixel coordinates.
 
-    def __next__(self):
+        Parameters
+        ----------
+        buffersize : int
+            Set the size of the buffer.  The map will be returned in
+            chunks of the given size.
 
-        if self._iter is None:
-            self._iter = np.ndenumerate(self.data)
+        Returns
+        -------
+        val : ~np.ndarray
+            Map values.
+        pix : tuple
+            Tuple of pixel coordinates.
+        """
+        pass
 
-        try:
-            return next(self._iter)
-        except StopIteration:
-            self._iter = None
-            raise
+    @abc.abstractmethod
+    def iter_by_coords(self, buffersize=1):
+        """Iterate over elements of the map returning a tuple with values and
+        map coordinates.
 
-    next = __next__
+        Parameters
+        ----------
+        buffersize : int
+            Set the size of the buffer.  The map will be returned in
+            chunks of the given size.
+
+        Returns
+        -------
+        val : ~np.ndarray
+            Map values.
+        coords : tuple
+            Tuple of map coordinates.
+        """
+        pass
 
     @abc.abstractmethod
     def sum_over_axes(self):

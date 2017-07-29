@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
+from .utils import unpack_seq
 from .geom import pix_tuple_to_idx
 from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
@@ -110,6 +111,20 @@ class WcsMapND(WcsMap):
     def set_by_idx(self, idx, vals):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
+
+    def iter_by_pix(self, buffersize=1):
+        pix = list(self.geom.get_pixels())
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + pix,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
+
+    def iter_by_coords(self, buffersize=1):
+        coords = list(self.geom.get_coords())
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + coords,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
 
     def sum_over_axes(self):
         raise NotImplementedError
