@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
@@ -161,6 +162,20 @@ class HpxMapND(HpxMap):
     def get_pixel_skydirs(self):
         """Get a list of sky coordinates for the centers of every pixel. """
         return self._hpx.get_skydirs()
+
+    def iter_by_pix(self, buffersize=1):
+        pix = list(self.geom.get_pixels())
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + pix,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
+
+    def iter_by_coords(self, buffersize=1):
+        coords = list(self.geom.get_coords())
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + coords,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
 
     def sum_over_axes(self):
         """Sum over all non-spatial dimensions."""

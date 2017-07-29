@@ -72,6 +72,12 @@ class HpxMapSparse(HpxMap):
         idx = ravel_hpx_index(idx, self.hpx.npix)
         self.data[0, idx] = vals
 
+    def iter_by_pix(self):
+        raise NotImplementedError
+
+    def iter_by_coords(self):
+        raise NotImplementedError
+
     def sum_over_axes(self):
         raise NotImplementedError
 

@@ -76,3 +76,17 @@ def test_wcsmapnd_fill_by_coords(tmpdir, npix, binsz, coordsys, proj, skydir, ax
     m.fill_by_coords(tuple([np.concatenate((t, t)) for t in coords]),
                      np.concatenate((coords[1], coords[1])))
     assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsmapnd_iter(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    m.fill_by_coords(coords, coords[0])
+    for vals, pix in m.iter_by_pix(buffersize=100):
+        assert_allclose(vals, m.get_by_pix(pix))
+    for vals, coords in m.iter_by_coords(buffersize=100):
+        assert_allclose(vals, m.get_by_coords(coords))

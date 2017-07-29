@@ -108,6 +108,19 @@ def test_hpxcube_fill_by_coords(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
+def test_hpxcube_iter(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    coords = m.geom.get_coords()
+    m.fill_by_coords(coords, coords[0])
+    for vals, pix in m.iter_by_pix(buffersize=100):
+        assert_allclose(vals, m.get_by_pix(pix))
+    for vals, coords in m.iter_by_coords(buffersize=100):
+        assert_allclose(vals, m.get_by_coords(coords))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
 def test_hpxcube_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
