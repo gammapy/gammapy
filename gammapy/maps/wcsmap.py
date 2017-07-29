@@ -148,25 +148,31 @@ class WcsMap(MapBase):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, **kwargs):
-
-        extname = kwargs.get('extname', 'SKYMAP')
-        extname_bands = kwargs.get('extname_bands', 'BANDS')
-        sparse = kwargs.get('sparse', False)
+    def to_hdulist(self, extname=None, extname_bands='BANDS', sparse=False):
 
         if sparse:
-            hdulist = [fits.PrimaryHDU(), self.make_hdu(**kwargs)]
+            extname = 'SKYMAP' if extname is None else extname.upper()
         else:
-            kwargs['primary'] = True
-            hdulist = [self.make_hdu(**kwargs)]
+            extname = 'PRIMARY' if extname is None else extname.upper()
+
+        if sparse and extname == 'PRIMARY':
+            raise ValueError(
+                'Sparse maps cannot be written to the PRIMARY HDU.')
+
+        hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
+                            sparse=sparse)
+
+        if extname == 'PRIMARY':
+            hdulist = [hdu]
+        else:
+            hdulist = [fits.PrimaryHDU(), hdu]
 
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, extname='SKYMAP', extname_bands='BANDS', sparse=False,
-                 primary=False):
-        """Make a FITS HDU with input data.
+    def make_hdu(self, extname='SKYMAP', extname_bands='BANDS', sparse=False):
+        """Make a FITS HDU from this map.
 
         Parameters
         ----------
@@ -177,8 +183,11 @@ class WcsMap(MapBase):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        primary : bool
-            Specify whether to make a primary or image HDU.
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
+            HDU containing the map data.
         """
         data = self.data
         shape = data.shape
@@ -231,7 +240,7 @@ class WcsMap(MapBase):
 
             hdu = fits.BinTableHDU.from_columns(cols, header=header,
                                                 name=extname)
-        elif primary:
+        elif extname == 'PRIMARY':
             hdu = fits.PrimaryHDU(data, header=header)
         else:
             hdu = fits.ImageHDU(data, header=header, name=extname)
