@@ -341,19 +341,21 @@ class WcsGeom(MapGeom):
 
                 ntot = npix[0][i] * npix[1][i]
                 o = np.unravel_index(np.arange(ntot, dtype=int),
-                                     (npix[0][i], npix[1][i]))
+                                     (npix[0][i], npix[1][i]), order='F')
                 pix[0] = np.concatenate((pix[0], o[0].astype(float)))
                 pix[1] = np.concatenate((pix[1], o[1].astype(float)))
+                idx = np.unravel_index(np.ravel_multi_index(i, npix[0].shape),
+                                       npix[0].shape, order='F')
                 for j in range(len(self.axes)):
                     pix[2 + j] = np.concatenate((pix[2 + j],
-                                                 i[j] * np.ones(ntot, dtype=float)))
+                                                 idx[j] * np.ones(ntot, dtype=float)))
 
         else:
             pix = [np.arange(npix[0], dtype=float),
                    np.arange(npix[1], dtype=float)]
             for i, ax in enumerate(self.axes):
                 pix += [np.arange(ax.nbin, dtype=float)]
-            pix = np.meshgrid(*pix, indexing='ij')
+            pix = np.meshgrid(*pix[::-1], indexing='ij')[::-1]
 
         if mode == 'edges':
             for i in range(len(pix)):
