@@ -116,7 +116,7 @@ class WcsMap(MapBase):
             raise ValueError('Unregnized Map type: {}'.format(map_type))
 
     @classmethod
-    def from_hdulist(cls, hdulist, **kwargs):
+    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -133,18 +133,22 @@ class WcsMap(MapBase):
         wcs_map : `WcsMap`
             Map object
         """
-        extname = kwargs.get('hdu', None)
-        if extname is None:
+        if hdu is None:
             hdu = find_hdu(hdulist)
         else:
-            hdu = hdulist[extname]
-        extname_bands = kwargs.get('hdu_bands', None)
-        if 'BANDSHDU' in hdu.header and extname_bands is None:
-            extname_bands = hdu.header['BANDSHDU']
+            hdu = hdulist[hdu]
 
-        hdu_bands = None
-        if extname_bands is not None:
-            hdu_bands = hdulist[extname_bands]
+        if 'BANDSHDU' in hdu.header and hdu_bands is None:
+            hdu_bands = hdu.header['BANDSHDU']
+        elif hdu.header.get('NAXIS', None) == 3 and hdu_bands is None:
+
+            if 'EBOUNDS' in hdulist:
+                hdu_bands = 'EBOUNDS'
+            elif 'ENERGIES' in hdulist:
+                hdu_bands = 'ENERGIES'
+
+        if hdu_bands is not None:
+            hdu_bands = hdulist[hdu_bands]
 
         return cls.from_hdu(hdu, hdu_bands)
 
