@@ -115,7 +115,7 @@ def ravel_hpx_index(idx, npix):
     # TODO: raise exception for indices that are out of bounds
 
     idx0 = idx[0]
-    idx1 = np.ravel_multi_index(idx[1:], npix.shape)
+    idx1 = np.ravel_multi_index(idx[1:], npix.shape, mode='clip')
     npix = np.concatenate((np.array([0]), npix.flat[:-1]))
 
     return idx0 + np.cumsum(npix)[idx1]
@@ -437,7 +437,7 @@ class HpxGeom(MapGeom):
         self._conv = conv
         self._center_skydir = self.get_ref_dir(region, self.coordsys)
         self._center_coord = tuple(list(skydir_to_lonlat(self._center_skydir)) +
-                                   [(float(ax.nbin) - 1.0) / 2. for ax in self.axes])
+                                   [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
         self._center_pix = self.coord_to_pix(self._center_coord)
 
     def _create_lookup(self, region):
@@ -590,11 +590,6 @@ class HpxGeom(MapGeom):
 
             # FIXME: Figure out how to handle coordinates out of
             # bounds of non-spatial dimensions
-
-            # Ravel multi-dimensional indices
-            # ibin = np.ravel_multi_index(idxs, self._shape,
-            #                            mode='clip')
-
             if self.nside.size > 1:
                 nside = self.nside[idxs]
             else:
@@ -617,11 +612,10 @@ class HpxGeom(MapGeom):
                 bins += [pix[1 + i]]
                 vals += [ax.pix_to_coord(pix[1 + i])]
 
-            # Ravel multi-dimensional indices
-            ibin = np.ravel_multi_index(bins, self._shape)
+            idxs = pix_tuple_to_idx(bins)
 
             if self.nside.size > 1:
-                nside = self.nside[ibin]
+                nside = self.nside[idxs]
             else:
                 nside = self.nside
 
@@ -644,6 +638,8 @@ class HpxGeom(MapGeom):
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
             idx[i][idx_local[i] < 0] = -1
+            if i > 0:
+                idx[i][idx[i] > self.axes[i - 1].nbin - 1] = -1
 
         return tuple(idx)
 
@@ -1336,9 +1332,8 @@ class HpxGeom(MapGeom):
 
     def contains(self, coords):
 
-        # FIXME: Check pixel bounds for all dimensions
-        pix = self.global_to_local(self.coord_to_pix(coords))
-        return pix[0] != -1
+        idx = self.coord_to_idx(coords)
+        return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
     def get_skydirs(self):
         """Get the sky coordinates of all the pixels in this geometry. """
