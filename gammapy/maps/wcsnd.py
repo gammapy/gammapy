@@ -51,9 +51,9 @@ class WcsMapND(WcsMap):
 
         Parameters
         ----------
-        hdu : `~astropy.fits.BinTableHDU` or `~astropy.fits.ImageHDU` 
+        hdu : `~astropy.fits.BinTableHDU` or `~astropy.fits.ImageHDU`
             The map FITS HDU.
-        hdu_bands : `~astropy.fits.BinTableHDU` 
+        hdu_bands : `~astropy.fits.BinTableHDU`
             The BANDS table HDU.
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands)
@@ -129,14 +129,21 @@ class WcsMapND(WcsMap):
     def sum_over_axes(self):
         raise NotImplementedError
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, pix_slice=None, **kwargs):
         import matplotlib.pyplot as plt
 
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(111, projection=self.geom.wcs)
 
-        im = ax.imshow(self.data, interpolation='nearest', cmap='magma',
-                       origin='lower')
+        if pix_slice is not None:
+            slices = (slice(None), slice(None)) + pix_slice
+            data = self.data[slices[::-1]]
+        else:
+            data = self.data
+
+        kwargs.setdefault('interpolation', 'nearest')
+        kwargs.setdefault('origin', 'lower')
+        im = ax.imshow(data, **kwargs)
         ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
         return im
