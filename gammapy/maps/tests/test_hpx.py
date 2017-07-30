@@ -321,6 +321,26 @@ def test_hpxgeom_get_coords():
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
 
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    coords = geom.get_coords()
+    assert_allclose(geom.contains(coords), np.ones(
+        coords[0].shape, dtype=bool))
+
+    if axes is not None:
+
+        coords = [c[0] for c in coords[:2]] + \
+            [ax.edges[-1] + 1.0 for ax in axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+    if geom.region is not None:
+
+        coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+
 def test_make_hpx_to_wcs_mapping():
     ax0 = np.linspace(0., 1., 3)
     hpx = HpxGeom(16, False, 'GAL', region='DISK(110.,75.,2.)')
