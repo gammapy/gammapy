@@ -81,6 +81,9 @@ class HpxMapSparse(HpxMap):
     def sum_over_axes(self):
         raise NotImplementedError
 
+    def reproject(self, geom):
+        raise NotImplementedError
+
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
         raise NotImplementedError
 

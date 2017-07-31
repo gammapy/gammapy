@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
@@ -99,7 +100,7 @@ class WcsMapND(WcsMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        msk = idx[0] >= 0
+        msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
         if weights is not None:
             weights = weights[msk]
@@ -127,6 +128,22 @@ class WcsMapND(WcsMap):
                                     buffersize=buffersize))
 
     def sum_over_axes(self):
+
+        if self.geom.ndim == 2:
+            return copy.deepcopy(self)
+
+        map_out = self.__class__(self.geom.to_image())
+        if self.geom.npix[0].size > 1:
+            vals = self.get_by_idx(self.geom.get_pixels())
+            map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
+        else:
+            data = np.apply_over_axes(np.sum, self.data,
+                                      axes=np.arange(self.data.ndim - 2))
+            map_out.data = np.squeeze(data)
+
+        return map_out
+
+    def reproject(self, geom):
         raise NotImplementedError
 
     def plot(self, ax=None, pix_slice=None, **kwargs):

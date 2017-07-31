@@ -683,6 +683,19 @@ class MapGeom(object):
         """
         pass
 
+    @abc.abstractmethod
+    def to_image(self):
+        """Create a 2D geometry by dropping all non-spatial dimensions of this
+        geometry.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Image geometry.
+
+        """
+        pass
+
     def _fill_header_from_axes(self, header):
 
         for i, ax in enumerate(self.axes):

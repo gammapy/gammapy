@@ -799,14 +799,7 @@ class HpxGeom(MapGeom):
         return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
                               region=self.region, axes=self.axes, conv=self.conv)
 
-    def copy_and_drop_axes(self):
-        """Make a copy of the spatial component of this geometry.
-
-        Returns
-        -------
-        geom : `~HpxGeom`
-            A HEALPix geoemtry object.
-        """
+    def to_image(self):
         return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv)
 

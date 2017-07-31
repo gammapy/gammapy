@@ -90,3 +90,14 @@ def test_wcsmapnd_iter(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
         assert_allclose(vals, m.get_by_pix(pix))
     for vals, coords in m.iter_by_coords(buffersize=100):
         assert_allclose(vals, m.get_by_coords(coords))
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsmapnd_sum_over_axes(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    m.fill_by_coords(coords, coords[0])
+    msum = m.sum_over_axes()
