@@ -31,6 +31,19 @@ pixelization schemes are supported:
 * HEALPix : Hierarchical Equal Area Iso Latitude pixelation of the
   sphere.  Pixels are equal area but have irregular shapes.
 
+`gammapy.maps` is organized around two types of data structures:
+*geometry* classes inheriting from `~MapGeom` and *map* classes
+inheriting from `~MapBase`.  A geometry object defines the map
+boundaries, pixelization scheme, and provide methods for converting
+to/from map and pixel coordinates.  A map object owns a `~MapGeom`
+instance as well as a data structure representing map values.  Where
+possible it is recommended to use the abstract `~MapBase` interface
+for accessing or updating the contents of a map as this allows
+algorithms to be used interchangeably with different map
+representations.  The following describes methods of the abstract
+interface.  Documentation specific to WCS- and HEALPix-based maps is
+provided in :doc:`hpxmap` and :doc:`wcsmap`.
+
 
 Getting Started
 ===============
@@ -112,29 +125,46 @@ Get, Set, and Fill Methods
 --------------------------
 
 All map objects have a set of accessor methods provided through the
-abstract `~MapBase` class that can be used to retrieve or update the
-contents of the map.  Accessor methods accept as their first
-argument a tuple of vectors (lists or numpy arrays) with the coordinates of
-pixels within the map expressed in one of three coordinate systems:
+abstract `~MapBase` class.  These methods can be used to access or
+update the contents of the map irrespective of its underlying
+representation.  Three types of accessor methods are provided:
 
-* ``idx`` : Pixel indices.  These are explicit pixel indices into the map.  
-* ``pix`` : Coordinates in pixel space.  Pixel coordinates are defined
+* ``get`` : Return the value of the map at the pixel encompassing the
+  given coordinate (`~MapBase.get_by_idx`, `~MapBase.get_by_pix`,
+  `~MapBase.get_by_coords`).  By setting the ``interp`` argument,
+  `~MapBase.get_by_pix` and `~MapBase.get_by_coords` support
+  interpolation of map values between pixels.
+* ``set`` : Set the value of the map at the pixel encompassing the
+  given coordinate (`~MapBase.set_by_idx`, `~MapBase.set_by_pix`,
+  `~MapBase.set_by_coords`).
+* ``fill`` : Increment the value of the map at the pixel encompassing
+  the given coordinate with a unit weight or the value in the optional
+  ``weights`` argument (`~MapBase.fill_by_idx`,
+  `~MapBase.fill_by_pix`, `~MapBase.fill_by_coords`).
+
+All accessor methods accept as their first argument a
+coordinate tuple containing scalars, lists, or numpy arrays with one
+tuple element for each dimension of the map.  By convention the first
+two elements in the coordinate tuple correspond to longitude and
+latitude followed by one element for each non-spatial dimension.  Map
+coordinates can be expressed in one of three coordinate systems:
+
+* ``idx`` : Pixel indices.  These are explicit (integer) pixel indices into the map.  
+* ``pix`` : Coordinates in pixel space.  Pixel coordinates are continuous defined
   on the interval [0,N-1] where N is the number of pixels along a
   given map dimension with pixel centers at integer values.  For
   methods that reference a discrete pixel, pixel coordinates wil be
   rounded to the nearest pixel index and passed to the corresponding
   ``idx`` method.
-* ``coord`` : Sky coordinates.  The tuple should contain longitude and
+* ``coord`` : Sky (spherical) coordinates.  The tuple should contain longitude and
   latitude in degrees followed by one coordinate array for each
   non-spatial dimension.
   
 The coordinate system accepted by a given accessor method can be
 inferred from the suffix of the method name
-(e.g. `~MapBase.get_by_idx`).
-
-The ``get`` methods return the contents of the map for a sequence of
-pixels.  The following demonstrates how one can access the same pixels
-of a WCS map using each of the three coordinate systems:
+(e.g. `~MapBase.get_by_idx`).  The following demonstrates how one can
+access the same pixels of a WCS map using each of the three coordinate
+systems:
 
 .. code::
 
@@ -145,29 +175,44 @@ of a WCS map using each of the three coordinate systems:
    vals = m.get_by_pix( ([49.0,50.0],[49.0,50.0]) )
    vals = m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]) )
 
-The ``set`` methods can be used to set pixel values.  The following
-demonstrates how one can set same pixel values:
+Coordinate arguments obey normal numpy broadcasting rules.  The
+coordinate tuple may contain any combination of scalars, lists or
+numpy arrays as long as they have compatible shapes.  For instance a
+combination of scalar and vector arguments can be used to perform an
+operation along a slice of the map at a fixed value along that
+dimension.  Multi-dimensional arguments can be use to broadcast a
+given operation across a grid of coordinate values.
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   coords = np.linspace(-5.0,5.0,11)
+   
+   # Equivalent calls for accessing value at pixel (49,49)
+   vals = m.get_by_idx( (49,49) )
+   vals = m.get_by_idx( ([49],[49]) )
+   vals = m.get_by_idx( (np.array([49]),np.array([49])) )
+   
+   # Retrieve map values along latitude at fixed longitude=0.0
+   vals = m.get_by_coords( (0.0, coords) )
+   # Retrieve map values on a 2D grid of latitude/longitude points
+   vals = m.get_by_coords( (coords[None,:], coords[:,None]) )
+   # Set map values along slice at longitude=0.0 to twice their existing value
+   m.set_by_coords((0.0, coords), 2.0*m.get_by_coords(0.0, coords))
+
+The ``set`` and ``fill`` methods can both be used to set pixel values.
+The following demonstrates how one can set pixel values:
 
 .. code::
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    
-   m.set_by_idx( ([49,50],[49,50]), [0.5, 1.5] )
-   m.set_by_pix( ([49.0,50.0],[49.0,50.0]), [0.5, 1.5] )
    m.set_by_coords( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
-
-Finally the ``fill`` methods can be used to increment the value of a
-set of pixels according to a weights vector.
-
-.. code::
-
-   from gammapy.maps import MapBase
-   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   
-   m.fill_by_idx( ([49,50],[49,50]), weights=[0.5, 1.5] )
-   m.fill_by_pix( ([49.0,50.0],[49.0,50.0]), weights=[0.5, 1.5] )
    m.fill_by_coords( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
+   
+
 
    
 Slicing Methods
@@ -195,29 +240,30 @@ one can use this method to fill a map with a 2D Gaussian:
        new_val = np.exp(-sep**2/2.0)
        m.set_by_coords(coords, new_val)
 
-File I/O
+FITS I/O
 --------
 
-Maps can be written to and read from a FITS file with the ``write``
-and ``read`` methods.
+Maps can be written to and read from a FITS file with the
+`~MapBase.write` and ``read`` methods:
 
 .. code::
 
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE')
-   m = WcsMapND.read('test.fits', extname='IMAGE')
+   m = WcsMapND.read('file.fits', extname='IMAGE')
 
-Images can be serialized to a sparse data format by passing
-``sparse=True``.  This will write the file to a sparse data table
-appropriate to the pixelization scheme.
+Images can be serialized to a sparse data format by calling
+`~MapBase.write` with ``sparse=True``.  This will write all non-zero
+pixels in the map to a data table appropriate to the pixelization
+scheme.
 
 .. code::
 
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE', sparse=True)
-   m = WcsMapND.read('test.fits', extname='IMAGE')
+   m = WcsMapND.read('file.fits', extname='IMAGE')
 
 Using `gammapy.maps`
 ====================
