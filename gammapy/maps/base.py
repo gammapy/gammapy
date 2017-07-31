@@ -214,6 +214,74 @@ class MapBase(object):
         """
         pass
 
+    @abc.abstractmethod
+    def pad(self, pad_width):
+        """Pad the spatial dimension of the map by extending the edge of the
+        map by the given number of pixels.
+
+        Parameters
+        ----------
+        pad_width : {sequence, array_like, int}
+            Number of values padded to the edges of each axis, passed to `numpy.pad`
+
+        Returns
+        -------
+        map : `~MapBase`
+            Padded map.
+        """
+        pass
+
+    @abc.abstractmethod
+    def crop(self, crop_width):
+        """Crop the spatial dimension of the map.
+
+        Parameters
+        ----------
+        crop_width : {sequence, array_like, int}
+            Number of values cropped from the edges of each axis.
+            Defined analogously to `pad_with` from `~numpy.pad`.
+
+        Returns
+        -------
+        map : `~MapBase`
+            Cropped map.
+        """
+        pass
+
+    @abc.abstractmethod
+    def downsample(self, factor):
+        """Downsample the spatial dimension of the map by a given factor. 
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+
+        Returns
+        -------
+        map : `~MapBase`
+            Downsampled map.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def upsample(self, factor):
+        """Upsample the spatial dimension of the map by a given factor. 
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+
+        Returns
+        -------
+        map : `~MapBase`
+            Upsampled map.
+
+        """
+        pass
+
     def get_by_coords(self, coords, interp=None):
         """Return map values at the given map coordinates.
 
