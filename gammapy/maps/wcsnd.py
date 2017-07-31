@@ -146,6 +146,18 @@ class WcsMapND(WcsMap):
     def reproject(self, geom):
         raise NotImplementedError
 
+    def pad(self, pad_width):
+        raise NotImplementedError
+
+    def crop(self, crop_width):
+        raise NotImplementedError
+
+    def upsample(self, factor):
+        raise NotImplementedError
+
+    def downsample(self, factor):
+        raise NotImplementedError
+
     def plot(self, ax=None, pix_slice=None, **kwargs):
         import matplotlib.pyplot as plt
 

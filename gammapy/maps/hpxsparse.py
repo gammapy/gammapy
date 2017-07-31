@@ -84,6 +84,18 @@ class HpxMapSparse(HpxMap):
     def reproject(self, geom):
         raise NotImplementedError
 
+    def pad(self, pad_width):
+        raise NotImplementedError
+
+    def crop(self, crop_width):
+        raise NotImplementedError
+
+    def upsample(self, factor):
+        raise NotImplementedError
+
+    def downsample(self, factor):
+        raise NotImplementedError
+
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
         raise NotImplementedError
 
