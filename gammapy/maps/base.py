@@ -197,6 +197,23 @@ class MapBase(object):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
+    @abc.abstractmethod
+    def reproject(self, geom):
+        """Reproject this map to a different geometry.
+
+        Parameters
+        ----------
+        geom : `~MapGeom`
+            Geometry of projection.
+
+        Returns
+        -------
+        map : `~MapBase`
+            Reprojected map.
+
+        """
+        pass
+
     def get_by_coords(self, coords, interp=None):
         """Return map values at the given map coordinates.
 
@@ -314,8 +331,8 @@ class MapBase(object):
             Weights vector. If None then a unit weight will be assumed
             for each element in `coords`.
         """
-        pix = self.geom.coord_to_pix(coords)
-        self.fill_by_idx(pix, weights)
+        idx = self.geom.coord_to_idx(coords)
+        self.fill_by_idx(idx, weights)
 
     def fill_by_pix(self, pix, weights=None):
         """Fill pixels at the given pixel coordinates with values in `weights`

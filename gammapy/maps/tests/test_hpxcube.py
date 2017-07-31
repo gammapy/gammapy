@@ -145,3 +145,13 @@ def test_hpxcube_ud_grade(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m.to_ud_graded(4)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxcube_sum_over_axes(nside, nested, coordsys, region, axes):
+    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    coords = m.geom.get_coords()
+    m.fill_by_coords(coords, coords[0])
+    msum = m.sum_over_axes()

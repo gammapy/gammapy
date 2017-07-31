@@ -127,6 +127,10 @@ class WcsGeom(MapGeom):
         return self._axes
 
     @property
+    def ndim(self):
+        return len(self._axes) + 2
+
+    @property
     def center_coord(self):
         """Map coordinate of the center of the geometry.
 
@@ -355,7 +359,7 @@ class WcsGeom(MapGeom):
                    np.arange(npix[1], dtype=float)]
             for i, ax in enumerate(self.axes):
                 pix += [np.arange(ax.nbin, dtype=float)]
-            pix = np.meshgrid(*pix[::-1], indexing='ij')[::-1]
+            pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
 
         if mode == 'edges':
             for i in range(len(pix)):
@@ -364,6 +368,10 @@ class WcsGeom(MapGeom):
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         return tuple([np.ravel(t[m]) for t in pix])
+#        shape = np.broadcast(*coords).shape
+#        m = [np.isfinite(c) for c in coords]
+#        m = np.broadcast_to(np.prod(m),shape)
+#        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
     def get_coords(self):
 
@@ -411,10 +419,28 @@ class WcsGeom(MapGeom):
         return tuple(coords)
 
     def pix_to_idx(self, pix):
-        return pix_tuple_to_idx(pix)
+        idxs = pix_tuple_to_idx(pix)
+        if self.npix[0].size > 1:
+            ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
+            ibin = pix_tuple_to_idx(ibin)
+            npix = (self.npix[0][ibin], self.npix[1][ibin])
+        else:
+            npix = self.npix
+
+        for i, idx in enumerate(idxs):
+            if i < 2:
+                idxs[i][(idx < 0) | (idx >= npix[i])] = -1
+            else:
+                idxs[i][(idx < 0) | (idx >= self.axes[i-2].nbin)] = -1
+        return idxs
 
     def contains(self, coords):
         raise NotImplementedError
+
+    def to_image(self):
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+        return self.__class__(self._wcs, npix, cdelt=cdelt)
 
     def to_slice(self, slices):
         raise NotImplementedError

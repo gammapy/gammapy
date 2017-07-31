@@ -180,18 +180,21 @@ class HpxMapND(HpxMap):
     def sum_over_axes(self):
         """Sum over all non-spatial dimensions."""
 
-        hpx_out = self.hpx.copy_and_drop_axes()
+        hpx_out = self.hpx.to_image()
         map_out = self.__class__(hpx_out)
 
         if self.hpx.nside.size > 1:
             vals = self.get_by_idx(self.hpx.get_pixels())
             map_out.fill_by_coords(self.hpx.get_coords()[:2], vals)
         else:
-            data = np.apply_over_axes(np.sum, self.data,
-                                      axes=np.arange(self.data.ndim - 1))
-            map_out.data = data
+            axes = np.arange(self.data.ndim - 1).tolist()
+            data = np.apply_over_axes(np.sum, self.data, axes=axes)
+            map_out.data = np.squeeze(data, axis=axes)
 
         return map_out
+
+    def reproject(self, geom):
+        raise NotImplementedError
 
     def interp_by_coords(self, coords, interp=None):
 
