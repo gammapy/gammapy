@@ -85,14 +85,14 @@ class Parameter(object):
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
-        if isinstance(value, u.Quantity):
+        if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
             self.quantity = value
         else:
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin
-        self.parmax = parmax
+        self.parmin = parmin or np.nan
+        self.parmax = parmax or np.nan
         self.frozen = frozen
 
     @property
@@ -102,6 +102,7 @@ class Parameter(object):
 
     @quantity.setter
     def quantity(self, par):
+        par = u.Quantity(par)
         self.value = par.value
         self.unit = par.unit
 
@@ -153,11 +154,14 @@ class Parameter(object):
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
+
+        parmin = np.finfo(np.float32).min if np.isnan(self.parmin) else self.parmin
+        parmax = np.finfo(np.float32).max if np.isnan(self.parmax) else self.parmax
+
         par = Parameter(modelname=modelname, name=self.name,
                         val=self.value, units=self.unit,
-                        min=self.parmin, max=self.parmax,
+                        min=parmin, max=parmax,
                         frozen=self.frozen)
-
         return par
 
 
@@ -231,7 +235,9 @@ class ParameterList(object):
         """
         names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
-                   'error': '.3e', }
+                   'error': '.3e',
+                   'min': '.3e',
+                   'max': '.3e'}
         table = Table(self.to_list_of_dict(), names=names)
 
         for name in formats:

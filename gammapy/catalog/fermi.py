@@ -305,8 +305,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
-                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'e2dnde', 'e2dnde_errn',
+                     'e2dnde_errp', 'flux_ul', 'e2dnde_ul', 'dnde']
         table['sqrt_TS'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:
@@ -331,9 +331,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['flux_errp'] = flux_err[:, 1]
 
         nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
-        table['eflux'] = nuFnu
-        table['eflux_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
-        table['eflux_errp'] = nuFnu * flux_err[:, 1] / flux
+        table['e2dnde'] = nuFnu
+        table['e2dnde_errn'] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table['e2dnde_errp'] = nuFnu * flux_err[:, 1] / flux
 
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
@@ -344,9 +344,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         table['flux_ul'][is_ul] = flux_ul[is_ul]
 
         # handle upper limits
-        table['eflux_ul'] = np.nan * nuFnu.unit
-        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
-        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
+        table['e2dnde_ul'] = np.nan * nuFnu.unit
+        e2dnde_ul = compute_flux_points_ul(table['e2dnde'], table['e2dnde_errp'])
+        table['e2dnde_ul'][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
         table['sqrt_TS'] = [self.data['Sqrt_TS' + _] for _ in self._ebounds_suffix]
@@ -754,8 +754,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'eflux', 'eflux_errn',
-                     'eflux_errp', 'flux_ul', 'eflux_ul', 'dnde']
+        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'e2dnde', 'e2dnde_errn',
+                     'e2dnde_errp', 'flux_ul', 'e2dnde_ul', 'dnde']
         table['sqrt_ts'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:
@@ -781,9 +781,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         table['flux_errn'] = np.abs(flux_err[:, 0])
         table['flux_errp'] = flux_err[:, 1]
 
-        table['eflux'] = e2dnde
-        table['eflux_errn'] = np.abs(e2dnde * flux_err[:, 0] / flux)
-        table['eflux_errp'] = e2dnde * flux_err[:, 1] / flux
+        table['e2dnde'] = e2dnde
+        table['e2dnde_errn'] = np.abs(e2dnde * flux_err[:, 0] / flux)
+        table['e2dnde_errp'] = e2dnde * flux_err[:, 1] / flux
 
         is_ul = np.isnan(table['flux_errn'])
         table['is_ul'] = is_ul
@@ -793,9 +793,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         flux_ul = compute_flux_points_ul(table['flux'], table['flux_errp'])
         table['flux_ul'][is_ul] = flux_ul[is_ul]
 
-        table['eflux_ul'] = np.nan * e2dnde.unit
-        eflux_ul = compute_flux_points_ul(table['eflux'], table['eflux_errp'])
-        table['eflux_ul'][is_ul] = eflux_ul[is_ul]
+        table['e2dnde_ul'] = np.nan * e2dnde.unit
+        e2dnde_ul = compute_flux_points_ul(table['e2dnde'], table['e2dnde_errp'])
+        table['e2dnde_ul'][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
         table['sqrt_ts'] = self.data['Sqrt_TS_Band']
@@ -995,7 +995,7 @@ def _is_galactic(source_class):
         return 'galactic'
     elif source_class in egal_classes:
         return 'extra-galactic'
-    elif source_class == '':
+    elif (source_class == '') or (source_class == 'unknown'):
         return 'unknown'
     else:
         raise ValueError('Unknown source class: {}'.format(source_class))

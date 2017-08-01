@@ -508,7 +508,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
         table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask]
-        table['is_ul'] = self.data['Flux_Points_Flux_Is_UL'][mask]
+        table['is_ul'] = self.data['Flux_Points_Flux_Is_UL'][mask].astype('bool')
 
         return FluxPoints(table)
 

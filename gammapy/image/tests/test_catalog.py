@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.tests.helper import remote_data
 from ...utils.testing import requires_dependency, requires_data
 from ..catalog import CatalogImageEstimator, catalog_image, catalog_table, _source_image
 from ...image import SkyImage
@@ -18,6 +19,7 @@ def test_extended_image():
     pass
 
 
+@remote_data
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_source_image():
@@ -40,6 +42,7 @@ def test_source_image():
     assert_allclose(actual, expected)
 
 
+@remote_data
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_catalog_image():
@@ -61,6 +64,7 @@ def test_catalog_image():
     assert_allclose(actual, expected, rtol=0.01)
 
 
+@remote_data
 @requires_data('gammapy-extra')
 def test_catalog_table():
     # Checks catalogs are loaded correctly

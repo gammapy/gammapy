@@ -310,7 +310,7 @@ class FermiLATDataset(object):
 
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
-        except ValueError:
+        except (ValueError, KeyError):
             from ..cube.healpix import SkyCubeHealpix
             cube = SkyCubeHealpix.read(filename, format='fermi-counts')
 
