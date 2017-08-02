@@ -200,10 +200,8 @@ class SpectralModel(object):
         """Create from dict."""
         classname = val.pop('name')
         parameters = ParameterList.from_dict(val)
-        kwargs = dict()
-        for par in parameters.parameters:
-            kwargs[par.name] = par.quantity
-        model = globals()[classname](**kwargs)
+        model = globals()[classname]()
+        model.parameters = parameters
         model.parameters.covariance = parameters.covariance
         return model
 
