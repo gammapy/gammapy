@@ -19,7 +19,6 @@ from .image_ts import *
 from .cube_background import *
 from .cube_bin import *
 
-from .catalog_browser import *
 # from .catalog_query import *
 
 from .cta_irf import *

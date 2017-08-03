@@ -77,7 +77,6 @@ Detect
 Catalog
 -------
 
-- ``gammapy-catalog-browse`` (web GUI tool) calls `gammapy.scripts.catalog_browser` (TODO: list in the API docs)
 - ``gammapy-catalog-query`` calls `gammapy.scripts.catalog_query`
 
 
