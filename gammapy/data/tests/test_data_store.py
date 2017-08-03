@@ -211,3 +211,11 @@ def test_make_mean_edisp(tmpdir):
     i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     assert_equal(i, i2)
+
+
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
+def test_check_observations(data_manager):
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    result = data_store.check_observations()
+    assert len(result) == 0
