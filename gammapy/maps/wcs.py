@@ -127,6 +127,11 @@ class WcsGeom(MapGeom):
         return self._axes
 
     @property
+    def shape(self):
+        """Shape of non-spatial axes."""
+        return self._shape
+
+    @property
     def ndim(self):
         return len(self._axes) + 2
 
@@ -431,7 +436,7 @@ class WcsGeom(MapGeom):
             if i < 2:
                 idxs[i][(idx < 0) | (idx >= npix[i])] = -1
             else:
-                idxs[i][(idx < 0) | (idx >= self.axes[i-2].nbin)] = -1
+                idxs[i][(idx < 0) | (idx >= self.axes[i - 2].nbin)] = -1
         return idxs
 
     def contains(self, coords):
