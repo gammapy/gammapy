@@ -98,6 +98,35 @@ class WcsMapND(WcsMap):
         else:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
+    def interp_image(self, coords, method='linear'):
+
+        if self.geom.ndim == 2:
+            raise ValueError('Operation only supported for maps with one or more '
+                             'non-spatial dimensions.')
+        elif self.geom.ndim == 3:
+            return self._interp_image_cube(coords, method)
+        else:
+            raise NotImplementedError
+
+    def _interp_image_cube(self, coords, method):
+        """Interpolate an image plane of a cube."""
+
+        # TODO: consider re-writing to support maps with > 3 dimensions
+
+        from scipy.interpolate import interp1d
+
+        axis = self.geom.axes[0]
+        idx = axis.coord_to_idx_interp(coords[0])
+        map_slice = slice(int(idx[0]), int(idx[-1]) + 1)
+        pix_vals = [float(t) for t in idx]
+        pix = axis.coord_to_pix(coords[0])
+        data = self.data[map_slice]
+        fn = interp1d(pix_vals, data, copy=False, axis=0, fill_value='extrapolate',
+                      kind=method)
+        data_interp = fn(float(pix))
+        geom = self.geom.to_image()
+        return self.__class__(geom, data_interp)
+
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
@@ -112,6 +141,10 @@ class WcsMapND(WcsMap):
     def set_by_idx(self, idx, vals):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
+
+    def iter_by_image(self):
+        for idx in np.ndindex(self.geom.shape):
+            yield self.data[idx[::-1]], idx
 
     def iter_by_pix(self, buffersize=1):
         pix = list(self.geom.get_pixels())
@@ -143,8 +176,61 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def reproject(self, geom):
-        raise NotImplementedError
+    def reproject(self, geom, mode='interp'):
+
+        from reproject import reproject_interp, reproject_exact
+        from reproject import reproject_from_healpix, reproject_to_healpix
+        from .hpx import HpxGeom
+        from .hpxcube import HpxMapND
+
+        coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
+
+        if isinstance(geom, HpxGeom):
+
+            map_out = HpxMapND(geom)
+            for vals, idx in map_out.iter_by_image():
+
+                # TODO: Check if non-spatial geometries are compatible
+                # otherwise interpolate
+                coords = self.geom.pix_to_coord((0,) + idx)
+                img = self.interp_image(coords).data
+
+                # TODO: Create WCS object for image plane if
+                # multi-resolution geom
+                data, footprint = reproject_to_healpix((img, self.geom.wcs),
+                                                       coordsys,
+                                                       nside=geom.nside, nested=geom.nest,
+                                                       order='bilinear')
+                vals[...] = data
+            return map_out
+        elif isinstance(geom, WcsGeom):
+
+            map_out = WcsMapND(geom)
+            for vals, idx in map_out.iter_by_image():
+
+                # TODO: Check if geometries are compatible otherwise
+                # interpolate
+                coords = self.geom.pix_to_coord((0, 0) + idx)
+                img = self.interp_image(coords[2:]).data
+                shape_out = geom.npix[::-1]
+
+                if mode == 'interp':
+                    data, footprint = reproject_interp((img, self.geom.wcs),
+                                                       geom.wcs,
+                                                       shape_out=shape_out)
+                elif mode == 'exact':
+                    data, footprint = reproject_exact((img, self.geom.wcs),
+                                                      geom.wcs,
+                                                      shape_out=shape_out)
+                else:
+                    raise TypeError(
+                        "Invalid reprojection mode, either choose 'interp' or 'exact'")
+
+                vals[...] = data
+            return map_out
+
+        else:
+            raise TypeError('Invalid type for map geometry.')
 
     def pad(self, pad_width):
         raise NotImplementedError

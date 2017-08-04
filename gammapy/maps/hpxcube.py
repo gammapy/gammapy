@@ -163,6 +163,10 @@ class HpxMapND(HpxMap):
         """Get a list of sky coordinates for the centers of every pixel. """
         return self._hpx.get_skydirs()
 
+    def iter_by_image(self):
+        for idx in np.ndindex(self.geom.shape):
+            yield self.data[idx[::-1]], idx
+
     def iter_by_pix(self, buffersize=1):
         pix = list(self.geom.get_pixels())
         vals = self.data[np.isfinite(self.data)]

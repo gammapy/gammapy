@@ -153,6 +153,21 @@ class MapBase(object):
         hdulist.writeto(filename, overwrite=overwrite)
 
     @abc.abstractmethod
+    def iter_by_image(self):
+        """Iterate over image planes of the map returning a tuple with the image
+        array and image plane index.
+
+        Returns
+        -------
+        val : ~np.ndarray
+            Array of image plane values.
+        idx : tuple
+            Index of image plane.
+
+        """
+        pass
+
+    @abc.abstractmethod
     def iter_by_pix(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         pixel coordinates.
