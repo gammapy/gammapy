@@ -156,7 +156,7 @@ def coord_to_idx(edges, x, bounded=False):
 
     if bounded:
         ibin[x < edges[0]] = 0
-        ibin[x < edges[0]] = len(edges) - 1
+        ibin[x > edges[-1]] = len(edges) - 1
     else:
         ibin[x > edges[-1]] = -1
     return ibin
@@ -415,14 +415,29 @@ class MapAxis(object):
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
         bounded : bool
-
+            Choose whether to clip the index to the valid range of the
+            axis.  If false then indices for values outside the axis
+            range will be set -1.
 
         Returns
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
+
         """
         return coord_to_idx(self.edges, coord, bounded)
+
+    def coord_to_idx_interp(self, coord):
+        """Compute indices of two nearest bins to the given coordinate.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+        """
+
+        return (coord_to_idx(self.center[:-1], coord, bounded=True),
+                coord_to_idx(self.center[:-1], coord, bounded=True) + 1,)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
