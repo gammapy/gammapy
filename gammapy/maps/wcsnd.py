@@ -4,9 +4,10 @@ import copy
 import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
+from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 
 __all__ = [
     'WcsMapND',
@@ -176,61 +177,96 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def reproject(self, geom, mode='interp'):
+    def reproject(self, geom, mode='interp', order='linear'):
+
+        from .hpx import HpxGeom
+
+        if geom.ndim == 2 and self.geom.ndim > 2:
+            geom = geom.to_cube(self.geom.axes)
+        elif geom.ndim != self.geom.ndim:
+            raise ValueError('Projection geometry must be 2D or have the '
+                             'same number of dimensions as the map.')
+
+        if geom.projection == 'HPX':
+            return self._reproject_hpx(geom)
+        else:
+            return self._reproject_wcs(geom)
+
+    def _reproject_wcs(self, geom, mode='interp'):
 
         from reproject import reproject_interp, reproject_exact
-        from reproject import reproject_from_healpix, reproject_to_healpix
-        from .hpx import HpxGeom
-        from .hpxcube import HpxMapND
 
-        coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
+        map_out = WcsMapND(geom)
 
-        if isinstance(geom, HpxGeom):
+        for vals, idx in map_out.iter_by_image():
 
-            map_out = HpxMapND(geom)
-            for vals, idx in map_out.iter_by_image():
-
-                # TODO: Check if non-spatial geometries are compatible
-                # otherwise interpolate
-                coords = self.geom.pix_to_coord((0,) + idx)
+            # TODO: Check if non-spatial geometries are compatible
+            # otherwise interpolate
+            if self.geom.ndim == 2:
+                img = self.data
+            else:
+                coords = axes_pix_to_coord(geom.axes, idx)
                 img = self.interp_image(coords).data
 
-                # TODO: Create WCS object for image plane if
-                # multi-resolution geom
-                data, footprint = reproject_to_healpix((img, self.geom.wcs),
-                                                       coordsys,
-                                                       nside=geom.nside, nested=geom.nest,
-                                                       order='bilinear')
-                vals[...] = data
-            return map_out
-        elif isinstance(geom, WcsGeom):
+            # TODO: Create WCS object for image plane if
+            # multi-resolution geom
+            shape_out = geom.get_image_shape(idx)[::-1]
 
-            map_out = WcsMapND(geom)
-            for vals, idx in map_out.iter_by_image():
-
-                # TODO: Check if geometries are compatible otherwise
-                # interpolate
-                coords = self.geom.pix_to_coord((0, 0) + idx)
-                img = self.interp_image(coords[2:]).data
-                shape_out = geom.npix[::-1]
-
-                if mode == 'interp':
-                    data, footprint = reproject_interp((img, self.geom.wcs),
+            if self.geom.projection == 'CAR' and self.geom.allsky:
+                data, footprint = reproject_car_to_wcs((img, self.geom.wcs),
                                                        geom.wcs,
                                                        shape_out=shape_out)
-                elif mode == 'exact':
-                    data, footprint = reproject_exact((img, self.geom.wcs),
-                                                      geom.wcs,
-                                                      shape_out=shape_out)
-                else:
-                    raise TypeError(
-                        "Invalid reprojection mode, either choose 'interp' or 'exact'")
+            elif mode == 'interp':
+                data, footprint = reproject_interp((img, self.geom.wcs),
+                                                   geom.wcs,
+                                                   shape_out=shape_out)
+            elif mode == 'exact':
+                data, footprint = reproject_exact((img, self.geom.wcs),
+                                                  geom.wcs,
+                                                  shape_out=shape_out)
+            else:
+                raise TypeError(
+                    "Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-                vals[...] = data
-            return map_out
+            vals[...] = data
 
-        else:
-            raise TypeError('Invalid type for map geometry.')
+        return map_out
+
+    def _reproject_hpx(self, geom):
+
+        from reproject import reproject_from_healpix, reproject_to_healpix
+        from .hpxcube import HpxMapND
+
+        map_out = HpxMapND(geom)
+        coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
+
+        for vals, idx in map_out.iter_by_image():
+
+            # TODO: Check if non-spatial geometries are compatible
+            # otherwise interpolate
+            if geom.ndim == 2:
+                img = self.data
+            else:
+                coords = axes_pix_to_coord(geom.axes, idx)
+                img = self.interp_image(coords).data
+
+            # TODO: For partial-sky HPX we need to map from full- to
+            # partial-sky indices
+            if self.geom.projection == 'CAR' and self.geom.allsky:
+                data, footprint = reproject_car_to_hpx((img, self.geom.wcs),
+                                                       coordsys,
+                                                       nside=geom.nside,
+                                                       nested=geom.nest,
+                                                       order=1)
+            else:
+                data, footprint = reproject_to_healpix((img, self.geom.wcs),
+                                                       coordsys,
+                                                       nside=geom.nside,
+                                                       nested=geom.nest,
+                                                       order=1)
+            vals[...] = data
+
+        return map_out
 
     def pad(self, pad_width):
         raise NotImplementedError
