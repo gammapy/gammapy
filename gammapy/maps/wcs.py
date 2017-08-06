@@ -60,6 +60,7 @@ class WcsGeom(MapGeom):
     def __init__(self, wcs, npix, cdelt=None, axes=None):
         self._wcs = wcs
         self._coordsys = get_coordsys(wcs)
+        self._projection = get_projection(wcs)
         self._axes = axes if axes is not None else []
         for i, ax in enumerate(self.axes):
             if isinstance(ax, np.ndarray):
@@ -104,6 +105,19 @@ class WcsGeom(MapGeom):
         """Coordinate system of the projection, either Galactic ('GAL') or
         Equatorial ('CEL')."""
         return self._coordsys
+
+    @property
+    def projection(self):
+        """Map projection."""
+        return self._projection
+
+    @property
+    def allsky(self):
+        """Flag for all-sky maps."""
+        if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.)):
+            return True
+        else:
+            return False
 
     @property
     def width(self):
@@ -331,6 +345,17 @@ class WcsGeom(MapGeom):
         the edge of the projection."""
         raise NotImplementedError
 
+    def get_image_shape(self, idx):
+        """Get the shape of the image plane at index ``idx``."""
+
+        if self.npix[0].size > 1:
+            return (int(self.npix[0][idx]), int(self.npix[1][idx]))
+        else:
+            return (int(self.npix[0]), int(self.npix[1]))
+
+    def get_image_wcs(self, idx):
+        raise NotImplementedError
+
     def get_pixels(self):
         return pix_tuple_to_idx(self._get_pix_coords(mode='center'))
 
@@ -446,6 +471,12 @@ class WcsGeom(MapGeom):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         return self.__class__(self._wcs, npix, cdelt=cdelt)
+
+    def to_cube(self, axes):
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+        axes = copy.deepcopy(self.axes) + axes
+        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes)
 
     def to_slice(self, slices):
         raise NotImplementedError
@@ -665,6 +696,10 @@ def pix_to_skydir(xpix, ypix, wcs):
         return SkyCoord(np.empty(0), np.empty(0), unit='deg', frame='icrs')
 
     return SkyCoord.from_pixel(xpix, ypix, wcs, origin=0).transform_to('icrs')
+
+
+def get_projection(wcs):
+    return wcs.wcs.ctype[0][5:]
 
 
 def get_coordsys(wcs):
