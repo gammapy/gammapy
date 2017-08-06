@@ -146,6 +146,26 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
+def axes_pix_to_coord(axes, pix):
+    """Perform pixel to axis coordinates for a list of `~MapAxis`
+    objects.
+
+    Parameters
+    ----------
+    axes : list
+        List of `~MapAxis`.
+
+    pix : tuple
+        Tuple of pixel coordinates.
+    """
+
+    coords = []
+    for ax, t in zip(axes, pix):
+        coords += [ax.pix_to_coord(t)]
+
+    return coords
+
+
 def coord_to_idx(edges, x, bounded=False):
     """Convert axis coordinates ``x`` to bin indices.
 
@@ -168,7 +188,7 @@ def bin_to_val(edges, bins):
 
 
 def coord_to_pix(edges, coord, interp='lin'):
-    """Convert grid coordinates to pixel coordinates using the chosen
+    """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
 
@@ -545,6 +565,10 @@ class MapGeom(object):
     """Base class for WCS and HEALPix geometries."""
 
     @abc.abstractproperty
+    def allsky(self):
+        pass
+
+    @abc.abstractproperty
     def center_coord(self):
         pass
 
@@ -707,6 +731,26 @@ class MapGeom(object):
         -------
         geom : `~MapGeom`
             Image geometry.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def to_cube(self, axes):
+        """Create a new geometry by appending a list of non-spatial axes to
+        the present geometry.  This will result in a new geometry with
+        N+M dimensions where N is the number of current dimensions and
+        M is the number of axes in the list.
+
+        Parameters
+        ----------
+        axes : list
+            Axes that will be appended to this geometry.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Map geometry.
 
         """
         pass

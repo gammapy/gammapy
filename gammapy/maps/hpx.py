@@ -728,9 +728,22 @@ class HpxGeom(MapGeom):
         return self._coordsys
 
     @property
+    def projection(self):
+        """Map projection."""
+        return 'HPX'
+
+    @property
     def region(self):
         """Region string."""
         return self._region
+
+    @property
+    def allsky(self):
+        """Flag for all-sky maps."""
+        if self._region is None:
+            return True
+        else:
+            return False
 
     @property
     def center_coord(self):
@@ -802,6 +815,11 @@ class HpxGeom(MapGeom):
     def to_image(self):
         return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv)
+
+    def to_cube(self, axes):
+        axes = copy.deepcopy(self.axes) + axes
+        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+                              region=self.region, conv=self.conv, axes=axes)
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
