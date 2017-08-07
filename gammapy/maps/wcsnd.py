@@ -38,14 +38,40 @@ class WcsMapND(WcsMap):
         shape = tuple([np.max(wcs.npix[0]), np.max(wcs.npix[1])] +
                       [ax.nbin for ax in wcs.axes])
         if data is None:
-            data = np.nan * np.ones(shape, dtype=dtype).T
-            pix = wcs.get_pixels()
-            data[pix[::-1]] = 0.0
+            data = self._init_data(wcs, shape, dtype)
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
         WcsMap.__init__(self, wcs, data)
+
+    def _init_data(self, geom, shape, dtype):
+
+        # Check whether corners of each image plane are valid
+        coords = []
+        if geom.npix[0].size > 1:
+
+            for idx in np.ndindex(geom.shape):
+                pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
+                       np.array([0.0, float(geom.npix[1][idx] - 1)]))
+                pix += tuple([np.array(2 * [t]) for t in idx])
+                coords += geom.pix_to_coord(pix)
+
+        else:
+
+            pix = (np.array([0.0, float(geom.npix[0] - 1)]),
+                   np.array([0.0, float(geom.npix[1] - 1)]))
+            pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
+            coords += geom.pix_to_coord(pix)
+
+        if np.all(np.isfinite(np.vstack(coords))):
+            data = np.zeros(shape, dtype=dtype).T
+        else:
+            data = np.nan * np.ones(shape, dtype=dtype).T
+            pix = geom.get_pixels()
+            data[pix[::-1]] = 0.0
+
+        return data
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
