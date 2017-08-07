@@ -99,17 +99,17 @@ class WcsMapND(WcsMap):
         else:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
-    def interp_image(self, coords, method='linear'):
+    def interp_image(self, coords, order=1):
 
         if self.geom.ndim == 2:
             raise ValueError('Operation only supported for maps with one or more '
                              'non-spatial dimensions.')
         elif self.geom.ndim == 3:
-            return self._interp_image_cube(coords, method)
+            return self._interp_image_cube(coords, order)
         else:
             raise NotImplementedError
 
-    def _interp_image_cube(self, coords, method):
+    def _interp_image_cube(self, coords, order=1):
         """Interpolate an image plane of a cube."""
 
         # TODO: consider re-writing to support maps with > 3 dimensions
@@ -122,8 +122,18 @@ class WcsMapND(WcsMap):
         pix_vals = [float(t) for t in idx]
         pix = axis.coord_to_pix(coords[0])
         data = self.data[map_slice]
-        fn = interp1d(pix_vals, data, copy=False, axis=0, fill_value='extrapolate',
-                      kind=method)
+
+        if coords[0] < axis.center[0] or coords[0] > axis.center[-1]:
+            kind = 'linear' if order >= 1 else 'nearest'
+            fill_value = 'extrapolate'
+        else:
+            kind = order
+            fill_value = None
+
+        # TODO: Cache interpolating function?
+
+        fn = interp1d(pix_vals, data, copy=False, axis=0,
+                      kind=kind, fill_value=fill_value)
         data_interp = fn(float(pix))
         geom = self.geom.to_image()
         return self.__class__(geom, data_interp)
@@ -177,7 +187,7 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def reproject(self, geom, mode='interp', order='linear'):
+    def reproject(self, geom, mode='interp', order=1):
 
         from .hpx import HpxGeom
 
@@ -188,11 +198,11 @@ class WcsMapND(WcsMap):
                              'same number of dimensions as the map.')
 
         if geom.projection == 'HPX':
-            return self._reproject_hpx(geom)
+            return self._reproject_hpx(geom, order=order)
         else:
-            return self._reproject_wcs(geom)
+            return self._reproject_wcs(geom, mode=mode, order=order)
 
-    def _reproject_wcs(self, geom, mode='interp'):
+    def _reproject_wcs(self, geom, mode='interp', order=1):
 
         from reproject import reproject_interp, reproject_exact
 
@@ -203,10 +213,14 @@ class WcsMapND(WcsMap):
             # TODO: Check if non-spatial geometries are compatible
             # otherwise interpolate
             if self.geom.ndim == 2:
-                img = self.data
+                img = self.data.copy()
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
-                img = self.interp_image(coords).data
+                img = self.interp_image(coords, order=order).data
+
+            # FIXME: This is a temporary solution for handling maps
+            # with undefined pixels
+            img[~np.isfinite(img)] = 0.0
 
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
@@ -232,7 +246,7 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def _reproject_hpx(self, geom):
+    def _reproject_hpx(self, geom, order=1):
 
         from reproject import reproject_from_healpix, reproject_to_healpix
         from .hpxcube import HpxMapND
@@ -248,7 +262,7 @@ class WcsMapND(WcsMap):
                 img = self.data
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
-                img = self.interp_image(coords).data
+                img = self.interp_image(coords, order=order).data
 
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
@@ -257,13 +271,13 @@ class WcsMapND(WcsMap):
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
-                                                       order=1)
+                                                       order=order)
             else:
                 data, footprint = reproject_to_healpix((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
-                                                       order=1)
+                                                       order=order)
             vals[...] = data
 
         return map_out
