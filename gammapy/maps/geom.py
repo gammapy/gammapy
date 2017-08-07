@@ -286,6 +286,20 @@ class MapAxis(object):
         pix = np.arange(nbin + 1, dtype=float) - 0.5
         self._bin_edges = self.pix_to_coord(pix)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (np.allclose(self._nodes, other._nodes) and
+                    self._node_type == other._node_type and
+                    self._interp == other._interp and
+                    self._quantity_type == other._quantity_type and
+                    self._unit == other._unit)
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
     @property
     def name(self):
         """Name of the axis."""
