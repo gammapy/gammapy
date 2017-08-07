@@ -57,13 +57,14 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     filename = str(tmpdir / 'skycube.fits')
+    filename_sparse = str(tmpdir / 'skycube_sparse.fits')
     m0 = WcsMapND(geom)
     m0.fill_poisson(0.5)
     m0.write(filename)
     m1 = WcsMapND.read(filename)
     assert_allclose(m0.data, m1.data)
-    m0.write(filename, sparse=True)
-    m1 = WcsMapND.read(filename)
+    m0.write(filename_sparse, sparse=True)
+    m1 = WcsMapND.read(filename_sparse)
     assert_allclose(m0.data, m1.data)
 
 
