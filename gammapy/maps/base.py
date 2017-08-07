@@ -213,13 +213,17 @@ class MapBase(object):
         pass
 
     @abc.abstractmethod
-    def reproject(self, geom):
+    def reproject(self, geom, order=1):
         """Reproject this map to a different geometry.
 
         Parameters
         ----------
         geom : `~MapGeom`
             Geometry of projection.
+
+        order : int or str
+            Order of interpolating polynomial (0 = nearest-neighbor, 1 =
+            linear, 2 = quadratic, 3 = cubic).
 
         Returns
         -------
