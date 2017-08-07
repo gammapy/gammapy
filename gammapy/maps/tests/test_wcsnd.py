@@ -12,6 +12,7 @@ from ..wcsnd import WcsMapND
 
 
 pytest.importorskip('scipy')
+pytest.importorskip('reproject')
 
 axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log')]
 axes2 = [MapAxis(np.logspace(0., 3., 3), interp='log'),
@@ -111,6 +112,9 @@ def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                           skydir=skydir, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
+
+    if geom.projection == 'AIT' and geom.allsky:
+        pytest.xfail('Bug in reproject version <= 0.3.1')
 
     if geom.ndim > 3 or geom.npix[0].size > 1:
         pytest.xfail(
