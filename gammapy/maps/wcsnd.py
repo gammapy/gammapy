@@ -233,20 +233,22 @@ class WcsMapND(WcsMap):
         from reproject import reproject_interp, reproject_exact
 
         map_out = WcsMapND(geom)
+        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
+                          zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
 
-            # TODO: Check if non-spatial geometries are compatible
-            # otherwise interpolate
-            if self.geom.ndim == 2:
-                img = self.data.copy()
+            if self.geom.ndim == 2 or axes_eq:
+                img = self.data[idx[::-1]]
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
                 img = self.interp_image(coords, order=order).data
 
             # FIXME: This is a temporary solution for handling maps
             # with undefined pixels
-            img[~np.isfinite(img)] = 0.0
+            if np.any(~np.isfinite(img)):
+                img = img.copy()
+                img[~np.isfinite(img)] = 0.0
 
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
@@ -279,13 +281,13 @@ class WcsMapND(WcsMap):
 
         map_out = HpxMapND(geom)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
+        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
+                          zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
 
-            # TODO: Check if non-spatial geometries are compatible
-            # otherwise interpolate
-            if geom.ndim == 2:
-                img = self.data
+            if self.geom.ndim == 2 or axes_eq:
+                img = self.data[idx[::-1]]
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
                 img = self.interp_image(coords, order=order).data
@@ -320,21 +322,29 @@ class WcsMapND(WcsMap):
     def downsample(self, factor):
         raise NotImplementedError
 
-    def plot(self, ax=None, pix_slice=None, **kwargs):
+    def plot(self, ax=None, idx=None, **kwargs):
         import matplotlib.pyplot as plt
+        import matplotlib.colors as colors
 
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(111, projection=self.geom.wcs)
 
-        if pix_slice is not None:
-            slices = (slice(None), slice(None)) + pix_slice
+        if idx is not None:
+            slices = (slice(None), slice(None)) + idx
             data = self.data[slices[::-1]]
         else:
             data = self.data
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
+        kwargs.setdefault('norm', None)
+
+        if kwargs['norm'] == 'log':
+            kwargs['norm'] = colors.LogNorm()
+        elif kwargs['norm'] == 'pow2':
+            kwargs['norm'] = colors.PowerNorm(gamma=0.5)
+
         im = ax.imshow(data, **kwargs)
         ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
         return im
