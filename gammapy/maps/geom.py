@@ -8,6 +8,7 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from .utils import find_hdu, find_bands_hdu
 
 __all__ = [
     'MapCoords',
@@ -27,7 +28,7 @@ def make_axes(axes_in, conv):
         if isinstance(ax, np.ndarray):
             ax = MapAxis(ax)
 
-        if conv in ['fgst-ccube','fgst-template']:
+        if conv in ['fgst-ccube', 'fgst-template']:
             ax.set_name('energy')
         elif ax.name == '':
             ax.set_name('axis%i' % i)
@@ -651,6 +652,63 @@ class MapGeom(object):
     @abc.abstractproperty
     def center_skydir(self):
         pass
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Create a geometry object from a FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the FITS file.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Geometry object.
+        """
+        with fits.open(filename) as hdulist:
+            geom = cls.from_hdulist(hdulist, **kwargs)
+        return geom
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
+        """Load a geometry object from a FITS HDUList.
+
+        Parameters
+        ----------
+        hdulist :  `~astropy.io.fits.HDUList`
+            HDU list containing HDUs for map data and bands.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Geometry object.
+        """
+        if hdu is None:
+            hdu = find_hdu(hdulist)
+        else:
+            hdu = hdulist[hdu]
+
+        if hdu_bands is None:
+            hdu_bands = find_bands_hdu(hdu)
+
+        if hdu_bands is not None:
+            hdu_bands = hdulist[hdu_bands]
+
+        return cls.from_header(hdu.header, hdu_bands)
 
     @abc.abstractmethod
     def make_bands_hdu(self):
