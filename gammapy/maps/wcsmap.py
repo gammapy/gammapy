@@ -5,37 +5,11 @@ from astropy.io import fits
 from .geom import find_and_read_bands
 from .base import MapBase
 from .wcs import WcsGeom
+from .utils import find_hdu, find_bands_hdu
 
 __all__ = [
     'WcsMap',
 ]
-
-
-def find_hdu(hdulist):
-
-    for hdu in hdulist:
-        if hdu.data is not None:
-            return hdu
-
-    raise AttributeError('No Image HDU found.')
-
-
-def find_image_hdu(hdulist):
-
-    for hdu in hdulist:
-        if hdu.data is not None and isinstance(hdu, fits.ImageHDU):
-            return hdu
-
-    raise AttributeError('No Image HDU found.')
-
-
-def find_bintable_hdu(hdulist):
-
-    for hdu in hdulist:
-        if hdu.data is not None and isinstance(hdu, fits.BinTableHDU):
-            return hdu
-
-    raise AttributeError('No BinTable HDU found.')
 
 
 class WcsMap(MapBase):
@@ -142,14 +116,8 @@ class WcsMap(MapBase):
         else:
             hdu = hdulist[hdu]
 
-        if 'BANDSHDU' in hdu.header and hdu_bands is None:
-            hdu_bands = hdu.header['BANDSHDU']
-        elif hdu.header.get('NAXIS', None) == 3 and hdu_bands is None:
-
-            if 'EBOUNDS' in hdulist:
-                hdu_bands = 'EBOUNDS'
-            elif 'ENERGIES' in hdulist:
-                hdu_bands = 'ENERGIES'
+        if hdu_bands is None:
+            hdu_bands = find_bands_hdu(hdu)
 
         if hdu_bands is not None:
             hdu_bands = hdulist[hdu_bands]
