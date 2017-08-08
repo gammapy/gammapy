@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skydir_to_lonlat, make_axes_cols
-from .geom import find_and_read_bands
+from .geom import find_and_read_bands, make_axes
 
 # TODO: What should be part of the public API?
 __all__ = [
@@ -404,14 +404,7 @@ class HpxGeom(MapGeom):
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = axes if axes is not None else []
-
-        for i, ax in enumerate(self.axes):
-            if isinstance(ax, np.ndarray):
-                self.axes[i] = MapAxis(ax)
-            if self.axes[i].name == '':
-                self.axes[i].set_name('axis%i' % i)
-
+        self._axes = make_axes(axes, conv)
         self._shape = tuple([ax.nbin for ax in self._axes])
         if self.nside.size > 1 and self.nside.shape != self._shape:
             raise Exception('Wrong dimensionality for nside.  nside must '
