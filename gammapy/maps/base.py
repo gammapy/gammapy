@@ -118,13 +118,13 @@ class MapBase(object):
 
         Returns
         -------
-        out_map : `~MapBase`
+        map_out : `~MapBase`
             Map object
 
         """
         with fits.open(filename) as hdulist:
-            out_map = cls.from_hdulist(hdulist, **kwargs)
-        return out_map
+            map_out = cls.from_hdulist(hdulist, **kwargs)
+        return map_out
 
     def write(self, filename, **kwargs):
         """Write to a FITS file.
