@@ -16,12 +16,35 @@ __all__ = [
 ]
 
 
-def make_axes_cols(axes):
+def make_axes(axes_in, conv):
+    """Make a sequence of `~MapAxis` objects."""
+
+    if axes_in is None:
+        return []
+
+    axes_out = []
+    for i, ax in enumerate(axes_in):
+        if isinstance(ax, np.ndarray):
+            ax = MapAxis(ax)
+
+        if conv in ['fgst-ccube','fgst-template']:
+            ax.set_name('energy')
+        elif ax.name == '':
+            ax.set_name('axis%i' % i)
+
+        axes_out += [ax]
+
+    return axes_out
+
+
+def make_axes_cols(axes, axis_names=None):
     """Make FITS table columns for map axes.
 
     Parameters
     ----------
     axes : list of `~MapAxis`
+
+    colnames : list of str
 
     """
 
@@ -29,15 +52,18 @@ def make_axes_cols(axes):
                'time': ['TIME', 'T_MIN', 'T_MAX'],
                }
 
+    if axis_names is None:
+        axis_names = [ax.name for ax in axes]
+
     size = np.prod([ax.nbin for ax in axes])
     chan = np.arange(0, size)
     cols = [fits.Column('CHANNEL', 'I', array=chan), ]
     axes_ctr = np.meshgrid(*[ax.center for ax in axes])
     axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
     axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
-    for i, ax in enumerate(axes):
+    for i, (ax, name) in enumerate(zip(axes, axis_names)):
 
-        names = colname.get(ax.name.lower(),
+        names = colname.get(name.lower(),
                             ['AXIS%i' % i,
                              'AXIS%i_MIN' % i, 'AXIS%i_MAX' % i])
         for t, v in zip(names, [axes_ctr, axes_min, axes_max]):
@@ -47,8 +73,13 @@ def make_axes_cols(axes):
     return cols
 
 
-def find_and_read_bands(hdu):
+def find_and_read_bands(hdu, header=None):
     """Read and returns the map axes from a BANDS table.
+
+    Parameters
+    ----------
+    hdu : `~astropy.fits.BinTableHDU`
+        The BANDS table HDU.
 
     Returns
     -------
@@ -81,13 +112,21 @@ def find_and_read_bands(hdu):
         else:
             name = cols[0]
 
+        unit = hdu.data.columns[cols[0]].unit
+        if unit is None and header is not None:
+            unit = header.get('CUNIT%i' % (3 + i), '')
+
         if len(cols) == 2:
-            xmin = np.unique(hdu.data.field(cols[0]))  # / 1E3
-            xmax = np.unique(hdu.data.field(cols[1]))  # / 1E3
-            axes += [MapAxis(np.append(xmin, xmax[-1]), name=name)]
+            xmin = np.unique(hdu.data.field(cols[0]))
+            xmax = np.unique(hdu.data.field(cols[1]))
+            axis = MapAxis(np.append(xmin, xmax[-1]), name=name,
+                           unit=unit)
+            axes += [axis]
         else:
             x = np.unique(hdu.data.field(cols[0]))
-            axes += [MapAxis.from_nodes(x, name=name)]
+            axis = MapAxis.from_nodes(x, name=name,
+                                      unit=unit)
+            axes += [axis]
 
     return axes
 
@@ -251,25 +290,33 @@ class MapAxis(object):
     ----------
     nodes : `~numpy.ndarray`
         Array of node values.  These will be interpreted as either bin
-        edges or centers.
+        edges or centers according to ``node_type``.
     interp : str
         Interpolation method used to transform between axis and pixel
-        coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+        coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+    node_type : str
+        Flag indicating whether coordinate nodes correspond to pixel
+        edges (node_type = 'edge') or pixel centers (node_type =
+        'center').  'center' should be used where the map values are
+        defined at a specific coordinate (e.g. differential
+        quantities). 'edge' should be used where map values are
+        defined by an integral over coordinate intervals (e.g. a
+        counts histogram).
     unit : str
         String specifying the data units.
+
     """
 
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
-    def __init__(self, nodes, interp='lin', name='', quantity_type='integral',
+    def __init__(self, nodes, interp='lin', name='',
                  node_type='edge', unit=''):
         self._name = name
-        self._quantity_type = quantity_type
         self._interp = interp
         self._nodes = nodes
         self._node_type = node_type
-        self._unit = u.Unit(unit)
+        self._unit = u.Unit('' if unit is None else unit)
 
         # Set pixel coordinate of first node
         if node_type == 'edge':
@@ -291,7 +338,6 @@ class MapAxis(object):
             return (np.allclose(self._nodes, other._nodes) and
                     self._node_type == other._node_type and
                     self._interp == other._interp and
-                    self._quantity_type == other._quantity_type and
                     self._unit == other._unit)
         return NotImplemented
 
@@ -304,10 +350,6 @@ class MapAxis(object):
     def name(self):
         """Name of the axis."""
         return self._name
-
-    @property
-    def quantity_type(self):
-        return self._quantity_type
 
     @property
     def edges(self):
@@ -325,6 +367,11 @@ class MapAxis(object):
         return len(self._bin_edges) - 1
 
     @property
+    def node_type(self):
+        """Return node type ('center' or 'edge')."""
+        return self._node_type
+
+    @property
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
@@ -332,7 +379,10 @@ class MapAxis(object):
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
         """Generate an axis object from a lower/upper bound and number of
-        bins.
+        bins.  If node_type = 'edge' then bounds correspond to the
+        lower and upper bound of the first and last bin.  If node_type
+        = 'center' then bounds correspond to the centers of the first
+        and last bin.
 
         Parameters
         ----------
@@ -345,22 +395,31 @@ class MapAxis(object):
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+
         """
 
         interp = kwargs.setdefault('interp', 'lin')
+        node_type = kwargs.setdefault('node_type', 'edge')
+
+        if node_type == 'edge':
+            nnode = nbin + 1
+        elif node_type == 'center':
+            nnode = nbin
+        else:
+            raise ValueError('Invalid node type: {}'.format(node_type))
 
         if interp == 'lin':
-            nodes = np.linspace(lo_bnd, hi_bnd, nbin + 1)
+            nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == 'log':
             nodes = np.exp(np.linspace(np.log(lo_bnd),
-                                       np.log(hi_bnd), nbin + 1))
+                                       np.log(hi_bnd), nnode))
         elif interp == 'sqrt':
             nodes = np.linspace(lo_bnd ** 0.5,
-                                hi_bnd ** 0.5, nbin + 1) ** 2.0
+                                hi_bnd ** 0.5, nnode) ** 2.0
         else:
             raise ValueError('Invalid interp: {}'.format(interp))
 
-        return cls(nodes, node_type='edge', **kwargs)
+        return cls(nodes, **kwargs)
 
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
@@ -493,7 +552,6 @@ class MapAxis(object):
             idx = tuple(list(idx) + [1 + idx[-1]])
         nodes = self._nodes[(idx,)]
         return MapAxis(nodes, interp=self._interp, name=self._name,
-                       quantity_type=self._quantity_type,
                        node_type=self._node_type, unit=self._unit)
 
 
@@ -773,15 +831,15 @@ class MapGeom(object):
 
         for i, ax in enumerate(self.axes):
 
-            if ax.name == 'energy' and ax.quantity_type == 'integral':
+            if ax.name == 'energy' and ax.node_type == 'edge':
                 header['AXCOLS%i' % i] = 'E_MIN,E_MAX'
-            elif ax.name == 'energy' and ax.quantity_type == 'differential':
+            elif ax.name == 'energy' and ax.node_type == 'center':
                 header['AXCOLS%i' % i] = 'ENERGY'
-            elif ax.quantity_type == 'integral':
+            elif ax.node_type == 'edge':
                 header['AXCOLS%i' % i] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
                                                                 ax.name.upper())
-            elif ax.quantity_type == 'differential':
-                header['AXCOLS%i' % i] = ax.name.upper
+            elif ax.node_type == 'center':
+                header['AXCOLS%i' % i] = ax.name.upper()
             else:
-                raise ValueError('Invalid quantity type '
-                                 '{}'.format(ax.quantity_type))
+                raise ValueError('Invalid node type '
+                                 '{}'.format(ax.node_type))

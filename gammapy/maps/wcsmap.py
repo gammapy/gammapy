@@ -56,7 +56,7 @@ class WcsMap(MapBase):
     @classmethod
     def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32'):
+               axes=None, skydir=None, dtype='float32', conv=None):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -95,6 +95,9 @@ class WcsMap(MapBase):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
+        conv : str, optional
+            FITS format convention ('fgst-ccube', 'fgst-template',
+            'gadf').  Default is 'gadf'.
 
         Returns
         -------
@@ -106,7 +109,8 @@ class WcsMap(MapBase):
 
         geom = WcsGeom.create(npix=npix, binsz=binsz, width=width,
                               proj=proj, skydir=skydir,
-                              coordsys=coordsys, refpix=refpix, axes=axes)
+                              coordsys=coordsys, refpix=refpix, axes=axes,
+                              conv=conv)
 
         if map_type in [None, 'wcs', 'WcsMapND']:
             return WcsMapND(geom, dtype=dtype)
@@ -152,7 +156,8 @@ class WcsMap(MapBase):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, extname=None, extname_bands='BANDS', sparse=False):
+    def to_hdulist(self, extname=None, extname_bands=None, sparse=False,
+                   conv=None):
 
         if sparse:
             extname = 'SKYMAP' if extname is None else extname.upper()
@@ -163,8 +168,13 @@ class WcsMap(MapBase):
             raise ValueError(
                 'Sparse maps cannot be written to the PRIMARY HDU.')
 
+        if self.geom.axes:
+            bands_hdu = self.geom.make_bands_hdu(extname=extname_bands,
+                                                 conv=conv)
+            extname_bands = bands_hdu.name
+
         hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
-                            sparse=sparse)
+                            sparse=sparse, conv=conv)
 
         if extname == 'PRIMARY':
             hdulist = [hdu]
@@ -172,10 +182,11 @@ class WcsMap(MapBase):
             hdulist = [fits.PrimaryHDU(), hdu]
 
         if self.geom.axes:
-            hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
+            hdulist += [bands_hdu]
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, extname='SKYMAP', extname_bands='BANDS', sparse=False):
+    def make_hdu(self, extname='SKYMAP', extname_bands=None, sparse=False,
+                 conv=None):
         """Make a FITS HDU from this map.
 
         Parameters
@@ -197,7 +208,7 @@ class WcsMap(MapBase):
         shape = data.shape
         header = self.geom.make_header()
 
-        if self.geom.axes:
+        if extname_bands is not None:
             header['BANDSHDU'] = extname_bands
 
         cols = []

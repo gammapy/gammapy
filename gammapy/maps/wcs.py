@@ -7,7 +7,8 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
-from .geom import MapAxis, get_shape, make_axes_cols, find_and_read_bands
+from .geom import MapAxis, get_shape, make_axes_cols, make_axes
+from .geom import find_and_read_bands
 
 __all__ = [
     'WcsGeom',
@@ -57,16 +58,12 @@ class WcsGeom(MapGeom):
         Axes for non-spatial dimensions
     """
 
-    def __init__(self, wcs, npix, cdelt=None, axes=None):
+    def __init__(self, wcs, npix, cdelt=None, axes=None, conv='gadf'):
         self._wcs = wcs
         self._coordsys = get_coordsys(wcs)
         self._projection = get_projection(wcs)
-        self._axes = axes if axes is not None else []
-        for i, ax in enumerate(self.axes):
-            if isinstance(ax, np.ndarray):
-                self.axes[i] = MapAxis(ax)
-            if self.axes[i].name == '':
-                self.axes[i].set_name('axis%i' % i)
+        self._conv = conv
+        self._axes = make_axes(axes, conv)
 
         self._shape = tuple([ax.nbin for ax in self._axes])
         if cdelt is None:
@@ -181,7 +178,7 @@ class WcsGeom(MapGeom):
 
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, width=None):
+               axes=None, skydir=None, width=None, conv=None):
         """Create a WCS geometry object.  Pixelization of the map is set with
         ``binsz`` and one of either ``npix`` or ``width`` arguments.
         For maps with non-spatial dimensions a different pixelization
@@ -220,6 +217,9 @@ class WcsGeom(MapGeom):
         refpix : tuple
             Reference pixel of the projection.  If None this will be
             set to the center of the map.
+        conv : string, optional
+            FITS format convention ('fgst-ccube', 'fgst-template',
+            'gadf').  Default is 'gadf'.
 
         Returns
         -------
@@ -267,10 +267,10 @@ class WcsGeom(MapGeom):
                              binsz[0].flat[0], xref, yref,
                              proj, coordsys, refpix, refpix)
         wcs = WCS(header)
-        return cls(wcs, npix, cdelt=binsz, axes=axes)
+        return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None):
+    def from_header(cls, header, hdu_bands=None, conv=None):
         """Create a WCS geometry object from a FITS header.
 
         Parameters
@@ -279,6 +279,8 @@ class WcsGeom(MapGeom):
             The FITS header
         hdu_bands : `~astropy.fits.BinTableHDU` 
             The BANDS table HDU.
+        conv : str
+            Override FITS format convention.
 
         Returns
         -------
@@ -290,8 +292,16 @@ class WcsGeom(MapGeom):
         for i in range(naxis - 2):
             wcs = wcs.dropaxis(2)
 
-        axes = find_and_read_bands(hdu_bands)
+        axes = find_and_read_bands(hdu_bands, header)
         shape = tuple([ax.nbin for ax in axes])
+        conv = 'gadf'
+
+        # Discover FITS convention
+        if hdu_bands is not None:
+            if hdu_bands.name == 'EBOUNDS':
+                conv = 'fgst-ccube'
+            elif hdu_bands.name == 'ENERGIES':
+                conv = 'fgst-template'
 
         # FIXME: Propagate CRPIX
 
@@ -312,13 +322,24 @@ class WcsGeom(MapGeom):
             cdelt = None
             crpix = None
 
-        return cls(wcs, npix, cdelt=cdelt, axes=axes)
+        return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
-    def make_bands_hdu(self, extname='BANDS'):
+    def make_bands_hdu(self, extname=None, conv=None):
 
-        header = self.make_header()
+        conv = self._conv if conv is None else conv
+        header = self.make_header(conv)
+        axis_names = None
 
-        cols = make_axes_cols(self.axes)
+        if conv == 'fgst-ccube':
+            extname = 'EBOUNDS'
+            axis_names = ['energy']
+        elif conv == 'fgst-template':
+            extname = 'ENERGIES'
+            axis_names = ['energy']
+        elif extname is None and conv == 'gadf':
+            extname = 'BANDS'
+
+        cols = make_axes_cols(self.axes, axis_names)
         if self.npix[0].size > 1:
             cols += [fits.Column('NPIX', '2I', dim='(2)',
                                  array=np.vstack((np.ravel(self.npix[0]),
@@ -333,7 +354,7 @@ class WcsGeom(MapGeom):
         hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
         return hdu
 
-    def make_header(self, **kwargs):
+    def make_header(self, conv=None):
         header = self.wcs.to_header()
         self._fill_header_from_axes(header)
         header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
