@@ -96,19 +96,6 @@ def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     if imin >= nx or imax < 0 or jmin >= ny or jmax < 0:
         return array_new * np.nan, array_new.astype(float)
 
-    subset = None
-    # Now, we check whether there is any point in defining a subset
-    if 0 and (imin > 0 or imax < nx or jmin > 0 or jmax < ny):
-        subset = (slice(max(jmin, 0), min(jmax, ny)),
-                  slice(max(imin, 0), min(imax, nx)))
-        if imin > 0:
-            coordinates[1] -= imin
-        if jmin > 0:
-            coordinates[0] -= jmin
-
-    if subset is not None:
-        slice_in = slice_in[subset]
-
     # Pad by 3 pixels to ensure that cubic interpolation works
     slice_in = np.pad(slice_in, 3, mode='wrap')
 
@@ -118,6 +105,6 @@ def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     slice_out[:, :] = map_coordinates(slice_in,
                                       coordinates + 3,
                                       order=order, cval=np.nan,
-                                      mode='wrap').reshape(slice_out.shape)
+                                      mode='constant').reshape(slice_out.shape)
 
     return array_new, (~np.isnan(array_new)).astype(float)
