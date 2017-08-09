@@ -873,7 +873,7 @@ class HpxGeom(MapGeom):
         if skydir is None:
             lonlat = (0.0, 0.0)
         elif isinstance(skydir, tuple):
-            pass
+            lonlat = skydir
         elif isinstance(skydir, SkyCoord):
             lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
         else:
@@ -1261,8 +1261,8 @@ class HpxGeom(MapGeom):
         width = (2.0 * self.get_region_size(self._region) +
                  np.max(get_pixel_size_from_nside(self.nside)))
 
-        if width > 45.:
-            width = (180., 90.0)
+        if width > 90.:
+            width = (min(360., width), min(180.0, width))
 
         if drop_axes:
             axes = None
@@ -1270,7 +1270,7 @@ class HpxGeom(MapGeom):
             axes = copy.deepcopy(self.axes)
 
         geom = WcsGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
-                              axes=axes, skydir=skydir)
+                              axes=axes, skydir=skydir, proj=proj)
 
         return geom
 

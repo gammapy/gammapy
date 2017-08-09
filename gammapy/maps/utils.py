@@ -24,7 +24,7 @@ def unpack_seq(seq, n=1):
         yield [e for e in row[:n]] + [row[n:]]
 
 
-def find_bands_hdu(hdu):
+def find_bands_hdu(hdulist, hdu):
     """Discover the extension name of the BANDS HDU.
 
     Returns

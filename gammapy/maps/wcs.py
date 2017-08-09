@@ -330,6 +330,9 @@ class WcsGeom(MapGeom):
         header = self.make_header(conv)
         axis_names = None
 
+        # FIXME: Check whether convention is compatible with
+        # dimensionality of geometry
+
         if conv == 'fgst-ccube':
             extname = 'EBOUNDS'
             axis_names = ['energy']
