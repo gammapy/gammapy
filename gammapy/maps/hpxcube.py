@@ -132,7 +132,7 @@ class HpxMapND(HpxMap):
                                   oversample=oversample)
 
         # FIXME: Check whether the old mapping is still valid and reuse it
-        self.make_wcs_mapping(oversample=oversample)
+        self.make_wcs_mapping(oversample=oversample, proj=proj)
 
         # FIXME: Need a function to extract a valid shape from npix property
 

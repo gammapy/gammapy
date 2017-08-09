@@ -703,7 +703,7 @@ class MapGeom(object):
             hdu = hdulist[hdu]
 
         if hdu_bands is None:
-            hdu_bands = find_bands_hdu(hdu)
+            hdu_bands = find_bands_hdu(hdulist, hdu)
 
         if hdu_bands is not None:
             hdu_bands = hdulist[hdu_bands]
