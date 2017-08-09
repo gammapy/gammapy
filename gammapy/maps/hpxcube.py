@@ -379,13 +379,133 @@ class HpxMapND(HpxMap):
 
         return map_out
 
-    def plot(self, ax=None, normalize=False, proj='AIT', oversample=10):
+    def plot(self, ax=None, normalize=False, proj='AIT', oversample=4, method='raster'):
         """Quickplot method.
 
-        This will generate a basic visualization by
-        converting to a rasterized WCS image.
+        This will generate a visualization of the map by converting to
+        a rasterized WCS image (method='raster') or drawing polygons
+        for each pixel (method='poly').
+
+        Parameters
+        ----------
+        proj : string, optional
+            Any valid WCS projection type.
+        oversample : int
+            Oversampling factor to use when generating the rasterized
+            image.
+        method : str
+            Method for mapping HEALPix pixels to a two-dimensional
+            image.  Can be set to 'raster' (rasterization to cartesian
+            image plane) or 'poly' (explicit polygons for each pixel).
+            WARNING: The 'poly' method is much slower than 'raster'
+            and only suitable for maps with less than ~10k pixels.
+
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
+
+        im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
+            Image object.
+
         """
-        m = self.to_wcs(sum_bands=True,
-                        normalize=normalize,
-                        proj=proj, oversample=oversample)
-        return m.plot(ax)
+
+        if method == 'raster':
+            m = self.to_wcs(sum_bands=True,
+                            normalize=normalize,
+                            proj=proj, oversample=oversample)
+            return m.plot(ax)
+        elif method == 'poly':
+            return self._plot_poly(proj=proj, ax=ax)
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
+    def _plot_poly(self, proj='AIT', step=1, ax=None):
+        """Plot the map using a collection of polygons.
+
+        Parameters
+        ----------
+        proj : string, optional
+            Any valid WCS projection type.
+        step : int
+            Set the number vertices that will be computed for each
+            pixel in multiples of 4.
+
+        """
+
+        # FIXME: At the moment this only works for all-sky maps if the
+        # projection is centered at (0,0)
+
+        # FIXME: Figure out how to force a square aspect-ratio like imshow
+
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Polygon
+        from matplotlib.collections import PatchCollection
+        import healpy as hp
+
+        wcs = self.geom.make_wcs(proj=proj, oversample=1)
+        if ax is None:
+            fig = plt.gcf()
+            ax = fig.add_subplot(111, projection=wcs.wcs)
+
+        wcs_lonlat = wcs.center_coord[:2]
+        pix = self.geom.get_pixels()
+        vtx = hp.boundaries(self.geom.nside, pix[0],
+                            nest=self.geom.nest, step=step)
+        theta, phi = hp.pixelfunc.vec2ang(np.rollaxis(vtx, 2))
+        theta = theta.reshape((4 * step, -1)).T
+        phi = phi.reshape((4 * step, -1)).T
+
+        patches = []
+        data = []
+
+        def get_angle(x, t):
+            return 180. - (180. - x + t) % 360.
+
+        for i, (x, y) in enumerate(zip(phi, theta)):
+
+            lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
+            # Add a small ofset to avoid vertices wrapping to the
+            # other size of the projection
+            if get_angle(np.median(lon), wcs_lonlat[0]) > 0.0:
+                pix = wcs.coord_to_pix((lon - 1E-4, lat))
+            else:
+                pix = wcs.coord_to_pix((lon + 1E-4, lat))
+
+            dist = np.max(np.abs(pix[0][0] - pix[0]))
+
+            # Split pixels that wrap around the edges of the projection
+            if(dist > wcs.npix[0] / 1.5):
+
+                lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
+                lon0 = lon - 1E-4
+                lon1 = lon + 1E-4
+                pix0 = wcs.coord_to_pix((lon0, lat))
+                pix1 = wcs.coord_to_pix((lon1, lat))
+
+                idx0 = np.argsort(pix0[0])
+                idx1 = np.argsort(pix1[0])
+
+                pix0 = (pix0[0][idx0][:3], pix0[1][idx0][:3])
+                pix1 = (pix1[0][idx1][1:], pix1[1][idx1][1:])
+
+                patches.append(Polygon(np.vstack((pix0[0], pix0[1])).T, True))
+                patches.append(Polygon(np.vstack((pix1[0], pix1[1])).T, True))
+                data.append(self.data[i])
+                data.append(self.data[i])
+
+            else:
+                polygon = Polygon(np.vstack((pix[0], pix[1])).T, True)
+                patches.append(polygon)
+                data.append(self.data[i])
+
+        p = PatchCollection(patches, linewidths=0, edgecolors='None')
+        p.set_array(np.array(data))
+        ax.add_collection(p)
+        ax.autoscale_view()
+        ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
+
+        return fig, ax, p

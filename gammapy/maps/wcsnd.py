@@ -323,6 +323,30 @@ class WcsMapND(WcsMap):
         raise NotImplementedError
 
     def plot(self, ax=None, idx=None, **kwargs):
+        """Quickplot method.
+
+        Parameters
+        ----------
+        norm : str
+            Set the normalization scheme of the color map.
+
+        idx : tuple
+            Set the image slice to plot if this map has non-spatial
+            dimensions.
+
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
+
+        im : `~matplotlib.image.AxesImage`
+            Image object.
+
+        """
+
         import matplotlib.pyplot as plt
         import matplotlib.colors as colors
 
@@ -347,4 +371,4 @@ class WcsMapND(WcsMap):
 
         im = ax.imshow(data, **kwargs)
         ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
-        return im
+        return fig, ax, im
