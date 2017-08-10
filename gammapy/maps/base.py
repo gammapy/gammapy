@@ -159,7 +159,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : ~np.ndarray
+        val : `~np.ndarray`
             Array of image plane values.
         idx : tuple
             Index of image plane.
@@ -180,7 +180,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : ~np.ndarray
+        val : `~np.ndarray`
             Map values.
         pix : tuple
             Tuple of pixel coordinates.
@@ -200,7 +200,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : ~np.ndarray
+        val : `~np.ndarray`
             Map values.
         coords : tuple
             Tuple of map coordinates.
