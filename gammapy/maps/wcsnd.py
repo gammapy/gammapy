@@ -213,21 +213,6 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def reproject(self, geom, mode='interp', order=1):
-
-        from .hpx import HpxGeom
-
-        if geom.ndim == 2 and self.geom.ndim > 2:
-            geom = geom.to_cube(self.geom.axes)
-        elif geom.ndim != self.geom.ndim:
-            raise ValueError('Projection geometry must be 2D or have the '
-                             'same number of dimensions as the map.')
-
-        if geom.projection == 'HPX':
-            return self._reproject_hpx(geom, order=order)
-        else:
-            return self._reproject_wcs(geom, mode=mode, order=order)
-
     def _reproject_wcs(self, geom, mode='interp', order=1):
 
         from reproject import reproject_interp, reproject_exact
@@ -274,7 +259,7 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def _reproject_hpx(self, geom, order=1):
+    def _reproject_hpx(self, geom, mode='interp', order=1):
 
         from reproject import reproject_from_healpix, reproject_to_healpix
         from .hpxcube import HpxMapND

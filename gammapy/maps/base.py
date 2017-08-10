@@ -212,14 +212,17 @@ class MapBase(object):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
-    @abc.abstractmethod
-    def reproject(self, geom, order=1):
+    def reproject(self, geom, order=1, mode='interp'):
         """Reproject this map to a different geometry.
 
         Parameters
         ----------
         geom : `~MapGeom`
             Geometry of projection.
+
+        mode : str
+            Method for reprojection.  'interp' method interpolates at pixel
+            centers.  'exact' method integrates over intersection of pixels.
 
         order : int or str
             Order of interpolating polynomial (0 = nearest-neighbor, 1 =
@@ -231,7 +234,16 @@ class MapBase(object):
             Reprojected map.
 
         """
-        pass
+        if geom.ndim == 2 and self.geom.ndim > 2:
+            geom = geom.to_cube(self.geom.axes)
+        elif geom.ndim != self.geom.ndim:
+            raise ValueError('Projection geometry must be 2D or have the '
+                             'same number of dimensions as the map.')
+
+        if geom.projection == 'HPX':
+            return self._reproject_hpx(geom, mode=mode, order=order)
+        else:
+            return self._reproject_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
     def pad(self, pad_width):

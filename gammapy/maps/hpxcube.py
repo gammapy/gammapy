@@ -197,8 +197,27 @@ class HpxMapND(HpxMap):
 
         return map_out
 
-    def reproject(self, geom):
-        raise NotImplementedError
+    def _reproject_wcs(self, geom, order=1, mode='interp'):
+
+        map_out = WcsMapND(geom)
+        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
+                          zip(geom.axes, self.geom.axes)])
+
+        for vals, idx in map_out.iter_by_image():
+            pass
+
+        return map_out
+
+    def _reproject_hpx(self, geom, order=1, mode='interp'):
+
+        map_out = HpxMapND(geom)
+        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
+                          zip(geom.axes, self.geom.axes)])
+
+        for vals, idx in map_out.iter_by_image():
+            pass
+
+        return map_out
 
     def pad(self, pad_width):
         raise NotImplementedError
