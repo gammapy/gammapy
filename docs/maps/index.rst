@@ -31,17 +31,17 @@ pixelization schemes are supported:
 * HEALPix : Hierarchical Equal Area Iso Latitude pixelation of the
   sphere.  Pixels are equal area but have irregular shapes.
 
-`gammapy.maps` is organized around two types of data structures:
+`gammapy.maps` is organized around two data structures:
 *geometry* classes inheriting from `~MapGeom` and *map* classes
-inheriting from `~MapBase`.  A geometry object defines the map
-boundaries, pixelization scheme, and provide methods for converting
-to/from map and pixel coordinates.  A map object owns a `~MapGeom`
-instance as well as a data structure representing map values.  Where
+inheriting from `~MapBase`.  A geometry defines the map
+boundaries, pixelization scheme, and provides methods for converting
+to/from map and pixel coordinates.  A map owns a `~MapGeom`
+instance as well as a data structure containing map values.  Where
 possible it is recommended to use the abstract `~MapBase` interface
 for accessing or updating the contents of a map as this allows
 algorithms to be used interchangeably with different map
-representations.  The following describes methods of the abstract
-interface.  Documentation specific to WCS- and HEALPix-based maps is
+representations.  The following reviews methods of the abstract
+map interface.  Documentation specific to WCS- and HEALPix-based maps is
 provided in :doc:`hpxmap` and :doc:`wcsmap`.
 
 
@@ -129,15 +129,15 @@ abstract `~MapBase` class.  These methods can be used to access or
 update the contents of the map irrespective of its underlying
 representation.  Three types of accessor methods are provided:
 
-* ``get`` : Return the value of the map at the pixel encompassing the
+* ``get`` : Return the value of the map at the pixel containing the
   given coordinate (`~MapBase.get_by_idx`, `~MapBase.get_by_pix`,
-  `~MapBase.get_by_coords`).  By setting the ``interp`` argument,
-  `~MapBase.get_by_pix` and `~MapBase.get_by_coords` support
+  `~MapBase.get_by_coords`).  With the ``interp`` argument,
+  `~MapBase.get_by_pix` and `~MapBase.get_by_coords` also support
   interpolation of map values between pixels.
-* ``set`` : Set the value of the map at the pixel encompassing the
+* ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~MapBase.set_by_idx`, `~MapBase.set_by_pix`,
   `~MapBase.set_by_coords`).
-* ``fill`` : Increment the value of the map at the pixel encompassing
+* ``fill`` : Increment the value of the map at the pixel containing
   the given coordinate with a unit weight or the value in the optional
   ``weights`` argument (`~MapBase.fill_by_idx`,
   `~MapBase.fill_by_pix`, `~MapBase.fill_by_coords`).
@@ -240,6 +240,19 @@ one can use this method to fill a map with a 2D Gaussian:
        new_val = np.exp(-sep**2/2.0)
        m.set_by_coords(coords, new_val)
 
+For maps with non-spatial dimensions the `~MapBase.iter_by_image`
+method can be used to loop over image slices:
+
+.. code::
+
+   from astropy.coordinates import SkyCoord
+   from astropy.convolution import Gaussian2DKernel, convolve
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.05, map_type='wcs', width=10.0)
+   for img, idx in m.iter_by_image():
+       img = convolve(img, Gaussian2DKernel(stddev=2.0) )
+
+
 FITS I/O
 --------
 
@@ -265,6 +278,60 @@ scheme.
    m.write('file.fits', extname='IMAGE', sparse=True)
    m = WcsMapND.read('file.fits', extname='IMAGE')
 
+Visualization
+-------------
+
+All map objects provide a `~MapBase.plot` method for generating a
+visualization of a map.  This method returns figure, axes, and image
+objects that can be used to further tweak/customize the image.
+
+.. code::
+
+   import matplotlib.pyplot as plt
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+   m.fill_by_poisson(1.0)
+   fig, ax, im = m.plot(cmap='magma')
+   plt.colorbar(im)
+
+
+Examples
+========
+
+Creating a Counts Cube from an FT1 File
+---------------------------------------
+
+This example shows how to fill a counts cube from an FT1 file:
+
+.. code::
+
+   from astropy.io import fits
+   from gammapy.maps import WcsGeom, WcsMapND, MapAxis
+
+   h = fits.open('ft1.fits')
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+   m = WcsMapND.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
+                       coordsys='CEL', axes=[energy_axis])
+   m.fill_by_coords((h['EVENTS'].data.field('RA'),
+                     h['EVENTS'].data.field('DEC'),
+                     h['EVENTS'].data.field('ENERGY')))
+   m.write('ccube.fits', conv='fgst-ccube')
+   
+Generating a Cutout of a Model Cube
+-----------------------------------
+
+This example shows how to extract a cut-out of LAT galactic
+diffuse model cube using the `~MapBase.reproject` method:
+
+.. code::
+
+   from gammapy.maps import WcsGeom, WcsMapND
+   m = WcsMapND.read('gll_iem_v06.fits')
+   geom = WcsGeom(binsz=0.125, skydir=(45.0,30.0), coordsys='GAL', proj='AIT')
+   m_proj = m.reproject(geom)
+   m_proj.write('cutout.fits', conv='fgst-template')
+
+   
 Using `gammapy.maps`
 ====================
 
