@@ -84,9 +84,6 @@ class HpxMapSparse(HpxMap):
     def sum_over_axes(self):
         raise NotImplementedError
 
-    def reproject(self, geom):
-        raise NotImplementedError
-
     def pad(self, pad_width):
         raise NotImplementedError
 
