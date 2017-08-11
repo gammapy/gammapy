@@ -30,14 +30,28 @@ wcs_test_geoms = wcs_allsky_test_geoms
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_init(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
+def test_wcsgeom_get_pixels(npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    pix = geom.get_pixels()
+    if axes is not None:
+        idx = tuple([1] * len(axes))
+        pix_img = geom.get_pixels(idx=idx)
+        m = np.all(np.stack([x == y for x, y in zip(idx, pix[2:])]), axis=0)
+        assert_allclose(pix[0][m], pix_img[0])
+        assert_allclose(pix[1][m], pix_img[1])
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
 def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_coords()[0],
                     geom.pix_to_coord(geom.get_pixels())[0])
@@ -56,9 +70,9 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
                          wcs_test_geoms)
 def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     geom0 = WcsGeom.create(npix=npix, binsz=binsz,
-                          proj=proj, coordsys=coordsys, axes=axes)
+                           proj=proj, coordsys=coordsys, axes=axes)
 
-    shape = (np.max(geom0.npix[0]),np.max(geom0.npix[1]))
+    shape = (np.max(geom0.npix[0]), np.max(geom0.npix[1]))
     hdu_bands = geom0.make_bands_hdu(extname='BANDS')
     hdu_prim = fits.PrimaryHDU(np.zeros(shape).T)
     hdu_prim.header.update(geom0.make_header())

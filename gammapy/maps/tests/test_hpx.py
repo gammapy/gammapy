@@ -16,6 +16,8 @@ hpx_allsky_test_geoms = [
     (8, False, 'GAL', None, None),
     # 3D All-sky
     (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
+    # 3D All-sky w/ variable pixel size
+    ([2, 4, 8], False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
     # 4D All-sky
     (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 3), name='axis0'),
                              MapAxis(np.logspace(0., 2., 4), name='axis1')]),
@@ -26,10 +28,10 @@ hpx_partialsky_test_geoms = [
     (8, False, 'GAL', 'DISK(110.,75.,10.)', None),
     # 3D Partial-sky
     (8, False, 'GAL', 'DISK(110.,75.,10.)', [MapAxis(np.logspace(0., 3., 4))]),
-    # 3D Partial-sky w/ variable bin size
+    # 3D Partial-sky w/ variable pixel size
     ([8, 16, 32], False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 4))]),
-    # 4D Partial-sky w/ variable bin size
+    # 4D Partial-sky w/ variable pixel size
     ([[8, 16, 32], [8, 8, 16]], False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 3), name='axis0'),
       MapAxis(np.logspace(0., 2., 4), name='axis1')])
@@ -161,6 +163,21 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
         assert_allclose(pix_slice, (pix[0][m],))
     else:
         assert_allclose(pix_slice, pix)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_get_pixels(nside, nested, coordsys, region, axes):
+
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    pix = geom.get_pixels(local=False)
+    pix_local = geom.get_pixels(local=True)
+    assert_allclose(pix, geom.local_to_global(pix_local))
+
+    if axes is not None:
+        pix_img = geom.get_pixels(local=False, idx=tuple([1] * len(axes)))
+        pix_img_local = geom.get_pixels(local=True, idx=tuple([1] * len(axes)))
+        assert_allclose(pix_img, geom.local_to_global(pix_img_local))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
