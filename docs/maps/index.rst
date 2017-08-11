@@ -278,6 +278,25 @@ scheme.
    m.write('file.fits', extname='IMAGE', sparse=True)
    m = WcsMapND.read('file.fits', extname='IMAGE')
 
+By default files will be written to the *gamma-astro-data-format*
+specification for sky maps (see `here
+<http://gamma-astro-data-formats.readthedocs.io/en/latest/skymaps/index.html>`_).
+The GADF format offers a number of enhancements over existing map
+formats such as support for writing multi-resolution maps, sparse
+maps, and cubes with different geometries to the same file.  For
+backward compatibility with software using other formats, the ``conv``
+keyword option is provided to write a file using a format other than
+the GADF format:
+
+.. code::
+
+   from gammapy.maps import MapBase, MapAxis
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0,
+                      axes=[energy_axis])
+   # Write a counts cube in a format compatible with the Fermi Science Tools
+   m.write('ccube.fits', conv='fgst-ccube')
+   
 Visualization
 -------------
 
