@@ -91,6 +91,9 @@ def unravel_hpx_index(idx, npix):
     idx : tuple of `~numpy.ndarray`
         Index array for each dimension of the map.
     """
+    if npix.size == 1:
+        return tuple([idx])
+
     dpix = np.zeros(npix.size, dtype='i')
     dpix[1:] = np.cumsum(npix.flat[:-1])
     bidx = np.searchsorted(np.cumsum(npix.flat), idx + 1)
@@ -439,6 +442,8 @@ class HpxGeom(MapGeom):
         if isinstance(region, six.string_types):
             ipix = [self.get_index_list(nside, self._nest, region)
                     for nside in self._nside.flat]
+            self._ibnd = np.concatenate([i * np.ones_like(p, dtype='int16') for
+                                         i, p in enumerate(ipix)])
             self._ipix = [ravel_hpx_index((p, i * np.ones_like(p)),
                                           np.ravel(self._maxpix)) for i, p in
                           enumerate(ipix)]
@@ -475,8 +480,15 @@ class HpxGeom(MapGeom):
                 'Invalid input for region string: {}'.format(region))
 
     def local_to_global(self, idx_local):
-        """Compute a global index (partial-sky) from a global (all-sky)
-        index."""
+        """Compute a local index (partial-sky) from a global (all-sky)
+        index.
+
+        Returns
+        -------
+        idx_global : tuple
+            A tuple of pixel index vectors with global HEALPIX pixel
+            indices.
+        """
 
         if self._ipix is None:
             return idx_local
@@ -484,16 +496,24 @@ class HpxGeom(MapGeom):
         if self.nside.size > 1:
             idx = ravel_hpx_index(idx_local, self._npix)
         else:
-            idx_local = tuple([idx_local[0]] +
-                              [np.zeros(t.shape, dtype=int)
-                               for t in idx_local[1:]])
-            idx = ravel_hpx_index(idx_local, self._npix)
+            idx_tmp = tuple([idx_local[0]] +
+                            [np.zeros(t.shape, dtype=int)
+                             for t in idx_local[1:]])
+            idx = ravel_hpx_index(idx_tmp, self._npix)
 
-        return unravel_hpx_index(self._ipix[idx], self._maxpix)
+        idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
+        return idx_global[:1] + idx_local[1:]
 
     def global_to_local(self, idx_global):
-        """Compute a local (partial-sky) index from a global (all-sky)
-        index."""
+        """Compute a global (all-sky) index from a local (partial-sky)
+        index.
+
+        Returns
+        -------
+        idx_local : tuple
+            A tuple of pixel index vectors with local HEALPIX pixel
+            indices.
+        """
 
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
@@ -1274,64 +1294,64 @@ class HpxGeom(MapGeom):
 
         return geom
 
-    def get_pixels(self, local=False):
-        """Get pixel indices for all pixels in this geometry.
+    def get_pixels(self, idx=None, local=False):
 
-        Parameters
-        ----------
-        local : bool
-            Flag to return local or global pixel indices.
+        if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
+            raise ValueError('Image index out of range: {}'.format(idx))
 
-        Returns
-        -------
-        pix : tuple
-            Tuple of pixel index vectors with one element for each
-            dimension.
-
-        """
-        if self._ipix is None:
+        if self._ipix is None and idx is None:
             ipix = np.concatenate([np.arange(t) for t in self._maxpix.flat])
             if not len(self._shape):
                 return ipix,
+
             ibnd = np.concatenate([i * np.ones(t, dtype=int)
                                    for i, t in enumerate(self._maxpix.flat)])
             ibnd = list(np.unravel_index(ibnd, self._shape))
             pix = tuple([ipix] + ibnd)
+        elif self._ipix is None:
+            ipix = np.arange(self._maxpix[idx])
+            ibnd = [t * np.ones(len(ipix), dtype=int) for t in idx]
+            pix = tuple([ipix] + ibnd)
         elif self.nside.shape == self._maxpix.shape or self.region == 'explicit':
-            pix = unravel_hpx_index(self._ipix, self._maxpix)
-            if self.ndim == 2:
-                pix = pix[:1]
+
+            if idx is not None:
+                npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
+                idx_ravel = np.ravel_multi_index(idx, self._shape)
+                s = slice(npix_sum[idx_ravel], npix_sum[idx_ravel + 1])
+            else:
+                s = slice(None)
+
+            pix = unravel_hpx_index(self._ipix[s], self._maxpix)
         else:
 
             # For fixed nside we only store an ipix vector for the
             # first plane. Here we construct global pixel index vectors
             # for all planes
-            maxpix = np.ravel(self._maxpix) * np.arange(self.npix.size)
-            maxpix = maxpix.reshape(self._maxpix.shape)[None, ...]
-            # maxpix = np.ravel(self._maxpix *
-            #                  np.arange(self.npix.size))[None, ...]
-            maxpix = maxpix * np.ones([self._npix.flat[0]] +
-                                      list(self._shape), dtype=int)
-            maxpix = np.ravel(maxpix.T)
-            ipix = np.ravel(self._ipix[None, :] *
-                            np.ones(self._shape, dtype=int)[..., None])
-            pix = unravel_hpx_index(ipix + maxpix, self._maxpix)
+            if idx is None:
+
+                nimg = np.prod(self._shape)
+                npix = self._npix.flat[0]
+                ibnd = np.ravel(
+                    np.arange(nimg)[:, None] * np.ones(npix, dtype=int)[None, :])
+                ibnd = np.unravel_index(ibnd, self._shape, order='F')
+                ipix = np.ravel(self._ipix[None, :]
+                                * np.ones(nimg, dtype=int)[:, None])
+                pix = tuple([ipix] + list(ibnd))
+            else:
+
+                npix = self._npix.flat[0]
+                ibnd = [t * np.ones(npix, dtype=int) for t in idx]
+                ipix = self._ipix.copy()
+                pix = tuple([ipix] + list(ibnd))
 
         if local:
             return self.global_to_local(pix)
         else:
             return pix
 
-    def get_coords(self):
-        """Get the coordinates of all the pixels in this geometry.
+    def get_coords(self, idx=None):
 
-        Returns
-        -------
-        coords : tuple
-            Tuple of coordinate vectors with one element for each
-            dimension.
-        """
-        pix = self.get_pixels()
+        pix = self.get_pixels(idx=idx)
         return self.pix_to_coord(pix)
 
     def contains(self, coords):

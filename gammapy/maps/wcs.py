@@ -380,10 +380,14 @@ class WcsGeom(MapGeom):
     def get_image_wcs(self, idx):
         raise NotImplementedError
 
-    def get_pixels(self):
-        return pix_tuple_to_idx(self._get_pix_coords(mode='center'))
+    def get_pixels(self, idx=None, local=False):
+        return pix_tuple_to_idx(self._get_pix_coords(idx=idx,
+                                                     mode='center'))
 
-    def _get_pix_coords(self, mode='center'):
+    def _get_pix_coords(self, idx=None, mode='center'):
+
+        # FIXME: Figure out if there is some way to employ open/sparse
+        # vectors
 
         npix = copy.deepcopy(self.npix)
 
@@ -397,22 +401,29 @@ class WcsGeom(MapGeom):
                    for i in range(2 + len(self.axes))]
             for i, t in np.ndenumerate(npix[0]):
 
+                if idx is not None and i != idx:
+                    continue
+
                 ntot = npix[0][i] * npix[1][i]
-                o = np.unravel_index(np.arange(ntot, dtype=int),
-                                     (npix[0][i], npix[1][i]), order='F')
-                pix[0] = np.concatenate((pix[0], o[0].astype(float)))
-                pix[1] = np.concatenate((pix[1], o[1].astype(float)))
-                idx = np.unravel_index(np.ravel_multi_index(i, npix[0].shape),
-                                       npix[0].shape, order='F')
+                pix_img = np.unravel_index(np.arange(ntot, dtype=int),
+                                           (npix[0][i], npix[1][i]), order='F')
+                pix[0] = np.concatenate((pix[0], pix_img[0].astype(float)))
+                pix[1] = np.concatenate((pix[1], pix_img[1].astype(float)))
+                idx_img = np.unravel_index(np.ravel_multi_index(i, npix[0].shape, order='F'),
+                                           npix[0].shape, order='F')
                 for j in range(len(self.axes)):
                     pix[2 + j] = np.concatenate((pix[2 + j],
-                                                 idx[j] * np.ones(ntot, dtype=float)))
+                                                 idx_img[j] * np.ones(ntot, dtype=float)))
 
         else:
             pix = [np.arange(npix[0], dtype=float),
                    np.arange(npix[1], dtype=float)]
-            for i, ax in enumerate(self.axes):
-                pix += [np.arange(ax.nbin, dtype=float)]
+
+            if idx is None:
+                pix += [np.arange(ax.nbin, dtype=float) for ax in self.axes]
+            else:
+                pix += list(idx)
+
             pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
 
         if mode == 'edges':
@@ -427,9 +438,9 @@ class WcsGeom(MapGeom):
 #        m = np.broadcast_to(np.prod(m),shape)
 #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
-    def get_coords(self):
+    def get_coords(self, idx=None):
 
-        pix = self.get_pixels()
+        pix = self.get_pixels(idx=idx)
         return self.pix_to_coord(pix)
 
     def coord_to_pix(self, coords):

@@ -715,26 +715,54 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def get_pixels(self):
-        """Get pixel indices for all pixels in this geometry.
+    def get_pixels(self, idx=None, local=False):
+        """Get tuple of pixel indices for this geometry.  Returns all pixels
+        in the geometry by default.  Pixel indices for a single image
+        plane can be accessed by setting ``idx`` to the index tuple of
+        a plane.
+
+        Parameters
+        ----------
+        idx : tuple, optional
+            A tuple of indices with one index for each non-spatial
+            dimension.  If defined only pixels for the image plane with
+            this index will be returned.  If none then all pixels
+            will be returned.
+
+        local : bool
+            Flag to return local or global pixel indices.  Local
+            indices run from 0 to the number of pixels in a given
+            image plane.
 
         Returns
         -------
         pix : tuple
-            Tuple of pixel index vectors with one element for each
+            Tuple of pixel index vectors with one vector for each
             dimension.
         """
         pass
 
     @abc.abstractmethod
-    def get_coords(self):
-        """Get the coordinates of all the pixels in this geometry.
+    def get_coords(self, idx=None):
+        """Get the coordinates of all the pixels in this geometry.  Returns
+        coordinates for all pixels in the geometry by default.
+        Coordinates for a single image plane can be accessed by
+        setting ``idx`` to the index tuple of a plane.
+
+        Parameters
+        ----------
+        idx : tuple, optional
+            A tuple of indices with one index for each non-spatial
+            dimension.  If defined only coordinates for the image
+            plane with this index will be returned.  If none then
+            coordinates for all pixels will be returned.
 
         Returns
         -------
         coords : tuple
-            Tuple of coordinate vectors with one element for each
+            Tuple of coordinate vectors with one vector for each
             dimension.
+
         """
         pass
 
