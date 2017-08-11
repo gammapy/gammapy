@@ -16,6 +16,8 @@ hpx_allsky_test_geoms = [
     (8, False, 'GAL', None, None),
     # 3D All-sky
     (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
+    # 3D All-sky w/ variable pixel size
+    ([2, 4, 8], False, 'GAL', None, [MapAxis(np.logspace(0., 3., 4))]),
     # 4D All-sky
     (8, False, 'GAL', None, [MapAxis(np.logspace(0., 3., 3), name='axis0'),
                              MapAxis(np.logspace(0., 2., 4), name='axis1')]),
@@ -26,10 +28,10 @@ hpx_partialsky_test_geoms = [
     (8, False, 'GAL', 'DISK(110.,75.,10.)', None),
     # 3D Partial-sky
     (8, False, 'GAL', 'DISK(110.,75.,10.)', [MapAxis(np.logspace(0., 3., 4))]),
-    # 3D Partial-sky w/ variable bin size
+    # 3D Partial-sky w/ variable pixel size
     ([8, 16, 32], False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 4))]),
-    # 4D Partial-sky w/ variable bin size
+    # 4D Partial-sky w/ variable pixel size
     ([[8, 16, 32], [8, 8, 16]], False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 3), name='axis0'),
       MapAxis(np.logspace(0., 2., 4), name='axis1')])
@@ -161,6 +163,21 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
         assert_allclose(pix_slice, (pix[0][m],))
     else:
         assert_allclose(pix_slice, pix)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_get_pixels(nside, nested, coordsys, region, axes):
+
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    pix = geom.get_pixels(local=False)
+    pix_local = geom.get_pixels(local=True)
+    assert_allclose(pix, geom.local_to_global(pix_local))
+
+    if axes is not None:
+        pix_img = geom.get_pixels(local=False, idx=tuple([1] * len(axes)))
+        pix_img_local = geom.get_pixels(local=True, idx=tuple([1] * len(axes)))
+        assert_allclose(pix_img, geom.local_to_global(pix_img_local))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -321,6 +338,26 @@ def test_hpxgeom_get_coords():
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
 
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    coords = geom.get_coords()
+    assert_allclose(geom.contains(coords), np.ones(
+        coords[0].shape, dtype=bool))
+
+    if axes is not None:
+
+        coords = [c[0] for c in coords[:2]] + \
+            [ax.edges[-1] + 1.0 for ax in axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+    if geom.region is not None:
+
+        coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+
 def test_make_hpx_to_wcs_mapping():
     ax0 = np.linspace(0., 1., 3)
     hpx = HpxGeom(16, False, 'GAL', region='DISK(110.,75.,2.)')
@@ -378,7 +415,22 @@ def test_hpxgeom_from_header():
     assert_allclose(hpx.nside, np.array([64]))
 
 
-def test_hpxgeom_make_header():
-    hpx = HpxGeom(16, False, 'GAL')
-    header = hpx.make_header()
-    # TODO: assert on something
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
+    geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_prim = fits.PrimaryHDU()
+    hdu_prim.header.update(geom0.make_header())
+
+    filename = str(tmpdir / 'hpxgeom.fits')
+    hdulist = fits.HDUList([hdu_prim, hdu_bands])
+    hdulist.writeto(filename, overwrite=True)
+
+    hdulist = fits.open(filename)
+    geom1 = HpxGeom.from_header(hdulist[0].header, hdulist['BANDS'])
+
+    assert_allclose(geom0.nside, geom1.nside)
+    assert_allclose(geom0.npix, geom1.npix)
+    assert_allclose(geom0.nest, geom1.nest)
+    assert(geom0.coordsys == geom1.coordsys)

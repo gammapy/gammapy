@@ -1,17 +1,135 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import re
 import numpy as np
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
+from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from .utils import find_hdu, find_bands_hdu
 
 __all__ = [
     'MapCoords',
     'MapGeom',
     'MapAxis',
 ]
+
+
+def make_axes(axes_in, conv):
+    """Make a sequence of `~MapAxis` objects."""
+
+    if axes_in is None:
+        return []
+
+    axes_out = []
+    for i, ax in enumerate(axes_in):
+        if isinstance(ax, np.ndarray):
+            ax = MapAxis(ax)
+
+        if conv in ['fgst-ccube', 'fgst-template']:
+            ax.set_name('energy')
+        elif ax.name == '':
+            ax.set_name('axis%i' % i)
+
+        axes_out += [ax]
+
+    return axes_out
+
+
+def make_axes_cols(axes, axis_names=None):
+    """Make FITS table columns for map axes.
+
+    Parameters
+    ----------
+    axes : list of `~MapAxis`
+
+    colnames : list of str
+
+    """
+
+    colname = {'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
+               'time': ['TIME', 'T_MIN', 'T_MAX'],
+               }
+
+    if axis_names is None:
+        axis_names = [ax.name for ax in axes]
+
+    size = np.prod([ax.nbin for ax in axes])
+    chan = np.arange(0, size)
+    cols = [fits.Column('CHANNEL', 'I', array=chan), ]
+    axes_ctr = np.meshgrid(*[ax.center for ax in axes])
+    axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
+    axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
+    for i, (ax, name) in enumerate(zip(axes, axis_names)):
+
+        names = colname.get(name.lower(),
+                            ['AXIS%i' % i,
+                             'AXIS%i_MIN' % i, 'AXIS%i_MAX' % i])
+        for t, v in zip(names, [axes_ctr, axes_min, axes_max]):
+            cols += [fits.Column(t, 'E', array=np.ravel(v[i]),
+                                 unit=ax.unit.to_string()), ]
+
+    return cols
+
+
+def find_and_read_bands(hdu, header=None):
+    """Read and returns the map axes from a BANDS table.
+
+    Parameters
+    ----------
+    hdu : `~astropy.fits.BinTableHDU`
+        The BANDS table HDU.
+
+    Returns
+    -------
+    axes : list of `~MapAxis`
+        List of axis objects.
+
+    """
+    if hdu is None:
+        return []
+
+    axes = []
+    axis_cols = []
+    if hdu.name == 'ENERGIES':
+        axis_cols = [['ENERGY']]
+    elif hdu.name == 'EBOUNDS':
+        axis_cols = [['E_MIN', 'E_MAX']]
+    else:
+        for i in range(5):
+            if 'AXCOLS%i' % i in hdu.header:
+                axis_cols += [hdu.header['AXCOLS%i' % i].split(',')]
+            else:
+                break
+
+    for i, cols in enumerate(axis_cols):
+
+        if 'ENERGY' in cols or 'E_MIN' in cols:
+            name = 'energy'
+        elif re.search('(.+)_MIN', cols[0]):
+            name = re.search('(.+)_MIN', cols[0]).group(1)
+        else:
+            name = cols[0]
+
+        unit = hdu.data.columns[cols[0]].unit
+        if unit is None and header is not None:
+            unit = header.get('CUNIT%i' % (3 + i), '')
+
+        if len(cols) == 2:
+            xmin = np.unique(hdu.data.field(cols[0]))
+            xmax = np.unique(hdu.data.field(cols[1]))
+            axis = MapAxis(np.append(xmin, xmax[-1]), name=name,
+                           unit=unit)
+            axes += [axis]
+        else:
+            x = np.unique(hdu.data.field(cols[0]))
+            axis = MapAxis.from_nodes(x, name=name,
+                                      unit=unit)
+            axes += [axis]
+
+    return axes
 
 
 def get_shape(param):
@@ -68,6 +186,26 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
+def axes_pix_to_coord(axes, pix):
+    """Perform pixel to axis coordinates for a list of `~MapAxis`
+    objects.
+
+    Parameters
+    ----------
+    axes : list
+        List of `~MapAxis`.
+
+    pix : tuple
+        Tuple of pixel coordinates.
+    """
+
+    coords = []
+    for ax, t in zip(axes, pix):
+        coords += [ax.pix_to_coord(t)]
+
+    return coords
+
+
 def coord_to_idx(edges, x, bounded=False):
     """Convert axis coordinates ``x`` to bin indices.
 
@@ -78,7 +216,7 @@ def coord_to_idx(edges, x, bounded=False):
 
     if bounded:
         ibin[x < edges[0]] = 0
-        ibin[x < edges[0]] = len(edges) - 1
+        ibin[x > edges[-1]] = len(edges) - 1
     else:
         ibin[x > edges[-1]] = -1
     return ibin
@@ -90,7 +228,7 @@ def bin_to_val(edges, bins):
 
 
 def coord_to_pix(edges, coord, interp='lin'):
-    """Convert grid coordinates to pixel coordinates using the chosen
+    """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
 
@@ -153,25 +291,33 @@ class MapAxis(object):
     ----------
     nodes : `~numpy.ndarray`
         Array of node values.  These will be interpreted as either bin
-        edges or centers.
+        edges or centers according to ``node_type``.
     interp : str
         Interpolation method used to transform between axis and pixel
-        coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+        coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+    node_type : str
+        Flag indicating whether coordinate nodes correspond to pixel
+        edges (node_type = 'edge') or pixel centers (node_type =
+        'center').  'center' should be used where the map values are
+        defined at a specific coordinate (e.g. differential
+        quantities). 'edge' should be used where map values are
+        defined by an integral over coordinate intervals (e.g. a
+        counts histogram).
     unit : str
         String specifying the data units.
+
     """
 
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
-    def __init__(self, nodes, interp='lin', name='', quantity_type='integral',
+    def __init__(self, nodes, interp='lin', name='',
                  node_type='edge', unit=''):
         self._name = name
-        self._quantity_type = quantity_type
         self._interp = interp
         self._nodes = nodes
         self._node_type = node_type
-        self._unit = u.Unit(unit)
+        self._unit = u.Unit('' if unit is None else unit)
 
         # Set pixel coordinate of first node
         if node_type == 'edge':
@@ -188,14 +334,23 @@ class MapAxis(object):
         pix = np.arange(nbin + 1, dtype=float) - 0.5
         self._bin_edges = self.pix_to_coord(pix)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (np.allclose(self._nodes, other._nodes) and
+                    self._node_type == other._node_type and
+                    self._interp == other._interp and
+                    self._unit == other._unit)
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
     @property
     def name(self):
         """Name of the axis."""
         return self._name
-
-    @property
-    def quantity_type(self):
-        return self._quantity_type
 
     @property
     def edges(self):
@@ -213,6 +368,11 @@ class MapAxis(object):
         return len(self._bin_edges) - 1
 
     @property
+    def node_type(self):
+        """Return node type ('center' or 'edge')."""
+        return self._node_type
+
+    @property
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
@@ -220,7 +380,10 @@ class MapAxis(object):
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
         """Generate an axis object from a lower/upper bound and number of
-        bins.
+        bins.  If node_type = 'edge' then bounds correspond to the
+        lower and upper bound of the first and last bin.  If node_type
+        = 'center' then bounds correspond to the centers of the first
+        and last bin.
 
         Parameters
         ----------
@@ -233,22 +396,31 @@ class MapAxis(object):
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+
         """
 
         interp = kwargs.setdefault('interp', 'lin')
+        node_type = kwargs.setdefault('node_type', 'edge')
+
+        if node_type == 'edge':
+            nnode = nbin + 1
+        elif node_type == 'center':
+            nnode = nbin
+        else:
+            raise ValueError('Invalid node type: {}'.format(node_type))
 
         if interp == 'lin':
-            nodes = np.linspace(lo_bnd, hi_bnd, nbin + 1)
+            nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == 'log':
             nodes = np.exp(np.linspace(np.log(lo_bnd),
-                                       np.log(hi_bnd), nbin + 1))
+                                       np.log(hi_bnd), nnode))
         elif interp == 'sqrt':
             nodes = np.linspace(lo_bnd ** 0.5,
-                                hi_bnd ** 0.5, nbin + 1) ** 2.0
+                                hi_bnd ** 0.5, nnode) ** 2.0
         else:
             raise ValueError('Invalid interp: {}'.format(interp))
 
-        return cls(nodes, node_type='edge', **kwargs)
+        return cls(nodes, **kwargs)
 
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
@@ -337,14 +509,29 @@ class MapAxis(object):
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
         bounded : bool
-
+            Choose whether to clip the index to the valid range of the
+            axis.  If false then indices for values outside the axis
+            range will be set -1.
 
         Returns
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
+
         """
         return coord_to_idx(self.edges, coord, bounded)
+
+    def coord_to_idx_interp(self, coord):
+        """Compute indices of two nearest bins to the given coordinate.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+        """
+
+        return (coord_to_idx(self.center[:-1], coord, bounded=True),
+                coord_to_idx(self.center[:-1], coord, bounded=True) + 1,)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -366,7 +553,6 @@ class MapAxis(object):
             idx = tuple(list(idx) + [1 + idx[-1]])
         nodes = self._nodes[(idx,)]
         return MapAxis(nodes, interp=self._interp, name=self._name,
-                       quantity_type=self._quantity_type,
                        node_type=self._node_type, unit=self._unit)
 
 
@@ -452,6 +638,10 @@ class MapGeom(object):
     """Base class for WCS and HEALPix geometries."""
 
     @abc.abstractproperty
+    def allsky(self):
+        pass
+
+    @abc.abstractproperty
     def center_coord(self):
         pass
 
@@ -463,27 +653,116 @@ class MapGeom(object):
     def center_skydir(self):
         pass
 
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Create a geometry object from a FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the FITS file.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Geometry object.
+        """
+        with fits.open(filename) as hdulist:
+            geom = cls.from_hdulist(hdulist, **kwargs)
+        return geom
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
+        """Load a geometry object from a FITS HDUList.
+
+        Parameters
+        ----------
+        hdulist :  `~astropy.io.fits.HDUList`
+            HDU list containing HDUs for map data and bands.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Geometry object.
+        """
+        if hdu is None:
+            hdu = find_hdu(hdulist)
+        else:
+            hdu = hdulist[hdu]
+
+        if hdu_bands is None:
+            hdu_bands = find_bands_hdu(hdulist, hdu)
+
+        if hdu_bands is not None:
+            hdu_bands = hdulist[hdu_bands]
+
+        return cls.from_header(hdu.header, hdu_bands)
+
     @abc.abstractmethod
-    def get_pixels(self):
-        """Get pixel indices for all pixels in this geometry.
+    def make_bands_hdu(self):
+        pass
+
+    @abc.abstractmethod
+    def get_pixels(self, idx=None, local=False):
+        """Get tuple of pixel indices for this geometry.  Returns all pixels
+        in the geometry by default.  Pixel indices for a single image
+        plane can be accessed by setting ``idx`` to the index tuple of
+        a plane.
+
+        Parameters
+        ----------
+        idx : tuple, optional
+            A tuple of indices with one index for each non-spatial
+            dimension.  If defined only pixels for the image plane with
+            this index will be returned.  If none then all pixels
+            will be returned.
+
+        local : bool
+            Flag to return local or global pixel indices.  Local
+            indices run from 0 to the number of pixels in a given
+            image plane.
 
         Returns
         -------
         pix : tuple
-            Tuple of pixel index vectors with one element for each
+            Tuple of pixel index vectors with one vector for each
             dimension.
         """
         pass
 
     @abc.abstractmethod
-    def get_coords(self):
-        """Get the coordinates of all the pixels in this geometry.
+    def get_coords(self, idx=None):
+        """Get the coordinates of all the pixels in this geometry.  Returns
+        coordinates for all pixels in the geometry by default.
+        Coordinates for a single image plane can be accessed by
+        setting ``idx`` to the index tuple of a plane.
+
+        Parameters
+        ----------
+        idx : tuple, optional
+            A tuple of indices with one index for each non-spatial
+            dimension.  If defined only coordinates for the image
+            plane with this index will be returned.  If none then
+            coordinates for all pixels will be returned.
 
         Returns
         -------
         coords : tuple
-            Tuple of coordinate vectors with one element for each
+            Tuple of coordinate vectors with one vector for each
             dimension.
+
         """
         pass
 
@@ -600,3 +879,53 @@ class MapGeom(object):
             Sliced geometry.
         """
         pass
+
+    @abc.abstractmethod
+    def to_image(self):
+        """Create a 2D geometry by dropping all non-spatial dimensions of this
+        geometry.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Image geometry.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def to_cube(self, axes):
+        """Create a new geometry by appending a list of non-spatial axes to
+        the present geometry.  This will result in a new geometry with
+        N+M dimensions where N is the number of current dimensions and
+        M is the number of axes in the list.
+
+        Parameters
+        ----------
+        axes : list
+            Axes that will be appended to this geometry.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Map geometry.
+
+        """
+        pass
+
+    def _fill_header_from_axes(self, header):
+
+        for i, ax in enumerate(self.axes):
+
+            if ax.name == 'energy' and ax.node_type == 'edge':
+                header['AXCOLS%i' % i] = 'E_MIN,E_MAX'
+            elif ax.name == 'energy' and ax.node_type == 'center':
+                header['AXCOLS%i' % i] = 'ENERGY'
+            elif ax.node_type == 'edge':
+                header['AXCOLS%i' % i] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
+                                                                ax.name.upper())
+            elif ax.node_type == 'center':
+                header['AXCOLS%i' % i] = ax.name.upper()
+            else:
+                raise ValueError('Invalid node type '
+                                 '{}'.format(ax.node_type))
