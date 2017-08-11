@@ -399,21 +399,22 @@ class WcsGeom(MapGeom):
 
             pix = [np.array([], dtype=float)
                    for i in range(2 + len(self.axes))]
-            for i, t in np.ndenumerate(npix[0]):
+            for idx_img in np.ndindex(self.shape[::-1]):
 
-                if idx is not None and i != idx:
+                idx_img = idx_img[::-1]
+                if idx is not None and idx_img != idx:
                     continue
 
-                ntot = npix[0][i] * npix[1][i]
+                npix0, npix1 = npix[0][idx_img], npix[1][idx_img]
+                ntot = npix0 * npix1
                 pix_img = np.unravel_index(np.arange(ntot, dtype=int),
-                                           (npix[0][i], npix[1][i]), order='F')
+                                           (npix0, npix1), order='F')
                 pix[0] = np.concatenate((pix[0], pix_img[0].astype(float)))
                 pix[1] = np.concatenate((pix[1], pix_img[1].astype(float)))
-                idx_img = np.unravel_index(np.ravel_multi_index(i, npix[0].shape, order='F'),
-                                           npix[0].shape, order='F')
                 for j in range(len(self.axes)):
                     pix[2 + j] = np.concatenate((pix[2 + j],
-                                                 idx_img[j] * np.ones(ntot, dtype=float)))
+                                                 idx_img[j] *
+                                                 np.ones(ntot, dtype=float)))
 
         else:
             pix = [np.arange(npix[0], dtype=float),
