@@ -301,6 +301,53 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
+    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+        """
+        Source spatial model.
+        """
+        d = self.data
+        flux = self.spectral_model.integral(emin, emax)
+        amplitude = flux.to('cm-2 s-1').value
+
+        pars = {}
+        glon = Angle(d['GLON']).wrap_at('180d')
+        glat = Angle(d['GLAT']).wrap_at('180d')
+
+        if self.is_pointlike:
+            pars['amplitude'] = amplitude
+            pars['x_0'] = glon.value
+            pars['y_0'] = glat.value
+            return Delta2D(**pars)
+        else:
+            de = self.data_extended
+            morph_type = de['Model_Form'].strip()
+
+            if morph_type == 'Disk':
+                pars['x_0'] = glon.value
+                pars['y_0'] = glat.value
+                pars['R_0'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] = amplitude / (np.pi * pars['R_0'] ** 2)
+                return Disk2D(**pars)
+            elif morph_type in ['Map', 'Ring', '2D Gaussian x2']:
+                filename = de['Spatial_Filename'].strip()
+                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/'
+                template = Template2D.read(base + filename)
+                template.amplitude = amplitude
+                return template
+            elif morph_type == '2D Gaussian':
+                pars['x_mean'] = glon.value
+                pars['y_mean'] = glat.value
+                pars['x_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['y_stddev'] = de['Model_SemiMajor'].to('deg').value
+                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
+                return Gaussian2D(**pars)
+            else:
+                raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def is_pointlike(self):
+        return self.data['Extended_Source_Name'].strip() == ''
+
     @property
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
