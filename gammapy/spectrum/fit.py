@@ -254,18 +254,18 @@ class SpectrumFit(object):
         """
         # Off stat = 0 by default
         off_stat = np.zeros(obs.e_reco.nbins)
-        if self.stat == 'cash':
+        if self.stat == 'cash' or self.stat == 'cstat':
             if self.background_model is not None:
                 mu_on = prediction[0] + prediction[1]
-                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
-                                     mu_on=mu_on)
+                on_stat = stats.__dict__[self.stat](n_on=obs.on_vector.data.data.value,
+                                                    mu_on=mu_on)
                 mu_off = prediction[1] / obs.alpha
-                off_stat = stats.cash(n_on=obs.off_vector.data.data.value,
-                                      mu_on=mu_off)
+                off_stat = stats.__dict__[self.stat](n_on=obs.off_vector.data.data.value,
+                                                     mu_on=mu_off)
             else:
                 mu_on = prediction[0]
-                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
-                                     mu_on=mu_on)
+                on_stat = stats.__dict__[self.stat](n_on=obs.on_vector.data.data.value,
+                                                    mu_on=mu_on)
                 off_stat = np.zeros_like(on_stat)
 
         elif self.stat == 'wstat':
