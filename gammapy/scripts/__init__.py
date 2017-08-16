@@ -6,7 +6,6 @@ Gammapy command line and GUI tools.
 from .check import *
 from .info import *
 
-from .data_browser import *
 from .data_select import *
 from .data_show import *
 
