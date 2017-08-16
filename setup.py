@@ -127,12 +127,6 @@ setup(
           'matplotlib>=1.5',
           'aplpy>=0.9',
       ],
-      gui=[
-          'flask',
-          'flask-bootstrap',
-          'flask-wtf',
-          'flask-nav',
-      ],
     ),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,

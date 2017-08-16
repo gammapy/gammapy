@@ -36,7 +36,6 @@
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
-.. _flask: http://flask.pocoo.org/
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools

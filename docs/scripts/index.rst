@@ -11,8 +11,7 @@ Command line tools  (`gammapy.scripts`)
 Introduction
 ============
 
-Gammapy contains a bunch of command line tools,
-and we've started to add `flask`_ web apps for cases where a GUI makes sense.
+Gammapy contains a bunch of command line tools to execute common tasks.
 
 Note that these are all still very much work in progress, we haven't
 settled on a very good scheme to organise the functionality, do
