@@ -713,7 +713,7 @@ class SkyImage(MapBase):
             Position and value of the maximum.
         """
         if region:
-            mask = region.contains(self.coordinates())
+            mask = region.contains(self.coordinates(), wcs=self.wcs)
         else:
             mask = np.ones_like(self.data)
 
@@ -1098,14 +1098,16 @@ class SkyImage(MapBase):
         """
         if isinstance(region, PixelRegion):
             coords = self.coordinates_pix()
+            kwargs = dict()
         elif isinstance(region, SkyRegion):
             coords = self.coordinates()
+            kwargs = dict(wcs=self.wcs)
         else:
             raise TypeError("Invalid region type, must be instance of "
                             "'regions.PixelRegion' or 'regions.SkyRegion'")
 
         mask = self.copy()
-        mask.data = region.contains(coords)
+        mask.data = region.contains(coords, **kwargs)
         return mask
 
     @staticmethod
