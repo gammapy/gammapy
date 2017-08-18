@@ -37,7 +37,7 @@ env:
 
         - PIP_DEPENDENCIES='uncertainties'
 
-        - CONDA_CHANNELS='conda-forge astropy sherpa openastronomy'
+        - CONDA_CHANNELS='conda-forge sherpa'
 
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
