@@ -545,6 +545,21 @@ class DataStoreObservation(object):
         return self.load(hdu_type='psf')
 
     @lazyproperty
+    def psf_table(self):
+        """Load table point spread function object (lazy property)."""
+        return self.load(hdu_type='psf', hdu_class='psf_table')
+
+    @lazyproperty
+    def psf_3gauss(self):
+        """Load triple-Gauss point spread function object (lazy property)."""
+        return self.load(hdu_type='psf', hdu_class='psf_3gauss')
+
+    @lazyproperty
+    def psf_king(self):
+        """Load King point spread function object (lazy property)."""
+        return self.load(hdu_type='psf', hdu_class='psf_king')
+
+    @lazyproperty
     def bkg(self):
         """Load background object (lazy property)."""
         return self.load(hdu_type='bkg')
