@@ -33,7 +33,7 @@ def load_catalog_green():
         Source catalog
     """
     filename = make_path('$GAMMAPY_EXTRA/datasets/catalogs/Green_2014-05.fits.gz')
-    return Table.read(filename)
+    return Table.read(str(filename))
 
 
 # TODO: remove, or integrate with gammapy.astro.source.Pulsar !
@@ -64,4 +64,4 @@ class SourceCatalogATNF(SourceCatalog):
 
     def __init__(self, filename=None):
         filename = filename or make_path('$GAMMAPY_EXTRA/datasets/catalogs/ATNF_v1.54.fits.gz')
-        self.table = Table.read(filename)
+        self.table = Table.read(str(filename))
