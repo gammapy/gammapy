@@ -252,19 +252,21 @@ class SpectrumFit(object):
         statsval : tuple of `~numpy.ndarray`
             Statval for (on, off)
         """
+        stats_func = getattr(stats, self.stat)
+
         # Off stat = 0 by default
         off_stat = np.zeros(obs.e_reco.nbins)
-        if self.stat == 'cash':
+        if self.stat == 'cash' or self.stat == 'cstat':
             if self.background_model is not None:
                 mu_on = prediction[0] + prediction[1]
-                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
+                on_stat = stats_func(n_on=obs.on_vector.data.data.value,
                                      mu_on=mu_on)
                 mu_off = prediction[1] / obs.alpha
-                off_stat = stats.cash(n_on=obs.off_vector.data.data.value,
+                off_stat = stats_func(n_on=obs.off_vector.data.data.value,
                                       mu_on=mu_off)
             else:
                 mu_on = prediction[0]
-                on_stat = stats.cash(n_on=obs.on_vector.data.data.value,
+                on_stat = stats_func(n_on=obs.on_vector.data.data.value,
                                      mu_on=mu_on)
                 off_stat = np.zeros_like(on_stat)
 
@@ -276,7 +278,7 @@ class SpectrumFit(object):
             # Store the result of the profile likelihood as bkg prediction
             mu_bkg = stats.get_wstat_mu_bkg(**kwargs)
             prediction[1] = mu_bkg * obs.alpha
-            on_stat_ = stats.wstat(**kwargs)
+            on_stat_ = stats_func(**kwargs)
             # The on_stat sometime contains nan values
             # TODO: Handle properly
             on_stat = np.nan_to_num(on_stat_)

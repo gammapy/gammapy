@@ -117,8 +117,8 @@ class Parameter(object):
                     value=float(self.value),
                     unit=str(self.unit),
                     frozen=self.frozen,
-                    min=self.parmin,
-                    max=self.parmax)
+                    min=float(self.parmin),
+                    max=float(self.parmax))
 
     # TODO: I think this method is not very useful, because the same can be just
     # achieved with `Parameter(**data)`. Why duplicate?
@@ -264,8 +264,10 @@ class ParameterList(object):
     def from_dict(cls, val):
         pars = list()
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'], value=par['value'],
-                                  unit=par['unit']))
+            pars.append(Parameter(name=par['name'], value=float(par['value']),
+                                  unit=par['unit'], parmin=float(par['min']),
+                                  parmax=float(par['max']),
+                                  frozen=par['frozen']))
         try:
             covariance = np.array(val['covariance'])
         except KeyError:

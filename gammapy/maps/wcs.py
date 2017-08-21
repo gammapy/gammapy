@@ -1,15 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
-from .geom import MapAxis, get_shape
+from .geom import MapAxis, get_shape, make_axes_cols, make_axes
+from .geom import find_and_read_bands
 
 __all__ = [
-    'WCSGeom',
+    'WcsGeom',
 ]
 
 
@@ -36,7 +38,7 @@ def cast_to_shape(param, shape, dtype):
     return tuple(param)
 
 
-class WCSGeom(MapGeom):
+class WcsGeom(MapGeom):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and the
@@ -56,15 +58,12 @@ class WCSGeom(MapGeom):
         Axes for non-spatial dimensions
     """
 
-    def __init__(self, wcs, npix, cdelt=None, axes=None):
+    def __init__(self, wcs, npix, cdelt=None, axes=None, conv='gadf'):
         self._wcs = wcs
         self._coordsys = get_coordsys(wcs)
-        self._axes = axes if axes is not None else []
-        for i, ax in enumerate(self.axes):
-            if isinstance(ax, np.ndarray):
-                self.axes[i] = MapAxis(ax)
-            if self.axes[i].name == '':
-                self.axes[i].set_name('axis%i' % i)
+        self._projection = get_projection(wcs)
+        self._conv = conv
+        self._axes = make_axes(axes, conv)
 
         self._shape = tuple([ax.nbin for ax in self._axes])
         if cdelt is None:
@@ -105,9 +104,28 @@ class WCSGeom(MapGeom):
         return self._coordsys
 
     @property
+    def projection(self):
+        """Map projection."""
+        return self._projection
+
+    @property
+    def allsky(self):
+        """Flag for all-sky maps."""
+        if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.)):
+            return True
+        else:
+            return False
+
+    @property
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
         return self._width
+
+    @property
+    def pixel_area(self):
+        """Pixel area in deg^2."""
+        # FIXME: Correctly compute solid angle for projection
+        return self._cdelt[0] * self._cdelt[1]
 
     @property
     def npix(self):
@@ -118,6 +136,15 @@ class WCSGeom(MapGeom):
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
+
+    @property
+    def shape(self):
+        """Shape of non-spatial axes."""
+        return self._shape
+
+    @property
+    def ndim(self):
+        return len(self._axes) + 2
 
     @property
     def center_coord(self):
@@ -151,7 +178,7 @@ class WCSGeom(MapGeom):
 
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, width=None):
+               axes=None, skydir=None, width=None, conv=None):
         """Create a WCS geometry object.  Pixelization of the map is set with
         ``binsz`` and one of either ``npix`` or ``width`` arguments.
         For maps with non-spatial dimensions a different pixelization
@@ -171,7 +198,7 @@ class WCSGeom(MapGeom):
             Width of the map in degrees.  A tuple will be interpreted
             as parameters for longitude and latitude axes.  For maps
             with non-spatial dimensions, list input can be used to
-            define a different map width in each image plane.  
+            define a different map width in each image plane.
         binsz : float or tuple or list
             Map pixel size in degrees.  A tuple will be interpreted
             as parameters for longitude and latitude axes.  For maps
@@ -188,23 +215,26 @@ class WCSGeom(MapGeom):
         proj : string, optional
             Any valid WCS projection type. Default is 'CAR' (cartesian).
         refpix : tuple
-            Reference pixel of the projection.  If None then this will
-            be chosen to be center of the map.
+            Reference pixel of the projection.  If None this will be
+            set to the center of the map.
+        conv : string, optional
+            FITS format convention ('fgst-ccube', 'fgst-template',
+            'gadf').  Default is 'gadf'.
 
         Returns
         -------
-        geom : `~WCSGeom`
+        geom : `~WcsGeom`
             A WCS geometry object.
 
         Examples
         --------
-        >>> from gammapy.maps import WCSGeom
+        >>> from gammapy.maps import WcsGeom
         >>> from gammapy.maps import MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
-        >>> geom = SkyImage.create(npix=(100,100), binsz=0.1)
-        >>> geom = SkyImage.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = SkyImage.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = SkyImage.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
+        >>> geom = WcsGeom.create(npix=(100,100), binsz=0.1)
+        >>> geom = WcsGeom.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = WcsGeom.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
 
         """
         if skydir is None:
@@ -237,43 +267,181 @@ class WCSGeom(MapGeom):
                              binsz[0].flat[0], xref, yref,
                              proj, coordsys, refpix, refpix)
         wcs = WCS(header)
-        return cls(wcs, npix, cdelt=binsz, axes=axes)
+        return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
+
+    @classmethod
+    def from_header(cls, header, hdu_bands=None, conv=None):
+        """Create a WCS geometry object from a FITS header.
+
+        Parameters
+        ----------
+        header : `~astropy.io.fits.Header`
+            The FITS header
+        hdu_bands : `~astropy.fits.BinTableHDU` 
+            The BANDS table HDU.
+        conv : str
+            Override FITS format convention.
+
+        Returns
+        -------
+        wcs : `~WcsGeom`
+            WCS geometry object.
+        """
+        wcs = WCS(header)
+        naxis = wcs.naxis
+        for i in range(naxis - 2):
+            wcs = wcs.dropaxis(2)
+
+        axes = find_and_read_bands(hdu_bands, header)
+        shape = tuple([ax.nbin for ax in axes])
+        conv = 'gadf'
+
+        # Discover FITS convention
+        if hdu_bands is not None:
+            if hdu_bands.name == 'EBOUNDS':
+                conv = 'fgst-ccube'
+            elif hdu_bands.name == 'ENERGIES':
+                conv = 'fgst-template'
+
+        # FIXME: Propagate CRPIX
+
+        if hdu_bands is not None and 'NPIX' in hdu_bands.columns.names:
+            npix = hdu_bands.data.field('NPIX').reshape(shape + (2,))
+            npix = (npix[..., 0], npix[..., 1])
+            cdelt = hdu_bands.data.field('CDELT').reshape(shape + (2,))
+            cdelt = (cdelt[..., 0], cdelt[..., 1])
+            crpix = hdu_bands.data.field('CRPIX').reshape(shape + (2,))
+            crpix = (crpix[..., 0], crpix[..., 1])
+        elif 'WCSSHAPE' in header:
+            wcs_shape = eval(header['WCSSHAPE'])
+            npix = (wcs_shape[0], wcs_shape[1])
+            cdelt = None
+            crpix = None
+        else:
+            npix = (header['NAXIS1'], header['NAXIS2'])
+            cdelt = None
+            crpix = None
+
+        return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
+
+    def make_bands_hdu(self, extname=None, conv=None):
+
+        conv = self._conv if conv is None else conv
+        header = self.make_header(conv)
+        axis_names = None
+
+        # FIXME: Check whether convention is compatible with
+        # dimensionality of geometry
+
+        if conv == 'fgst-ccube':
+            extname = 'EBOUNDS'
+            axis_names = ['energy']
+        elif conv == 'fgst-template':
+            extname = 'ENERGIES'
+            axis_names = ['energy']
+        elif extname is None and conv == 'gadf':
+            extname = 'BANDS'
+
+        cols = make_axes_cols(self.axes, axis_names)
+        if self.npix[0].size > 1:
+            cols += [fits.Column('NPIX', '2I', dim='(2)',
+                                 array=np.vstack((np.ravel(self.npix[0]),
+                                                  np.ravel(self.npix[1]))).T), ]
+            cols += [fits.Column('CDELT', '2E', dim='(2)',
+                                 array=np.vstack((np.ravel(self._cdelt[0]),
+                                                  np.ravel(self._cdelt[1]))).T), ]
+            cols += [fits.Column('CRPIX', '2E', dim='(2)',
+                                 array=np.vstack((np.ravel(self._crpix[0]),
+                                                  np.ravel(self._crpix[1]))).T), ]
+
+        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
+        return hdu
+
+    def make_header(self, conv=None):
+        header = self.wcs.to_header()
+        self._fill_header_from_axes(header)
+        header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
+                                              np.max(self.npix[1]))
+        return header
 
     def distance_to_edge(self, skydir):
         """Angular distance from the given direction and
         the edge of the projection."""
         raise NotImplementedError
 
-    def get_pixels(self):
+    def get_image_shape(self, idx):
+        """Get the shape of the image plane at index ``idx``."""
+
+        if self.npix[0].size > 1:
+            return (int(self.npix[0][idx]), int(self.npix[1][idx]))
+        else:
+            return (int(self.npix[0]), int(self.npix[1]))
+
+    def get_image_wcs(self, idx):
+        raise NotImplementedError
+
+    def get_pixels(self, idx=None, local=False):
+        return pix_tuple_to_idx(self._get_pix_coords(idx=idx,
+                                                     mode='center'))
+
+    def _get_pix_coords(self, idx=None, mode='center'):
+
+        # FIXME: Figure out if there is some way to employ open/sparse
+        # vectors
+
+        npix = copy.deepcopy(self.npix)
+
+        if mode == 'edge':
+            npix[0] += 1
+            npix[1] += 1
 
         if self.axes and self.npix[0].size > 1:
 
-            pix = [np.array([], dtype=int) for i in range(2 + len(self.axes))]
-            for i, t in np.ndenumerate(self.npix[0]):
+            pix = [np.array([], dtype=float)
+                   for i in range(2 + len(self.axes))]
+            for idx_img in np.ndindex(self.shape[::-1]):
 
-                npix = self.npix[0][i] * self.npix[1][i]
-                o = np.unravel_index(np.arange(npix, dtype=int),
-                                     (self.npix[0][i], self.npix[1][i]))
-                pix[0] = np.concatenate((pix[0], o[0]))
-                pix[1] = np.concatenate((pix[1], o[1]))
+                idx_img = idx_img[::-1]
+                if idx is not None and idx_img != idx:
+                    continue
+
+                npix0, npix1 = npix[0][idx_img], npix[1][idx_img]
+                ntot = npix0 * npix1
+                pix_img = np.unravel_index(np.arange(ntot, dtype=int),
+                                           (npix0, npix1), order='F')
+                pix[0] = np.concatenate((pix[0], pix_img[0].astype(float)))
+                pix[1] = np.concatenate((pix[1], pix_img[1].astype(float)))
                 for j in range(len(self.axes)):
                     pix[2 + j] = np.concatenate((pix[2 + j],
-                                                 i[j] * np.ones(npix, dtype=int)))
+                                                 idx_img[j] *
+                                                 np.ones(ntot, dtype=float)))
 
         else:
-            pix = [np.arange(self.npix[0], dtype=int),
-                   np.arange(self.npix[1], dtype=int)]
-            for i, ax in enumerate(self.axes):
-                pix += [np.arange(ax.nbin, dtype=int)]
-            pix = np.meshgrid(*pix, indexing='ij')
+            pix = [np.arange(npix[0], dtype=float),
+                   np.arange(npix[1], dtype=float)]
+
+            if idx is None:
+                pix += [np.arange(ax.nbin, dtype=float) for ax in self.axes]
+            else:
+                pix += list(idx)
+
+            pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
+
+        if mode == 'edges':
+            for i in range(len(pix)):
+                pix[i] -= 0.5
 
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         return tuple([np.ravel(t[m]) for t in pix])
+#        shape = np.broadcast(*coords).shape
+#        m = [np.isfinite(c) for c in coords]
+#        m = np.broadcast_to(np.prod(m),shape)
+#        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
-    def get_coords(self):
+    def get_coords(self, idx=None):
 
-        pix = self.get_pixels()
+        pix = self.get_pixels(idx=idx)
         return self.pix_to_coord(pix)
 
     def coord_to_pix(self, coords):
@@ -317,10 +485,34 @@ class WCSGeom(MapGeom):
         return tuple(coords)
 
     def pix_to_idx(self, pix):
-        return pix_tuple_to_idx(pix)
+        idxs = pix_tuple_to_idx(pix)
+        if self.npix[0].size > 1:
+            ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
+            ibin = pix_tuple_to_idx(ibin)
+            npix = (self.npix[0][ibin], self.npix[1][ibin])
+        else:
+            npix = self.npix
+
+        for i, idx in enumerate(idxs):
+            if i < 2:
+                idxs[i][(idx < 0) | (idx >= npix[i])] = -1
+            else:
+                idxs[i][(idx < 0) | (idx >= self.axes[i - 2].nbin)] = -1
+        return idxs
 
     def contains(self, coords):
         raise NotImplementedError
+
+    def to_image(self):
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+        return self.__class__(self._wcs, npix, cdelt=cdelt)
+
+    def to_cube(self, axes):
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+        axes = copy.deepcopy(self.axes) + axes
+        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes)
 
     def to_slice(self, slices):
         raise NotImplementedError
@@ -540,6 +732,10 @@ def pix_to_skydir(xpix, ypix, wcs):
         return SkyCoord(np.empty(0), np.empty(0), unit='deg', frame='icrs')
 
     return SkyCoord.from_pixel(xpix, ypix, wcs, origin=0).transform_to('icrs')
+
+
+def get_projection(wcs):
+    return wcs.wcs.ctype[0][5:]
 
 
 def get_coordsys(wcs):

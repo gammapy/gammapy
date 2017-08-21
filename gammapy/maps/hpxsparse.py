@@ -72,7 +72,28 @@ class HpxMapSparse(HpxMap):
         idx = ravel_hpx_index(idx, self.hpx.npix)
         self.data[0, idx] = vals
 
+    def iter_by_image(self):
+        raise NotImplementedError
+
+    def iter_by_pix(self):
+        raise NotImplementedError
+
+    def iter_by_coords(self):
+        raise NotImplementedError
+
     def sum_over_axes(self):
+        raise NotImplementedError
+
+    def pad(self, pad_width):
+        raise NotImplementedError
+
+    def crop(self, crop_width):
+        raise NotImplementedError
+
+    def upsample(self, factor):
+        raise NotImplementedError
+
+    def downsample(self, factor):
         raise NotImplementedError
 
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
