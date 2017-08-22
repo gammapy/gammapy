@@ -215,7 +215,7 @@ class CountsSpectrum(object):
         kwargs.setdefault('lw', 2)
         kwargs.setdefault('histtype', 'step')
         weights = self.data.data.value
-        bins = self.energy.bins.to(energy_unit).value[:-1]
+        bins = self.energy.bins.to(energy_unit).value
         x = self.energy.nodes.to(energy_unit).value
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
