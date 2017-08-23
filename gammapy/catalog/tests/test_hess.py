@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
+from ...image import SkyImage
 from ..hess import SourceCatalogHGPS
 
 
@@ -20,6 +22,31 @@ class TestSourceCatalogHGPS:
 
     def test_associations_table(self):
         assert len(self.cat.associations) == 223
+
+    def test_large_scale_component(self):
+        # This test compares the flux values from the LS model within source
+        # regions with ones listed in the catalog, agreement is <1%
+        ls_model = self.cat.large_scale_component
+
+        for name in ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055']:
+            source = self.cat[name]
+            rspec = source.data['RSpec']
+            npix = int(2.5 * rspec.value / 0.02)
+
+            wcs_spec = {'xref': source.position.galactic.l.deg,
+                        'yref': source.position.galactic.b.deg,
+                        'nxpix': npix,
+                        'nypix': npix}
+
+            image = SkyImage.empty(**wcs_spec)
+            coordinates = image.coordinates()
+            image.data = ls_model.evaluate(coordinates)
+            image.data *= image.solid_angle()
+
+            mask = coordinates.separation(source.position) < rspec
+            flux_ls = image.data[mask].sum()
+
+            assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
 
 
 @requires_data('hgps')

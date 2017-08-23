@@ -22,7 +22,7 @@ class TestGaussianBand2D:
     def setup(self):
         table = Table()
         table['GLON'] = [-30, -10, 10, 20] * u.deg
-        table['Flux_Density'] = [0, 1, 10, 0] * u.Unit('cm-2 s-1')
+        table['Surface_Brightness'] = [0, 1, 10, 0] * u.Unit('cm-2 s-1 sr-1')
         table['GLAT'] = [-1, 0, 1, 0] * u.deg
         table['Width'] = [0.4, 0.5, 0.3, 1.0] * u.deg
         self.table = table
@@ -34,13 +34,13 @@ class TestGaussianBand2D:
         x, y = np.meshgrid(x, y)
         coords = SkyCoord(x, y, unit='deg', frame='galactic')
         image = self.model.evaluate(coords)
-        desired = 1.223962643740966 * u.Unit('cm-2 s-1')
+        desired = 1.223962643740966 * u.Unit('cm-2 s-1 sr-1')
         assert_quantity_allclose(image.sum(), desired)
 
     def test_parvals(self):
         glon = Angle(-30, unit='deg')
-        assert_quantity_allclose(self.model.flux(glon), 0 * u.Unit('cm-2 s-1'))
-        assert_quantity_allclose(self.model.peak_glat(glon), -1 * u.deg)
+        assert_quantity_allclose(self.model.peak_brightness(glon), 0 * u.Unit('cm-2 s-1 sr-1'))
+        assert_quantity_allclose(self.model.peak_latitude(glon), -1 * u.deg)
         assert_quantity_allclose(self.model.width(glon), 0.4 * u.deg)
 
 

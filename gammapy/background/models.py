@@ -186,25 +186,25 @@ class GaussianBand2D(object):
         y = self._splines[parname](glon.degree)
         return y * self._units[parname]
 
-    def flux(self, glon):
-        """Flux amplitude at a given longitude.
+    def peak_brightness(self, glon):
+        """Peak brightness at a given longitude.
 
         Parameters
         ----------
         glon : `~astropy.coordinates.Longitude`
             Galactic Longitude.
         """
-        return self._interpolate_parameter('Flux_Density', glon)
+        return self._interpolate_parameter('Surface_Brightness', glon)
 
-    def flux_error(self, glon):
-        """Flux amplitude error at a given longitude.
+    def peak_brightness_error(self, glon):
+        """Peak brightness error at a given longitude.
 
         Parameters
         ----------
         glon : `~astropy.coordinates.Longitude`
             Galactic Longitude.
         """
-        return self._interpolate_parameter('Flux_Density_Err', glon)
+        return self._interpolate_parameter('Surface_Brightness_Err', glon)
 
     def width(self, glon):
         """Width at a given longitude.
@@ -226,7 +226,7 @@ class GaussianBand2D(object):
         """
         return self._interpolate_parameter('Width_Err', glon)
 
-    def peak_glat(self, glon):
+    def peak_latitude(self, glon):
         """Peak position at a given longitude.
 
         Parameters
@@ -236,7 +236,7 @@ class GaussianBand2D(object):
         """
         return self._interpolate_parameter('GLAT', glon)
 
-    def peak_glat_error(self, glon):
+    def peak_latitude_error(self, glon):
         """Peak position error at a given longitude.
 
         Parameters
@@ -256,8 +256,8 @@ class GaussianBand2D(object):
         """
         glon, glat = position.galactic.l, position.galactic.b
         width = self.width(glon)
-        amplitude = self.flux(glon)
-        mean = self.peak_glat(glon)
+        amplitude = self.peak_brightness(glon)
+        mean = self.peak_latitude(glon)
         return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)
 
 

@@ -1098,18 +1098,12 @@ class SkyImage(MapBase):
          [0 0 1 0 0]
          [0 0 0 0 0]]
         """
-        if isinstance(region, PixelRegion):
-            coords = self.coordinates_pix()
-            kwargs = dict()
-        elif isinstance(region, SkyRegion):
-            coords = self.coordinates()
-            kwargs = dict(wcs=self.wcs)
-        else:
-            raise TypeError("Invalid region type, must be instance of "
-                            "'regions.PixelRegion' or 'regions.SkyRegion'")
+        if isinstance(region, SkyRegion):
+            region = region.to_pixel(self.wcs)
 
+        coords = self.coordinates_pix()
         mask = self.copy()
-        mask.data = region.contains(coords, **kwargs)
+        mask.data = region.contains(coords)
         return mask
 
     @staticmethod
