@@ -713,7 +713,9 @@ class SkyImage(MapBase):
             Position and value of the maximum.
         """
         if region:
-            mask = region.contains(self.coordinates(), wcs=self.wcs)
+            region_pix = region.to_pixel(self.wcs)
+            coords_pix = self.coordinates_pix()
+            mask = region_pix.contains(coords_pix)
         else:
             mask = np.ones_like(self.data)
 
