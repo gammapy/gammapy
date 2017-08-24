@@ -38,10 +38,10 @@ class TestGaussianBand2D:
         assert_quantity_allclose(image.sum(), desired)
 
     def test_parvals(self):
-        glon = Angle(-30, unit='deg')
-        assert_quantity_allclose(self.model.peak_brightness(glon), 0 * u.Unit('cm-2 s-1 sr-1'))
-        assert_quantity_allclose(self.model.peak_latitude(glon), -1 * u.deg)
-        assert_quantity_allclose(self.model.width(glon), 0.4 * u.deg)
+        glon = Angle(10, unit='deg')
+        assert_quantity_allclose(self.model.peak_brightness(glon), 10 * u.Unit('cm-2 s-1 sr-1'))
+        assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
+        assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)
 
 
 # TODO: broken code ... clean up!

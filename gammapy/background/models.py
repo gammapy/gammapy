@@ -201,7 +201,7 @@ class GaussianBand2D(object):
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter('Surface_Brightness_Err', glon)
@@ -211,7 +211,7 @@ class GaussianBand2D(object):
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter('Width', glon)
@@ -221,7 +221,7 @@ class GaussianBand2D(object):
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter('Width_Err', glon)
@@ -231,7 +231,7 @@ class GaussianBand2D(object):
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter('GLAT', glon)
@@ -241,7 +241,7 @@ class GaussianBand2D(object):
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter('GLAT_Err', glon)
