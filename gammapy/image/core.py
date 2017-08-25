@@ -259,6 +259,7 @@ class SkyImage(MapBase):
                              proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
+        header.update(meta)
         return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
@@ -290,7 +291,9 @@ class SkyImage(MapBase):
 
         data = fill * np.ones_like(image.data)
 
-        return cls(name, data, wcs, unit, meta=wcs.to_header())
+        header = wcs.to_header()
+        header.update(meta)
+        return cls(name, data, wcs, unit, meta=header)
 
     def fill_events(self, events, weights=None):
         """Fill events (modifies ``data`` attribute).
