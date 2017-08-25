@@ -23,6 +23,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..image.models import Delta2D, Shell2D
+from ..background.models import GaussianBand2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -533,6 +534,14 @@ class SourceCatalogHGPS(SourceCatalog):
         self.components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
         self.associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
         self.identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
+        self._large_scale_component = Table.read(filename, hdu='HGPS_LARGE_SCALE_COMPONENT')
+
+    @property
+    def large_scale_component(self):
+        """Large sclae component model (`~gammapy.background.models.GaussianBand2D`).
+        """
+        table = self._large_scale_component
+        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0))
 
     def _make_source_object(self, index):
         """Make one source object.
