@@ -9,7 +9,7 @@ and then run these commands:
 
 .. code-block:: bash
 
-    conda config --add channels astropy --add channels sherpa
+    conda config --add channels conda-forge --add channels sherpa
     conda install gammapy naima \
         scipy matplotlib ipython-notebook \
         cython click
