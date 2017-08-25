@@ -103,7 +103,7 @@ class SingleObsImageMaker(object):
 
         self.images["bkg"] = bkg_image
 
-    def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
+    def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False, eref=None):
         """Compute the 1D exposure table for one observation for an offset table.
 
         Parameters
@@ -112,7 +112,9 @@ class SingleObsImageMaker(object):
             Assumed power-law spectral index
         for_integral_flux : bool
             True if you want that the total excess / exposure gives the integrated flux
-
+        eref: `~gammapy.utils.energy.Energy`
+            Reference energy at which you want to compute the exposure. Default is the log center of the energy band of
+             the image.
         Returns
         -------
         table : `astropy.table.Table`
@@ -122,7 +124,8 @@ class SingleObsImageMaker(object):
                                                 self.energy_band.unit)
         energy_band = energy.bands
         energy_bin = energy.log_centers
-        eref = EnergyBounds(self.energy_band).log_centers
+        if not eref:
+            eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
         offset = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         arf = self.aeff.data.evaluate(offset=offset, energy=energy_bin).T
