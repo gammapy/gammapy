@@ -50,6 +50,20 @@ class HGPSGaussComponent(object):
     def __init__(self, data):
         self.data = OrderedDict(data)
 
+    def __str__(self):
+        """Pretty-print source data"""
+        d = self.data
+        ss = 'Component {}:\n'.format(d['Component_ID'])
+        fmt = '{:<20s} : {:8.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('GLON', d['GLON'].value, d['GLON_Err'].value)
+        ss += fmt.format('GLAT', d['GLAT'].value, d['GLAT_Err'].value)
+        fmt = '{:<20s} : {:.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('Size', d['Size'].value, d['Size_Err'].value)
+        val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
+        fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
+        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        return ss
+
     @property
     def name(self):
         """Source name"""
@@ -80,20 +94,6 @@ class HGPSGaussComponent(object):
         pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
         return Gaussian2D(**pars)
 
-    def __str__(self):
-        """Pretty-print source data"""
-        d = self.data
-        ss = 'Component {}:\n'.format(d['Component_ID'])
-        fmt = '{:<20s} : {:8.3f} +/- {:.3f} deg\n'
-        ss += fmt.format('GLON', d['GLON'].value, d['GLON_Err'].value)
-        ss += fmt.format('GLAT', d['GLAT'].value, d['GLAT_Err'].value)
-        fmt = '{:<20s} : {:.3f} +/- {:.3f} deg\n'
-        ss += fmt.format('Size', d['Size'].value, d['Size_Err'].value)
-        val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
-        fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
-        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
-        return ss
-
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog."""
@@ -102,18 +102,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def energy_range(self):
         return u.Quantity([self.data['Energy_Range_Spec_Lo'], self.data['Energy_Range_Spec_Hi']])
 
+    def __str__(self):
+        return self.info()
+
     def info(self, info='all'):
-        """Print info.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations'}
-            Comma separated list of options
-        """
-        ss = self.__str__(info=info)
-        print(ss)
-
-    def __str__(self, info='all'):
         """Info string.
 
         Parameters
@@ -368,9 +360,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n\n'.format('Spatial components', self.data['Components'])
 
         for component in self.components:
-            # Call __str__ directly to
-            ss += component.__str__()
+            ss += str(component)
             ss += '\n\n'
+
         return ss
 
     @property

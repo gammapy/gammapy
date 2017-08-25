@@ -54,18 +54,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     _source_name_key = 'common_name'
     _source_index_key = 'catalog_row_index'
 
+    def __str__(self):
+        return self.info()
+
     def info(self, info='all'):
-        """Print info.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'position', 'model'}
-            Comma separated list of options
-        """
-        ss = self.__str__(info=info)
-        print(ss)
-
-    def __str__(self, info='all'):
         """Info string.
 
         Parameters
@@ -87,6 +79,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += self._info_morph()
             ss += self._info_spectral_fit()
             ss += self._info_spectral_points()
+
         return ss
 
     def _info_basic(self):
@@ -95,6 +88,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss = '\n*** Basic info ***\n\n'
         ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
         ss += '{:<15s} : {}\n'.format('Common name', d['common_name'])
+
         # ss += '{:<15s} : {}\n'.format('Gamma names', d['gamma_names'])
         # ss += '{:<15s} : {}\n'.format('Fermi names', d['fermi_names'])
         # ss += '{:<15s} : {}\n'.format('Other names', d['other_names'])
@@ -266,7 +260,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         unit = 'erg cm-2 s-1'
         fmt = '{:<30s} : {:.3} +- {:.3} {} (statistical)\n'
-        args = ('Integrated flux (1-10 TeV)', d['spec_eflux_1TeV_10TeV'].value, d['spec_eflux_1TeV_10TeV_err'].value, unit)
+        args = (
+        'Integrated flux (1-10 TeV)', d['spec_eflux_1TeV_10TeV'].value, d['spec_eflux_1TeV_10TeV_err'].value, unit)
         ss += fmt.format(*args)
 
         return ss
