@@ -66,18 +66,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     be consistent with previous catalogs.
     """
 
+    def __str__(self):
+        return self.info()
+
     def info(self, info='all'):
-        """Print info.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
-            Comma separated list of options
-        """
-        ss = self.__str__(info=info)
-        print(ss)
-
-    def __str__(self, info='all'):
         """Summary info string.
 
         Parameters
@@ -455,6 +447,9 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
     """Energy range of the Fermi 1FHL source catalog"""
 
     def __str__(self):
+        return self.info()
+
+    def info(self):
         """Print summary info."""
         # TODO: can we share code with 3FGL summary function?
         d = self.data
@@ -528,6 +523,9 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     """Energy range of the Fermi 2FHL source catalog"""
 
     def __str__(self):
+        return self.info()
+
+    def info(self):
         """Print summary info."""
         # TODO: can we share code with 3FGL summary funtion?
         d = self.data
@@ -602,18 +600,10 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], 'GeV')
 
+    def __str__(self):
+        return self.info()
+
     def info(self, info='all'):
-        """Print info.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'position', 'spectral'}
-            Comma separated list of options
-        """
-        ss = self.__str__(info=info)
-        print(ss)
-
-    def __str__(self, info='all'):
         """Summary info string.
 
         Parameters
