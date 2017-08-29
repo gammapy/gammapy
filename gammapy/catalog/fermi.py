@@ -894,6 +894,14 @@ class SourceCatalog3FGL(SourceCatalog):
     name = '3fgl'
     description = 'LAT 4-year point source catalog'
     source_object_class = SourceCatalogObject3FGL
+    source_classes = {'galactic': ['psr', 'pwn', 'snr', 'spp',  'glc'],
+                      'extra-galactic': ['css', 'bll', 'fsrq', 'agn', 'nlsy1',
+                                         'rdg', 'sey', 'bcu', 'gal', 'sbg', 'ssrq'],
+                      'GALACTIC': ['PSR', 'PWN',  'SNR', 'HMB', 'BIN', 'NOV', 'SFR'],
+                      'EXTRA-GALACTIC': ['CSS', 'BLL', 'FSRQ', 'AGN', 'NLSY1',
+                                         'RDG', 'SEY', 'BCU', 'GAL', 'SBG', 'SSRQ']
+                      }
+
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
         filename = str(make_path(filename))
@@ -913,6 +921,57 @@ class SourceCatalog3FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu='ExtendedSources')
+
+
+    def select_source_class(self, source_class):
+        """
+        Select all sources of a given source class.
+
+        The classes are described in Table 3 of the 3FGL paper:
+
+        http://adsabs.harvard.edu/abs/2015arXiv150102003T
+
+        There are a few extra selections available:
+
+        - `'ALL'`: all identified objects
+        - `'all'`: all objects with associations
+        - `'galactic'`: all sources with an associated galactic object
+        - `'GALACTIC'`: all identified galactic sources
+        - `'extra-galactic'`: all sources with an associated extra-galactic object
+        - `'EXTRA-GALACTIC'`: all identified extra-galactic sources
+        - `'unassociated'`: all unassociated objects
+
+        Parameters
+        ----------
+        source_class : str
+            Source class designator.
+        """
+        catalog = self.copy()
+        source_class_column = np.char.strip(catalog.table['CLASS1'])
+
+        source_classes_id = list(self.source_classes['EXTRA-GALACTIC']
+                               + self.source_classes['GALACTIC'])
+        source_classes_assoc = list(self.source_classes['extra-galactic']
+                                  + self.source_classes['galactic'])
+
+        source_classes_all = source_classes_id + source_classes_assoc
+
+        if source_class in self.source_classes:
+            selection = np.in1d(source_class_column, self.source_classes[source_class])
+        elif source_class == 'ALL':
+            selection = np.in1d(source_class_column, source_classes_id)
+        elif source_class == 'all':
+            selection = np.in1d(source_class_column, source_classes_assoc)
+        elif source_class == 'unassociated':
+            selection = (source_class_column == '')
+        elif source_class in source_classes_all:
+            selection = (source_class_column == source_class)
+        else:
+            raise ValueError("'{}' ist not a valid source class.".format(source_class))
+
+        catalog.table = catalog.table[selection]
+        return catalog
+
 
 
 class SourceCatalog1FHL(SourceCatalog):
@@ -979,6 +1038,11 @@ class SourceCatalog3FHL(SourceCatalog):
     name = '3fhl'
     description = 'LAT third high-energy source catalog'
     source_object_class = SourceCatalogObject3FHL
+    source_classes = {'galactic': ['glc', 'hmb', 'psr', 'pwn',  'sfr', 'snr', 'spp'],
+                      'extra-galactic': ['agn', 'bcu', 'bll', 'fsrq', 'rdg', 'sbg'],
+                      'GALACTIC': ['BIN', 'HMB',  'PSR', 'PWN', 'SFR', 'SNR'],
+                      'EXTRA-GALACTIC': ['BLL', 'FSRQ', 'NLSY1', 'RDG']
+                      }
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'):
         filename = str(make_path(filename))
@@ -998,3 +1062,53 @@ class SourceCatalog3FHL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu='ExtendedSources')
         self.rois = Table.read(filename, hdu='ROIs')
         self.energy_bounds_table = Table.read(filename, hdu='EnergyBounds')
+
+    def select_source_class(self, source_class):
+        """
+        Select all sources of a given source class.
+
+        The classes are described in Table 2 of the 3FHL paper:
+
+        http://adsabs.harvard.edu/abs/2017arXiv170200664T
+
+        There are a few extra selections available:
+
+        - `'all'`: all objects with associations
+        - `'ALL'`: all identified objects
+        - `'galactic'`: all sources with an associated galactic object
+        - `'GALACTIC'`: all identified galactic sources
+        - `'extra-galactic'`: all sources with an associated extra-galactic object
+        - `'EXTRA-GALACTIC'`: all identified extra-galactic sources
+        - `'unassociated'`: all unassociated objects
+
+        Parameters
+        ----------
+        source_class : str
+            Source class designator.
+        """
+        catalog = self.copy()
+        source_class_column = np.char.strip(catalog.table['CLASS'])
+
+        source_classes_id = list(self.source_classes['EXTRA-GALACTIC']
+                               + self.source_classes['GALACTIC'])
+        source_classes_assoc = list(self.source_classes['extra-galactic']
+                                  + self.source_classes['galactic'])
+        source_classes_all = source_classes_id + source_classes_assoc
+
+        if source_class in self.source_classes:
+            selection = np.in1d(source_class_column, self.source_classes[source_class])
+        elif source_class == 'ALL':
+            selection = np.in1d(source_class_column, source_classes_id)
+        elif source_class == 'all':
+            selection = np.in1d(source_class_column, source_classes_assoc)
+        elif source_class == 'unassociated':
+            selection = (source_class_column == '')
+        elif source_class in source_classes_all:
+            selection = (source_class_column == source_class)
+        elif source_class == 'unknown':
+            selection = (source_class_column == 'unknown')
+        else:
+            raise ValueError("'{}' ist not a valid source class.".format(source_class))
+
+        catalog.table = catalog.table[selection]
+        return catalog
