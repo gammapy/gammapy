@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-HAWC catalogs (https://www.hawc-observatory.org)
-"""
-
-from .core import SourceCatalog, SourceCatalogObject
-from ..utils.scripts import make_path
+"""HAWC catalogs (https://www.hawc-observatory.org)."""
+import numpy as np
 from astropy.table import Table
 import astropy.units as u
-import numpy as np
+from ..utils.scripts import make_path
 from ..spectrum.models import PowerLaw
+from .core import SourceCatalog, SourceCatalogObject
 
 
 class SourceCatalogObject2HWC(SourceCatalogObject):
@@ -28,7 +25,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'spectrum}
+        info : {'all', 'basic', 'position', 'spectrum'}
             Comma separated list of options
         """
 
@@ -80,28 +77,27 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args2)
         ss += '{:20s} : {:1}\n\n'.format('Test radius', d['spec0_radius'])
 
-        if(np.isnan(d['spec1_dnde'])):
-            ss += 'No second spectrum available for this source'
-        else:
+        if self.n_spectra == 2:
             ss += 'Spectrum 2:\n'
             args3 = 'Flux at 7 TeV', d['spec1_dnde'].value, d['spec1_dnde_err'].value, 'cm-2 s-1 TeV-1'
             ss += '{:20s} : {:.3} +- {:.3} {}\n'.format(*args3)
             args4 = 'Spectral index', d['spec1_index'], d['spec1_index_err']
             ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args4)
             ss += '{:20s} : {:1}'.format('Test radius', d['spec1_radius'])
+        else:
+            ss += 'No second spectrum available for this source'
 
         return ss
 
     @property
     def n_spectra(self):
         """Number of measured spectra (1 or 2)."""
-
         return 1 if np.isnan(self.data['spec1_dnde']) else 2
 
-    def _get_spec_pars(self, id):
+    def _get_spectral_model(self, idx_model):
         pars, errs = {}, {}
         data = self.data
-        label = 'spec{}_'.format(id)
+        label = 'spec{}_'.format(idx_model)
 
         pars['amplitude'] = data[label + 'dnde']
         errs['amplitude'] = data[label + 'dnde_err']
@@ -109,30 +105,32 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         errs['index'] = data[label + 'index_err'] * u.Unit('')
         pars['reference'] = 7 * u.TeV
 
-        return [pars, errs]
+        model = PowerLaw(**pars)
+        model.parameters.set_parameter_errors(errs)
 
-    def spectral_model(self):
-        """Returns a list of `~gammapy.spectrum.models.SpectralModel`
-        objects. Either with one or with two entries depending on the
-        source in the catalog.
+        return model
+
+    @property
+    def spectral_models(self):
+        """Spectral models (either one or two).
+
+        The HAWC catalog has one or two spectral measurements for each source.
+
+        Returns
+        -------
+        models : list
+            List of `~gammapy.spectrum.models.SpectralModel`
         """
+        models = [self._get_spectral_model(0)]
 
-        models = []
-
-        model1 = PowerLaw(**(self._get_spec_pars(0)[0]))
-        model1.parameters.set_parameter_errors(self._get_spec_pars(0)[1])
-        models = [model1]
-
-        if(self.n_spectra == 2):
-            model2 = PowerLaw(**(self._get_spec_pars(1)[0]))
-            model2.parameters.set_parameter_errors(self._get_spec_pars(1)[1])
-            models.append(model2)
+        if self.n_spectra == 2:
+            models.append(self._get_spectral_model(1))
 
         return models
 
 
 class SourceCatalog2HWC(SourceCatalog):
-    """ HAWC 2FHL catalog
+    """HAWC 2FHL catalog.
 
     One source is represented by `~gammapy.catalog.SourceCatalogObjectGammaCat`
 
@@ -141,9 +139,8 @@ class SourceCatalog2HWC(SourceCatalog):
     References
     -----------
     .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-     `Link <https://arxiv.org/abs/1702.02992>_
+           `Link <https://arxiv.org/abs/1702.02992>_
     """
-
     name = '2hwc'
     description = 'Second HWC FHL catalog from the HAWC observatory'
     source_object_class = SourceCatalogObject2HWC
@@ -156,4 +153,5 @@ class SourceCatalog2HWC(SourceCatalog):
 
         super(SourceCatalog2HWC, self).__init__(
             table=table,
-            source_name_key=source_name_key)
+            source_name_key=source_name_key,
+        )
