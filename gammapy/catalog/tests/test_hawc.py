@@ -5,6 +5,9 @@ import astropy.units as u
 from ...utils.testing import requires_data, requires_dependency
 from ..hawc import SourceCatalog2HWC
 
+# 2HWC catalog is in ECSV format, which requires yaml to read the header
+pytest.importorskip('yaml')
+
 
 @pytest.fixture(scope='session')
 def hawc_2hwc():
@@ -20,7 +23,6 @@ class TestSourceCatalog2HWC:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObject2HWC:
-
     def test_data(self, hawc_2hwc):
         source = hawc_2hwc[0]
         assert source.data['source_name'] == '2HWC J0534+220'
@@ -35,7 +37,6 @@ class TestSourceCatalogObject2HWC:
         assert 'Spectrum 1:' in str(source)
 
     @requires_dependency('uncertainties')
-    @requires_dependency('yaml')
     def test_spectral_models_one(self, hawc_2hwc):
         source = hawc_2hwc[0]
         assert source.n_spectra == 1
@@ -51,7 +52,6 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(flux_err.value, 1.671177271712936e-14)
 
     @requires_dependency('uncertainties')
-    @requires_dependency('yaml')
     def test_spectral_models_two(self, hawc_2hwc):
         # This test is just to check that sources with 2 spectra also work OK.
         source = hawc_2hwc[1]
