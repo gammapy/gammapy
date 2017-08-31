@@ -27,6 +27,7 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Brigitta Sipocz
 - Christoph Deil
 - Johannes King
+- Peter Deiml (new)
 - Roberta Zanin (new)
 - Rubén López-Coto (new)
 
@@ -37,6 +38,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1108] Add HAWC 2HWC catalog (Peter Deiml)
 - [#1040] Add combined 3D model and simple npred function (Christoph Deil)
 - [#1038] Remove gammapy.utils.mpl_style (Christoph Deil)
 - [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
