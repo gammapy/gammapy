@@ -7,9 +7,14 @@ from ..utils.scripts import make_path
 from ..spectrum.models import PowerLaw
 from .core import SourceCatalog, SourceCatalogObject
 
+__all__ = [
+    'SourceCatalog2HWC',
+    'SourceCatalogObject2HWC',
+]
+
 
 class SourceCatalogObject2HWC(SourceCatalogObject):
-    """One source from the HAWC 2FHL catalog.
+    """One source from the HAWC 2HWC catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
     """
@@ -56,7 +61,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Print position info."""
         d = self.data
         ss = '\n*** Position info ***\n\n'
-        ss += 'Measurement:\n'
         ss += '{:20s} : {:.3f}\n'.format('RA', d['ra'])
         ss += '{:20s} : {:.3f}\n'.format('DEC', d['dec'])
         ss += '{:20s} : {:.3f}\n'.format('GLON', d['glon'])
@@ -65,25 +69,25 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return ss
 
+    @staticmethod
+    def _info_spectrum_one(d, idx):
+        label = 'spec{}_'.format(idx)
+        ss = 'Spectrum {}:\n'.format(idx)
+        args = 'Flux at 7 TeV', d[label + 'dnde'].value, d[label + 'dnde_err'].value, 'cm-2 s-1 TeV-1'
+        ss += '{:20s} : {:.3} +- {:.3} {}\n'.format(*args)
+        args = 'Spectral index', d[label + 'index'], d[label + 'index_err']
+        ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args)
+        ss += '{:20s} : {:1}\n\n'.format('Test radius', d[label + 'radius'])
+        return ss
+
     def _info_spectrum(self):
         """Print spectral info."""
         d = self.data
         ss = '\n*** Spectral info ***\n\n'
-
-        ss += 'Spectrum 1:\n'
-        args1 = 'Flux at 7 TeV', d['spec0_dnde'].value, d['spec0_dnde_err'].value, 'cm-2 s-1 TeV-1'
-        ss += '{:20s} : {:.3} +- {:.3} {}\n'.format(*args1)
-        args2 = 'Spectral index', d['spec0_index'], d['spec0_index_err']
-        ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args2)
-        ss += '{:20s} : {:1}\n\n'.format('Test radius', d['spec0_radius'])
+        ss += self._info_spectrum_one(d, 0)
 
         if self.n_spectra == 2:
-            ss += 'Spectrum 2:\n'
-            args3 = 'Flux at 7 TeV', d['spec1_dnde'].value, d['spec1_dnde_err'].value, 'cm-2 s-1 TeV-1'
-            ss += '{:20s} : {:.3} +- {:.3} {}\n'.format(*args3)
-            args4 = 'Spectral index', d['spec1_index'], d['spec1_index_err']
-            ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args4)
-            ss += '{:20s} : {:1}'.format('Test radius', d['spec1_radius'])
+            ss += self._info_spectrum_one(d, 1)
         else:
             ss += 'No second spectrum available for this source'
 
@@ -94,10 +98,10 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Number of measured spectra (1 or 2)."""
         return 1 if np.isnan(self.data['spec1_dnde']) else 2
 
-    def _get_spectral_model(self, idx_model):
+    def _get_spectral_model(self, idx):
         pars, errs = {}, {}
         data = self.data
-        label = 'spec{}_'.format(idx_model)
+        label = 'spec{}_'.format(idx)
 
         pars['amplitude'] = data[label + 'dnde']
         errs['amplitude'] = data[label + 'dnde_err']
@@ -130,19 +134,28 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
 
 class SourceCatalog2HWC(SourceCatalog):
-    """HAWC 2FHL catalog.
+    """HAWC 2HWC catalog.
 
-    One source is represented by `~gammapy.catalog.SourceCatalogObjectGammaCat`
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2HWC`.
 
-    See: http://adsabs.harvard.edu/abs/2017ApJ...843...40A
+    The data is from tables 2 and 3 in the paper [1]_.
+
+    The catalog table contains 40 rows / sources.
+    The paper mentions 39 sources e.g. in the abstract.
+    The difference is due to Geminga, which was detected as two "sources" by the algorithm
+    used to make the catalog, but then in the discussion considered as one source.
 
     References
     -----------
     .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-           `Link <https://arxiv.org/abs/1702.02992>_
+       On ADS: `2017ApJ...843...40A <http://adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
     """
     name = '2hwc'
-    description = 'Second HWC FHL catalog from the HAWC observatory'
+    """Catalog name"""
+
+    description = '2HWC catalog from the HAWC observatory'
+    """Catalog description"""
+
     source_object_class = SourceCatalogObject2HWC
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/2HWC.ecsv'):
