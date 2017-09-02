@@ -70,7 +70,7 @@ TEST_CASES = [
 ]
 
 @pytest.mark.parametrize('test_case', TEST_CASES)
-def test_lomb_scargle(test_case):
+def test_robust_periodogram(test_case):
     test_data = simulate_test_data(
         test_case['period'], test_case['amplitude'], test_case['t_length'],
         test_case['n_data'], test_case['n_observations'], test_case['n_outliers'],
@@ -81,4 +81,3 @@ def test_lomb_scargle(test_case):
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
     assert_allclose(result['period'], test_case['period'], atol=test_case['dt'],)
-
