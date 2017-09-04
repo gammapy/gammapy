@@ -20,7 +20,7 @@ def plot_periodogram(time, flux, flux_error, periods, psd_data, psd_win, best_pe
         Time array of the light curve
     flux : `~numpy.ndarray`
         Flux array of the light curve
-    flux_err : `~numpy.ndarray`
+    flux_error : `~numpy.ndarray`
         Flux error array of the light curve
     periods : `~numpy.ndarray`
         Periods for the periodogram
@@ -29,7 +29,8 @@ def plot_periodogram(time, flux, flux_error, periods, psd_data, psd_win, best_pe
     best_period : `float`
         Highest period of the periodogram
     significance : `float` or `~numpy.ndarray`
-        Significance of ``best_period`` under the specified significance criterion. If the significance criterion is not defined, the maximum significance of all significance criteria is used
+        Significance of ``best_period`` under the specified significance criterion.
+        If the significance criterion is not defined, the maximum significance of all significance criteria is used
     psd_win : Periodogram peaks of the window function
 
     Returns

@@ -1,3 +1,4 @@
+# coding=utf-8
 from collections import OrderedDict
 import numpy as np
 from scipy.optimize import least_squares
@@ -46,7 +47,7 @@ def _window_function(time, dt):
     t_max = np.max(time_win)
     t_min = np.min(time_win)
     window_grid = np.arange(t_min, t_max+dt, dt)
-    window_grid = np.rint(window_grid / dt) * dt # round again since np.arange is not robust
+    window_grid = np.rint(window_grid / dt) * dt  # round again since np.arange is not robust
     window = np.zeros(len(window_grid))
     window[np.searchsorted(window_grid, time_win, side='right')-1] = 1
 
@@ -63,14 +64,16 @@ def _bootstrap(time, flux, flux_error, periods, n_bootstraps, loss, scale):
     max_periods = np.empty(n_bootstraps)
     beta0 = np.array([0, 1, 0])
     mu = np.median(flux)
-    X = np.ones([len(time), len(beta0)])
+    x = np.ones([len(time), len(beta0)])
     chi_model = np.empty([len(periods)])
     chi_noise = np.empty([len(periods)])
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
         for i in range(len(periods)):
-            chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale, args=(X, periods[i], time, flux, flux_err)).cost
-            chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale, args=(time, flux, flux_err)).cost
+            chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
+                                         args=(x, periods[i], time, flux[ind], flux_error[ind])).cost
+            chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
+                                         args=(time, flux[ind], flux_error[ind])).cost
         psd_boot = 1 - chi_model / chi_noise
         max_periods[idx_run] = np.max(psd_boot)
 
@@ -158,16 +161,16 @@ def _significance_all(time, flux, flux_error, periods, psd, psd_best_period, n_b
     significance = np.empty([4])
     significance[0] = _significance_pre(time, periods, psd_best_period)
     significance[1] = _significance_nll(time, periods, psd, psd_best_period)
-    significance[2] = _significance_cvm(time, periods, psd, psd_best_period)
+    significance[2] = _significance_cvm(periods, psd, psd_best_period)
     significance[3] = _significance_boot(time, flux, flux_error, periods, psd_best_period, n_bootstraps, loss, scale)
 
     return significance
 
 
-def _full_model(beta0, X, period, t, y, dy):
-    X[:,1] = np.cos(2 * np.pi * t / period)
-    X[:,2] = np.sin(2 * np.pi * t / period)
-    return (y - np.dot(X, beta0.T)) / dy
+def _full_model(beta0, x, period, t, y, dy):
+    x[:, 1] = np.cos(2 * np.pi * t / period)
+    x[:, 2] = np.sin(2 * np.pi * t / period)
+    return (y - np.dot(x, beta0.T)) / dy
 
 
 def _location_model(mu, t, y, dy):
@@ -179,10 +182,12 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     Compute period and significance of a light curve using robust regression techniques to fit a single harmonic model .
 
     To compute the power spectral density, the scipy object `~scipy.optimize.least_squares` is called.
-    For eyesight inspection, the spectral window function is also returned to evaluate the impcat of sampling on the periodogram.
+    For eyesight inspection, the spectral window function is also returned to evaluate
+    the impact of sampling on the periodogram.
     The significance cirteria are both, parametric and non-parametric.
 
-    For an introduction to robust regression techniques and loss functions provided by scipy, see Nikolay Mayorov (2015).
+    For an introduction to robust regression techniques
+    and loss functions provided by scipy, see Nikolay Mayorov (2015).
 
     The function returns a results dictionary with the following content:
 
@@ -217,7 +222,8 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
         - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
         - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. (2016))
         - ``nll`` for negative logarithmic likelihood minimisation
-        - ``boot`` for bootstrap-resampling (see Süveges (2012) and `astroML.time_series.lomb_scargle_bootstrap <http://www.astroml.org/modules/generated/astroML.time_series.lomb_scargle_bootstrap.html>`_)
+        - ``boot`` for bootstrap-resampling (see Süveges (2012) and
+        `astroML.time_series.lomb_scargle_bootstrap <http://www.astroml.org/modules/generated/astroML.time_series.lomb_scargle_bootstrap.html>`_)
     
     n_bootstraps : `float`
         Number of bootstraps resampling
@@ -244,15 +250,17 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     # set up model for robust regression
     beta0 = np.array([0, 1, 0])
     mu = np.median(flux)
-    X = np.ones([len(time), len(beta0)])
+    x = np.ones([len(time), len(beta0)])
     chi_model = np.empty([len(periods)])
     chi_noise = np.empty([len(periods)])
 
     # perform robust regression on light curve
     print(loss)
     for i in range(len(periods)):
-        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale, args=(X, periods[i], time, flux, flux_err)).cost
-        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale, args=(time, flux, flux_err)).cost
+        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
+                                     args=(x, periods[i], time, flux, flux_err)).cost
+        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
+                                     args=(time, flux, flux_err)).cost
     psd_data = 1 - chi_model / chi_noise
 
     # find period with highest periodogram peak
@@ -268,17 +276,21 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     if 'pre' in criteria:
         significance['pre'] = _significance_pre(time, periods, psd_best_period)
     if 'cvm' in criteria:
-        significance['cvm'] =  _significance_cvm(periods, psd_data, psd_best_period)
+        significance['cvm'] = _significance_cvm(periods, psd_data, psd_best_period)
     if 'nll' in criteria:
         significance['nll'] = _significance_nll(time, periods, psd_data, psd_best_period)
     if 'boot' in criteria:
-        significance['boot'] =  _significance_boot(time, flux, flux_err, periods, psd_best_period, n_bootstraps, loss, scale)
+        significance['boot'] = _significance_boot(time, flux, flux_err, periods, psd_best_period,
+                                                  n_bootstraps, loss, scale)
 
     # spectral window function
     time_win, window = _window_function(time, dt)
+    x = np.ones([len(time_win), len(beta0)])
     for i in range(len(periods)):
-        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale, args=(X, periods[i], time_win, window, 1)).cost
-        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale, args=(time_win, window, 1)).cost
+        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
+                                     args=(x, periods[i], time_win, window, 1)).cost
+        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
+                                     args=(time_win, window, 1)).cost
     psd_win = 1 - chi_model / chi_noise
 
     return OrderedDict([
@@ -288,4 +300,3 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
         ('significance', significance),
         ('swf', psd_win),
     ])
-

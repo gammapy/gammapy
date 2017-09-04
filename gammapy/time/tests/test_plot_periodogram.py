@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..lomb_scargle import lomb_scargle
+from ..robust_periodogram import robust_periodogram
 from ..plot_periodogram import plot_periodogram
+
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     """
@@ -10,7 +11,8 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     As underlying model, a single harmonic is used.
     First, an evenly sampled test data set is generated.
     It the is distorted by randomly chosing data points.
-    Outliers are simulated as exponential burst with ten times the amplitude decreasing with a characterisitc time length of 1.
+    Outliers are simulated as exponential burst with ten times the amplitude,
+    decreasing with a characterisitc time length of 1.
     Flux errors are assumed to be gaussian and homoscedastic.
 
     It returns arrays for time, flux and flux error and the resolution of the test data.
@@ -62,22 +64,23 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 
 TEST_CASES = [
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 2, n_outliers = 0, dt = 0.1,
-         max_period = 10, criteria = 'boot', n_bootstraps = 100),
+         n_observations = 1000 / 2, n_outliers = 0, dt = 1,
+         max_period = 10, loss = 'linear', scale = 1, criteria = 'None', n_bootstraps = 100),
     dict(period = 7, amplitude = 2, t_length = 100, n_data = 1000,
-         n_observations = 1000 / 2, n_outliers = 0, dt = 0.1,
-         max_period = 'None', criteria = 'None', n_bootstraps = 'None'),
+         n_observations = 1000 / 2, n_outliers = 10, dt = 1,
+         max_period = 10, loss = 'cauchy', scale = 1, criteria = 'None', n_bootstraps = 100),
 ]
 
 
 @pytest.mark.parametrize('test_case', TEST_CASES)
-def test_lomb_scargle_plot(test_case):
+def test_robust_periodogram_plot(test_case):
     test_data = simulate_test_data(
         test_case['period'], test_case['amplitude'], test_case['t_length'],
         test_case['n_data'], test_case['n_observations'], test_case['n_outliers']
     )
-    result = lomb_scargle(
+    result = robust_periodogram(
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'], 
+        test_case['loss'], test_case['scale'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
     plot_periodogram(
