@@ -450,7 +450,20 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         elif spatial_model in ['Gaussian', '2-Gaussian', '3-Gaussian']:
             amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
-            models = [component.spatial_model for component in self.components]
+            try:
+                models = [component.spatial_model for component in self.components]
+            except AttributeError:
+                amplitude = d['Flux_Map'].to('cm-2 s-1').value
+                pars = {}
+                glon = Angle(d['GLON']).wrap_at('180d')
+                glat = Angle(d['GLAT']).wrap_at('180d')
+
+                pars['x_mean'] = glon.value
+                pars['y_mean'] = glat.value
+                pars['x_stddev'] = d['Size'].to('deg').value
+                pars['y_stddev'] = d['Size'].to('deg').value
+                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
+                return Gaussian2D(**pars)
 
             for model in models:
                 # weight total flux according to relative amplitude
