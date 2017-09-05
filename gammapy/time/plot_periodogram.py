@@ -61,8 +61,8 @@ def plot_periodogram(time, flux, flux_error, periods, psd_data, psd_win, best_pe
                         list(significance.values()))))
     ax2.set(  # xlabel=r'\textbf{period} (d)'
         ylabel=r'\textbf{power}',
-        xlim=(0, np.max(periods)),
-        ylim=(0, 1),
+        xlim=(0, np.max(periods))  # ,
+        # ylim=(0, 1),
     )
     ax2.legend(loc='upper right')
     # plot the spectral window function
@@ -71,4 +71,6 @@ def plot_periodogram(time, flux, flux_error, periods, psd_data, psd_win, best_pe
             ylabel=r'\textbf{power}',
             xlim=(0, np.max(periods)),
             )
-    plt.savefig('example', bbox_inches='tight')
+
+    plt.show()
+    # plt.savefig('example', bbox_inches='tight')

@@ -62,6 +62,7 @@ def _bootstrap(time, flux, flux_error, periods, n_bootstraps, loss, scale):
     if n_bootstraps == 'None':
         n_bootstraps = 100    
     max_periods = np.empty(n_bootstraps)
+    second_max_periods = np.empty(n_bootstraps)
     beta0 = np.array([0, 1, 0])
     mu = np.median(flux)
     x = np.ones([len(time), len(beta0)])
@@ -76,14 +77,17 @@ def _bootstrap(time, flux, flux_error, periods, n_bootstraps, loss, scale):
                                          args=(time, flux[ind], flux_error[ind])).cost
         psd_boot = 1 - chi_model / chi_noise
         max_periods[idx_run] = np.max(psd_boot)
+        second_max_periods[idx_run] = np.sort(psd_boot.flatten())[-2]
 
-    return max_periods
+    return max_periods, second_max_periods
 
 
 def _freq_grid(time, dt, max_period):
     """
     Generates the frequency grid for the periodogram
     """
+    if dt == 'None':
+        dt = (np.max(time) - np.min(time)) / (2 * len(time))
     if max_period == 'None':
         max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
     else:
@@ -95,7 +99,7 @@ def _freq_grid(time, dt, max_period):
     return grid, periods
 
 
-def _significance_pre(time, periods, psd_best_period):
+def _significance_pre(time, periods, psd, psd_best_period):
     """
     Computes significance for the pre-defined beta distribution
     """
@@ -103,6 +107,10 @@ def _significance_pre(time, periods, psd_best_period):
     a = (3-1)/2
     b = (len(time)-3)/2
     significance = 100 * beta.cdf(psd_best_period, a, b)**len(periods)
+    print('pre')
+    print(significance)
+    print(beta.ppf(0.95 ** (1. / len(periods)), a, b))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], a, b)**len(periods))
 
     return significance
 
@@ -125,6 +133,10 @@ def _significance_cvm(periods, psd, psd_best_period):
         theta_2 = clip
     cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
     significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1])**len(periods)
+    print('cvm')
+    print(significance)
+    print(beta.ppf(0.95 ** (1. / len(periods)), cvm_minimize[0], cvm_minimize[1]))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], cvm_minimize[0], cvm_minimize[1])**len(periods))
 
     return significance
 
@@ -139,6 +151,10 @@ def _significance_nll(time, periods, psd, psd_best_period):
     b = (len(time)-3)/2
     nll_minimize = optimize.fmin(_nll, [a, b], args=(psd,))
     significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1])**len(periods)
+    print('nll')
+    print(significance)
+    print(beta.ppf(0.95**(1./len(periods)), nll_minimize[0], nll_minimize[1]))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], nll_minimize[0], nll_minimize[1])**len(periods))
 
     return significance
 
@@ -148,8 +164,12 @@ def _significance_boot(time, flux, flux_error, periods, psd_best_period, n_boots
     Computes significance for the bootstrap-resampling
     """
     from scipy import stats
-    max_periods = _bootstrap(time, flux, flux_error, periods, n_bootstraps, loss, scale)
-    significance = stats.percentileofscore(max_periods, psd_best_period)
+    max_periods, second_max_periods = _bootstrap(time, flux, flux_error, periods, n_bootstraps, loss, scale)
+    significance = 100 * (stats.percentileofscore(max_periods, psd_best_period) / 100)**len(periods)
+    print('boot')
+    print(significance)
+    print(np.percentile(max_periods, 100 * 0.95**(1./len(periods))))
+    print(100 * (stats.percentileofscore(second_max_periods, psd_best_period) / 100)**len(periods))
 
     return significance
 
@@ -159,7 +179,7 @@ def _significance_all(time, flux, flux_error, periods, psd, psd_best_period, n_b
     Computes significance for all significance criteria
     """
     significance = np.empty([4])
-    significance[0] = _significance_pre(time, periods, psd_best_period)
+    significance[0] = _significance_pre(time, periods, psd, psd_best_period)
     significance[1] = _significance_nll(time, periods, psd, psd_best_period)
     significance[2] = _significance_cvm(periods, psd, psd_best_period)
     significance[3] = _significance_boot(time, flux, flux_error, periods, psd_best_period, n_bootstraps, loss, scale)
@@ -255,7 +275,6 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     chi_noise = np.empty([len(periods)])
 
     # perform robust regression on light curve
-    print(loss)
     for i in range(len(periods)):
         chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
                                      args=(x, periods[i], time, flux, flux_err)).cost
@@ -274,7 +293,7 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     significance = OrderedDict()
 
     if 'pre' in criteria:
-        significance['pre'] = _significance_pre(time, periods, psd_best_period)
+        significance['pre'] = _significance_pre(time, periods, psd_data, psd_best_period)
     if 'cvm' in criteria:
         significance['cvm'] = _significance_cvm(periods, psd_data, psd_best_period)
     if 'nll' in criteria:
@@ -284,9 +303,11 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
                                                   n_bootstraps, loss, scale)
 
     # spectral window function
+    print('window')
     time_win, window = _window_function(time, dt)
     x = np.ones([len(time_win), len(beta0)])
     for i in range(len(periods)):
+        print(i)
         chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
                                      args=(x, periods[i], time_win, window, 1)).cost
         chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
