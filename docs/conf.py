@@ -299,4 +299,10 @@ if eval(setup_cfg.get('edit_on_github')):
 
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 
+# -- Other options --
+
+# http://sphinx-automodapi.readthedocs.io/en/latest/automodapi.html
+# show inherited members for classes
+automodsumm_inherited_members = True
+
 # nitpicky = True
