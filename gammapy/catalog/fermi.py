@@ -872,7 +872,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 return Disk2D(**pars)
             elif morph_type == 'SpatialMap':
                 filename = de['Spatial_Filename'].strip()
-                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17/Templates/'
+                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/'
                 template = Template2D.read(base + filename)
                 template.amplitude = amplitude
                 return template
@@ -985,7 +985,7 @@ class SourceCatalog3FHL(SourceCatalog):
     description = 'LAT third high-energy source catalog'
     source_object_class = SourceCatalogObject3FHL
 
-    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v11.fit.gz'):
+    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'):
         filename = str(make_path(filename))
 
         with ignore_warnings():  # ignore FITS units warnings
