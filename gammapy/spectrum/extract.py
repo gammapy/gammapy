@@ -46,6 +46,9 @@ class SpectrumExtraction(object):
     max_alpha : float
         Maximum alpha value to accept, if the background was estimated using
         reflected regions this is 1 / minimum number of regions.
+    use_recommended_erange : bool
+        Extract spectrum only within the recommended valid energy range of the
+        effective area table (default is True).
     """
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
@@ -53,7 +56,7 @@ class SpectrumExtraction(object):
     """Reconstruced energy axis to be used if not specified otherwise"""
 
     def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False, max_alpha=1):
+                 containment_correction=False, max_alpha=1, use_recommended_erange=True):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
@@ -61,6 +64,7 @@ class SpectrumExtraction(object):
         self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
+        self.use_recommended_erange = use_recommended_erange
         self.observations = SpectrumObservationList()
 
     def run(self, outdir=None, use_sherpa=False):
@@ -121,11 +125,12 @@ class SpectrumExtraction(object):
             edisp=self._edisp,
         )
 
-        try:
-            spectrum_observation.hi_threshold = obs.aeff.high_threshold
-            spectrum_observation.lo_threshold = obs.aeff.low_threshold
-        except KeyError:
-            log.warning('No thresholds defined for obs {}'.format(obs))
+        if self.use_recommended_erange:
+            try:
+                spectrum_observation.hi_threshold = obs.aeff.high_threshold
+                spectrum_observation.lo_threshold = obs.aeff.low_threshold
+            except KeyError:
+                log.warning('No thresholds defined for obs {}'.format(obs))
 
         return spectrum_observation
 
