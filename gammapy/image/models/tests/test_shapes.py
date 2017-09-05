@@ -87,7 +87,7 @@ def test_delta2d_against_gauss(x_0, y_0):
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_template2d():
-    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17'
+    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
                 '/Templates/HESSJ1841-055.fits')
     template = Template2D.read(filename)
     assert_allclose(template(26.7, 0), 1.1553735159851262)

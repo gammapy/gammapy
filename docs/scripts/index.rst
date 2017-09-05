@@ -72,11 +72,6 @@ Detect
 - ``gammapy-detect`` calls `gammapy.scripts.detect`
 - ``gammapy-detect-iterative`` calls `gammapy.scripts.detect_iterative`
 
-Catalog
--------
-
-- ``gammapy-catalog-query`` calls `gammapy.scripts.catalog_query`
-
 
 Technical background
 ====================

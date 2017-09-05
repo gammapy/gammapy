@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
 from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL,
                                 PLSuperExpCutoff3FGL)
@@ -23,7 +23,7 @@ MODEL_TEST_DATA_3FGL = [
 
 MODEL_TEST_DATA_3FHL = [
     (352, PowerLaw, u.Quantity(5.79746841775092e-12, 'cm-2 s-1 GeV-1')),
-    (1444, LogParabola, u.Quantity(2.056998292908196e-12, 'cm-2 s-1 GeV-1')),
+    (1442, LogParabola, u.Quantity(2.056998292908196e-12, 'cm-2 s-1 GeV-1')),
 ]
 
 CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
@@ -32,8 +32,7 @@ CRAB_NAMES_1FHL = ['Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+
                    'Crab']
 CRAB_NAMES_2FHL = ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201',
                    'TeV J0534+2200']
-CRAB_NAMES_3FHL = ['Crab Pulsar', '3FHL J0534.5+2201', 'PSR J0534+2200',
-                   '3FGL J0534.5+2201i']
+CRAB_NAMES_3FHL = ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i']
 
 
 @requires_data('gammapy-extra')
@@ -210,7 +209,7 @@ class TestFermi3FHLObject:
         self.source.pprint()
 
     def test_str(self):
-        source = self.cat['3FHL J2301.9+5855e'] # Picking an extended source
+        source = self.cat['3FHL J2301.9+5855e']  # Picking an extended source
         ss = str(source)
         assert 'Source name          : 3FHL J2301.9+5855e' in ss
         assert 'RA                   : 345.494 deg' in ss
@@ -245,7 +244,7 @@ class TestFermi3FHLObject:
 
     @pytest.mark.parametrize('name', CRAB_NAMES_3FHL)
     def test_crab_alias(self, name):
-        assert str(self.cat['Crab Pulsar']) == str(self.cat[name])
+        assert str(self.cat['Crab Nebula']) == str(self.cat[name])
 
 
 @requires_data('gammapy-extra')
@@ -305,7 +304,7 @@ class TestSourceCatalog3FHL:
         cls.cat = SourceCatalog3FHL()
 
     def test_main_table(self):
-        assert len(self.cat.table) == 1558
+        assert len(self.cat.table) == 1556
 
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
