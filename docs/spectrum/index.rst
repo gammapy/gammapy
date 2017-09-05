@@ -79,7 +79,6 @@ Content
 
    fitting
    energy_group
-   plotting_fermi_spectra
 
 Reference/API
 =============
