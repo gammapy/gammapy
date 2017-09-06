@@ -46,7 +46,7 @@ def _window_function(time, dt):
     t_max = np.max(time_win)
     t_min = np.min(time_win)
     window_grid = np.arange(t_min, t_max+dt, dt)
-    window_grid = np.rint(window_grid / dt) * dt # round again since np.arange is not robust
+    window_grid = np.rint(window_grid / dt) * dt  # round again since np.arange is not robust
     window = np.zeros(len(window_grid))
     window[np.searchsorted(window_grid, time_win, side='right')-1] = 1
 
@@ -61,12 +61,14 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     if n_bootstraps == 'None':
         n_bootstraps = 100    
     max_periods = np.empty(n_bootstraps)
+    second_max_periods = np.empty(n_bootstraps)
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
         psd_boot = LombScargle(time, flux[ind], flux_error[ind]).power(freq)
         max_periods[idx_run] = np.max(psd_boot)
+        second_max_periods[idx_run] = np.sort(psd_boot.flatten())[-2]
 
-    return max_periods
+    return max_periods, second_max_periods
 
 
 def _freq_grid(time, dt, max_period):
@@ -84,7 +86,7 @@ def _freq_grid(time, dt, max_period):
     return grid, periods
 
 
-def _significance_pre(time, freq, psd_best_period):
+def _significance_pre(time, freq, psd, psd_best_period):
     """
     Computes significance for the pre-defined beta distribution
     """
@@ -92,6 +94,10 @@ def _significance_pre(time, freq, psd_best_period):
     a = (3-1)/2
     b = (len(time)-3)/2
     significance = 100 * beta.cdf(psd_best_period, a, b)**len(freq)
+    print('pre')
+    print(significance)
+    print(beta.ppf(0.95 ** (1. / len(freq)), a, b))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], a, b)**len(freq))
 
     return significance
 
@@ -114,6 +120,10 @@ def _significance_cvm(freq, psd, psd_best_period):
         theta_2 = clip
     cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
     significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1])**len(freq)
+    print('cvm')
+    print(significance)
+    print(beta.ppf(0.95 ** (1. / len(freq)), cvm_minimize[0], cvm_minimize[1]))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], cvm_minimize[0], cvm_minimize[1])**len(freq))
 
     return significance
 
@@ -128,6 +138,10 @@ def _significance_nll(time, freq, psd, psd_best_period):
     b = (len(time)-3)/2
     nll_minimize = optimize.fmin(_nll, [a, b], args=(psd,))
     significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1])**len(freq)
+    print('nll')
+    print(significance)
+    print(beta.ppf(0.95**(1./len(freq)), nll_minimize[0], nll_minimize[1]))
+    print(100 * beta.cdf(np.sort(psd.flatten())[-2], nll_minimize[0], nll_minimize[1])**len(freq))
 
     return significance
 
@@ -137,8 +151,12 @@ def _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstra
     Computes significance for the bootstrap-resampling
     """
     from scipy import stats
-    max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
+    max_periods, second_max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
     significance = stats.percentileofscore(max_periods, psd_best_period)
+    print('boot')
+    print(significance)
+    print(np.percentile(max_periods, 100 * 0.95**(1./len(freq))))
+    print(100 * (stats.percentileofscore(second_max_periods, psd_best_period) / 100)**len(freq))
 
     return significance
 
@@ -148,9 +166,9 @@ def _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_boot
     Computes significance for all significance criteria
     """
     significance = np.empty([4])
-    significance[0] = _significance_pre(time, freq, psd_best_period)
+    significance[0] = _significance_pre(time, freq, psd_data, psd_best_period)
     significance[1] = _significance_nll(time, freq, psd, psd_best_period)
-    significance[2] = _significance_cvm(time, freq, psd, psd_best_period)
+    significance[2] = _significance_cvm(freq, psd, psd_best_period)
     significance[3] = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps)
 
     return significance
@@ -225,6 +243,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     # find period with highest periodogram peak
     psd_best_period = np.max(psd_data)
     best_period = periods[np.argmax(psd_data)]
+    print(best_period)
 
     # define significance for best period
     if criteria == 'None':
@@ -233,13 +252,13 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     significance = OrderedDict()
 
     if 'pre' in criteria:
-        significance['pre'] = _significance_pre(time, freq, psd_best_period)
+        significance['pre'] = _significance_pre(time, freq, psd_data, psd_best_period)
     if 'cvm' in criteria:
-        significance['cvm'] =  _significance_cvm(freq, psd_data, psd_best_period)
+        significance['cvm'] = _significance_cvm(freq, psd_data, psd_best_period)
     if 'nll' in criteria:
         significance['nll'] = _significance_nll(time, freq, psd_data, psd_best_period)
     if 'boot' in criteria:
-        significance['boot'] =  _significance_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
+        significance['boot'] = _significance_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
 
     # spectral window function
     time_win, window = _window_function(time, dt)
@@ -252,4 +271,3 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
         ('significance', significance),
         ('swf', psd_win),
     ])
-
