@@ -308,7 +308,7 @@ class TestSkyImage:
         self.image = SkyImage.empty(
             nxpix=10, nypix=5, binsz=0.2,
             xref=self.center.l.deg, yref=self.center.b.deg,
-            proj='TAN', coordsys='GAL',
+            proj='TAN', coordsys='GAL', meta={'TEST': 42},
         )
         self.image.data = np.arange(50, dtype=float).reshape((5, 10))
 
@@ -337,6 +337,9 @@ class TestSkyImage:
         smoothed = self.image.smooth(kernel, 0.2 * u.deg)
         actual = smoothed.data.sum()
         assert_allclose(actual, desired)
+
+    def test_meta(self):
+        assert self.image.meta['TEST'] == 42
 
 
 def test_image_pad():
