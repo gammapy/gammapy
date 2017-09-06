@@ -285,6 +285,7 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     # find period with highest periodogram peak
     psd_best_period = np.max(psd_data)
     best_period = periods[np.argmax(psd_data)]
+    print(best_period)
 
     # define significance for best period
     if criteria == 'None':
@@ -308,9 +309,9 @@ def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period='None',
     x = np.ones([len(time_win), len(beta0)])
     for i in range(len(periods)):
         print(i)
-        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
+        chi_model[i] = least_squares(_full_model, beta0, loss='linear', f_scale=scale,
                                      args=(x, periods[i], time_win, window, 1)).cost
-        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
+        chi_noise[i] = least_squares(_location_model, mu, loss='linear', f_scale=scale,
                                      args=(time_win, window, 1)).cost
     psd_win = 1 - chi_model / chi_noise
 
