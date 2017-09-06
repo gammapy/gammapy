@@ -305,4 +305,15 @@ github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 # show inherited members for classes
 automodsumm_inherited_members = True
 
+# In `about.rst` and `references.rst` we are giving lists of citations
+# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
+# in the Gammapy docs. This is normal, but Sphinx emits a warning.
+# The following config option suppresses the warning.
+# http://www.sphinx-doc.org/en/stable/rest.html#citations
+# http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
+suppress_warnings = [
+    'ref.citation'
+]
+
+
 # nitpicky = True

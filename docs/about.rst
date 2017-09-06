@@ -121,19 +121,20 @@ that have supported Gammapy development!
 
 - `Werner Hofmann`_ and `Jim Hinton`_ (directors at `MPIK Heidelberg`_) for giving
   PhDs and postdocs in the `H.E.S.S.`_ and `CTA`_ group time to work on Gammapy.
-- Google for sponsoring `Manuel Paz Arribas <https://github.com/mapazarr>`__
-  to work on background modeling in Gammapy for `GSoC 2015`_.
+- Google for sponsoring Manuel Paz Arribas to work on background modeling
+  as well as Olga Vorokh to work on image analysis and source detection in Gammapy
+  as part of `Google Summer of Code`_.
 - `H.E.S.S.`_ for providing a wonderful TeV gamma-ray dataset
   to develop the Gammapy code and methods (to collaboration members only).
   And specifically to the HOST ("HESS data analysis with open source tools") task
   group within H.E.S.S. for exporting the data and IRFs to FITS format,
   making it available to Gammapy and other open source tools.
-- `Fermi-LAT`_ for making their data and software freely available and providing
-  a wonderful GeV gamma-ray dataset, which was used to develop Gammapy.
 - `CTA`_ for promoting open source and working on the specification of open data formats,
   which are the basis of Gammapy data analysis and interoperability with other
   open source analysis packages (e.g. Gammalib/ctools or 3ML)
   and between different collaborations (e.g. H.E.S.S., VERITAS, MAGIC).
+- `Fermi-LAT`_ for making their data and software freely available and providing
+  a wonderful GeV gamma-ray dataset, which was used to develop Gammapy.
 - The `Astropy`_ project (core package, affiliated package, people) for creating
   a core Python package for astronomy.
   (Astropy is one of the building blocks on which Gammapy is built.)
@@ -148,17 +149,57 @@ that have supported Gammapy development!
 
 .. _about-users:
 
-Papers using Gammapy
---------------------
+Publications using Gammapy
+--------------------------
 
-Here's a list of papers using Gammapy.
+Here's a list of publications using Gammapy (in reverse chronological order).
 
-If something is missing, please send an email to the Gammapy mailing list
-or to `Christoph Deil`_ if you prefer private communication.
+A few of them don't "use" Gammapy, but describe or discuss and reference it.
+We list those as well because they might also be of interest to you if you are interested in Gammapy.
+
+- Wood et al (2017),
+  "Fermipy: An open-source Python package for analysis of Fermi-LAT Data",
+  `2017arXiv170709551W <https://ui.adsabs.harvard.edu/#abs/2017arXiv170709551W>`__
+
+- Fioretti et al. (2017),
+  "The Cherenkov Telescope array on-site integral sensitivity: observing the Crab",
+  `2016SPIE.9906E..3OF <https://ui.adsabs.harvard.edu/#abs/2016SPIE.9906E..3OF>`__
+
+- Voruganti et al. (2017),
+  "Gamma-sky.net: Portal to the gamma-ray sky",
+  `2017AIPC.1792g0005V <https://ui.adsabs.harvard.edu/#abs/2017AIPC.1792g0005V>`__
+
+- Deil et al. (2017),
+  "Open high-level data formats and software for gamma-ray astronomy",
+  `2017AIPC.1792g0006D <https://ui.adsabs.harvard.edu/#abs/2017AIPC.1792g0006D>`__
+
+- Gottschall et al. (2017),
+  "Discovery of new TeV supernova remnant shells in the Galactic plane with H.E.S.S.",
+  `2017AIPC.1792d0030G <https://ui.adsabs.harvard.edu/#abs/2017AIPC.1792d0030G>`__
+
+- Deil (2016),
+  "Python in gamma-ray astronomy",
+  `2016pyas.confE...4D <https://ui.adsabs.harvard.edu/#abs/2016pyas.confE...4D>`__
+
+- Puelhofer et al. (2015),
+  "Search for new supernova remnant shells in the Galactic plane with H.E.S.S.",
+  `2015ICRC...34..886P <https://ui.adsabs.harvard.edu/#abs/2015ICRC...34..886P>`__
+
+- Zabalza (2015),
+  "Naima: a Python package for inference of particle distribution properties from nonthermal spectra",
+  `2015ICRC...34..922Z <https://ui.adsabs.harvard.edu/#abs/2015ICRC...34..922Z>`__
+
+- Donath et al. (2015),
+  "Gammapy: An open-source Python package for gamma-ray astronomy",
+  `2015ICRC...34..789D <https://ui.adsabs.harvard.edu/#abs/2015ICRC...34..789D>`__
+
+- Owen et al. (2015),
+  "The gamma-ray Milky Way above 10 GeV: Distinguishing Sources from Diffuse Emission",
+  `2015arXiv150602319O <https://ui.adsabs.harvard.edu/#abs/2015arXiv150602319O>`__
 
 
-.. [Owen2015] `Owen et al. (2015) <http://adsabs.harvard.edu/abs/2015arXiv150602319O>`_,
-   "The gamma-ray Milky Way above 10 GeV: Distinguishing Sources from Diffuse Emission",
+If something is missing, please let us know (e.g. drop a line to the Gammapy mailing list).
 
-.. [Puelhofer2015] `Pühlhofer et al. (2015) <https://indico.cern.ch/event/344485/session/109/contribution/1299>`_,
-   "Search for new supernova remnant shells in the Galactic plane with H.E.S.S.",
+Being able to show that Gammapy is used for scientific studies helps us to justify
+spending time on coding, or in the future possibly even to apply for funding
+specifically to extend Gammapy to enable new or better science.
