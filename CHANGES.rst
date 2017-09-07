@@ -39,8 +39,8 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Julien Lefaucheur
 - Lars Mohrmann
 - Léa Jouvin
-- Johannes King
 - Matthew Wood
+- Matthias Wegen (new)
 - Peter Deiml (new)
 - Roberta Zanin (new)
 - Rubén López-Coto (new)
@@ -75,6 +75,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1078] Add printout for 3FHL and gamma-cat sources (Arjun Voruganti)
 - [#1076] Development in ``gammapy.maps`` (Matthew Wood)
 - [#1073] Fix spectrum fit for case of no EDISP (Johannes King)
+- [#1070] Add Lomb-Scargle detection function (Matthias Wegen)
 - [#1069] Add easy access to parameter errors (Johannes King)
 - [#1067] Add flux upper limit computation to TSImageEstimator (Axel Donath)
 - [#1065] Add skip_missing option to ``DataStore.obs_list`` (Johannes King)
