@@ -365,7 +365,7 @@ class EnergyDispersion(object):
         """
         mean = self._get_mean(e_true)
         e_reco = (10 ** mean) * self.e_reco.unit
-        bias = (e_true - e_reco) / e_true
+        bias = (e_reco - e_true) / e_true
         return bias
 
     def _get_mean(self, e_true):
