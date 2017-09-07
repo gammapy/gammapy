@@ -34,6 +34,7 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Brigitta Sipocz
 - Bruno Khelifi (new)
 - Christoph Deil
+- Cosimo Nigro (new)
 - Johannes King
 - Julien Lefaucheur
 - Lars Mohrmann
@@ -51,6 +52,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1115] Fix energy bias computation (Cosimo Nigro)
 - [#1110] Remove ATNF catalog class and Green catalog load function (Christoph Deil)
 - [#1108] Add HAWC 2HWC catalog (Peter Deiml)
 - [#1107] Rewrite GaussianBand2D model (Axel Donath)
