@@ -37,6 +37,10 @@ __all__ = [
 ]
 
 
+FERMI_GALACTIC = []
+FERMI_EXTRA_GALACTIC = []
+
+
 def compute_flux_points_ul(quantity, quantity_errp):
     """Compute UL value for fermi flux points.
 
@@ -902,7 +906,6 @@ class SourceCatalog3FGL(SourceCatalog):
                                          'RDG', 'SEY', 'BCU', 'GAL', 'SBG', 'SSRQ']
                       }
 
-
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
         filename = str(make_path(filename))
 
@@ -921,7 +924,6 @@ class SourceCatalog3FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu='ExtendedSources')
-
 
     def select_source_class(self, source_class):
         """
@@ -948,7 +950,6 @@ class SourceCatalog3FGL(SourceCatalog):
         """
         catalog = self.copy()
         source_class_column = np.char.strip(catalog.table['CLASS1'])
-
         source_classes_id = list(self.source_classes['EXTRA-GALACTIC']
                                + self.source_classes['GALACTIC'])
         source_classes_assoc = list(self.source_classes['extra-galactic']
