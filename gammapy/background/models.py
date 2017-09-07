@@ -163,27 +163,8 @@ class GaussianBand2D(object):
     spline_kwargs : dict
         Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
     """
-    boundary_left = {'GLON': 75,
-                     'GLAT': 0,
-                     'GLAT_Err': 0,
-                     'Surface_Brightness': 0,
-                     'Surface_Brightness_Err': 0,
-                     'Width': 0,
-                     'Width_Err': 0}
-
-    boundary_right = {'GLON': 240,
-                     'GLAT': 0,
-                     'GLAT_Err': 0,
-                     'Surface_Brightness': 0,
-                     'Surface_Brightness_Err': 0,
-                     'Width': 0,
-                     'Width_Err': 0}
-
     def __init__(self, table, spline_kwargs=DEFAULT_SPLINE_KWARGS):
         from scipy.interpolate import UnivariateSpline
-
-        table.insert_row(index=0, vals=self.boundary_right)
-        table.add_row(vals=self.boundary_left)
 
         self.table = table
         glon = Angle(self.table['GLON']).wrap_at('180d')

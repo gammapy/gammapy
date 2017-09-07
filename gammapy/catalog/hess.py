@@ -554,7 +554,7 @@ class SourceCatalogHGPS(SourceCatalog):
         """Large sclae component model (`~gammapy.background.models.GaussianBand2D`).
         """
         table = self._large_scale_component
-        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0))
+        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0, ext=0))
 
     def _make_source_object(self, index):
         """Make one source object.
