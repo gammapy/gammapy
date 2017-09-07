@@ -28,11 +28,10 @@ def _cvm(param, data):
     a, b = param
     ordered_data = np.sort(data, axis=None)
     for n in range(len(data)):
-        sumbeta =+ (beta.cdf(ordered_data[n],
-                             a, b,
-                             loc=0, scale=1)
-                    - (n - 0.5) / len(data))**2.0
-    cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data)**2.))
+        cdf = beta.cdf(ordered_data[n], a, b, loc=0, scale=1)
+        sumbeta = + (cdf - (n - 0.5) / len(data)) ** 2.0
+
+    cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data) ** 2.))
     mask = np.isfinite(cvm_dist)
     cvm = cvm_dist[mask]
     return cvm
@@ -45,10 +44,10 @@ def _window_function(time, dt):
     time_win = np.rint(time / dt) * dt
     t_max = np.max(time_win)
     t_min = np.min(time_win)
-    window_grid = np.arange(t_min, t_max+dt, dt)
+    window_grid = np.arange(t_min, t_max + dt, dt)
     window_grid = np.rint(window_grid / dt) * dt  # round again since np.arange is not robust
     window = np.zeros(len(window_grid))
-    window[np.searchsorted(window_grid, time_win, side='right')-1] = 1
+    window[np.searchsorted(window_grid, time_win, side='right') - 1] = 1
 
     return window_grid, window
 
@@ -59,9 +58,10 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     """
     rand = np.random.RandomState(42)
     if n_bootstraps == 'None':
-        n_bootstraps = 100    
+        n_bootstraps = 100
     max_periods = np.empty(n_bootstraps)
     second_max_periods = np.empty(n_bootstraps)
+
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
         psd_boot = LombScargle(time, flux[ind], flux_error[ind]).power(freq)
@@ -80,7 +80,7 @@ def _freq_grid(time, dt, max_period):
     else:
         max_period = np.rint(max_period / dt) * dt
     min_period = dt
-    periods = np.arange(min_period, max_period+dt, dt)
+    periods = np.arange(min_period, max_period + dt, dt)
     grid = 1. / periods
 
     return grid, periods
@@ -91,13 +91,9 @@ def _significance_pre(time, freq, psd, psd_best_period):
     Computes significance for the pre-defined beta distribution
     """
     from scipy.stats import beta
-    a = (3-1)/2
-    b = (len(time)-3)/2
-    significance = 100 * beta.cdf(psd_best_period, a, b)**len(freq)
-    print('pre')
-    print(significance)
-    print(beta.ppf(0.95 ** (1. / len(freq)), a, b))
-    print(100 * beta.cdf(np.sort(psd.flatten())[-2], a, b)**len(freq))
+    a = (3 - 1) / 2
+    b = (len(time) - 3) / 2
+    significance = 100 * beta.cdf(psd_best_period, a, b) ** len(freq)
 
     return significance
 
@@ -109,21 +105,18 @@ def _significance_cvm(freq, psd, psd_best_period):
     from scipy import optimize
     from scipy.stats import beta
     clip = 0.00001
-    theta_1 = -1. * (np.mean(psd) * (-np.mean(psd)
-                                     + np.mean(psd)**2
-                                     + np.var(psd))
-                     ) / (np.var(psd))
+
+    temp = np.mean(psd) * (-np.mean(psd) + np.mean(psd) ** 2 + np.var(psd))
+    theta_1 = - temp / np.var(psd)
     if theta_1 < 0:
         theta_1 = clip
+
     theta_2 = (theta_1 - theta_1 * np.mean(psd)) / np.mean(psd)
     if theta_2 < 0:
         theta_2 = clip
+
     cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1])**len(freq)
-    print('cvm')
-    print(significance)
-    print(beta.ppf(0.95 ** (1. / len(freq)), cvm_minimize[0], cvm_minimize[1]))
-    print(100 * beta.cdf(np.sort(psd.flatten())[-2], cvm_minimize[0], cvm_minimize[1])**len(freq))
+    significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1]) ** len(freq)
 
     return significance
 
@@ -134,14 +127,10 @@ def _significance_nll(time, freq, psd, psd_best_period):
     """
     from scipy import optimize
     from scipy.stats import beta
-    a = (3-1)/2
-    b = (len(time)-3)/2
+    a = (3 - 1) / 2
+    b = (len(time) - 3) / 2
     nll_minimize = optimize.fmin(_nll, [a, b], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1])**len(freq)
-    print('nll')
-    print(significance)
-    print(beta.ppf(0.95**(1./len(freq)), nll_minimize[0], nll_minimize[1]))
-    print(100 * beta.cdf(np.sort(psd.flatten())[-2], nll_minimize[0], nll_minimize[1])**len(freq))
+    significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1]) ** len(freq)
 
     return significance
 
@@ -153,24 +142,6 @@ def _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstra
     from scipy import stats
     max_periods, second_max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
     significance = stats.percentileofscore(max_periods, psd_best_period)
-    print('boot')
-    print(significance)
-    print(np.percentile(max_periods, 100 * 0.95**(1./len(freq))))
-    print(100 * (stats.percentileofscore(second_max_periods, psd_best_period) / 100)**len(freq))
-
-    return significance
-
-
-def _significance_all(time, flux, flux_error, freq, psd, psd_best_period, n_bootstraps):
-    """
-    Computes significance for all significance criteria
-    """
-    significance = np.empty([4])
-    significance[0] = _significance_pre(time, freq, psd_data, psd_best_period)
-    significance[1] = _significance_nll(time, freq, psd, psd_best_period)
-    significance[2] = _significance_cvm(freq, psd, psd_best_period)
-    significance[3] = _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps)
-
     return significance
 
 
@@ -178,9 +149,10 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     """
     Compute period and significance of a light curve using Lomb-Scargle PSD.
 
-    To compute the Lomb-Scargle power spectral density, the astropy object `~astropy.stats.LombScargle` is called.
-    For eyesight inspection, the spectral window function is also returned to evaluate the impcat of sampling on the periodogram.
-    The significance cirteria are both, parametric and non-parametric.
+    To compute the Lomb-Scargle power spectral density, `~astropy.stats.LombScargle` is called.
+    For eyesight inspection, the spectral window function is also returned
+    to evaluate the impact of sampling on the periodogram.
+    The significance criteria are both parametric and non-parametric.
 
     For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
 
