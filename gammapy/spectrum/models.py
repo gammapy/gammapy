@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
+import operator
 import astropy.units as u
 from astropy.table import Table
 from ..utils.energy import EnergyBounds
@@ -59,6 +60,39 @@ class SpectralModel(object):
             kwargs[par.name] = par.quantity
 
         return self.evaluate(energy, **kwargs)
+
+    def __mul__(self, model):
+        if not isinstance(model, SpectralModel):
+            model = ConstantModel(const=model)
+        return CompoundSpectralModel(self, model, operator.mul)
+
+    def __rmul__(self, model):
+        # This is needed to support e.g. 5 * model
+        return self.__mul__(model)
+
+    def __add__(self, model):
+        if not isinstance(model, SpectralModel):
+            model = ConstantModel(const=model)
+        return CompoundSpectralModel(self, model, operator.add)
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+    def __sub__(self, model):
+        if not isinstance(model, SpectralModel):
+            model = ConstantModel(const=model)
+        return CompoundSpectralModel(self, model, operator.sub)
+
+    def __rsub__(self, model):
+        return self.__sub__(model)
+
+    def __truediv__(self, model):
+        if not isinstance(model, SpectralModel):
+            model = ConstantModel(const=model)
+        return CompoundSpectralModel(self, model, operator.truediv)
+
+    def __rtruediv__(self, model):
+        return self.__div__(model)
 
     def _parse_uarray(self, uarray):
         from uncertainties import unumpy
@@ -390,6 +424,64 @@ class SpectralModel(object):
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
+
+
+class ConstantModel(SpectralModel):
+    r"""Constant model
+
+    .. math::
+
+        \phi(E) = k 
+
+    Parameters
+    ----------
+    const : `~astropy.units.Quantity`
+        :math:`k`
+    """
+    def __init__(self, const):
+        self.parameters = ParameterList([
+            Parameter('const', const)
+        ])
+
+    @staticmethod
+    def evaluate(energy, const):
+        """Evaluate the model (static function)."""
+        return const 
+
+
+class CompoundSpectralModel(SpectralModel):
+    """Represents the algebraic combination of two
+    `~gammapy.spectrum.models.SpectralModel`
+
+    """
+    def __init__(self, model1, model2, operator):
+        self.model1 = model1
+        self.model2 = model2
+        self.operator = operator
+
+    @property
+    def parameters(self):
+        val = self.model1.parameters.parameters + self.model2.parameters.parameters
+        return ParameterList(val)
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n    Component 1 : {}'.format(self.model1)
+        ss += '\n    Component 2 : {}'.format(self.model2)
+        ss += '\n    Operator : {}'.format(self.operator)
+        return ss
+
+    def __call__(self, energy):
+        val1 = self.model1(energy)
+        val2 = self.model2(energy)
+
+        return self.operator(val1, val2)
+
+    def to_dict(self):
+        retval = dict()
+        retval['model1'] = self.model1.to_dict()
+        retval['model2'] = self.model2.to_dict()
+        retval['operator'] = self.operator
 
 
 class PowerLaw(SpectralModel):
