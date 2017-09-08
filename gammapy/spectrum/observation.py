@@ -160,6 +160,17 @@ class SpectrumObservation(object):
                               energy_hi=energy.hi)
 
     @property
+    def excess_vector(self):
+        """Excess `~gammapy.spectrum.CountsSpectrum`.
+
+        excess = n_on = alpha * n_off
+        """
+        energy = self.off_vector.energy
+        data = self.on_vector.data.data - self.background_vector.data.data
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
+
+    @property
     def total_stats(self):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
