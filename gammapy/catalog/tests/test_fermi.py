@@ -270,6 +270,9 @@ class TestSourceCatalog3FGL:
         selection = self.cat.select_source_class('unassociated')
         assert len(selection.table) == 1010
 
+        selection = self.cat.select_source_class('ALL')
+        assert len(selection.table) == 239
+
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog1FHL:
@@ -329,3 +332,6 @@ class TestSourceCatalog3FHL:
 
         selection = self.cat.select_source_class('unassociated')
         assert len(selection.table) == 177
+
+        selection = self.cat.select_source_class('ALL')
+        assert len(selection.table) == 135
