@@ -233,40 +233,15 @@ class SpectrumExtraction(object):
         self._on_vector.areascal = areascal
         self._off_vector.areascal = areascal
 
-    def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
-        """Compute and set the safe energy threshold.
+    def compute_energy_threshold(self, **kwargs):
+        """Compute and set the safe energy threshold for all observations.
 
-        Set the high and low energy threshold for each observation based on a
-        chosen method.
-
-        Available methods for setting the low energy threshold:
-
-        * area_max : Set energy threshold at x percent of the maximum effective
-          area (x given as kwargs['percent'])
-
-        Available methods for setting the high energy threshold:
-
-        * TBD
-
-        Parameters
-        ----------
-        method_lo_threshold : {'area_max'}
-            Method for defining the low energy threshold
+        See `SpectrumObservation.compute_energy_threshold` for full
+        documentation about the options.
         """
-        # TODO: This should be a method on SpectrumObservation
-        # TODO: define method for the high energy threshold
 
-        # It is important to update the low and high threshold for ON and OFF
-        # vector, otherwise Sherpa will not understand the files
         for obs in self.observations:
-            if method_lo_threshold == 'area_max':
-                aeff_thres = kwargs['percent'] / 100 * obs.aeff.max_area
-                thres = obs.aeff.find_energy(aeff_thres)
-                obs.on_vector.lo_threshold = thres
-                obs.off_vector.lo_threshold = thres
-            else:
-                raise ValueError('Undefine method for low threshold: {}'.format(
-                    method_lo_threshold))
+            obs.compute_energy_threshold(**kwargs)
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk.
