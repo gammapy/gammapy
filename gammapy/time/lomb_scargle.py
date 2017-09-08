@@ -184,7 +184,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
         - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
         - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. (2016))
         - ``nll`` for negative logarithmic likelihood minimisation
-        - ``boot`` for bootstrap-resampling (see Süveges (2012) and `astroML.time_series.lomb_scargle_bootstrap <http://www.astroml.org/modules/generated/astroML.time_series.lomb_scargle_bootstrap.html>`_)
+        - ``boot`` for bootstrap-resampling (see Sueveges (2012) and `astroML.time_series.lomb_scargle_bootstrap <http://www.astroml.org/modules/generated/astroML.time_series.lomb_scargle_bootstrap.html>`_)
     
     n_bootstraps : `float`
         Number of bootstraps resampling
@@ -204,7 +204,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
        `Link <https://academic.oup.com/mnras/article/301/3/831/1038387/The-distribution-of-empirical-periodograms-Lomb>`_
     .. [4] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
        `Link <https://www.jstatsoft.org/article/view/v069i09>`_
-    .. [5] Süveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
+    .. [5] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
        `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
     """
 
