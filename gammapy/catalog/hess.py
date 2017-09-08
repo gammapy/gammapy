@@ -419,7 +419,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+    def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
         """
         Source spatial model.
         """
@@ -453,17 +453,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             try:
                 models = [component.spatial_model for component in self.components]
             except AttributeError:
-                amplitude = d['Flux_Map'].to('cm-2 s-1').value
-                pars = {}
-                glon = Angle(d['GLON']).wrap_at('180d')
-                glat = Angle(d['GLAT']).wrap_at('180d')
-
-                pars['x_mean'] = glon.value
-                pars['y_mean'] = glat.value
-                pars['x_stddev'] = d['Size'].to('deg').value
-                pars['y_stddev'] = d['Size'].to('deg').value
-                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
-                return Gaussian2D(**pars)
+                # there is one external source (HESS J1801-233) where there is no
+                # component info available, so we create it here locally
+                models = [HGPSGaussComponent(d).spatial_model]
 
             for model in models:
                 # weight total flux according to relative amplitude
