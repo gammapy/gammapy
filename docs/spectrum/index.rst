@@ -85,6 +85,8 @@ Reference/API
 
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
+    :include-all-objects:

@@ -22,7 +22,7 @@ def test_make_test_psf_fits_table():
 
 
 def test_make_test_observation_table():
-    observatory_name = 'HESS'
+    observatory_name = 'hess'
     n_obs = 10
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(observatory_name=observatory_name,

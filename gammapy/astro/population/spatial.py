@@ -1,13 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Galactic radial source distribution probability density functions.
-
-Attributes
-----------
-radial_distributions : `~collections.OrderedDict`
-    Dictionary of available spatial distributions.
-
-    Useful for automatic processing.
-"""
+"""Galactic radial source distribution probability density functions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
@@ -29,8 +21,6 @@ __all__ = [
     'FaucherSpiral',
     'ValleeSpiral',
     'radial_distributions',
-    'RMIN', 'RMAX',
-    'ZMIN', 'ZMAX',
 ]
 
 # Simulation range used for random number drawing
@@ -512,14 +502,8 @@ class ValleeSpiral(LogSpiral):
         self.bar = dict(x=Quantity([x_0, x_1]), y=Quantity([y_0, y_1]))
 
 
-# TODO: this is not picked up in the HTML docs ... don't know why.
-# http://sphinx-doc.org/latest/ext/example_numpy.html
-# For now I add it in the module-level docstring in an `Attributes` section.
 radial_distributions = OrderedDict()
-"""Dictionary of available spatial distributions.
-
-Useful for automatic processing.
-"""
+radial_distributions.__doc__ = """Radial distribution (dict mapping names to classes)."""
 radial_distributions['CB98'] = CaseBattacharya1998
 radial_distributions['F06'] = FaucherKaspi2006
 radial_distributions['L06'] = Lorimer2006
