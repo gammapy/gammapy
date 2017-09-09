@@ -694,8 +694,6 @@ class DataStoreObservation(object):
         energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
         rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
 
-        print(self.psf)
-
         if isinstance(self.psf, PSF3D):
             # PSF3D is a table PSF, so we use the native RAD binning by default
             # TODO: should handle this via a uniform caller API

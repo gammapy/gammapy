@@ -215,7 +215,6 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     # find period with highest periodogram peak
     psd_best_period = np.max(psd_data)
     best_period = periods[np.argmax(psd_data)]
-    print(best_period)
 
     # define significance for best period
     if criteria == 'None':
