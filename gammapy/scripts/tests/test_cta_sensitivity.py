@@ -17,5 +17,16 @@ def test_cta_sensitivity():
     sens.run()
     table = sens.diff_sensi_table
 
-    # Assert on diff flux at 1 TeV
-    assert_allclose(table[9].data[1], 6.8452201495e-13, rtol=0.01)
+    # Assert on a few rows of the result table
+    assert len(table) == 21
+
+    assert_allclose(
+        table['ENERGY'][[0, 9, 20]],
+        [0.0158489, 1.0, 158.489],
+        rtol=0.01,
+    )
+    assert_allclose(
+        table['FLUX'][[0, 9, 20]],
+        [1.223534e-10, 4.272442e-13, 9.047706e-12],
+        rtol=0.01,
+    )
