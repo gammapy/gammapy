@@ -11,8 +11,7 @@ Command line tools  (`gammapy.scripts`)
 Introduction
 ============
 
-Gammapy contains a bunch of command line tools,
-and we've started to add `flask`_ web apps for cases where a GUI makes sense.
+Gammapy contains a bunch of command line tools to execute common tasks.
 
 Note that these are all still very much work in progress, we haven't
 settled on a very good scheme to organise the functionality, do
@@ -39,7 +38,6 @@ Utilities
 Data
 ----
 
-- ``gammapy-data-browse`` (web GUI tool) calls `gammapy.scripts.data_browser`
 - ``gammapy-data-manage`` calls `gammapy.scripts.data_manage`
 - ``gammapy-data-select`` calls `gammapy.scripts.data_select`
 - ``gammapy-data-show`` calls `gammapy.scripts.data_show`
@@ -73,12 +71,6 @@ Detect
 
 - ``gammapy-detect`` calls `gammapy.scripts.detect`
 - ``gammapy-detect-iterative`` calls `gammapy.scripts.detect_iterative`
-
-Catalog
--------
-
-- ``gammapy-catalog-browse`` (web GUI tool) calls `gammapy.scripts.catalog_browser` (TODO: list in the API docs)
-- ``gammapy-catalog-query`` calls `gammapy.scripts.catalog_query`
 
 
 Technical background
@@ -119,3 +111,4 @@ Reference/API
 
 .. automodapi:: gammapy.scripts
     :no-inheritance-diagram:
+    :include-all-objects:

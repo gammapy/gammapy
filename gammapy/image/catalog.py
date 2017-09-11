@@ -35,7 +35,7 @@ class CatalogImageEstimator(object):
     Examples
     --------
 
-    ::
+    Here is an example how to compute a flux image from a catalog:
 
         from astropy import units as u
         from gammapy.image import SkyImage, CatalogImageEstimator

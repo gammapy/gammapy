@@ -144,6 +144,106 @@ class SpectrumObservation(object):
         if self.off_vector is not None:
             self.off_vector.hi_threshold = threshold
 
+    def reset_thresholds(self):
+        """Reset energy thresholds (i.e. declare all energy bins valid)"""
+        self.on_vector.reset_thresholds()
+        if self.off_vector is not None:
+            self.off_vector.reset_thresholds()
+
+    def compute_energy_threshold(self, method_lo='area_max', method_hi='area_max', reset=False, **kwargs):
+        """Compute and set the safe energy threshold.
+
+        Set the high and low energy threshold for each observation based on a
+        chosen method.
+
+        Available methods for setting the low energy threshold:
+
+        * area_max : Set energy threshold at x percent of the maximum effective
+          area (x given as kwargs['area_percent_lo'])
+
+        * energy_bias : Set energy threshold at energy where the energy bias
+          exceeds a value of x percent (given as kwargs['bias_percent_lo'])
+
+        Available methods for setting the high energy threshold:
+
+        * area_max : Set energy threshold at x percent of the maximum effective
+          area (x given as kwargs['area_percent_hi'])
+
+        * energy_bias : Set energy threshold at energy where the energy bias
+          exceeds a value of x percent (given as kwargs['bias_percent_hi'])
+
+        Parameters
+        ----------
+        method_lo : {'area_max', 'energy_bias'}
+            Method for defining the low energy threshold
+
+        method_hi : {'area_max', 'energy_bias'}
+            Method for defining the high energy threshold
+
+        reset : bool
+            Reset existing energy thresholds before setting the new ones
+            (default is `False`)
+        """
+
+        if reset:
+            self.reset_thresholds()
+
+        # It is important to update the low and high threshold for ON and OFF
+        # vector, otherwise Sherpa will not understand the files
+
+        # Low threshold
+        if method_lo == 'area_max':
+            aeff_thres = kwargs['area_percent_lo'] / 100 * self.aeff.max_area
+            thres_lo = self.aeff.find_energy(aeff_thres)
+        elif method_lo == 'energy_bias':
+            thres_lo = self._find_bias_energy(kwargs['bias_percent_lo'] / 100)
+        else:
+            raise ValueError('Undefine method for low threshold: {}'.format(
+                method_lo))
+
+        self.on_vector.lo_threshold = thres_lo
+        if self.off_vector is not None:
+            self.off_vector.lo_threshold = thres_lo
+
+        # High threshold
+        if method_hi == 'area_max':
+            aeff_thres = kwargs['area_percent_hi'] / 100 * self.aeff.max_area
+            thres_hi = self.aeff.find_energy(aeff_thres, reverse=True)
+        elif method_hi == 'energy_bias':
+            thres_hi = self._find_bias_energy(kwargs['bias_percent_hi'] / 100, reverse=True)
+        else:
+            raise ValueError('Undefined method for high threshold: {}'.format(
+                method_hi))
+
+        self.on_vector.hi_threshold = thres_hi
+        if self.off_vector is not None:
+            self.off_vector.hi_threshold = thres_hi
+
+    def _find_bias_energy(self, bias_value, reverse=False):
+        """Helper function to interpolate between bias values to retrieve an energy"""
+        e = self.e_true.log_centers
+        bias = np.abs(self.edisp.get_bias(e))
+        with np.errstate(invalid='ignore'):
+            valid = np.where(bias <= bias_value)[0]
+        idx = valid[0]
+        if reverse:
+            idx = valid[-1]
+        if not reverse:
+            if idx == 0:
+                energy = self.e_true[idx].value
+            else:
+                energy = np.interp(bias_value,
+                                   (bias[[idx - 1, idx]].value),
+                                   (e[[idx - 1, idx]].value))
+        else:
+            if idx == e.size - 1:
+                energy = self.e_true[idx+1].value
+            else:
+                energy = np.interp(bias_value,
+                                   (bias[[idx, idx + 1]].value),
+                                   (e[[idx, idx + 1]].value))
+        return energy * self.e_true.unit
+
     @property
     def background_vector(self):
         """Background `~gammapy.spectrum.CountsSpectrum`.
@@ -156,6 +256,17 @@ class SpectrumObservation(object):
         """
         energy = self.off_vector.energy
         data = self.off_vector.data.data * self.alpha
+        return CountsSpectrum(data=data, energy_lo=energy.lo,
+                              energy_hi=energy.hi)
+
+    @property
+    def excess_vector(self):
+        """Excess `~gammapy.spectrum.CountsSpectrum`.
+
+        excess = n_on = alpha * n_off
+        """
+        energy = self.off_vector.energy
+        data = self.on_vector.data.data - self.background_vector.data.data
         return CountsSpectrum(data=data, energy_lo=energy.lo,
                               energy_hi=energy.hi)
 
@@ -696,7 +807,7 @@ class SpectrumObservationStacker(object):
         stacked_quality = np.ones(energy.nbins)
 
         for spec in counts_spectrum_list:
-            stacked_data += spec.counts_in_safe_range
+            stacked_data += spec.counts_in_safe_range.value
             temp = np.logical_and(stacked_quality,
                                   spec.quality)
             stacked_quality = np.array(temp, dtype=int)
@@ -718,7 +829,7 @@ class SpectrumObservationStacker(object):
             bkscal_on_data = obs.on_vector._backscal_array.copy()
 
             bkscal_off_data = obs.off_vector._backscal_array.copy()
-            bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range
+            bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
 
         stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
 

@@ -7,7 +7,8 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy import units as u
 from astropy.units import Quantity
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
@@ -307,7 +308,7 @@ class TestSkyImage:
         self.image = SkyImage.empty(
             nxpix=10, nypix=5, binsz=0.2,
             xref=self.center.l.deg, yref=self.center.b.deg,
-            proj='TAN', coordsys='GAL',
+            proj='TAN', coordsys='GAL', meta={'TEST': 42},
         )
         self.image.data = np.arange(50, dtype=float).reshape((5, 10))
 
@@ -321,6 +322,14 @@ class TestSkyImage:
         assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
         assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
 
+    def test_width(self):
+        width = self.image.width
+        assert_quantity_allclose(width, 2 * u.deg, rtol=1e-3)
+
+    def test_height(self):
+        height = self.image.height
+        assert_allclose(height, 1 * u.deg, rtol=1e-3)
+
     @requires_dependency('scipy')
     @pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])
     def test_smooth(self, kernel):
@@ -328,6 +337,9 @@ class TestSkyImage:
         smoothed = self.image.smooth(kernel, 0.2 * u.deg)
         actual = smoothed.data.sum()
         assert_allclose(actual, desired)
+
+    def test_meta(self):
+        assert self.image.meta['TEST'] == 42
 
 
 def test_image_pad():

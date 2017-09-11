@@ -69,6 +69,7 @@ The Gammapy toolbox
   stats/index
   time/index
   utils/index
+  maps/index
 
 .. _gammapy_news:
 

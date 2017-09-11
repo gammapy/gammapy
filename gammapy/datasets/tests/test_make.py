@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import numpy as np
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...datasets import (make_test_psf, make_test_observation_table,
@@ -21,7 +22,7 @@ def test_make_test_psf_fits_table():
 
 
 def test_make_test_observation_table():
-    observatory_name = 'HESS'
+    observatory_name = 'hess'
     n_obs = 10
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(observatory_name=observatory_name,

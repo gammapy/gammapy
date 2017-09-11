@@ -643,13 +643,33 @@ class SkyCube(MapBase):
             z, y, x = np.meshgrid(z, y, x, indexing='ij')
             data = self._interpolate_data(z, y, x)
         else:
-            zmin = np.rint(self.energy_axis.wcs_world2pix(emin)).astype('int')
-            zmax = np.rint(self.energy_axis.wcs_world2pix(emax)).astype('int')
-            energy = self.energies()[zmin:zmax]
-            data = self.data[zmin:zmax]
+            energy_slice = self._get_energy_slice_for_energy_range(emin, emax)
+            energy = self.energies()[energy_slice]
+            data = self.data[energy_slice]
+
         integral = _trapz_loglog(data, energy, axis=0)
         name = 'integrated {}'.format(self.name)
         return SkyImage(name=name, data=integral, wcs=self.wcs.celestial)
+
+    # TODO: is this the rounding we want? document what it does!
+    def _get_energy_slice_for_energy_range(self, emin, emax):
+        idx_min = np.rint(self.energy_axis.wcs_world2pix(emin)).astype('int')
+        idx_max = np.rint(self.energy_axis.wcs_world2pix(emax)).astype('int')
+        return slice(idx_min, idx_max)
+
+    def sky_image_sum(self, emin, emax):
+        """Sum cube along the energy axis.
+
+        Similar to the ``sky_image_integral`` method,
+        but not doing interpolation / integration.
+
+        Just selects a subset of energy bins and sums those.
+        This is useful for counts.
+        """
+        sky_image = self.sky_image_ref()
+        energy_slice = self._get_energy_slice_for_energy_range(emin, emax)
+        sky_image.data = self.data[energy_slice].sum(axis=1)
+        return sky_image
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """Reproject spatial dimensions onto a reference image.

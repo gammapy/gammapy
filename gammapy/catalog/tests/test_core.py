@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
+import pytest
+
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table, Column
 from astropy.units import Quantity
 from ..core import SourceCatalog

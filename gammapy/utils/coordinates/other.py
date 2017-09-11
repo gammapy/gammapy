@@ -10,6 +10,7 @@ __all__ = [
     'motion_since_birth', 'polar', 'D_SUN_TO_GALACTIC_CENTER',
 ]
 
+# TODO: replace this with the default from the Galactocentric frame in astropy.coordinates
 D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, 'kpc')
 
 

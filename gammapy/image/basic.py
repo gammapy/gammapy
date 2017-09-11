@@ -103,9 +103,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
     The following images will be computed:
 
-        * counts
-        * exposure
-        * background
+    * counts
+    * exposure
+    * background
 
     Parameters
     ----------
@@ -384,13 +384,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         """
         galactic_diffuse = dataset.galactic_diffuse
 
-        # add margin of 1 pixel
         margin = galactic_diffuse.sky_image_ref.wcs_pixel_scale()
-
-        footprint = self.reference.footprint(mode='edges')
-        width = footprint['width'] + margin[1]
-        height = footprint['height'] + margin[0]
-
+        width = self.reference.width + margin[1]
+        height = self.reference.height + margin[0]
         cutout = galactic_diffuse.cutout(position=self.reference.center,
                                          size=(height, width))
         return cutout
@@ -452,9 +448,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         # reproject to reference image and renormalize data
         # TODO: use solid angle image
-        norm = (npred_total.wcs_pixel_scale() / self.reference.wcs_pixel_scale())
+        norm = (npred_total.wcs_pixel_scale() / self.reference.wcs_pixel_scale()).to('')
         npred_total = npred_total.reproject(self.reference)
-        npred_total.data /= (norm.mean()) ** 2
+        npred_total.data /= (norm.value.mean()) ** 2
 
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)

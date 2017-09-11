@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
-from ...utils.testing import requires_data, requires_dependency
 from ..hess import SourceCatalogHGPS
+from ...utils.testing import requires_data, requires_dependency
+from ...image import SkyImage
 
 
 @requires_data('hgps')
@@ -22,13 +24,37 @@ class TestSourceCatalogHGPS:
     def test_associations_table(self):
         assert len(self.cat.associations) == 223
 
+    @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
+    def test_large_scale_component(self, source_name):
+        # This test compares the flux values from the LS model within source
+        # regions with ones listed in the catalog, agreement is <1%
+        ls_model = self.cat.large_scale_component
+
+        source = self.cat[source_name]
+        rspec = source.data['RSpec']
+        npix = int(2.5 * rspec.value / 0.02)
+
+        wcs_spec = {'xref': source.position.galactic.l.deg,
+                    'yref': source.position.galactic.b.deg,
+                    'nxpix': npix,
+                    'nypix': npix}
+
+        image = SkyImage.empty(**wcs_spec)
+        coordinates = image.coordinates()
+        image.data = ls_model.evaluate(coordinates)
+        image.data *= image.solid_angle()
+
+        mask = coordinates.separation(source.position) < rspec
+        flux_ls = image.data[mask].sum()
+
+        assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
+
 
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
     def setup(self):
         self.cat = SourceCatalogHGPS()
-        # Use HESS J1825-137 as a test source
-        self.source_name = 'HESS J1825-137'
+        self.source_name = 'HESS J1843-033'
         self.source = self.cat[self.source_name]
 
     def test_single_gauss(self):
@@ -50,63 +76,46 @@ class TestSourceCatalogObjectHGPS:
         assert self.source.name == self.source_name
 
     def test_index(self):
-        assert self.source.index == 54
+        assert self.source.index == 64
 
     def test_data(self):
         data = self.source.data
-        assert data['Source_Class'] == 'PWN'
+        assert data['Source_Class'] == 'Unid'
 
     def test_pprint(self):
         self.source.pprint()
 
     def test_str(self):
         ss = self.source.__str__()
-        assert 'Source name          : HESS J1825-137' in ss
-        assert 'Component HGPSC 065:' in ss
+        assert 'Source name          : HESS J1843-033' in ss
+        assert 'Component HGPSC 083:' in ss
 
     def test_model(self):
-        model = self.source.spectral_model
+        source = self.source
+        model = source.spectral_model
         pars = model.parameters
-        assert_quantity_allclose(
-            pars['amplitude'].quantity,
-            u.Quantity(1.716531924e-11, 'TeV-1 cm-2 s-1'),
-        )
-        assert_quantity_allclose(
-            pars['index'].quantity,
-            u.Quantity(2.3770857316, ''),
-        )
-        assert_quantity_allclose(
-            pars['reference'].quantity,
-            u.Quantity(1.1561109149, 'TeV'),
-        )
+        assert_allclose(pars['amplitude'].value, 9.140179932365378e-13)
+        assert_allclose(pars['index'].value, 2.1513476371765137)
+        assert_allclose(pars['reference'].value, 1.867810606956482)
 
-        emin, emax = u.Quantity([1, 1e10], 'TeV')
-        desired = u.Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
-        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+        emin, emax = u.Quantity([1, 1e5], 'TeV')
+        actual = model.integral(emin, emax).value
+        desired = source.data['Flux_Spec_Int_1TeV'].value
+        assert_allclose(actual, desired, rtol=0.01)
 
     def test_ecpl_model(self):
-        model = self.cat['HESS J0835-455'].spectral_model
+        source = self.cat['HESS J0835-455']
+        model = source.spectral_model
         pars = model.parameters
-        assert_quantity_allclose(
-            pars['amplitude'].quantity,
-            u.Quantity(6.408420542586617e-12, 'TeV-1 cm-2 s-1'),
-        )
-        assert_quantity_allclose(
-            pars['index'].quantity,
-            u.Quantity(1.3543991614920847, ''),
-        )
-        assert_quantity_allclose(
-            pars['reference'].quantity,
-            u.Quantity(1.696938754239, 'TeV'),
-        )
-        assert_quantity_allclose(
-            pars['lambda_'].quantity,
-            u.Quantity(0.081517637, 'TeV-1'),
-        )
+        assert_allclose(pars['amplitude'].value, 6.408420542586617e-12)
+        assert_allclose(pars['index'].value, 1.3543991614920847)
+        assert_allclose(pars['reference'].value, 1.696938754239)
+        assert_allclose(pars['lambda_'].value, 0.081517637)
 
-        emin, emax = u.Quantity([1, 1e10], 'TeV')
-        desired = u.Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
-        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+        emin, emax = u.Quantity([1, 1e5], 'TeV')
+        actual = model.integral(emin, emax).value
+        desired = source.data['Flux_Spec_Int_1TeV'].value
+        assert_allclose(actual, desired, rtol=0.01)
 
     @requires_dependency('matplotlib')
     def test_model_plot(self):

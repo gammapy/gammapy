@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.utils.data import get_pkg_data_filename
 from astropy.modeling.tests.test_models import Fittable2DModelTester
-from ..models import Delta2D, Gaussian2D, Sphere2D, Shell2D, Template2D
+from ....extern import xmltodict
 from ....utils.testing import requires_dependency, requires_data
+from ..shapes import Delta2D, Gaussian2D, Sphere2D, Shell2D, Template2D
 
 models_2D = [
 
@@ -86,7 +88,7 @@ def test_delta2d_against_gauss(x_0, y_0):
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_template2d():
-    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v17'
+    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
                 '/Templates/HESSJ1841-055.fits')
     template = Template2D.read(filename)
     assert_allclose(template(26.7, 0), 1.1553735159851262)
@@ -95,3 +97,12 @@ def test_template2d():
 @pytest.mark.parametrize(('model_class', 'test_parameters'), models_2D)
 class TestMorphologyModels(Fittable2DModelTester):
     pass
+
+
+def test_model_xml_read_write():
+    filename = get_pkg_data_filename('data/fermi_model.xml')
+    sources = xmltodict.parse(open(filename).read())
+    sources = sources['source_library']['source']
+    assert sources[0]['@name'] == '3C 273'
+    assert sources[0]['spectrum']['parameter'][1]['@name'] == 'Index'
+    assert sources[0]['spectrum']['parameter'][1]['@value'] == '-2.1'

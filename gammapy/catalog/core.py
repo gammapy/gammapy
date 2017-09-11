@@ -6,6 +6,7 @@ from collections import OrderedDict
 import sys
 from copy import deepcopy
 from pprint import pprint
+import numpy as np
 from astropy.extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
@@ -58,10 +59,28 @@ class SourceCatalogObject(object):
 
         pprint(self.data, stream=file)
 
-        # TODO: add methods to serialise to JSON and YAML
-        # and also to quickly pretty-print output in that format for interactive use.
-        # Maybe even add HTML output for IPython repr?
-        # Or at to_table method?
+    @property
+    def _data_python_dict(self):
+        """Convert ``data`` into a Python dict that only contains
+        Python data types, i.e. is readily JSON or YAML serialisable.
+        Quantity unit information is stripped.
+
+        This is mainly used at the moment to pass the data to
+        the gamma-sky.net webpage.
+        """
+        out = OrderedDict()
+        for key, value in self.data.items():
+            if isinstance(value, int):
+                out_val = value
+            else:
+                # This works because almost all values in ``data``
+                # are Numpy objects, and ``tolist`` works for Numpy
+                # arrays and scalars.
+                out_val = np.asarray(value).tolist()
+
+            out[key] = out_val
+
+        return out
 
     def info(self):
         """
@@ -106,6 +125,16 @@ class SourceCatalog(object):
         self.table = table
         self._source_name_key = source_name_key
         self._source_name_alias = source_name_alias
+
+    def __str__(self):
+        """Info string."""
+        ss = self.description
+        ss += ' with {} objects.'.format(len(self.table))
+        return ss
+
+    def info(self):
+        """Print info string."""
+        print(self)
 
     @lazyproperty
     def _name_to_index_cache(self):
@@ -247,15 +276,16 @@ class SourceCatalog(object):
             data[colname] = val
         return data
 
-    def info(self):
-        """Print info string."""
-        print(self)
+    @property
+    def _data_python_list(self):
+        """Convert catalog into a Python list that only contains
+        Python data types, i.e. is readily JSON or YAML serialisable.
+        Quantity unit information is stripped.
 
-    def __str__(self):
-        """Info string."""
-        ss = self.description
-        ss += ' with {} objects.'.format(len(self.table))
-        return ss
+        This is mainly used at the moment to pass the data to
+        the gamma-sky.net webpage.
+        """
+        return [source._data_python_dict for source in self]
 
     @property
     def positions(self):

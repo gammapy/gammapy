@@ -301,7 +301,7 @@ class StackedObsCubeMaker(object):
         for idx_energy, E in enumerate(energy_bins[0:-1]):
             energy_band = Energy([energy_bins[idx_energy].value, energy_bins[idx_energy + 1].value], energy_bins.unit)
             energy = EnergyBounds.equal_log_spacing(energy_band[0].value, energy_band[1].value, 100, energy_band.unit)
-            psf_energydependent = obslist.make_mean_psf(center, energy, theta=None)
+            psf_energydependent = obslist.make_mean_psf(center, energy, rad=None)
             try:
                 psf_table = psf_energydependent.table_psf_in_energy_band(
                     energy_band, spectral_index=spectral_index)

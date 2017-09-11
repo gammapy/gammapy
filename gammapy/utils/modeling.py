@@ -85,14 +85,14 @@ class Parameter(object):
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
         self.name = name
 
-        if isinstance(value, u.Quantity):
+        if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
             self.quantity = value
         else:
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin
-        self.parmax = parmax
+        self.parmin = parmin or np.nan
+        self.parmax = parmax or np.nan
         self.frozen = frozen
 
     @property
@@ -102,6 +102,7 @@ class Parameter(object):
 
     @quantity.setter
     def quantity(self, par):
+        par = u.Quantity(par)
         self.value = par.value
         self.unit = par.unit
 
@@ -116,8 +117,8 @@ class Parameter(object):
                     value=float(self.value),
                     unit=str(self.unit),
                     frozen=self.frozen,
-                    min=self.parmin,
-                    max=self.parmax)
+                    min=float(self.parmin),
+                    max=float(self.parmax))
 
     # TODO: I think this method is not very useful, because the same can be just
     # achieved with `Parameter(**data)`. Why duplicate?
@@ -153,11 +154,14 @@ class Parameter(object):
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
+
+        parmin = np.finfo(np.float32).min if np.isnan(self.parmin) else self.parmin
+        parmax = np.finfo(np.float32).max if np.isnan(self.parmax) else self.parmax
+
         par = Parameter(modelname=modelname, name=self.name,
                         val=self.value, units=self.unit,
-                        min=self.parmin, max=self.parmax,
+                        min=parmin, max=parmax,
                         frozen=self.frozen)
-
         return par
 
 
@@ -216,12 +220,12 @@ class ParameterList(object):
 
     def to_list_of_dict(self):
         result = []
-        for i, parameter in enumerate(self.parameters):
+        for parameter in self.parameters:
             vals = parameter.to_dict()
             if self.covariance is None:
                 vals['error'] = np.nan
             else:
-                vals['error'] = np.sqrt(self.covariance[i, i])
+                vals['error'] = self.error(parameter.name)
             result.append(vals)
         return result
 
@@ -231,7 +235,9 @@ class ParameterList(object):
         """
         names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
-                   'error': '.3e', }
+                   'error': '.3e',
+                   'min': '.3e',
+                   'max': '.3e'}
         table = Table(self.to_list_of_dict(), names=names)
 
         for name in formats:
@@ -258,8 +264,10 @@ class ParameterList(object):
     def from_dict(cls, val):
         pars = list()
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'], value=par['value'],
-                                  unit=par['unit']))
+            pars.append(Parameter(name=par['name'], value=float(par['value']),
+                                  unit=par['unit'], parmin=float(par['min']),
+                                  parmax=float(par['max']),
+                                  frozen=par['frozen']))
         try:
             covariance = np.array(val['covariance'])
         except KeyError:
@@ -349,6 +357,25 @@ class ParameterList(object):
                 covariance_new[i_new, j_new] = covariance[i, j]
 
         self.covariance = covariance_new
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def error(self, parname):
+        """
+        Return error on a given parameter
+
+        Parameters
+        ----------
+        parname : str
+            Parameter
+        """
+        if self.covariance is None:
+            raise ValueError('Covariance matrix not set.')
+
+        for i, parameter in enumerate(self.parameters):
+            if parameter.name == parname:
+                return np.sqrt(self.covariance[i, i])
+        raise ValueError('Could not find parameter {}'.format(parname))
 
 
 class SourceLibrary(object):

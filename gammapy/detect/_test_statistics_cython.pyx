@@ -97,8 +97,8 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    for j in range(ni):
-        for i in range(nj):
+    for j in range(nj):
+        for i in range(ni):
             if counts[j, i] > 0:
                 s_counts += counts[j, i]
                 if model[j, i] > 0:

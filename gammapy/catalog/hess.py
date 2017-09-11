@@ -23,6 +23,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..image.models import Delta2D, Shell2D
+from ..background.models import GaussianBand2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -38,7 +39,7 @@ FF = 1e-12
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
-SHELL_WIDTH = 0.05 # Default shell width (fraction of R_out)
+SHELL_WIDTH = 0.05  # Default shell width (fraction of R_out)
 
 
 class HGPSGaussComponent(object):
@@ -49,6 +50,20 @@ class HGPSGaussComponent(object):
 
     def __init__(self, data):
         self.data = OrderedDict(data)
+
+    def __str__(self):
+        """Pretty-print source data"""
+        d = self.data
+        ss = 'Component {}:\n'.format(d['Component_ID'])
+        fmt = '{:<20s} : {:8.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('GLON', d['GLON'].value, d['GLON_Err'].value)
+        ss += fmt.format('GLAT', d['GLAT'].value, d['GLAT_Err'].value)
+        fmt = '{:<20s} : {:.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('Size', d['Size'].value, d['Size_Err'].value)
+        val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
+        fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
+        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        return ss
 
     @property
     def name(self):
@@ -81,21 +96,6 @@ class HGPSGaussComponent(object):
         return Gaussian2D(**pars)
 
 
-    def __str__(self):
-        """Pretty-print source data"""
-        d = self.data
-        ss = 'Component {}:\n'.format(d['Component_ID'])
-        fmt = '{:<20s} : {:8.3f} +/- {:.3f} deg\n'
-        ss += fmt.format('GLON', d['GLON'].value, d['GLON_Err'].value)
-        ss += fmt.format('GLAT', d['GLAT'].value, d['GLAT_Err'].value)
-        fmt = '{:<20s} : {:.3f} +/- {:.3f} deg\n'
-        ss += fmt.format('Size', d['Size'].value, d['Size_Err'].value)
-        val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
-        fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
-        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
-        return ss
-
-
 class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog."""
 
@@ -103,18 +103,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def energy_range(self):
         return u.Quantity([self.data['Energy_Range_Spec_Lo'], self.data['Energy_Range_Spec_Hi']])
 
+    def __str__(self):
+        return self.info()
+
     def info(self, info='all'):
-        """Print info.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations'}
-            Comma separated list of options
-        """
-        ss = self.__str__(info=info)
-        print(ss)
-
-    def __str__(self, info='all'):
         """Info string.
 
         Parameters
@@ -123,7 +115,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Comma separated list of options
         """
         if info == 'all':
-            info = 'basic,map,spec,flux_points,components,associations'
+            info = 'basic,associations,map,spec,flux_points,components'
 
         ss = ''
         ops = info.split(',')
@@ -153,6 +145,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n'.format('Identified object', d['Identified_Object'])
         ss += '{:<20s} : {}\n'.format('Gamma-Cat id', d['Gamma_Cat_Source_ID'])
         ss += '\n'
+        return ss
+
+    def _info_associations(self):
+        ss = '\n*** Source associations info ***\n\n'
+        associations = ', '.join(self.associations)
+        ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
     def _info_map(self):
@@ -191,39 +189,39 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime'].value)
 
-        ss += '{:<20s} : {:.1f}\n'.format('Energy threshold', d['Energy_Threshold'])
+        ss += '{:<20s} : {:.2f}\n'.format('Energy threshold', d['Energy_Threshold'])
 
         val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
-        ss += '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Map measurement',
             d['Flux_Map_RSpec_Data'].value / FF,
             d['Flux_Map_RSpec_Data'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Source model',
             d['Flux_Map_RSpec_Source'].value / FF,
             d['Flux_Map_RSpec_Source'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Other component model',
             d['Flux_Map_RSpec_Other'].value / FF,
             d['Flux_Map_RSpec_Other'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Large scale component model',
             d['Flux_Map_RSpec_LS'].value / FF,
             d['Flux_Map_RSpec_LS'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
+        ss += '{:<30s} : {:.3f} x 10^-12 cm^-2 s^-1 = {:5.2f} % Crab\n'.format(
             'Total model',
             d['Flux_Map_RSpec_Total'].value / FF,
             d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB,
@@ -247,7 +245,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         lo = d['Energy_Range_Spec_Lo'].value
         hi = d['Energy_Range_Spec_Hi'].value
-        ss += '{:<20s} : {:.1f} to {:.1f} TeV\n'.format('Energy range:', lo, hi)
+        ss += '{:<20s} : {:.2f} to {:.2f} TeV\n'.format('Energy range:', lo, hi)
 
         ss += '{:<20s} : {:.1f}\n'.format('Background', d['Background_Spec'])
         ss += '{:<20s} : {:.1f}\n'.format('Excess', d['Excess_Spec'])
@@ -258,12 +256,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_Int_1TeV'].value
         err = d['Flux_Spec_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Best-fit model flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Flux_Spec_Energy_1_10_TeV'].value
         err = d['Flux_Spec_Energy_1_10_TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 erg cm^-2 s^-1\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 erg cm^-2 s^-1\n'.format(
             'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
 
         # TODO: can we just use the Gammapy model classes here instead of duplicating the code?
@@ -274,21 +272,21 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_spec_pl(self):
         d = self.data
-        ss = '{:<20s} : {:.1f}\n'.format('Pivot energy', d['Energy_Spec_PL_Pivot'])
+        ss = '{:<20s} : {:.2f}\n'.format('Pivot energy', d['Energy_Spec_PL_Pivot'])
 
         val = d['Flux_Spec_PL_Diff_Pivot'].value
         err = d['Flux_Spec_PL_Diff_Pivot_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'Flux at pivot energy', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_PL_Int_1TeV'].value
         err = d['Flux_Spec_PL_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'PL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Flux_Spec_PL_Diff_1TeV'].value
         err = d['Flux_Spec_PL_Diff_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'PL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Index_Spec_PL']
@@ -304,12 +302,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_ECPL_Diff_1TeV'].value
         err = d['Flux_Spec_ECPL_Diff_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'ECPL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_ECPL_Int_1TeV'].value
         err = d['Flux_Spec_ECPL_Int_1TeV_Err'].value
-        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
             'ECPL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Index_Spec_ECPL']
@@ -325,7 +323,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         err = err / val ** 2
         val = 1. / val
 
-        ss += '{:<20s} : {:.1f} +/- {:.1f} TeV\n'.format('ECPL E_cut', val, err)
+        ss += '{:<20s} : {:.2f} +/- {:.2f} TeV\n'.format('ECPL E_cut', val, err)
 
         return ss
 
@@ -339,8 +337,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         flux_points = self.flux_points.table.copy()
 
         energy_cols = ['e_ref', 'e_min', 'e_max']
-        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp']
-        flux_points = flux_points[energy_cols + flux_cols]
+        flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']
+        cols = energy_cols + flux_cols + ['is_ul']
+        flux_points = flux_points[cols]
 
         for _ in energy_cols:
             flux_points[_].format = '.3f'
@@ -362,15 +361,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n\n'.format('Spatial components', self.data['Components'])
 
         for component in self.components:
-            # Call __str__ directly to
-            ss += component.__str__()
+            ss += str(component)
             ss += '\n\n'
-        return ss
 
-    def _info_associations(self):
-        ss = '\n*** Source associations info ***\n\n'
-        associations = ', '.join(self.associations)
-        ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
     @property
@@ -384,6 +377,23 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         data = self.data
         spec_type = data['Spectral_Model'].strip()
+        return self._spectral_model(spec_type)
+
+    def _spectral_model(self, spec_type):
+        """
+        Create spectral model from source parameters.
+
+        Parameters
+        ----------
+        spec_type : str
+            Spectral model type either 'PL' or 'ECPL'.
+
+        Returns
+        -------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model instance.
+        """
+        data = self.data
 
         pars, errs = {}, {}
 
@@ -409,7 +419,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-
     def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
         """
         Source spatial model.
@@ -434,7 +443,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['x_0'] = glon.value
             pars['y_0'] = glat.value
             r_out = d['Size'].to('deg').value
-            pars['width'] =  r_out * SHELL_WIDTH
+            pars['width'] = r_out * SHELL_WIDTH
             pars['r_in'] = r_out * (1 - SHELL_WIDTH)
             pars['amplitude'] = amplitude
             return Shell2D(**pars)
@@ -467,7 +476,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 return model
 
         else:
-            raise ValueError('Not a valid spatial model{}'.format(morph_type))
+            raise ValueError('Not a valid spatial model{}'.format(spatial_model))
 
     @property
     def is_pointlike(self):
@@ -489,9 +498,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table['e_max'] = self.data['Flux_Points_Energy_Max'][mask]
 
         table['dnde'] = self.data['Flux_Points_Flux'][mask]
-        table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_errn'] = self.data['Flux_Points_Flux_Err_Lo'][mask]
+        table['dnde_errp'] = self.data['Flux_Points_Flux_Err_Hi'][mask]
         table['dnde_ul'] = self.data['Flux_Points_Flux_UL'][mask]
+        table['is_ul'] = self.data['Flux_Points_Flux_Is_UL'][mask].astype('bool')
 
         return FluxPoints(table)
 
@@ -524,6 +534,14 @@ class SourceCatalogHGPS(SourceCatalog):
         self.components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
         self.associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
         self.identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
+        self._large_scale_component = Table.read(filename, hdu='HGPS_LARGE_SCALE_COMPONENT')
+
+    @property
+    def large_scale_component(self):
+        """Large sclae component model (`~gammapy.background.models.GaussianBand2D`).
+        """
+        table = self._large_scale_component
+        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0))
 
     def _make_source_object(self, index):
         """Make one source object.

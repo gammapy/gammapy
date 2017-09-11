@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 from gammapy.utils.energy import EnergyBounds
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
                       TableModel, AbsorbedSpectralModel, Absorption)
@@ -66,15 +67,16 @@ TEST_MODELS = [
     dict(
         name='ecpl',
         model=ExponentialCutoffPowerLaw(
-            index=2.3 * u.Unit(''),
+            index=1.6 * u.Unit(''),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
         ),
 
-        val_at_2TeV=u.Quantity(0.6650160161581361, 'cm-2 s-1 TeV-1'),
-        integral_1_10TeV=u.Quantity(2.3556579120286796, 'cm-2 s-1'),
-        eflux_1_10TeV=u.Quantity(4.83209019773561, 'TeV cm-2 s-1'),
+        val_at_2TeV=u.Quantity(1.080321705479446, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(3.765838739678921, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(9.901735870666526, 'TeV cm-2 s-1'),
+        e_peak=4 * u.TeV
     ),
 
     dict(
@@ -102,10 +104,51 @@ TEST_MODELS = [
 
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
-        eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1')
+        eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
+        e_peak=0.74082 * u.TeV
     ),
 ]
 
+# Add compound models
+TEST_MODELS.append(dict(
+    name='compound1',
+    model=TEST_MODELS[0]['model'] * 5,
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 5,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 5,
+))
+
+TEST_MODELS.append(dict(
+    name='compound2',
+    model=5 * TEST_MODELS[0]['model'],
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 5,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 5,
+))
+
+TEST_MODELS.append(dict(
+    name='compound3',
+    model= TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
+    val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 2,
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 2,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 2,
+))
+
+TEST_MODELS.append(dict(
+    name='compound4',
+    model= TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
+    val_at_2TeV= 0.9 * TEST_MODELS[0]['val_at_2TeV'],
+    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'), 
+    eflux_1_10TeV=2.6322140512045697 * u.Unit('TeV cm-2 s-1'),
+))
+
+TEST_MODELS.append(dict(
+    name='compound5',
+    model= TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
+    val_at_2TeV= 0.5 * TEST_MODELS[0]['val_at_2TeV'],
+    integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 0.5,
+    eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 0.5,
+))
 # The table model imports scipy.interpolate in `__init__`,
 # so we skip it if scipy is not available
 try:
@@ -137,10 +180,16 @@ def test_models(spectrum):
     assert_quantity_allclose(model.energy_flux(emin=emin, emax=emax),
                              spectrum['eflux_1_10TeV'])
 
+    if 'e_peak' in spectrum:
+        assert_quantity_allclose(model.e_peak, spectrum['e_peak'], rtol=1E-2)
+
     # inverse for TableModel is not implemented
     if not isinstance(model, TableModel):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
+
     model.to_dict()
+
+    assert '' in str(model)
 
 
 @requires_dependency('matplotlib')

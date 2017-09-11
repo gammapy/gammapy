@@ -206,6 +206,26 @@ class Shell2D(Fittable2DModel):
         return ((self.y_0 - r_out, self.y_0 + r_out),
                 (self.x_0 - r_out, self.x_0 + r_out))
 
+    def to_sherpa(self, name='default'):
+        """Convert to a `~sherpa.models.ArithmeticModel`.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
+        from sherpa.astro.models import Shell2D
+        model = Shell2D(name=name)
+
+        model.xpos = self.x_0.value
+        model.ypos = self.y_0.value
+        model.ampl = self.amplitude.value
+        # Note: we checked, the Sherpa `r0` is our `r_in`.
+        model.r0 = self.r_in.value
+        model.width = self.width.value
+
+        return model
+
 
 class Sphere2D(Fittable2DModel):
     """Projected homogeneous radiating sphere model.
@@ -324,8 +344,9 @@ class Template2D(Fittable2DModel):
     """
     amplitude = Parameter('amplitude')
 
-    def __init__(self, image, amplitude=1., **constraints):
+    def __init__(self, image, amplitude=1., frame='galactic', **constraints):
         self.image = image
+        self.frame = frame
         super(Template2D, self).__init__(amplitude=amplitude, **constraints)
 
     @lazyproperty
@@ -372,18 +393,18 @@ class Template2D(Fittable2DModel):
 
     @property
     def bounding_box(self):
-        footprint = self.image.footprint()
-        width = footprint['width'].deg
-        height = footprint['height'].deg
-        center = footprint['center']
+        width = self.image.width.deg
+        height = self.image.height.deg
+        center = self.image.center
         x_0 = center.data.lon.wrap_at('180d').deg
         y_0 = center.data.lat.deg
         return ((y_0 - height / 2, y_0 + height / 2),
                 (x_0 - width, x_0 + height / 2))
 
 
+# TODO: change this to a model registry
 morph_types = OrderedDict()
-"""Available morphology types."""
+morph_types.__doc__ = """Spatial model registry (`~collections.OrderedDict`)."""
 morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D

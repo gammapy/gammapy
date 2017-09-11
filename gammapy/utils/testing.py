@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
+import pytest
 from astropy.coordinates import Angle
-from astropy.tests.helper import pytest
 from numpy.testing import assert_array_less, assert_allclose
+
 from ..data import DataManager
 from ..datasets import gammapy_extra
 

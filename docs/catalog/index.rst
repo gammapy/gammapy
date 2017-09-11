@@ -14,6 +14,8 @@ and catalogs relevant for gamma-ray astronomy specifically.
 
 A tutorial introduction is available here: :gp-extra-notebook:`source_catalogs`.
 
+If you just want to browse catalog information, you can visit http://gamma-sky.net .
+
 Available catalogs
 ------------------
 
@@ -21,12 +23,13 @@ Support for the following catalogs is available::
 
        Name                       Description                      Sources
     --------- ---------------------------------------------------- -------
+         hgps H.E.S.S. Galactic plane survey (HGPS) source catalog      78
+    gamma-cat                 An open catalog of gamma-ray sources     166
          3fgl                      LAT 4-year point source catalog    3034
          1fhl      First Fermi-LAT Catalog of Sources above 10 GeV     514
          2fhl                LAT second high-energy source catalog     360
-         3fhl                 LAT third high-energy source catalog    1558
-         hgps H.E.S.S. Galactic plane survey (HGPS) source catalog      78
-    gamma-cat                 An open catalog of gamma-ray sources     162
+         3fhl                 LAT third high-energy source catalog    1556
+         2hwc               2HWC catalog from the HAWC observatory      40
 
 More catalogs can be added to ``gammapy.catalog``, and users can also add
 support for their favourite catalog in their Python script or package,
@@ -98,59 +101,6 @@ The ``source`` object contains all of the information in the ``data`` attribute:
 TODO: continue here describing how to access spectra, finder charts, ...
 once that's implemented.
 
-
-Catalog analysis
-----------------
-
-TODO: explain about the catalog "analysis" classes and functions (see API docs below)
-
-TODO: give one example, e.g. how to reproduce a log(N)-log(S) plot from a Fermi catalog paper.
-
-Command line tool
-=================
-
-Sometimes you just want to look up the information for a give source, and it's a little
-inconvenient to have to start ``python`` and type the imports to access the info via ``gammapy.catalog``.
-
-In this case we recommend you go to http://gamma-sky.net/cat ,
-a website we are building for this use case (still very preliminary and incomplete).
-
-Another option is to use the command line tool ``gammapy-catalog-query``::
-
-    $ gammapy-catalog-query --help
-    Usage: gammapy-catalog-query [OPTIONS] COMMAND [ARGS]...
-
-      Gammapy catalog query command line tool.
-
-      Examples
-      --------
-
-      gammapy-catalog-query -h
-      gammapy-catalog-query catalogs
-      gammapy-catalog-query sources 2fhl
-      gammapy-catalog-query info 2fhl "2FHL J0534.5+2201"
-      gammapy-catalog-query info 3fgl "3FGL J0534.5+2201"
-      gammapy-catalog-query info hgps "HESS J1825-137"
-
-      gammapy-catalog-query table-info 2fhl
-      gammapy-catalog-query table-web 2fhl
-
-    Options:
-      -h, --help  Show this message and exit.
-
-    Commands:
-      catalogs         List available catalogs
-      info             Print info for CATALOG and SOURCE
-      plot-lightcurve  Plot lightcurve for CATALOG and SOURCE
-      plot-spectrum    Plot spectrum for CATALOG and SOURCE
-      sources          List sources for CATALOG
-      table-info       Summarise table info for CATALOG
-      table-web        Open table in web browser for CATALOG
-
-We also started to implement a local web app: ``gammapy-catalog-browse``.
-It isn't working well at the moment, and probably now that we started http://gamma-sky.net we'll probably remove it.
-But if anyone is interested to fix and improve ``gammapy-catalog-browse``, we could also keep it.
-
 Content
 =======
 
@@ -164,3 +114,4 @@ Reference/API
 
 .. automodapi:: gammapy.catalog
     :no-inheritance-diagram:
+    :include-all-objects:

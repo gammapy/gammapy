@@ -33,3 +33,4 @@ Reference/API
 
 .. automodapi:: gammapy.astro.source
     :no-inheritance-diagram:
+    :include-all-objects:

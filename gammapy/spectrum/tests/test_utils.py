@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...spectrum import LogEnergyAxis, integrate_spectrum, CountsPredictor
@@ -42,9 +43,14 @@ def test_integrate_spectrum():
     val = integrate_spectrum(f, e1, e2)
     assert_quantity_allclose(val, ref)
 
+    # Test quantity handling
+    e2_ = Quantity(1e4, 'GeV')
+    val_ = integrate_spectrum(f, e1, e2_)
+    assert_quantity_allclose(val, val_)
+
 
 @requires_dependency('uncertainties')
-def test_integrate_spectrum():
+def test_integrate_spectrum_uncertainties():
     """
     Test numerical integration against analytical solution.
     """

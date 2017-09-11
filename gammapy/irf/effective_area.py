@@ -244,11 +244,12 @@ class EffectiveAreaTable(object):
         cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
         return cleaned_data.max()
 
-    def find_energy(self, aeff):
+    def find_energy(self, aeff, reverse=False):
         """Find energy for given effective area.
 
         A linear interpolation is performed between the two nodes closest to
-        the desired effective area value.
+        the desired effective area value. By default, the first match is
+        returned (use `reverse` to search starting from the end of the array)
 
         TODO: Move to `~gammapy.utils.nddata.NDDataArray`
 
@@ -256,18 +257,37 @@ class EffectiveAreaTable(object):
         ----------
         aeff : `~astropy.units.Quantity`
             Effective area value
+        reverse : bool
+            Reverse the direction, i.e. search starting from the end of the array
 
         Returns
         -------
         energy : `~astropy.units.Quantity`
             Energy corresponding to aeff
         """
-        idx = np.where(self.data.data > aeff)[0][0]
+        valid = np.where(self.data.data > aeff)[0]
+        idx = valid[0]
+        if reverse:
+            idx = valid[-1]
 
-        # Linear interpolation between two energy nodes
-        energy = np.interp(aeff.value,
-                           (self.data.data[[idx - 1, idx]].value),
-                           (self.energy.nodes[[idx - 1, idx]].value))
+        if not reverse:
+            # Return lower edge if first bin is selected
+            if idx == 0:
+                energy = self.energy.lo[idx].value
+            # Perform linear interpolation otherwise
+            else:
+                energy = np.interp(aeff.value,
+                                   (self.data.data[[idx - 1, idx]].value),
+                                   (self.energy.nodes[[idx - 1, idx]].value))
+        else:
+            # Return upper edge if last bin is selected
+            if idx == self.data.data.size - 1:
+                energy = self.energy.hi[idx].value
+            # Perform linear interpolation otherwise
+            else:
+                energy = np.interp(aeff.value,
+                                   (self.data.data[[idx, idx + 1]].value),
+                                   (self.energy.nodes[[idx, idx + 1]].value))
         return energy * self.energy.unit
 
     def to_sherpa(self, name):

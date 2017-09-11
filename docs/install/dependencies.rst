@@ -29,7 +29,6 @@ The required core dependencies of Gammapy are:
 We're currently using
 
 * `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
-* `flask`_ and some Flask plugins for Gammapy web apps
 
 Currently optional dependencies that are being considered as core dependencies:
 
