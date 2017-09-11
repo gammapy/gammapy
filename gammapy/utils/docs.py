@@ -41,10 +41,13 @@ class ExtraImage(Image):
             if not path.is_file():
                 msg = 'Error in {} directive: File not found: {}'.format(self.name, path)
                 raise self.error(msg)
-            self.arguments[0] = '/' + str(path)
+            # Usually Sphinx doesn't support absolute paths
+            # But passing a POSIX string of the absolute path
+            # with an extra "/" at the start seems to do the trick
+            self.arguments[0] = '/' + path.absolute().as_posix()
         else:
             self.warning('GAMMAPY_EXTRA not available. Missing image: {}'.format(self.name, filename))
-            self.options['alt'] = self.argument[1]
+            self.options['alt'] = self.arguments[1]
 
         return super(ExtraImage, self).run()
 
