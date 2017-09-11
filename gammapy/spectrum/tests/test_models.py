@@ -191,6 +191,11 @@ def test_models(spectrum):
 
     assert '' in str(model)
 
+    # check that an array evaluation works (otherwise e.g. plotting raises an error)
+    e_array = [2, 10, 20] * u.TeV
+    val = model(e_array)
+    assert_quantity_allclose(val[0], spectrum['val_at_2TeV'])
+
 
 @requires_dependency('matplotlib')
 @requires_dependency('sherpa')
