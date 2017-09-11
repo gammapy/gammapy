@@ -34,17 +34,16 @@ class ExtraImage(Image):
     """Directive to add optional images from gammapy-extra"""
 
     def run(self):
+        filename = self.arguments[0]
+
         if HAS_GP_EXTRA:
-            path = gammapy_extra_path / 'figures'
-            filename = self.arguments[0]
-            current_source = self.state_machine.document.current_source
-            module = current_source.split('/')[-2]
-            new_filename = path / module / filename
-            if not new_filename.is_file():
-                msg = 'Error in {} directive: File not found: {}'.format(self.name, new_filename)
+            path = gammapy_extra_path / 'figures' / filename
+            if not path.is_file():
+                msg = 'Error in {} directive: File not found: {}'.format(self.name, path)
                 raise self.error(msg)
-            self.arguments[0] = '/' + str(new_filename)
+            self.arguments[0] = '/' + str(path)
         else:
+            self.warning('GAMMAPY_EXTRA not available. Missing image: {}'.format(self.name, filename))
             self.options['alt'] = self.argument[1]
 
         return super(ExtraImage, self).run()

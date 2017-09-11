@@ -19,8 +19,8 @@ and [LiMa1983]_.
 Computation of TS images
 ========================
 
-.. gp-extra-image:: fermi_ts_image.png
-    :scale: 100%
+.. gp-extra-image:: detect/fermi_ts_image.png
+    :width: 100%
 
 Test statistics image computed using `~gammapy.detect.TSImageEstimator` for an
 example Fermi dataset.
