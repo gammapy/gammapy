@@ -50,3 +50,4 @@ Reference/API
 
 .. automodapi:: gammapy.cube
     :no-inheritance-diagram:
+    :include-all-objects:

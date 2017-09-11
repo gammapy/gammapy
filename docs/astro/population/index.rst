@@ -74,3 +74,4 @@ Reference/API
 
 .. automodapi:: gammapy.astro.population
     :no-inheritance-diagram:
+    :include-all-objects:

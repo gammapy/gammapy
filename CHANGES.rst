@@ -98,6 +98,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1014] Introduce TSImageEstimator class (Axel Donath)
 - [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
 - [#845] Add background model component to SpectrumFit (Johannes King)
+- [#111] Include module-level variables in API docs (Christoph Deil)
 
 .. _gammapy_0p6_release:
 

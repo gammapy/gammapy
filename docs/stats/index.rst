@@ -120,3 +120,4 @@ Reference/API
 
 .. automodapi:: gammapy.stats
     :no-inheritance-diagram:
+    :include-all-objects:

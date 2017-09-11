@@ -115,4 +115,4 @@ Reference/API
 
 .. automodapi:: gammapy.time
     :no-inheritance-diagram:
-
+    :include-all-objects:

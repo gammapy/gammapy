@@ -369,6 +369,4 @@ Reference/API
 
 .. automodapi:: gammapy.maps
     :no-inheritance-diagram:
-
-
-
+    :include-all-objects:

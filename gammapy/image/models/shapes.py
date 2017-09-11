@@ -402,8 +402,9 @@ class Template2D(Fittable2DModel):
                 (x_0 - width, x_0 + height / 2))
 
 
+# TODO: change this to a model registry
 morph_types = OrderedDict()
-"""Available morphology types."""
+morph_types.__doc__ = """Spatial model registry (`~collections.OrderedDict`)."""
 morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D

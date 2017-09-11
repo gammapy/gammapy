@@ -49,3 +49,4 @@ Reference/API
 
 .. automodapi:: gammapy.irf
     :no-inheritance-diagram:
+    :include-all-objects:

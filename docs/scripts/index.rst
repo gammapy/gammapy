@@ -111,3 +111,4 @@ Reference/API
 
 .. automodapi:: gammapy.scripts
     :no-inheritance-diagram:
+    :include-all-objects:

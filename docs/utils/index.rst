@@ -169,42 +169,56 @@ Reference/API
 
 .. automodapi:: gammapy.utils.energy
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.units
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.table
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.fits
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.root
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.random
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.distributions
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.scripts
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.testing
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.wcs
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.nddata
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.time
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.utils.modeling
     :no-inheritance-diagram:
+    :include-all-objects:
