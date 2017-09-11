@@ -150,7 +150,7 @@ class SpectrumObservation(object):
         if self.off_vector is not None:
             self.off_vector.reset_thresholds()
 
-    def compute_energy_threshold(self, method_lo=None, method_hi=None, reset=False, **kwargs):
+    def compute_energy_threshold(self, method_lo='none', method_hi='none', reset=False, **kwargs):
         """Compute and set the safe energy threshold.
 
         Set the high and low energy threshold for each observation based on a
@@ -164,6 +164,8 @@ class SpectrumObservation(object):
         * energy_bias : Set energy threshold at energy where the energy bias
           exceeds a value of x percent (given as kwargs['bias_percent_lo'])
 
+        * none : Do not apply a lower threshold
+
         Available methods for setting the high energy threshold:
 
         * area_max : Set energy threshold at x percent of the maximum effective
@@ -172,12 +174,14 @@ class SpectrumObservation(object):
         * energy_bias : Set energy threshold at energy where the energy bias
           exceeds a value of x percent (given as kwargs['bias_percent_hi'])
 
+        * none : Do not apply a higher energy threshold
+
         Parameters
         ----------
-        method_lo : {'area_max', 'energy_bias'}
+        method_lo : {'area_max', 'energy_bias', 'none'}
             Method for defining the low energy threshold
 
-        method_hi : {'area_max', 'energy_bias'}
+        method_hi : {'area_max', 'energy_bias', 'none'}
             Method for defining the high energy threshold
 
         reset : bool
@@ -192,34 +196,36 @@ class SpectrumObservation(object):
         # vector, otherwise Sherpa will not understand the files
 
         # Low threshold
-        if method_lo is not None:
-            if method_lo == 'area_max':
-                aeff_thres = kwargs['area_percent_lo'] / 100 * self.aeff.max_area
-                thres_lo = self.aeff.find_energy(aeff_thres)
-            elif method_lo == 'energy_bias':
-                thres_lo = self._find_bias_energy(kwargs['bias_percent_lo'] / 100)
-            else:
-                raise ValueError('Undefine method for low threshold: {}'.format(
-                    method_lo))
+        if method_lo == 'area_max':
+            aeff_thres = kwargs['area_percent_lo'] / 100 * self.aeff.max_area
+            thres_lo = self.aeff.find_energy(aeff_thres)
+        elif method_lo == 'energy_bias':
+            thres_lo = self._find_bias_energy(kwargs['bias_percent_lo'] / 100)
+        elif method_lo == 'none':
+            thres_lo = self.e_true[0]
+        else:
+            raise ValueError('Undefine method for low threshold: {}'.format(
+                method_lo))
 
-            self.on_vector.lo_threshold = thres_lo
-            if self.off_vector is not None:
-                self.off_vector.lo_threshold = thres_lo
+        self.on_vector.lo_threshold = thres_lo
+        if self.off_vector is not None:
+            self.off_vector.lo_threshold = thres_lo
 
         # High threshold
-        if method_hi is not None:
-            if method_hi == 'area_max':
-                aeff_thres = kwargs['area_percent_hi'] / 100 * self.aeff.max_area
-                thres_hi = self.aeff.find_energy(aeff_thres, reverse=True)
-            elif method_hi == 'energy_bias':
-                thres_hi = self._find_bias_energy(kwargs['bias_percent_hi'] / 100, reverse=True)
-            else:
-                raise ValueError('Undefined method for high threshold: {}'.format(
-                    method_hi))
+        if method_hi == 'area_max':
+            aeff_thres = kwargs['area_percent_hi'] / 100 * self.aeff.max_area
+            thres_hi = self.aeff.find_energy(aeff_thres, reverse=True)
+        elif method_hi == 'energy_bias':
+            thres_hi = self._find_bias_energy(kwargs['bias_percent_hi'] / 100, reverse=True)
+        elif method_hi == 'none':
+            thres_hi = self.e_true[-1]
+        else:
+            raise ValueError('Undefined method for high threshold: {}'.format(
+                method_hi))
 
-            self.on_vector.hi_threshold = thres_hi
-            if self.off_vector is not None:
-                self.off_vector.hi_threshold = thres_hi
+        self.on_vector.hi_threshold = thres_hi
+        if self.off_vector is not None:
+            self.off_vector.hi_threshold = thres_hi
 
     def _find_bias_energy(self, bias_value, reverse=False):
         """Helper function to interpolate between bias values to retrieve an energy"""
