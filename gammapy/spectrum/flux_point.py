@@ -67,10 +67,64 @@ class FluxPoints(object):
 
     Examples
     --------
-    >>> from gammapy.spectrum import FluxPoints
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
-    >>> flux_points = FluxPoints.read(filename)
-    >>> flux_points.plot()
+    The `FluxPoints` object is most easily created by reading a file with
+    flux points given in one of the formats documented above:
+
+    .. code::
+
+        from gammapy.spectrum import FluxPoints
+        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        flux_points = FluxPoints.read(filename)
+        flux_points.plot()
+
+    An instance of `FluxPoints` can also be created by passing an instance of
+    `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
+    and `'dnde'`:
+
+    .. code::
+
+        from astropy import units as u
+        from astropy.table import Table
+        from gammapy.spectrum import FluxPoints
+        from gammapy.spectrum.models import PowerLaw
+
+        table = Table()
+        pwl = PowerLaw()
+        e_ref = np.logspace(0, 2, 7) * u.TeV
+        table['e_ref'] = e_ref
+        table['dnde'] = pwl(e_ref)
+        table.meta['SED_TYPE'] = 'dnde'
+
+        flux_points = FluxPoints(table)
+        flux_points.plot()
+
+    If you have flux points in a different data format, the format can be changed
+    by renamimg the table columns and adding meta data:
+
+    .. code::
+
+        from astropy import units as u
+        from astropy.table import Table
+        from gammapy.spectrum import FluxPoints
+
+        table = Table.read('$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points_ctb_37b.txt',
+                           format='ascii.csv', delimiter=' ', comment='#')
+        table.meta['SED_TYPE'] = 'dnde'
+        table.rename_column('Differential_Flux', 'dnde')
+        table['dnde'].unit = 'cm-2 s-1 TeV-1'
+
+        table.rename_column('lower_error', 'dnde_errn')
+        table['dnde_errn'].unit = 'cm-2 s-1 TeV-1'
+
+        table.rename_column('upper_error', 'dnde_errp')
+        table['dnde_errp'].unit = 'cm-2 s-1 TeV-1'
+
+        table.rename_column('E', 'e_ref')
+        table['e_ref'].unit = 'TeV'
+
+        flux_points = FluxPoints(table)
+        flux_points.plot()
+
     """
 
     def __init__(self, table):
