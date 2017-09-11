@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
-from ...utils.testing import requires_data
+import pytest
+from ...utils.testing import requires_data, requires_dependency
 from ..registry import source_catalogs, SourceCatalogRegistry
 from .test_core import make_test_catalog
 
@@ -19,6 +19,8 @@ class TestSourceCatalogs:
         table = self.source_catalogs.info_table
         assert table.colnames == ['Name', 'Description', 'Sources']
 
+    # 2HWC catalog is in ECSV format, which requires yaml to read the header
+    @requires_dependency('yaml')
     @requires_data('gammapy-extra')
     def test_info(self):
         # TODO: assert output somehow

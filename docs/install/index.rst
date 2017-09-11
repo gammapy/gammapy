@@ -24,16 +24,15 @@ Stable version
 
 You can install the latest stable version of Gammapy with conda::
 
-  conda install -c astropy gammapy
+    conda install -c conda-forge gammapy
 
 or with pip::
 
-  pip install gammapy
+    pip install gammapy
 
 or with Macports (a package manager for Mac OS)::
 
-  sudo port install gammapy
-
+    sudo port install gammapy
 
 Gammapy is not yet available in the Linux distributions, i.e. at this time you can't
 install it with e.g. ``apt-get`` or ``yum``.
@@ -43,16 +42,16 @@ Development version
 
 To install the development version of Gammapy::
 
-  git clone https://github.com/gammapy/gammapy.git
-  cd gammapy
-  pip install .
+    git clone https://github.com/gammapy/gammapy.git
+    cd gammapy
+    pip install .
 
 of if you're using conda, you can install the development version like this::
 
-  git clone https://github.com/gammapy/gammapy.git
-  cd gammapy
-  conda install -f environment.yml
-  source activate gammapy-dev
+    git clone https://github.com/gammapy/gammapy.git
+    cd gammapy
+    conda install -f environment.yml
+    source activate gammapy-dev
 
 Verify
 ------
@@ -85,14 +84,14 @@ Once you've made your choice how to install Gammapy, you can find detailed infor
 on the following sub-pages:
 
 .. toctree::
-  :maxdepth: 1
+    :maxdepth: 1
 
-  conda
-  pip
-  macports
-  other
-  check
-  dependencies
+    conda
+    pip
+    macports
+    other
+    check
+    dependencies
 
 
 If you'd like to make a code contribution to Gammapy, please see the developer documentation

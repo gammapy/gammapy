@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
 from ..gammacat import SourceCatalogGammaCat
@@ -73,16 +74,14 @@ class TestSourceCatalogGammaCat:
         for sort_key in sort_keys:
             # this test modifies the catalog, so we make a copy
             cat = gammacat()
-            before = str(cat[name])
             cat.table.sort(sort_key)
-            after = str(cat[name])
-            assert before == after
+            assert cat[name].name == name
 
     def test_to_source_library(self, gammacat):
         sources = gammacat.to_source_library()
         source = sources.source_list[0]
 
-        assert len(sources.source_list) == 72
+        assert len(sources.source_list) == 74
         assert source.source_name == 'CTA 1'
         assert_allclose(source.spectral_model.parameters['Index'].value, -2.2)
 
@@ -96,6 +95,23 @@ class TestSourceCatalogObjectGammaCat:
         assert isinstance(source.data, OrderedDict)
         assert source.data['common_name'] == 'CTA 1'
         assert_quantity_allclose(source.data['dec'], 72.782997 * u.deg)
+
+    def test_str(self, gammacat):
+        source = gammacat[0]
+        ss = str(source) # CTA 1
+        assert 'Common name     : CTA 1' in ss
+        assert 'RA                   : 1.650 deg' in ss
+        assert 'norm            : 9.1e-14 +- 1.3e-14 cm-2 s-1 TeV-1 (statistical)' in ss
+        assert 'Integrated flux (<1 TeV)       : 8.5e-13 +- 1.3e-13 cm-2 s-1 (statistical)' in ss
+
+    def test_data_python_dict(self, gammacat):
+        source = gammacat[0]
+        data = source._data_python_dict
+        assert type(data['ra']) == float
+        assert data['ra'] == 1.649999976158142
+        assert type(data['sed_e_min']) == list
+        assert type(data['sed_e_min'][0]) == float
+        assert_allclose(data['sed_e_min'][0], 0.5600000023841858)
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_spectral_model(self, gammacat, ref):

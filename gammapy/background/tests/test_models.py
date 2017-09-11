@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.table import Table
 import astropy.units as u
 from astropy.units import Quantity
@@ -20,10 +21,10 @@ from ...background import GaussianBand2D, FOVCubeBackgroundModel, EnergyOffsetBa
 class TestGaussianBand2D:
     def setup(self):
         table = Table()
-        table['x'] = [-30, -10, 10, 20]
-        table['amplitude'] = [0, 1, 10, 0]
-        table['mean'] = [-1, 0, 1, 0]
-        table['stddev'] = [0.4, 0.5, 0.3, 1.0]
+        table['GLON'] = [-30, -10, 10, 20] * u.deg
+        table['Surface_Brightness'] = [0, 1, 10, 0] * u.Unit('cm-2 s-1 sr-1')
+        table['GLAT'] = [-1, 0, 1, 0] * u.deg
+        table['Width'] = [0.4, 0.5, 0.3, 1.0] * u.deg
         self.table = table
         self.model = GaussianBand2D(table)
 
@@ -31,19 +32,16 @@ class TestGaussianBand2D:
         x = np.linspace(-100, 20, 5)
         y = np.linspace(-2, 2, 7)
         x, y = np.meshgrid(x, y)
-        image = self.model.evaluate(x, y)
-        assert_allclose(image.sum(), 1.223962643740966)
+        coords = SkyCoord(x, y, unit='deg', frame='galactic')
+        image = self.model.evaluate(coords)
+        desired = 1.223962643740966 * u.Unit('cm-2 s-1 sr-1')
+        assert_quantity_allclose(image.sum(), desired)
 
     def test_parvals(self):
-        par = self.model.parvals(-30)
-        assert_allclose(par['amplitude'], 0)
-        assert_allclose(par['mean'], -1)
-        assert_allclose(par['stddev'], 0.4)
-
-    def test_y_model(self):
-        model = self.model.y_model(-30)
-        assert isinstance(model, Gaussian1D)
-        assert_allclose(model.parameters, [0, -1, 0.4])
+        glon = Angle(10, unit='deg')
+        assert_quantity_allclose(self.model.peak_brightness(glon), 10 * u.Unit('cm-2 s-1 sr-1'))
+        assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
+        assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)
 
 
 # TODO: broken code ... clean up!

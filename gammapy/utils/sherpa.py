@@ -15,7 +15,6 @@ __all__ = [
 
 SHERPA_OPTMETHODS = OrderedDict()
 SHERPA_OPTMETHODS['levmar'] = LevMar()
-SHERPA_OPTMETHODS = OrderedDict()
 SHERPA_OPTMETHODS['simplex'] = NelderMead()
 SHERPA_OPTMETHODS['moncar'] = MonCar()
 SHERPA_OPTMETHODS['gridsearch'] = GridSearch()
@@ -67,7 +66,7 @@ class SherpaModelWrapper(ArithmeticModel):
 
         sherpa_pars = []
         for par in gp_model.parameters.parameters:
-            sherpa_pars.append(par.to_sherpa())
+            sherpa_pars.append(par.to_sherpa(modelname=modelname))
 
         ArithmeticModel.__init__(self, modelname, sherpa_pars)
 
@@ -80,10 +79,8 @@ class SherpaModelWrapper(ArithmeticModel):
         return self.gp_model.__class__(**kwargs)
 
     def _update_pars(self):
-        for par in self.pars:
-            gp_par = self.gp_model.parameters[par.name]
+        for par, gp_par in zip(self.pars, self.gp_model.parameters.parameters):
             gp_par.value = par.val
-            gp_par.unit = par.units
 
     def calc(self, pars, *args):
         return np.empty_like(args[0])

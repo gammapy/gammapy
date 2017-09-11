@@ -2,8 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 from numpy.testing.utils import assert_allclose
+import pytest
+
 from astropy.stats import gaussian_sigma_to_fwhm
-from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import load_poisson_stats_image
 from ..image_fit import run_image_fit_sherpa
@@ -51,6 +52,7 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
         args['counts'] = str(filenames['counts'])
     else:
         args['counts'] = str(filenames['model'])
+
     if psf:
         args['psf'] = filenames['psf']
     else:

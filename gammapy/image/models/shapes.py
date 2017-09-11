@@ -344,8 +344,9 @@ class Template2D(Fittable2DModel):
     """
     amplitude = Parameter('amplitude')
 
-    def __init__(self, image, amplitude=1., **constraints):
+    def __init__(self, image, amplitude=1., frame='galactic', **constraints):
         self.image = image
+        self.frame = frame
         super(Template2D, self).__init__(amplitude=amplitude, **constraints)
 
     @lazyproperty
@@ -392,18 +393,18 @@ class Template2D(Fittable2DModel):
 
     @property
     def bounding_box(self):
-        footprint = self.image.footprint()
-        width = footprint['width'].deg
-        height = footprint['height'].deg
-        center = footprint['center']
+        width = self.image.width.deg
+        height = self.image.height.deg
+        center = self.image.center
         x_0 = center.data.lon.wrap_at('180d').deg
         y_0 = center.data.lat.deg
         return ((y_0 - height / 2, y_0 + height / 2),
                 (x_0 - width, x_0 + height / 2))
 
 
+# TODO: change this to a model registry
 morph_types = OrderedDict()
-"""Available morphology types."""
+morph_types.__doc__ = """Spatial model registry (`~collections.OrderedDict`)."""
 morph_types['delta2d'] = Delta2D
 morph_types['gauss2d'] = Gaussian2D
 morph_types['shell2d'] = Shell2D

@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-)
+from ...utils.testing import requires_dependency, requires_data
 from ...utils.random import get_random_state
-from ...datasets import gammapy_extra
+from ...irf import EffectiveAreaTable
 from ...spectrum import (
     PHACountsSpectrum,
     SpectrumObservationList,
@@ -196,11 +194,19 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        par_errors = result.model.parameters._ufloats
-        assert_allclose(par_errors['index'].s, 0.09787747219456712)
-        assert_allclose(par_errors['amplitude'].s, 2.1992645712596426e-12)
-
+        assert_allclose(result.model.parameters.error('index'), 0.09787747219456712)
+        assert_allclose(result.model.parameters.error('amplitude'), 2.1992645712596426e-12)
         self.fit.result[0].to_table()
+
+    def test_compound(self):
+        self.fit.model = self.fit.model * 2
+        self.fit.fit()
+        result = self.fit.result[0]
+        pars = result.model.parameters
+        assert_quantity_allclose(pars['index'].value, 2.2542315426423283)
+        # amplitude should come out roughly * 0.5
+        assert_quantity_allclose(pars['amplitude'].quantity,
+                                 1.0243449507421302e-7 * u.Unit('m-2 s-1 TeV-1'))
 
     def test_areascal(self):
         areascal = np.ones(self.fit.obs_list[0].e_reco.nbins)
@@ -257,6 +263,19 @@ class TestSpectralFit:
         result = self.fit.result[0]
         assert_quantity_allclose(result.model.parametersr['index'].value,
                                  2.2395184727047788)
+
+    def test_no_edisp(self):
+        obs = self.obs_list[0]
+        # Bring aeff in RECO space
+        data = obs.aeff.data.evaluate(energy=obs.on_vector.energy.nodes)
+        obs.aeff = EffectiveAreaTable(data=data,
+                                      energy_lo=obs.on_vector.energy.lo,
+                                      energy_hi=obs.on_vector.energy.hi)
+        obs.edisp = None
+        fit = SpectrumFit(obs_list=obs, model=self.pwl)
+        fit.fit()
+        assert_quantity_allclose(fit.result[0].model.parameters['index'].value,
+                                 2.2960518556630887, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)

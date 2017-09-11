@@ -2,11 +2,9 @@ name: gammapy-rtd
 
 channels:
   - conda-forge
-  - astropy
 
 dependencies:
-  - python=3.5
-  - pip
+  - python=3.6
   - cython
   - numpy
   - uncertainties
@@ -18,3 +16,4 @@ dependencies:
   - regions
   - reproject
   - aplpy
+  - sphinx

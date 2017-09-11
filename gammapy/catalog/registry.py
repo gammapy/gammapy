@@ -53,6 +53,9 @@ class SourceCatalogRegistry(object):
         from .fermi import SourceCatalog3FHL
         source_catalogs.register('3fhl', SourceCatalog3FHL)
 
+        from .hawc import SourceCatalog2HWC
+        source_catalogs.register('2hwc', SourceCatalog2HWC)
+
         return source_catalogs
 
     @property

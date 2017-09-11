@@ -1,7 +1,6 @@
 """Plot Fermi PSF."""
 import matplotlib.pyplot as plt
 from astropy import units as u
-from astropy.visualization import simple_norm
 from gammapy.datasets import FermiGalacticCenter
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.image import SkyImage
@@ -11,14 +10,13 @@ fermi_psf = EnergyDependentTablePSF.read(filename)
 
 fig = plt.figure(figsize=(6, 5))
 
-# Create an empty sky image to show the PSF
-image_psf = SkyImage.empty()
-
-energies = [1] * u.GeV
-for energy in energies:
-    psf = fermi_psf.table_psf_at_energy(energy=energy)
-    image_psf.data = psf.kernel(image_psf)
-    norm = simple_norm(image_psf.data, stretch='log')
-    image_psf.plot(fig=fig, add_cbar=True, norm=norm)
+# Compute a PSF kernel image
+# TODO: change this example after introducing PSF kernel class
+# (using SkyImage this way for kernels is weird)
+psf_image = SkyImage.empty()
+energy = 1 * u.GeV
+psf = fermi_psf.table_psf_at_energy(energy=energy)
+psf_image.data = psf.kernel(psf_image).value
+psf_image.plot(fig=fig, add_cbar=True)
 
 plt.show()

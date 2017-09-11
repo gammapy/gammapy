@@ -10,6 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.fits import table_from_row_data
 from ..utils.table import table_standardise_units_copy
 from .models import PowerLaw
+from .powerlaw import power_law_integral_flux
 
 __all__ = [
     'FluxPoints',
@@ -178,7 +179,7 @@ class FluxPoints(object):
         table_drop_ul = self.table[~self._is_ul]
         return self.__class__(table_drop_ul)
 
-    def to_sed_type(self, sed_type, method='log_center', model=None):
+    def to_sed_type(self, sed_type, method='log_center', model=None, pwl_approx=False):
         """Convert to a different SED type (return new `FluxPoints`).
 
         See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
@@ -198,6 +199,9 @@ class FluxPoints(object):
                 * `'laferty'` Lafferty & Wyatt model-based e_ref
                 * `'log_center'` log bin center e_ref
                 * `'table'` using column 'e_ref' from input flux_points
+        pwl_approx : bool
+            Use local power law appoximation at e_ref to compute differential flux
+            from the integral flux. This method is used by the Fermi-LAT catalogs.
 
         Returns
         -------
@@ -242,7 +246,7 @@ class FluxPoints(object):
             raise ValueError('Invalid method: {}'.format(method))
 
         flux = input_table['flux'].quantity
-        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max)
+        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx)
 
         # Add to result table
         table = input_table.copy()
@@ -259,11 +263,40 @@ class FluxPoints(object):
 
         if 'flux_ul' in table.colnames:
             flux_ul = table['flux_ul'].quantity
-            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max)
+            dnde_ul = self._dnde_from_flux(flux_ul, model, e_ref, e_min, e_max, pwl_approx)
             table['dnde_ul'] = dnde_ul
 
         table.meta['SED_TYPE'] = 'dnde'
         return FluxPoints(table)
+
+    @staticmethod
+    def _e_ref_lafferty(model, e_min, e_max):
+        """Helper for `to_sed_type`.
+
+        Compute e_ref that the value at e_ref corresponds
+        to the mean value between e_min and e_max.
+        """
+        flux = model.integral(e_min, e_max)
+        dnde_mean = flux / (e_max - e_min)
+        return model.inverse(dnde_mean)
+
+    @staticmethod
+    def _dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx):
+        """Helper for `to_sed_type`.
+
+        Compute dnde under the assumption that flux equals expected
+        flux from model.
+        """
+        dnde_model = model(e_ref)
+
+        if pwl_approx:
+            index = model.spectral_index(e_ref)
+            flux_model = power_law_integral_flux(f=dnde_model, g=index, e=e_ref,
+                                                 e1=e_min, e2=e_max)
+        else:
+            flux_model = model.integral(e_min, e_max, intervals=True)
+
+        return dnde_model * (flux / flux_model)
 
     @property
     def sed_type(self):
@@ -393,28 +426,6 @@ class FluxPoints(object):
         """
         return self.table['e_max'].quantity
 
-    @staticmethod
-    def _e_ref_lafferty(model, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute e_ref that the value at e_ref corresponds
-        to the mean value between e_min and e_max.
-        """
-        flux = model.integral(e_min, e_max)
-        dnde_mean = flux / (e_max - e_min)
-        return model.inverse(dnde_mean)
-
-    @staticmethod
-    def _dnde_from_flux(flux, model, e_ref, e_min, e_max):
-        """Helper for `to_sed_type`.
-
-        Compute dnde under the assumption that flux equals expected
-        flux from model.
-        """
-        flux_model = model.integral(e_min, e_max)
-        dnde_model = model(e_ref)
-        return dnde_model * (flux / flux_model)
-
     def plot(self, ax=None, sed_type=None, energy_unit='TeV', flux_unit=None,
              energy_power=0, **kwargs):
         """Plot flux points.
@@ -492,6 +503,9 @@ class FluxPoints(object):
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
 
             kwargs.setdefault('c', ebar[0].get_color())
+
+            # pop label keyword to avoid that it appears twice in the legend
+            kwargs.pop('label', None)
             ax.errorbar(x[is_ul].value, y_ul[is_ul].value, xerr=x_err, yerr=y_err,
                         uplims=True, **kwargs)
 
@@ -554,7 +568,6 @@ class FluxPointEstimator(object):
             global_model=self.model,
             energy_range=energy_group.energy_range,
         )
-
         energy_ref = self.compute_energy_ref(energy_group)
 
         return self.fit_point(
@@ -614,8 +627,108 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return approx_model
 
-    def fit_point(self, model, energy_group, energy_ref):
+    def compute_flux_point_ul(self, fit, best_fit, delta_ts=4, negative=False):
+        """
+        Compute upper limits for flux point values.
+
+
+        Parameters
+        ----------
+        fit : `SpectrumFit`
+            Instance of spectrum fit.
+        best_fit : `SpectrumFitResult`
+            Best fit result.
+        delta_ts : float (4)
+            Difference in log-likelihood for given confidence interval.
+            See Example below.
+        negative : bool
+            Compute limit in negative direction.
+
+
+        Examples
+        --------
+        To compute ~95% confidence upper limits (or 2 sigma) you can use:
+
+            from scipy.stats import chi2, norm
+
+            sigma = 2
+            cl = 1 - 2 * norm.sf(sigma) # using two sided p-value
+            delta_ts = chi2.isf(1 - cl, df=1)
+
+
+        Returns
+        -------
+        dnde_ul : `~astropy.units.Quantity`
+            Flux point upper limit.
+
+        """
+
+        from scipy.optimize import brentq
+
+        # this is a prototype for fast flux point upper limit
+        # calculation using brentq
+        stat_best_fit = best_fit.statval
+        amplitude = best_fit.model.parameters['amplitude'].value / 1E-12
+        amplitude_err = best_fit.model.parameters.error('amplitude') / 1E-12
+
+        if negative:
+            amplitude_max = amplitude
+            amplitude_min = amplitude_max - 1E3 * amplitude_err
+        else:
+            amplitude_max = amplitude + 1E3 * amplitude_err
+            amplitude_min = amplitude
+
+        def ts_diff(x):
+            fit.model.parameters['amplitude'].value = x * 1E-12
+            fit.predict_counts()
+            fit.calc_statval()
+            return (stat_best_fit + delta_ts) - fit.total_stat
+
+        try:
+            result = brentq(ts_diff, amplitude_min, amplitude_max,
+                            maxiter=100, rtol=1e-2)
+            return 1E-12 * result * fit.model.parameters['amplitude'].unit
+        except (RuntimeError, ValueError):
+            # Where the root finding fails NaN is set as amplitude
+            log.debug('Flux point upper limit computation failed.')
+            return np.nan * fit.model.parameters['amplitude'].unit
+
+    def compute_flux_point_sqrt_ts(self, fit, best_fit):
+        """
+        Compute sqrt(TS) for flux point.
+
+
+        Parameters
+        ----------
+        fit : `SpectrumFit`
+            Instance of spectrum fit.
+        best_fit : `SpectrumFitResult`
+            Best fit result.
+
+
+        Returns
+        -------
+        sqrt_ts : float
+            Sqrt(TS) for flux point.
+
+        """
+        amplitude = best_fit.model.parameters['amplitude'].value
+        stat_best_fit = best_fit.statval
+
+        fit.model.parameters['amplitude'].value = 0
+        fit.predict_counts()
+        fit.calc_statval()
+        stat_null = fit.total_stat
+
+        fit.model.parameters['amplitude'].value = amplitude
+        ts = np.abs(stat_null - stat_best_fit)
+        return np.sign(amplitude) * np.sqrt(ts)
+
+    def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
+
+        # Set reference and remove min amplitude
+        model.parameters['reference'].value = energy_ref.to('TeV').value
 
         fit = SpectrumFit(self.obs, model)
         erange = energy_group.energy_range
@@ -637,6 +750,11 @@ class FluxPointEstimator(object):
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
         dnde, dnde_err = res.model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
+
+        dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
+        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
@@ -644,6 +762,11 @@ class FluxPointEstimator(object):
             ('e_max', e_max),
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
+            ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
+            ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            ('sqrt_ts', sqrt_ts),
+            ('dnde_errp', dnde_errp),
+            ('dnde_errn', dnde_errn)
         ])
 
 
@@ -700,7 +823,6 @@ def chi2_flux_points_assym(flux_points, gp_model):
 
     data_err = np.where(model > data, data_errp, data_errn)
     stat_per_bin = ((data - model) / data_err).value ** 2
-
     return np.nansum(stat_per_bin), stat_per_bin
 
 
@@ -795,9 +917,9 @@ class FluxPointFitter(object):
             Best fit model
         """
         p = self.parameters
+        model = model.copy()
 
-        # TODO: make copy of model?
-        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch']:
+        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch', 'levmar']:
             sherpa_fitter = self._setup_sherpa_fit(data, model)
             sherpa_fitter.fit()
         else:
@@ -833,6 +955,7 @@ class FluxPointFitter(object):
         """
         Estimate errors on best fit parameters.
         """
+        model = model.copy()
         sherpa_fitter = self._setup_sherpa_fit(data, model)
         result = sherpa_fitter.est_errors()
         covariance = result.extra_output
@@ -858,12 +981,12 @@ class FluxPointFitter(object):
         """
         best_fit_model = self.fit(data, model)
         best_fit_model = self.estimate_errors(data, best_fit_model)
-        dof = self.dof(data, model)
-        statval = self.statval(data, model)[0]
+        dof = self.dof(data, best_fit_model)
+        statval = self.statval(data, best_fit_model)[0]
 
         return OrderedDict([
-            ('best_fit_model', best_fit_model),
-            ('dof', dof),
-            ('statval', statval),
-            ('statval/dof', statval / dof),
+            ('best-fit-model', best_fit_model),
+            ('dof', int(dof)),
+            ('statval', float(statval)),
+            ('statval/dof', float(statval / dof)),
         ])

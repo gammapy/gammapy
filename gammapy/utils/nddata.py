@@ -386,7 +386,7 @@ class BinnedDataAxis(DataAxis):
     def bins(self):
         """Bin edges"""
         unit = self.lo.unit
-        val = np.append(self.lo.value, self.hi.value[-1])
+        val = np.append(self.lo.value, self.hi.to(unit).value[-1])
         return val * unit
 
     @property

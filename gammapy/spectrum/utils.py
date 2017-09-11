@@ -222,7 +222,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     if isinstance(xmin, Quantity):
         unit = xmin.unit
         xmin = xmin.value
-        xmax = xmax.value
+        xmax = xmax.to(unit).value
         is_quantity = True
 
     if np.isscalar(xmin):

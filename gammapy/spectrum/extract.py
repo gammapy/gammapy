@@ -46,6 +46,9 @@ class SpectrumExtraction(object):
     max_alpha : float
         Maximum alpha value to accept, if the background was estimated using
         reflected regions this is 1 / minimum number of regions.
+    use_recommended_erange : bool
+        Extract spectrum only within the recommended valid energy range of the
+        effective area table (default is True).
     """
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
@@ -53,7 +56,7 @@ class SpectrumExtraction(object):
     """Reconstruced energy axis to be used if not specified otherwise"""
 
     def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False, max_alpha=1):
+                 containment_correction=False, max_alpha=1, use_recommended_erange=True):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
@@ -61,6 +64,7 @@ class SpectrumExtraction(object):
         self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
+        self.use_recommended_erange = use_recommended_erange
         self.observations = SpectrumObservationList()
 
     def run(self, outdir=None, use_sherpa=False):
@@ -121,11 +125,12 @@ class SpectrumExtraction(object):
             edisp=self._edisp,
         )
 
-        try:
-            spectrum_observation.hi_threshold = obs.aeff.high_threshold
-            spectrum_observation.lo_threshold = obs.aeff.low_threshold
-        except KeyError:
-            log.warning('No thresholds defined for obs {}'.format(obs))
+        if self.use_recommended_erange:
+            try:
+                spectrum_observation.hi_threshold = obs.aeff.high_threshold
+                spectrum_observation.lo_threshold = obs.aeff.low_threshold
+            except KeyError:
+                log.warning('No thresholds defined for obs {}'.format(obs))
 
         return spectrum_observation
 
@@ -228,40 +233,15 @@ class SpectrumExtraction(object):
         self._on_vector.areascal = areascal
         self._off_vector.areascal = areascal
 
-    def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
-        """Compute and set the safe energy threshold.
+    def compute_energy_threshold(self, **kwargs):
+        """Compute and set the safe energy threshold for all observations.
 
-        Set the high and low energy threshold for each observation based on a
-        chosen method.
-
-        Available methods for setting the low energy threshold:
-
-        * area_max : Set energy threshold at x percent of the maximum effective
-          area (x given as kwargs['percent'])
-
-        Available methods for setting the high energy threshold:
-
-        * TBD
-
-        Parameters
-        ----------
-        method_lo_threshold : {'area_max'}
-            Method for defining the low energy threshold
+        See `SpectrumObservation.compute_energy_threshold` for full
+        documentation about the options.
         """
-        # TODO: This should be a method on SpectrumObservation
-        # TODO: define method for the high energy threshold
 
-        # It is important to update the low and high threshold for ON and OFF
-        # vector, otherwise Sherpa will not understand the files
         for obs in self.observations:
-            if method_lo_threshold == 'area_max':
-                aeff_thres = kwargs['percent'] / 100 * obs.aeff.max_area
-                thres = obs.aeff.find_energy(aeff_thres)
-                obs.on_vector.lo_threshold = thres
-                obs.off_vector.lo_threshold = thres
-            else:
-                raise ValueError('Undefine method for low threshold: {}'.format(
-                    method_lo_threshold))
+            obs.compute_energy_threshold(**kwargs)
 
     def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
         """Write results to disk.

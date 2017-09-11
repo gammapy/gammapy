@@ -3,7 +3,5 @@
 Morphology models.
 """
 from .gauss import *
-from .model import *
-from .models import *
+from .shapes import *
 from .theta import *
-from .utils import *

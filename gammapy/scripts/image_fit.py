@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..irf._utils_old import read_json, write_all
 
 __all__ = ['run_image_fit_sherpa']
 
@@ -45,7 +46,6 @@ def run_image_fit_sherpa(counts,
     Uses initial parameters from a JSON file (for now only Gaussians).
     """
     import sherpa.astro.ui
-    from ..image.models.utils import read_json, write_all
     from ..irf import SherpaMultiGaussPSF
 
     # ---------------------------------------------------------

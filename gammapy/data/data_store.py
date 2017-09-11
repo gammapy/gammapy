@@ -212,20 +212,34 @@ class DataStore(object):
             data_store=self,
         )
 
-    def obs_list(self, obs_id):
+    def obs_list(self, obs_id, skip_missing=False):
         """Generate a `~gammapy.data.ObservationList`.
 
         Parameters
         ----------
         obs_id : list
             Observation IDs.
+        skip_missing : bool, optional
+            Skip missing observations, default: False
 
         Returns
         -------
         obs : `~gammapy.data.ObservationList`
             List of `~gammapy.data.DataStoreObservation`
         """
-        return ObservationList(self.obs(_) for _ in obs_id)
+        obslist = ObservationList()
+        for _ in obs_id:
+            try:
+                obs = self.obs(_)
+            except ValueError as err:
+                if skip_missing:
+                    log.warn('Obs {} not in store, skip.'.format(_))
+                    continue
+                else:
+                    raise err
+            else:
+                obslist.append(obs)
+        return obslist
 
     def load_all(self, hdu_type=None, hdu_class=None):
         """Load a given file type for all observations.
@@ -269,6 +283,25 @@ class DataStore(object):
             things.append(thing)
 
         return things
+
+    def check_observations(self):
+        """Perform some sanity checks for all observations.
+
+        Returns
+        -------
+        results : OrderedDict
+            dictionary containing failure messages for all runs that fail a check.
+        """
+
+        results = OrderedDict()
+
+        # Loop over all obs_ids in obs_table
+        for obs_id in self.obs_table['OBS_ID']:
+            messages = self.obs(obs_id).check_observation()
+            if len(messages) > 0:
+                results[obs_id] = messages
+
+        return results
 
     def check_integrity(self, logger=None):
         """Check integrity, i.e. whether index and observation table match.
@@ -661,8 +694,6 @@ class DataStoreObservation(object):
         energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
         rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
 
-        print(self.psf)
-
         if isinstance(self.psf, PSF3D):
             # PSF3D is a table PSF, so we use the native RAD binning by default
             # TODO: should handle this via a uniform caller API
@@ -676,6 +707,33 @@ class DataStoreObservation(object):
         psf = EnergyDependentTablePSF(energy=energy, rad=rad,
                                       exposure=exposure, psf_value=psf_value)
         return psf
+
+    def check_observation(self):
+        """Perform some basic sanity checks on this observation.
+
+        Returns
+        -------
+        results : list
+            List with failure messages for the checks that failed
+        """
+        messages = []
+        # Check that events table is not empty
+        if len(self.events.table) == 0:
+            messages.append('events table empty')
+        # Check that thresholds are meaningful for aeff
+        if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
+            messages.append('LO_THRES >= HI_THRES in effective area meta data')
+        # Check that maximum value of aeff is greater than zero
+        if np.max(self.aeff.data.data) <= 0:
+            messages.append('maximum entry of effective area table <= 0')
+        # Check that maximum value of edisp matrix is greater than zero
+        if np.max(self.edisp.data.data) <= 0:
+            messages.append('maximum entry of energy dispersion table <= 0')
+        # Check that thresholds are meaningful for psf
+        if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
+            messages.append('LO_THRES >= HI_THRES in psf meta data')
+
+        return messages
 
 
 class ObservationList(UserList):

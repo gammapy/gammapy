@@ -27,23 +27,25 @@ env:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
 
-        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa regions reproject'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils regions reproject'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy sherpa libgfortran regions reproject'
-        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy regions reproject'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy sherpa libgfortran runipy regions reproject'
-        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy libgfortran runipy regions reproject'
+        - CONDA_DEPENDENCIES='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa regions reproject'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils regions reproject'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy sherpa libgfortran regions reproject'
+        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy sherpa libgfortran runipy regions reproject'
+        - CONDA_DEPENDENCIES_NOTEBOOKS_WO_SHERPA='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils aplpy libgfortran runipy regions reproject'
 
         - PIP_DEPENDENCIES='uncertainties'
 
-        - CONDA_CHANNELS='conda-forge astropy sherpa'
+        - CONDA_CHANNELS='conda-forge sherpa'
 
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
         - PACKAGING_TEST=false
 
         - MAIN_CMD='python setup.py'
+
+        - ASTROPY_USE_SYSTEM_PYTEST=1
 
     matrix:
         - PYTHON_VERSION=3.6 SETUP_CMD='egg_info'
@@ -156,7 +158,7 @@ matrix:
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
-    - source ci-helpers/travis/setup_conda_$TRAVIS_OS_NAME.sh
+    - source ci-helpers/travis/setup_conda.sh
 
     - if $FETCH_GAMMAPY_EXTRA; then
           git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;

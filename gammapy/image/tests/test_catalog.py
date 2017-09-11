@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.tests.helper import remote_data
 from ...utils.testing import requires_dependency, requires_data
 from ..catalog import CatalogImageEstimator, catalog_image, catalog_table, _source_image
 from ...image import SkyImage
@@ -10,7 +11,8 @@ from ...irf import EnergyDependentTablePSF
 from ...cube import SkyCube
 from ...datasets import FermiGalacticCenter
 from ...spectrum import LogEnergyAxis
-from ...catalog import SourceCatalog3FHL, SourceCatalogGammaCat, SourceCatalogHGPS
+from ...catalog import (SourceCatalog3FHL, SourceCatalogGammaCat, SourceCatalogHGPS,
+                        SourceCatalog3FGL)
 
 
 def test_extended_image():
@@ -18,6 +20,7 @@ def test_extended_image():
     pass
 
 
+@remote_data
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_source_image():
@@ -40,6 +43,7 @@ def test_source_image():
     assert_allclose(actual, expected)
 
 
+@remote_data
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_catalog_image():
@@ -61,6 +65,7 @@ def test_catalog_image():
     assert_allclose(actual, expected, rtol=0.01)
 
 
+@remote_data
 @requires_data('gammapy-extra')
 def test_catalog_table():
     # Checks catalogs are loaded correctly
@@ -113,6 +118,25 @@ class TestCatalogImageEstimator(object):
         desired = selection.table['Flux'].sum()
         assert_allclose(actual, desired, rtol=1E-2)
 
+    @requires_data('gammapy-extra')
+    def test_flux_3FGL(self):
+        reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=81,
+                                   nxpix=81, binsz=0.1)
+
+        catalog = SourceCatalog3FGL()
+        estimator = CatalogImageEstimator(reference=reference,
+                                          emin=1 * u.GeV,
+                                          emax=100 * u.GeV)
+
+        result = estimator.run(catalog)
+
+        actual = result['flux'].data.sum()
+        selection = catalog.select_image_region(reference)
+
+        assert len(selection.table) == 18
+
+        desired = selection.table['Flux1000'].sum()
+        assert_allclose(actual, desired, rtol=1E-2)
 
     @requires_data('hgps')
     def test_flux_hgps(self):

@@ -310,7 +310,7 @@ class FermiLATDataset(object):
 
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
-        except ValueError:
+        except (ValueError, KeyError):
             from ..cube.healpix import SkyCubeHealpix
             cube = SkyCubeHealpix.read(filename, format='fermi-counts')
 
@@ -387,11 +387,11 @@ class FermiLATDataset(object):
 
     def __str__(self):
         """Summary info string about the dataset."""
-        info = 'Fermi-LAT {name} dataset'.format(name=self.name)
-        info += '\n' + len(info) * '=' + '\n'
-
-        info += 'Filenames:\n'
+        info = self.__class__.__name__
+        info += '\n\n\tname: {name} \n\n'.format(name=self.name)
+        info += 'Filenames:\n\n'
         for name in sorted(self.config['filenames']):
             filename = self.config['filenames'][name]
-            info += "  {name:8s}: {filename}\n".format(name=name, filename=filename)
+            info += "\t{name:8s} : {filename}\n".format(name=name, filename=filename)
+
         return info

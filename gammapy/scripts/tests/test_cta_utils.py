@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
-from astropy.tests.helper import pytest
+import pytest
+from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...scripts.cta_irf import CTAPerf
 from ...scripts.cta_utils import Target, ObservationParameters, CTAObservationSimulation
@@ -47,9 +48,12 @@ def perf():
 @requires_data('gammapy-extra')
 @pytest.fixture(scope='session')
 def cta_simu():
-    return CTAObservationSimulation.simulate_obs(perf=perf(),
-                                                 target=target(),
-                                                 obs_param=obs_param())
+    return CTAObservationSimulation.simulate_obs(
+        perf=perf(),
+        target=target(),
+        obs_param=obs_param(),
+        random_state=0,
+    )
 
 
 @requires_data('gammapy-extra')
@@ -79,6 +83,5 @@ def test_cta_simulation():
     text = str(cta_simu())
     assert '*** Observation summary report ***' in text
 
-    # TODO: fix the seed to have
     stats = cta_simu().total_stats
-    assert stats.sigma > 5.
+    assert_allclose(stats.sigma, 36.51439765644547)

@@ -259,6 +259,7 @@ class SkyImage(MapBase):
                              proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
+        header.update(meta)
         return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
@@ -290,7 +291,9 @@ class SkyImage(MapBase):
 
         data = fill * np.ones_like(image.data)
 
-        return cls(name, data, wcs, unit, meta=wcs.to_header())
+        header = wcs.to_header()
+        header.update(meta)
+        return cls(name, data, wcs, unit, meta=header)
 
     def fill_events(self, events, weights=None):
         """Fill events (modifies ``data`` attribute).
@@ -423,16 +426,40 @@ class SkyImage(MapBase):
         for key, (x, y) in zip(keys, pixcoord):
             footprint[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
 
-        width_low = footprint['lower left'].separation(footprint['lower right'])
-        width_up = footprint['upper left'].separation(footprint['upper right'])
-        footprint['width'] = Angle([width_low, width_up]).max()
-
-        height_left = footprint['lower left'].separation(footprint['upper left'])
-        height_right = footprint['lower right'].separation(footprint['upper right'])
-        footprint['height'] = Angle([height_right, height_left]).max()
-
-        footprint['center'] = self.center
         return footprint
+
+    @property
+    def width(self):
+        """
+        Maximum angular width of the image.
+        """
+        coordinates = self.coordinates('edges')
+        left, right = coordinates[:, 0], coordinates[:, -1]
+        width = left.separation(right)
+
+        width_max = width.max()
+
+        if left.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - width_max
+        else:
+            return width_max
+
+    @property
+    def height(self):
+        """
+        Maximum angular height of the image.
+        """
+        coordinates = self.coordinates('edges')
+        top, bottom = coordinates[-1, :], coordinates[0, :]
+
+        height = top.separation(bottom)
+
+        height_max = height.max()
+
+        if top.separation(self.center).max() >= 90 * u.deg:
+            return 360 * u.deg - height_max
+        else:
+            return height_max
 
     def _get_boundaries(self, image_ref, image, wcs_check):
         """Boundary pixel coordinates on another reference image.
@@ -689,7 +716,9 @@ class SkyImage(MapBase):
             Position and value of the maximum.
         """
         if region:
-            mask = region.contains(self.coordinates())
+            region_pix = region.to_pixel(self.wcs)
+            coords_pix = self.coordinates_pix()
+            mask = region_pix.contains(coords_pix)
         else:
             mask = np.ones_like(self.data)
 
@@ -1072,14 +1101,10 @@ class SkyImage(MapBase):
          [0 0 1 0 0]
          [0 0 0 0 0]]
         """
-        if isinstance(region, PixelRegion):
-            coords = self.coordinates_pix()
-        elif isinstance(region, SkyRegion):
-            coords = self.coordinates()
-        else:
-            raise TypeError("Invalid region type, must be instance of "
-                            "'regions.PixelRegion' or 'regions.SkyRegion'")
+        if isinstance(region, SkyRegion):
+            region = region.to_pixel(self.wcs)
 
+        coords = self.coordinates_pix()
         mask = self.copy()
         mask.data = region.contains(coords)
         return mask

@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
@@ -74,6 +75,19 @@ def test_datastore_load_all(data_manager):
     assert_allclose(event_lists[0].table['ENERGY'][0], 1.1156039)
     assert_allclose(event_lists[-1].table['ENERGY'][0], 1.0204216)
 
+@requires_data('gammapy-extra')
+@requires_dependency('yaml')
+def test_datastore_obslist(data_manager):
+    """Test loading data and IRF files via the DataStore"""
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    obslist = data_store.obs_list([23523, 23592])
+    assert obslist[0].obs_id == 23523
+
+    with pytest.raises(ValueError):
+        obslist = data_store.obs_list([11111, 23592])
+
+    obslist = data_store.obs_list([11111, 23523], skip_missing=True)
+    assert obslist[0].obs_id == 23523
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
@@ -197,3 +211,11 @@ def test_make_mean_edisp(tmpdir):
     i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     assert_equal(i, i2)
+
+
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
+def test_check_observations(data_manager):
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    result = data_store.check_observations()
+    assert len(result) == 0

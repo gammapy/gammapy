@@ -55,3 +55,4 @@ Reference/API
 
 .. automodapi:: gammapy.data
     :no-inheritance-diagram:
+    :include-all-objects:

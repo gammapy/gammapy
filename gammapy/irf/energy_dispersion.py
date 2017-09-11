@@ -365,15 +365,15 @@ class EnergyDispersion(object):
         """
         mean = self._get_mean(e_true)
         e_reco = (10 ** mean) * self.e_reco.unit
-        bias = (e_true - e_reco) / e_true
+        bias = (e_reco - e_true) / e_true
         return bias
 
     def _get_mean(self, e_true):
         """Get mean log reconstructed energy."""
         # Reconstructed energy is 1st moment of PDF
         pdf = self.data.evaluate(e_true=e_true)
-        norm = np.sum(pdf)
-        temp = np.sum(pdf * self.e_reco._interp_nodes())
+        norm = np.sum(pdf, axis=pdf.ndim-1)
+        temp = np.sum(pdf * self.e_reco._interp_nodes(), axis=pdf.ndim-1)
         return temp / norm
 
     def _extent(self):

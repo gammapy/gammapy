@@ -168,42 +168,97 @@ class GaussianBand2D(object):
         from scipy.interpolate import UnivariateSpline
 
         self.table = table
-        self.parnames = ['amplitude', 'mean', 'stddev']
+        glon = Angle(self.table['GLON']).wrap_at('180d')
 
-        s = dict()
-        for parname in self.parnames:
-            x = self.table['x']
-            y = self.table[parname]
-            s[parname] = UnivariateSpline(x, y, **spline_kwargs)
-        self._par_model = s
+        splines, units = {}, {}
 
-    def _evaluate_y(self, y, pars):
-        """Evaluate Gaussian model at a given ``y`` position."""
-        return Gaussian1D.evaluate(y, **pars)
+        for column in table.colnames:
+            y = self.table[column].quantity
+            spline = UnivariateSpline(glon.degree, y.value, **spline_kwargs)
+            splines[column] = spline
+            units[column] = y.unit
 
-    def parvals(self, x):
-        """Interpolated parameter values at a given ``x``."""
-        x = np.asanyarray(x, dtype=float)
-        parvals = dict()
-        for parname in self.parnames:
-            par_model = self._par_model[parname]
-            shape = x.shape
-            parvals[parname] = par_model(x.flat).reshape(shape)
+        self._splines = splines
+        self._units = units
 
-        return parvals
+    def _interpolate_parameter(self, parname, glon):
+        glon = glon.wrap_at('180d')
+        y = self._splines[parname](glon.degree)
+        return y * self._units[parname]
 
-    def y_model(self, x):
-        """Create model at a given ``x`` position."""
-        x = np.asanyarray(x, dtype=float)
-        parvals = self.parvals(x)
-        return Gaussian1D(**parvals)
+    def peak_brightness(self, glon):
+        """Peak brightness at a given longitude.
 
-    def evaluate(self, x, y):
-        """Evaluate model at a given position ``(x, y)`` position."""
-        x = np.asanyarray(x, dtype=float)
-        y = np.asanyarray(y, dtype=float)
-        parvals = self.parvals(x)
-        return self._evaluate_y(y, parvals)
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Surface_Brightness', glon)
+
+    def peak_brightness_error(self, glon):
+        """Peak brightness error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Surface_Brightness_Err', glon)
+
+    def width(self, glon):
+        """Width at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width', glon)
+
+    def width_error(self, glon):
+        """Width error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width_Err', glon)
+
+    def peak_latitude(self, glon):
+        """Peak position at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT', glon)
+
+    def peak_latitude_error(self, glon):
+        """Peak position error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT_Err', glon)
+
+    def evaluate(self, position):
+        """Evaluate model at a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        """
+        glon, glat = position.galactic.l, position.galactic.b
+        width = self.width(glon)
+        amplitude = self.peak_brightness(glon)
+        mean = self.peak_latitude(glon)
+        return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)
 
 
 class FOVCubeBackgroundModel(object):

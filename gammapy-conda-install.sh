@@ -32,7 +32,7 @@ bash miniconda.sh -b -p $INSTALL_DIR
 export PATH="$INSTALL_DIR/bin:$PATH"
 conda config --set always_yes yes --set changeps1 no
 
-conda config --add channels astropy
+conda config --add channels conda-forge
 conda config --add channels sherpa
 
 conda update -q conda
@@ -40,7 +40,7 @@ conda update -q conda
 
 # Finally ... install Gammapy and the most useful dependencies
 conda install gammapy naima \
-    scipy matplotlib ipython-notebook
+    iminuit scipy matplotlib ipython-notebook
 # Disk space now: 200 MB
 
 # Nice to have extras
@@ -50,6 +50,5 @@ conda install \
 # Disk space now: 747 MB
 
 pip install reproject
-pip install iminuit
 
 conda install sherpa

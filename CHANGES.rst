@@ -20,13 +20,28 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 
 - Dropped support for Python 3.4. (probably everything still works with Python 3.4, but we don't
   test with Python 3.4 anymore in our continuous integration).
+- New sub-package ``gammapy.maps``. Possibly will replace ``SkyImage`` and ``SkyCube``.
+  Please try it out and give feedback.
+- Gammapy conda package (and dependencies like Astropy regions, reproject, ...) changed
+  from the ``astropy`` and ``openastronomy`` conda channel to ``conda-forge``,
+  the main community-maintained conda build infrastructure and distribution channel.
+  See installation instructions; in short: ``conda install gammapy -c conda-forge``.
 
 **Contributors:**
 
+- Arjun Voruganti
 - Axel Donath
 - Brigitta Sipocz
+- Bruno Khelifi (new)
 - Christoph Deil
+- Cosimo Nigro (new)
 - Johannes King
+- Julien Lefaucheur
+- Lars Mohrmann
+- Léa Jouvin
+- Matthew Wood
+- Matthias Wegen (new)
+- Peter Deiml (new)
 - Roberta Zanin (new)
 - Rubén López-Coto (new)
 
@@ -37,8 +52,41 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1115] Fix energy bias computation (Cosimo Nigro)
+- [#1110] Remove ATNF catalog class and Green catalog load function (Christoph Deil)
+- [#1108] Add HAWC 2HWC catalog (Peter Deiml)
+- [#1107] Rewrite GaussianBand2D model (Axel Donath)
+- [#1105] Emit warning when HDU loading from index is ambiguous (Lars Mohrmann)
+- [#1104] Change conda install instructions to conda-forge channel (Christoph Deil)
+- [#1103] Remove catalog and data browser Flask web apps (Christoph Deil)
+- [#1102] Add 3FGL spatial models (Axel Donath)
+- [#1100] Add energy reference for exposure map (Léa Jouvin)
+- [#1098] Improve flux point fitter (Axel Donath)
+- [#1093] Implement I/O methods for ``gammapy.maps`` (Matthew Wood)
+- [#1092] Add random seed argument for CTA simulations (Julien Lefaucheur)
+- [#1090] Add default parameters for spectral models (Axel Donath)
+- [#1089] Fix Fermi-LAT catalog flux points property (Axel Donath)
+- [#1088] Update Gammapy to match Astropy region changes (Johannes King)
+- [#1087] Add peak energy property to some spectral models (Axel Donath)
+- [#1085] Update astropy-helpers to v2.0 (Brigitta Sipocz)
+- [#1084] Add flux points upper limit estimation (Axel Donath)
+- [#1083] Add JSON-serialisable source catalog object dict (Arjun Voruganti)
+- [#1082] Add observation sanity check method to DataStore (Lars Mohrmann)
+- [#1078] Add printout for 3FHL and gamma-cat sources (Arjun Voruganti)
+- [#1076] Development in ``gammapy.maps`` (Matthew Wood)
+- [#1073] Fix spectrum fit for case of no EDISP (Johannes King)
+- [#1070] Add Lomb-Scargle detection function (Matthias Wegen)
+- [#1069] Add easy access to parameter errors (Johannes King)
+- [#1067] Add flux upper limit computation to TSImageEstimator (Axel Donath)
+- [#1065] Add skip_missing option to ``DataStore.obs_list`` (Johannes King)
+- [#1057] Use system pytest rather than astropy (Brigitta Sipocz)
+- [#1054] Development in ``gammapy.maps`` (Matthew Wood)
+- [#1053] Add sensitivity computation (Bruno Khelifi)
+- [#1051] Improve 3D simulation / analysis example (Roberta Zanin)
+- [#1045] Fix energy dispersion apply and to_sherpa (Johannes King)
+- [#1043] Make ``gammapy.spectrum.powerlaw`` private (Christoph Deil)
 - [#1040] Add combined 3D model and simple npred function (Christoph Deil)
-- [#1038] Remove gammapy.utils.mpl_style (Christoph Deil)
+- [#1038] Remove ``gammapy.utils.mpl_style`` (Christoph Deil)
 - [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
 - [#1032] Improve table unit standardisation and flux points (Christoph Deil)
 - [#1031] Add HGPS catalog spatial models (Axel Donath)
@@ -50,6 +98,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1014] Introduce TSImageEstimator class (Axel Donath)
 - [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
 - [#845] Add background model component to SpectrumFit (Johannes King)
+- [#111] Include module-level variables in API docs (Christoph Deil)
 
 .. _gammapy_0p6_release:
 
@@ -115,6 +164,7 @@ Summary
 - Arpit Gogia (new)
 - Axel Donath
 - Brigitta Sipocz
+- Bruno Khelifi (new)
 - Christoph Deil
 - Dirk Lennarz
 - Fabio Acero (new)

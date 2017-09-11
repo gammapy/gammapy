@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import pytest
+import pytest
 from astropy.modeling.tests.test_models import Fittable1DModelTester
-from ...population import (FaucherKaspi2006, Lorimer2006,
-                           YusifovKucuk2004, YusifovKucuk2004B,
-                           Paczynski1990, CaseBattacharya1998,
-                           RMIN, RMAX, ZMIN, ZMAX, Exponential)
+from ..spatial import (FaucherKaspi2006, Lorimer2006,
+                       YusifovKucuk2004, YusifovKucuk2004B,
+                       Paczynski1990, CaseBattacharya1998,
+                       RMIN, RMAX, ZMIN, ZMAX, Exponential)
 from .test_velocity import velocity_models_1D
 
 radial_models_1D = {

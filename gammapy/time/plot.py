@@ -5,10 +5,12 @@ from astropy.time import Time, TimeDelta
 from ..utils.time import TIME_REF_FERMI
 
 __all__ = [
-    'plot_fermi_3fgl_light_curve',
+    # 'plot_fermi_3fgl_light_curve',
 ]
 
 
+# TODO: refactor this into `SourceCatalogFermi3FGL.light_curve.plot()
+# (but make sure the plot still looks good and copy over the test we have
 def plot_fermi_3fgl_light_curve(source_name, time_start=None, time_end=None, ax=None):
     """Plot flux as a function of time for a fermi 3FGL object.
 

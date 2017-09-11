@@ -36,7 +36,6 @@
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
-.. _flask: http://flask.pocoo.org/
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
@@ -50,6 +49,9 @@
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
+.. _APC Paris: http://www.apc.univ-paris7.fr/
+.. _Paris Observatory: https://www.obspm.fr
+
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
 
 .. _CTA: https://www.cta-observatory.org/
@@ -68,7 +70,7 @@
 .. _Martin Raue: https://twitter.com/_rmrtn
 .. _Christoph Deil: https://github.com/cdeil
 
-.. _GSoC 2015: https://www.google-melange.com/gsoc/homepage/google/gsoc2015
+.. _Google Summer of Code: https://summerofcode.withgoogle.com/
 .. _Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling: http://mapaz-gsoc2015-blog.blogspot.de/
 .. _Olga Vorokh GSoC 2016 on image analysis and source detection: http://alcyonegammapy.blogspot.de/
 .. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
