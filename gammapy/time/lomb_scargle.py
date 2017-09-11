@@ -27,9 +27,10 @@ def _cvm(param, data):
     from scipy.stats import beta
     a, b = param
     ordered_data = np.sort(data, axis=None)
+    sumbeta = 0
     for n in range(len(data)):
-        cdf = beta.cdf(ordered_data[n], a, b, loc=0, scale=1)
-        sumbeta = + (cdf - (n - 0.5) / len(data)) ** 2.0
+        cdf = beta.cdf(ordered_data[n], a, b)
+        sumbeta += (cdf - (n - 0.5) / len(data)) ** 2.0
 
     cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data) ** 2.))
     mask = np.isfinite(cvm_dist)
@@ -86,7 +87,7 @@ def _freq_grid(time, dt, max_period):
     return grid, periods
 
 
-def _significance_pre(time, freq, psd, psd_best_period):
+def _significance_pre(time, freq, psd_best_period):
     """
     Computes significance for the pre-defined beta distribution
     """
@@ -205,7 +206,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     .. [4] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
        `Link <https://www.jstatsoft.org/article/view/v069i09>`_
     .. [5] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
-       `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
+       `Link <http://ada7.cosmostat.org/ADA7_proceeding_MSuveges2.pdf>`_
     """
 
     # set up lomb-scargle-algorithm
@@ -223,7 +224,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     significance = OrderedDict()
 
     if 'pre' in criteria:
-        significance['pre'] = _significance_pre(time, freq, psd_data, psd_best_period)
+        significance['pre'] = _significance_pre(time, freq, psd_best_period)
     if 'cvm' in criteria:
         significance['cvm'] = _significance_cvm(freq, psd_data, psd_best_period)
     if 'nll' in criteria:

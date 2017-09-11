@@ -27,7 +27,7 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
         Highest period of the periodogram
     significance : `float` or `~numpy.ndarray`
         Significance of ``best_period`` under the specified significance criterion.
-        If the significance criterion is not defined, the maximum significance
+        If the significance criterion is not defined, the minimum significance
         of all significance criteria is used.
     psd_win : Periodogram peaks of the window function
         
