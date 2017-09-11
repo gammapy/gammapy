@@ -767,8 +767,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         pars['reference'] = d['Pivot_Energy']
 
         if spec_type == 'PowerLaw':
-            pars['index'] = d['Spectral_Index'] * u.dimensionless_unscaled
-            errs['index'] = d['Unc_Spectral_Index'] * u.dimensionless_unscaled
+            pars['index'] = d['PowerLaw_Index'] * u.dimensionless_unscaled
+            errs['index'] = d['Unc_PowerLaw_Index'] * u.dimensionless_unscaled
             model = PowerLaw(**pars)
         elif spec_type == 'LogParabola':
             pars['alpha'] = d['Spectral_Index'] * u.dimensionless_unscaled
