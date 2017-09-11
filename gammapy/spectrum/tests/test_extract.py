@@ -105,8 +105,8 @@ class TestSpectrumExtraction:
         desired = extraction.observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
-    def test_define_energy_threshold(self, extraction):
+    def test_compute_energy_threshold(self, extraction):
         # TODO: Find better API for this
-        extraction.define_energy_threshold(method_lo_threshold="area_max", percent=10)
+        extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
         actual = extraction.observations[0].lo_threshold
         assert_quantity_allclose(actual, 0.6812920690579611 * u.TeV, rtol=1e-3)
