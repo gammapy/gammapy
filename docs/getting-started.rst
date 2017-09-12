@@ -26,22 +26,6 @@ and in the future we plan on adding web apps with a graphical user interface.
 To use those no Python programming skills are required, you'll just have to specify which
 data to analyse, with which method and parameters.
 
-.. _binder:
-
-Gammapy binder
---------------
-
-If you go to http://mybinder.org/repo/gammapy/gammapy-extra ,
-a Docker image with Gammapy installed and some example data and IPython notebooks
-will start. Usually this takes ~ 30 seconds and you can execute Gammapy
-in your browser without having to install anything.
-
-If you're interested how this works, https://www.docker.com/ and http://mybinder.org/ are making this possible and the
-Dockerfile is in the gammapy-extra repo:
-https://github.com/gammapy/gammapy-extra/blob/master/Dockerfile
-
-We would like to thank the people that have created Docker, IPython, Jupyter and Binder
-and that are running this as a free, easy to use service!
 
 Getting set up
 --------------
@@ -125,7 +109,7 @@ and are wonderful tools to learn and explore (both programming and the data),
 and finally to share results with your colleagues.
 
 So now is a good time to have a look at the
-`Gammapy Jupyter notebooks <https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/Index.ipynb>`__.
+`Gammapy Jupyter notebooks <https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb>`__.
 Try executing the cells locally on your machine as you read through the text and code.
 
 
