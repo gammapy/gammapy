@@ -75,10 +75,7 @@ Software references:
 Glossary
 --------
 
-.. [CSV] comma-separated values; see also :ref:`CSV_files`.
 .. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
-.. [RST] restructured text; the markup format used for documentation and docstrings.
-         See `here <http://en.wikipedia.org/wiki/ReStructuredText>`__ and `here <http://sphinx-doc.org/rest.html>`__.
 
 Other related packages
 ----------------------

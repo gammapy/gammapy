@@ -448,9 +448,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         # reproject to reference image and renormalize data
         # TODO: use solid angle image
-        norm = (npred_total.wcs_pixel_scale() / self.reference.wcs_pixel_scale())
+        norm = (npred_total.wcs_pixel_scale() / self.reference.wcs_pixel_scale()).to('')
         npred_total = npred_total.reproject(self.reference)
-        npred_total.data /= (norm.mean()) ** 2
+        npred_total.data /= (norm.value.mean()) ** 2
 
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)

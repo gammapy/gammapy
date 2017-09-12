@@ -19,16 +19,13 @@ import json
 import numpy as np
 from astropy.extern import six
 from astropy.convolution import Gaussian2DKernel
-from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
-from ..image.models import read_json
 from ..image.models import Gauss2DPDF, MultiGauss2D
 
 __all__ = [
     'GaussPSF',
     'HESSMultiGaussPSF',
     'SherpaMultiGaussPSF',
-    'PositionDependentMultiGaussPSF',
     'multi_gauss_psf_kernel',
 ]
 
@@ -92,7 +89,7 @@ class SherpaMultiGaussPSF(object):
     def set(self):
         """Set the PSF for Sherpa."""
         import sherpa.astro.ui as sau
-        # from gammapy.image.models.utils import read_json
+        from ._utils_old import read_json
         read_json(self.pars, sau.set_model)
         sau.load_psf('psf', sau.get_model())
         self.center_psf()
@@ -262,65 +259,6 @@ class HESSMultiGaussPSF(object):
         m = self.to_MultiGauss2D(normalize=True)
         theta = m.containment_radius(containment_fraction)
         return theta
-
-
-class PositionDependentMultiGaussPSF(object):
-    """Position-dependent multi-Gauss PSF.
-
-    Represented by a set of images of multi-Gauss PSF parameters.
-
-    Parameters
-    ----------
-    hdu_list : `~astropy.io.fits.HDUList`
-        HDU list.
-    """
-
-    def __init__(self, hdu_list):
-        self.hdu_list = hdu_list
-        self._psf_pars = ['scale', 'sigma_1', 'A_2', 'sigma_2', 'A_3', 'sigma_3']
-        self._psf_vals = dict()
-        for psf_par in self._psf_pars:
-            self._psf_vals[psf_par] = self.hdu_list[psf_par].data.flat
-        self.shape = self.hdu_list['SCALE'].data.shape
-        self.size = self.hdu_list['SCALE'].data.size
-
-    @classmethod
-    def read(cls, filename):
-        """Create `PositionDependentMultiGaussPSF` from FITS file."""
-        hdu_list = fits.open(filename)
-        return cls(hdu_list)
-
-    def containment_radius_image(self, fraction):
-        """Compute containment radius image.
-
-        Parameters
-        ----------
-        fraction : float
-            Containment fraction
-
-        Returns
-        -------
-        image : `numpy.ndarray`
-            Containment radius image
-        """
-        out = np.zeros(self.shape, dtype=float)
-        npix = self.size
-        for ii in range(npix):
-            try:
-                psf = self._get_psf(ii)
-                out.flat[ii] = psf.containment_radius(fraction)
-            except ValueError:
-                # This is what happens to pixels in the map without PSF info
-                out.flat[ii] = np.nan
-
-        return out
-
-    def _get_psf(self, index):
-        """Get PSF at a given flattened index position.
-        """
-        psf_vals = [self._psf_vals[parameter][index] for parameter in self._psf_pars]
-        psf = HESSMultiGaussPSF(dict(zip(self._psf_pars, psf_vals)))
-        return psf
 
 
 def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs):

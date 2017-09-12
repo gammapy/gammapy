@@ -215,7 +215,7 @@ class CountsSpectrum(object):
         kwargs.setdefault('lw', 2)
         kwargs.setdefault('histtype', 'step')
         weights = self.data.data.value
-        bins = self.energy.bins.to(energy_unit).value[:-1]
+        bins = self.energy.bins.to(energy_unit).value
         x = self.energy.nodes.to(energy_unit).value
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
@@ -389,6 +389,10 @@ class PHACountsSpectrum(CountsSpectrum):
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
+
+    def reset_thresholds(self):
+        """Reset energy thresholds (i.e. declare all energy bins valid)"""
+        self.quality = np.zeros_like(self.quality)
 
     def rebin(self, parameter):
         """Rebin.

@@ -32,10 +32,6 @@ def data_show_main(filename, filetype, do_plot):
 
     Use the `gammapy-data-browser` to browse / check lots of files.
     """
-    if do_plot:
-        import matplotlib.pyplot as plt
-        plt.style.use('fivethirtyeight')
-
     if filetype == 'events':
         show_events(filename, do_plot)
     elif filetype == 'aeff':

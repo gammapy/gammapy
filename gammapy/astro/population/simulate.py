@@ -13,8 +13,8 @@ from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
 from ...utils.distributions import draw, pdf
 from ...utils.random import sample_sphere, sample_sphere_distance, get_random_state
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
-from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
-from ..population import VMIN, VMAX, velocity_distributions
+from ..population.spatial import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
+from ..population.velocity import VMIN, VMAX, velocity_distributions
 
 __all__ = [
     'make_catalog_random_positions_cube',

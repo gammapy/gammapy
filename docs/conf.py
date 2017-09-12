@@ -50,10 +50,12 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
 
+plot_html_show_source_link = False
+
 # -- General configuration ----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.1'
+# needs_sphinx = '1.1'
 
 # We currently want to link to the latest development version of the astropy docs,
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
@@ -72,10 +74,6 @@ intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/'
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
-intersphinx_mapping['gwcs'] = ('http://gwcs.readthedocs.io/en/latest/', None)
-intersphinx_mapping['astroplan'] = ('http://astroplan.readthedocs.io/en/latest/', None)
-# intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.io/en/latest/', None)
-# intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
 
 
 # List of patterns, relative to source directory, that match files and
@@ -107,7 +105,6 @@ version = package.__version__.split('-', 1)[0]
 # The full version, including alpha/beta/rc tags.
 release = package.__version__
 
-
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
@@ -120,37 +117,37 @@ release = package.__version__
 html_theme_options = {
     'logotext1': 'gamma',  # white,  semi-bold
     'logotext2': 'py',  # orange, light
-    'logotext3': ':docs'   # white,  light
+    'logotext3': ':docs'  # white,  light
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
-#html_theme_path = []
+# html_theme_path = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-#html_theme = None
+# html_theme = None
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+# html_sidebars = {}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = ''
+# html_favicon = ''
 
 # The Gammapy logo doesn't look good so small (would need to make it thicker)
 # So let's use the Astropy icon for now, i.e. not set `html_favicon` here.
 # https://github.com/gammapy/gammapy-website/tree/master/logos
-#html_favicon = '_static/gammapy_logo.ico'
+# html_favicon = '_static/gammapy_logo.ico'
 
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = ''
+# html_last_updated_fmt = ''
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -161,7 +158,6 @@ htmlhelp_basename = project + 'doc'
 
 # Static files to copy after template files
 html_static_path = ['_static']
-
 
 # download gammapy-extra for read the docs build
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
@@ -179,90 +175,8 @@ if on_rtd:
     gp_extra_zip.close()
     os.environ['GAMMAPY_EXTRA'] = os.path.join(path, 'gammapy-extra-master')
 
-
-
-# check if gammapy-extra is available
-from gammapy.extern.pathlib import Path
-try:
-    gammapy_extra_path = Path(os.environ['GAMMAPY_EXTRA'])
-    HAS_GP_EXTRA = True
-    print('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
-    print('*** Nice!')
-
-except KeyError:
-    HAS_GP_EXTRA = False
-    print('*** gammapy-extra *not* found.')
-    print('*** Set the GAMMAPY_EXTRA environment variable!')
-    print('*** Docs build will be incomplete.')
-    print('*** Notebook links will not be verified.')
-
-# define directive to include figures from gammapy-extra
-# see http://docutils.sourceforge.net/docs/howto/rst-directives.html
-# TODO: move to gammapy.utils
-from docutils.parsers.rst import directives
-
-class ExtraImage(directives.images.Image):
-    """Directive to add optional images from gammapy-extra"""
-    def run(self):
-        if HAS_GP_EXTRA:
-            path = gammapy_extra_path / 'figures'
-            filename = self.arguments[0]
-            current_source = self.state_machine.document.current_source
-            module = current_source.split('/')[-2]
-            new_filename = path / module / filename
-            if not new_filename.is_file():
-                msg = inliner.reporter.error('Gammapy-extra file not found:'
-                                             ' {}'.format(new_filename),
-                                             line=lineno)
-                prb = inliner.problematic(rawtext, rawtext, msg)
-                return [prb], [msg]
-            self.arguments[0] = '/' + str(new_filename)
-        else:
-            self.options['alt'] = self.argument[1]
-
-        return super(ExtraImage, self).run()
-
-directives.register_directive('gp-extra-image', ExtraImage)
-
-
-# define role to generate notebook links
-# see https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
-# TODO: move to gammapy.utils
-from docutils.parsers.rst import roles
-from docutils import nodes
-from gammapy.utils.scripts import read_yaml
-
-def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
-    """Link to a notebook on gammapy-extra"""
-    if HAS_GP_EXTRA:
-        available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
-        exists = notebook in [_['name'] for _ in available_notebooks]
-    else:
-        exists = True
-
-    if not exists:
-        msg = inliner.reporter.error('Unknown notebook {}'.format(notebook),
-                                     line=lineno)
-        prb = inliner.problematic(rawtext, rawtext, msg)
-        return [prb], [msg]
-    else:
-        app = inliner.document.settings.env.app
-        node = make_link_node(rawtext, app, notebook, options)
-        return [node], []
-
-
-def make_link_node(rawtext, app, notebook, options):
-
-    # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
-    base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
-    full_name = notebook + '.ipynb'
-    ref = base + full_name
-    roles.set_classes(options)
-    node = nodes.reference(rawtext, full_name, refuri=ref, **options)
-    return node
-
-roles.register_local_role('gp-extra-notebook', notebook_role)
-
+from gammapy.utils.docs import gammapy_sphinx_ext_activate
+gammapy_sphinx_ext_activate()
 
 html_style = 'gammapy.css'
 
@@ -273,14 +187,12 @@ html_style = 'gammapy.css'
 latex_documents = [('index', project + '.tex', project + u' Documentation',
                     author, 'manual')]
 
-
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [('index', project.lower(), project + u' Documentation',
               [author], 1)]
-
 
 # -- Options for the edit_on_github extension ----------------------------------------
 
@@ -298,5 +210,22 @@ if eval(setup_cfg.get('edit_on_github')):
     edit_on_github_doc_root = "docs"
 
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
+
+# -- Other options --
+
+# http://sphinx-automodapi.readthedocs.io/en/latest/automodapi.html
+# show inherited members for classes
+automodsumm_inherited_members = True
+
+# In `about.rst` and `references.rst` we are giving lists of citations
+# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
+# in the Gammapy docs. This is normal, but Sphinx emits a warning.
+# The following config option suppresses the warning.
+# http://www.sphinx-doc.org/en/stable/rest.html#citations
+# http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
+suppress_warnings = [
+    'ref.citation'
+]
+
 
 # nitpicky = True

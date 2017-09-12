@@ -126,6 +126,16 @@ class SourceCatalog(object):
         self._source_name_key = source_name_key
         self._source_name_alias = source_name_alias
 
+    def __str__(self):
+        """Info string."""
+        ss = self.description
+        ss += ' with {} objects.'.format(len(self.table))
+        return ss
+
+    def info(self):
+        """Print info string."""
+        print(self)
+
     @lazyproperty
     def _name_to_index_cache(self):
         # Make a dict for quick lookup: source name -> row index
@@ -276,16 +286,6 @@ class SourceCatalog(object):
         the gamma-sky.net webpage.
         """
         return [source._data_python_dict for source in self]
-
-    def info(self):
-        """Print info string."""
-        print(self)
-
-    def __str__(self):
-        """Info string."""
-        ss = self.description
-        ss += ' with {} objects.'.format(len(self.table))
-        return ss
 
     @property
     def positions(self):

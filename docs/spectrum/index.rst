@@ -79,13 +79,14 @@ Content
 
    fitting
    energy_group
-   plotting_fermi_spectra
 
 Reference/API
 =============
 
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
+    :include-all-objects:
 
 .. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
+    :include-all-objects:

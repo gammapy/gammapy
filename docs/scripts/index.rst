@@ -72,11 +72,6 @@ Detect
 - ``gammapy-detect`` calls `gammapy.scripts.detect`
 - ``gammapy-detect-iterative`` calls `gammapy.scripts.detect_iterative`
 
-Catalog
--------
-
-- ``gammapy-catalog-query`` calls `gammapy.scripts.catalog_query`
-
 
 Technical background
 ====================
@@ -116,3 +111,4 @@ Reference/API
 
 .. automodapi:: gammapy.scripts
     :no-inheritance-diagram:
+    :include-all-objects:

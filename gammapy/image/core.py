@@ -259,6 +259,7 @@ class SkyImage(MapBase):
                              proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
+        header.update(meta)
         return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
@@ -290,7 +291,9 @@ class SkyImage(MapBase):
 
         data = fill * np.ones_like(image.data)
 
-        return cls(name, data, wcs, unit, meta=wcs.to_header())
+        header = wcs.to_header()
+        header.update(meta)
+        return cls(name, data, wcs, unit, meta=header)
 
     def fill_events(self, events, weights=None):
         """Fill events (modifies ``data`` attribute).
@@ -713,7 +716,9 @@ class SkyImage(MapBase):
             Position and value of the maximum.
         """
         if region:
-            mask = region.contains(self.coordinates(), wcs=self.wcs)
+            region_pix = region.to_pixel(self.wcs)
+            coords_pix = self.coordinates_pix()
+            mask = region_pix.contains(coords_pix)
         else:
             mask = np.ones_like(self.data)
 
@@ -1142,18 +1147,12 @@ class SkyImage(MapBase):
          [0 0 1 0 0]
          [0 0 0 0 0]]
         """
-        if isinstance(region, PixelRegion):
-            coords = self.coordinates_pix()
-            kwargs = dict()
-        elif isinstance(region, SkyRegion):
-            coords = self.coordinates()
-            kwargs = dict(wcs=self.wcs)
-        else:
-            raise TypeError("Invalid region type, must be instance of "
-                            "'regions.PixelRegion' or 'regions.SkyRegion'")
+        if isinstance(region, SkyRegion):
+            region = region.to_pixel(self.wcs)
 
+        coords = self.coordinates_pix()
         mask = self.copy()
-        mask.data = region.contains(coords, **kwargs)
+        mask.data = region.contains(coords)
         return mask
 
     @staticmethod

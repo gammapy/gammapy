@@ -75,7 +75,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
                                         )
 
 
-def make_test_observation_table(observatory_name='HESS', n_obs=10,
+def make_test_observation_table(observatory_name='hess', n_obs=10,
                                 az_range=Angle([0, 360], 'deg'),
                                 alt_range=Angle([45, 90], 'deg'),
                                 date_range=(Time('2010-01-01'),
@@ -431,7 +431,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
 
 
 def make_test_dataset(outdir, overwrite=False,
-                      observatory_name='HESS', n_obs=10,
+                      observatory_name='hess', n_obs=10,
                       az_range=Angle([0, 360], 'deg'),
                       alt_range=Angle([45, 90], 'deg'),
                       date_range=(Time('2010-01-01'),
@@ -512,8 +512,8 @@ def make_test_dataset(outdir, overwrite=False,
 
     # create data store for the organization of the files
     # using H.E.S.S.-like dir/file naming scheme
-    if observatory_name == 'HESS':
-        scheme = 'HESS'
+    if observatory_name == 'hess':
+        scheme = 'hess'
     else:
         s_error = "Warning! Storage scheme for {}".format(observatory_name)
         s_error += "not implemented. Only H.E.S.S. scheme is available."

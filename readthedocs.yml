@@ -1,7 +1,6 @@
 # See http://read-the-docs.readthedocs.io/en/latest/yaml-config.html
 conda:
-    file: docs/environment.yml
+  file: docs/environment.yml
 
 python:
-   version: 3.5
-   setup_py_install: true
+  setup_py_install: true

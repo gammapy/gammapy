@@ -198,6 +198,16 @@ class TestSpectralFit:
         assert_allclose(result.model.parameters.error('amplitude'), 2.1992645712596426e-12)
         self.fit.result[0].to_table()
 
+    def test_compound(self):
+        self.fit.model = self.fit.model * 2
+        self.fit.fit()
+        result = self.fit.result[0]
+        pars = result.model.parameters
+        assert_quantity_allclose(pars['index'].value, 2.2542315426423283)
+        # amplitude should come out roughly * 0.5
+        assert_quantity_allclose(pars['amplitude'].quantity,
+                                 1.0243449507421302e-7 * u.Unit('m-2 s-1 TeV-1'))
+
     def test_areascal(self):
         areascal = np.ones(self.fit.obs_list[0].e_reco.nbins)
         areascal *= 0.5

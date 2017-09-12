@@ -11,7 +11,6 @@ __all__ = [
     'FaucherKaspi2006VelocityBimodal',
     'Paczynski1990Velocity',
     'velocity_distributions',
-    'VMIN', 'VMAX',
 ]
 
 # Simulation range used for random number drawing
@@ -119,10 +118,7 @@ class Paczynski1990Velocity(Fittable1DModel):
 
 
 velocity_distributions = OrderedDict()
-"""Dictionary of available distributions.
-
-Useful for automatic processing.
-"""
+velocity_distributions.__doc__ = """Velocity distributions (dict mapping names to classes)."""
 velocity_distributions['H05'] = FaucherKaspi2006VelocityMaxwellian
 velocity_distributions['F06B'] = FaucherKaspi2006VelocityBimodal
 velocity_distributions['F06P'] = Paczynski1990Velocity

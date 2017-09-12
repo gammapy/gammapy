@@ -44,8 +44,8 @@ class SensitivityEstimator(object):
 
         from gammapy.scripts import CTAPerf, SensitivityEstimator
         filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-        irf1 = CTAPerf.read(filename)
-        sens = SensitivityEstimator(irf=irf1, livetime=5.0*u.Unit('h'))
+        irf = CTAPerf.read(filename)
+        sens = SensitivityEstimator(irf=irf, livetime='5h')
         sens.run()
         sens.print_results()
         sens.plot()
