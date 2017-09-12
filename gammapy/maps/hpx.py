@@ -826,12 +826,12 @@ class HpxGeom(MapGeom):
                               region=self.region, axes=self.axes, conv=self.conv)
 
     def to_image(self):
-        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv)
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
-        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv, axes=axes)
 
     @classmethod
@@ -940,7 +940,7 @@ class HpxGeom(MapGeom):
             return 'FGST_LTCUBE'
         elif colname == 'Bin0':
             return 'GALPROP'
-        elif colname == 'CHANNEL1':
+        elif colname == 'CHANNEL1' or colname == 'CHANNEL0':
             if extname == 'SKYMAP':
                 return 'FGST_CCUBE'
             else:
