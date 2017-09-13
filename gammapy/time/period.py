@@ -7,17 +7,34 @@ __all__ = [
 ]
 
 
-def _nll(param, data):
+def _window_function(time, dt):
     """
-    Negative log likelihood function for beta distribution
+    Generates window function with desired resolution dt
     """
-    from scipy.stats import beta
-    a, b = param
-    pdf = beta.pdf(data, a, b, loc=0, scale=1)
-    lg = np.log(pdf)
-    mask = np.isfinite(lg)
-    nll = -lg[mask].sum()
-    return nll
+    time_win = np.rint(time / dt) * dt
+    t_max = np.max(time_win)
+    t_min = np.min(time_win)
+    window_grid = np.arange(t_min, t_max + dt, dt)
+    window_grid = np.rint(window_grid / dt) * dt  # round again since np.arange is not robust
+    window = np.zeros(len(window_grid))
+    window[np.searchsorted(window_grid, time_win, side='right') - 1] = 1
+
+    return window_grid, window
+
+
+def _freq_grid(time, dt, max_period):
+    """
+    Generates the frequency grid for the periodogram
+    """
+    if max_period == 'None':
+        max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
+    else:
+        max_period = np.rint(max_period / dt) * dt
+    min_period = dt
+    periods = np.arange(min_period, max_period + dt, dt)
+    grid = 1. / periods
+
+    return grid, periods
 
 
 def _cvm(param, data):
@@ -35,22 +52,22 @@ def _cvm(param, data):
     cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data) ** 2.))
     mask = np.isfinite(cvm_dist)
     cvm = cvm_dist[mask]
+
     return cvm
 
 
-def _window_function(time, dt):
+def _nll(param, data):
     """
-    Generates window function with desired resolution dt
+    Negative log likelihood function for beta distribution
     """
-    time_win = np.rint(time / dt) * dt
-    t_max = np.max(time_win)
-    t_min = np.min(time_win)
-    window_grid = np.arange(t_min, t_max + dt, dt)
-    window_grid = np.rint(window_grid / dt) * dt  # round again since np.arange is not robust
-    window = np.zeros(len(window_grid))
-    window[np.searchsorted(window_grid, time_win, side='right') - 1] = 1
+    from scipy.stats import beta
+    a, b = param
+    pdf = beta.pdf(data, a, b)
+    lg = np.log(pdf)
+    mask = np.isfinite(lg)
+    nll = -lg[mask].sum()
 
-    return window_grid, window
+    return nll
 
 
 def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
@@ -70,21 +87,6 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
         second_max_periods[idx_run] = np.sort(psd_boot.flatten())[-2]
 
     return max_periods, second_max_periods
-
-
-def _freq_grid(time, dt, max_period):
-    """
-    Generates the frequency grid for the periodogram
-    """
-    if max_period == 'None':
-        max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
-    else:
-        max_period = np.rint(max_period / dt) * dt
-    min_period = dt
-    periods = np.arange(min_period, max_period + dt, dt)
-    grid = 1. / periods
-
-    return grid, periods
 
 
 def _significance_pre(time, freq, psd_best_period):
@@ -116,8 +118,8 @@ def _significance_cvm(freq, psd, psd_best_period):
     if theta_2 < 0:
         theta_2 = clip
 
-    cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1]) ** len(freq)
+    cvm_minimize = optimize.minimize(_cvm, [theta_1, theta_2], args=(psd,), bounds=((clip, None), (clip, None)))
+    significance = 100 * beta.cdf(psd_best_period, cvm_minimize.x[0], cvm_minimize.x[1]) ** len(freq)
 
     return significance
 
@@ -130,8 +132,9 @@ def _significance_nll(time, freq, psd, psd_best_period):
     from scipy.stats import beta
     a = (3 - 1) / 2
     b = (len(time) - 3) / 2
-    nll_minimize = optimize.fmin(_nll, [a, b], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1]) ** len(freq)
+    clip = 0.00001
+    nll_minimize = optimize.minimize(_nll, [a, b], args=(psd,), bounds=((clip, None), (clip, None)))
+    significance = 100 * beta.cdf(psd_best_period, nll_minimize.x[0], nll_minimize.x[1]) ** len(freq)
 
     return significance
 

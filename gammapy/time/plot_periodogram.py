@@ -45,8 +45,8 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     # plot the light curve
     ax = fig.add_subplot(grid_spec[0, :])
     ax.errorbar(time, flux, flux_err, fmt='ok', elinewidth=1.5, capsize=0)
-    ax.set_xlabel(r'\textbf{time} (d)')
-    ax.set_ylabel(r'\textbf{magnitude} (a.u.)')
+    ax.set_xlabel('time (d)')
+    ax.set_ylabel('magnitude (a.u.)')
 
     # plot the periodogram
     ax = fig.add_subplot(grid_spec[1, :])
@@ -60,8 +60,8 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
         ymax = psd_data[periods == best_period]
         ax.axvline(best_period, ymin=0, ymax=ymax, label=label)
 
-    ax.set_xlabel(r'\textbf{period} (d)')
-    ax.set_ylabel(r'\textbf{power}')
+    ax.set_xlabel('period (d)')
+    ax.set_ylabel('power')
     ax.set_xlim(0, np.max(periods))
     ax.set_ylim(0, 1)
     ax.legend(loc='upper right')
@@ -69,8 +69,8 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     # plot the spectral window function
     ax = fig.add_subplot(grid_spec[2, :])
     ax.plot(periods, psd_win)
-    ax.set_xlabel(r'\textbf{period} (d)')
-    ax.set_ylabel(r'\textbf{power}')
+    ax.set_xlabel('period (d)')
+    ax.set_ylabel('power')
     ax.set_xlim(0, np.max(periods))
 
     return fig

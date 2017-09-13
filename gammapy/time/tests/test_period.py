@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..lomb_scargle import lomb_scargle
+from ..period import lomb_scargle
 
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
@@ -75,4 +75,5 @@ def test_lomb_scargle(test_case):
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
+    assert_allclose(result['period'], test_case['period'], atol=test_case['dt'],)
+    assert_allclose(np.asarray(list(result['significance'].values())), 100, atol=1)
