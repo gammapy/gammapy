@@ -6,7 +6,7 @@ __all__ = [
 ]
 
 
-def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_period=None, significance=None):
+def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_period=None, fap=None):
     """Plot a light curve, its periodogram and spectral window function.
 
     The highest period of the periodogram and its significance will be added to the plot, if given.
@@ -24,14 +24,14 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
         Periods for the periodogram
     psd_data : `~numpy.ndarray`
         Periodogram peaks of the data
-    best_period : float
-        Highest period of the periodogram
-    significance : float or `~numpy.ndarray`
-        Significance of ``best_period`` under the specified significance criterion.
-        If the significance criterion is not defined, the minimum significance
-        of all significance criteria is used.
     psd_win : `~numpy.ndarray`
         Periodogram peaks of the window function
+    best_period : float
+        Highest period of the periodogram
+    fap : float or `~numpy.ndarray`
+        False alarm probability of ``best_period`` under the specified significance criterion.
+        If the significance criterion is not defined, the maximum false alarm probability
+        of all significance criteria is used.
         
     Returns
     -------
@@ -55,13 +55,13 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     ax.plot(periods, psd_data)
     # mark the best period and label with significance
     if best_period is not None:
-        if significance is None:
-            raise ValueError('Must give a significance if you give a best_period')
+        if fap is None:
+            raise ValueError('Must give a false alarm probability if you give a best_period')
 
         # set precision for period format
         pre = int(abs(np.floor(np.log10(np.max(np.diff(periods))))))
-        s_min = min(significance.values())
-        label = 'Detected period p = {:.{}f} with {:.2f} significance'.format(best_period, pre, s_min)
+        fap_max = max(fap.values())
+        label = 'Detected period p = {:.{}f} with {:.2E} FAP'.format(best_period, pre, fap_max)
         ymax = psd_data[periods == best_period]
         ax.axvline(best_period, ymin=0, ymax=ymax, label=label)
 
@@ -79,3 +79,4 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     ax.set_xlim(0, np.max(periods))
 
     return fig
+
