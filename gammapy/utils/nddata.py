@@ -3,9 +3,9 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
+from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
-from ..extern.bunch import Bunch
 from .array import array_stats_str
 
 __all__ = [
@@ -45,7 +45,7 @@ class NDDataArray(object):
         if data is not None:
             self.data = data
         if meta is not None:
-            self.meta = Bunch(meta)
+            self.meta = OrderedDict(meta)
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
 
         self._regular_grid_interp = None

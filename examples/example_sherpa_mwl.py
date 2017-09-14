@@ -7,7 +7,6 @@ where e.g. radio / X-ray flux points are used,
 Fermi ScienceTools are called for Fermi
 and gammapy.spectrum for IACT analysis.
 """
-import IPython
 import numpy as np
 from astropy.units import Quantity
 import astropy.units as u
@@ -20,7 +19,6 @@ from sherpa.fit import Fit
 
 from gammapy.datasets import load_crab_flux_points
 from gammapy.utils.energy import Energy
-from gammapy.extern.bunch import Bunch
 
 
 class FermiStat(Likelihood):
@@ -132,8 +130,7 @@ def mwl_fit_low_level_calling_fermi():
     fit = Fit(data=data, model=model, stat=stat, method=method)
     result = fit.fit()
 
-    # IPython.embed()
-    return Bunch(results=result, model=spec_model)
+    return dict(results=result, model=spec_model)
 
 
 def mwl_fit_low_level():
@@ -162,7 +159,7 @@ def mwl_fit_low_level():
     result = fit.fit()
 
     # IPython.embed()
-    return Bunch(results=result, model=spec_model)
+    return dict(results=result, model=spec_model)
 
 
 def mwl_fit_high_level():
@@ -202,7 +199,7 @@ def mwl_fit_high_level():
     # IPython.embed()
     ui.fit()
 
-    return Bunch(results=ui.get_fit_results(), model=spec_model)
+    return dict(results=ui.get_fit_results(), model=spec_model)
 
 
 def print_results(results):
