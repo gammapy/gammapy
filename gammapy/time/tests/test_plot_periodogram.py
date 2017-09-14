@@ -7,7 +7,7 @@ from .test_period import simulate_test_data
 @pytest.mark.parametrize('test_case', [
     dict(period=7, amplitude=2, t_length=100, n_data=1000,
          n_observations=1000 / 2, n_outliers=0, dt=0.5,
-         max_period='None', criteria='None', n_bootstraps='None'),
+         max_period=None, criteria='all', n_bootstraps=10),
 ])
 def test_lomb_scargle_plot(test_case):
     test_data = simulate_test_data(
@@ -18,7 +18,7 @@ def test_lomb_scargle_plot(test_case):
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    fig = plot_periodogram(
+    plot_periodogram(
         test_data['t'], test_data['y'], test_data['dy'], result['pgrid'],
         result['psd'], result['swf'], result['period'],
         result['significance']

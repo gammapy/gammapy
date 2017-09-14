@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -64,7 +65,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 @pytest.mark.parametrize('test_case', [
     dict(period=7, amplitude=2, t_length=100, n_data=1000,
          n_observations=1000 / 2, n_outliers=0, dt=0.5,
-         max_period='None', criteria='None', n_bootstraps='None'),
+         max_period=None, criteria='all', n_bootstraps=10),
 ])
 def test_lomb_scargle(test_case):
     test_data = simulate_test_data(
@@ -75,5 +76,5 @@ def test_lomb_scargle(test_case):
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    assert_allclose(result['period'], test_case['period'], atol=test_case['dt'],)
-    assert_allclose(np.asarray(list(result['significance'].values())), 100, atol=1)
+    assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
+    assert_allclose(list(result['significance'].values()), 100, atol=1)

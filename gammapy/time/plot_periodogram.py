@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 
 __all__ = [
@@ -5,7 +6,7 @@ __all__ = [
 ]
 
 
-def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_period='None', significance='None'):
+def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_period=None, significance=None):
     """Plot a light curve, its periodogram and spectral window function.
 
     The highest period of the periodogram and its significance will be added to the plot, if given.
@@ -23,18 +24,19 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
         Periods for the periodogram
     psd_data : `~numpy.ndarray`
         Periodogram peaks of the data
-    best_period : `float`
+    best_period : float
         Highest period of the periodogram
-    significance : `float` or `~numpy.ndarray`
+    significance : float or `~numpy.ndarray`
         Significance of ``best_period`` under the specified significance criterion.
         If the significance criterion is not defined, the minimum significance
         of all significance criteria is used.
-    psd_win : Periodogram peaks of the window function
+    psd_win : `~numpy.ndarray`
+        Periodogram peaks of the window function
         
     Returns
     -------
-    fig : `~matplotlib.Figure`
-        Figure
+    fig : `~matplotlib.figure.Figure`
+        Matplotlib figure
     """
     import matplotlib.pyplot as plt
 
@@ -52,7 +54,10 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     ax = fig.add_subplot(grid_spec[1, :])
     ax.plot(periods, psd_data)
     # mark the best period and label with significance
-    if best_period != 'None':
+    if best_period is not None:
+        if significance is None:
+            raise ValueError('Must give a significance if you give a best_period')
+
         # set precision for period format
         pre = int(abs(np.floor(np.log10(np.max(np.diff(periods))))))
         s_min = min(significance.values())
