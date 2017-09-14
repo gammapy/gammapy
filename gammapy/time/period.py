@@ -7,36 +7,6 @@ __all__ = [
 ]
 
 
-def _nll(param, data):
-    """
-    Negative log likelihood function for beta distribution
-    """
-    from scipy.stats import beta
-    a, b = param
-    pdf = beta.pdf(data, a, b, loc=0, scale=1)
-    lg = np.log(pdf)
-    mask = np.isfinite(lg)
-    nll = -lg[mask].sum()
-    return nll
-
-
-def _cvm(param, data):
-    """
-    Cramer-von-Mises distance for beta distribution
-    """
-    from scipy.stats import beta
-    a, b = param
-    ordered_data = np.sort(data, axis=None)
-    for n in range(len(data)):
-        cdf = beta.cdf(ordered_data[n], a, b, loc=0, scale=1)
-        sumbeta = + (cdf - (n - 0.5) / len(data)) ** 2.0
-
-    cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data) ** 2.))
-    mask = np.isfinite(cvm_dist)
-    cvm = cvm_dist[mask]
-    return cvm
-
-
 def _window_function(time, dt):
     """
     Generates window function with desired resolution dt
@@ -50,6 +20,54 @@ def _window_function(time, dt):
     window[np.searchsorted(window_grid, time_win, side='right') - 1] = 1
 
     return window_grid, window
+
+
+def _freq_grid(time, dt, max_period):
+    """
+    Generates the frequency grid for the periodogram
+    """
+    if max_period == 'None':
+        max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
+    else:
+        max_period = np.rint(max_period / dt) * dt
+    min_period = dt
+    periods = np.arange(min_period, max_period + dt, dt)
+    grid = 1. / periods
+
+    return grid, periods
+
+
+def _cvm(param, data):
+    """
+    Cramer-von-Mises distance for beta distribution
+    """
+    from scipy.stats import beta
+    a, b = param
+    ordered_data = np.sort(data, axis=None)
+    sumbeta = 0
+    for n in range(len(data)):
+        cdf = beta.cdf(ordered_data[n], a, b)
+        sumbeta += (cdf - (n - 0.5) / len(data)) ** 2.0
+
+    cvm_dist = (1. / len(data)) * sumbeta + 1. / (12 * (len(data) ** 2.))
+    mask = np.isfinite(cvm_dist)
+    cvm = cvm_dist[mask]
+
+    return cvm
+
+
+def _nll(param, data):
+    """
+    Negative log likelihood function for beta distribution
+    """
+    from scipy.stats import beta
+    a, b = param
+    pdf = beta.pdf(data, a, b)
+    lg = np.log(pdf)
+    mask = np.isfinite(lg)
+    nll = -lg[mask].sum()
+
+    return nll
 
 
 def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
@@ -71,22 +89,7 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     return max_periods, second_max_periods
 
 
-def _freq_grid(time, dt, max_period):
-    """
-    Generates the frequency grid for the periodogram
-    """
-    if max_period == 'None':
-        max_period = np.rint((np.max(time) - np.min(time)) / dt) * dt
-    else:
-        max_period = np.rint(max_period / dt) * dt
-    min_period = dt
-    periods = np.arange(min_period, max_period + dt, dt)
-    grid = 1. / periods
-
-    return grid, periods
-
-
-def _significance_pre(time, freq, psd, psd_best_period):
+def _significance_pre(time, freq, psd_best_period):
     """
     Computes significance for the pre-defined beta distribution
     """
@@ -115,8 +118,8 @@ def _significance_cvm(freq, psd, psd_best_period):
     if theta_2 < 0:
         theta_2 = clip
 
-    cvm_minimize = optimize.fmin(_cvm, [theta_1, theta_2], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, cvm_minimize[0], cvm_minimize[1]) ** len(freq)
+    cvm_minimize = optimize.minimize(_cvm, [theta_1, theta_2], args=(psd,), bounds=((clip, None), (clip, None)))
+    significance = 100 * beta.cdf(psd_best_period, cvm_minimize.x[0], cvm_minimize.x[1]) ** len(freq)
 
     return significance
 
@@ -129,8 +132,9 @@ def _significance_nll(time, freq, psd, psd_best_period):
     from scipy.stats import beta
     a = (3 - 1) / 2
     b = (len(time) - 3) / 2
-    nll_minimize = optimize.fmin(_nll, [a, b], args=(psd,))
-    significance = 100 * beta.cdf(psd_best_period, nll_minimize[0], nll_minimize[1]) ** len(freq)
+    clip = 0.00001
+    nll_minimize = optimize.minimize(_nll, [a, b], args=(psd,), bounds=((clip, None), (clip, None)))
+    significance = 100 * beta.cdf(psd_best_period, nll_minimize.x[0], nll_minimize.x[1]) ** len(freq)
 
     return significance
 
@@ -205,7 +209,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     .. [4] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
        `Link <https://www.jstatsoft.org/article/view/v069i09>`_
     .. [5] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
-       `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
+       `Link <http://ada7.cosmostat.org/ADA7_proceeding_MSuveges2.pdf>`_
     """
 
     # set up lomb-scargle-algorithm
@@ -223,7 +227,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period='None', criteria='None', n
     significance = OrderedDict()
 
     if 'pre' in criteria:
-        significance['pre'] = _significance_pre(time, freq, psd_data, psd_best_period)
+        significance['pre'] = _significance_pre(time, freq, psd_best_period)
     if 'cvm' in criteria:
         significance['cvm'] = _significance_cvm(freq, psd_data, psd_best_period)
     if 'nll' in criteria:
