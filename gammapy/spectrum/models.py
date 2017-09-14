@@ -505,6 +505,8 @@ class PowerLaw(SpectralModel):
     --------
     This is how to plot the default `PowerLaw` model:
 
+    .. code::
+
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw
 
@@ -707,6 +709,8 @@ class PowerLaw2(SpectralModel):
     --------
     This is how to plot the default `PowerLaw2` model:
 
+    .. code::
+
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw2
 
@@ -826,6 +830,8 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw` model:
 
+    .. code::
+
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw
 
@@ -920,6 +926,8 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model:
 
+    .. code::
+
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
 
@@ -975,6 +983,8 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     Examples
     --------
     This is how to plot the default `PLSuperExpCutoff3FGL` model:
+
+    .. code::
 
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff3FGL
@@ -1032,6 +1042,8 @@ class LogParabola(SpectralModel):
     Examples
     --------
     This is how to plot the default `LogParabola` model:
+
+    .. code::
 
         from astropy import units as u
         from gammapy.spectrum.models import LogParabola
