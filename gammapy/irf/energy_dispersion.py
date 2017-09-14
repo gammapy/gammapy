@@ -335,7 +335,8 @@ class EnergyDispersion(object):
     def get_resolution(self, e_true):
         """Get energy resolution for a given true energy.
 
-        Resolution is the 1 sigma containment of the energy dispersion PDF.
+        The resolution is given as the standard deviation
+        of the logarithm of the reconstructed energy.
 
         Parameters
         ----------
@@ -366,20 +367,39 @@ class EnergyDispersion(object):
 
     def _get_mean(self, e_true):
         """Get mean log reconstructed energy."""
+        # evaluate the pdf at given true energies
         pdf = self.data.evaluate(e_true=e_true)
-        norm = np.sum(pdf, axis=pdf.ndim-1)
-        temp = np.sum(pdf * self.e_reco._interp_nodes(), axis=pdf.ndim-1)
+
+        # compute sum along reconstructed energy 
+        # axis to determine the mean
+        norm = np.sum(pdf, axis=-1)
+        temp = np.sum(pdf * self.e_reco._interp_nodes(), axis=-1)
+
         return temp / norm
 
     def _get_variance(self, e_true):
         """Get variance of log reconstructed energy."""
+        # evaluate the pdf at given true energies
         pdf = self.data.evaluate(e_true=e_true)
+
+        # compute mean
         mean = self._get_mean(e_true)
+
+        # create array of reconstructed-energy nodes
+        # for each given true energy value
+        # (first axis is reconstructed energy)
         erec = self.e_reco._interp_nodes()
         erec = np.repeat(erec, max(np.sum(mean.shape), 1)).reshape(erec.shape + mean.shape)
+
+        # compute deviation from mean
+        # (and move reconstructed energy axis to last axis)
         temp = np.moveaxis((erec - mean) ** 2, 0, -1)
-        norm = np.sum(pdf, axis=pdf.ndim-1)
-        var = np.sum(temp * pdf, axis=pdf.ndim-1)
+
+        # compute sum along reconstructed energy
+        # axis to determine the variance
+        norm = np.sum(pdf, axis=-1)
+        var = np.sum(temp * pdf, axis=-1)
+
         return var / norm
 
     def _extent(self):
