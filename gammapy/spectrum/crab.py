@@ -24,7 +24,7 @@ hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
          'index': 2.62,
          'reference': 1 * u.TeV}
 
-# MAGIC publication: JHEAP 5-6 (2015), 30-38
+# MAGIC publication: 2015JHEAp...5...30A
 # note that in the paper the beta of the LogParabola is given as negative in  
 # Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
 magic_lp ={'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
@@ -71,7 +71,7 @@ class CrabSpectrum(object):
     * 'meyer', http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     * 'hegra', http://adsabs.harvard.edu/abs/2000ApJ...539..317A
     * 'hess_pl' and 'hess_ecpl': http://adsabs.harvard.edu/abs/2006A%26A...457..899A
-    * 'magic_lp' and 'magic_ecpl': http://www.sciencedirect.com/science/article/pii/S2214404815000038?via%3Dihub
+    * 'magic_lp' and 'magic_ecpl': http://adsabs.harvard.edu/abs/2015JHEAp...5...30A
 
     Parameters
     ----------
