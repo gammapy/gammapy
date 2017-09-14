@@ -342,11 +342,7 @@ class EnergyDispersion(object):
         e_true : `~astropy.units.Quantity`
             True energy
         """
-        # Variance is 2nd moment of PDF
-        pdf = self.data.evaluate(e_true=e_true)
-        mean = self._get_mean(e_true)
-        temp = (self.e_reco._interp_nodes() - mean) ** 2
-        var = np.sum(temp * pdf)
+        var = self._get_variance(e_true)
         return np.sqrt(var)
 
     def get_bias(self, e_true):
@@ -370,11 +366,21 @@ class EnergyDispersion(object):
 
     def _get_mean(self, e_true):
         """Get mean log reconstructed energy."""
-        # Reconstructed energy is 1st moment of PDF
         pdf = self.data.evaluate(e_true=e_true)
         norm = np.sum(pdf, axis=pdf.ndim-1)
         temp = np.sum(pdf * self.e_reco._interp_nodes(), axis=pdf.ndim-1)
         return temp / norm
+
+    def _get_variance(self, e_true):
+        """Get variance of log reconstructed energy."""
+        pdf = self.data.evaluate(e_true=e_true)
+        mean = self._get_mean(e_true)
+        erec = self.e_reco._interp_nodes()
+        erec = np.repeat(erec, max(np.sum(mean.shape), 1)).reshape(erec.shape + mean.shape)
+        temp = np.moveaxis((erec - mean) ** 2, 0, -1)
+        norm = np.sum(pdf, axis=pdf.ndim-1)
+        var = np.sum(temp * pdf, axis=pdf.ndim-1)
+        return var / norm
 
     def _extent(self):
         """Extent (x0, x1, y0, y1) for plotting (4x float).
