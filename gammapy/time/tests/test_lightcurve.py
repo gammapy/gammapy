@@ -79,7 +79,7 @@ def spec_extraction():
                                     e_reco=e_reco,
                                     e_true=e_true)
     extraction.run()
-    extraction.define_energy_threshold('area_max', percent=10.0)
+    extraction.compute_energy_threshold(method_lo='area_max', area_percent_lo=10.0)
     return extraction
 
 

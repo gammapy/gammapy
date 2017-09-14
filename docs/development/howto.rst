@@ -1004,7 +1004,7 @@ instead of the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
 
-    .. gp-extra-image:: fermi_ts_image.png
+    .. gp-extra-image:: detect/fermi_ts_image.png
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__

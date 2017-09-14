@@ -6,6 +6,5 @@ from .plot import *
 from .simulate import *
 from .lightcurve import *
 from .exptest import *
-from .robust_periodogram import *
-from .lomb_scargle import *
+from .period import *
 from .plot_periodogram import *

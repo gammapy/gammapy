@@ -1,7 +1,8 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..lomb_scargle import lomb_scargle
+from ..period import lomb_scargle
 
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
@@ -63,11 +64,8 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 
 @pytest.mark.parametrize('test_case', [
     dict(period=7, amplitude=2, t_length=100, n_data=1000,
-         n_observations=1000 / 2, n_outliers=0, dt=0.01,
-         max_period=10, criteria='boot', n_bootstraps=100),
-    dict(period=7, amplitude=2, t_length=100, n_data=1000,
-         n_observations=1000 / 2, n_outliers=0, dt=0.01,
-         max_period='None', criteria='None', n_bootstraps='None'),
+         n_observations=1000 / 2, n_outliers=0, dt=0.5,
+         max_period=None, criteria='all', n_bootstraps=10),
 ])
 def test_lomb_scargle(test_case):
     test_data = simulate_test_data(
@@ -79,3 +77,4 @@ def test_lomb_scargle(test_case):
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
     assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
+    assert_allclose(list(result['significance'].values()), 100, atol=1)
