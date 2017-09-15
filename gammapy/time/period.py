@@ -219,7 +219,12 @@ def _fap_cvm(freq, psd, psd_best_period):
     if theta_2 < 0:
         theta_2 = clip
 
-    cvm_minimize = optimize.minimize(_cvm, [theta_1, theta_2], args=(psd,), bounds=((clip, None), (clip, None)))
+    cvm_minimize = optimize.minimize(
+        _cvm,
+        [theta_1, theta_2],
+        args=(psd,),
+        bounds=((clip, None), (clip, None)),
+    )
     fap = 1 - beta.cdf(psd_best_period, cvm_minimize.x[0], cvm_minimize.x[1]) ** len(freq)
 
     return fap
@@ -234,7 +239,12 @@ def _fap_nll(time, freq, psd, psd_best_period):
     a = (3 - 1) / 2
     b = (len(time) - 3) / 2
     clip = 0.00001
-    nll_minimize = optimize.minimize(_nll, [a, b], args=(psd,), bounds=((clip, None), (clip, None)))
+    nll_minimize = optimize.minimize(
+        _nll,
+        [a, b],
+        args=(psd,),
+        bounds=((clip, None), (clip, None)),
+    )
     fap = 1 - beta.cdf(psd_best_period, nll_minimize.x[0], nll_minimize.x[1]) ** len(freq)
 
     return fap

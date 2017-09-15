@@ -75,10 +75,10 @@ The periodogram has many spurious peaks, which are due to several factors:
    the periodogram at :math:`p_{{alias}} = 0.796`.
 
 .. [1] Astropy docs, Lomb-Scargle Periodograms,
-   `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`_
+   `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`__
 .. [2] Gammapy docs, Lomb-Scargle periodogram example,
-   `Link <https://github.com/gammapy/gammapy-extra/blob/master/figures/time/example_lomb_scargle.py>`_
+   `Link <https://github.com/gammapy/gammapy-extra/blob/master/figures/time/example_lomb_scargle.py>`__
 .. [3] F. Aharonian, 3.9 day orbital modulation in the TeV gamma-ray flux and spectrum from the X-ray binary LS 5039,
-   `Link <https://www.aanda.org/articles/aa/pdf/forth/aa5940-06.pdf>`_ 
+   `Link <https://www.aanda.org/articles/aa/pdf/forth/aa5940-06.pdf>`__
 .. [4] J. Casares, A possible black hole in the gamma-ray microquasar LS 5039,
-   `Link <https://academic.oup.com/mnras/article/364/3/899/1187228/A-possible-black-hole-in-the-ray-microquasar-LS>`_
+   `Link <https://academic.oup.com/mnras/article/364/3/899/1187228/A-possible-black-hole-in-the-ray-microquasar-LS>`__
