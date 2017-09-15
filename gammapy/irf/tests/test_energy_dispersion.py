@@ -16,10 +16,12 @@ class TestEnergyDispersion:
         self.e_true = np.logspace(0, 1, 101) * u.TeV
         self.e_reco = self.e_true
         self.resolution = 0.1
+        self.bias = 1
         self.edisp = EnergyDispersion.from_gauss(e_true=self.e_true,
                                                  e_reco=self.e_reco,
                                                  pdf_threshold=1e-7,
-                                                 sigma=self.resolution)
+                                                 sigma=self.resolution,
+                                                 bias=self.bias)
 
     def test_basic(self):
         assert 'EnergyDispersion' in str(self.edisp)
@@ -32,7 +34,7 @@ class TestEnergyDispersion:
         # Check resolution
         assert_allclose(self.edisp.get_resolution(test_e_true),
                         self.resolution,
-                        atol=1e-4)
+                        atol=1e-2)
 
     def test_io(self, tmpdir):
         indices = np.array([[1, 3, 6], [3, 3, 2]])
@@ -46,13 +48,13 @@ class TestEnergyDispersion:
     def test_apply(self):
         counts = np.arange(len(self.e_true) - 1)
         actual = self.edisp.apply(counts)
-        assert_allclose(actual[0], 3.9877484855864265)
+        assert_allclose(actual[0], 1.8612999017723058)
 
         counts = np.arange(len(self.e_true) - 4)
         with pytest.raises(ValueError) as exc:
             self.edisp.apply(counts)
         assert str(len(counts)) in str(exc.value)
-        assert_allclose(actual[0], 3.9877484855864265)
+        assert_allclose(actual[0], 1.8612999017723058)
 
     @requires_dependency('matplotlib')
     def test_plot_matrix(self):
@@ -68,6 +70,7 @@ class TestEnergyDispersion:
 class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp
+        # At the moment only 1 test uses it (test_get_response)
         filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
         self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 

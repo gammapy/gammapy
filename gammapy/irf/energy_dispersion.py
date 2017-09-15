@@ -116,15 +116,10 @@ class EnergyDispersion(object):
         return data
 
     @classmethod
-    def from_gauss(cls, e_true, e_reco, sigma=0.2, pdf_threshold=1e-6):
+    def from_gauss(cls, e_true, e_reco, sigma, bias, pdf_threshold=1e-6):
         """Create Gaussian `EnergyDispersion` matrix.
 
-        The output matrix will be Gaussian in log(e_true / e_reco)
-
-        TODO: extend to have a vector of bias various true energies.
-        TODO: extend to have vector of  resolution for various true energies.
-        TODO: give formula: Gaussian in log(e_reco)
-        TODO: add option to add poisson noise
+        Calls :func:`~gammapy.irf.EnergyDispersion2D.from_gauss`
 
         Parameters
         ----------
@@ -132,31 +127,26 @@ class EnergyDispersion(object):
             Bin edges of true energy axis
         e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
             Bin edges of reconstructed energy axis
-        sigma : float, optional
+        bias : float or `~numpy.ndarray`
+            Center of Gaussian energy dispersion, bias
+        sigma : float or `~numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        from scipy.special import erf
+        # migra axis
+        migra = np.linspace(1./3, 3, 200)
+        
+        # offset axis
+        offset = Quantity([0,1,2], 'deg')
 
-        e_reco = EnergyBounds(e_reco)
-        e_true = EnergyBounds(e_true)
-
-        # erf does not work with Quantities
-        reco = e_reco.to('TeV').value
-        true = e_true.log_centers.to('TeV').value
-        migra_min = np.log10(reco[:-1] / true[:, np.newaxis])
-        migra_max = np.log10(reco[1:] / true[:, np.newaxis])
-
-        pdf = .5 * (erf(migra_max / (np.sqrt(2.) * sigma))
-                    - erf(migra_min / (np.sqrt(2.) * sigma)))
-
-        pdf[np.where(pdf < pdf_threshold)] = 0
-
-        e_lo, e_hi = (e_true[:-1], e_true[1:])
-        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
-        return cls(e_true_lo=e_lo, e_true_hi=e_hi,
-                   e_reco_lo=ereco_lo, e_reco_hi=ereco_hi, data=pdf)
+        edisp2D = EnergyDispersion2D.from_gauss(e_true=e_true, migra=migra,
+                                                sigma=sigma, bias=bias,
+                                                offset=offset)
+        edisp = edisp2D.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
+        edisp.data.data = np.where(edisp.data.data > pdf_threshold,
+                                   edisp.data.data, 0)
+        return edisp
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
@@ -335,8 +325,7 @@ class EnergyDispersion(object):
     def get_resolution(self, e_true):
         """Get energy resolution for a given true energy.
 
-        The resolution is given as the standard deviation
-        of the logarithm of the reconstructed energy.
+        The resolution is given as a percentage of the true energy
 
         Parameters
         ----------
@@ -344,7 +333,9 @@ class EnergyDispersion(object):
             True energy
         """
         var = self._get_variance(e_true)
-        return np.sqrt(var)
+        idx_true = self.e_true.find_node(e_true)
+        e_true_real = self.e_true.nodes[idx_true]
+        return np.sqrt(var) / e_true_real
 
     def get_bias(self, e_true):
         r"""Get reconstruction bias for a given true energy.
@@ -360,35 +351,38 @@ class EnergyDispersion(object):
         e_true : `~astropy.units.Quantity`
             True energy
         """
-        mean = self._get_mean(e_true)
-        e_reco = (10 ** mean) * self.e_reco.unit
-        bias = (e_reco - e_true) / e_true
+        e_reco = self.get_mean(e_true)
+        idx_true = self.e_true.find_node(e_true)
+        e_true_real = self.e_true.nodes[idx_true]
+        bias = (e_reco - e_true_real) / e_true_real
         return bias
 
-    def _get_mean(self, e_true):
-        """Get mean log reconstructed energy."""
-        # evaluate the pdf at given true energies
-        pdf = self.data.evaluate(e_true=e_true)
+    def get_mean(self, e_true):
+        """Get mean reconstructed energy for a given true energy."""
+        # find pdf for true energies
+        idx = self.e_true.find_node(e_true)
+        pdf = self.data.data[idx]
 
         # compute sum along reconstructed energy 
         # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
-        temp = np.sum(pdf * self.e_reco._interp_nodes(), axis=-1)
+        temp = np.sum(pdf * self.e_reco.nodes, axis=-1)
 
         return temp / norm
 
     def _get_variance(self, e_true):
         """Get variance of log reconstructed energy."""
         # evaluate the pdf at given true energies
-        pdf = self.data.evaluate(e_true=e_true)
+        idx = self.e_true.find_node(e_true)
+        pdf = self.data.data[idx]
 
         # compute mean
-        mean = self._get_mean(e_true)
+        mean = self.get_mean(e_true)
 
         # create array of reconstructed-energy nodes
         # for each given true energy value
         # (first axis is reconstructed energy)
-        erec = self.e_reco._interp_nodes()
+        erec = self.e_reco.nodes
         erec = np.repeat(erec, max(np.sum(mean.shape), 1)).reshape(erec.shape + mean.shape)
 
         # compute deviation from mean
@@ -620,9 +614,11 @@ class EnergyDispersion2D(object):
     def from_gauss(cls, e_true, migra, bias, sigma, offset):
         """Create Gaussian `EnergyDispersion2D` matrix.
 
-         The output matrix will be Gaussian in (e_true / e_reco).
-         bias and sigma should be either floats or arrays of same dimension than e_true.
-         Note that, the output matrix is flat in offset.
+         The output matrix will be Gaussian in (e_true / e_reco).  ``bias`` and
+         ``sigma`` should be either floats or arrays of same dimension than
+         ``e_true``. ``bias`` refers to the mean value of the ``migra``
+         distribution, i.e. ``bias=1`` means no bias.  Note that, the output
+         matrix is flat in offset.
 
          Parameters
          ----------
@@ -634,7 +630,7 @@ class EnergyDispersion2D(object):
              Center of Gaussian energy dispersion, bias
          sigma : float or `~numpy.ndarray`
              RMS width of Gaussian energy dispersion, resolution
-         offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`, optional
+         offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
              Bin edges of offset
          """
         from scipy.special import erf
