@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
 from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.stats import significance_on_off
@@ -6,7 +7,7 @@ import astropy.units as u
 from ..cta_irf import CTAPerf
 from ..cta_sensitivity import SensitivityEstimator
 
-
+@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_cta_sensitivity():
@@ -21,7 +22,7 @@ def test_cta_sensitivity():
     # Assert on diff flux at 1 TeV
     assert_allclose(table[9].data[1], 6.8452201495e-13, rtol=0.01)
 
-
+@pytest.mark.xfail
 @requires_dependency('scipy')
 def test_cta_min_gamma():
     """Run sensitivity estimation for one CTA IRF example."""
@@ -48,6 +49,7 @@ def test_cta_min_gamma():
         rtol=0.01,
     )
 
+@pytest.mark.xfail
 @requires_dependency('scipy')
 def test_cta_correct_sigma():
     """Run sensitivity estimation for one CTA IRF example."""

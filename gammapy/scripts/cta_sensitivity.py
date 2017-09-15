@@ -9,7 +9,7 @@ from gammapy.stats import significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
 from gammapy.scripts import CTAPerf
-from scipy.optimize import newton
+
 
 log = logging.getLogger(__name__)
 
@@ -116,6 +116,7 @@ class SensitivityEstimator(object):
         and uses scipy.optimize.newton to find the `x` for which this function
         is zero.
         """
+        from scipy.optimize import newton
 
         def target_function(on, off, alpha):
             return significance_on_off(on, off, alpha, method='lima') - self.sigma
