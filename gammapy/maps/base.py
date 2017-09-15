@@ -140,13 +140,18 @@ class MapBase(object):
         extname_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        hpxconv : str
-            Format convention for HEALPix maps.  This option can be used to
-            write files that are compliant with non-standard HEALPix
-            conventions.
-        sparse : bool
+        conv : str        
+            FITS format convention.  By default files will be written
+            to the gamma-astro-data-formats (GADF) format.  This
+            option can be used to write files that are compliant with
+            format conventions required by specific software (e.g. the
+            Fermi Science Tools).  Supported conventions are 'gadf',
+            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+            'galprop', and 'galprop2'.            
+        sparse : bool        
             Sparsify the map by dropping pixels with zero amplitude.
-
+            This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
         overwrite = kwargs.get('overwrite', True)
