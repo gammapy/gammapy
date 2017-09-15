@@ -2,11 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..period import lomb_scargle
+from ..period import lomb_scargle, robust_periodogram
 
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
-    """Function for creating an unevenly data biased by outliers.
+    """
+    Function for creating an unevenly data biased by outliers.
 
     As underlying model, a single harmonic is used.
     First, an evenly sampled test data set is generated.
@@ -63,21 +64,31 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 
 @pytest.mark.parametrize('pars', [
     dict(
-        period=7, amplitude=2, t_length=100, n_data=1000,
-        n_obs=500, n_outliers=0, dt=0.5,
-        max_period=None, criteria='all', n_bootstraps=10,
-        fap=dict(
-            pre=2.220446049250313e-14,
+        period=7, amplitude=2, t_length=100, n_data=1000, n_obs=500,
+        n_outliers_lomb_scargle=0, n_outliers_robust_periodogram=50,
+        dt=0.5, max_period=None,
+        criteria='all', n_bootstraps=10,
+        fap_lomb_scargle=dict(
+            pre=2.2204460492503131e-14,
             cvm=1.4011014570769476e-11,
             nll=5.6590954145008254e-09,
             boot=0,
         ),
+        loss='cauchy', scale=1,
+        fap_robust_periodogram=dict(
+            pre=2.2204460492503131e-14,
+            cvm=2.2204460492503131e-14,
+            nll=2.2204460492503131e-14,
+            boot=0.19999999999999996,
+        ),
     ),
 ])
-def test_lomb_scargle(pars):
+
+
+def test_period(pars):
     test_data = simulate_test_data(
         pars['period'], pars['amplitude'], pars['t_length'],
-        pars['n_data'], pars['n_obs'], pars['n_outliers'],
+        pars['n_data'], pars['n_obs'], pars['n_outliers_lomb_scargle'],
     )
 
     result = lomb_scargle(
@@ -86,7 +97,24 @@ def test_lomb_scargle(pars):
     )
 
     assert_allclose(result['period'], pars['period'], atol=pars['dt'])
-    assert_allclose(result['fap']['pre'], pars['fap']['pre'], rtol=1e-3)
-    assert_allclose(result['fap']['cvm'], pars['fap']['cvm'], rtol=1e-3)
-    assert_allclose(result['fap']['nll'], pars['fap']['nll'], rtol=1e-3)
-    assert_allclose(result['fap']['boot'], pars['fap']['boot'], rtol=1e-3)
+    assert_allclose(result['fap']['pre'], pars['fap_lomb_scargle']['pre'], rtol=1e-3)
+    assert_allclose(result['fap']['cvm'], pars['fap_lomb_scargle']['cvm'], rtol=1e-3)
+    assert_allclose(result['fap']['nll'], pars['fap_lomb_scargle']['nll'], rtol=1e-3)
+    assert_allclose(result['fap']['boot'], pars['fap_lomb_scargle']['boot'], rtol=1e-3)
+
+    test_data = simulate_test_data(
+        pars['period'], pars['amplitude'], pars['t_length'],
+        pars['n_data'], pars['n_obs'], pars['n_outliers_robust_periodogram'],
+    )
+
+    result = robust_periodogram(
+        test_data['t'], test_data['y'], test_data['dy'], pars['dt'],
+        pars['loss'], pars['scale'],
+        pars['max_period'], pars['criteria'], pars['n_bootstraps'],
+    )
+
+    assert_allclose(result['period'], pars['period'], atol=pars['dt'])
+    assert_allclose(result['fap']['pre'], pars['fap_robust_periodogram']['pre'], rtol=1e-3)
+    assert_allclose(result['fap']['cvm'], pars['fap_robust_periodogram']['cvm'], rtol=1e-3)
+    assert_allclose(result['fap']['nll'], pars['fap_robust_periodogram']['nll'], rtol=1e-3)
+    assert_allclose(result['fap']['boot'], pars['fap_robust_periodogram']['boot'], rtol=1e-3)
