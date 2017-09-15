@@ -49,6 +49,11 @@ class TestSourceCatalogHGPS:
 
         assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
 
+    def test_hessj1801_spatial_model(self):
+        # special test for the only extern source with a gaussian morphology
+        source = self.cat['HESS J1801-233']
+        assert_allclose(source.spatial_model().amplitude, 2.488E-12, rtol=1E-3)
+
 
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
