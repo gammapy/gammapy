@@ -163,7 +163,6 @@ class GaussianBand2D(object):
     spline_kwargs : dict
         Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
     """
-
     def __init__(self, table, spline_kwargs=DEFAULT_SPLINE_KWARGS):
         from scipy.interpolate import UnivariateSpline
 

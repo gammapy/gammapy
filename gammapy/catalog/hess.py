@@ -419,7 +419,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+    def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
         """
         Source spatial model.
         """
@@ -450,7 +450,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         elif spatial_model in ['Gaussian', '2-Gaussian', '3-Gaussian']:
             amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
-            models = [component.spatial_model for component in self.components]
+            try:
+                models = [component.spatial_model for component in self.components]
+            except AttributeError:
+                # there is one external source (HESS J1801-233) where there is no
+                # component info available, so we create it here locally
+                models = [HGPSGaussComponent(d).spatial_model]
 
             for model in models:
                 # weight total flux according to relative amplitude
@@ -541,7 +546,7 @@ class SourceCatalogHGPS(SourceCatalog):
         """Large sclae component model (`~gammapy.background.models.GaussianBand2D`).
         """
         table = self._large_scale_component
-        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0))
+        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0, ext=0))
 
     def _make_source_object(self, index):
         """Make one source object.

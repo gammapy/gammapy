@@ -37,21 +37,10 @@ An example of detecting a period is shown in the figure below.
 The light curve is from the X-ray binary LS 5039 observed with H.E.S.S. at energies above 0.1 TeV in 2005 [1]_.
 The Lomb-Scargle reveals the period of :math:`(3.907 \pm 0.001)` days in agreement with [1]_ and [2]_.
 
-.. gp-extra-image:: lomb_scargle_long.png
-    :width: 100 %
-    :alt: alternate text
-    :align: left
+.. gp-extra-image:: time/example_lomb_scargle.png
+    :width: 100%
 
-The periodogram shows fluctuations for small periods and a smoothed behaviour for longer periods that are
-due to sampling effects and aliasing.
-If this is the case, `max_period` can be defined to limit the period range for the analysis.
-This way, the resoultion can be increased with equal computation time.
-
-.. gp-extra-image:: lomb_scargle_short.png
-    :width: 100 %
-    :alt: alternate text
-    :align: left
-
+The parameter `max_period` was set to :math:`1 d` to decrease compuation time by limiting the period range for the analysis.
 The periodogram has many spurious peaks, which are due to several factors:
 
 1. Errors in observations lead to leakage of power from the true peaks.
@@ -60,7 +49,7 @@ The periodogram has many spurious peaks, which are due to several factors:
    The first one arises from the nightly observation cycle, the second from the lunar phase.
    Thus, aliases are expected to appear at :math:`f_{{alias}} = f_{{true}} + n f_{{window}}`
    for integer values of :math:`n`. For the peak in the spectral window function at
-   :math:`f_{{window}} = 1 day^{{-1}}`, this corresponds to the third highest peak in
+   :math:`f_{{window}} = 1 d^{{-1}}`, this corresponds to the second highest peak in
    the periodogram at :math:`p_{{alias}} = 0.796`.
 
 The returned significance must be used with caution. If the resolution is too rough, several periods
