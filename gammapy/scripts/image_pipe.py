@@ -83,7 +83,7 @@ class SingleObsImageMaker(object):
             log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
                      format(len(self.events), self.ncounts_min))
 
-    def bkg_image(self, bkg_norm=True):
+    def bkg_image(self, bkg_norm=True, scale_threshold=0):
         """
         Make the background image for one observation from a bkg model.
 
@@ -108,6 +108,8 @@ class SingleObsImageMaker(object):
             scale, counts = self.background_norm_factor(self.images["counts"], bkg_image)
             if np.isnan(scale):
                 # print(" *** IS NAN *** {0} {1}".format(scale,counts))
+                return False
+            elif scale<scale_threshold:
                 return False
             bkg_image.data = scale * bkg_image.data
             if self.save_bkg_scale:
@@ -316,7 +318,7 @@ class StackedObsImageMaker(object):
         self.used_obs_id = []
 			
     def make_images(self, make_background_image=False, bkg_norm=True,
-                    spectral_index=2.3, for_integral_flux=False, radius=10, nmax=-1):
+                    spectral_index=2.3, for_integral_flux=False, radius=10, nmax=-1, scale_threshold=0):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -352,9 +354,9 @@ class StackedObsImageMaker(object):
             else:
                 obs_image.counts_image()
                 if make_background_image:
-                    success = obs_image.bkg_image(bkg_norm)
+                    success = obs_image.bkg_image(bkg_norm, scale_threshold)
                     if success is False:
-                        print("WARNING: fail to compute a Bkg model for the ObsId #{0}".format(obs_id))
+                        # print("WARNING: fail to compute a Bkg model for the ObsId #{0}".format(obs_id))
                         continue
                     if self.save_bkg_scale:
                         self.table_bkg_scale.add_row(obs_image.table_bkg_scale[0])

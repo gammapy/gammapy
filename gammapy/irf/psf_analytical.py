@@ -369,7 +369,7 @@ class EnergyDependentMultiGaussPSF(object):
                            "".format(100 * fraction, theta, energy, radius))
         return ss
 
-    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None, emid=None):
         """
         Convert triple Gaussian PSF ot table PSF.
 
@@ -390,7 +390,7 @@ class EnergyDependentMultiGaussPSF(object):
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        energies = self.energy
+        energies = self.energy if emid is None else emid
 
         # Defaults and input handling
         if theta:

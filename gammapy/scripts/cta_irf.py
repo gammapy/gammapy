@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 from astropy.io import fits
+import astropy.units as u
 from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -18,6 +20,7 @@ __all__ = [
     'CTAPerf',
 ]
 
+log = logging.getLogger(__name__)
 
 class CTAIrf(object):
     """CTA instrument response function container.
@@ -81,8 +84,11 @@ class CTAIrf(object):
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
-        table = fits.open(filename)['SENSITIVITY']
-        sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        try:
+            table = fits.open(filename)['SENSITIVITY']
+            sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        except KeyError:
+            sensi = None
 
         return cls(
             aeff=aeff,
@@ -90,8 +96,43 @@ class CTAIrf(object):
             edisp=edisp,
             psf=psf,
             ref_sensi=sensi,
-        )
+            )
 
+    def area_containment_correction(self, offset, radius, emid=None):
+        """
+        After reading the full containment Effective Area, one can deduce the Effective Area for a given integration radius
+
+        Parameters
+        ----------
+        offset : `~astropy.units.Quantity`
+            Offset in the FoV frame
+        radius : `~astropy.units.Quantity`
+            Radius of the integration area
+        emid : `gammapy.utils.energy.EnergyBounds`
+            Centers of the True Energy bins
+        """
+        center_energies = self.aeff.energy.nodes if emid is None else emid
+
+        # First need psf
+        mypsf = self.psf.to_energy_dependent_table_psf(theta=offset, emid=emid)
+        # if isinstance(self.psf, PSF3D):
+        #     mypsf = self.psf.to_energy_dependent_table_psf(theta=offset)
+        # else:
+        #     angles = np.linspace(0., 1.5, 150) * u.deg
+        #     mypsf = self.psf.to_energy_dependent_table_psf(offset, angles)
+
+        areascal = []
+        for index, energy in enumerate(center_energies):
+            try:
+                correction = mypsf.integral(energy, 0.*u.deg, radius)
+            except:
+                msg = 'Containment correction failed for bin {}, energy {}.'
+                log.warning(msg.format(index, energy))
+                correction = 1
+            finally:
+                areascal.append(correction)
+
+        return areascal*u.Unit('')
 
 class BgRateTable(object):
     """Background rate table.

@@ -39,7 +39,7 @@ class SpectrumSimulation(object):
 
     def __init__(self, livetime, source_model, aeff, edisp=None,
                  background_model=None, alpha=None):
-        self.livetime = livetime
+        self.livetime = livetime.to('s')
         self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
@@ -70,12 +70,20 @@ class SpectrumSimulation(object):
 
         Calls :func:`gammapy.spectrum.utils.CountsPredictor`.
         """
-        predictor = CountsPredictor(livetime=self.livetime,
+
+        if self.background_model is None:
+            predictor = CountsPredictor(livetime=self.livetime,
                                     aeff=self.aeff,
                                     edisp=self.edisp,
                                     model=self.background_model)
-        predictor.run()
-        return predictor.npred
+            predictor.run()
+            return predictor.npred
+        else:
+            from . import CountsSpectrum
+            data = CountsSpectrum(data=self.background_model*self.livetime,
+                                    energy_lo=self.e_reco[:-1],
+                                    energy_hi=self.e_reco[1:])
+            return data
 
     @property
     def e_reco(self):
