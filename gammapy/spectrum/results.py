@@ -4,7 +4,6 @@ import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
 from ..spectrum import CountsSpectrum, models
-from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
 from ..utils.energy import EnergyBounds
 
@@ -118,14 +117,15 @@ class SpectrumFitResult(object):
             energy_range = (erange['min'], erange['max']) * u.Unit(erange['unit'])
         except KeyError:
             energy_range = None
+
         try:
             fl = val['fluxes']
         except KeyError:
             fluxes = None
             flux_errors = None
         else:
-            fluxes = Bunch()
-            flux_errors = Bunch()
+            fluxes = dict()
+            flux_errors = dict()
             for flu in fl:
                 fluxes[flu] = fl[flu]['value'] * u.Unit(fl[flu]['unit'])
                 flux_errors[flu] = fl[flu]['error'] * u.Unit(fl[flu]['unit'])

@@ -170,6 +170,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _info_spectral_fit(self):
         """Print spectral info."""
         d = self.data
+        spec_type = d['SpectrumType'].strip()
+
         ss = '\n*** Spectral info ***\n\n'
 
         ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
@@ -178,19 +180,20 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += fmt.format(*args)
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
-        spec_type = d['SpectrumType'].strip()
         if spec_type == 'LogParabola':
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
-        if spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
+        elif spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
             fmt = '{:<45s} : {:.0f} +- {:.0f} {}\n'
             args = ('Cutoff energy', d['Cutoff'].value, d['Unc_Cutoff'].value, d['Cutoff'].unit)
             ss += fmt.format(*args)
-        if spec_type == 'PLSuperExpCutoff':
-            ss += '{:<45s} : {} +- {}\n'.format('Exponential index', d['Exp_Index'], d['Unc_Exp_Index'])
+        elif spec_type == 'PLSuperExpCutoff':
+            ss += '{:<45s} : {} +- {}\n'.format('Super-exponential cutoff index', d['Exp_Index'], d['Unc_Exp_Index'])
+        else:
+            raise ValueError('This case should not exist. Please report this issue.')
 
         ss += '{:<45s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
 
-        ss += '{:<45s} : {:.3f}\n'.format('Power law index', d['PowerLaw_Index'])
+        ss += '{:<45s} : {:.3f}\n'.format('Power law spectral index', d['PowerLaw_Index'])
 
         fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
         args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
@@ -251,6 +254,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.spectrum.SpectralModel`)."""
         spec_type = self.data['SpectrumType'].strip()
+
         pars, errs = {}, {}
         pars['amplitude'] = self.data['Flux_Density']
         errs['amplitude'] = self.data['Unc_Flux_Density']
@@ -283,7 +287,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs['ecut'] = self.data['Unc_Cutoff'].to('GeV')
             model = PLSuperExpCutoff3FGL(**pars)
         else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
+            raise ValueError('No spec_type: {}. Please report this issue.'.format(spec_type))
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -615,6 +619,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             ss += self._info_basic()
         if 'position' in ops:
             ss += self._info_position()
+            if not self.is_pointlike:
+                ss += self._info_morphology()
         if 'spectral' in ops:
             ss += self._info_spectral_fit()
             ss += self._info_spectral_points()
@@ -679,37 +685,44 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         return ss
 
+    def _info_morphology(self):
+        e = self.data_extended
+        ss = '*** Extended source information ***\n'
+        ss += '{:<16s} : {}\n'.format('Model form', e['Model_Form'])
+        ss += '{:<16s} : {:.4f}\n'.format('Model semimajor', e['Model_SemiMajor'])
+        ss += '{:<16s} : {:.4f}\n'.format('Model semiminor', e['Model_SemiMinor'])
+        ss += '{:<16s} : {:.4f}\n'.format('Position angle', e['Model_PosAng'])
+        ss += '{:<16s} : {}\n'.format('Spatial function', e['Spatial_Function'])
+        ss += '{:<16s} : {}\n\n'.format('Spatial filename', e['Spatial_Filename'])
+        return ss
+
     def _info_spectral_fit(self):
         """Print model data."""
         d = self.data
-        ss = '\n*** Model info ***\n\n'
+        spec_type = d['SpectrumType'].strip()
 
-        if not self.is_pointlike:
-            e = self.data_extended
-            ss += 'Extended source information:\n'
-            ss += '{:<16s} : {}\n'.format('Model form', e['Model_Form'])
-            ss += '{:<16s} : {:.4f}\n'.format('Model semimajor', e['Model_SemiMajor'])
-            ss += '{:<16s} : {:.4f}\n'.format('Model semiminor', e['Model_SemiMinor'])
-            ss += '{:<16s} : {:.4f}\n'.format('Position angle', e['Model_PosAng'])
-            ss += '{:<16s} : {}\n'.format('Spatial function', e['Spatial_Function'])
-            ss += '{:<16s} : {}\n\n'.format('Spatial filename', e['Spatial_Filename'])
+        ss = '\n*** Spectral fit info ***\n\n'
 
         ss += '{:<32s} : {}\n'.format('Spectrum type', d['SpectrumType'])
         ss += '{:<32s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
+
+        # Power-law parameters are always given; give in any case
         fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-        args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+        args = ('Power-law spectral index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index'])
         ss += fmt.format(*args)
 
-        spec_type = d['SpectrumType'].strip()
-        if spec_type == 'LogParabola':
-            # ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('alpha', d['Spectral_Index'], d['Unc_Spectral_Index'])
-            ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('beta', d['beta'], d['Unc_beta'])
+        if spec_type == 'PowerLaw':
+            pass
+        elif spec_type == 'LogParabola':
+            fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
+            args = ('LogParabola spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+            ss += fmt.format(*args)
 
-        ss += '{:<32s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
+            ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('LogParabola beta', d['beta'], d['Unc_beta'])
+        else:
+            raise ValueError('This case should not exist. Please report this issue.')
 
-        fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-        args = ('Power Law index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index'], d['Unc_PowerLaw_Index'])
-        ss += fmt.format(*args)
+        ss += '{:<32s} : {:.1f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
 
         unit = 'cm-2 GeV-1 s-1'
         fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
@@ -760,7 +773,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         d = self.data
-        spec_type = d['SpectrumType'].strip()
+        spec_type = self.data['SpectrumType'].strip()
+
         pars, errs = {}, {}
         pars['amplitude'] = d['Flux_Density']
         errs['amplitude'] = d['Unc_Flux_Density']
@@ -777,7 +791,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             errs['beta'] = d['Unc_beta'] * u.dimensionless_unscaled
             model = LogParabola(**pars)
         else:
-            raise ValueError('Spectral model {} not available'.format(spec_type))
+            raise ValueError('No spec_type: {}. Please report this issue.'.format(spec_type))
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -894,13 +908,15 @@ class SourceCatalog3FGL(SourceCatalog):
     name = '3fgl'
     description = 'LAT 4-year point source catalog'
     source_object_class = SourceCatalogObject3FGL
-    source_categories = {'galactic': ['psr', 'pwn', 'snr', 'spp',  'glc'],
-                         'extra-galactic': ['css', 'bll', 'fsrq', 'agn', 'nlsy1',
-                                         'rdg', 'sey', 'bcu', 'gal', 'sbg', 'ssrq'],
-                         'GALACTIC': ['PSR', 'PWN',  'SNR', 'HMB', 'BIN', 'NOV', 'SFR'],
-                         'EXTRA-GALACTIC': ['CSS', 'BLL', 'FSRQ', 'AGN', 'NLSY1',
-                                         'RDG', 'SEY', 'BCU', 'GAL', 'SBG', 'SSRQ'],
-                         'unassociated': ['']}
+    source_categories = {
+        'galactic': ['psr', 'pwn', 'snr', 'spp', 'glc'],
+        'extra-galactic': ['css', 'bll', 'fsrq', 'agn', 'nlsy1',
+                           'rdg', 'sey', 'bcu', 'gal', 'sbg', 'ssrq'],
+        'GALACTIC': ['PSR', 'PWN', 'SNR', 'HMB', 'BIN', 'NOV', 'SFR'],
+        'EXTRA-GALACTIC': ['CSS', 'BLL', 'FSRQ', 'AGN', 'NLSY1',
+                           'RDG', 'SEY', 'BCU', 'GAL', 'SBG', 'SSRQ'],
+        'unassociated': [''],
+    }
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
         filename = str(make_path(filename))
@@ -954,18 +970,17 @@ class SourceCatalog3FGL(SourceCatalog):
             category = set(self.source_categories[source_class])
         elif source_class == 'ALL':
             category = set(self.source_categories['EXTRA-GALACTIC']
-                            + self.source_categories['GALACTIC'])
+                           + self.source_categories['GALACTIC'])
         elif source_class == 'all':
             category = set(self.source_categories['extra-galactic']
-                            + self.source_categories['galactic'])
+                           + self.source_categories['galactic'])
         elif source_class in np.unique(source_class_info):
             category = set(source_class)
         else:
             raise ValueError("'{}' ist not a valid source class.".format(source_class))
 
-        selection = np.array([ _ in category for _ in source_class_info])
+        selection = np.array([_ in category for _ in source_class_info])
         return selection
-
 
     def select_source_class(self, source_class):
         """
@@ -987,7 +1002,6 @@ class SourceCatalog3FGL(SourceCatalog):
         selection = self.is_source_class(source_class)
         catalog.table = catalog.table[selection]
         return catalog
-
 
 
 class SourceCatalog1FHL(SourceCatalog):
@@ -1054,11 +1068,13 @@ class SourceCatalog3FHL(SourceCatalog):
     name = '3fhl'
     description = 'LAT third high-energy source catalog'
     source_object_class = SourceCatalogObject3FHL
-    source_categories = {'galactic': ['glc', 'hmb', 'psr', 'pwn',  'sfr', 'snr', 'spp'],
-                         'extra-galactic': ['agn', 'bcu', 'bll', 'fsrq', 'rdg', 'sbg'],
-                         'GALACTIC': ['BIN', 'HMB',  'PSR', 'PWN', 'SFR', 'SNR'],
-                         'EXTRA-GALACTIC': ['BLL', 'FSRQ', 'NLSY1', 'RDG'],
-                         'unassociated': ['']}
+    source_categories = {
+        'galactic': ['glc', 'hmb', 'psr', 'pwn', 'sfr', 'snr', 'spp'],
+        'extra-galactic': ['agn', 'bcu', 'bll', 'fsrq', 'rdg', 'sbg'],
+        'GALACTIC': ['BIN', 'HMB', 'PSR', 'PWN', 'SFR', 'SNR'],
+        'EXTRA-GALACTIC': ['BLL', 'FSRQ', 'NLSY1', 'RDG'],
+        'unassociated': [''],
+    }
 
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'):
         filename = str(make_path(filename))
@@ -1112,16 +1128,16 @@ class SourceCatalog3FHL(SourceCatalog):
             category = set(self.source_categories[source_class])
         elif source_class == 'ALL':
             category = set(self.source_categories['EXTRA-GALACTIC']
-                            + self.source_categories['GALACTIC'])
+                           + self.source_categories['GALACTIC'])
         elif source_class == 'all':
             category = set(self.source_categories['extra-galactic']
-                            + self.source_categories['galactic'])
+                           + self.source_categories['galactic'])
         elif source_class in np.unique(source_class_info):
             category = set(source_class)
         else:
             raise ValueError("'{}' ist not a valid source class.".format(source_class))
 
-        selection = np.array([ _ in category for _ in source_class_info])
+        selection = np.array([_ in category for _ in source_class_info])
         return selection
 
     def select_source_class(self, source_class):

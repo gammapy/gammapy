@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
-from .models import PowerLaw, ExponentialCutoffPowerLaw, SpectralModel
+from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
 from ..utils.modeling import ParameterList, Parameter
 
 __all__ = [
@@ -23,6 +23,19 @@ hess_ecpl = {'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
 hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
          'index': 2.62,
          'reference': 1 * u.TeV}
+
+# MAGIC publication: 2015JHEAp...5...30A
+# note that in the paper the beta of the LogParabola is given as negative in  
+# Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
+magic_lp ={'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
+		   'alpha': 2.47,
+		   'beta': 0.24,
+		   'reference': 1 * u.TeV}
+
+magic_ecpl = {'amplitude': 3.80e-11 * u.Unit('1 / (cm2 s TeV)'),
+             'index': 2.21,
+             'lambda_': 1 / (6. * u.TeV),
+             'reference': 1 * u.TeV}
 
 
 class MeyerCrabModel(SpectralModel):
@@ -58,10 +71,11 @@ class CrabSpectrum(object):
     * 'meyer', http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     * 'hegra', http://adsabs.harvard.edu/abs/2000ApJ...539..317A
     * 'hess_pl' and 'hess_ecpl': http://adsabs.harvard.edu/abs/2006A%26A...457..899A
+    * 'magic_lp' and 'magic_ecpl': http://adsabs.harvard.edu/abs/2015JHEAp...5...30A
 
     Parameters
     ----------
-    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl'}
+    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}
         Which reference to use for the spectral model.
 
     Examples
@@ -96,7 +110,7 @@ class CrabSpectrum(object):
     """
 
     references = [
-        'meyer', 'hegra', 'hess_pl', 'hess_ecpl',
+        'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'
     ]
     """Available references (see class docstring)."""
 
@@ -110,6 +124,10 @@ class CrabSpectrum(object):
             model = PowerLaw(**hess_pl)
         elif reference == 'hess_ecpl':
             model = ExponentialCutoffPowerLaw(**hess_ecpl)
+        elif reference == 'magic_lp':
+            model = LogParabola(**magic_lp)
+        elif reference == 'magic_ecpl':
+            model = ExponentialCutoffPowerLaw(**magic_ecpl)
         else:
             fmt = 'Invalid reference: {!r}. Choices: {!r}'
             raise ValueError(fmt.format(reference, self.references))

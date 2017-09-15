@@ -10,29 +10,47 @@ from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw
                                 PLSuperExpCutoff3FGL)
 from ...utils.testing import requires_data, requires_dependency
 
-MODEL_TEST_DATA_3FGL = [
-    (0, PowerLaw, u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1'),
-     u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1')),
-    (4, LogParabola, u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1'),
-     u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1')),
-    (55, ExponentialCutoffPowerLaw3FGL, u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
-     u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),),
-    (960, PLSuperExpCutoff3FGL, u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
-     u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1')),
+SOURCES_3FGL = [
+    dict(
+        idx=0,
+        spec_type=PowerLaw,
+        dnde=u.Quantity(1.4351261e-9, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(2.1356270e-10, 'cm-2 s-1 GeV-1'),
+    ),
+    dict(
+        idx=4,
+        spec_type=LogParabola,
+        dnde=u.Quantity(8.3828599e-10, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(2.6713238e-10, 'cm-2 s-1 GeV-1'),
+    ),
+    dict(
+        idx=55,
+        spec_type=ExponentialCutoffPowerLaw3FGL,
+        dnde=u.Quantity(1.8666925e-09, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(2.2068837e-10, 'cm-2 s-1 GeV-1'),
+    ),
+    dict(
+        idx=960,
+        spec_type=PLSuperExpCutoff3FGL,
+        dnde=u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1'),
+    )
 ]
 
-MODEL_TEST_DATA_3FHL = [
-    (352, PowerLaw, u.Quantity(5.79746841775092e-12, 'cm-2 s-1 GeV-1')),
-    (1442, LogParabola, u.Quantity(2.056998292908196e-12, 'cm-2 s-1 GeV-1')),
+SOURCES_3FHL = [
+    dict(
+        idx=352,
+        spec_type=PowerLaw,
+        dnde=u.Quantity(6.3848912826152664e-12, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(2.679593524691324e-13, 'cm-2 s-1 GeV-1'),
+    ),
+    dict(
+        idx=1442,
+        spec_type=LogParabola,
+        dnde=u.Quantity(2.056998292908196e-12, 'cm-2 s-1 GeV-1'),
+        dnde_err=u.Quantity(4.219030630302381e-13, 'cm-2 s-1 GeV-1'),
+    )
 ]
-
-CRAB_NAMES_3FGL = ['Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
-                   '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201']
-CRAB_NAMES_1FHL = ['Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+2200',
-                   'Crab']
-CRAB_NAMES_2FHL = ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201',
-                   'TeV J0534+2200']
-CRAB_NAMES_3FHL = ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i']
 
 
 @requires_data('gammapy-extra')
@@ -76,21 +94,16 @@ class TestFermi3FGLObject:
         assert type(data['Unc_Flux100_300'][0]) == float
         assert_allclose(data['Unc_Flux100_300'][0], -1.44535601265261e-08)
 
-    @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
-    def test_spectral_model(self, index, model_type, desired, desired_err):
-        energy = u.Quantity(1, 'GeV')
-        model = self.cat[index].spectral_model
-        assert isinstance(model, model_type)
-        actual = model(energy)
-        assert_quantity_allclose(actual, desired)
-
     @requires_dependency('uncertainties')
-    @pytest.mark.parametrize('index, model_type, desired, desired_err', MODEL_TEST_DATA_3FGL)
-    def test_spectral_model_error(self, index, model_type, desired, desired_err):
-        energy = u.Quantity(1, 'GeV')
-        model = self.cat[index].spectral_model
-        actual = model.evaluate_error(energy)
-        assert_quantity_allclose(actual[1], desired_err)
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref['idx']].spectral_model
+
+        dnde, dnde_err = model.evaluate_error(1 * u.GeV)
+
+        assert isinstance(model, ref['spec_type'])
+        assert_quantity_allclose(dnde, ref['dnde'])
+        assert_quantity_allclose(dnde_err, ref['dnde_err'])
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -120,7 +133,9 @@ class TestFermi3FGLObject:
         assert_quantity_allclose(point['FLUX'], 2.38471262e-06 * u.Unit('cm-2 s-1'))
         assert_quantity_allclose(point['FLUX_ERR'], 8.07127023e-08 * u.Unit('cm-2 s-1'))
 
-    @pytest.mark.parametrize('name', CRAB_NAMES_3FGL)
+    @pytest.mark.parametrize('name', [
+        'Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
+        '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201'])
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 
@@ -225,13 +240,16 @@ class TestFermi3FHLObject:
         assert type(data['Flux_Band'][0]) == float
         assert_allclose(data['Flux_Band'][0], 5.1698894054652555e-09)
 
-    @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA_3FHL)
-    def test_spectral_model(self, index, model_type, desired):
-        energy = u.Quantity(100, 'GeV')
-        model = self.cat[index].spectral_model
-        assert isinstance(model, model_type)
-        actual = model(energy)
-        assert_quantity_allclose(actual, desired)
+    @requires_dependency('uncertainties')
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref['idx']].spectral_model
+
+        dnde, dnde_err = model.evaluate_error(100 * u.GeV)
+
+        assert isinstance(model, ref['spec_type'])
+        assert_quantity_allclose(dnde, ref['dnde'])
+        assert_quantity_allclose(dnde_err, ref['dnde_err'])
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -242,7 +260,7 @@ class TestFermi3FHLObject:
         desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10, 4.30737078315e-11]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
-    @pytest.mark.parametrize('name', CRAB_NAMES_3FHL)
+    @pytest.mark.parametrize('name', ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i'])
     def test_crab_alias(self, name):
         assert str(self.cat['Crab Nebula']) == str(self.cat[name])
 
@@ -287,7 +305,8 @@ class TestSourceCatalog1FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 18
 
-    @pytest.mark.parametrize('name', CRAB_NAMES_1FHL)
+    @pytest.mark.parametrize('name', [
+        'Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+2200'])
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 
@@ -305,7 +324,8 @@ class TestSourceCatalog2FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 25
 
-    @pytest.mark.parametrize('name', CRAB_NAMES_2FHL)
+    @pytest.mark.parametrize('name', [
+        'Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201', 'TeV J0534+2200'])
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 
