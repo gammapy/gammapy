@@ -78,6 +78,5 @@ def test_lomb_scargle(test_case):
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    print(result['fap'])
     assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
     assert_allclose(list(result['fap'].values()), test_case['fap'], rtol=1e-06, atol=0)
