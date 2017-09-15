@@ -41,7 +41,8 @@ def test_spectrum_observation_2():
     """Simulated obs without background"""
     energy = np.logspace(-2, 2, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
-    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy)
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy,
+                                        sigma=0.2, bias=1)
     livetime = 1 * u.h
     source_model = models.PowerLaw(index=2.3 * u.Unit(''),
                                    amplitude=2.3e-11 * u.Unit('cm-2 s-1 TeV-1'),

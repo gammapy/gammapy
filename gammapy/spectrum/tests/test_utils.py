@@ -122,7 +122,9 @@ def get_test_cases():
                                 reference=Quantity(1, 'TeV'),
                                 amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
                  aeff=EffectiveAreaTable.from_parametrization(e_true),
-                 edisp=EnergyDispersion.from_gauss(e_reco=e_reco, e_true=e_true),
+                 edisp=EnergyDispersion.from_gauss(e_reco=e_reco,
+                                                   e_true=e_true,
+                                                   bias=1, sigma=0.2),
                  livetime=Quantity(10, 'h'),
                  npred=1417.0316019166937),
         ]

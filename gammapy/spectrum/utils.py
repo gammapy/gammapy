@@ -1,4 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+# Licensed under a 3-clause BSD style license - see LICENSE.rst bias=1
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
@@ -117,7 +117,7 @@ class CountsPredictor(object):
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
         edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
-                                            sigma=0.3)
+                                            sigma=0.3, bias=1)
 
         model = models.PowerLaw(index=2.3,
                                 amplitude=2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),
