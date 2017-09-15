@@ -78,4 +78,3 @@ def test_lomb_scargle(test_case):
     )
     assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
     assert_allclose(list(result['fap'].values()), 0, atol=1)
-

@@ -5,11 +5,13 @@ Period detection and plotting
 Introduction
 ============
 
-`~gammapy.time.lomb_scargle` establishes methods for period detection in unevenly sampled time series.
-It computes the Lomb-Scargle periodogram and the spectral window function on a light curve and returns
-the period of an intrinsic periodic beahviour in respect of different significance criteria and an
-adjustable false alarm probability. The result can be plotted with `~gammapy.time.plot_periodogram`.
+`~gammapy.time.period` establishes methods for period detection in unevenly sampled time series.
+It computes the Lomb-Scargle periodogram and the spectral window function on a light curve and
+returns the period of the highest periodogram peak as the period of an intrinsic periodic beahviour.
+The false alarm probability of this period is estimated under the null hypothesis of only-noise data.
+The result can be plotted with `~gammapy.time.plot_periodogram`.
 The Lomb Scargle algorithm is provided by `astropy.stats.LombScargle`.
+See the astropy docs for more details about the Lomb-Scargle periodogram and its false alarm probability [1]_.
 
 Getting Started
 ===============
@@ -17,30 +19,50 @@ Getting Started
 Input
 -----
 
-`~gammapy.time.lomb_scargle` takes a light curve in format time, flux and flux error.
-Additionally, the linear frequency grid can be narrowed down with an oversampling factor.
-For the significance criteria, the false alarm probability need to be defined.
-For the bootstrap resamling, the number of resamlings has to be defined.
-`~gammapy.time.plot_periodogram` takes the output of `~gammapy.time.lomb_scargle` as input.
+`~gammapy.time.period` takes a light curve in format time, flux and flux error as input.
+The trial period grid can optionally be specified by the resolution `dt` and a maximum period `max_period`.
+If these parameters are not given, `dt` will be set by the inverse Nyquist frequency and `max_period` by the length of the light curve.
+For the false alarm probability, distributions can be chosen from `criteria`.
+If not specified, all criteria will be used for the analysis.
+For the bootstrap resamling, the number of resamlings can be defined by `n_bootstrap`.
+Its default value is set to 100.
+`~gammapy.time.plot_periodogram` takes the output of `~gammapy.time.period` as input.
 
 Output
 ------
 
-`~gammapy.time.lomb_scargle` returns the frequency grid, the periodogram peaks of the
-Lomb-Scargle periodogram and the spectral window function, the percentiles of all
-significance criteria for a specified false alarm probability, as well as the best period if found.
+`~gammapy.time.period` returns the period grid, the periodogram peaks of the
+Lomb-Scargle periodogram and the spectral window function,
+the false alarm probability for the highest periodogram peak for the given criteria,
+as well as the period of highest periodogram peak.
 
 Example
 =======
 
 An example of detecting a period is shown in the figure below.
-The light curve is from the X-ray binary LS 5039 observed with H.E.S.S. at energies above 0.1 TeV in 2005 [1]_.
-The Lomb-Scargle reveals the period of :math:`(3.907 \pm 0.001)` days in agreement with [1]_ and [2]_.
+The code can be found under [2]_.
+The light curve is from the X-ray binary LS 5039 observed with H.E.S.S. at energies above 0.1 TeV in 2005 [3]_.
+The Lomb-Scargle reveals the period of :math:`(3.907 \pm 0.001)` days in agreement with [3]_ and [4]_.
 
 .. gp-extra-image:: time/example_lomb_scargle.png
     :width: 100%
 
-The parameter `max_period` was set to :math:`1 d` to decrease compuation time by limiting the period range for the analysis.
+The maximum false alarm probability of the highest periodogram peak is estimated to 0.17 with the `cvm` criterion.
+The false alarm probability (FAP) of all criteria is listed below:
+
+=========  ========
+criterion  FAP
+=========  ========
+`pre`      1.11e-12
+`cvm`      0.17
+`nll`      0.12
+`boot`     0.0
+=========  ========
+
+As can be seen, `cvm` is the most constraining criterion.
+`boot` is to imprecise to return a vaild false alarm probability for 100 bootstrap resamplings.
+
+The parameter `max_period` was set to :math:`10 d` to decrease computation time by limiting the period range for the analysis.
 The periodogram has many spurious peaks, which are due to several factors:
 
 1. Errors in observations lead to leakage of power from the true peaks.
@@ -52,10 +74,11 @@ The periodogram has many spurious peaks, which are due to several factors:
    :math:`f_{{window}} = 1 d^{{-1}}`, this corresponds to the second highest peak in
    the periodogram at :math:`p_{{alias}} = 0.796`.
 
-The returned significance must be used with caution. If the resolution is too rough, several periods
-will be detected with a significance of 100 per cent. Thus, an eyesight inspection is obligatory.
-
-.. [1] F. Aharonian, 3.9 day orbital modulation in the TeV gamma-ray flux and spectrum from the X-ray binary LS 5039,
+.. [1] Astropy docs, Lomb-Scargle Periodograms,
+   `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`_
+.. [2] Gammapy docs, Lomb-Scargle periodogram example,
+   `Link <https://github.com/gammapy/gammapy-extra/blob/master/figures/time/example_lomb_scargle.py>`_
+.. [3] F. Aharonian, 3.9 day orbital modulation in the TeV gamma-ray flux and spectrum from the X-ray binary LS 5039,
    `Link <https://www.aanda.org/articles/aa/pdf/forth/aa5940-06.pdf>`_ 
-.. [2] J. Casares, A possible black hole in the gamma-ray microquasar LS 5039,
+.. [4] J. Casares, A possible black hole in the gamma-ray microquasar LS 5039,
    `Link <https://academic.oup.com/mnras/article/364/3/899/1187228/A-possible-black-hole-in-the-ray-microquasar-LS>`_

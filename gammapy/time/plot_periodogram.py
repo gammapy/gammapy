@@ -79,4 +79,3 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     ax.set_xlim(0, np.max(periods))
 
     return fig
-

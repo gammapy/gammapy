@@ -18,13 +18,15 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     The criteria for the false alarm probability are both parametric and non-parametric.
 
     For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
+    For an introduction to the false alarm probability of thr Lomb-Scargle periodogram, see the astropy docs.
 
     The function returns a results dictionary with the following content:
 
     - ``pgrid`` (`~numpy.ndarray`) -- Period grid in units of ``t``
     - ``psd`` (`~numpy.ndarray`) -- PSD of Lomb-Scargle at frequencies of ``fgrid``
     - ``period`` (`float`) -- Location of the highest periodogram peak
-    - ``fap`` (`float`) or (`~numpy.ndarray`) -- False alarm probability of ``period`` under the null hypothesis of only-noise data for the specified criteria.
+    - ``fap`` (`float`) or (`~numpy.ndarray`) -- False alarm probability of ``period``
+      under the null hypothesis of only-noise data for the specified criteria.
       If criteria is not defined, the false alarm probability of all criteria is returned.
     - ``swf`` (`~numpy.ndarray`) -- Spectral window function
 
@@ -61,7 +63,8 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     ----------
     .. [1] Lomb (1976), "Least-squares frequency analysis of unequally spaced data",
        `Link <https://link.springer.com/article/10.1007%2FBF00648343?LI=true>`__
-    .. [2] Scargle (1982), "Studies in astronomical time series analysis. II - Statistical aspects of spectral analysis of unevenly spaced data",
+    .. [2] Scargle (1982), "Studies in astronomical time series analysis. II -
+       Statistical aspects of spectral analysis of unevenly spaced data",
        `Link <http://articles.adsabs.harvard.edu/full/1982ApJ...263..835S>`__
     .. [3] Schwarzenberg-Czerny (1998), "The distribution of empirical periodograms: Lomb-Scargle and PDM spectra",
        `Link <https://academic.oup.com/mnras/article/301/3/831/1038387/The-distribution-of-empirical-periodograms-Lomb>`__
@@ -69,6 +72,8 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
        `Link <https://www.jstatsoft.org/article/view/v069i09>`__
     .. [5] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
        `Link <http://ada7.cosmostat.org/ADA7_proceeding_MSuveges2.pdf>`__
+    .. [6] Astropy docs, Lomb-Scargle Periodograms,
+       `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`_
     """
     # set up lomb-scargle-algorithm
     freq, periods = _freq_grid(time, dt, max_period)
@@ -176,15 +181,13 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     """
     rand = np.random.RandomState(42)
     max_periods = np.empty(n_bootstraps)
-    second_max_periods = np.empty(n_bootstraps)
 
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
         psd_boot = LombScargle(time, flux[ind], flux_error[ind]).power(freq)
         max_periods[idx_run] = np.max(psd_boot)
-        second_max_periods[idx_run] = np.sort(psd_boot.flatten())[-2]
 
-    return max_periods, second_max_periods
+    return max_periods
 
 
 def _fap_pre(time, freq, psd_best_period):
@@ -194,7 +197,7 @@ def _fap_pre(time, freq, psd_best_period):
     from scipy.stats import beta
     a = (3 - 1) / 2
     b = (len(time) - 3) / 2
-    fap = 1- beta.cdf(psd_best_period, a, b) ** len(freq)
+    fap = 1 - beta.cdf(psd_best_period, a, b) ** len(freq)
 
     return fap
 
@@ -242,8 +245,7 @@ def _fap_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps):
     Computes significance for the bootstrap-resampling
     """
     from scipy import stats
-    max_periods, second_max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
-    fap = 1 - stats.percentileofscore(max_periods, psd_best_period) / 100
+    max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
+    fap = 1 - (stats.percentileofscore(max_periods, psd_best_period) / 100)
 
     return fap
-
