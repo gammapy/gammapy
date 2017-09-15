@@ -49,7 +49,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     t = np.linspace(0, t_length, n_data)
     t_obs = np.sort(rand.choice(t, n_obs, replace=False))
     n_outliers = n_outliers
-    dmag = np.random.normal(0, 1, n_data) * -1 ** (rand.randint(2, size=n_data))
+    dmag = rand.normal(0, 1, n_data) * -1 ** (rand.randint(2, size=n_data))
     dmag_obs = dmag[np.searchsorted(t, t_obs)]
     outliers = rand.randint(0, t.size, n_outliers)
     mag = amplitude * np.sin(2 * np.pi * t / period) + dmag
@@ -65,7 +65,9 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 @pytest.mark.parametrize('test_case', [
     dict(period=7, amplitude=2, t_length=100, n_data=1000,
          n_observations=1000 / 2, n_outliers=0, dt=0.5,
-         max_period=None, criteria='all', n_bootstraps=10),
+         max_period=None, criteria='all', n_bootstraps=10,
+         fap=[2.220446*10**-14, 1.401101*10**-11, 5.659984*10**-9, 0.0],
+         ),
 ])
 def test_lomb_scargle(test_case):
     test_data = simulate_test_data(
@@ -77,4 +79,4 @@ def test_lomb_scargle(test_case):
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
     assert_allclose(result['period'], test_case['period'], atol=test_case['dt'], )
-    assert_allclose(list(result['significance'].values()), 100, atol=1)
+    assert_allclose(list(result['fap'].values()), test_case['fap'], rtol=1e-06, atol=0)

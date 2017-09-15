@@ -18,8 +18,9 @@ def test_lomb_scargle_plot(test_case):
         test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
         test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
     )
-    plot_periodogram(
+    fig = plot_periodogram(
         test_data['t'], test_data['y'], test_data['dy'], result['pgrid'],
         result['psd'], result['swf'], result['period'],
-        result['significance']
+        result['fap']
     )
+    fig.savefig('test')

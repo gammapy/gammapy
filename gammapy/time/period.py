@@ -10,22 +10,24 @@ __all__ = [
 
 def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bootstraps=100):
     """
-    Compute period and significance of a light curve using Lomb-Scargle PSD.
+    Compute period and its false alarm probability of a light curve using Lomb-Scargle PSD.
 
     To compute the Lomb-Scargle power spectral density, `astropy.stats.LombScargle` is called.
     For eyesight inspection, the spectral window function is also returned
     to evaluate the impact of sampling on the periodogram.
-    The significance criteria are both parametric and non-parametric.
+    The criteria for the false alarm probability are both parametric and non-parametric.
 
     For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
+    For an introduction to the false alarm probability of thr Lomb-Scargle periodogram, see the astropy docs.
 
     The function returns a results dictionary with the following content:
 
     - ``pgrid`` (`~numpy.ndarray`) -- Period grid in units of ``t``
     - ``psd`` (`~numpy.ndarray`) -- PSD of Lomb-Scargle at frequencies of ``fgrid``
     - ``period`` (`float`) -- Location of the highest periodogram peak
-    - ``significance`` (`float`) or (`~numpy.ndarray`) -- Significance of ``period`` under specified criteria.
-      If criteria is not defined, the significance of all criteria is returned.
+    - ``fap`` (`float`) or (`~numpy.ndarray`) -- False alarm probability of ``period``
+      under the null hypothesis of only-noise data for the specified criteria.
+      If criteria is not defined, the false alarm probability of all criteria is returned.
     - ``swf`` (`~numpy.ndarray`) -- Spectral window function
 
     Parameters
@@ -61,7 +63,8 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     ----------
     .. [1] Lomb (1976), "Least-squares frequency analysis of unequally spaced data",
        `Link <https://link.springer.com/article/10.1007%2FBF00648343?LI=true>`__
-    .. [2] Scargle (1982), "Studies in astronomical time series analysis. II - Statistical aspects of spectral analysis of unevenly spaced data",
+    .. [2] Scargle (1982), "Studies in astronomical time series analysis. II -
+       Statistical aspects of spectral analysis of unevenly spaced data",
        `Link <http://articles.adsabs.harvard.edu/full/1982ApJ...263..835S>`__
     .. [3] Schwarzenberg-Czerny (1998), "The distribution of empirical periodograms: Lomb-Scargle and PDM spectra",
        `Link <https://academic.oup.com/mnras/article/301/3/831/1038387/The-distribution-of-empirical-periodograms-Lomb>`__
@@ -69,6 +72,8 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
        `Link <https://www.jstatsoft.org/article/view/v069i09>`__
     .. [5] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
        `Link <http://ada7.cosmostat.org/ADA7_proceeding_MSuveges2.pdf>`__
+    .. [6] Astropy docs, Lomb-Scargle Periodograms,
+       `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`_
     """
     # set up lomb-scargle-algorithm
     freq, periods = _freq_grid(time, dt, max_period)
@@ -82,16 +87,16 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     if criteria == 'all':
         criteria = ['pre', 'cvm', 'nll', 'boot']
 
-    significance = OrderedDict()
+    fap = OrderedDict()
 
     if 'pre' in criteria:
-        significance['pre'] = _significance_pre(time, freq, psd_best_period)
+        fap['pre'] = _fap_pre(time, freq, psd_best_period)
     if 'cvm' in criteria:
-        significance['cvm'] = _significance_cvm(freq, psd_data, psd_best_period)
+        fap['cvm'] = _fap_cvm(freq, psd_data, psd_best_period)
     if 'nll' in criteria:
-        significance['nll'] = _significance_nll(time, freq, psd_data, psd_best_period)
+        fap['nll'] = _fap_nll(time, freq, psd_data, psd_best_period)
     if 'boot' in criteria:
-        significance['boot'] = _significance_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
+        fap['boot'] = _fap_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
 
     # spectral window function
     time_win, window = _window_function(time, dt)
@@ -101,7 +106,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
         ('pgrid', periods),
         ('psd', psd_data),
         ('period', best_period),
-        ('significance', significance),
+        ('fap', fap),
         ('swf', psd_win),
     ])
 
@@ -176,32 +181,30 @@ def _bootstrap(time, flux, flux_error, freq, n_bootstraps):
     """
     rand = np.random.RandomState(42)
     max_periods = np.empty(n_bootstraps)
-    second_max_periods = np.empty(n_bootstraps)
 
     for idx_run in range(n_bootstraps):
         ind = rand.randint(0, len(flux), len(flux))
         psd_boot = LombScargle(time, flux[ind], flux_error[ind]).power(freq)
         max_periods[idx_run] = np.max(psd_boot)
-        second_max_periods[idx_run] = np.sort(psd_boot.flatten())[-2]
 
-    return max_periods, second_max_periods
+    return max_periods
 
 
-def _significance_pre(time, freq, psd_best_period):
+def _fap_pre(time, freq, psd_best_period):
     """
-    Computes significance for the pre-defined beta distribution
+    Computes false alarm probability for the pre-defined beta distribution
     """
     from scipy.stats import beta
     a = (3 - 1) / 2
     b = (len(time) - 3) / 2
-    significance = 100 * beta.cdf(psd_best_period, a, b) ** len(freq)
+    fap = 1 - beta.cdf(psd_best_period, a, b) ** len(freq)
 
-    return significance
+    return fap
 
 
-def _significance_cvm(freq, psd, psd_best_period):
+def _fap_cvm(freq, psd, psd_best_period):
     """
-    Computes significance for the cvm-distance-minimised beta distribution
+    Computes false alarm probability for the cvm-distance-minimised beta distribution
     """
     from scipy import optimize
     from scipy.stats import beta
@@ -217,14 +220,14 @@ def _significance_cvm(freq, psd, psd_best_period):
         theta_2 = clip
 
     cvm_minimize = optimize.minimize(_cvm, [theta_1, theta_2], args=(psd,), bounds=((clip, None), (clip, None)))
-    significance = 100 * beta.cdf(psd_best_period, cvm_minimize.x[0], cvm_minimize.x[1]) ** len(freq)
+    fap = 1 - beta.cdf(psd_best_period, cvm_minimize.x[0], cvm_minimize.x[1]) ** len(freq)
 
-    return significance
+    return fap
 
 
-def _significance_nll(time, freq, psd, psd_best_period):
+def _fap_nll(time, freq, psd, psd_best_period):
     """
-    Computes significance for the negative logarithmic likelihood-minimised beta distribution
+    Computes false alarm probability for the negative logarithmic likelihood-minimised beta distribution
     """
     from scipy import optimize
     from scipy.stats import beta
@@ -232,16 +235,17 @@ def _significance_nll(time, freq, psd, psd_best_period):
     b = (len(time) - 3) / 2
     clip = 0.00001
     nll_minimize = optimize.minimize(_nll, [a, b], args=(psd,), bounds=((clip, None), (clip, None)))
-    significance = 100 * beta.cdf(psd_best_period, nll_minimize.x[0], nll_minimize.x[1]) ** len(freq)
+    fap = 1 - beta.cdf(psd_best_period, nll_minimize.x[0], nll_minimize.x[1]) ** len(freq)
 
-    return significance
+    return fap
 
 
-def _significance_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps):
+def _fap_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps):
     """
     Computes significance for the bootstrap-resampling
     """
     from scipy import stats
-    max_periods, second_max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
-    significance = stats.percentileofscore(max_periods, psd_best_period)
-    return significance
+    max_periods = _bootstrap(time, flux, flux_error, freq, n_bootstraps)
+    fap = 1 - (stats.percentileofscore(max_periods, psd_best_period) / 100)
+
+    return fap
