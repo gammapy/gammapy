@@ -155,11 +155,11 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)
 
-    def _cutout_observation(self, image, observation, margin=0.5 * u.deg):
+    def _cutout_observation(self, image, observation, margin=0.1 * u.deg):
         p = self.parameters
         position = observation.pointing_radec
         size = 2 * (p['offset_max'] + margin)
-        cutout = image.cutout(position=position, size=size)
+        cutout = image.cutout(position=position, size=size, copy=False)
         return cutout
 
     def _exposure_cube(self, observation):
@@ -232,12 +232,13 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         p = self.parameters
         events = observation.events.select_energy((p['emin'], p['emax']))
 
-        # TODO: check if a lower offset bound different from zero is needed.
-        events = events.select_offset((Angle(0, 'deg'), p['offset_max']))
-
         counts = self._cutout_observation(self.reference, observation)
         counts.name = 'counts'
         counts.fill_events(events)
+
+        coordinates = counts.coordinates()
+        offset = coordinates.separation(observation.pointing_radec)
+        counts.data[offset >= p['offset_max']] = 0
         return counts
 
     def _background(self, counts, exposure, observation):
@@ -270,6 +271,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         sky_images : `~gammapy.image.SkyImageList`
             List of sky images
         """
+        from astropy.utils.console import ProgressBar
         result = SkyImageList()
 
         if 'all' in which:
@@ -278,7 +280,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         for name in which:
             result[name] = self._get_empty_skyimage(name)
 
-        for observation in observations:
+        for observation in ProgressBar(observations):
             if 'counts' in which:
                 counts = self._counts(observation)
                 result['counts'].paste(counts)
@@ -290,10 +292,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'background' in which:
                 background = self._background(counts, exposure, observation)['background']
 
-                # TODO: check why fixing nan is needed here
-                background.data = np.nan_to_num(background.data)
-
-                # TODO: included stacked alpha and on/off exposure images
+                # TODO: include stacked alpha and on/off exposure images
                 result['background'].paste(background)
 
             if 'excess' in which:
@@ -303,6 +302,11 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'flux' in which:
                 flux = self.flux(SkyImageList([counts, background, exposure]))
                 result['flux'].paste(flux)
+
+            # TODO: this is needed, otherwise the memory runs full, check why this
+            # happens and what the correct way is to handle this, e.g. implement
+            # a generator for observation list
+            del observation.events
 
         if 'psf' in which:
             result['psf'] = self.psf(observations)
