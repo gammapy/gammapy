@@ -383,8 +383,8 @@ class EnergyDependentMultiGaussPSF(object):
         exposure : `~astropy.units.Quantity`
             Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
             Default exposure = 1.
-        emid : `~astropy.units.Quantity`
-            Energies at which a PSF is requested.
+        emid : `gammapy.utils.energy.EnergyBounds`
+            True Energy bounds at which a PSF is requested.
 
         Returns
         -------
