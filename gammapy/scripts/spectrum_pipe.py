@@ -43,11 +43,17 @@ class SpectrumAnalysisIACT(object):
         Observations to analyse
     config : dict
         Config dict
+    nsigma_ul_threshold : float
+        Significance for an energy bin for which an UL should be computed
+    nsigma_ul : float
+        Number of sigma used for the UL computation
     """
 
-    def __init__(self, observations, config):
+    def __init__(self, observations, config, nsigma_ul_threshold=1.5, nsigma_ul=3.):
         self.observations = observations
         self.config = config
+        self.nsigma_ul_threshold = nsigma_ul_threshold
+        self.nsigma_ul = nsigma_ul
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -90,7 +96,10 @@ class SpectrumAnalysisIACT(object):
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.observations)
+            obs=self.extraction.observations,
+            nsigma_ul_threshold=self.nsigma_ul_threshold,
+            nsigma_ul=self.nsigma_ul
+            )
         self.flux_point_estimator.compute_points()
 
     @property
