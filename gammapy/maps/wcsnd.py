@@ -5,6 +5,7 @@ import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
+from .utils import interp_to_order
 from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
@@ -49,7 +50,7 @@ class WcsMapND(WcsMap):
 
         # Check whether corners of each image plane are valid
         coords = []
-        if geom.npix[0].size > 1:
+        if not geom.regular:
 
             for idx in np.ndindex(geom.shape):
                 pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
@@ -65,7 +66,15 @@ class WcsMapND(WcsMap):
             coords += geom.pix_to_coord(pix)
 
         if np.all(np.isfinite(np.vstack(coords))):
-            data = np.zeros(shape, dtype=dtype).T
+
+            if geom.regular:
+                data = np.zeros(shape, dtype=dtype).T
+            else:
+                data = np.nan * np.ones(shape, dtype=dtype).T
+                for idx in np.ndindex(geom.shape):
+                    data[idx,
+                         slice(geom.npix[0][idx]),
+                         slice(geom.npix[1][idx])] = 0.0
         else:
             data = np.nan * np.ones(shape, dtype=dtype).T
             pix = geom.get_pixels()
@@ -113,17 +122,73 @@ class WcsMapND(WcsMap):
         if interp is None:
             return self.get_by_idx(pix)
         else:
-            raise NotImplementedError
+            return self.interp_by_pix(pix, interp=interp)
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
         return self._data.T[idx]
 
     def interp_by_coords(self, coords, interp=None):
-        if interp == 'linear':
-            raise NotImplementedError
+        if self.geom.regular:
+            pix = self.geom.coord_to_pix(coords)
+            return self.interp_by_pix(pix, interp=interp)
         else:
+            return self._interp_by_coords_griddata(coords, interp=interp)
+
+    def interp_by_pix(self, pix, interp=None):
+        """Interpolate map values at the given pixel coordinates.
+
+        """
+
+        if not self.geom.regular:
+            raise ValueError('Pixel-based interpolation not supported for '
+                             'non-regular geometries.')
+
+        order = interp_to_order(interp)
+        if order == 0:
+            return self.get_by_pix(pix)
+        if order == 1:
+            return self._interp_by_pix_linear_grid(pix)
+        elif order == 2 or order == 3:
+            return self._interp_by_pix_map_coordinates(pix, order=order)
+        else:
+            raise ValueError('Invalid interpolation order: {}'.format(order))
+
+    def _interp_by_pix_linear_grid(self, pix):
+
+        # TODO: Cache interpolator
+
+        from scipy.interpolate import RegularGridInterpolator
+        grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
+
+        if np.any(np.isfinite(self.data)):
+            data = self.data.copy().T
+            data[~np.isfinite(data)] = 0.0
+        else:
+            data = self.data.T
+
+        fn = RegularGridInterpolator(grid_pix, data, fill_value=None,
+                                     bounds_error=False)
+        return fn(tuple(pix))
+
+    def _interp_by_pix_map_coordinates(self, pix, order=1):
+        from scipy.ndimage import map_coordinates
+        pix = tuple([np.array(x, ndmin=1)
+                     if not isinstance(x, np.ndarray) or x.ndim == 0 else x for x in pix])
+        return map_coordinates(self.data.T, pix, order=order, mode='nearest')
+
+    def _interp_by_coords_griddata(self, coords, interp=None):
+
+        order = interp_to_order(interp)
+        method_lookup = {1: 'linear', 3: 'cubic'}
+        method = method_lookup.get(order, None)
+        if method is None:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
+
+        from scipy.interpolate import griddata
+        grid_coords = self.geom.get_coords()
+        data = self.data[np.isfinite(self.data)]
+        return griddata(grid_coords, data, coords, method=method)
 
     def interp_image(self, coords, order=1):
 
