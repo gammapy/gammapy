@@ -759,6 +759,18 @@ class HpxGeom(MapGeom):
             return False
 
     @property
+    def regular(self):
+        """Flag identifying whether this geometry is regular in non-spatial
+        dimensions.  False for multi-resolution or irregular
+        geometries.  If true all image planes have the same pixel
+        geometry.
+        """
+        if self.nside.size > 1:
+            return False
+        else:
+            return True
+
+    @property
     def center_coord(self):
         """Map coordinate of the center of the geometry.
 
