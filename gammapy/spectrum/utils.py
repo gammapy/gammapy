@@ -173,7 +173,7 @@ class CountsPredictor(object):
 
     def apply_aeff(self):
         if self.aeff is not None:
-            cts = self.true_flux * self.aeff.data.data
+            cts = (self.true_flux * self.aeff.data.data).decompose()
             if cts.unit.is_equivalent('s-1'):
                 cts *= self.livetime
         else:
@@ -193,7 +193,6 @@ class CountsPredictor(object):
         self.npred = CountsSpectrum(data=cts,
                                     energy_lo=self.e_reco[:-1],
                                     energy_hi=self.e_reco[1:])
-
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     """
@@ -241,7 +240,6 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     val = _trapz_loglog(y, x, intervals=intervals)
 
     return val
-
 
 # This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
 # and slightly modified to allow use with the uncertainties package
