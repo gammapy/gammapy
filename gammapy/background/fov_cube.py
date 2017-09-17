@@ -2,9 +2,10 @@
 """FOVCube container."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import math
 import astropy.units as u
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -340,7 +341,8 @@ class FOVCube(object):
 
         # get data
         data = image_hdu.data
-        data_unit = _parse_data_units(image_header['DATAUNIT'])
+        # data_unit = _parse_data_units(image_header['DATAUNIT'])
+        data_unit = _parse_data_units(image_header['TUNIT7'])
         data = Quantity(data, data_unit)
 
         return cls(coordx_edges=coordx_edges,
@@ -707,6 +709,58 @@ class FOVCube(object):
         spectrum = self.data[ebins, coord_bin[1], coord_bin[0]]
 
         return spectrum
+
+    def make_roi_spectrum(self, offset, roi, ebounds=None):
+        """
+        Generate energy spectrum around a certain position in the FOV within an integration radius
+
+        Parameters
+        ----------
+        offset : `~astropy.units.Quantity`
+            Offset of the integration area
+        roi : `~astropy.units.Quantity`
+            Radius of the integration area
+        ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
+            Energy binning for the spectrum
+
+        Returns
+        -------
+        spectrum : `~astropy.units.Quantity`
+            Energy spectrum
+        e_reco : `~astropy.units.Quantity`
+            Bounds of the reconstructed Energy
+        """
+
+        ebounds = self.energy_edges if ebounds is None else ebounds
+
+        xx, yy = np.meshgrid(self.coordx_edges[:].value, self.coordy_edges[:].value)
+        xx = Quantity(xx, self.coordx_edges[0].unit)
+        yy = Quantity(yy, self.coordx_edges[0].unit)
+        bc = zip(xx.ravel(), yy.ravel())
+        area = 0
+        spectrum = np.zeros(len(ebounds) - 1)
+        spectrum = Quantity(spectrum, self.data.unit)
+
+        for abc in bc:
+            vdist = (abc[0] ** 2 + abc[1] ** 2) ** 0.5
+
+        if np.abs(vdist - offset) <= roi:
+            area += 1.
+        coord = Angle([abc[0], abc[1]], abc[0].unit)
+        spectrum += self.make_spectrum(coord, ebounds=ebounds)
+
+        if area <= 0:
+            raise ValueError('No Off counts in the wished reagion')
+        area *= ((self.coordx_edges[1] - self.coordx_edges[0]) * (self.coordy_edges[1] - self.coordy_edges[0])).to(
+            'sr')
+        tarea = (math.pi * roi ** 2).to('sr')
+        delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
+
+        if len(delta_energy) != len(spectrum):
+            print("-> {} {} ".format(len(delta_energy), len(spectrum)))
+            raise ValueError('Wished Ereco bins not compatible with the ones of the Bkg model')
+
+        return (spectrum * (tarea / area) * tarea * delta_energy).decompose(), ebounds
 
     def plot_spectrum(self, coord, ebounds=None, ax=None, style_kwargs=None):
         """Plot spectra for the coord bin containing the specified coord (X, Y) pair.
