@@ -3,6 +3,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.io import fits
 
 
+def interp_to_order(interp):
+    """Convert interpolation string to order."""
+
+    if isinstance(interp, int):
+        return interp
+
+    order_map = {None: 0,
+                 'nearest': 0,
+                 'linear': 1,
+                 'quadratic': 2,
+                 'cubic': 3}
+    return order_map.get(interp, None)
+
+
 def unpack_seq(seq, n=1):
     """Utility to unpack the first N values of a tuple or list.  Remaining
     values are put into a single list which is the last element of the
