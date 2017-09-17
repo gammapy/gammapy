@@ -81,8 +81,11 @@ class CTAIrf(object):
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
-        table = fits.open(filename)['SENSITIVITY']
-        sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        try:
+            table = fits.open(filename)['SENSITIVITY']
+            sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        except:
+            sensi = None
 
         return cls(
             aeff=aeff,
