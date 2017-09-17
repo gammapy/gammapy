@@ -133,7 +133,7 @@ representation.  Three types of accessor methods are provided:
   given coordinate (`~MapBase.get_by_idx`, `~MapBase.get_by_pix`,
   `~MapBase.get_by_coords`).  With the ``interp`` argument,
   `~MapBase.get_by_pix` and `~MapBase.get_by_coords` also support
-  interpolation of map values between pixels.
+  interpolation of map values between pixels (see `Interpolation`_).
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~MapBase.set_by_idx`, `~MapBase.set_by_pix`,
   `~MapBase.set_by_coords`).
@@ -212,7 +212,52 @@ The following demonstrates how one can set pixel values:
    m.set_by_coords( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
    m.fill_by_coords( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
    
+Interpolation
+-------------
 
+Maps support interpolation via the `~MapBase.get_by_coords` and
+`~MapBase.get_by_pix` methods.  Currently the following interpolation
+methods are supported:
+
+* ``nearest`` : Return value of nearest pixel (no interpolation).
+* ``linear`` : Interpolation with first order polynomial.  This is the
+  only interpolation method that is supported for all map types.
+* ``quadratic`` : Interpolation with second order polynomial.
+* ``cubic`` : Interpolation with third order polynomial.
+
+Note that ``quadratic`` and ``cubic`` interpolation are currently only
+supported for WCS-based maps with regular geometry (e.g. 2D or ND with
+the same geometry in every image plane).  ``linear`` and higher order
+interpolation by pixel coordinates is only supported for WCS-based
+maps.
+
+.. code::
+
+   from gammapy.maps import MapBase
+   m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
+
+   m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
+   m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
+
+
+Projection
+----------
+
+The `~MapBase.reproject` method can be used to project a map onto a
+different geometry.  This can be used to convert between different WCS
+projections, extract a cut-out of a map, or to convert between WCS and
+HPX map types.  If the projection geometry lacks non-spatial
+dimensions then the non-spatial dimensions of the original map will be copied
+over to the projected map.
+
+.. code::
+
+   from gammapy.maps import WcsMapND, HpxGeom
+   m = WcsMapND.read('gll_iem_v06.fits')
+   geom = HpxGeom.create(nside=8, coordsys='GAL')
+   # Convert LAT standard IEM to HPX (nside=8)
+   m_proj = m.project(geom)
+   m_proj.write('gll_iem_v06_hpx_nside8.fits')
 
    
 Slicing Methods
