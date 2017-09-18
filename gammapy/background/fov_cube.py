@@ -757,8 +757,9 @@ class FOVCube(object):
         delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
 
         if len(delta_energy) != len(spectrum):
-            print("-> {} {} ".format(len(delta_energy), len(spectrum)))
-            raise ValueError('Wished Ereco bins not compatible with the ones of the Bkg model')
+            msg = 'Wished Ereco bins not compatible with the ones of the Bkg model\n ' \
+                  '-> ' + str(len(delta_energy)) + ' ' + str(len(spectrum))
+            raise ValueError(msg)
 
         return (spectrum * (tarea / area) * tarea * delta_energy).decompose(), ebounds
 
