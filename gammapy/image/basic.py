@@ -235,10 +235,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         counts = self._cutout_observation(self.reference, observation)
         counts.name = 'counts'
         counts.fill_events(events)
-
-        coordinates = counts.coordinates()
-        offset = coordinates.separation(observation.pointing_radec)
-        counts.data[offset >= p['offset_max']] = 0
         return counts
 
     def _background(self, counts, exposure, observation):
@@ -281,13 +277,18 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             result[name] = self._get_empty_skyimage(name)
 
         for observation in ProgressBar(observations):
-            if 'counts' in which:
-                counts = self._counts(observation)
-                result['counts'].paste(counts)
-
             if 'exposure' in which:
                 exposure = self._exposure(observation)
                 result['exposure'].paste(exposure)
+
+            if 'counts' in which:
+                counts = self._counts(observation)
+                #TODO: on the left side of the field of view there is one extra
+                # row of pixels in the counts image compared to the exposure and
+                # background image. Check why this happends and remove the fix below
+                not_has_exposure = ~(exposure.data > 0)
+                counts.data[not_has_exposure] = 0
+                result['counts'].paste(counts)
 
             if 'background' in which:
                 background = self._background(counts, exposure, observation)['background']
@@ -305,7 +306,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
             # TODO: this is needed, otherwise the memory runs full, check why this
             # happens and what the correct way is to handle this, e.g. implement
-            # a generator for observation list
+            # a generator method for observation lists
             del observation.events
 
         if 'psf' in which:
