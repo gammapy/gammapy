@@ -10,7 +10,6 @@ from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
 from gammapy.scripts import CTAPerf
 
-
 log = logging.getLogger(__name__)
 
 __all__ = ['SensitivityEstimator']
@@ -185,7 +184,7 @@ class SensitivityEstimator(object):
             excess_counts = self.get_excess(bkg_counts)
         else:
             ex = self.get_excess(np.random.poisson(bkg_counts))
-            for ii in range(self.random-1):
+            for ii in range(self.random - 1):
                 ex += self.get_excess(np.random.poisson(bkg_counts))
             excess_counts = ex / float(self.random)
 
@@ -227,7 +226,7 @@ class SensitivityEstimator(object):
         if log.getEffectiveLevel() == 10:
             log.debug("** ROOT Sensitivity **")
             self._ref_diff_sensi.pprint()
-            rel_diff = (self.diff_sensi_table['FLUX']-self._ref_diff_sensi['FLUX'])/self._ref_diff_sensi['FLUX']
+            rel_diff = (self.diff_sensi_table['FLUX'] - self._ref_diff_sensi['FLUX']) / self._ref_diff_sensi['FLUX']
             log.debug("** Relative Difference (ref=ROOT)**")
             log.debug(rel_diff)
 
@@ -239,9 +238,10 @@ class SensitivityEstimator(object):
         fig.canvas.set_window_title("Sensitivity")
         ax = ax or plt.gca()
 
-        ax.plot(self.energy.value, self.diff_sens.value, color='red', label=r"        $\sigma$="+str(self.sigma)+" T="+\
-                                str(self.livetime.to('h').value)+"h \n"+r"$\alpha$="+str(self.alpha)+ \
-                                r" Syst$_{BKG}$="+str(self.bkg_sys*100)+"%"+r" $\gamma_{min}$="+str(self.gamma_min))
+        ax.plot(self.energy.value, self.diff_sens.value, color='red',
+                label=r"        $\sigma$=" + str(self.sigma) + " T=" + \
+                      str(self.livetime.to('h').value) + "h \n" + r"$\alpha$=" + str(self.alpha) + \
+                      r" Syst$_{BKG}$=" + str(self.bkg_sys * 100) + "%" + r" $\gamma_{min}$=" + str(self.gamma_min))
 
         ax.set_xscale('log')
         ax.set_yscale('log')

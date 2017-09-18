@@ -7,11 +7,13 @@ import astropy.units as u
 from ..cta_irf import CTAPerf
 from ..cta_sensitivity import SensitivityEstimator
 
-@pytest.mark.xfail
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_cta_sensitivity():
     """Run sensitivity estimation for one CTA IRF example."""
+    # TODO: change the test case to something simple that's easy to understand?
+    # E.g. a step function in AEFF and a very small Gaussian EDISP?
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     irf = CTAPerf.read(filename)
 
@@ -19,9 +21,21 @@ def test_cta_sensitivity():
     sens.run()
     table = sens.diff_sensi_table
 
-    # Assert on diff flux at 1 TeV
-    assert_allclose(table[9].data[1], 6.8452201495e-13, rtol=0.01)
+    assert len(table) == 21
 
+    # Assert on relevant values in three energy bins
+    # TODO: add asserts on other quantities: excess, exposure
+    assert_allclose(table['ENERGY'][0], 0.015848932787775993)
+    assert_allclose(table['FLUX'][0], 1.2234342551880124e-10)
+
+    assert_allclose(table['ENERGY'][9], 1)
+    assert_allclose(table['FLUX'][9], 4.28759401411e-13)
+
+    assert_allclose(table['ENERGY'][20], 158.4893035888672)
+    assert_allclose(table['FLUX'][20], 9.04770579058e-12)
+
+
+# TODO: fix this test
 @pytest.mark.xfail
 @requires_dependency('scipy')
 def test_cta_min_gamma():
@@ -49,6 +63,7 @@ def test_cta_min_gamma():
         rtol=0.01,
     )
 
+# TODO: fix this test
 @pytest.mark.xfail
 @requires_dependency('scipy')
 def test_cta_correct_sigma():
