@@ -788,8 +788,21 @@ class FluxPointEstimator(object):
 
     def fit_point(self, model, energy_group, energy_ref, nsigma_ul_threshold=1.5, nsigma_ul=3.):
         """
-        :param sqrt_ts_threshold: Significance for an energy bin for which an UL should be computed
-        :param sigma_for_ul: Number of sigma used for the UL computation
+        Main function that computes flux points, with errors and ULs.
+
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+        energy_group : `~gammapy.spectrum.SpectrumEnergyGroups`
+            Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
+        energy_ref : `~astropy.units.Quantity`
+            Reference energy.
+        sqrt_ts_threshold : `float`
+            Significance for an energy bin for which an UL should be computed
+        sigma_for_ul : `float`
+            Number of sigma used for the UL computation
         """
         from .fit import SpectrumFit
 
