@@ -140,13 +140,18 @@ class MapBase(object):
         extname_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        hpxconv : str
-            Format convention for HEALPix maps.  This option can be used to
-            write files that are compliant with non-standard HEALPix
-            conventions.
-        sparse : bool
+        conv : str        
+            FITS format convention.  By default files will be written
+            to the gamma-astro-data-formats (GADF) format.  This
+            option can be used to write files that are compliant with
+            format conventions required by specific software (e.g. the
+            Fermi Science Tools).  Supported conventions are 'gadf',
+            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+            'galprop', and 'galprop2'.            
+        sparse : bool        
             Sparsify the map by dropping pixels with zero amplitude.
-
+            This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
         overwrite = kwargs.get('overwrite', True)
@@ -324,19 +329,24 @@ class MapBase(object):
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
-        interp : {None, 'linear', 'nearest'}
-            Interpolate data values. None corresponds to 'nearest',
-            but might have advantages in performance, because no
-            interpolator is set up.
+        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+            Method to interpolate data values.  By default no
+            interpolation is performed and the return value will be
+            the amplitude of the pixel encompassing the given
+            coordinate.  Integer values can be used in lieu of strings
+            to choose the interpolation method of the given order
+            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
+            that only 'nearest' and 'linear' methods are supported for
+            all map types.
 
         Returns
         -------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map.
-           np.nan used to flag coords outside of map
+           Values of pixels in the map.  np.nan used to flag coords
+           outside of map.
 
         """
-        if interp is None:
+        if interp is None or interp == 'nearest':
             idx = self.geom.coord_to_pix(coords)
             return self.get_by_idx(idx)
         else:
@@ -354,16 +364,21 @@ class MapBase(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type. 
 
-        interp : {None, 'linear', 'nearest'}
-            Interpolate data values. None corresponds to 'nearest',
-            but might have advantages in performance, because no
-            interpolator is set up.
+        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+            Method to interpolate data values.  By default no
+            interpolation is performed and the return value will be
+            the amplitude of the pixel encompassing the given
+            coordinate.  Integer values can be used in lieu of strings
+            to choose the interpolation method of the given order
+            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
+            that only 'nearest' and 'linear' methods are supported for
+            all map types.
 
         Returns
         ----------
         vals : `~numpy.ndarray`
-           Array of pixel values.
-           np.nan used to flag coordinates outside of map
+           Array of pixel values.  np.nan used to flag coordinates
+           outside of map
 
         """
         pass
@@ -400,10 +415,15 @@ class MapBase(object):
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
-        interp : {None, 'linear', 'nearest'}
-            Interpolate data values. None corresponds to 'nearest',
-            but might have advantages in performance, because no
-            interpolator is set up.
+        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+            Method to interpolate data values.  By default no
+            interpolation is performed and the return value will be
+            the amplitude of the pixel encompassing the given
+            coordinate.  Integer values can be used in lieu of strings
+            to choose the interpolation method of the given order
+            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
+            that only 'nearest' and 'linear' methods are supported for
+            all map types.
 
         Returns
         -------

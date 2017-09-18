@@ -182,7 +182,13 @@ class HpxMapND(HpxMap):
                                     buffersize=buffersize))
 
     def sum_over_axes(self):
-        """Sum over all non-spatial dimensions."""
+        """Sum over all non-spatial dimensions.
+
+        Returns
+        -------
+        map_out : `~HpxMapND`
+            Summed map.
+        """
 
         hpx_out = self.hpx.to_image()
         map_out = self.__class__(hpx_out)
@@ -199,12 +205,29 @@ class HpxMapND(HpxMap):
 
     def _reproject_wcs(self, geom, order=1, mode='interp'):
 
+        from reproject import reproject_from_healpix
+        from .wcsnd import WcsMapND
+
         map_out = WcsMapND(geom)
+        coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-            pass
+
+            if self.geom.ndim == 2 or axes_eq:
+                img = self.data[idx[::-1]]
+            else:
+                raise NotImplementedError
+
+            # TODO: Create WCS object for image plane if
+            # multi-resolution geom
+            shape_out = geom.get_image_shape(idx)[::-1]
+
+            data, footprint = reproject_from_healpix((img, coordsys),
+                                                     geom.wcs,
+                                                     shape_out=shape_out)
+            vals[...] = data
 
         return map_out
 
@@ -398,7 +421,7 @@ class HpxMapND(HpxMap):
 
         return map_out
 
-    def plot(self, ax=None, normalize=False, proj='AIT', oversample=4, method='raster'):
+    def plot(self, ax=None, idx=None, normalize=False, proj='AIT', oversample=4, method='raster'):
         """Quickplot method.
 
         This will generate a visualization of the map by converting to
@@ -410,7 +433,7 @@ class HpxMapND(HpxMap):
         proj : string, optional
             Any valid WCS projection type.
         oversample : int
-            Oversampling factor to use when generating the rasterized
+            Oversampling factor to use when generating a rasterized
             image.
         method : str
             Method for mapping HEALPix pixels to a two-dimensional
@@ -418,6 +441,9 @@ class HpxMapND(HpxMap):
             image plane) or 'poly' (explicit polygons for each pixel).
             WARNING: The 'poly' method is much slower than 'raster'
             and only suitable for maps with less than ~10k pixels.
+        idx : tuple
+            Set the image slice to plot if this map has non-spatial
+            dimensions.
 
         Returns
         -------

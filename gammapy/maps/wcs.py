@@ -117,6 +117,18 @@ class WcsGeom(MapGeom):
             return False
 
     @property
+    def regular(self):
+        """Flag identifying whether this geometry is regular in non-spatial
+        dimensions.  False for multi-resolution or irregular
+        geometries.  If true all image planes have the same pixel
+        geometry.
+        """
+        if self.npix[0].size > 1:
+            return False
+        else:
+            return True
+
+    @property
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
         return self._width

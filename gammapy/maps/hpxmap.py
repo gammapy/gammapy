@@ -7,6 +7,7 @@ from astropy.io import fits
 from .base import MapBase
 from .hpx import HpxGeom, HpxConv
 from .geom import MapAxis, find_and_read_bands
+from .utils import find_bintable_hdu, find_bands_hdu
 
 __all__ = [
     'HpxMap',
@@ -81,15 +82,17 @@ class HpxMap(MapBase):
             raise ValueError('Unregnized Map type: {}'.format(map_type))
 
     @classmethod
-    def from_hdulist(cls, hdulist, **kwargs):
+    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Make a HpxMap object from a FITS HDUList.
 
         Parameters
         ----------
         hdulist :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
-        hdu : str
-            Name or index of the HDU with the map data.
+        hdu : str        
+            Name or index of the HDU with the map data.  If None then
+            the method will try to load map data from the first
+            BinTableHDU in the file.            
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
 
@@ -98,16 +101,17 @@ class HpxMap(MapBase):
         hpx_map : `HpxMap`
             Map object
         """
-        extname = kwargs.get('hdu', 'SKYMAP')
 
-        hdu = hdulist[extname]
-        extname_bands = kwargs.get('hdu_bands', None)
-        if 'BANDSHDU' in hdu.header and extname_bands is None:
-            extname_bands = hdu.header['BANDSHDU']
+        if hdu is None:
+            hdu = find_bintable_hdu(hdulist)
+        else:
+            hdu = hdulist[hdu]
 
-        hdu_bands = None
-        if extname_bands is not None:
-            hdu_bands = hdulist[extname_bands]
+        if hdu_bands is None:
+            hdu_bands = find_bands_hdu(hdulist, hdu)
+
+        if hdu_bands is not None:
+            hdu_bands = hdulist[hdu_bands]
 
         return cls.from_hdu(hdu, hdu_bands)
 

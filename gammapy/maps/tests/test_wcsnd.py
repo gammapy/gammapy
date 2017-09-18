@@ -83,6 +83,21 @@ def test_wcsmapnd_fill_by_coords(tmpdir, npix, binsz, coordsys, proj, skydir, ax
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
+def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    m.set_by_coords(coords, coords[1])
+    assert_allclose(coords[1], m.get_by_coords(coords, interp='nearest'))
+    assert_allclose(coords[1], m.get_by_coords(coords, interp='linear'))
+    assert_allclose(coords[1], m.get_by_coords(coords, interp=1))
+    if geom.regular and not geom.allsky:
+        assert_allclose(coords[1], m.get_by_coords(coords, interp='cubic'))
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
 def test_wcsmapnd_iter(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)

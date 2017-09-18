@@ -759,6 +759,18 @@ class HpxGeom(MapGeom):
             return False
 
     @property
+    def regular(self):
+        """Flag identifying whether this geometry is regular in non-spatial
+        dimensions.  False for multi-resolution or irregular
+        geometries.  If true all image planes have the same pixel
+        geometry.
+        """
+        if self.nside.size > 1:
+            return False
+        else:
+            return True
+
+    @property
     def center_coord(self):
         """Map coordinate of the center of the geometry.
 
@@ -826,12 +838,12 @@ class HpxGeom(MapGeom):
                               region=self.region, axes=self.axes, conv=self.conv)
 
     def to_image(self):
-        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv)
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
-        return self.__class__(np.max(self.nside), not self.nest, coordsys=self.coordsys,
+        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv, axes=axes)
 
     @classmethod
@@ -940,7 +952,7 @@ class HpxGeom(MapGeom):
             return 'FGST_LTCUBE'
         elif colname == 'Bin0':
             return 'GALPROP'
-        elif colname == 'CHANNEL1':
+        elif colname == 'CHANNEL1' or colname == 'CHANNEL0':
             if extname == 'SKYMAP':
                 return 'FGST_CCUBE'
             else:
