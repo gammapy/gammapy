@@ -5,20 +5,21 @@ from astropy.stats import LombScargle
 
 __all__ = [
     'lomb_scargle',
+    'robust_periodogram'
 ]
 
 
 def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bootstraps=100):
     """
-    Compute period and its false alarm probability of a light curve using Lomb-Scargle PSD.
+    Compute period and its false alarm probability of a light curve using Lomb-Scargle periodogram.
 
-    To compute the Lomb-Scargle power spectral density, `astropy.stats.LombScargle` is called.
+    To compute the periodogram peaks of the Lomb-Scargle periodogram, `astropy.stats.LombScargle` is called.
     For eyesight inspection, the spectral window function is also returned
     to evaluate the impact of sampling on the periodogram.
     The criteria for the false alarm probability are both parametric and non-parametric.
 
     For an introduction to the Lomb-Scargle periodogram, see Lomb (1976) and Scargle (1982).
-    For an introduction to the false alarm probability of thr Lomb-Scargle periodogram, see the astropy docs.
+    For an introduction to the false alarm probability of the Lomb-Scargle periodogram, see the astropy docs.
 
     The function returns a results dictionary with the following content:
 
@@ -43,7 +44,7 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     max_period : float
         Maximum period to analyse
     criteria : list of str
-        Select which significance methods you'd like to run (by default all are running)
+        Select which methods to compute the false alarm probability you'd like to run (by default all are running)
         Available: `{'pre', 'cvm', 'nll', 'boot'}`
 
         - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
@@ -101,6 +102,111 @@ def lomb_scargle(time, flux, flux_err, dt, max_period=None, criteria='all', n_bo
     # spectral window function
     time_win, window = _window_function(time, dt)
     psd_win = LombScargle(time_win, window, 1).power(freq)
+
+    return OrderedDict([
+        ('pgrid', periods),
+        ('psd', psd_data),
+        ('period', best_period),
+        ('fap', fap),
+        ('swf', psd_win),
+    ])
+
+
+def robust_periodogram(time, flux, flux_err, dt, loss, scale, max_period=None, criteria='all', n_bootstraps=100):
+    """
+    Compute period and its false alarm probability of a light curve
+    using robust regression techniques to fit a single harmonic model.
+
+    To compute the periodogram peaks with robust regression, the scipy object `~scipy.optimize.least_squares` is called.
+    For eyesight inspection, the spectral window function is also returned
+    to evaluate the impact of sampling on the periodogram.
+    The criteria for the false alarm probability are both parametric and non-parametric.
+
+    For an introduction to the false alarm probability of the Lomb-Scargle periodogram, see the astropy docs.
+    For an introduction to robust regression techniques
+    and loss functions provided by scipy, see Nikolay Mayorov (2015).
+
+    The function returns a results dictionary with the following content:
+
+    - ``pgrid`` (`~numpy.ndarray`) -- Period grid in units of ``t``
+    - ``psd`` (`~numpy.ndarray`) -- PSD of Lomb-Scargle at frequencies of ``fgrid``
+    - ``period`` (`float`) -- Location of the highest periodogram peak
+    - ``fap`` (`float`) or (`~numpy.ndarray`) -- False alarm probability of ``period``
+      under the null hypothesis of only-noise data for the specified criteria.
+      If criteria is not defined, the false alarm probability of all criteria is returned.
+    - ``swf`` (`~numpy.ndarray`) -- Spectral window function
+
+    Parameters
+    ----------
+    time : `~numpy.ndarray`
+        Time array of the light curve
+    flux : `~numpy.ndarray`
+        Flux array of the light curve
+    flux_err : `~numpy.ndarray`
+        Flux error array of the light curve
+    dt : float
+        Desired resolution of the periodogram and the window function
+    max_period : float
+        Maximum period to analyse
+    loss : `str`
+        loss function for the robust regression
+        Available: `{'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'}`
+    scale : `float`
+        loss scale parameter to define margin between inlier and outlier residuals
+    criteria : list of str
+        Select which methods to compute the false alarm probability you'd like to run (by default all are running)
+        Available: `{'pre', 'cvm', 'nll', 'boot'}`
+
+        - ``pre`` for pre-defined beta distribution (see Schwarzenberg-Czerny (1998))
+        - ``cvm`` for Cramer-von-Mises distance minimisation (see Thieler et at. (2016))
+        - ``nll`` for negative logarithmic likelihood minimisation
+        - ``boot`` for bootstrap-resampling (see Sueveges (2012)
+           and ``astroML.time_series.lomb_scargle_bootstrap``.
+    n_bootstraps : int
+        Number of bootstraps resampling
+
+    Returns
+    -------
+    results : `~collections.OrderedDict`
+        Results dictionary (see description above).
+
+    References
+    ----------
+    .. [1] Nikolay Mayorov (2015), `Link <http://scipy-cookbook.readthedocs.io/items/robust_regression.html>`_
+    .. [2] Schwarzenberg-Czerny (1998), "The distribution of empirical periodograms: Lomb-Scargle and PDM spectra",
+       `Link <https://academic.oup.com/mnras/article/301/3/831/1038387/The-distribution-of-empirical-periodograms-Lomb>`_
+    .. [3] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
+       `Link <https://www.jstatsoft.org/article/view/v069i09>`_
+    .. [4] Sueveges (2012), "False Alarm Probability based on bootstrap and extreme-value methods for periodogram peaks",
+       `Link <https://www.researchgate.net/profile/Maria_Sueveges/publication/267988824_False_Alarm_Probability_based_on_bootstrap_and_extreme-value_methods_for_periodogram_peaks/links/54e1ba3a0cf2953c22bb222a.pdf>`_
+    """
+
+    # set up period grid
+    freq, periods = _freq_grid(time, dt, max_period)
+    psd_data = _robust_regression(time, flux, flux_err, periods, loss, scale)
+
+    # find period with highest periodogram peak
+    psd_best_period = np.max(psd_data)
+    best_period = periods[np.argmax(psd_data)]
+
+    # define significance for best period
+    if criteria == 'all':
+        criteria = ['pre', 'cvm', 'nll', 'boot']
+
+    fap = OrderedDict()
+
+    if 'pre' in criteria:
+        fap['pre'] = _fap_pre(time, freq, psd_best_period)
+    if 'cvm' in criteria:
+        fap['cvm'] = _fap_cvm(freq, psd_data, psd_best_period)
+    if 'nll' in criteria:
+        fap['nll'] = _fap_nll(time, freq, psd_data, psd_best_period)
+    if 'boot' in criteria:
+        fap['boot'] = _fap_boot(time, flux, flux_err, freq, psd_best_period, n_bootstraps)
+
+    # spectral window function
+    time_win, window = _window_function(time, dt)
+    psd_win = _robust_regression(time_win, window, 1, periods, loss, scale)
 
     return OrderedDict([
         ('pgrid', periods),
@@ -259,3 +365,42 @@ def _fap_boot(time, flux, flux_error, freq, psd_best_period, n_bootstraps):
     fap = 1 - (stats.percentileofscore(max_periods, psd_best_period) / 100)
 
     return fap
+
+
+def _full_model(beta0, x, period, t, y, dy):
+    """
+    Computes the residuals of the periodic model
+    """
+    x[:, 1] = np.cos(2 * np.pi * t / period)
+    x[:, 2] = np.sin(2 * np.pi * t / period)
+
+    return (y - np.dot(x, beta0.T)) / dy
+
+
+def _location_model(mu, t, y, dy):
+    """
+    Computes the residuals of the noise-only model
+    """
+
+    return (mu * np.ones(len(t)) - y) / dy
+
+
+def _robust_regression(time, flux, flux_err, periods, loss, scale):
+    """
+    Computed the periodogram peaks for the given loss function and scale
+    """
+    from scipy.optimize import least_squares
+    beta0 = np.array([0, 1, 0])
+    mu = np.median(flux)
+    x = np.ones([len(time), len(beta0)])
+    chi_model = np.empty([len(periods)])
+    chi_noise = np.empty([len(periods)])
+
+    for i in range(len(periods)):
+        chi_model[i] = least_squares(_full_model, beta0, loss=loss, f_scale=scale,
+                                     args=(x, periods[i], time, flux, flux_err)).cost
+        chi_noise[i] = least_squares(_location_model, mu, loss=loss, f_scale=scale,
+                                     args=(time, flux, flux_err)).cost
+    psd_data = 1 - chi_model / chi_noise
+
+    return psd_data

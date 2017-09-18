@@ -2,31 +2,38 @@
 Period detection and plotting
 *****************************
 
+.. currentmodule:: gammapt.time.period
+.. currentmodule:: gammapy.time.plot_periodogram
+
 Introduction
 ============
-
 `~gammapy.time.period` establishes methods for period detection in unevenly sampled time series.
-It computes the Lomb-Scargle periodogram and the spectral window function on a light curve and
-returns the period of the highest periodogram peak as the period of an intrinsic periodic beahviour.
+It compute the periodogram and the spectral window function of a light curve.
+A single sinusoidal is fitted with linear (`~gammapy.time.period.lomb_scargle`)
+or robust (`~gammapy.time.period.robust_periodogram`) least square regression to the light curve.
+The period of the highest periodogram peak is returned as the period of an intrinsic periodic beahviour.
 The false alarm probability of this period is estimated under the null hypothesis of only-noise data.
-The result can be plotted with `~gammapy.time.plot_periodogram`.
+The results can be plotted with `gammapy.time.plot_periodogram`.
 The Lomb Scargle algorithm is provided by `astropy.stats.LombScargle`.
 See the astropy docs for more details about the Lomb-Scargle periodogram and its false alarm probability [1]_.
+The loss functions for the robust regression are provided by `scipy.optimize.least_squares`.
+See the scipy docs for more details about the loss functions [2]_.
 
 Getting Started
 ===============
-
 Input
 -----
-
-`~gammapy.time.period` takes a light curve in format time, flux and flux error as input.
+`~gammapy.time.period` takes a light curve in format `time`, `flux` and `flux error` as input.
 The trial period grid can optionally be specified by the resolution `dt` and a maximum period `max_period`.
-If these parameters are not given, `dt` will be set by the inverse Nyquist frequency and `max_period` by the length of the light curve.
+If these parameters are not given, `dt` will be set by the inverse Nyquist frequency
+and `max_period` by the length of the light curve.
+For the robust periodogram, the loss function `loss` and the loss scale parameter `scale` need to be given.
 For the false alarm probability, distributions can be chosen from `criteria`.
 If not specified, all criteria will be used for the analysis.
 For the bootstrap resamling, the number of resamlings can be defined by `n_bootstrap`.
 Its default value is set to 100.
 `~gammapy.time.plot_periodogram` takes the output of `~gammapy.time.period` as input.
+
 
 Output
 ------
@@ -38,11 +45,10 @@ as well as the period of highest periodogram peak.
 
 Example
 =======
-
-An example of detecting a period is shown in the figure below.
-The code can be found under [2]_.
-The light curve is from the X-ray binary LS 5039 observed with H.E.S.S. at energies above 0.1 TeV in 2005 [3]_.
-The Lomb-Scargle reveals the period of :math:`(3.907 \pm 0.001)` days in agreement with [3]_ and [4]_.
+An example of detecting a period with the Lomb-Scargle is shown in the figure below.
+The code can be found under [3]_.
+The light curve is from the X-ray binary LS 5039 observed with H.E.S.S. at energies above 0.1 TeV in 2005 [4]_.
+The Lomb-Scargle reveals the period of :math:`(3.907 \pm 0.001)` days in agreement with [4]_ and [5]_.
 
 .. gp-extra-image:: time/example_lomb_scargle.png
     :width: 100%
@@ -76,9 +82,11 @@ The periodogram has many spurious peaks, which are due to several factors:
 
 .. [1] Astropy docs, Lomb-Scargle Periodograms,
    `Link <http://docs.astropy.org/en/latest/stats/lombscargle.html>`__
-.. [2] Gammapy docs, Lomb-Scargle periodogram example,
-   `Link <https://github.com/gammapy/gammapy-extra/blob/master/figures/time/example_lomb_scargle.py>`__
-.. [3] F. Aharonian, 3.9 day orbital modulation in the TeV gamma-ray flux and spectrum from the X-ray binary LS 5039,
+.. [2] Scipy docs, scipy.optimize.least_squares
+   `Link <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html>`__
+.. [3] Gammapy docs, period detection example,
+   `Link <https://github.com/gammapy/gammapy-extra/blob/master/figures/time/example_period.py>`__
+.. [4] F. Aharonian, 3.9 day orbital modulation in the TeV gamma-ray flux and spectrum from the X-ray binary LS 5039,
    `Link <https://www.aanda.org/articles/aa/pdf/forth/aa5940-06.pdf>`__
-.. [4] J. Casares, A possible black hole in the gamma-ray microquasar LS 5039,
+.. [5] J. Casares, A possible black hole in the gamma-ray microquasar LS 5039,
    `Link <https://academic.oup.com/mnras/article/364/3/899/1187228/A-possible-black-hole-in-the-ray-microquasar-LS>`__
