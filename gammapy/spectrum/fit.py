@@ -170,8 +170,6 @@ class SpectrumFit(object):
                 valid_range_hi[idx_hi] = 0  # every bin edges below threshold is accepted
 
                 valid_range = np.logical_and(1-valid_range_lo, 1-valid_range_hi)
-                
-            print('valid: {}'.format(valid_range))
 
             # Take into account quality 
             try:
@@ -180,7 +178,6 @@ class SpectrumFit(object):
                 quality = np.ones(obs.e_reco.nbins)
 
             convolved = np.logical_and(quality, valid_range)
-            print('convolved: {}'.format(convolved))
             self._bins_in_fit_range.append(convolved)
 
     def predict_counts(self):
