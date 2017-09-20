@@ -141,26 +141,46 @@ class SpectrumFit(object):
         self._bins_in_fit_range = []
         for obs in self.obs_list:
             # Take into account fit range
-            energy = obs.e_reco
+            energy = obs.e_reco            
+            thresh_lo = np.full(len(energy.lower_bounds),
+                                self.fit_range[0]) * u.Unit((self.fit_range[0].unit))
+            thresh_hi = np.full(len(energy.upper_bounds),
+                                self.fit_range[1]) * u.Unit((self.fit_range[1].unit))
+            valid_range_lo = np.ones(energy.nbins)
+            valid_range_hi = np.ones(energy.nbins)
             valid_range = np.zeros(energy.nbins)
 
             if self.fit_range is not None:
-                idx_lo = np.where(energy < self.fit_range[0])[0]
-                valid_range[idx_lo] = 1
+                
+                # conditions for low threshold
+                cond1 = energy.lower_bounds > self.fit_range[0]
+                # condition for edges almost equal to threshold (float rounding error)
+                cond2 = np.isclose(thresh_lo.to('TeV').value,
+                                   energy.lower_bounds.to('TeV').value, atol=1.e-3)
 
-                idx_hi = np.where(energy[:-1] > self.fit_range[1])[0]
-                if len(idx_hi) != 0:
-                    idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
-                valid_range[idx_hi] = 1
+                idx_lo = np.where(np.logical_or(cond1, cond2))[0]
+                valid_range_lo[idx_lo] = 0  # every bin edges above threshold is accepted
+                
+                # conditions for high threshold
+                cond1 = energy.upper_bounds < self.fit_range[1]
+                # condition for edges almost equal to threshold (float rounding error)
+                cond2 = np.isclose(thresh_hi.to('TeV').value,
+                                   energy.upper_bounds.to('TeV').value, atol=1.e-3)
+                idx_hi = np.where(np.logical_or(cond1, cond2))[0]
+                valid_range_hi[idx_hi] = 0  # every bin edges below threshold is accepted
 
-            # Take into account thresholds
+                valid_range = np.logical_and(1-valid_range_lo, 1-valid_range_hi)
+                
+            print('valid: {}'.format(valid_range))
+
+            # Take into account quality 
             try:
-                quality = obs.on_vector.quality
+                quality = 1-obs.on_vector.quality  #
             except AttributeError:
-                quality = np.zeros(obs.e_reco.nbins)
+                quality = np.ones(obs.e_reco.nbins)
 
-            convolved = np.logical_and(1 - quality, 1 - valid_range)
-
+            convolved = np.logical_and(quality, valid_range)
+            print('convolved: {}'.format(convolved))
             self._bins_in_fit_range.append(convolved)
 
     def predict_counts(self):
