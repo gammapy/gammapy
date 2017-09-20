@@ -877,7 +877,7 @@ class SkyImage(MapBase):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, ax=None, fig=None, add_cbar=False, **kwargs):
+    def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
         Plot image on matplotlib WCS axes.
 
@@ -887,7 +887,8 @@ class SkyImage(MapBase):
             WCS axis object to plot on.
         fig : `~matplotlib.figure.Figure`, optional
             Figure
-
+        stretch : str, optional
+            Scaling for image ('linear', 'sqrt', 'log')
         Returns
         -------
         fig : `~matplotlib.figure.Figure`, optional
@@ -898,6 +899,7 @@ class SkyImage(MapBase):
             Colorbar object (if ``add_cbar=True`` was set)
         """
         import matplotlib.pyplot as plt
+        from astropy.visualization import simple_norm
 
         if fig is None:
             fig = plt.gcf()
@@ -913,7 +915,9 @@ class SkyImage(MapBase):
             data = self.data.value
         except AttributeError:
             data = self.data
-        caxes = ax.imshow(data, **kwargs)
+
+        norm = simple_norm(data, stretch)
+        caxes = ax.imshow(data, norm=norm, **kwargs)
 
         if add_cbar:
             unit = self.unit or 'A.U.'
