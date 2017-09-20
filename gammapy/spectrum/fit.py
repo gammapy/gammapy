@@ -142,15 +142,16 @@ class SpectrumFit(object):
         for obs in self.obs_list:
             # Take into account fit range
             energy = obs.e_reco            
-            thresh_lo = np.full(len(energy.lower_bounds),
-                                self.fit_range[0]) * u.Unit((self.fit_range[0].unit))
-            thresh_hi = np.full(len(energy.upper_bounds),
-                                self.fit_range[1]) * u.Unit((self.fit_range[1].unit))
             valid_range_lo = np.ones(energy.nbins)
             valid_range_hi = np.ones(energy.nbins)
             valid_range = np.zeros(energy.nbins)
 
             if self.fit_range is not None:
+
+                thresh_lo = np.full(len(energy.lower_bounds),
+                                    self.fit_range[0]) * u.Unit((self.fit_range[0].unit))
+                thresh_hi = np.full(len(energy.upper_bounds),
+                                    self.fit_range[1]) * u.Unit((self.fit_range[1].unit))
                 
                 # conditions for low threshold
                 cond1 = energy.lower_bounds > self.fit_range[0]
