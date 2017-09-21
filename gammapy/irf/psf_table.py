@@ -777,6 +777,7 @@ class EnergyDependentTablePSF(object):
         """
         psf_values = self.psf_value[energy_index, :].flatten().copy()
         where_are_NaNs = np.isnan(psf_values)
+        # When the PSF Table is not filled (with nan), the psf estimation at a given energy crashes
         psf_values[where_are_NaNs] = 0
         return psf_values
 
