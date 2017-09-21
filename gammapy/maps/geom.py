@@ -182,7 +182,7 @@ def pix_tuple_to_idx(pix):
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
-            idx += [(0.5 + p).astype(int)]
+            idx += [np.rint(p).astype(int)]
     return tuple(idx)
 
 

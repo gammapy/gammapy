@@ -351,6 +351,8 @@ class HpxMapND(HpxMap):
     def fill_by_idx(self, idx, weights=None):
 
         idx = pix_tuple_to_idx(idx)
+        msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
+        idx = [t[msk] for t in idx]
         idx_local = list(self.hpx.global_to_local(idx))
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
