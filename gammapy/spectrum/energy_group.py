@@ -18,6 +18,7 @@ from astropy.table import Table
 from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from .observation import SpectrumObservationList
+import logging
 
 __all__ = [
     'SpectrumEnergyGroupMaker',
@@ -34,6 +35,7 @@ INVALID_GROUP_INDEX = -99
 UNDERFLOW_BIN_INDEX = -1
 OVERFLOW_BIN_INDEX = -2
 
+log = logging.getLogger(__name__)
 
 class SpectrumEnergyGroupMaker(object):
     """Energy bin groups for spectral analysis.
@@ -109,14 +111,17 @@ class SpectrumEnergyGroupMaker(object):
     def compute_range_safe(self):
         """Apply safe energy range of observation to ``groups``."""
         bins = self.obs.on_vector.bins_in_safe_range
+
         underflow = bins[0] - 1
+
         # If no low threshold is set no underflow bin is needed
-        if underflow > 0:
+        if underflow >= 0:
             self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
 
         # The group binning has changed
-        overflow = bins[-1] - underflow + 1
+        overflow = bins[-1] - underflow
         max_bin = self.groups[-1].energy_group_idx
+
         # If no high threshold is set no overflow bin is needed
         if overflow <= max_bin:
             self.groups.make_and_replace_merged_group(overflow, max_bin, 'overflow')
@@ -131,6 +136,11 @@ class SpectrumEnergyGroupMaker(object):
     # Methods to compute groupings
     def compute_groups_fixed(self, ebounds):
         """Compute grouping for a given fixed energy binning."""
+        # Sanity check
+        if np.all(ebounds == self.obs.e_reco):
+            log.warn('ebounds {} is the default binning, nothing to do'.format(ebounds))
+            return
+
         self.groups.apply_energy_min(energy=ebounds[0])
         self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
@@ -308,6 +318,10 @@ class SpectrumEnergyGroups(UserList):
     def find_list_idx(self, energy):
         """Find the list index corresponding to a given energy."""
         for idx, group in enumerate(self):
+            # For last energy group
+            if idx == len(self) - 1 and energy == group.energy_max:
+                return idx
+
             if energy in group.energy_range:
                 return idx
 
