@@ -512,7 +512,7 @@ class SkyImage(MapBase):
         else:
             raise ValueError('Invalid method: {}'.format(method))
 
-    def cutout(self, position, size):
+    def cutout(self, position, size, copy=True):
         """
         Cut out rectangular piece of a image.
 
@@ -551,7 +551,7 @@ class SkyImage(MapBase):
             Cut out image.
         """
         cutout = Cutout2D(
-            self.data, position=position, wcs=self.wcs, size=size, copy=True,
+            self.data, position=position, wcs=self.wcs, size=size, copy=copy,
         )
         return self.__class__(
             name=self.name, data=cutout.data,
@@ -1136,7 +1136,7 @@ class SkyImage(MapBase):
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
 
-    def convolve(self, kernel, **kwargs):
+    def convolve(self, kernel, use_fft=False, **kwargs):
         """
         Convolve sky image with kernel.
 
@@ -1148,7 +1148,12 @@ class SkyImage(MapBase):
             Further keyword arguments passed to `~scipy.ndimage.convolve`.
         """
         from scipy.ndimage import convolve
-        data = convolve(self.data, kernel, **kwargs)
+        from scipy.signal import fftconvolve
+
+        if use_fft:
+            data = fftconvolve(self.data, kernel, mode='same')
+        else:
+            data = convolve(self.data, kernel, **kwargs)
         wcs = self.wcs.deepcopy() if self.wcs else None
         return self.__class__(name=self.name, data=data, wcs=wcs)
 

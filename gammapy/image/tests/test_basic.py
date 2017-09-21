@@ -82,7 +82,7 @@ class TestIACTBasicImageEstimator:
         width = 0.2 * u.deg
         kwargs['background_estimator'] = RingBackgroundEstimator(r_in=r_in, width=width)
 
-        # Defien exclusion mask
+        # Define exclusion mask
         center = SkyCoord(83.633083, 22.0145, frame='icrs', unit='deg')
         circle = CircleSkyRegion(center, radius=Angle(0.2, 'deg'))
         kwargs['exclusion_mask'] = kwargs['reference'].region_mask(circle)
@@ -96,11 +96,11 @@ class TestIACTBasicImageEstimator:
 
     def test_run(self):
         images = OrderedDict()
-        images['counts'] = dict(sum=2620.0)
-        images['background'] = dict(sum=1994.79254434631)
+        images['counts'] = dict(sum=2222.0)
+        images['background'] = dict(sum=1855.654807821552)
         images['exposure'] = dict(sum=83036669325.30281)
-        images['excess'] = dict(sum=625.2074556536902)
-        images['flux'] = dict(sum=2.524971454563909e-07)
+        images['excess'] = dict(sum=366.34519217844803)
+        images['flux'] = dict(sum=8.143944483402417e-07)
         images['psf'] = dict(sum=1.)
         results = self.estimator.run(self.observations)
 

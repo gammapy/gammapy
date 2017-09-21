@@ -129,6 +129,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
                  background_estimator=None, exclusion_mask=None):
         self.parameters = OrderedDict(emin=emin, emax=emax, offset_max=offset_max)
         self.reference = reference
+        self.reference.data = np.zeros(reference.data.shape)
         self.background_estimator = background_estimator
         self.exclusion_mask = exclusion_mask
 
@@ -137,20 +138,29 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         self.spectral_model = spectral_model
 
-    def _get_ref_cube(self, enumbins=11):
+    def _get_ref_cube(self, observation,  enumbins=11):
         from ..cube import SkyCube
         from ..spectrum import LogEnergyAxis
 
         p = self.parameters
 
-        wcs = self.reference.wcs.deepcopy()
-        shape = (enumbins,) + self.reference.data.shape
+        cutout = self._cutout_observation(self.reference, observation)
+
+        wcs = cutout.wcs.deepcopy()
+        shape = (enumbins,) + cutout.data.shape
         data = np.zeros(shape)
 
         energy = Energy.equal_log_spacing(p['emin'], p['emax'], enumbins, 'TeV')
         energy_axis = LogEnergyAxis(energy, mode='center')
 
         return SkyCube(data=data, wcs=wcs, energy_axis=energy_axis)
+
+    def _cutout_observation(self, image, observation, margin=0.1 * u.deg):
+        p = self.parameters
+        position = observation.pointing_radec
+        size = 2 * (p['offset_max'] + margin)
+        cutout = image.cutout(position=position, size=size, copy=False)
+        return cutout
 
     def _exposure_cube(self, observation):
         """
@@ -168,7 +178,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             pointing=observation.pointing_radec,
             aeff=observation.aeff,
             offset_max=p['offset_max'],
-            ref_cube=self._get_ref_cube(),
+            ref_cube=self._get_ref_cube(observation),
         )
 
     def _exposure(self, observation):
@@ -222,14 +232,12 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         p = self.parameters
         events = observation.events.select_energy((p['emin'], p['emax']))
 
-        # TODO: check if a lower offset bound different from zero is needed.
-        events = events.select_offset((Angle(0, 'deg'), p['offset_max']))
-
-        counts = self._get_empty_skyimage('counts')
+        counts = self._cutout_observation(self.reference, observation)
+        counts.name = 'counts'
         counts.fill_events(events)
         return counts
 
-    def _background(self, counts, exposure):
+    def _background(self, counts, exposure, observation):
         """
         Estimate background image for one observation.
 
@@ -242,7 +250,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure_on = exposure.copy()
         exposure_on.name = 'exposure_on'
         input_images['exposure_on'] = exposure_on
-        input_images['exclusion'] = self.exclusion_mask
+        input_images['exclusion'] = self._cutout_observation(self.exclusion_mask, observation)
         return self.background_estimator.run(input_images)
 
     def run(self, observations, which='all'):
@@ -259,6 +267,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         sky_images : `~gammapy.image.SkyImageList`
             List of sky images
         """
+        from astropy.utils.console import ProgressBar
         result = SkyImageList()
 
         if 'all' in which:
@@ -267,31 +276,38 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         for name in which:
             result[name] = self._get_empty_skyimage(name)
 
-        for observation in observations:
-            if 'counts' in which:
-                counts = self._counts(observation)
-                result['counts'].data += counts.data
-
+        for observation in ProgressBar(observations):
             if 'exposure' in which:
                 exposure = self._exposure(observation)
-                result['exposure'].data += exposure.data
+                result['exposure'].paste(exposure)
+
+            if 'counts' in which:
+                counts = self._counts(observation)
+                #TODO: on the left side of the field of view there is one extra
+                # row of pixels in the counts image compared to the exposure and
+                # background image. Check why this happends and remove the fix below
+                not_has_exposure = ~(exposure.data > 0)
+                counts.data[not_has_exposure] = 0
+                result['counts'].paste(counts)
 
             if 'background' in which:
-                background = self._background(counts, exposure)['background']
+                background = self._background(counts, exposure, observation)['background']
 
-                # TODO: check why fixing nan is needed here
-                background.data = np.nan_to_num(background.data)
-
-                # TODO: included stacked alpha and on/off exposure images
-                result['background'].data += background.data
+                # TODO: include stacked alpha and on/off exposure images
+                result['background'].paste(background)
 
             if 'excess' in which:
                 excess = self.excess(SkyImageList([counts, background]))
-                result['excess'].data += excess.data
+                result['excess'].paste(excess)
 
             if 'flux' in which:
                 flux = self.flux(SkyImageList([counts, background, exposure]))
-                result['flux'].data += flux.data
+                result['flux'].paste(flux)
+
+            # TODO: this is needed, otherwise the memory runs full, check why this
+            # happens and what the correct way is to handle this, e.g. implement
+            # a generator method for observation lists
+            del observation.events
 
         if 'psf' in which:
             result['psf'] = self.psf(observations)

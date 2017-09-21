@@ -238,6 +238,8 @@ class RingBackgroundEstimator(object):
         Inner ring radius
     width : `~astropy.units.Quantity`
         Ring width.
+    use_fft_convolution : bool
+        Use fft convolution.
 
 
     Examples
@@ -263,8 +265,8 @@ class RingBackgroundEstimator(object):
     gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
     """
 
-    def __init__(self, r_in, width):
-        self.parameters = dict(r_in=r_in, width=width)
+    def __init__(self, r_in, width, use_fft_convolution=False):
+        self.parameters = dict(r_in=r_in, width=width, use_fft_convolution=use_fft_convolution)
 
     def kernel(self, image):
         """Ring kernel.
@@ -304,6 +306,7 @@ class RingBackgroundEstimator(object):
         result : `SkyImageList`
             Result sky images
         """
+        p = self.parameters
         required = ['counts', 'exposure_on', 'exclusion']
         images.check_required(required)
         counts, exposure_on, exclusion = [images[_] for _ in required]
@@ -313,12 +316,24 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
-        result['off'] = counts_excluded.convolve(ring.array, mode='reflect')
+        result['off'] = counts_excluded.convolve(ring.array, mode='reflect',
+                                                 use_fft=p['use_fft_convolution'])
+        result['off'].data = result['off'].data.astype(int)
 
         exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
-        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='reflect')
+        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='reflect',
+                                                               use_fft=p['use_fft_convolution'])
 
-        result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
+        with np.errstate(divide='ignore'):
+            # set pixels, where ring is too small to NaN
+            not_has_off_exposure = ~(result['exposure_off'].data > 0)
+            result['exposure_off'].data[not_has_off_exposure] = np.nan
+
+            result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
+
+            not_has_exposure = ~(exposure_on.data > 0)
+            result['alpha'].data[not_has_exposure] = 0
+
         result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
         return result
 
