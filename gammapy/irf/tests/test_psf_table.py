@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...datasets import FermiGalacticCenter
-from ...irf import TablePSF, EnergyDependentTablePSF
+from ...irf import TablePSF, EnergyDependentTablePSF, EnergyDependentMultiGaussPSF
 from ...image import SkyImage
 
 
@@ -115,6 +115,13 @@ def test_EnergyDependentTablePSF():
     actual = psf_band.kernel(ref, normalize=True).value.sum()
     assert_allclose(actual, desired)
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_PSFLowEnergy():
+    filename = "$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits"
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    psf = psf.to_energy_dependent_table_psf('4.5 deg')
+    psf.table_psf_at_energy('0.05 TeV')
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
