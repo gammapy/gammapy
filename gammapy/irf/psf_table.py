@@ -638,7 +638,6 @@ class EnergyDependentTablePSF(object):
             energy_min = self.energy[idx]
             energy_max = self.energy[idx + 1]
             exposure = self.exposure[idx]
-
             flux = spectrum(energy_min)
             weights[idx] = (exposure * flux * (energy_max - energy_min)).value
 
@@ -777,6 +776,8 @@ class EnergyDependentTablePSF(object):
             PSF value array
         """
         psf_values = self.psf_value[energy_index, :].flatten().copy()
+        where_are_NaNs = np.isnan(psf_values)
+        psf_values[where_are_NaNs] = 0
         return psf_values
 
     def _get_1d_table_psf(self, energy_index, **kwargs):
