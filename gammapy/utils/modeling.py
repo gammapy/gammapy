@@ -89,7 +89,7 @@ class Parameter(object):
             self.quantity = value
         else:
             self.value = value
-            self.unit = unit
+            self.unit = u.Unit(unit)
 
         self.parmin = parmin or np.nan
         self.parmax = parmax or np.nan

@@ -3,13 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
+import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...spectrum import LogEnergyAxis, integrate_spectrum, CountsPredictor
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
-from ..models import ExponentialCutoffPowerLaw, PowerLaw
+from ..models import ExponentialCutoffPowerLaw, PowerLaw, TableModel
 
 
 @requires_dependency('scipy')
@@ -125,6 +126,10 @@ def get_test_cases():
                  edisp=EnergyDispersion.from_gauss(e_reco=e_reco, e_true=e_true),
                  livetime=Quantity(10, 'h'),
                  npred=1417.0316019166937),
+            dict(model=TableModel(energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                                  values=[4., 3., 1., 0.1] * u.Unit('TeV-1')),
+                 npred=0.5545130625383198,
+                 e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV)
         ]
 
 
