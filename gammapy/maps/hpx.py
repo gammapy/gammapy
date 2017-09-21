@@ -650,7 +650,7 @@ class HpxGeom(MapGeom):
         idx = list(pix_tuple_to_idx(pix))
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
-            idx[i][idx_local[i] < 0] = -1
+            idx[i][(idx_local[i] < 0) | (idx[i] < 0)] = -1
             if i > 0:
                 idx[i][idx[i] > self.axes[i - 1].nbin - 1] = -1
 
@@ -996,7 +996,7 @@ class HpxGeom(MapGeom):
             raise Exception('ORDERING != RING | NESTED')
 
         if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
-            nside = hdu_bands.data.field('NSIDE').reshape(shape)
+            nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
         elif 'NSIDE' in header:
             nside = header['NSIDE']
         elif 'ORDER' in header:
