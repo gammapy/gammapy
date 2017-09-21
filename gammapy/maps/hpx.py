@@ -996,7 +996,7 @@ class HpxGeom(MapGeom):
             raise Exception('ORDERING != RING | NESTED')
 
         if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
-            nside = hdu_bands.data.field('NSIDE').reshape(shape)
+            nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
         elif 'NSIDE' in header:
             nside = header['NSIDE']
         elif 'ORDER' in header:
