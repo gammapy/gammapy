@@ -145,10 +145,13 @@ class SpectrumFit(object):
             valid_range = np.zeros(energy.nbins)
 
             if self.fit_range is not None:
-                idx_lo = np.where(energy < self.fit_range[0])[0]
+
+                precision = 1e-3  # to avoid floating round precision
+                idx_lo = np.where(energy * (1 + precision) < self.fit_range[0])[0]
                 valid_range[idx_lo] = 1
 
-                idx_hi = np.where(energy[:-1] > self.fit_range[1])[0]
+                
+                idx_hi = np.where(energy[:-1] * (1 - precision) > self.fit_range[1])[0]
                 if len(idx_hi) != 0:
                     idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
                 valid_range[idx_hi] = 1
