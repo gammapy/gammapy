@@ -150,8 +150,8 @@ class MultiGauss2D(object):
     def __init__(self, sigmas, norms=None):
         # If no norms are given, you have a PDF.
         sigmas = np.asarray(sigmas, dtype=np.float64)
-
         self.components = [Gauss2DPDF(sigma) for sigma in sigmas]
+
         if norms is None:
             self.norms = np.ones(len(self.components))
         else:
@@ -251,7 +251,9 @@ class MultiGauss2D(object):
         norm_multigauss : `~gammapy.image.models.MultiGauss2D`
            normalized function
         """
-        self.norms /= self.integral
+        sum = self.integral
+        if sum!=0:
+            self.norms /= sum
         return self
 
     def containment_fraction(self, theta):

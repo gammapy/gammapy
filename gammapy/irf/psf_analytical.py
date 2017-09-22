@@ -403,7 +403,7 @@ class EnergyDependentMultiGaussPSF(object):
         else:
             rad = Angle(np.arange(0, 1.5, 0.005), 'deg')
 
-        psf_value = Quantity(np.empty((energies.size, rad.size)), 'deg^-2')
+        psf_value = Quantity(np.zeros((energies.size, rad.size)), 'deg^-2')
 
         for idx, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
