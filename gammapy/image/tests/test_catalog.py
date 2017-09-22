@@ -79,6 +79,7 @@ def test_catalog_table():
 
 class TestCatalogImageEstimator(object):
     @requires_data('gammapy-extra')
+    @requires_data('gamma-cat')
     def test_flux_gammacat(self):
         reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=41,
                                    nxpix=41, binsz=0.1)

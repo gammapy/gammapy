@@ -149,7 +149,7 @@ class SpectrumFitResult(object):
 
             # Apply correction factor for units
             # TODO: Refactor
-            current_unit = self.model.parameters[par_name].unit
+            current_unit = u.Unit(self.model.parameters[par_name].unit)
             if current_unit.is_equivalent(energy_unit):
                 factor = current_unit.to(energy_unit)
                 col_unit = energy_unit
