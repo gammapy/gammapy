@@ -48,13 +48,13 @@ class TestEnergyDispersion:
     def test_apply(self):
         counts = np.arange(len(self.e_true) - 1)
         actual = self.edisp.apply(counts)
-        assert_allclose(actual[0], 1.8612999017723058)
+        assert_allclose(actual[0], 1.8612999017723058, atol=1e-3)
 
         counts = np.arange(len(self.e_true) - 4)
         with pytest.raises(ValueError) as exc:
             self.edisp.apply(counts)
         assert str(len(counts)) in str(exc.value)
-        assert_allclose(actual[0], 1.8612999017723058)
+        assert_allclose(actual[0], 1.8612999017723058, atol=1e-3)
 
     @requires_dependency('matplotlib')
     def test_plot_matrix(self):

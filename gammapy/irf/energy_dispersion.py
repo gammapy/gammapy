@@ -144,8 +144,6 @@ class EnergyDispersion(object):
                                                 sigma=sigma, bias=bias,
                                                 offset=offset)
         edisp = edisp2D.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
-        edisp.data.data = np.where(edisp.data.data > pdf_threshold,
-                                   edisp.data.data, 0)
         return edisp
 
     @classmethod
@@ -387,7 +385,8 @@ class EnergyDispersion(object):
 
         # compute deviation from mean
         # (and move reconstructed energy axis to last axis)
-        temp = np.moveaxis((erec - mean) ** 2, 0, -1)
+        temp_ = (erec-mean) ** 2
+        temp = np.rollaxis(temp_, 1)
 
         # compute sum along reconstructed energy
         # axis to determine the variance
@@ -611,7 +610,7 @@ class EnergyDispersion2D(object):
         return self.data.axis('offset')
 
     @classmethod
-    def from_gauss(cls, e_true, migra, bias, sigma, offset):
+    def from_gauss(cls, e_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
         """Create Gaussian `EnergyDispersion2D` matrix.
 
          The output matrix will be Gaussian in (e_true / e_reco).  ``bias`` and
@@ -632,6 +631,8 @@ class EnergyDispersion2D(object):
              RMS width of Gaussian energy dispersion, resolution
          offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
              Bin edges of offset
+        pdf_threshold : float, optional
+            Zero suppression threshold
          """
         from scipy.special import erf
 
@@ -648,6 +649,8 @@ class EnergyDispersion2D(object):
                     - erf((migra2d_lo - bias) / (np.sqrt(2.) * sigma)))
 
         pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
+
+        pdf_array = np.where(pdf_array > pdf_threshold, pdf_array, 0)
 
         return cls(e_true[:-1], e_true[1:], migra[:-1], migra[1:],
                    offset[:-1], offset[1:], pdf_array)
