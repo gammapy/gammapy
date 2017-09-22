@@ -115,13 +115,25 @@ def test_EnergyDependentTablePSF():
     actual = psf_band.kernel(ref, normalize=True).value.sum()
     assert_allclose(actual, desired)
 
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_PSFLowEnergy():
+def test_psf_cta_1dc():
     filename = "$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits"
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-    psf = psf.to_energy_dependent_table_psf('4.5 deg')
-    psf.table_psf_at_energy('0.05 TeV')
+    psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+
+    # Check that PSF is filled with 0 for energy / offset where no PSF info is given.
+    # This is needed so that stacked PSF computation doesn't error out,
+    # trying to interpolate for observations / energies where this occurs.
+    psf = psf_irf.to_energy_dependent_table_psf('4.5 deg')
+    psf = psf.table_psf_at_energy('0.05 TeV')
+    assert_allclose(psf.evaluate(rad='0.03 deg').value, 0)
+
+    # Check that evaluation works for an energy / offset where an energy is available
+    psf = psf_irf.to_energy_dependent_table_psf('2 deg')
+    psf = psf.table_psf_at_energy('1 TeV')
+    assert_allclose(psf.containment_radius(0.68).deg, 0.05175066714958721)
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
