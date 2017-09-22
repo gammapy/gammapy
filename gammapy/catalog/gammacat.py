@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import logging
 import numpy as np
-from astropy.extern import six
+from ..extern import six
 from astropy.tests.helper import ignore_warnings
 from astropy import units as u
 from astropy.table import Table

@@ -17,7 +17,7 @@ by issueing center_psf()
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import numpy as np
-from astropy.extern import six
+from ..extern import six
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
 from ..image.models import Gauss2DPDF, MultiGauss2D

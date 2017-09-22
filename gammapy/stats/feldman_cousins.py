@@ -3,8 +3,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from astropy.extern.six.moves import range
-from astropy.extern.six import iteritems
+from ..extern.six.moves import range
+from ..extern.six import iteritems
 
 __all__ = [
     'fc_find_acceptance_interval_gauss',

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
-from astropy.extern import six
+from ..extern import six
 from astropy.coordinates import Angle
 from astropy.table import Table, Column
 from astropy.table import vstack as table_vstack

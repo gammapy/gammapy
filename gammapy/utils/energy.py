@@ -4,7 +4,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy import log
-from astropy.extern import six
+from ..extern import six
 
 __all__ = [
     'Energy',

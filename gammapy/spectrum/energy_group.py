@@ -12,7 +12,7 @@ they are not part of the public Gammapy API at the moment:
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from astropy.extern.six.moves import UserList
+from ..extern.six.moves import UserList
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.fits import table_from_row_data
