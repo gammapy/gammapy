@@ -15,7 +15,7 @@ class TestSpectrumSimulation:
         e_reco = SpectrumExtraction.DEFAULT_RECO_ENERGY
 
         edisp = EnergyDispersion.from_gauss(
-            e_true=e_true, e_reco=e_reco, sigma=0.2,
+            e_true=e_true, e_reco=e_reco, sigma=0.2, bias=1
         )
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
