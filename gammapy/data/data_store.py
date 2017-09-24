@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from collections import OrderedDict
 import subprocess
-from astropy.extern.six.moves import UserList
+from ..extern.six.moves import UserList
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.units import Quantity

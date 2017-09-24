@@ -2,7 +2,7 @@
 """Utility functions to deal with arrays and quantities.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.extern import six
+from ..extern import six
 import numpy as np
 
 __all__ = ['array_stats_str',

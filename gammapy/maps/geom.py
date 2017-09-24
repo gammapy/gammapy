@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import abc
 import re
 import numpy as np
-from astropy.extern import six
+from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u

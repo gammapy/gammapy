@@ -7,7 +7,7 @@ import sys
 from copy import deepcopy
 from pprint import pprint
 import numpy as np
-from astropy.extern import six
+from ..extern import six
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from ..utils.array import _is_int

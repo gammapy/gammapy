@@ -5,8 +5,8 @@ from collections import OrderedDict
 import re
 import copy
 import numpy as np
-from astropy.extern import six
-from astropy.extern.six.moves import range
+from ..extern import six
+from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord

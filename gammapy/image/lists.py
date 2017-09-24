@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import logging
-from astropy.extern import six
-from astropy.extern.six.moves import UserList
+from ..extern import six
+from ..extern.six.moves import UserList
 from astropy.io import fits
 from astropy.io.fits import HDUList
 from .core import SkyImage

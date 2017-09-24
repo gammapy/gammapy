@@ -8,7 +8,7 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import numpy as np
 from numpy.lib.arraypad import _validate_lengths
-from astropy.extern import six
+from ..extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation

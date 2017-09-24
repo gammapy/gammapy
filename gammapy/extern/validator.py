@@ -3,7 +3,7 @@
 
 import numpy as np
 from astropy import units as u
-from astropy.extern import six
+from . import six
 
 def validate_physical_type(name, value, physical_type):
     if physical_type is not None:
