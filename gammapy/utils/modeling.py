@@ -104,7 +104,7 @@ class Parameter(object):
     def quantity(self, par):
         par = u.Quantity(par)
         self.value = par.value
-        self.unit = par.unit
+        self.unit = str(par.unit)
 
     def __str__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '

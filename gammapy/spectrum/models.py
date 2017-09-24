@@ -1113,16 +1113,16 @@ class TableModel(SpectralModel):
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
-    amplitude : float
-        Model amplitude that is multiplied to the supplied arrays. Defaults to 1.
+    scale : float
+        Model scale that is multiplied to the supplied arrays. Defaults to 1.
     scale_logy : boolean
         interpolation can be done linearly or in logarithm
     """
 
-    def __init__(self, energy, values, amplitude=1, scale_logy=True):
+    def __init__(self, energy, values, scale=1, scale_logy=True):
         from scipy.interpolate import interp1d
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude, parmin=0)
+            Parameter('scale', scale, parmin=0, unit='')
         ])
         self.energy = energy
         self.values = values
@@ -1204,7 +1204,7 @@ class TableModel(SpectralModel):
 
         return cls(energy=energy, values=values, scale_logy=False)
 
-    def evaluate(self, energy, amplitude):
+    def evaluate(self, energy, scale):
         """Evaluate the model (static function)."""
         # What's with all this checking?
         # TODO: Try `np.asanyarray` and always return an array (even for scalar input)?
@@ -1238,7 +1238,7 @@ class TableModel(SpectralModel):
 
         if self.scale_logy:
             values = np.power(10, values)
-        return amplitude * values * self.unit
+        return scale * values * self.unit
 
     def plot(self, energy_range, ax=None, energy_unit='TeV',
              n_points=100, **kwargs):
@@ -1268,7 +1268,7 @@ class TableModel(SpectralModel):
         emin, emax = energy_range
         energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
 
-        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['amplitude'].quantity
+        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['scale'].quantity
         if self.scale_logy:
             y = np.power(10, y)
 

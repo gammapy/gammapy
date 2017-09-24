@@ -157,7 +157,7 @@ class CountsPredictor(object):
             # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
             try:
-                for unit in self.model.parameters['amplitude'].unit.bases:
+                for unit in self.model.parameters['amplitude'].quantity.unit.bases:
                     if unit.is_equivalent('eV'):
                         ref_unit = unit
             except IndexError:
