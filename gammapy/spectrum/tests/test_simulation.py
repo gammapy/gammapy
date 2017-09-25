@@ -15,7 +15,7 @@ class TestSpectrumSimulation:
         e_reco = SpectrumExtraction.DEFAULT_RECO_ENERGY
 
         edisp = EnergyDispersion.from_gauss(
-            e_true=e_true, e_reco=e_reco, sigma=0.2, bias=1
+            e_true=e_true, e_reco=e_reco, sigma=0.2, bias=0,
         )
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
@@ -40,25 +40,25 @@ class TestSpectrumSimulation:
 
     def test_without_background(self):
         self.sim.simulate_obs(seed=23, obs_id=23)
-        assert self.sim.obs.on_vector.total_counts == 156 * u.ct
+        assert self.sim.obs.on_vector.total_counts == 160 * u.ct
         # print(np.sum(self.sim.npred_source.data.value))
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
         self.sim.alpha = self.alpha
         self.sim.simulate_obs(seed=23, obs_id=23)
-        assert self.sim.obs.on_vector.total_counts == 525 * u.ct
-        assert self.sim.obs.off_vector.total_counts == 1096 * u.ct
+        assert self.sim.obs.on_vector.total_counts == 530 * u.ct
+        assert self.sim.obs.off_vector.total_counts == 1112 * u.ct
 
     def test_observations_list(self):
         seeds = np.arange(5)
         self.sim.run(seed=seeds)
         assert (self.sim.result.obs_id == seeds).all()
-        assert self.sim.result[0].on_vector.total_counts == 169 * u.ct
-        assert self.sim.result[1].on_vector.total_counts == 159 * u.ct
-        assert self.sim.result[2].on_vector.total_counts == 151 * u.ct
-        assert self.sim.result[3].on_vector.total_counts == 163 * u.ct
-        assert self.sim.result[4].on_vector.total_counts == 185 * u.ct
+        assert self.sim.result[0].on_vector.total_counts == 158 * u.ct
+        assert self.sim.result[1].on_vector.total_counts == 158 * u.ct
+        assert self.sim.result[2].on_vector.total_counts == 161 * u.ct
+        assert self.sim.result[3].on_vector.total_counts == 168 * u.ct
+        assert self.sim.result[4].on_vector.total_counts == 186 * u.ct
 
     def test_without_edisp(self):
         sim = SpectrumSimulation(aeff=self.sim.aeff,
