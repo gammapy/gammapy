@@ -106,13 +106,9 @@ matrix:
 
 
         # Test with Astropy dev and LTS versions
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
-#        - os: linux
-#          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
