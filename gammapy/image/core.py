@@ -877,7 +877,7 @@ class SkyImage(MapBase):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, ax=None, fig=None, add_cbar=False, **kwargs):
+    def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
         Plot image on matplotlib WCS axes.
 
@@ -887,7 +887,10 @@ class SkyImage(MapBase):
             WCS axis object to plot on.
         fig : `~matplotlib.figure.Figure`, optional
             Figure
-
+        stretch : str, optional
+            Scaling for image ('linear', 'sqrt', 'log').
+            Similar to normalize and stretch functions in ds9.
+            See http://docs.astropy.org/en/stable/visualization/normalization.html
         Returns
         -------
         fig : `~matplotlib.figure.Figure`, optional
@@ -896,8 +899,26 @@ class SkyImage(MapBase):
             WCS axis object
         cbar : ?
             Colorbar object (if ``add_cbar=True`` was set)
+        Examples
+        --------
+        >>> from astropy.visualization import simple_norm
+        >>> from gammapy.image import SkyImage
+        >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
+        >>> image = SkyImage.read(filename, hdu=2)
+        >>> norm = simple_norm(image, 'sqrt')
+        >>> plt.imshow(image, norm = norm)
+        >>> plt.show()
+        >>> #Equivalent to :
+        >>> image.plot(stretch='sqrt')
         """
         import matplotlib.pyplot as plt
+        from astropy.visualization import simple_norm
+
+        # TODO: make skyimage.data a quantity
+        try:
+            data = self.data.value
+        except AttributeError:
+            data = self.data
 
         if fig is None:
             fig = plt.gcf()
@@ -908,11 +929,9 @@ class SkyImage(MapBase):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
-        # TODO: make skyimage.data a quantity
-        try:
-            data = self.data.value
-        except AttributeError:
-            data = self.data
+        norm = simple_norm(data, stretch)
+        kwargs.setdefault('norm', norm)
+
         caxes = ax.imshow(data, **kwargs)
 
         if add_cbar:
