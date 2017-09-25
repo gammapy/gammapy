@@ -888,7 +888,13 @@ class SkyImage(MapBase):
         fig : `~matplotlib.figure.Figure`, optional
             Figure
         stretch : str, optional
-            Scaling for image ('linear', 'sqrt', 'log')
+            Scaling for image ('linear', 'sqrt', 'log').
+            Similar to normalize and stretch functions in ds9.
+            Uses astropy.visualization ImageNormalize object e.g. :
+            from astropy.visualization import simple_norm
+            norm = simple_norm(image, 'sqrt')
+            plt.imshow(image, norm = norm)
+            See http://docs.astropy.org/en/stable/visualization/normalization.html
         Returns
         -------
         fig : `~matplotlib.figure.Figure`, optional
@@ -901,6 +907,12 @@ class SkyImage(MapBase):
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
 
+        # TODO: make skyimage.data a quantity
+        try:
+            data = self.data.value
+        except AttributeError:
+            data = self.data
+
         if fig is None:
             fig = plt.gcf()
 
@@ -910,14 +922,10 @@ class SkyImage(MapBase):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
-        # TODO: make skyimage.data a quantity
-        try:
-            data = self.data.value
-        except AttributeError:
-            data = self.data
-
         norm = simple_norm(data, stretch)
-        caxes = ax.imshow(data, norm=norm, **kwargs)
+        kwargs.setdefault('norm', norm)
+
+        caxes = ax.imshow(data, **kwargs)
 
         if add_cbar:
             unit = self.unit or 'A.U.'
