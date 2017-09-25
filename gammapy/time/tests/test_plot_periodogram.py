@@ -1,9 +1,12 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from ..period import lomb_scargle
+from ...utils.testing import requires_dependency
 from ..plot_periodogram import plot_periodogram
 from .test_period import simulate_test_data
 
 
+@requires_dependency('scipy')
 @pytest.mark.parametrize('test_case', [
     dict(period=7, amplitude=2, t_length=100, n_data=1000,
          n_obs=500, n_outliers=0, dt=0.5,

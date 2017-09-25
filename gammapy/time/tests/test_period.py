@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from ...utils.testing import requires_dependency
 from ..period import lomb_scargle
 
 
@@ -61,6 +62,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     return dict(t=t_obs, dt=dt, y=mag_obs, dy=dmag_obs)
 
 
+@requires_dependency('scipy')
 @pytest.mark.parametrize('pars', [
     dict(
         period=7, amplitude=2, t_length=100, n_data=1000,
