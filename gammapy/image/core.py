@@ -890,10 +890,6 @@ class SkyImage(MapBase):
         stretch : str, optional
             Scaling for image ('linear', 'sqrt', 'log').
             Similar to normalize and stretch functions in ds9.
-            Uses astropy.visualization ImageNormalize object e.g. :
-            from astropy.visualization import simple_norm
-            norm = simple_norm(image, 'sqrt')
-            plt.imshow(image, norm = norm)
             See http://docs.astropy.org/en/stable/visualization/normalization.html
         Returns
         -------
@@ -903,6 +899,17 @@ class SkyImage(MapBase):
             WCS axis object
         cbar : ?
             Colorbar object (if ``add_cbar=True`` was set)
+        Examples
+        --------
+        >>> from astropy.visualization import simple_norm
+        >>> from gammapy.image import SkyImage
+        >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
+        >>> image = SkyImage.read(filename, hdu=2)
+        >>> norm = simple_norm(image, 'sqrt')
+        >>> plt.imshow(image, norm = norm)
+        >>> plt.show()
+        >>> #Equivalent to :
+        >>> image.plot(stretch='sqrt')
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
