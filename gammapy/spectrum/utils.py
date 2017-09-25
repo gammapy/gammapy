@@ -117,7 +117,7 @@ class CountsPredictor(object):
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
         edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
-                                            sigma=0.3, bias=1)
+                                            sigma=0.3, bias=0)
 
         model = models.PowerLaw(index=2.3,
                                 amplitude=2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),

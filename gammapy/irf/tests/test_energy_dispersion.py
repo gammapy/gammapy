@@ -16,34 +16,22 @@ class TestEnergyDispersion:
         self.e_true = np.logspace(0, 1, 101) * u.TeV
         self.e_reco = self.e_true
         self.resolution = 0.1
-        self.bias = 1
-        self.edisp = EnergyDispersion.from_gauss(e_true=self.e_true,
-                                                 e_reco=self.e_reco,
-                                                 pdf_threshold=1e-7,
-                                                 sigma=self.resolution,
-                                                 bias=self.bias)
+        self.bias = 0
+        self.edisp = EnergyDispersion.from_gauss(
+            e_true=self.e_true,
+            e_reco=self.e_reco,
+            pdf_threshold=1e-7,
+            sigma=self.resolution,
+            bias=self.bias,
+        )
 
-    def test_basic(self):
+    def test_str(self):
         assert 'EnergyDispersion' in str(self.edisp)
-        test_e_true = 3.34 * u.TeV
-        # Check for correct normalization
-        test_pdf = self.edisp.data.evaluate(e_true=test_e_true)
-        assert_allclose(np.sum(test_pdf), 1, atol=1e-2)
-        # Check bias
-        assert_allclose(self.edisp.get_bias(test_e_true), 0, atol=1e-2)
-        # Check resolution
-        assert_allclose(self.edisp.get_resolution(test_e_true),
-                        self.resolution,
-                        atol=1e-2)
 
-    def test_io(self, tmpdir):
-        indices = np.array([[1, 3, 6], [3, 3, 2]])
-        desired = self.edisp.pdf_matrix[indices]
-        writename = str(tmpdir / 'rmf_test.fits')
-        self.edisp.write(writename)
-        edisp2 = EnergyDispersion.read(writename)
-        actual = edisp2.pdf_matrix[indices]
-        assert_allclose(actual, desired)
+    def test_evaluate(self):
+        # Check for correct normalization
+        pdf = self.edisp.data.evaluate(e_true=3.34 * u.TeV)
+        assert_allclose(np.sum(pdf), 1, atol=1e-2)
 
     def test_apply(self):
         counts = np.arange(len(self.e_true) - 1)
@@ -56,6 +44,23 @@ class TestEnergyDispersion:
         assert str(len(counts)) in str(exc.value)
         assert_allclose(actual[0], 1.8612999017723058, atol=1e-3)
 
+    def test_get_bias(self):
+        bias = self.edisp.get_bias(3.34 * u.TeV)
+        assert_allclose(bias, self.bias, atol=1e-2)
+
+    def test_get_resolution(self):
+        resolution = self.edisp.get_resolution(3.34 * u.TeV)
+        assert_allclose(resolution, self.resolution, atol=1e-2)
+
+    def test_io(self, tmpdir):
+        indices = np.array([[1, 3, 6], [3, 3, 2]])
+        desired = self.edisp.pdf_matrix[indices]
+        writename = str(tmpdir / 'rmf_test.fits')
+        self.edisp.write(writename)
+        edisp2 = EnergyDispersion.read(writename)
+        actual = edisp2.pdf_matrix[indices]
+        assert_allclose(actual, desired)
+
     @requires_dependency('matplotlib')
     def test_plot_matrix(self):
         self.edisp.plot_matrix()
@@ -64,15 +69,27 @@ class TestEnergyDispersion:
     def test_plot_bias(self):
         self.edisp.plot_bias()
 
+    @requires_dependency('matplotlib')
+    def test_peek(self):
+        self.edisp.peek()
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestEnergyDispersion2D:
     def setup(self):
-        # TODO: use from_gauss method to create know edisp
+        # TODO: use from_gauss method to create know edisp (see below)
         # At the moment only 1 test uses it (test_get_response)
         filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
         self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+
+        # Make a test case
+        e_true = np.logspace(-1., 2., 51) * u.TeV
+        migra = np.linspace(0., 4., 1001)
+        offset = np.linspace(0., 2.5, 5) * u.deg
+        sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
+        bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
+        self.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
 
     def test_evaluation(self):
         # TODO: Move to tests for NDDataArray
@@ -103,34 +120,9 @@ class TestEnergyDispersion2D:
         assert_equal(actual, desired)
 
     def test_get_response(self):
-        # Here we test get_response with an expected gaussian shape for edisp
-        from scipy.special import erf
-
-        size_true = 50
-        size_mig = 1000
-        size_off = 4
-
-        etrues = np.logspace(-1., 2., size_true + 1) * u.TeV
-        migras = np.linspace(0., 4., size_mig + 1)
-        offsets = np.linspace(0., 2.5, size_off + 1) * u.deg
-
-        # Resolution with energy
-        sigma = 0.15 / ((etrues[:-1] / (1 * u.TeV)).value) ** 0.3
-        # Bias with energy
-        mu = 1.0 + 1e-3 * (etrues[:-1] - 1 * u.TeV).value
-
-        edisp = EnergyDispersion2D.from_gauss(etrues, migras, mu, sigma, offsets)
-
-        for i in [5, 10, 15, 20, 25, 30, 35, 40]:
-            e_true = etrues[i]
-            e_reco = np.array([0.25, 0.5, 1.0, 1.5, 2.0]) * e_true
-            actual = edisp.get_response(offset=0.7 * u.deg, e_true=e_true, e_reco=e_reco)
-
-            val = ((e_reco / e_true).value - mu[i]) / (np.sqrt(2) * sigma[i])
-            desired = np.diff(erf(val)) * 0.5
-
-            # We want the absolute precision to be less than 3%
-            assert_allclose(actual, desired, atol=3e-2)
+        pdf = self.edisp2.get_response(offset=0.7 * u.deg, e_true=1 * u.TeV)
+        assert_allclose(pdf.sum(), 1)
+        assert_allclose(pdf.max(), 0.013025634736094305)
 
     def test_exporter(self):
         # Check RMF exporter

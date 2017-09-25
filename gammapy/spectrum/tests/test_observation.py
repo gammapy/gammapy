@@ -42,7 +42,7 @@ def test_spectrum_observation_2():
     energy = np.logspace(-2, 2, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy,
-                                        sigma=0.2, bias=1)
+                                        sigma=0.2, bias=0)
     livetime = 1 * u.h
     source_model = models.PowerLaw(index=2.3 * u.Unit(''),
                                    amplitude=2.3e-11 * u.Unit('cm-2 s-1 TeV-1'),
@@ -53,11 +53,11 @@ def test_spectrum_observation_2():
     obs = sim.obs
 
     pars = dict(
-        total_on=821,
+        total_on=824,
         livetime=livetime,
-        npred=291.84115011604587,
-        excess=821,
-        excess_safe_range=821,
+        npred=292.00223031875987,
+        excess=824,
+        excess_safe_range=824,
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
