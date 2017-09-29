@@ -1028,6 +1028,16 @@ class LogParabola(SpectralModel):
           - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
         }
 
+    Note that :math:`log` refers to the natural logarithm. This is consistent
+    with the `Fermi Science Tools
+    <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>`_
+    and `ctools
+    <http://cta.irap.omp.eu/ctools-devel/users/user_manual/getting_started/models.html#log-parabola>`_.
+    The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
+    package>`_ package, however, uses :math:`log_{10}`. If you have
+    parametrization based on :math:`log_{10}` you can use the
+    :func:`~gammapy.spectrum.models.LogParabola.from_log10` method.
+
     Parameters
     ----------
     amplitude : `~astropy.units.Quantity`
@@ -1061,6 +1071,13 @@ class LogParabola(SpectralModel):
             Parameter('alpha', alpha),
             Parameter('beta', beta)
         ])
+
+    @classmethod
+    def from_log10(cls, amplitude, reference, alpha, beta):
+        """Construct LogParabola from :math:`log_{10}` parametrization"""
+        beta_ = beta / np.log(10)
+        return cls(amplitude=amplitude, reference=reference, alpha=alpha,
+                   beta=beta_)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):

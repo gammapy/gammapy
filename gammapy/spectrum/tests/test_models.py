@@ -107,6 +107,20 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
         e_peak=0.74082 * u.TeV
     ),
+    dict(
+        name='logpar10',
+        model=LogParabola.from_log10(
+            alpha=2.3 * u.Unit(''),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            beta=1.151292546497023 * u.Unit('')
+        ),
+
+        val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
+        e_peak=0.74082 * u.TeV
+    ),
 ]
 
 # Add compound models

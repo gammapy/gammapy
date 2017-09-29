@@ -27,9 +27,11 @@ hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
 # MAGIC publication: 2015JHEAp...5...30A
 # note that in the paper the beta of the LogParabola is given as negative in  
 # Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
+# Also MAGIC uses log10 in the LogParabola expression, gammapy uses ln, hence
+# the conversion factor
 magic_lp ={'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
 		   'alpha': 2.47,
-		   'beta': 0.24,
+		   'beta': 0.24 / np.log(10),
 		   'reference': 1 * u.TeV}
 
 magic_ecpl = {'amplitude': 3.80e-11 * u.Unit('1 / (cm2 s TeV)'),

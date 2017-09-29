@@ -32,9 +32,9 @@ CRAB_SPECTRA = [
     ),
 	dict(
 		name='magic_lp',
-		dnde=u.Quantity(5.19493945966e-12, 'cm-2 s-1 TeV-1'),
-		flux=u.Quantity(1.8787105528004794e-11, 'cm-2 s-1'),
-		index=2.802713046670476,
+		dnde=u.Quantity(5.5451060834144166e-12, 'cm-2 s-1 TeV-1'),
+		flux=u.Quantity(2.028222279117e-11, 'cm-2 s-1'),
+		index=2.614495440236207,
 	),
 	dict(
 		name='magic_ecpl',
