@@ -71,7 +71,7 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
-def test_wcsmapnd_fill_by_coords(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsmapnd_fill_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
@@ -98,7 +98,7 @@ def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
-def test_wcsmapnd_iter(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsmapnd_iter(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)

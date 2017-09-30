@@ -1455,19 +1455,22 @@ class HpxToWcsMapping(object):
     def write(self, fitsfile, clobber=True):
         """Write this mapping to a FITS file, to avoid having to recompute it
         """
-        from fermipy.skymap import Map
+        from .wcsnd import WcsMapND
         hpx_header = self._hpx.make_header()
-        index_map = Map(self.ipix, self.wcs)
-        mult_map = Map(self.mult_val, self.wcs)
-        prim_hdu = index_map.create_primary_hdu()
-        mult_hdu = index_map.create_image_hdu()
-        for key in ['COORDSYS', 'ORDERING', 'PIXTYPE',
-                    'ORDERING', 'ORDER', 'NSIDE',
-                    'FIRSTPIX', 'LASTPIX']:
-            prim_hdu.header[key] = hpx_header[key]
-            mult_hdu.header[key] = hpx_header[key]
+        index_map = WcsMapND(self.ipix, self.wcs)
+        mult_map = WcsMapND(self.mult_val, self.wcs)
 
-        hdulist = fits.HDUList([prim_hdu, mult_hdu])
+        # TODO: Figure out where to write HPX header information
+
+        #prim_hdu = index_map.create_primary_hdu()
+        #mult_hdu = index_map.create_image_hdu()
+        # for key in ['COORDSYS', 'ORDERING', 'PIXTYPE',
+        #            'ORDERING', 'ORDER', 'NSIDE',
+        #            'FIRSTPIX', 'LASTPIX']:
+        #    prim_hdu.header[key] = hpx_header[key]
+        #    mult_hdu.header[key] = hpx_header[key]
+
+        hdulist = index_map.to_hdulist()
         hdulist.writeto(fitsfile, clobber=clobber)
 
     @classmethod
@@ -1478,14 +1481,13 @@ class HpxToWcsMapping(object):
     @classmethod
     def read(cls, filename):
         """Read a FITS file and use it to make a mapping."""
-        from fermipy.skymap import Map
-        index_map = Map.read(filename)
-        mult_map = Map.read(filename, hdu=1)
-
+        from .wcsnd import WcsMapND
+        index_map = WcsMapND.read(filename)
+        mult_map = WcsMapND.read(filename, hdu=1)
         with fits.open(filename) as ff:
             hpx = HpxGeom.from_header(ff[0])
-            ipix = index_map.counts
-            mult_val = mult_map.counts
+            ipix = index_map.data
+            mult_val = mult_map.data
             npix = mult_map.counts.shape
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 

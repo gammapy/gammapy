@@ -593,7 +593,7 @@ class MapCoords(object):
         return cls(tuple([lon, lat] + list(args)), **kwargs)
 
     @classmethod
-    def from_skydir(cls, skydir, *args):
+    def from_skydir(cls, skydir, *args, **kwargs):
         """Create from vector of `~astropy.coordinates.SkyCoord`."""
         if skydir.frame.name in ['icrs', 'fk5']:
             return cls.from_lonlat(skydir.ra.deg, skydir.dec.deg, *args,
