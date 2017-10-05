@@ -311,22 +311,33 @@ class EffectiveAreaTable(object):
 class EffectiveAreaTable2D(object):
     """2D effective area table.
 
+    Data format specification: :ref:`gadf:aeff_2d`
+
     Parameters
     -----------
-    energy_lo : `~astropy.units.Quantity`
-        Lower bin edges of energy axis
-    energy_hi : `~astropy.units.Quantity`
-        Upper bin edges of energy axis
-    offset_lo : `~astropy.units.Quantity`
-        Lower bin edges of offset axis
-    offset_hi : `~astropy.units.Quantity`
-        Upper bin edges of offset axis
+    energy_lo, energy_hi : `~astropy.units.Quantity`
+        Energy binning
+    offset_lo, offset_hi : `~astropy.units.Quantity`
+        Field of view offset angle.
     data : `~astropy.units.Quantity`
         Effective area
 
     Examples
     --------
-    Create `~gammapy.irf.EffectiveAreaTable2D` from scratch
+    Here's an example you can use to learn about this class:
+
+    >>> from gammapy.irf import EffectiveAreaTable2D
+    >>> filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
+    >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+    >>> print(aeff)
+    EffectiveAreaTable2D
+    NDDataArray summary info
+    energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
+    offset         : size =     6, min =  0.500 deg, max =  5.500 deg
+    Data           : size =   126, min =  0.000 m2, max = 4263992.500 m2
+
+
+    Here's another one, created from scratch, without reading a file:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
     >>> import astropy.units as u
@@ -334,8 +345,8 @@ class EffectiveAreaTable2D(object):
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
     >>> data = np.ones(shape=(10,4)) * u.cm * u.cm
-    >>> eff_area = EffectiveAreaTable2D(energy=energy, offset=offset, data= data)
-    >>> print(eff_area)
+    >>> aeff = EffectiveAreaTable2D(energy=energy, offset=offset, data= data)
+    >>> print(aeff)
     Data array summary info
     energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
@@ -361,6 +372,11 @@ class EffectiveAreaTable2D(object):
                                 interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.data)
+        return ss
+
     @property
     def energy(self):
         return self.data.axis('energy')
@@ -381,10 +397,7 @@ class EffectiveAreaTable2D(object):
 
     @classmethod
     def from_table(cls, table):
-        """Read from `~astropy.table.Table`.
-
-        Data format specification: :ref:`gadf:aeff_2d`
-        """
+        """Read from `~astropy.table.Table`."""
         return cls(
             energy_lo=table['ENERG_LO'].quantity[0],
             energy_hi=table['ENERG_HI'].quantity[0],
@@ -406,12 +419,7 @@ class EffectiveAreaTable2D(object):
         """Read from file."""
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
-        try:
-            return cls.from_hdulist(hdulist, hdu=hdu)
-        except KeyError:
-            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
+        return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_effective_area_table(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.
@@ -551,6 +559,7 @@ class EffectiveAreaTable2D(object):
         if add_cbar:
             label = 'Effective Area ({unit})'.format(unit=aeff.unit)
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+
         return ax
 
     def peek(self, figsize=(15, 5)):

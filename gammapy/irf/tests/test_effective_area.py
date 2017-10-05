@@ -1,20 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, data_manager
+from ...utils.testing import requires_dependency, requires_data
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
+
+
+@pytest.fixture(scope='session')
+def aeff():
+    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
+    return EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
 
 
 @requires_dependency('scipy')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
-def test_EffectiveAreaTable2D():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
-    aeff = EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
-
+def test_EffectiveAreaTable2D(aeff):
     assert aeff.energy.nbins == 73
     assert aeff.data.axis('offset').nbins == 6
     assert aeff.data.data.shape == (73, 6)
@@ -58,9 +62,7 @@ def test_EffectiveAreaTable2D():
 @requires_dependency('scipy')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
-def test_EffectiveAreaTable(tmpdir, data_manager):
-    store = data_manager['hess-crab4-hd-hap-prod2']
-    aeff = store.obs(obs_id=23523).aeff
+def test_EffectiveAreaTable(tmpdir, aeff):
     arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
     assert_quantity_allclose(arf.data.evaluate(), arf.data.data)
@@ -99,9 +101,10 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
 def test_EffectiveAreaTable_from_parametrization():
     # Log center of this is 100 GeV
     energy = [80, 125] * u.GeV
-    area_ref = 1.65469579e+07 * u.cm * u.cm
+    area_ref = 1.65469579e+07 * u.cm ** 2
 
     area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
+
     assert_allclose(area.data.data, area_ref)
     assert area.data.data.unit == area_ref.unit
 

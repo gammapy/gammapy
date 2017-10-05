@@ -3,6 +3,7 @@
 Instrument response functions (IRFs).
 """
 from .effective_area import *
+from .background import *
 from .psf_core import *
 from .psf_table import *
 from .psf_3d import *

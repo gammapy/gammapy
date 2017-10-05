@@ -357,8 +357,8 @@ class SpectrumResult(object):
             points_err = np.sqrt(points_err[0] * points_err[1])
 
         model_val = self.model(e_ref)
-        residuals = ((points - model_val) / model_val).to('')
-        residuals_err = (points_err / model_val).to('')
+        residuals = ((points - model_val) / model_val).to('').value
+        residuals_err = (points_err / model_val).to('').value
 
         return residuals, residuals_err
 
