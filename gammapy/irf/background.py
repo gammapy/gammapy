@@ -30,17 +30,18 @@ class Background3D(object):
 
     Examples
     --------
-    Create `~gammapy.irf.EffectiveAreaTable2D` from scratch
+    Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import Background3D
     >>> filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
-    >>> bkg_3d = Background3D.read(filename)
-    >>> print(bkg_3d.data)
+    >>> bkg_3d = Background3D.read(filename, hdu='BACKGROUND')
+    >>> print(bkg_3d)
+    Background3D
     NDDataArray summary info
     energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
     detx           : size =    12, min = -5.500 deg, max =  5.500 deg
     dety           : size =    12, min = -5.500 deg, max =  5.500 deg
-    Data           : size =  3024, min =  0.000 1/s/MeV/sr, max =  0.269 1/s/MeV/sr
+    Data           : size =  3024, min =  0.000 1 / (MeV s sr), max =  0.269 1 / (MeV s sr)
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
@@ -65,6 +66,11 @@ class Background3D(object):
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n{}'.format(self.data)
+        return ss
 
     @classmethod
     def from_table(cls, table):

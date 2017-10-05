@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import astropy.units as u
 from numpy.testing import assert_allclose
+from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D
 
 
@@ -12,6 +13,8 @@ def bkg_3d():
     return Background3D.read(filename, hdu='BACKGROUND')
 
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_background_3d_basics(bkg_3d):
     assert 'NDDataArray summary info' in str(bkg_3d.data)
 
@@ -32,7 +35,9 @@ def test_background_3d_basics(bkg_3d):
     assert data.unit == u.Unit('s-1 MeV-1 sr-1')
 
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_background_3d_evalutate(bkg_3d):
     bkg_rate = bkg_3d.data.evaluate(energy='1 TeV', detx='0.2 deg', dety='0.5 deg')
     assert_allclose(bkg_rate.value, 0.00013652553025167435)
-    bkg_rate.unit == '1/s/MeV/sr'
+    bkg_rate.unit == u.Unit('s-1 MeV-1 sr-1')

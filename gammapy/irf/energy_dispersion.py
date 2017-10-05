@@ -24,14 +24,10 @@ class EnergyDispersion(object):
 
     Parameters
     ----------
-    e_true_lo : `~astropy.units.Quantity`
-        Lower bin edges of true energy axis
-    e_true_hi : `~astropy.units.Quantity`
-        Upper bin edges of true energy axis
-    e_reco_lo : `~astropy.units.Quantity`
-        Lower bin edges of reconstruced energy axis
-    e_reco_hi : `~astropy.units.Quantity`
-        Upper bin edges of reconstruced energy axis
+    e_true_lo, e_true_hi : `~astropy.units.Quantity`
+        True energy axis binning
+    e_reco_lo, e_reco_hi : `~astropy.units.Quantity`
+        Reconstruced energy axis binning
     data : array_like
         2-dim energy dispersion matrix
 
@@ -39,6 +35,7 @@ class EnergyDispersion(object):
     --------
     Create a Gaussian energy dispersion matrix::
 
+        import numpy as np
         import astropy.units as u
         from gammapy.irf import EnergyDispersion
         energy = np.logspace(0, 1, 101) * u.TeV
@@ -78,7 +75,6 @@ class EnergyDispersion(object):
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n{}'.format(self.data)
-
         return ss
 
     def apply(self, data):
@@ -550,20 +546,14 @@ class EnergyDispersion2D(object):
 
     Parameters
     ----------
-    e_true_lo : `~astropy.units.Quantity`
-        True energy axis lower bounds
-    e_true_hi : `~astropy.units.Quantity`
-        True energy axis upper bounds
-    migra_lo : `~numpy.ndarray`, list
-        Migration axis lower bounds
-    migra_hi : `~numpy.ndarray`, list
-        Migration axis upper bounds
-    offset_lo : `~astropy.coordinates.Angle`
-        Offset axis lower bounds
-    offset_hi : `~astropy.coordinates.Angle`
-        Offset axis upper bounds
+    e_true_lo, e_true_hi : `~astropy.units.Quantity`
+        True energy axis binning
+    migra_lo, migra_hi : `~numpy.ndarray`
+        Energy migration axis binning
+    offset_lo, offset_hi : `~astropy.coordinates.Angle`
+        Field of view offset axis binning
     data : `~numpy.ndarray`
-        PDF matrix
+        Energy dispersion probability density
 
     Examples
     --------
@@ -619,7 +609,6 @@ class EnergyDispersion2D(object):
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n{}'.format(self.data)
-
         return ss
 
     @property
