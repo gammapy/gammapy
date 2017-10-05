@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
 from ...background import (RingBackgroundEstimator, AdaptiveRingBackgroundEstimator,
@@ -8,29 +9,42 @@ from ...image import SkyImageList, SkyImage
 from ...utils.testing import requires_dependency
 
 
+@pytest.fixture
+def example_test_images():
+    fov = 2.5 * u.deg
+
+    reference_image = SkyImage.empty(nxpix=201, nypix=201, fill=1, binsz=0.05)
+
+    coords = reference_image.coordinates()
+    mask = (coords.separation(reference_image.center) < fov)
+
+    images = SkyImageList()
+    images['counts'] = SkyImage.empty_like(reference_image, fill=2.)
+    images['counts'].data *= mask
+
+    images['exposure_on'] = SkyImage.empty_like(reference_image, fill=1.)
+    images['exposure_on'].data *= mask
+
+    exclusion = SkyImage.empty_like(reference_image, fill=1.)
+    exclusion.data[90:110, 90:110] = 0
+    images['exclusion'] = exclusion
+    return images
+
+
 @requires_dependency('scipy')
 class TestRingBackgroundEstimator:
     def setup(self):
-        self.ring = RingBackgroundEstimator(0.1 * u.deg, 0.1 * u.deg)
-        self.images = SkyImageList()
+        self.ring = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
 
-        self.images['counts'] = SkyImage.empty(nxpix=101, nypix=101, fill=1)
-        self.images['exposure_on'] = SkyImage.empty(nxpix=101, nypix=101, fill=1e10)
-        exclusion = SkyImage.empty(nxpix=101, nypix=101, fill=1)
-        exclusion.data[40:60, 40:60] = 0
-        self.images['exclusion'] = exclusion
+    def test_background_run(self, example_test_images):
+        result = self.ring.run(example_test_images)
 
-    def test_run(self):
-        result = self.ring.run(self.images)
-        assert_allclose(result['background'].data[50, 50], 1)
-        assert_allclose(result['alpha'].data[50, 50], 0.5)
-        assert_allclose(result['exposure_off'].data[50, 50], 20000000000.0)
-        assert_allclose(result['off'].data[50, 50], 2)
+        in_fov = example_test_images['exposure_on'].data > 0
 
-        assert_allclose(result['background'].data[0, 0], 1)
-        assert_allclose(result['alpha'].data[0, 0], 0.004032258064516129)
-        assert_allclose(result['exposure_off'].data[0, 0], 2480000000000.0)
-        assert_allclose(result['off'].data[0, 0], 248.0)
+        assert_allclose(result['background'].data[in_fov], 2.)
+        assert_allclose(result['alpha'].data[in_fov].mean(), 0.003488538457592745)
+        assert_allclose(result['exposure_off'].data[in_fov].mean(), 305.1268970794541)
+        assert_allclose(result['off'].data[in_fov].mean(), 610.2537941589082)
 
 
 @requires_dependency('scipy')
