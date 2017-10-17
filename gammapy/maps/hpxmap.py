@@ -74,7 +74,11 @@ class HpxMap(MapBase):
         hpx = HpxGeom.create(nside=nside, binsz=binsz,
                              nest=nest, coordsys=coordsys, region=region,
                              conv=None, axes=axes, skydir=skydir, width=width)
-        if map_type in [None, 'hpx', 'HpxMapND']:
+        if cls.__name__ == 'HpxMapND':
+            return HpxMapND(hpx, dtype=dtype)
+        elif cls.__name__ == 'HpxMapSparse':
+            return HpxMapSparse(hpx, dtype=dtype)
+        elif map_type in [None, 'hpx', 'HpxMapND']:
             return HpxMapND(hpx, dtype=dtype)
         elif map_type in ['hpx-sparse', 'HpxMapSparse']:
             return HpxMapSparse(hpx, dtype=dtype)

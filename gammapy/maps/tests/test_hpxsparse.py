@@ -24,7 +24,7 @@ hpx_test_geoms = [
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_init(nside, nested, coordsys, region, axes):
+def test_hpxsparse_init(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     m = HpxMapSparse(geom)
     # TODO: Test initialization w/ data array

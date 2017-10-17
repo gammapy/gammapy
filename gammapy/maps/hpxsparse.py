@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
 from .hpx import ravel_hpx_index
@@ -26,22 +27,18 @@ class HpxMapSparse(HpxMap):
 
     def __init__(self, hpx, data=None, dtype='float32'):
 
-        from scipy.sparse import csr_matrix
-
-        shape = (1, np.sum(hpx.npix),)
-
-        # TODO : accept sparse matrix for data argument
         if data is None:
-            data = csr_matrix(shape, dtype=dtype)
-        else:
-            data = csr_matrix(np.ravel(data).reshape((1, -1)))
+            shape = tuple([np.max(hpx.npix)] + [ax.nbin for ax in hpx.axes])
+            data = SparseArray(shape[::-1])
+        elif isinstance(data, np.ndarray):
+            data = SparseArray.from_array(data)
 
         HpxMap.__init__(self, hpx, data)
 
     def get_by_pix(self, pix, interp=None):
 
         if interp is None:
-            return get_by_idx(pix)
+            return self.get_by_idx(pix)
         else:
             raise NotImplementedError
 
@@ -50,8 +47,7 @@ class HpxMapSparse(HpxMap):
         # Convert to local pixel indices
         idx = pix_tuple_to_idx(idx)
         idx = self.hpx.global_to_local(idx)
-        idx = ravel_hpx_index(idx, self.hpx.npix)
-        return np.array(self.data[0, idx])
+        return self.data[idx[::-1]]
 
     def interp_by_coords(self, coords, interp=None):
         raise NotImplementedError
@@ -69,8 +65,7 @@ class HpxMapSparse(HpxMap):
 
         idx = pix_tuple_to_idx(idx)
         idx = self.hpx.global_to_local(idx)
-        idx = ravel_hpx_index(idx, self.hpx.npix)
-        self.data[0, idx] = vals
+        self.data[idx[::-1]] = vals
 
     def iter_by_image(self):
         raise NotImplementedError
