@@ -41,7 +41,6 @@ General documentation
   about
   install/index
   getting-started
-  tutorials/index
   dataformats/index
   references
   development/index
