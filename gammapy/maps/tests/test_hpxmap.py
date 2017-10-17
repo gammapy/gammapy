@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from ..geom import MapAxis
 from ..hpx import HpxGeom
 from ..hpxcube import HpxMapND
+from ..hpxsparse import HpxMapSparse
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -23,10 +24,13 @@ hpx_test_geoms = [
       MapAxis(np.logspace(0., 2., 3), name='axis1')])
 ]
 
+hpx_test_geoms_sparse = [tuple(list(t) + [True]) for t in hpx_test_geoms]
+hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
+
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_init(nside, nested, coordsys, region, axes):
+def test_hpxmap_init(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside=nside, nest=nested,
                    coordsys=coordsys, region=region, axes=axes)
     shape = [int(np.max(geom.npix))]
@@ -40,16 +44,21 @@ def test_hpxcube_init(nside, nested, coordsys, region, axes):
     assert_allclose(m.data, data)
 
 
-@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_geoms)
-def test_hpxcube_create(nside, nested, coordsys, region, axes):
-    m = HpxMapND.create(nside=nside, nest=nested, coordsys=coordsys,
-                        region=region, axes=axes)
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
+                         hpx_test_geoms_sparse)
+def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
+
+    if sparse:
+        m = HpxMapSparse.create(nside=nside, nest=nested, coordsys=coordsys,
+                            region=region, axes=axes)
+    else:
+        m = HpxMapND.create(nside=nside, nest=nested, coordsys=coordsys,
+                            region=region, axes=axes)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_read_write(tmpdir, nside, nested, coordsys, region, axes):
+def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes):
     filename = str(tmpdir / 'skycube.fits')
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
@@ -62,11 +71,16 @@ def test_hpxcube_read_write(tmpdir, nside, nested, coordsys, region, axes):
     assert_allclose(m.data, m2.data)
 
 
-@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_geoms)
-def test_hpxcube_set_get_by_pix(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
+                         hpx_test_geoms_sparse)
+def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
+
+    if sparse:
+        m = HpxMapSparse(HpxGeom(nside=nside, nest=nested,
+                                 coordsys=coordsys, region=region, axes=axes))
+    else:
+        m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+                             coordsys=coordsys, region=region, axes=axes))
     coords = m.hpx.get_coords()
     pix = m.hpx.get_pixels()
     m.set_by_pix(pix, coords[0])
@@ -75,7 +89,7 @@ def test_hpxcube_set_get_by_pix(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_set_get_by_coords(nside, nested, coordsys, region, axes):
+def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.hpx.get_coords()
@@ -86,7 +100,7 @@ def test_hpxcube_set_get_by_coords(nside, nested, coordsys, region, axes):
 @pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_get_by_coords_interp(nside, nested, coordsys, region, axes):
+def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.hpx.get_coords()
@@ -97,7 +111,7 @@ def test_hpxcube_get_by_coords_interp(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_fill_by_coords(nside, nested, coordsys, region, axes):
+def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.hpx.get_coords()
@@ -108,7 +122,7 @@ def test_hpxcube_fill_by_coords(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_iter(nside, nested, coordsys, region, axes):
+def test_hpxmap_iter(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords()
@@ -121,7 +135,7 @@ def test_hpxcube_iter(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_to_wcs(nside, nested, coordsys, region, axes):
+def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m_wcs = m.to_wcs(sum_bands=False, oversample=2, normalize=False)
@@ -130,7 +144,7 @@ def test_hpxcube_to_wcs(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_swap_scheme(nside, nested, coordsys, region, axes):
+def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m.fill_poisson(1.0)
@@ -141,7 +155,7 @@ def test_hpxcube_swap_scheme(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_ud_grade(nside, nested, coordsys, region, axes):
+def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m.to_ud_graded(4)
@@ -149,7 +163,7 @@ def test_hpxcube_ud_grade(nside, nested, coordsys, region, axes):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxcube_sum_over_axes(nside, nested, coordsys, region, axes):
+def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords()
