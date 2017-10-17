@@ -288,10 +288,8 @@ class FermiLATDataset(object):
                 warnings.simplefilter("ignore")
                 cube = SkyCube.read(filename, format='fermi-exposure')
         except (ValueError, KeyError):
-            cube = HpxMapND.read(filename, format='fermi-exposure')
-        cube.name = 'exposure'
-        # TODO: check why fixing the unit is needed
-        cube.data = u.Quantity(cube.data.value, 'cm2 s')
+            cube = HpxMapND.read(filename)
+
         return cube
 
     @lazyproperty
@@ -311,9 +309,8 @@ class FermiLATDataset(object):
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
         except (ValueError, KeyError):
-            cube = HpxMapND.read(filename, format='fermi-counts')
+            cube = HpxMapND.read(filename)
 
-        cube.name = 'counts'
         return cube
 
     @lazyproperty

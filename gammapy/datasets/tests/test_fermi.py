@@ -129,7 +129,7 @@ def test_load_lat_psf_performance():
 class TestFermiLATDataset:
     def setup(self):
         filename = '$GAMMAPY_FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
-        self.data_2fhl = data = FermiLATDataset(filename)
+        self.data_2fhl = FermiLATDataset(filename)
 
     def test_events(self):
         events = self.data_2fhl.events
@@ -137,11 +137,11 @@ class TestFermiLATDataset:
 
     def test_exposure(self):
         exposure = self.data_2fhl.exposure
-        assert exposure.name == 'exposure'
+        assert_allclose(exposure.data.sum(), 6.072634932461568e+16)
 
     def test_counts(self):
         counts = self.data_2fhl.counts
-        assert_quantity_allclose(counts.data.sum(), 60275 * u.count)
+        assert_allclose(counts.data.sum(), 60275)
 
     def test_psf(self):
         psf = self.data_2fhl.psf
