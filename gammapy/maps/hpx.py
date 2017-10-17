@@ -7,6 +7,7 @@ import copy
 import numpy as np
 from ..extern import six
 from ..extern.six.moves import range
+import astropy.units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
@@ -1183,17 +1184,19 @@ class HpxGeom(MapGeom):
             List of pixel indices.
         """
         from astropy_healpix import healpy as hp
+        from astropy_healpix import HEALPix
         tokens = parse_hpxregion(region)
+        order = 'nested' if nest else 'ring'
 
-        if tokens[0] == 'DISK':
-            vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
-            ilist = hp.query_disc(nside, vec[0], np.radians(float(tokens[3])),
-                                  inclusive=False, nest=nest)
-        elif tokens[0] == 'DISK_INC':
-            vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
-            ilist = hp.query_disc(nside, vec[0], np.radians(float(tokens[3])),
-                                  inclusive=True, fact=int(tokens[4]),
-                                  nest=nest)
+        if tokens[0] in {'DISK', 'DISK_INC'}:
+            lon = float(tokens[1]) * u.deg
+            lat = float(tokens[2]) * u.deg
+            radius = float(tokens[3]) * u.deg
+            hp = HEALPix(nside, order)
+            # TODO: the inclusive=False option doesn't exist yet in astropy-healpix
+            # Implement it and then pass it here
+            inclusive = True if tokens[0] == 'DISK_INC' else False
+            ilist = hp.cone_search_lonlat(lon, lat, radius)
         elif tokens[0] == 'HPX_PIXEL':
             nside_pix = int(tokens[2])
             if tokens[1] == 'NESTED':
