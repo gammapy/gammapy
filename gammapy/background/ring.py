@@ -213,6 +213,12 @@ class AdaptiveRingBackgroundEstimator(object):
 
         exposure_off, off = self._reduce_cubes(cubes)
         alpha = images['exposure_on'].data / exposure_off
+        not_has_exposure = ~(images['exposure_on'].data > 0)
+
+        # set data outside fov to zero
+        for data in [alpha, off, exposure_off]:
+            data[not_has_exposure] = 0
+
         background = alpha * off
 
         result = SkyImageList()
@@ -316,11 +322,12 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
-        result['off'] = counts_excluded.convolve(ring.array, mode='reflect',
+        result['off'] = counts_excluded.convolve(ring.array, mode='constant',
                                                  use_fft=p['use_fft_convolution'])
         result['off'].data = result['off'].data.astype(int)
 
         exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
+
         result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='reflect',
                                                                use_fft=p['use_fft_convolution'])
 

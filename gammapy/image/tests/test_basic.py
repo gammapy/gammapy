@@ -97,10 +97,10 @@ class TestIACTBasicImageEstimator:
     def test_run(self):
         images = OrderedDict()
         images['counts'] = dict(sum=2222.0)
-        images['background'] = dict(sum=1855.654807821552)
+        images['background'] = dict(sum=1827.9166666666665)
         images['exposure'] = dict(sum=83036669325.30281)
-        images['excess'] = dict(sum=366.34519217844803)
-        images['flux'] = dict(sum=8.143944483402417e-07)
+        images['excess'] = dict(sum=394.0833333333333)
+        images['flux'] = dict(sum=8.477134335825048e-07)
         images['psf'] = dict(sum=1.)
         results = self.estimator.run(self.observations)
 

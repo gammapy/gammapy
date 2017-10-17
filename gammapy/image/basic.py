@@ -247,8 +247,12 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         """
         input_images = SkyImageList()
         input_images['counts'] = counts
+
+        #TODO: instead of using a constant exposure, the acceptance model should
+        # be taken into account
         exposure_on = exposure.copy()
         exposure_on.name = 'exposure_on'
+        exposure_on.data = (exposure_on.data > 0).astype(float)
         input_images['exposure_on'] = exposure_on
         input_images['exclusion'] = self._cutout_observation(self.exclusion_mask, observation)
         return self.background_estimator.run(input_images)
