@@ -97,7 +97,7 @@ def find_bands_hdu(hdulist, hdu):
         has_cube_data = True
     elif isinstance(hdu, fits.BinTableHDU):
 
-        if (hdu.header.get('INDXSCHM', '') == 'IMPLICIT' and
+        if (hdu.header.get('INDXSCHM', '') in ['IMPLICIT', ''] and
                 len(hdu.columns) > 1):
             has_cube_data = True
 
