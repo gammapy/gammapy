@@ -38,7 +38,7 @@ def _get_input_pixels_celestial(wcs_in, wcs_out, shape_out):
 def reproject_car_to_hpx(input_data, coord_system_out,
                          nside, order=1, nested=False):
 
-    import healpy as hp
+    from astropy_healpix import healpy as hp
     from scipy.ndimage import map_coordinates
     from reproject.wcs_utils import convert_world_coordinates
     from reproject.healpix.utils import parse_coord_system

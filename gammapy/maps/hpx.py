@@ -164,7 +164,7 @@ def get_nside_from_pixel_size(pixsz):
     nside : `~numpy.ndarray`
         NSIDE parameter.
     """
-    import healpy as hp
+    from astropy_healpix import healpy as hp
     pixsz = np.array(pixsz, ndmin=1)
     nside = 2 ** np.linspace(1, 14, 14, dtype=int)
     nside_pixsz = np.degrees(hp.nside2resol(nside))
@@ -267,7 +267,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     npix : tuple
         tuple(nx,ny) with the shape of the WCS grid
     """
-    import healpy as hp
+    from astropy_healpix import healpy as hp
     npix = wcs.npix
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
@@ -282,10 +282,10 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
     m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
-    ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[..., None],
-                                   sky_crds[:, 1][mask][None, ...],
-                                   sky_crds[:, 0][mask][None, ...],
-                                   hpx.nest).flatten()
+    ipix[m] = hp.ang2pix(hpx.nside[..., None],
+                         sky_crds[:, 1][mask][None, ...],
+                         sky_crds[:, 0][mask][None, ...],
+                         hpx.nest).flatten()
 
     # Here we are counting the number of HEALPIX pixels each WCS pixel
     # points to and getting a multiplicative factor that tells use how
@@ -308,7 +308,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
     """TODO
     """
-    import healpy as hp
+    from astropy_healpix import healpy as hp
     ipix_in = np.arange(12 * nside * nside)
     vecs = hp.pix2vec(nside, ipix_in, nest)
     pix_match = hp.vec2pix(nside_pix, vecs[0], vecs[1], vecs[2]) == ipix_ring
@@ -588,7 +588,7 @@ class HpxGeom(MapGeom):
         return retval
 
     def coord_to_pix(self, coords):
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         c = MapCoords.create(coords)
         phi = np.radians(c.lon)
         theta = np.pi / 2. - np.radians(c.lat)
@@ -616,7 +616,7 @@ class HpxGeom(MapGeom):
         return pix
 
     def pix_to_coord(self, pix):
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         if self.axes:
 
             bins = []
@@ -1182,7 +1182,7 @@ class HpxGeom(MapGeom):
         ilist : `~numpy.ndarray`
             List of pixel indices.
         """
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         tokens = parse_hpxregion(region)
 
         if tokens[0] == 'DISK':
@@ -1221,7 +1221,7 @@ class HpxGeom(MapGeom):
         coordsys : {'CEL', 'GAL'}
             Coordinate system
         """
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         frame = coordsys_to_frame(coordsys)
 
         if region is None or isinstance(region, tuple):

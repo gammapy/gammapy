@@ -183,7 +183,7 @@ def test_hpxgeom_get_pixels(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
-    import healpy as hp
+    from astropy_healpix import healpy as hp
 
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     lon = np.array([112.5, 135., 105.])

@@ -278,7 +278,7 @@ class HpxMapND(HpxMap):
 
     def _get_interp_weights(self, coords, idxs):
 
-        import healpy as hp
+        from astropy_healpix import healpy as hp
 
         c = MapCoords.create(coords)
         coords_ctr = list(coords[:2])
@@ -298,8 +298,8 @@ class HpxMapND(HpxMap):
         else:
             nside = self.hpx.nside
 
-        pix, wts = hp.pixelfunc.get_interp_weights(nside, theta,
-                                                   phi, nest=self.hpx.nest)
+        pix, wts = hp.get_interp_weights(nside, theta,
+                                         phi, nest=self.hpx.nest)
 
         if self.hpx.nside.size > 1:
             pix_local = [self.hpx.global_to_local([pix] + list(idxs))[0]]
@@ -313,7 +313,7 @@ class HpxMapND(HpxMap):
 
     def _interp_by_coords(self, coords, interp):
         """Linearly interpolate map values."""
-        import healpy as hp
+        from astropy_healpix import healpy as hp
 
         c = MapCoords.create(coords)
         pix, wts = self._get_interp_weights(coords,
@@ -371,7 +371,7 @@ class HpxMapND(HpxMap):
 
     def to_swapped_scheme(self):
 
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         hpx_out = self.hpx.to_swapped()
         map_out = self.__class__(hpx_out)
         idx = list(self.hpx.get_pixels())
@@ -401,7 +401,7 @@ class HpxMapND(HpxMap):
         # FIXME: For higher order maps we may want the option to split
         # the pixel amplitude among all subpixels
 
-        import healpy as hp
+        from astropy_healpix import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.hpx.ud_graded_hpx(order)
         map_out = self.__class__(new_hpx)
@@ -491,7 +491,7 @@ class HpxMapND(HpxMap):
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
-        import healpy as hp
+        from astropy_healpix import healpy as hp
 
         wcs = self.geom.make_wcs(proj=proj, oversample=1)
         if ax is None:
@@ -502,7 +502,7 @@ class HpxMapND(HpxMap):
         pix = self.geom.get_pixels()
         vtx = hp.boundaries(self.geom.nside, pix[0],
                             nest=self.geom.nest, step=step)
-        theta, phi = hp.pixelfunc.vec2ang(np.rollaxis(vtx, 2))
+        theta, phi = hp.vec2ang(np.rollaxis(vtx, 2))
         theta = theta.reshape((4 * step, -1)).T
         phi = phi.reshape((4 * step, -1)).T
 

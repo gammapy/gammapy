@@ -184,6 +184,8 @@ install:
           export QT_API=pyqt;
       fi
 
+    - pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
+
 script:
     - $MAIN_CMD $SETUP_CMD
 
