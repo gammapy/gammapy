@@ -875,6 +875,9 @@ class SkyCube(MapBase):
         from ..utils.testing import assert_wcs_allclose
         assert cube1.name == cube2.name
         assert_allclose(cube1.data, cube2.data)
+
+        # TODO: add check_unit option, just like SkyImage has it.
+
         assert_allclose(cube1.energies(), cube2.energies())
         assert_wcs_allclose(cube1.wcs, cube2.wcs)
 
@@ -902,11 +905,17 @@ class SkyCube(MapBase):
 
         geom = WcsGeom(wcs=self.wcs, npix=npix, axes=[energy_axis])
 
-        return WcsMapND(wcs=geom, data=self.data)
+        # TODO: change maps and SkyCube to have a unit attribute
+        # For now, SkyCube is a mix of numpy array and quantity in `data`
+        # and we just strip the unit here
+        data = np.asarray(self.data)
+        # unit = getattr(self.data, 'unit', None)
+
+        return WcsMapND(wcs=geom, data=data)
 
     @classmethod
     def from_wcs_map_nd(cls, wcs_map_nd):
-        """Convert to a `gammapy.maps.WcsMapND`.
+        """Create from a `gammapy.maps.WcsMapND`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 
@@ -924,8 +933,13 @@ class SkyCube(MapBase):
         else:
             raise ValueError('Not supported: node_type: {}'.format(geom_axis.node_type))
 
+        data = wcs_map_nd.data
+        # TODO: copy unit once it's added to
+        # if wcs_map_nd.unit is not None:
+        #     data = data * wcs_map_nd.unit
+
         return cls(
-            data=wcs_map_nd.data,
+            data=data,
             wcs=wcs_map_nd.geom.wcs,
             energy_axis=energy_axis,
         )
