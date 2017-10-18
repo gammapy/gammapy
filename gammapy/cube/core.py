@@ -875,4 +875,57 @@ class SkyCube(MapBase):
         from ..utils.testing import assert_wcs_allclose
         assert cube1.name == cube2.name
         assert_allclose(cube1.data, cube2.data)
+        assert_allclose(cube1.energies(), cube2.energies())
         assert_wcs_allclose(cube1.wcs, cube2.wcs)
+
+    def to_wcs_map_nd(self, energy_axis_mode='center'):
+        """Convert to a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyCube`
+        over to the new maps classes.
+        """
+        from gammapy.maps import WcsMapND, WcsGeom, MapAxis
+
+        if energy_axis_mode == 'center':
+            energy = self.energies(mode='center')
+            energy_axis = MapAxis.from_nodes(energy.value, unit=energy.unit)
+        elif energy_axis_mode == 'edges':
+            energy = self.energies(mode='edges')
+            energy_axis = MapAxis.from_edges(energy.value, unit=energy.unit)
+        else:
+            raise ValueError('Invalid energy_axis_mode: {}'.format(energy_axis_mode))
+
+        # Axis order in SkyCube: energy, lat, lon
+        npix = (self.data.shape[2], self.data.shape[1])
+
+        geom = WcsGeom(wcs=self.wcs, npix=npix, axes=[energy_axis])
+
+        return WcsMapND(wcs=geom, data=self.data)
+
+    @classmethod
+    def from_wcs_map_nd(cls, wcs_map_nd):
+        """Convert to a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyCube`
+        over to the new maps classes.
+        """
+        geom_axis = wcs_map_nd.geom.axes[0]
+
+        if geom_axis.node_type == 'center':
+            energy = geom_axis.center * geom_axis.unit
+            energy_axis = LogEnergyAxis(energy, mode='center')
+        elif geom_axis.node_type == 'edges':
+            energy = geom_axis.edges * geom_axis.unit
+            energy_axis = LogEnergyAxis(energy, mode='edges')
+        else:
+            raise ValueError('Not supported: node_type: {}'.format(geom_axis.node_type))
+
+        return cls(
+            data=wcs_map_nd.data,
+            wcs=wcs_map_nd.geom.wcs,
+            energy_axis=energy_axis,
+        )

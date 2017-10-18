@@ -247,3 +247,13 @@ def test_bin_events_in_cube():
 
     assert counts.data.sum() == 1233
     assert counts.data.sum() == counts_image.data.sum()
+
+
+def test_conversion_wcs_map_nd():
+    """Check if SkyCube -> WCSMapNd -> SkyCube round-trips"""
+    cube = make_test_sky_cube()
+
+    map = cube.to_wcs_map_nd()
+    cube2 = SkyCube.from_wcs_map_nd(map)
+
+    SkyCube.assert_allclose(cube, cube2)

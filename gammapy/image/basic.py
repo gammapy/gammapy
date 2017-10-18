@@ -452,16 +452,19 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         background : `~gammapy.image.SkyImage`
             Predicted number of background counts sky image.
         """
-        from ..cube import compute_npred_cube
+        from ..cube import SkyCube, compute_npred_cube
 
         p = self.parameters
         energy_band = u.Quantity([p['emin'], p['emax']])
 
         background_cube = self._total_background_cube(dataset)
 
-
-        exposure_cube = dataset.exposure.reproject(background_cube)
-        psf = dataset.psf
+        # TODO: this is a temp solution, as long as we use HpxMapND objects for exposure
+        # and SkyCube objects otherwise. This should be changed to use WCSMapND
+        # instead of SkyCube in the future.
+        geom = background_cube.to_wcs_map_nd().geom
+        exposure_cube = dataset.exposure.reproject(geom)
+        exposure_cube = SkyCube.from_wcs_map_nd(exposure_cube)
 
         # compute npred cube
         npred_cube = compute_npred_cube(background_cube, exposure_cube, ebounds=energy_band)
@@ -476,9 +479,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         npred_total.data /= (norm.value.mean()) ** 2
 
         # convolve with PSF kernel
-        psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
-        kernel = psf_mean.kernel(npred_total,
-                                 rad_max=self.parameters['rad_max'])
+        psf_mean = dataset.psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
+        kernel = psf_mean.kernel(npred_total, rad_max=self.parameters['rad_max'])
         npred_total = npred_total.convolve(kernel)
         return npred_total
 
