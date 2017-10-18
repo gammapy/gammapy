@@ -7,7 +7,8 @@ cimport cython
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def binary_search(np.ndarray[np.int_t, ndim=1] arr_in, np.int_t idx, np.int_t ilo, np.int_t ihi):
+def binary_search(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
+                  np.int64_t ilo, np.int64_t ihi):
     """Perform a binary search for an element ``idx`` in a sorted integer
     array ``arr_in``.  The search is restricted to the range between
     ``ilo`` and ``ihi``.  This will return the index of the matching
@@ -43,7 +44,8 @@ def binary_search(np.ndarray[np.int_t, ndim=1] arr_in, np.int_t idx, np.int_t il
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def binary_search2(np.ndarray[np.int_t, ndim=1] arr_in, np.int_t idx, np.int_t ilo, np.int_t ihi):
+def binary_search2(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
+                   np.int64_t ilo, np.int64_t ihi):
 
     cdef int mid = 0
     cdef int midval = 0
@@ -64,8 +66,8 @@ def binary_search2(np.ndarray[np.int_t, ndim=1] arr_in, np.int_t idx, np.int_t i
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def find_in_array(np.ndarray[np.int_t, ndim=1] idx0,
-                  np.ndarray[np.int_t, ndim=1] idx1):
+def find_in_array(np.ndarray[np.int64_t, ndim=1] idx0,
+                  np.ndarray[np.int64_t, ndim=1] idx1):
     """Find the values in ``idx0`` contained in ``idx1``.
 
     Parameters
@@ -91,38 +93,38 @@ def find_in_array(np.ndarray[np.int_t, ndim=1] idx0,
     cdef int ni = idx0.shape[0]
     cdef int nj = idx1.shape[0]
 
-    cdef np.ndarray[np.int_t, ndim= 1] idx_sort = np.argsort(idx0)
-    cdef int i_ = 0
-    cdef int ii_ = 0
-    cdef int j_ = binary_search(idx1, idx0[idx_sort[0]], 0, nj)
-    cdef np.ndarray[np.int_t, ndim = 1] out = np.zeros([ni], dtype=int)
+    cdef np.ndarray[np.int64_t, ndim= 1] idx_sort = np.argsort(idx0)
+    cdef int i = 0
+    cdef int ii = 0
+    cdef np.int64_t j = binary_search(idx1, idx0[idx_sort[0]], 0, nj)
+    cdef np.ndarray[np.int64_t, ndim = 1] out = np.zeros([ni], dtype=np.int64)
     cdef np.ndarray[np.uint8_t, ndim = 1] msk = np.zeros([ni], dtype=np.uint8)
 
-    while(i_ < ni and j_ < nj):
+    while(i < ni and j < nj):
 
-        ii_ = idx_sort[i_]
+        ii = idx_sort[i]
 
         # Current element is less
-        if idx0[ii_] < idx1[j_]:
-            out[ii_] = j_
-            i_ += 1
-        elif idx0[ii_] > idx1[j_]:
-            j_ += 1
+        if idx0[ii] < idx1[j]:
+            out[ii] = j
+            i += 1
+        elif idx0[ii] > idx1[j]:
+            j += 1
         else:
-            out[ii_] = j_
-            msk[ii_] = True
-            i_ += 1
+            out[ii] = j
+            msk[ii] = True
+            i += 1
 
     return out, msk.astype(bool)
 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def merge_sparse_arrays(np.ndarray[np.int_t, ndim=1] idx0,
-                        np.ndarray[np.float_t, ndim=1] val0,
-                        np.ndarray[np.int_t, ndim=1] idx1,
-                        np.ndarray[np.float_t, ndim=1] val1,
-                        np.int_t fill=False
+def merge_sparse_arrays(np.ndarray[np.int64_t, ndim=1] idx0,
+                        np.ndarray[np.float64_t, ndim=1] val0,
+                        np.ndarray[np.int64_t, ndim=1] idx1,
+                        np.ndarray[np.float64_t, ndim=1] val1,
+                        np.int64_t fill=False
                         ):
     """Merge two sparse arrays represented as index/value pairs into a
     single sparse array.  Values in the first array (``idx0``,
@@ -169,9 +171,9 @@ def merge_sparse_arrays(np.ndarray[np.int_t, ndim=1] idx0,
     idx0 = idx0[isort]
     val0 = val0[isort]
 
-    cdef np.ndarray[np.int_t, ndim= 1] idx = np.sort(np.unique(np.concatenate((idx0, idx1))))
+    cdef np.ndarray[np.int64_t, ndim= 1] idx = np.sort(np.unique(np.concatenate((idx0, idx1))))
     cdef int n = idx.size
-    cdef np.ndarray[np.float_t, ndim = 1] vals = np.zeros(n, dtype=float)
+    cdef np.ndarray[np.float64_t, ndim = 1] vals = np.zeros(n, dtype=np.float64)
     while(k < n):
 
         while(j < nj):
