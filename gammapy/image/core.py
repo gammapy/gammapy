@@ -37,6 +37,13 @@ class MapBase(object):
 
     This is just a temp solution to put code that's common
     between `SkyImage` and `SkyCube`.
+
+    .. note::
+
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
     """
 
     @property
@@ -57,10 +64,16 @@ class MapBase(object):
 
 
 class SkyImage(MapBase):
-    """
-    Sky image.
+    """Sky image.
 
-    For a usage example see :gp-extra-notebook:`image_analysis`
+    .. note::
+
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
+
+    For further information, see :ref:`image`.
 
     Parameters
     ----------

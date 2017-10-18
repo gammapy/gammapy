@@ -329,11 +329,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
     Parameters
     ----------
     reference : `~gammapy.image.SkyImage`
-        Reference sky image.
-    emin : `~astropy.units.Quantity`
-        Lower bound of energy range.
-    emax : `~astropy.units.Quantity`
-        Upper bound of energy range.
+        Reference sky image
+    emin, emax : `~astropy.units.Quantity`
+        Energy range
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf images.
     rad_max : `~astropy.coordinates.Angle`
@@ -460,6 +458,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         energy_band = u.Quantity([p['emin'], p['emax']])
 
         background_cube = self._total_background_cube(dataset)
+
+
         exposure_cube = dataset.exposure.reproject(background_cube)
         psf = dataset.psf
 
@@ -541,8 +541,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         return psf_image
 
     def run(self, dataset, which='all'):
-        """
-        Estimate sky images.
+        """Estimate sky images.
 
         Parameters
         ----------

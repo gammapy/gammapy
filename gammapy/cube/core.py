@@ -1,12 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gamma-ray spectral cube: longitude, latitude and spectral axis.
-
-TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
-
-* ``SkyCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
-* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SkyCube`` (``gtexpcube`` format)
-* ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
@@ -34,18 +26,17 @@ class SkyCube(MapBase):
 
     .. note::
 
-        There is a very nice ``SkyCube`` implementation here:
-        http://spectral-cube.readthedocs.io/en/latest/index.html
-
-        Here is some discussion if / how it could be used:
-        https://github.com/radio-astro-tools/spectral-cube/issues/110
-
-    For now we re-implement what we need here.
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
 
     The order of the sky cube axes is defined as following:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
     * The ``wcs`` object is a two dimensional celestial WCS with axis order ``(lon, lat)``.
+
+    For further information, see :ref:`cube`.
 
     Parameters
     ----------

@@ -184,6 +184,9 @@ def make_path(path):
     path : str, `~gammapy.extern.pathlib.Path`
         path to expand
     """
+    # TODO: raise error or warning if environment variables that don't resolve are used
+    # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
+    # Otherwise this can result in cryptic errors later on
     return Path(expandvars(str(path)))
 
 

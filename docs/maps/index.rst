@@ -412,6 +412,10 @@ diffuse model cube using the `~MapBase.reproject` method:
 Using `gammapy.maps`
 ====================
 
+`Gammapy tutorial notebooks`_ that show examples using ``gammapy.maps``:
+
+* :gp-extra-notebook:`data_fermi_lat`
+
 More detailed documentation on the WCS and HPX classes in
 `gammapy.maps` can be found in the following sub-pages:
 

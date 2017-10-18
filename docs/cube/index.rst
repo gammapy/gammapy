@@ -1,3 +1,10 @@
+.. note::
+
+    A new set of map and cube classes is being developed in `gammapy.maps`
+    and long-term will replace the existing `gammapy.image.SkyImage` and
+    `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+    and changing your scripts to use those new classes. See :ref:`maps`.
+
 .. _cube:
 
 ************************************
@@ -42,8 +49,14 @@ Use the cube methods to do computations::
     image = cube.sky_image_integral(emin=emin, emax=emax)
     image.show('ds9')
 
-TODO: also show how to work with counts and exposure cube using the example at ``test_datasets/unbundled/fermi``
-(or make a better one).
+Using `gammapy.cube`
+=====================
+
+`Gammapy tutorial notebooks`_ that show examples using ``gammapy.cube``:
+
+* :gp-extra-notebook:`data_fermi_lat`
+* :gp-extra-notebook:`cube_analysis_part1`
+* :gp-extra-notebook:`cube_analysis_part2`
 
 Reference/API
 =============
