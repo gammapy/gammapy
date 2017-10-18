@@ -50,8 +50,20 @@ class SparseArray(object):
             self._idx = idx
             self._data = data
         else:
-            self._idx = np.zeros(0, dtype=int)
+            self._idx = np.zeros(0, dtype=np.int64)
             self._data = np.zeros(0, dtype=dtype)
+
+    def __getitem__(self, slices):
+
+        idx = slices_to_idxs(slices, self.shape, self.ndim)
+        idx = np.broadcast_arrays(*idx)
+        return self.get(idx)
+
+    def __setitem__(self, slices, vals):
+
+        idx = slices_to_idxs(slices, self.shape, self.ndim)
+        idx = np.broadcast_arrays(*idx)
+        return self.set(idx, vals)
 
     @property
     def size(self):
@@ -144,7 +156,7 @@ class SparseArray(object):
     def sum(self, axis=None, dtype=None, out=None, keepdims=False, **unused_kwargs):
 
         # FIXME: Figure out how to correctly support np.apply_over_axes
-        
+
         if axis is None:
             return np.sum(self._data)
         else:
@@ -155,15 +167,3 @@ class SparseArray(object):
                 del shape[axis]
             out = SparseArray(shape)
             return out
-
-    def __getitem__(self, slices):
-
-        idx = slices_to_idxs(slices, self.shape, self.ndim)
-        idx = np.broadcast_arrays(*idx)
-        return self.get(idx)
-
-    def __setitem__(self, slices, vals):
-
-        idx = slices_to_idxs(slices, self.shape, self.ndim)
-        idx = np.broadcast_arrays(*idx)
-        return self.set(idx, vals)
