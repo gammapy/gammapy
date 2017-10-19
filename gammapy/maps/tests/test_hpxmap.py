@@ -72,15 +72,19 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     m.write(filename)
 
     m2 = HpxMapND.read(filename)
+    m3 = HpxMapSparse.read(filename)
     if sparse:
         msk = np.isfinite(m2.data[...])
     else:
         msk = np.ones_like(m2.data[...], dtype=bool)
 
     assert_allclose(m.data[...][msk], m2.data[...][msk])
+    assert_allclose(m.data[...][msk], m3.data[...][msk])
     m.write(filename, sparse=True)
     m2 = HpxMapND.read(filename)
+    m3 = HpxMapND.read(filename)
     assert_allclose(m.data[...][msk], m2.data[...][msk])
+    assert_allclose(m.data[...][msk], m3.data[...][msk])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),

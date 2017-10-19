@@ -4,7 +4,7 @@ import numpy as np
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
-from .hpx import ravel_hpx_index
+from .hpx import HpxGeom, ravel_hpx_index
 
 __all__ = [
     'HpxMapSparse',
@@ -34,6 +34,50 @@ class HpxMapSparse(HpxMap):
             data = SparseArray.from_array(data)
 
         HpxMap.__init__(self, hpx, data)
+
+    @classmethod
+    def from_hdu(cls, hdu, hdu_bands=None):
+        """Make a HpxMapND object from a FITS HDU.
+
+        Parameters
+        ----------
+        hdu : `~astropy.fits.BinTableHDU`
+            The FITS HDU
+        hdu_bands  : `~astropy.fits.BinTableHDU`
+            The BANDS table HDU
+        """
+        hpx = HpxGeom.from_header(hdu.header, hdu_bands)
+        shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
+        shape_data = shape + tuple([np.max(hpx.npix)])
+
+        # TODO: Should we support extracting slices?
+
+        map_out = cls(hpx)
+
+        colnames = hdu.columns.names
+        cnames = []
+        if hdu.header['INDXSCHM'] == 'SPARSE':
+            pix = hdu.data.field('PIX')
+            vals = hdu.data.field('VALUE')
+            if 'CHANNEL' in hdu.data.columns.names:
+                chan = hdu.data.field('CHANNEL')
+                chan = np.unravel_index(chan, shape)
+                idx = chan + (pix,)
+            else:
+                idx = (pix,)
+            map_out.set_by_idx(idx[::-1], vals)
+        else:
+            for c in colnames:
+                if c.find(hpx.conv.colstring) == 0:
+                    cnames.append(c)
+            nbin = len(cnames)
+            if len(cnames) == 1:
+                map_out.data[...] = hdu.data.field(cnames[0])
+            else:
+                for i, cname in enumerate(cnames):
+                    idx = np.unravel_index(i, shape)
+                    map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
+        return map_out
 
     def get_by_pix(self, pix, interp=None):
 
