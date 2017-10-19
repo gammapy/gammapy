@@ -13,6 +13,7 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.energy import Energy
+from ..utils.time import time_ref_from_dict
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
@@ -567,14 +568,18 @@ class DataStoreObservation(object):
     @lazyproperty
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""
-        info = self._obs_info
-        return Time(info['TSTART'], format='mjd')
+        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
+        met = Quantity(self._obs_info['TSTART'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
 
     @lazyproperty
     def tstop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        info = self._obs_info
-        return Time(info['TSTOP'], format='mjd')
+        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
+        met = Quantity(self._obs_info['TSTOP'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
 
     @lazyproperty
     def muoneff(self):
