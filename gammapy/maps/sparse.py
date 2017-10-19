@@ -12,6 +12,9 @@ def slices_to_idxs(slices, shape, ndim):
     elif not isinstance(slices, tuple):
         slices = tuple([slices])
 
+    if len(slices) < ndim:
+        slices = tuple(list(slices) + [slice(None)] * (ndim - len(slices)))
+
     #nslice = min(1, sum([not isinstance(s, slice) for s in slices]))
     #nslice += sum([isinstance(s, slice) for s in slices])
     nslice = len(slices)
@@ -184,10 +187,15 @@ class SparseArray(object):
         vals = np.array(vals, ndmin=1)
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
         idx_flat_in = np.asanyarray(idx_flat_in, dtype=np.int64)
+        vals = np.asanyarray(vals, dtype=np.float64)
         idx, data = merge_sparse_arrays(idx_flat_in, vals,
                                         self.idx, self.data,
                                         fill=fill)
 
+        # Remove elements equal to fill value
+        msk = data != self._fill_value
+        idx = idx[msk]
+        data = data[msk]
         self._idx = idx
         self._data = data
         #idx, msk = find_in_array(idx_flat_in, self.idx)

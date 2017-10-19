@@ -32,6 +32,8 @@ def test_sparse_getitem():
     data = np.random.poisson(np.ones(shape)).astype(float)
     v = SparseArray.from_array(data)
     assert_allclose(v[...], data[...])
+    assert_allclose(v[:], data[:])
+    assert_allclose(v[:, :], data[:, :])
     assert_allclose(v[:, :, :], data[:, :, :])
     assert_allclose(v[1, 3, 10], data[1, 3, 10])
     assert_allclose(v[:, 3, 10], data[:, 3, 10])
