@@ -28,6 +28,18 @@ hpx_test_geoms_sparse = [tuple(list(t) + [True]) for t in hpx_test_geoms]
 hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
 
 
+def create_map(nside, nested, coordsys, region, axes, sparse):
+
+    if sparse:
+        m = HpxMapSparse(HpxGeom(nside=nside, nest=nested,
+                                 coordsys=coordsys, region=region, axes=axes))
+    else:
+        m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+                             coordsys=coordsys, region=region, axes=axes))
+
+    return m
+
+
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_init(nside, nested, coordsys, region, axes):
@@ -47,51 +59,45 @@ def test_hpxmap_init(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
-
-    if sparse:
-        m = HpxMapSparse.create(nside=nside, nest=nested, coordsys=coordsys,
-                            region=region, axes=axes)
-    else:
-        m = HpxMapND.create(nside=nside, nest=nested, coordsys=coordsys,
-                            region=region, axes=axes)
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
 
 
-@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_geoms)
-def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes):
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
+                         hpx_test_geoms_sparse)
+def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse):
     filename = str(tmpdir / 'skycube.fits')
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
     m.fill_poisson(0.5)
     m.write(filename)
+
     m2 = HpxMapND.read(filename)
-    assert_allclose(m.data, m2.data)
+    if sparse:
+        msk = np.isfinite(m2.data[...])
+    else:
+        msk = np.ones_like(m2.data[...], dtype=bool)
+
+    assert_allclose(m.data[...][msk], m2.data[...][msk])
     m.write(filename, sparse=True)
     m2 = HpxMapND.read(filename)
-    assert_allclose(m.data, m2.data)
+    assert_allclose(m.data[...][msk], m2.data[...][msk])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
 
-    if sparse:
-        m = HpxMapSparse(HpxGeom(nside=nside, nest=nested,
-                                 coordsys=coordsys, region=region, axes=axes))
-    else:
-        m = HpxMapND(HpxGeom(nside=nside, nest=nested,
-                             coordsys=coordsys, region=region, axes=axes))
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.hpx.get_coords()
     pix = m.hpx.get_pixels()
     m.set_by_pix(pix, coords[0])
     assert_allclose(coords[0], m.get_by_pix(pix))
 
 
-@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_geoms)
-def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
+                         hpx_test_geoms_sparse)
+def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse):
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.hpx.get_coords()
     m.set_by_coords(coords, coords[0])
     assert_allclose(coords[0], m.get_by_coords(coords))
@@ -109,11 +115,11 @@ def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
                     m.get_by_coords(coords, interp='linear'))
 
 
-@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_geoms)
-def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
+                         hpx_test_geoms_sparse)
+def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
+
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.hpx.get_coords()
     m.fill_by_coords(coords, coords[1])
     m.fill_by_coords(coords, coords[1])

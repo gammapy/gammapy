@@ -193,6 +193,8 @@ class HpxMap(MapBase):
         # FIXME: Should this be a method of HpxMapND?
         # FIXME: Should we assign extname in this method?
 
+        from .hpxsparse import HpxMapSparse
+
         conv = kwargs.get('conv', HpxConv.create('GADF'))
 
         data = self.data
@@ -201,7 +203,8 @@ class HpxMap(MapBase):
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
         extname_bands = conv.bands_hdu
 
-        sparse = kwargs.get('sparse', False)
+        sparse = kwargs.get('sparse', True if isinstance(self, HpxMapSparse)
+                            else False)
         header = self.hpx.make_header()
 
         if self.geom.axes:
@@ -217,31 +220,6 @@ class HpxMap(MapBase):
             cols.append(fits.Column('PIX', 'J',
                                     array=np.arange(data.shape[-1])))
 
-        if header['INDXSCHM'] == 'SPARSE':
-
-            data = data.copy()
-            data[~np.isfinite(data)] = 0
-            nonzero = np.where(data > 0)
-            pix = self.geom.local_to_global(nonzero[::-1])[0]
-            if len(shape) == 1:
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data[nonzero].astype(float)))
-
-            else:
-                channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data[nonzero].astype(float)))
-
-        elif len(shape) == 1:
-            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
-                                    'E', array=data.astype(float)))
-        else:
-            for i, idx in enumerate(np.ndindex(shape[:-1])):
-                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
-                                        array=data[idx].astype(float)))
-
+        cols += self.make_cols(header, conv)
         hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
         return hdu

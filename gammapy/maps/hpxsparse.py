@@ -58,14 +58,46 @@ class HpxMapSparse(HpxMap):
         if weights is None:
             weights = np.ones(idx[0].shape)
         idx = self.hpx.global_to_local(idx)
-        idx = ravel_hpx_index(idx, self.hpx.npix)
-        self.data[0, idx] += weights
+        idx_flat = np.ravel_multi_index(idx, self.data.shape[::-1])
+        idx_flat, idx_inv = np.unique(idx_flat, return_inverse=True)
+        idx = np.unravel_index(idx_flat, self.data.shape[::-1])
+        weights = np.bincount(idx_inv, weights=weights)
+        self.data.set(idx[::-1], weights, fill=True)
 
     def set_by_idx(self, idx, vals):
 
         idx = pix_tuple_to_idx(idx)
         idx = self.hpx.global_to_local(idx)
         self.data[idx[::-1]] = vals
+
+    def make_cols(self, header, conv):
+
+        from astropy.io import fits
+        shape = self.data.shape
+        cols = []
+        if header['INDXSCHM'] == 'SPARSE':
+            idx = np.unravel_index(self.data.idx, shape)
+            pix = self.geom.local_to_global(idx[::-1])[0]
+            if len(shape) == 1:
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=self.data.data.astype(float)))
+
+            else:
+                channel = np.ravel_multi_index(idx[:-1], shape[:-1])
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('CHANNEL', 'I', array=channel))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=self.data.data.astype(float)))
+
+        elif len(shape) == 1:
+            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
+                                    'E', array=self.data.data.astype(float)))
+        else:
+            for i, idx in enumerate(np.ndindex(shape[:-1])):
+                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
+                                        array=self.data[idx].astype(float)))
+        return cols
 
     def iter_by_image(self):
         raise NotImplementedError

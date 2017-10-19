@@ -369,6 +369,38 @@ class HpxMapND(HpxMap):
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
 
+    def make_cols(self, header, conv):
+
+        from astropy.io import fits
+
+        shape = self.data.shape
+        cols = []
+        if header['INDXSCHM'] == 'SPARSE':
+            data = self.data.copy()
+            data[~np.isfinite(data)] = 0
+            nonzero = np.where(data > 0)
+            pix = self.geom.local_to_global(nonzero[::-1])[0]
+            if len(shape) == 1:
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
+
+            else:
+                channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('CHANNEL', 'I', array=channel))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
+
+        elif len(shape) == 1:
+            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
+                                    'E', array=self.data.astype(float)))
+        else:
+            for i, idx in enumerate(np.ndindex(shape[:-1])):
+                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
+                                        array=self.data[idx].astype(float)))
+        return cols
+
     def to_swapped_scheme(self):
 
         import healpy as hp
