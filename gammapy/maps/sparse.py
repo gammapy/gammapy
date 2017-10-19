@@ -197,7 +197,6 @@ class SparseArray(object):
         """Get array values at indices ``idx_in``."""
 
         shape_out = idx_in[0].shape
-        size_out = idx_in[0].size
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
         idx_flat_in = np.asanyarray(idx_flat_in, dtype=np.int64)
 
