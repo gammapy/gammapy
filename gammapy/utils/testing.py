@@ -4,7 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import pytest
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
+from astropy.time import Time
 from numpy.testing import assert_array_less, assert_allclose
 
 from ..data import DataManager
@@ -15,6 +16,7 @@ __all__ = [
     'requires_data',
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
+    'assert_time_allclose',
 ]
 
 # Cache for `requires_dependency`
@@ -134,12 +136,21 @@ def assert_wcs_allclose(wcs1, wcs2):
     assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
 
 
-def assert_skycoord_allclose(skycoord1, skycoord2, atol='1 arcsec'):
+def assert_skycoord_allclose(actual, desired):
     """Assert all-close for `~astropy.coordinates.SkyCoord`.
 
-    - Checks if separation on the sky is within ``atol``.
     - Frames can be different, aren't checked at the moment.
     """
-    atol = Angle(atol)
-    sep = skycoord1.separation(skycoord2).deg
-    assert_array_less(sep.deg, atol.deg)
+    assert isinstance(actual, SkyCoord)
+    assert isinstance(desired, SkyCoord)
+    assert_allclose(actual.data.lon.value, desired.data.lon.value)
+    assert_allclose(actual.data.lat.value, desired.data.lat.value)
+
+
+def assert_time_allclose(actual, desired):
+    """Assert that two `astropy.time.Time` objects are almost the same."""
+    assert isinstance(actual, Time)
+    assert isinstance(desired, Time)
+    assert_allclose(actual.value, desired.value)
+    assert actual.scale == desired.scale
+    assert actual.format == desired.format

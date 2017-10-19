@@ -7,8 +7,10 @@ import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
+from astropy.time import Time
 from ...data import DataStore, DataManager, ObservationList
 from ...utils.testing import data_manager, requires_data, requires_dependency
+from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
 from ...utils.energy import Energy
 from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
@@ -75,6 +77,7 @@ def test_datastore_load_all(data_manager):
     assert_allclose(event_lists[0].table['ENERGY'][0], 1.1156039)
     assert_allclose(event_lists[-1].table['ENERGY'][0], 1.0204216)
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
 def test_datastore_obslist(data_manager):
@@ -88,6 +91,7 @@ def test_datastore_obslist(data_manager):
 
     obslist = data_store.obs_list([11111, 23523], skip_missing=True)
     assert obslist[0].obs_id == 23523
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
@@ -132,20 +136,25 @@ def test_data_summary(data_manager):
     assert t[0]['psf_3gauss'] == 6042
 
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
-def test_data_store_observation(data_manager):
+def test_data_store_observation():
     """Test DataStoreObservation class"""
-    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     obs = data_store.obs(23523)
-    assert_allclose(obs.tstart.value, 51545.11740650318)
-    assert_allclose(obs.tstop.value, 51545.11740672924)
-    assert_allclose(obs.pointing_radec.ra.value, 83.63333129882812)
-    assert_allclose(obs.pointing_radec.dec.value, 21.51444435119629)
-    assert_allclose(obs.pointing_altaz.alt.value, 40.60616683959961)
-    assert_allclose(obs.pointing_altaz.az.value, 26.533863067626953)
-    assert_allclose(obs.target_radec.ra.value, 83.63333129882812)
-    assert_allclose(obs.target_radec.dec.value, 22.01444435119629)
+
+    assert_time_allclose(obs.tstart, Time(51545.11740650318, scale='tt', format='mjd'))
+    assert_time_allclose(obs.tstop, Time(51545.11740672924, scale='tt', format='mjd'))
+
+    c = SkyCoord(83.63333129882812, 21.51444435119629, unit='deg')
+    assert_skycoord_allclose(obs.pointing_radec, c)
+
+    c = SkyCoord(26.533863067626953, 40.60616683959961, unit='deg')
+    assert_skycoord_allclose(obs.pointing_altaz, c)
+
+    c = SkyCoord(83.63333129882812, 22.01444435119629, unit='deg')
+    assert_skycoord_allclose(obs.target_radec, c)
 
 
 @requires_dependency('scipy')
@@ -195,7 +204,7 @@ def test_make_psf(pars, result):
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_make_mean_edisp(tmpdir):
+def test_make_mean_edisp():
     position = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)
