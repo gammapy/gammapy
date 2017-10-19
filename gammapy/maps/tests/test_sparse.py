@@ -76,12 +76,18 @@ def test_sparse_setitem(shape):
     assert_allclose(v[...], data)
 
 
-def test_merge_sparse_arrays():
+@pytest.mark.parametrize(('dtype_idx','dtype_val'),
+                         [(np.int64, np.float64),
+                          (np.int32, np.float64),
+                          (np.int32, np.float32),
+                          (np.int32, np.float64),
+                         ])
+def test_merge_sparse_arrays(dtype_idx, dtype_val):
 
-    idx0 = np.array([0, 0, 1, 4], dtype=np.int64)
-    val0 = np.array([1.0, 2.0, 3.0, 7.0], dtype=np.float64)
-    idx1 = np.array([0, 1, 2], dtype=np.int64)
-    val1 = np.array([1.0, 1.0, 1.0], dtype=np.float64)
+    idx0 = np.array([0, 0, 1, 4], dtype=dtype_idx)
+    val0 = np.array([1.0, 2.0, 3.0, 7.0], dtype=dtype_val)
+    idx1 = np.array([0, 1, 2], dtype=dtype_idx)
+    val1 = np.array([1.0, 1.0, 1.0], dtype=dtype_val)
     idx, val = merge_sparse_arrays(idx0, val0, idx1, val1)
     assert_allclose(idx, np.unique(np.concatenate((idx0, idx1))))
     assert_allclose(val, np.array([2.0, 3.0, 1.0, 7.0]))

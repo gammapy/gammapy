@@ -186,8 +186,7 @@ class SparseArray(object):
 
         vals = np.array(vals, ndmin=1)
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
-        idx_flat_in = np.asanyarray(idx_flat_in, dtype=np.int64)
-        vals = np.asanyarray(vals, dtype=np.float64)
+        vals = np.asanyarray(vals, dtype=self.data.dtype)
         idx, data = merge_sparse_arrays(idx_flat_in, vals,
                                         self.idx, self.data,
                                         fill=fill)
@@ -206,10 +205,6 @@ class SparseArray(object):
 
         shape_out = idx_in[0].shape
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
-        idx_flat_in = np.asanyarray(idx_flat_in, dtype=np.int64)
-
-        # Get broadcasted shape?
-
         idx, msk = find_in_array(idx_flat_in, self.idx)
         val_out = np.full(shape_out, self._fill_value)
         val_out.flat[np.flatnonzero(msk_in)[msk]] = self._data[idx[msk]]

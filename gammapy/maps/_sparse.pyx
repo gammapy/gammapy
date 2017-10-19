@@ -4,16 +4,22 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
+ctypedef fused int_t:
+    np.int32_t
+    np.int64_t
+
+ctypedef fused float_t:
+    np.float32_t
+    np.float64_t
+
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def binary_search(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
-                  np.int64_t ilo, np.int64_t ihi):
+def binary_search(np.ndarray[int_t, ndim=1] arr_in, int_t idx,
+                  int_t ilo, int_t ihi):
     """Perform a binary search for an element ``idx`` in a sorted integer
     array ``arr_in``.  The search is restricted to the range between
-    ``ilo`` and ``ihi``.  This will return the index of the matching
-    element or the index at which ``idx`` would be inserted to
-    maintain sorted order.
+    ``ilo`` and ``ihi``.
 
     Parameters
     ----------
@@ -21,12 +27,18 @@ def binary_search(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
         Sorted array of integers.
 
     idx : int
-        Value to be searched for.
+        Value to be searched for in ``arr_in``.
+
+    Returns
+    -------
+    idx_out: int
+        Index of matching element or the index at which ``idx`` would
+        be inserted to maintain sorted order.
 
     """
-    
-    cdef int mid = 0
-    cdef int midval = 0
+
+    cdef int_t mid = 0
+    cdef int_t midval = 0
 
     while(ilo < ihi):
         mid = (ilo + ihi) // 2
@@ -44,30 +56,8 @@ def binary_search(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def binary_search2(np.ndarray[np.int64_t, ndim=1] arr_in, np.int64_t idx,
-                   np.int64_t ilo, np.int64_t ihi):
-
-    cdef int mid = 0
-    cdef int midval = 0
-
-    while(ilo < ihi):
-        mid = (ilo + ihi) // 2
-        midval = arr_in[mid]
-
-        if midval < idx:
-            ilo = mid + 1
-        elif midval > idx:
-            ihi = mid
-        else:
-            return mid, 1
-
-    return ilo, 0
-
-
-@cython.cdivision(True)
-@cython.boundscheck(False)
-def find_in_array(np.ndarray[np.int64_t, ndim=1] idx0,
-                  np.ndarray[np.int64_t, ndim=1] idx1):
+def find_in_array(np.ndarray[int_t, ndim=1] idx0,
+                  np.ndarray[int_t, ndim=1] idx1):
     """Find the values in ``idx0`` contained in ``idx1``.
 
     Parameters
@@ -93,12 +83,12 @@ def find_in_array(np.ndarray[np.int64_t, ndim=1] idx0,
     cdef int ni = idx0.shape[0]
     cdef int nj = idx1.shape[0]
 
-    cdef np.ndarray[np.int64_t, ndim= 1] idx_sort = np.argsort(idx0)
+    cdef np.ndarray[int_t, ndim = 1] idx_sort = np.argsort(idx0)
     cdef int i = 0
     cdef int ii = 0
-    cdef np.int64_t j = binary_search(idx1, idx0[idx_sort[0]], 0, nj)
-    cdef np.ndarray[np.int64_t, ndim = 1] out = np.zeros([ni], dtype=np.int64)
-    cdef np.ndarray[np.uint8_t, ndim = 1] msk = np.zeros([ni], dtype=np.uint8)
+    cdef int_t j = binary_search(idx1, idx0[idx_sort[0]], 0, nj)
+    cdef np.ndarray[int_t, ndim= 1] out = np.zeros([ni], dtype=idx0.dtype)
+    cdef np.ndarray[np.uint8_t, ndim= 1] msk = np.zeros([ni], dtype=np.uint8)
 
     while(i < ni and j < nj):
 
@@ -120,11 +110,11 @@ def find_in_array(np.ndarray[np.int64_t, ndim=1] idx0,
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def merge_sparse_arrays(np.ndarray[np.int64_t, ndim=1] idx0,
-                        np.ndarray[np.float64_t, ndim=1] val0,
-                        np.ndarray[np.int64_t, ndim=1] idx1,
-                        np.ndarray[np.float64_t, ndim=1] val1,
-                        np.int64_t fill=False
+def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
+                        np.ndarray[float_t, ndim=1] val0,
+                        np.ndarray[int_t, ndim=1] idx1,
+                        np.ndarray[float_t, ndim=1] val1,
+                        bint fill=False
                         ):
     """Merge two sparse arrays represented as index/value pairs into a
     single sparse array.  Values in the first array (``idx0``,
@@ -133,16 +123,16 @@ def merge_sparse_arrays(np.ndarray[np.int64_t, ndim=1] idx0,
 
     Parameters
     ----------
-    idx0 : `numpy.ndarray`
+    idx0 : `~numpy.ndarray`
         Array of indices of first sparse array.
 
-    val0 : `numpy.ndarray`
+    val0 : `~numpy.ndarray`
         Array of values of first sparse array.
 
-    idx1 : `numpy.ndarray`
+    idx1 : `~numpy.ndarray`
         Array of indices for second sparse array. 
 
-    val1 : `numpy.ndarray`
+    val1 : `~numpy.ndarray`
         Array of values for second sparse array. 
 
     fill : bool
@@ -153,10 +143,10 @@ def merge_sparse_arrays(np.ndarray[np.int64_t, ndim=1] idx0,
 
     Returns
     -------
-    idx : `numpy.ndarray`
+    idx : `~numpy.ndarray`
         Array of indices for merged sparse array.
 
-    vals : `numpy.ndarray`
+    vals : `~numpy.ndarray`
         Array of values for merged sparse array.
 
     """
@@ -171,9 +161,10 @@ def merge_sparse_arrays(np.ndarray[np.int64_t, ndim=1] idx0,
     idx0 = idx0[isort]
     val0 = val0[isort]
 
-    cdef np.ndarray[np.int64_t, ndim= 1] idx = np.sort(np.unique(np.concatenate((idx0, idx1))))
+    cdef np.ndarray[int_t, ndim = 1] idx = np.sort(np.unique(np.concatenate((idx0, idx1))))
     cdef int n = idx.size
-    cdef np.ndarray[np.float64_t, ndim = 1] vals = np.zeros(n, dtype=np.float64)
+    cdef np.ndarray[float_t, ndim= 1] vals = np.zeros(n, dtype=val0.dtype)
+
     while(k < n):
 
         while(j < nj):
