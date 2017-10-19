@@ -148,7 +148,7 @@ class SpectrumExtraction(object):
         """
         log.info('Update observation meta info')
         # Copy over existing meta information
-        meta = OrderedDict(obs._obs_info)
+        meta = OrderedDict(obs.obs_info)
         offset = obs.pointing_radec.separation(bkg.on_region.center)
         log.info('Offset : {}\n'.format(offset))
         meta['OFFSET'] = offset.deg

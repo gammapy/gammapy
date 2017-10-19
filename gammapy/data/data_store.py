@@ -9,10 +9,10 @@ from ..extern.six.moves import UserList
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
-from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.energy import Energy
+from ..utils.time import time_ref_from_dict
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
@@ -468,6 +468,13 @@ class DataStoreObservation(object):
     """IACT data store observation.
 
     See :ref:`data_store`
+
+    Parameters
+    ----------
+    obs_id : int
+        Observation ID
+    data_store : `~gammapy.data.DataStore`
+        Data store
     """
 
     def __init__(self, obs_id, data_store):
@@ -479,6 +486,18 @@ class DataStoreObservation(object):
 
         self.obs_id = obs_id
         self.data_store = data_store
+
+    def __str__(self):
+        """Generate summary info string."""
+        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
+        ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd)
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
+        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+
+        # TODO: Which target was observed?
+        # TODO: print info about available HDUs for this observation ...
+        return ss
 
     def location(self, hdu_type=None, hdu_class=None):
         """HDU location object.
@@ -549,66 +568,27 @@ class DataStoreObservation(object):
         """Load background object (lazy property)."""
         return self.load(hdu_type='bkg')
 
-    # TODO: maybe the obs table row info should be put in a separate object?
     @lazyproperty
-    def _obs_info(self):
-        """Observation information."""
+    def obs_info(self):
+        """Observation information (`~collections.OrderedDict`)."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
-        data = OrderedDict(zip(row.colnames, row.as_void()))
-        return data
-
-    @lazyproperty
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self._obs_info
-        lon, lat = info['RA_PNT'], info['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        return OrderedDict(zip(row.colnames, row.as_void()))
 
     @lazyproperty
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""
-        info = self._obs_info
-        return Time(info['TSTART'], format='mjd')
+        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
+        met = Quantity(self.obs_info['TSTART'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
 
     @lazyproperty
     def tstop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        info = self._obs_info
-        return Time(info['TSTOP'], format='mjd')
-
-    @lazyproperty
-    def muoneff(self):
-        """Observation muon efficiency."""
-        info = self._obs_info
-        return info['MUONEFF']
-
-    @lazyproperty
-    def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self._obs_info
-        alt, az = info['ALT_PNT'], info['AZ_PNT']
-        return SkyCoord(az, alt, unit='deg', frame='altaz')
-
-    @lazyproperty
-    def pointing_zen(self):
-        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        info = self._obs_info
-        zen = info['ZEN_PNT']
-        return Quantity(zen, unit='deg')
-        return Quantity(info['TSTART'], 'second')
-
-    @lazyproperty
-    def target_radec(self):
-        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self._obs_info
-        lon, lat = info['RA_OBJ'], info['DEC_OBJ']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
-
-    @lazyproperty
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        info = self._obs_info
-        return _earth_location_from_dict(info)
+        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
+        met = Quantity(self.obs_info['TSTOP'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
 
     @lazyproperty
     def observation_time_duration(self):
@@ -616,8 +596,7 @@ class DataStoreObservation(object):
 
         The wall time, including dead-time.
         """
-        info = self._obs_info
-        return Quantity(info['ONTIME'], 'second')
+        return Quantity(self.obs_info['ONTIME'], 'second')
 
     @lazyproperty
     def observation_live_time_duration(self):
@@ -628,8 +607,7 @@ class DataStoreObservation(object):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        info = self._obs_info
-        return Quantity(info['LIVETIME'], 'second')
+        return Quantity(self.obs_info['LIVETIME'], 'second')
 
     @lazyproperty
     def observation_dead_time_fraction(self):
@@ -645,30 +623,43 @@ class DataStoreObservation(object):
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        info = self._obs_info
-        return 1 - info['DEADC']
+        return 1 - self.obs_info['DEADC']
 
-    def __str__(self):
-        """Generate summary info string."""
-        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd)
-        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
-        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
-        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+    @lazyproperty
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        lon, lat = self.obs_info['RA_PNT'], self.obs_info['DEC_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
-        # TODO: Which target was observed?
-        # TODO: print info about available HDUs for this observation ...
-        return ss
+    @lazyproperty
+    def pointing_altaz(self):
+        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        alt, az = self.obs_info['ALT_PNT'], self.obs_info['AZ_PNT']
+        return SkyCoord(az, alt, unit='deg', frame='altaz')
+
+    @lazyproperty
+    def pointing_zen(self):
+        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
+        return Quantity(self.obs_info['ZEN_PNT'], unit='deg')
+
+    @lazyproperty
+    def target_radec(self):
+        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        lon, lat = self.obs_info['RA_OBJ'], self.obs_info['DEC_OBJ']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @lazyproperty
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return _earth_location_from_dict(self.obs_info)
+
+    @lazyproperty
+    def muoneff(self):
+        """Observation muon efficiency."""
+        return self.obs_info['MUONEFF']
 
     def peek(self):
         """Quick-look plots in a few panels."""
-        raise NotImplementedError
-
-    def make_exposure_image(self, fov, energy_range):
-        """Make exposure image.
-
-        TODO: Do we want such methods here or as standalone functions that work with obs objects?
-        """
         raise NotImplementedError
 
     def make_psf(self, position, energy=None, rad=None):
