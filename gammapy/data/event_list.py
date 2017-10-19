@@ -532,11 +532,11 @@ class EventList(object):
         from ..spectrum import CountsSpectrum
 
         if ebounds is None:
-            emin = np.min(self['ENERGY'].quantity)
-            emax = np.max(self['ENERGY'].quantity)
+            emin = np.min(self.energy.value) * self.energy.unit
+            emax = np.max(self.energy.value) * self.energy.unit
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
-        spec = CountsSpectrum(energy=ebounds)
+        spec = CountsSpectrum(energy_lo = ebounds[:-1], energy_hi = ebounds[1:])
         spec.fill(self)
         spec.plot(ax=ax, **kwargs)
         return ax
