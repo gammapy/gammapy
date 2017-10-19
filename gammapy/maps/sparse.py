@@ -40,6 +40,54 @@ class SparseArray(object):
     structure for sparse n-dimensional arrays such that only non-zero
     data values are allocated in memory.  Supports numpy conventions
     for indexing and slicing logic.
+
+    Parameters
+    ----------
+    shape : tuple of ints
+        Shape of array.
+
+    idx : `~numpy.ndarray`, optional
+        Flattened index vector that initializes the array.  If none
+        then an empty array will be created.
+
+    data : `~numpy.ndarray`, optional
+        Flattened data vector that initializes the array.  If none
+        then an empty array will be created.
+
+    dtype : data-type, optional
+        Type of data vector.
+
+    fill_value : scalar, optional
+        Value assigned to array elements that are not allocated in
+        memory.
+
+    Examples
+    --------
+
+    A SparseArray is created in the same way as `~numpy.ndarray` by
+    passing the array shape to the constructor with an optional
+    argument for the array type:
+
+    >>> import numpy as np
+    >>> from gammapy.maps.sparse import SparseArray
+    >>> v = SparseArray((10,20), dtype=float)
+
+    Alternatively you can create a new SparseArray from an
+    `~numpy.ndarray` with `~SparseArray.from_array`:
+
+    >>> x = np.ndarray((10,20))
+    >>> v = SparseArray.from_array(x)
+
+    SparseArray follows numpy indexing and slicing conventions for
+    setting/getting array elements.  The primary difference with
+    respect to the behavior of `~numpy.ndarray` is that indexing
+    always returns a copy rather than a view.
+
+    >>> v[0,0] = 1.0
+    >>> print(v[0,0])
+    >>> v[:,0] = 1.0
+    >>> print(v[:,0])
+
     """
 
     def __init__(self, shape, idx=None, data=None, dtype=float, fill_value=0.0):
@@ -91,8 +139,8 @@ class SparseArray(object):
         return len(self._shape)
 
     @classmethod
-    def from_array(cls, data, min_value=0):
-        """Create from a numpy array.
+    def from_array(cls, data, min_value=0.0):
+        """Create a `~SparseArray` from a numpy array.
 
         Parameters
         ----------
@@ -101,6 +149,11 @@ class SparseArray(object):
 
         min_value : float
             Threshold for sparsifying the data vector.
+
+        Returns
+        -------
+        out : `~SparseArray`
+            Output sparse array.
         """
         shape = data.shape
         idx = np.where(data > min_value)
@@ -151,7 +204,7 @@ class SparseArray(object):
         # Get broadcasted shape?
 
         idx, msk = find_in_array(idx_flat_in, self.idx)
-        val_out = np.zeros(shape_out)
+        val_out = np.full(shape_out, self._fill_value)
         val_out.flat[np.flatnonzero(msk_in)[msk]] = self._data[idx[msk]]
         return np.squeeze(val_out)
 
