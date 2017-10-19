@@ -78,10 +78,10 @@ def test_sparse_setitem(shape):
 
 def test_merge_sparse_arrays():
 
-    idx0 = np.array([0, 0, 1, 4])
-    val0 = np.array([1.0, 2.0, 3.0, 7.0])
-    idx1 = np.array([0, 1, 2])
-    val1 = np.array([1.0, 1.0, 1.0])
+    idx0 = np.array([0, 0, 1, 4], dtype=np.int64)
+    val0 = np.array([1.0, 2.0, 3.0, 7.0], dtype=np.float64)
+    idx1 = np.array([0, 1, 2], dtype=np.int64)
+    val1 = np.array([1.0, 1.0, 1.0], dtype=np.float64)
     idx, val = merge_sparse_arrays(idx0, val0, idx1, val1)
     assert_allclose(idx, np.unique(np.concatenate((idx0, idx1))))
     assert_allclose(val, np.array([2.0, 3.0, 1.0, 7.0]))
