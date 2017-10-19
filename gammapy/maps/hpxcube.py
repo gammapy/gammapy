@@ -86,7 +86,6 @@ class HpxMapND(HpxMap):
                 if c.find(hpx.conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
-            data = np.ndarray(shape_data)
             if len(cnames) == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
