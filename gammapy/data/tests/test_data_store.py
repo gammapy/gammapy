@@ -132,6 +132,22 @@ def test_data_summary(data_manager):
     assert t[0]['psf_3gauss'] == 6042
 
 
+@requires_data('gammapy-extra')
+@requires_dependency('yaml')
+def test_data_store_observation(data_manager):
+    """Test DataStoreObservation class"""
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    obs = data_store.obs(23523)
+    assert_allclose(obs.tstart.value, 51545.11740650318)
+    assert_allclose(obs.tstop.value, 51545.11740672924)
+    assert_allclose(obs.pointing_radec.ra.value, 83.63333129882812)
+    assert_allclose(obs.pointing_radec.dec.value, 21.51444435119629)
+    assert_allclose(obs.pointing_altaz.alt.value, 40.60616683959961)
+    assert_allclose(obs.pointing_altaz.az.value, 26.533863067626953)
+    assert_allclose(obs.target_radec.ra.value, 83.63333129882812)
+    assert_allclose(obs.target_radec.dec.value, 22.01444435119629)
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars,result", [
