@@ -53,6 +53,7 @@ distribute-*.tar.gz
 htmlcov
 MANIFEST
 
+# notebooks
 *.ipynb
 *.ipynb_checkpoints
 

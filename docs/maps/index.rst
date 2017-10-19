@@ -13,7 +13,7 @@ Data Structures for Images and Cubes (`gammapy.maps`)
     The code in `gammapy.maps` is currently in an
     experimental/development state. Method and class names may change
     in the future.
-                   
+
 Introduction
 ============
 
@@ -66,7 +66,7 @@ facilitate creating an empty map object from scratch.  The
 (WCS or HPX) and whether the map internally uses a sparse
 representation of the data.
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase
    from astropy.coordinates import SkyCoord
@@ -77,18 +77,18 @@ representation of the data.
 
    # Create a HPX Map
    m_hpx = MapBase.create(binsz=0.1, map_type='hpx', skydir=position, width=10.0)
-   
+
 Higher dimensional map objects (cubes and hypercubes) can be
 constructed by passing a list of `~MapAxis` objects for non-spatial
 dimensions with the ``axes`` parameter:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, MapAxis
    from astropy.coordinates import SkyCoord
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
-   
+
    # Create a WCS Map
    m_wcs = MapBase.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0,
                           axes=[energy_axis])
@@ -104,7 +104,7 @@ non-spatial dimensions of the map.  The following example demonstrates
 creating an energy cube with a pixel size proportional to the
 Fermi-LAT PSF:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, MapAxis
    from astropy.coordinates import SkyCoord
@@ -149,7 +149,7 @@ two elements in the coordinate tuple correspond to longitude and
 latitude followed by one element for each non-spatial dimension.  Map
 coordinates can be expressed in one of three coordinate systems:
 
-* ``idx`` : Pixel indices.  These are explicit (integer) pixel indices into the map.  
+* ``idx`` : Pixel indices.  These are explicit (integer) pixel indices into the map.
 * ``pix`` : Coordinates in pixel space.  Pixel coordinates are continuous defined
   on the interval [0,N-1] where N is the number of pixels along a
   given map dimension with pixel centers at integer values.  For
@@ -159,18 +159,18 @@ coordinates can be expressed in one of three coordinate systems:
 * ``coord`` : Sky (spherical) coordinates.  The tuple should contain longitude and
   latitude in degrees followed by one coordinate array for each
   non-spatial dimension.
-  
+
 The coordinate system accepted by a given accessor method can be
 inferred from the suffix of the method name
 (e.g. `~MapBase.get_by_idx`).  The following demonstrates how one can
 access the same pixels of a WCS map using each of the three coordinate
 systems:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   
+
    vals = m.get_by_idx( ([49,50],[49,50]) )
    vals = m.get_by_pix( ([49.0,50.0],[49.0,50.0]) )
    vals = m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]) )
@@ -183,17 +183,17 @@ operation along a slice of the map at a fixed value along that
 dimension.  Multi-dimensional arguments can be use to broadcast a
 given operation across a grid of coordinate values.
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    coords = np.linspace(-5.0,5.0,11)
-   
+
    # Equivalent calls for accessing value at pixel (49,49)
    vals = m.get_by_idx( (49,49) )
    vals = m.get_by_idx( ([49],[49]) )
    vals = m.get_by_idx( (np.array([49]),np.array([49])) )
-   
+
    # Retrieve map values along latitude at fixed longitude=0.0
    vals = m.get_by_coords( (0.0, coords) )
    # Retrieve map values on a 2D grid of latitude/longitude points
@@ -204,14 +204,14 @@ given operation across a grid of coordinate values.
 The ``set`` and ``fill`` methods can both be used to set pixel values.
 The following demonstrates how one can set pixel values:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   
+
    m.set_by_coords( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
    m.fill_by_coords( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
-   
+
 Interpolation
 -------------
 
@@ -231,7 +231,7 @@ the same geometry in every image plane).  ``linear`` and higher order
 interpolation by pixel coordinates is only supported for WCS-based
 maps.
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
@@ -250,7 +250,7 @@ HPX map types.  If the projection geometry lacks non-spatial
 dimensions then the non-spatial dimensions of the original map will be copied
 over to the projected map.
 
-.. code::
+.. code:: python
 
    from gammapy.maps import WcsMapND, HpxGeom
    m = WcsMapND.read('gll_iem_v06.fits')
@@ -259,7 +259,7 @@ over to the projected map.
    m_proj = m.project(geom)
    m_proj.write('gll_iem_v06_hpx_nside8.fits')
 
-   
+
 Slicing Methods
 ---------------
 
@@ -270,11 +270,11 @@ Iterating over a map can be performed with the
 `~MapBase.iter_by_coords` and `~MapBase.iter_by_pix` methods.  These
 return an iterator that traverses the map returning (value,
 coordinate) pairs with map and pixel coordinates, respectively.  The
-optional ``buffersize`` argument can be used to split the iteration 
+optional ``buffersize`` argument can be used to split the iteration
 into chunks of a given size.  The following example illustrates how
 one can use this method to fill a map with a 2D Gaussian:
 
-.. code::
+.. code:: python
 
    from astropy.coordinates import SkyCoord
    from gammapy.maps import MapBase
@@ -288,7 +288,7 @@ one can use this method to fill a map with a 2D Gaussian:
 For maps with non-spatial dimensions the `~MapBase.iter_by_image`
 method can be used to loop over image slices:
 
-.. code::
+.. code:: python
 
    from astropy.coordinates import SkyCoord
    from astropy.convolution import Gaussian2DKernel, convolve
@@ -304,7 +304,7 @@ FITS I/O
 Maps can be written to and read from a FITS file with the
 `~MapBase.write` and ``read`` methods:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
@@ -316,7 +316,7 @@ Maps can be serialized to a sparse data format by calling
 pixels in the map to a data table appropriate to the pixelization
 scheme.
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
@@ -326,7 +326,7 @@ scheme.
 Sparse maps have the same ``read`` and ``write`` methods with the
 exception that they will be written to a sparse format by default:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, HpxMapSparse
    m = MapBase.create(binsz=0.1, map_type='hpx-sparse', width=10.0)
@@ -343,7 +343,7 @@ backward compatibility with software using other formats, the ``conv``
 keyword option is provided to write a file using a format other than
 the GADF format:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import MapBase, MapAxis
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
@@ -351,7 +351,7 @@ the GADF format:
                       axes=[energy_axis])
    # Write a counts cube in a format compatible with the Fermi Science Tools
    m.write('ccube.fits', conv='fgst-ccube')
-   
+
 Visualization
 -------------
 
@@ -359,7 +359,7 @@ All map objects provide a `~MapBase.plot` method for generating a
 visualization of a map.  This method returns figure, axes, and image
 objects that can be used to further tweak/customize the image.
 
-.. code::
+.. code:: python
 
    import matplotlib.pyplot as plt
    from gammapy.maps import MapBase
@@ -377,7 +377,7 @@ Creating a Counts Cube from an FT1 File
 
 This example shows how to fill a counts cube from an FT1 file:
 
-.. code::
+.. code:: python
 
    from astropy.io import fits
    from gammapy.maps import WcsGeom, WcsMapND, MapAxis
@@ -390,14 +390,14 @@ This example shows how to fill a counts cube from an FT1 file:
                      h['EVENTS'].data.field('DEC'),
                      h['EVENTS'].data.field('ENERGY')))
    m.write('ccube.fits', conv='fgst-ccube')
-   
+
 Generating a Cutout of a Model Cube
 -----------------------------------
 
 This example shows how to extract a cut-out of LAT galactic
 diffuse model cube using the `~MapBase.reproject` method:
 
-.. code::
+.. code:: python
 
    from gammapy.maps import WcsGeom, WcsMapND
    m = WcsMapND.read('gll_iem_v06.fits')
@@ -405,7 +405,7 @@ diffuse model cube using the `~MapBase.reproject` method:
    m_proj = m.reproject(geom)
    m_proj.write('cutout.fits', conv='fgst-template')
 
-   
+
 Using `gammapy.maps`
 ====================
 

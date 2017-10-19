@@ -18,7 +18,7 @@ Getting started
 
 Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
 
-.. code::
+.. code:: python
 
     from gammapy.image import SkyImage
 
@@ -29,7 +29,7 @@ Alternatively an empty image can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
 the parameters):
 
-.. code::
+.. code:: python
 
     image_empty = SkyImage.empty('empty')
 
@@ -37,13 +37,13 @@ Where the optional string ``'empty'`` specifies the name of the image.
 
 Some basic info on the image is shown when calling:
 
-.. code::
+.. code:: python
 
     image.info()
 
 To lookup the value of the data at a certain sky position one can do:
 
-.. code::
+.. code:: python
 
     from astropy.coordinates import SkyCoord
     position = SkyCoord(0, 0, frame='galactic', unit='deg')

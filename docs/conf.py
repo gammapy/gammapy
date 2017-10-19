@@ -79,6 +79,22 @@ intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')
+exclude_patterns.append('**.ipynb_checkpoints')
+
+#
+# -- nbsphinx settings
+#exclude_patterns.append('notebooks')
+extensions.append('nbsphinx')
+extensions.append('IPython.sphinxext.ipython_console_highlighting')
+extensions.append('sphinx.ext.mathjax')
+nbsphinx_execute = 'never'
+
+# patch to solve error in :code directive
+#from docutils.parsers.rst import directives
+#from docutils.parsers.rst.directives.body import CodeBlock
+#directives.register_directive('code', CodeBlock)
+#
+# --
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
@@ -208,6 +224,9 @@ if eval(setup_cfg.get('edit_on_github')):
 
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
+
+
+
 
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 

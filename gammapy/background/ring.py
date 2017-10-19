@@ -46,7 +46,7 @@ class AdaptiveRingBackgroundEstimator(object):
     --------
     Here's an example how to use the `AdaptiveRingBackgroundEstimator`:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.background import AdaptiveRingBackgroundEstimator
@@ -252,7 +252,7 @@ class RingBackgroundEstimator(object):
     --------
     Here's an example how to use the `RingBackgroundEstimator`:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.background import RingBackgroundEstimator

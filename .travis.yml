@@ -27,7 +27,7 @@ env:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
 
-        - CONDA_DEPENDENCIES='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject'
+        - CONDA_DEPENDENCIES='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa libgfortran regions reproject nbsphinx'
         - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils sherpa regions reproject'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils regions reproject'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils pygments aplpy sherpa libgfortran regions reproject'

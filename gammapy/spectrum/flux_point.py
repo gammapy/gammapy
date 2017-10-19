@@ -70,7 +70,7 @@ class FluxPoints(object):
     The `FluxPoints` object is most easily created by reading a file with
     flux points given in one of the formats documented above:
 
-    .. code::
+    .. code:: python
 
         from gammapy.spectrum import FluxPoints
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
@@ -81,7 +81,7 @@ class FluxPoints(object):
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
     and `'dnde'`:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from astropy.table import Table
@@ -101,7 +101,7 @@ class FluxPoints(object):
     If you have flux points in a different data format, the format can be changed
     by renamimg the table columns and adding meta data:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from astropy.table import Table

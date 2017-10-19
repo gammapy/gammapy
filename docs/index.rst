@@ -46,6 +46,15 @@ General documentation
   development/index
   changelog
 
+.. _gammapy_notebooks:
+
+IPython notebooks
+---------------------
+.. toctree::
+  :maxdepth: 1
+
+  notebooks
+
 .. _gammapy_toolbox:
 
 The Gammapy toolbox
@@ -53,7 +62,7 @@ The Gammapy toolbox
 
 .. toctree::
   :maxdepth: 1
- 
+
   scripts/index
   astro/index
   background/index
