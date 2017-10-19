@@ -57,8 +57,8 @@ class HpxMapSparse(HpxMap):
         colnames = hdu.columns.names
         cnames = []
         if hdu.header['INDXSCHM'] == 'SPARSE':
-            pix = hdu.data.field('PIX')
-            vals = hdu.data.field('VALUE')
+            pix = hdu.data.field('PIX').byteswap().newbyteorder()
+            vals = hdu.data.field('VALUE').byteswap().newbyteorder()
             if 'CHANNEL' in hdu.data.columns.names:
                 chan = hdu.data.field('CHANNEL')
                 chan = np.unravel_index(chan, shape)
