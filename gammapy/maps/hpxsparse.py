@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from .utils import swap_byte_order
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
@@ -57,10 +58,10 @@ class HpxMapSparse(HpxMap):
         colnames = hdu.columns.names
         cnames = []
         if hdu.header['INDXSCHM'] == 'SPARSE':
-            pix = hdu.data.field('PIX').byteswap().newbyteorder()
-            vals = hdu.data.field('VALUE').byteswap().newbyteorder()
+            pix = swap_byte_order(hdu.data.field('PIX'))
+            vals = swap_byte_order(hdu.data.field('VALUE'))
             if 'CHANNEL' in hdu.data.columns.names:
-                chan = hdu.data.field('CHANNEL')
+                chan = swap_byte_order(hdu.data.field('CHANNEL'))
                 chan = np.unravel_index(chan, shape)
                 idx = chan + (pix,)
             else:
