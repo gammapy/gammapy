@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ..sparse import SparseArray
+from .._sparse import merge_sparse_arrays
 
 test_params = [
     (8,),
@@ -51,3 +52,37 @@ def test_sparse_setitem(shape):
     idx = np.where(data > 0)
     v[idx] = data[idx]
     assert_allclose(v[...], data)
+
+    v = SparseArray(shape)
+    v.set(idx, data[idx])
+    assert_allclose(v[...], data)
+
+    v = SparseArray(shape)
+    v.set(idx, data[idx], fill=True)
+    v.set(idx, data[idx], fill=True)
+    assert_allclose(v[...], 2.0 * data)
+
+    v = SparseArray(shape)
+    data0 = np.random.poisson(np.ones(shape)).astype(float)
+    data1 = np.random.poisson(np.ones(shape)).astype(float)
+    data = data0 + data1
+    idx0 = np.where(data0 > 0)
+    idx1 = np.where(data1 > 0)
+    idx_in = tuple([np.concatenate((x, y)) for x, y in zip(idx0, idx1)])
+    data_in = np.concatenate((data0[idx0], data1[idx1]))
+    v.set(idx_in, data_in, fill=True)
+    assert_allclose(v[...], data)
+
+
+def test_merge_sparse_arrays():
+
+    idx0 = np.array([0, 0, 1, 4])
+    val0 = np.array([1.0, 2.0, 3.0, 7.0])
+    idx1 = np.array([0, 1, 2])
+    val1 = np.array([1.0, 1.0, 1.0])
+    idx, val = merge_sparse_arrays(idx0, val0, idx1, val1)
+    assert_allclose(idx, np.unique(np.concatenate((idx0, idx1))))
+    assert_allclose(val, np.array([2.0, 3.0, 1.0, 7.0]))
+    idx, val = merge_sparse_arrays(idx0, val0, idx1, val1, True)
+    assert_allclose(idx, np.unique(np.concatenate((idx0, idx1))))
+    assert_allclose(val, np.array([4.0, 4.0, 1.0, 7.0]))
