@@ -220,6 +220,6 @@ class HpxMap(MapBase):
             cols.append(fits.Column('PIX', 'J',
                                     array=np.arange(data.shape[-1])))
 
-        cols += self.make_cols(header, conv)
+        cols += self._make_cols(header, conv)
         hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
         return hdu

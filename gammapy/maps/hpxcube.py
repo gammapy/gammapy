@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
@@ -368,9 +369,7 @@ class HpxMapND(HpxMap):
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
 
-    def make_cols(self, header, conv):
-
-        from astropy.io import fits
+    def _make_cols(self, header, conv):
 
         shape = self.data.shape
         cols = []

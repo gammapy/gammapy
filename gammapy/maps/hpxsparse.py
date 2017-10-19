@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from .utils import swap_byte_order
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
@@ -115,9 +116,8 @@ class HpxMapSparse(HpxMap):
         idx = self.hpx.global_to_local(idx)
         self.data[idx[::-1]] = vals
 
-    def make_cols(self, header, conv):
+    def _make_cols(self, header, conv):
 
-        from astropy.io import fits
         shape = self.data.shape
         cols = []
         if header['INDXSCHM'] == 'SPARSE':
