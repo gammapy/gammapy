@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
@@ -86,7 +87,6 @@ class HpxMapND(HpxMap):
                 if c.find(hpx.conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
-            data = np.ndarray(shape_data)
             if len(cnames) == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
@@ -368,6 +368,36 @@ class HpxMapND(HpxMap):
         idx = pix_tuple_to_idx(idx)
         idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
+
+    def _make_cols(self, header, conv):
+
+        shape = self.data.shape
+        cols = []
+        if header['INDXSCHM'] == 'SPARSE':
+            data = self.data.copy()
+            data[~np.isfinite(data)] = 0
+            nonzero = np.where(data > 0)
+            pix = self.geom.local_to_global(nonzero[::-1])[0]
+            if len(shape) == 1:
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
+
+            else:
+                channel = np.ravel_multi_index(nonzero[:-1], shape[:-1])
+                cols.append(fits.Column('PIX', 'J', array=pix))
+                cols.append(fits.Column('CHANNEL', 'I', array=channel))
+                cols.append(fits.Column('VALUE', 'E',
+                                        array=data[nonzero].astype(float)))
+
+        elif len(shape) == 1:
+            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
+                                    'E', array=self.data.astype(float)))
+        else:
+            for i, idx in enumerate(np.ndindex(shape[:-1])):
+                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
+                                        array=self.data[idx].astype(float)))
+        return cols
 
     def to_swapped_scheme(self):
 

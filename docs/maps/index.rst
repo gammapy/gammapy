@@ -309,9 +309,9 @@ Maps can be written to and read from a FITS file with the
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE')
-   m = WcsMapND.read('file.fits', extname='IMAGE')
+   m = WcsMapND.read('file.fits', hdu='IMAGE')
 
-Images can be serialized to a sparse data format by calling
+Maps can be serialized to a sparse data format by calling
 `~MapBase.write` with ``sparse=True``.  This will write all non-zero
 pixels in the map to a data table appropriate to the pixelization
 scheme.
@@ -321,7 +321,17 @@ scheme.
    from gammapy.maps import MapBase, WcsMapND
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', extname='IMAGE', sparse=True)
-   m = WcsMapND.read('file.fits', extname='IMAGE')
+   m = WcsMapND.read('file.fits', hdu='IMAGE')
+
+Sparse maps have the same ``read`` and ``write`` methods with the
+exception that they will be written to a sparse format by default:
+
+.. code::
+
+   from gammapy.maps import MapBase, HpxMapSparse
+   m = MapBase.create(binsz=0.1, map_type='hpx-sparse', width=10.0)
+   m.write('file.fits', extname='IMAGE')
+   m = HpxMapSparse.read('file.fits', hdu='IMAGE')
 
 By default files will be written to the *gamma-astro-data-format*
 specification for sky maps (see `here

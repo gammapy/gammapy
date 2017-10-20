@@ -3,6 +3,26 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.io import fits
 
 
+def swap_byte_order(arr_in):
+    """Swap the byte order of a numpy array to the native one.
+
+    Parameters
+    ----------
+    arr_in : `~numpy.ndarray`
+        Input array.
+
+    Returns
+    -------
+    arr_out : `~numpy.ndarray`
+        Array with native byte order.
+    """
+
+    if arr_in.dtype.byteorder not in ('=', '|'):
+        return arr_in.byteswap().newbyteorder()
+
+    return arr_in
+
+
 def interp_to_order(interp):
     """Convert interpolation string to order."""
 
