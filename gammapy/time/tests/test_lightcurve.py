@@ -128,7 +128,7 @@ def test_lightcurve_estimator():
     )
 
     # assert_allclose(lc['FLUX'][0].value, 1.02122885108e-11, rtol=1e-2)
-    assert_allclose(lc['FLUX'][0].value, 1.826273620432445e-12, rtol=1e-2)
+    assert_allclose(lc['FLUX'][0].value, 1.80280798882e-12, rtol=1e-2)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities

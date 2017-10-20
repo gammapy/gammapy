@@ -273,8 +273,8 @@ class LightCurveEstimator(object):
             # introduce the e_reco binning here, since it's also used
             # in the calculation of predicted counts
             e_reco = spec.e_reco
-            emin = e_reco[e_reco.searchsorted(spec.lo_threshold)]
-            emax = e_reco[e_reco.searchsorted(spec.hi_threshold)-1]
+            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
+            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1]))-1]
 
             # compute ON events
             on = on_evt.select_energy([emin, emax])
