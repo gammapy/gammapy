@@ -17,3 +17,4 @@ dependencies:
   - reproject
   - aplpy
   - sphinx
+  - pyyaml
