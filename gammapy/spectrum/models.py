@@ -431,7 +431,7 @@ class ConstantModel(SpectralModel):
 
     .. math::
 
-        \phi(E) = k 
+        \phi(E) = k
 
     Parameters
     ----------
@@ -446,7 +446,7 @@ class ConstantModel(SpectralModel):
     @staticmethod
     def evaluate(energy, const):
         """Evaluate the model (static function)."""
-        return const 
+        return const
 
 
 class CompoundSpectralModel(SpectralModel):
@@ -505,7 +505,7 @@ class PowerLaw(SpectralModel):
     --------
     This is how to plot the default `PowerLaw` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw
@@ -709,7 +709,7 @@ class PowerLaw2(SpectralModel):
     --------
     This is how to plot the default `PowerLaw2` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw2
@@ -830,7 +830,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw
@@ -926,7 +926,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
@@ -984,7 +984,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     --------
     This is how to plot the default `PLSuperExpCutoff3FGL` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff3FGL
@@ -1053,7 +1053,7 @@ class LogParabola(SpectralModel):
     --------
     This is how to plot the default `LogParabola` model:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.spectrum.models import LogParabola

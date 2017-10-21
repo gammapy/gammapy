@@ -28,6 +28,7 @@
 import datetime
 import os
 import sys
+from distutils.dir_util import copy_tree
 
 try:
     import astropy_helpers
@@ -79,6 +80,16 @@ intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')
+exclude_patterns.append('**.ipynb_checkpoints')
+
+
+#
+# -- nbsphinx settings
+extensions.append('nbsphinx')
+extensions.append('IPython.sphinxext.ipython_console_highlighting')
+extensions.append('sphinx.ext.mathjax')
+nbsphinx_execute = 'never'
+# --
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
@@ -178,6 +189,12 @@ if on_rtd:
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
+# copy notebooks
+if os.environ['GAMMAPY_EXTRA']:
+    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
+    if os.path.isdir(gammapy_extra_notebooks_folder):
+        copy_tree(gammapy_extra_notebooks_folder, 'notebooks')
+
 html_style = 'gammapy.css'
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -209,6 +226,7 @@ if eval(setup_cfg.get('edit_on_github')):
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
 
+
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 
 # -- Other options --
@@ -216,6 +234,7 @@ github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 # http://sphinx-automodapi.readthedocs.io/en/latest/automodapi.html
 # show inherited members for classes
 automodsumm_inherited_members = True
+
 
 # In `about.rst` and `references.rst` we are giving lists of citations
 # (e.g. papers using Gammapy) that partly aren't referenced from anywhere

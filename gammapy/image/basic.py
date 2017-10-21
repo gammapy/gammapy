@@ -342,7 +342,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
     This example shows how to compute a set of basic images for the galactic
     center region using a prepared 2FHL dataset:
 
-    .. code::
+    .. code:: python
 
         from astropy import units as u
         from gammapy.image import SkyImage, FermiLATBasicImageEstimator
