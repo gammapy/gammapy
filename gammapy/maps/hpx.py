@@ -699,10 +699,12 @@ class HpxGeom(MapGeom):
 
     @property
     def ndim(self):
+        """Number of dimensions (int)."""
         return len(self._axes) + 2
 
     @property
     def ordering(self):
+        """HEALPix ordering ('NESTED' or 'RING')."""
         if self._nest:
             return 'NESTED'
         return 'RING'
@@ -721,6 +723,7 @@ class HpxGeom(MapGeom):
 
     @property
     def nest(self):
+        """Is HEALPix order nested? (bool)."""
         return self._nest
 
     @property

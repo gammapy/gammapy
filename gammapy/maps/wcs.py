@@ -191,7 +191,9 @@ class WcsGeom(MapGeom):
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
                axes=None, skydir=None, width=None, conv=None):
-        """Create a WCS geometry object.  Pixelization of the map is set with
+        """Create a WCS geometry object.
+
+        Pixelization of the map is set with
         ``binsz`` and one of either ``npix`` or ``width`` arguments.
         For maps with non-spatial dimensions a different pixelization
         can be used for each image plane by passing a list or array
@@ -247,7 +249,6 @@ class WcsGeom(MapGeom):
         >>> geom = WcsGeom.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
         >>> geom = WcsGeom.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
         >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
-
         """
         if skydir is None:
             xref, yref = (0.0, 0.0)
@@ -337,7 +338,6 @@ class WcsGeom(MapGeom):
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
     def make_bands_hdu(self, extname=None, conv=None):
-
         conv = self._conv if conv is None else conv
         header = self.make_header(conv)
         axis_names = None
@@ -452,12 +452,10 @@ class WcsGeom(MapGeom):
 #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
     def get_coords(self, idx=None):
-
         pix = self.get_pixels(idx=idx)
         return self.pix_to_coord(pix)
 
     def coord_to_pix(self, coords):
-
         c = MapCoords.create(coords)
 
         # Variable Bin Size
@@ -478,7 +476,6 @@ class WcsGeom(MapGeom):
         return pix
 
     def pix_to_coord(self, pix):
-
         # Variable Bin Size
         if self.axes and self.npix[0].size > 1:
             idxs = pix_tuple_to_idx([pix[2 + i] for i, ax
@@ -549,7 +546,6 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     axes : list
         List of non-spatial axes
     """
-
     naxis = 2
     if axes is not None:
         naxis += len(axes)
@@ -672,20 +668,15 @@ def pix2world(wcs, cdelt, crpix, pix):
     ----------
     wcs : `astropy.wcs.WCS`
         WCS transform object.
-
     cdelt : tuple
         Tuple of X/Y pixel size in deg.  Each element should have the
         same length as ``pix``.
-
     crpix : tuple
         Tuple of reference pixel parameters in X and Y dimensions.  Each
         element should have the same length as ``pix``.
-
     pix : tuple
         Tuple of pixel coordinates.
-
     """
-
     pix_ratio = [np.abs(wcs.wcs.cdelt[0] / cdelt[0]),
                  np.abs(wcs.wcs.cdelt[1] / cdelt[1])]
     pix = ((pix[0] - (crpix[0] - 1.0)) / pix_ratio[0] + wcs.wcs.crpix[0] - 1.0,
@@ -785,7 +776,7 @@ def wcs_to_coords(w, shape):
     elif w.naxis == 3:
         z, y, x = wcs_to_axes(w, shape)
     else:
-        raise Exception('WCS naxis must be 2 or 3. Got: {}'.format(w.naxis))
+        raise ValueError('WCS naxis must be 2 or 3. Got: {}'.format(w.naxis))
 
     x = 0.5 * (x[1:] + x[:-1])
     y = 0.5 * (y[1:] + y[:-1])

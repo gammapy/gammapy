@@ -17,10 +17,11 @@ __all__ = [
 
 class WcsMapND(WcsMap):
     """Representation of a N+2D map using WCS with two spatial dimensions
-    and N non-spatial dimensions.  This class uses an ND numpy array
-    to store map values.  For maps with non-spatial dimensions and
-    variable pixel size it will allocate an array with dimensions
-    commensurate with the largest image plane.
+    and N non-spatial dimensions.
+
+    This class uses an ND numpy array to store map values. For maps with
+    non-spatial dimensions and variable pixel size it will allocate an
+    array with dimensions commensurate with the largest image plane.
 
     Parameters
     ----------
@@ -33,7 +34,6 @@ class WcsMapND(WcsMap):
     """
 
     def __init__(self, wcs, data=None, dtype='float32'):
-
         # TODO: Figure out how to mask pixels for integer data types
 
         shape = tuple([np.max(wcs.npix[0]), np.max(wcs.npix[1])] +
@@ -47,7 +47,6 @@ class WcsMapND(WcsMap):
         WcsMap.__init__(self, wcs, data)
 
     def _init_data(self, geom, shape, dtype):
-
         # Check whether corners of each image plane are valid
         coords = []
         if not geom.regular:
@@ -137,9 +136,7 @@ class WcsMapND(WcsMap):
 
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
-
         """
-
         if not self.geom.regular:
             raise ValueError('Pixel-based interpolation not supported for '
                              'non-regular geometries.')
@@ -155,7 +152,6 @@ class WcsMapND(WcsMap):
             raise ValueError('Invalid interpolation order: {}'.format(order))
 
     def _interp_by_pix_linear_grid(self, pix):
-
         # TODO: Cache interpolator
 
         from scipy.interpolate import RegularGridInterpolator
@@ -178,7 +174,6 @@ class WcsMapND(WcsMap):
         return map_coordinates(self.data.T, pix, order=order, mode='nearest')
 
     def _interp_by_coords_griddata(self, coords, interp=None):
-
         order = interp_to_order(interp)
         method_lookup = {1: 'linear', 3: 'cubic'}
         method = method_lookup.get(order, None)
@@ -197,7 +192,6 @@ class WcsMapND(WcsMap):
         return vals
 
     def interp_image(self, coords, order=1):
-
         if self.geom.ndim == 2:
             raise ValueError('Operation only supported for maps with one or more '
                              'non-spatial dimensions.')
@@ -208,7 +202,6 @@ class WcsMapND(WcsMap):
 
     def _interp_image_cube(self, coords, order=1):
         """Interpolate an image plane of a cube."""
-
         # TODO: consider re-writing to support maps with > 3 dimensions
 
         from scipy.interpolate import interp1d
@@ -269,7 +262,6 @@ class WcsMapND(WcsMap):
                                     buffersize=buffersize))
 
     def sum_over_axes(self):
-
         if self.geom.ndim == 2:
             return copy.deepcopy(self)
 
@@ -285,7 +277,6 @@ class WcsMapND(WcsMap):
         return map_out
 
     def _reproject_wcs(self, geom, mode='interp', order=1):
-
         from reproject import reproject_interp, reproject_exact
 
         map_out = WcsMapND(geom)
@@ -331,7 +322,6 @@ class WcsMapND(WcsMap):
         return map_out
 
     def _reproject_hpx(self, geom, mode='interp', order=1):
-
         from reproject import reproject_from_healpix, reproject_to_healpix
         from .hpxcube import HpxMapND
 
@@ -385,7 +375,6 @@ class WcsMapND(WcsMap):
         ----------
         norm : str
             Set the normalization scheme of the color map.
-
         idx : tuple
             Set the image slice to plot if this map has non-spatial
             dimensions.
@@ -394,15 +383,11 @@ class WcsMapND(WcsMap):
         -------
         fig : `~matplotlib.figure.Figure`
             Figure object.
-
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-
         im : `~matplotlib.image.AxesImage`
             Image object.
-
         """
-
         import matplotlib.pyplot as plt
         import matplotlib.colors as colors
 

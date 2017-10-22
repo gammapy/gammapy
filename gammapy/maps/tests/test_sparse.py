@@ -15,10 +15,9 @@ test_params = [
 
 @pytest.mark.parametrize(('shape'), test_params)
 def test_sparse_init(shape):
-
     v = SparseArray(shape)
-    assert(v.shape == shape)
-    assert(v.size == 0)
+    assert (v.shape == shape)
+    assert (v.size == 0)
 
     data = np.ones(shape)
     v = SparseArray.from_array(data)
@@ -26,7 +25,6 @@ def test_sparse_init(shape):
 
 
 def test_sparse_getitem():
-
     shape = (8, 16, 32)
 
     data = np.random.poisson(np.ones(shape)).astype(float)
@@ -48,7 +46,6 @@ def test_sparse_getitem():
 
 @pytest.mark.parametrize(('shape'), test_params)
 def test_sparse_setitem(shape):
-
     data = np.random.poisson(np.ones(shape)).astype(float)
     v = SparseArray(shape)
     idx = np.where(data > 0)
@@ -76,14 +73,13 @@ def test_sparse_setitem(shape):
     assert_allclose(v[...], data)
 
 
-@pytest.mark.parametrize(('dtype_idx','dtype_val'),
+@pytest.mark.parametrize(('dtype_idx', 'dtype_val'),
                          [(np.int64, np.float64),
                           (np.int32, np.float64),
                           (np.int32, np.float32),
                           (np.int32, np.float64),
-                         ])
+                          ])
 def test_merge_sparse_arrays(dtype_idx, dtype_val):
-
     idx0 = np.array([0, 0, 1, 4], dtype=dtype_idx)
     val0 = np.array([1.0, 2.0, 3.0, 7.0], dtype=dtype_val)
     idx1 = np.array([0, 1, 2], dtype=dtype_idx)

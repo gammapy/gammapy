@@ -168,7 +168,6 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxgeom_get_pixels(nside, nested, coordsys, region, axes):
-
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     pix = geom.get_pixels(local=False)
     pix_local = geom.get_pixels(local=True)
@@ -347,13 +346,11 @@ def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
         coords[0].shape, dtype=bool))
 
     if axes is not None:
-
         coords = [c[0] for c in coords[:2]] + \
-            [ax.edges[-1] + 1.0 for ax in axes]
+                 [ax.edges[-1] + 1.0 for ax in axes]
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
 
     if geom.region is not None:
-
         coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
 
@@ -433,4 +430,4 @@ def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
     assert_allclose(geom0.nside, geom1.nside)
     assert_allclose(geom0.npix, geom1.npix)
     assert_allclose(geom0.nest, geom1.nest)
-    assert(geom0.coordsys == geom1.coordsys)
+    assert geom0.coordsys == geom1.coordsys

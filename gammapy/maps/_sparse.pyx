@@ -12,7 +12,6 @@ ctypedef fused float_t:
     np.float32_t
     np.float64_t
 
-
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def binary_search(np.ndarray[int_t, ndim=1] arr_in, int_t idx,
@@ -25,7 +24,6 @@ def binary_search(np.ndarray[int_t, ndim=1] arr_in, int_t idx,
     ----------
     arr_in : `~numpy.ndarray`
         Sorted array of integers.
-
     idx : int
         Value to be searched for in ``arr_in``.
 
@@ -34,13 +32,11 @@ def binary_search(np.ndarray[int_t, ndim=1] arr_in, int_t idx,
     idx_out: int
         Index of matching element or the index at which ``idx`` would
         be inserted to maintain sorted order.
-
     """
-
     cdef int_t mid = 0
     cdef int_t midval = 0
 
-    while(ilo < ihi):
+    while ilo < ihi:
         mid = (ilo + ihi) // 2
         midval = arr_in[mid]
 
@@ -53,7 +49,6 @@ def binary_search(np.ndarray[int_t, ndim=1] arr_in, int_t idx,
 
     return ilo
 
-
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def find_in_array(np.ndarray[int_t, ndim=1] idx0,
@@ -64,22 +59,18 @@ def find_in_array(np.ndarray[int_t, ndim=1] idx0,
     ----------
     idx0 : `~np.ndarray`
         Array of unsorted input values.
-
     idx1 : `~np.ndarray`
         Array of sorted values to be searched. 
 
     Returns
     -------
-    idx : `~np.ndarray`
+    idx : `~numpy.ndarray`
         Array of indices with length of ``idx0`` with the position of
         the given element in ``idx1``.
-
-    msk : `~np.ndarray`
+    msk : `~numpy.ndarray`
         Boolean mask with length of ``idx0`` indicating whether a
         given value was found in ``idx1``.
-
     """
-
     cdef int ni = idx0.shape[0]
     cdef int nj = idx1.shape[0]
 
@@ -90,7 +81,7 @@ def find_in_array(np.ndarray[int_t, ndim=1] idx0,
     cdef np.ndarray[int_t, ndim= 1] out = np.zeros([ni], dtype=idx0.dtype)
     cdef np.ndarray[np.uint8_t, ndim= 1] msk = np.zeros([ni], dtype=np.uint8)
 
-    while(i < ni and j < nj):
+    while i < ni and j < nj:
 
         ii = idx_sort[i]
 
@@ -107,7 +98,6 @@ def find_in_array(np.ndarray[int_t, ndim=1] idx0,
 
     return out, msk.astype(bool)
 
-
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
@@ -117,24 +107,21 @@ def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
                         bint fill=False
                         ):
     """Merge two sparse arrays represented as index/value pairs into a
-    single sparse array.  Values in the first array (``idx0``,
-    ``val0``) will supersede those in the second array.  Indices in
-    the second array should be presorted.
+    single sparse array.
+
+    Values in the first array (``idx0``, ``val0``) will supersede those
+    in the second array. Indices in the second array should be presorted.
 
     Parameters
     ----------
     idx0 : `~numpy.ndarray`
         Array of indices of first sparse array.
-
     val0 : `~numpy.ndarray`
         Array of values of first sparse array.
-
     idx1 : `~numpy.ndarray`
-        Array of indices for second sparse array. 
-
+        Array of indices for second sparse array.
     val1 : `~numpy.ndarray`
-        Array of values for second sparse array. 
-
+        Array of values for second sparse array.
     fill : bool
         Flag to switch between update and fill mode.  When fill is
         True the values in the first array will be added to the second
@@ -145,12 +132,9 @@ def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
     -------
     idx : `~numpy.ndarray`
         Array of indices for merged sparse array.
-
     vals : `~numpy.ndarray`
         Array of values for merged sparse array.
-
     """
-
     cdef int ni = idx0.shape[0]
     cdef int nj = idx1.shape[0]
     cdef int i = 0
@@ -165,13 +149,13 @@ def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
     cdef int n = idx.size
     cdef np.ndarray[float_t, ndim= 1] vals = np.zeros(n, dtype=val0.dtype)
 
-    while(k < n):
+    while k < n:
 
-        while(j < nj):
+        while j < nj:
 
-            if(idx1[j] > idx[k]):
+            if idx1[j] > idx[k]:
                 break
-            elif(idx1[j] == idx[k]):
+            elif idx1[j] == idx[k]:
 
                 if fill:
                     vals[k] += val1[j]
@@ -180,11 +164,11 @@ def merge_sparse_arrays(np.ndarray[int_t, ndim=1] idx0,
 
             j += 1
 
-        while(i < ni):
+        while i < ni:
 
-            if(idx0[i] > idx[k]):
+            if idx0[i] > idx[k]:
                 break
-            elif(idx0[i] == idx[k]):
+            elif idx0[i] == idx[k]:
 
                 if fill:
                     vals[k] += val0[i]

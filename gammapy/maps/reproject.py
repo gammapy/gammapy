@@ -14,7 +14,6 @@ def _get_input_pixels_celestial(wcs_in, wcs_out, shape_out):
     Get the pixel coordinates of the pixels in an array of shape ``shape_out``
     in the input WCS.
     """
-
     from reproject.wcs_utils import convert_world_coordinates
 
     # TODO: for now assuming that coordinates are spherical, not
@@ -37,7 +36,6 @@ def _get_input_pixels_celestial(wcs_in, wcs_out, shape_out):
 
 def reproject_car_to_hpx(input_data, coord_system_out,
                          nside, order=1, nested=False):
-
     import healpy as hp
     from scipy.ndimage import map_coordinates
     from reproject.wcs_utils import convert_world_coordinates
@@ -54,8 +52,10 @@ def reproject_car_to_hpx(input_data, coord_system_out,
     # Convert between celestial coordinates
     coord_system_out = parse_coord_system(coord_system_out)
     with np.errstate(invalid='ignore'):
-        lon_in, lat_in = convert_world_coordinates(lon_out, lat_out,
-                                                   (coord_system_out, u.deg, u.deg), wcs_in)
+        lon_in, lat_in = convert_world_coordinates(
+            lon_out, lat_out,
+            (coord_system_out, u.deg, u.deg), wcs_in,
+        )
 
     # Look up pixels in input system
     yinds, xinds = wcs_in.wcs_world2pix(lon_in, lat_in, 0)

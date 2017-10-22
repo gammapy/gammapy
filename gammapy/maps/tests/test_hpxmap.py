@@ -29,7 +29,6 @@ hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
 
 
 def create_map(nside, nested, coordsys, region, axes, sparse):
-
     if sparse:
         m = HpxMapSparse(HpxGeom(nside=nside, nest=nested,
                                  coordsys=coordsys, region=region, axes=axes))
@@ -90,7 +89,6 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
-
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.hpx.get_coords()
     pix = m.hpx.get_pixels()
@@ -122,7 +120,6 @@ def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
-
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.hpx.get_coords()
     m.fill_by_coords(coords, coords[1])

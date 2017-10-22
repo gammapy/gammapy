@@ -28,10 +28,9 @@ class HpxMapSparse(HpxMap):
     """
 
     def __init__(self, hpx, data=None, dtype='float32'):
-
         if data is None:
             shape = tuple([np.max(hpx.npix)] + [ax.nbin for ax in hpx.axes])
-            data = SparseArray(shape[::-1])
+            data = SparseArray(shape[::-1], dtype=dtype)
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
@@ -82,14 +81,12 @@ class HpxMapSparse(HpxMap):
         return map_out
 
     def get_by_pix(self, pix, interp=None):
-
         if interp is None:
             return self.get_by_idx(pix)
         else:
             raise NotImplementedError
 
     def get_by_idx(self, idx):
-
         # Convert to local pixel indices
         idx = pix_tuple_to_idx(idx)
         idx = self.hpx.global_to_local(idx)
@@ -99,7 +96,6 @@ class HpxMapSparse(HpxMap):
         raise NotImplementedError
 
     def fill_by_idx(self, idx, weights=None):
-
         idx = pix_tuple_to_idx(idx)
         if weights is None:
             weights = np.ones(idx[0].shape)
@@ -117,7 +113,6 @@ class HpxMapSparse(HpxMap):
         self.data[idx[::-1]] = vals
 
     def _make_cols(self, header, conv):
-
         shape = self.data.shape
         cols = []
         if header['INDXSCHM'] == 'SPARSE':
