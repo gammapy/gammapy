@@ -29,9 +29,9 @@ def make_axes(axes_in, conv):
             ax = MapAxis(ax)
 
         if conv in ['fgst-ccube', 'fgst-template']:
-            ax.set_name('energy')
+            ax.name = 'energy'
         elif ax.name == '':
-            ax.set_name('axis%i' % i)
+            ax.name = 'axis%i' % i
 
         axes_out += [ax]
 
