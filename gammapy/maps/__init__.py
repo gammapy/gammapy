@@ -17,3 +17,4 @@ from .hpxmap import *
 from .wcs import *
 from .wcsnd import *
 from .wcsmap import *
+from .sparse import *

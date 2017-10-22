@@ -1,8 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import numpy as np
 from ._sparse import find_in_array, merge_sparse_arrays
+
+__all__ = [
+    'SparseArray',
+]
 
 
 def slices_to_idxs(slices, shape, ndim):
@@ -38,10 +41,11 @@ def slices_to_idxs(slices, shape, ndim):
 
 
 class SparseArray(object):
-    """Sparse N-dimensional array object.  This class implements a data
-    structure for sparse n-dimensional arrays such that only non-zero
-    data values are allocated in memory.  Supports numpy conventions
-    for indexing and slicing logic.
+    """Sparse N-dimensional array object.
+
+    This class implements a data structure for sparse n-dimensional
+    arrays such that only non-zero data values are allocated in memory.
+    Supports numpy conventions for indexing and slicing logic.
 
     Parameters
     ----------
@@ -123,12 +127,12 @@ class SparseArray(object):
 
     @property
     def shape(self):
-        """Return the array shape."""
+        """Array shape."""
         return self._shape
 
     @property
     def ndim(self):
-        """Return the array dimension."""
+        """Array number of dimensions (int)."""
         return len(self._shape)
 
     @classmethod
