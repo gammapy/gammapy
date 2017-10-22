@@ -76,7 +76,7 @@ class SparseArray(object):
     Alternatively you can create a new SparseArray from an
     `~numpy.ndarray` with `~SparseArray.from_array`:
 
-    >>> x = np.ndarray((10,20))
+    >>> x = np.ones((10,20))
     >>> v = SparseArray.from_array(x)
 
     SparseArray follows numpy indexing and slicing conventions for
