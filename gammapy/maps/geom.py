@@ -163,7 +163,8 @@ def skydir_to_lonlat(skydir, coordsys=None):
     elif skydir.frame.name in ['galactic']:
         return skydir.l.deg, skydir.b.deg
     else:
-        raise ValueError('Unrecognized SkyCoord frame: {}'.format(skydir.frame.name))
+        raise ValueError(
+            'Unrecognized SkyCoord frame: {}'.format(skydir.frame.name))
 
 
 def pix_tuple_to_idx(pix):
@@ -359,6 +360,10 @@ class MapAxis(object):
         """Name of the axis."""
         return self._name
 
+    @name.setter
+    def name(self, val):
+        self._name = val
+
     @property
     def edges(self):
         """Return array of bin edges."""
@@ -470,9 +475,6 @@ class MapAxis(object):
             raise ValueError('Edges array must have at least two elements.')
 
         return cls(edges, node_type='edge', **kwargs)
-
-    def set_name(self, name):
-        self._name = name
 
     def pix_to_coord(self, pix):
         """Transform from pixel to axis coordinates.
