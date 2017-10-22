@@ -233,6 +233,7 @@ class WcsMapND(WcsMap):
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
         if weights is not None:
+            weights = np.asarray(weights)
             weights = weights[msk]
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
