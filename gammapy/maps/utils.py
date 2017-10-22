@@ -1,6 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy.io import fits
+
+
+def fill_poisson(map_in, mu):
+    """Fill a map object with a poisson random variable.
+
+    Parameters
+    ----------
+    map_in : `~gammapy.maps.MapBase`
+        Input map.
+
+    mu : scalar or `~numpy.ndarray`
+        Expectation value.
+
+    """
+
+    pix = map_in.geom.get_pixels()
+    mu = np.random.poisson(mu, len(pix[0]))
+    map_in.fill_by_idx(pix, mu)
 
 
 def swap_byte_order(arr_in):
@@ -69,12 +88,12 @@ def find_bands_hdu(hdulist, hdu):
     has_cube_data = False
 
     if (isinstance(hdu, (fits.ImageHDU, fits.PrimaryHDU)) and
-                hdu.header.get('NAXIS', None) == 3):
+            hdu.header.get('NAXIS', None) == 3):
         has_cube_data = True
     elif isinstance(hdu, fits.BinTableHDU):
 
         if (hdu.header.get('INDXSCHM', '') == 'IMPLICIT' and
-                    len(hdu.columns) > 1):
+                len(hdu.columns) > 1):
             has_cube_data = True
 
     if has_cube_data:

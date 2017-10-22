@@ -529,9 +529,3 @@ class MapBase(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
-
-    def fill_poisson(self, mu):
-
-        pix = self.geom.get_pixels()
-        mu = np.random.poisson(mu, len(pix[0]))
-        self.fill_by_idx(pix, mu)

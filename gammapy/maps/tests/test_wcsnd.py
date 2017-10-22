@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from ..utils import fill_poisson
 from ..geom import MapAxis
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
@@ -45,7 +46,8 @@ def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m0 = WcsMapND(geom)
-    m0.fill_poisson(0.5)
+    coords = m0.geom.get_coords()
+    m0.set_by_coords(coords, coords[1])
     m1 = WcsMapND(geom, m0.data)
     assert_allclose(m0.data, m1.data)
 
@@ -58,7 +60,7 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     filename = str(tmpdir / 'skycube.fits')
     filename_sparse = str(tmpdir / 'skycube_sparse.fits')
     m0 = WcsMapND(geom)
-    m0.fill_poisson(0.5)
+    fill_poisson(m0, 0.5)
     m0.write(filename)
     m1 = WcsMapND.read(filename)
     assert_allclose(m0.data, m1.data)
