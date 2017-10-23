@@ -4,6 +4,7 @@ from .core import SkyCube
 
 __all__ = [
     'make_exposure_cube',
+    'make_background_cube',
 ]
 
 
@@ -43,6 +44,59 @@ def make_exposure_cube(pointing,
 
     return SkyCube(
         data=exposure,
+        wcs=ref_cube.wcs,
+        energy_axis=ref_cube.energy_axis,
+    )
+
+
+def make_background_cube(pointing,
+                         obstime,
+                         bkg,
+                         ref_cube,
+                         offset_max=None,
+                         ):
+    """Calculate background predicted counts cube.
+
+    This function evaluates the background rate model on
+    a sky cube, and then multiplies with
+
+    TODO: clarify if it should be livetime or obstime:
+    https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/97
+
+    Parameters
+    ----------
+    pointing : `~astropy.coordinates.SkyCoord`
+        Pointing direction
+    obstime : `~astropy.units.Quantity`
+        Observation time
+    bkg : `~gammapy.irf.Background3D`
+        Effective area table
+    ref_cube : `~gammapy.cube.SkyCube`
+        Reference cube used to define geometry
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum field of view offset.
+
+    Returns
+    -------
+    background : `~gammapy.cube.SkyCube`
+        Background cube (3D)
+    """
+    coordinates = ref_cube.sky_image_ref.coordinates()
+    offset = coordinates.separation(pointing)
+    energy = ref_cube.energies()
+
+    # TODO: properly transform FOV to sky coordinates
+    # For now we assume the background is radially symmetric
+
+    data = bkg.data.evaluate(detx=offset, dety='0 deg', energy=energy)
+    data *= obstime * ref_cube.bin_size
+    data[:, offset >= offset_max] = 0
+
+    data = data.to('')
+
+    return SkyCube(
+        name='bkg',
+        data=data,
         wcs=ref_cube.wcs,
         energy_axis=ref_cube.energy_axis,
     )
