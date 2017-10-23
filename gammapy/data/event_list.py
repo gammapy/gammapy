@@ -791,11 +791,11 @@ class EventListLAT(EventListBase):
     def __init__(self, table):
         EventListBase.__init__(self, table)
 
-    def plot_image_radius(self, center, size):
-        """A quick look function to generate a count skymap
-        with all the photons within a certain radius.
+    def plot_image(self, center, size):
+        """A quick look function to generate a count skymap with all the photons
+        within a certain square.
         Fermi-LAT eventlist could encompass large fraction of the sky,
-        this way we can restirct the skymap to a region of interest (ROI)
+        this way we can restirct the skymap to a squared region of interest (ROI)
 
         Parameters:
         -----------
@@ -803,7 +803,6 @@ class EventListLAT(EventListBase):
             Sky circle center
         size : `~astropy.coordinates.Quantity`
             size of the square defining our ROI
-
         """
         ref_image = SkyImage.empty(
             nxpix=400, nypix=400, binsz=0.02,
