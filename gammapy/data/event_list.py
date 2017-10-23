@@ -12,7 +12,6 @@ from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
-from ..image import SkyImage
 from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
 from .utils import _earth_location_from_dict
@@ -689,6 +688,7 @@ class EventListLAT(EventListBase):
         size : `~astropy.coordinates.Quantity`
             size of the square defining our ROI
         """
+        from ..image import SkyImage
         ref_image = SkyImage.empty(
             nxpix=400, nypix=400, binsz=0.02,
             xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
