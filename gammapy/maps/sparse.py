@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import numpy as np
 from ._sparse import find_in_array, merge_sparse_arrays
 
+__all__ = [
+    'SparseArray',
+]
+
 
 def slices_to_idxs(slices, shape, ndim):
-
     if slices == Ellipsis:
         slices = tuple([slice(None)] * ndim)
     elif not isinstance(slices, tuple):
@@ -15,8 +17,8 @@ def slices_to_idxs(slices, shape, ndim):
     if len(slices) < ndim:
         slices = tuple(list(slices) + [slice(None)] * (ndim - len(slices)))
 
-    #nslice = min(1, sum([not isinstance(s, slice) for s in slices]))
-    #nslice += sum([isinstance(s, slice) for s in slices])
+    # nslice = min(1, sum([not isinstance(s, slice) for s in slices]))
+    # nslice += sum([isinstance(s, slice) for s in slices])
     nslice = len(slices)
     idim = None
     idx = []
@@ -39,34 +41,30 @@ def slices_to_idxs(slices, shape, ndim):
 
 
 class SparseArray(object):
-    """Sparse N-dimensional array object.  This class implements a data
-    structure for sparse n-dimensional arrays such that only non-zero
-    data values are allocated in memory.  Supports numpy conventions
-    for indexing and slicing logic.
+    """Sparse N-dimensional array object.
+
+    This class implements a data structure for sparse n-dimensional
+    arrays such that only non-zero data values are allocated in memory.
+    Supports numpy conventions for indexing and slicing logic.
 
     Parameters
     ----------
     shape : tuple of ints
         Shape of array.
-
     idx : `~numpy.ndarray`, optional
         Flattened index vector that initializes the array.  If none
         then an empty array will be created.
-
     data : `~numpy.ndarray`, optional
         Flattened data vector that initializes the array.  If none
         then an empty array will be created.
-
     dtype : data-type, optional
         Type of data vector.
-
     fill_value : scalar, optional
         Value assigned to array elements that are not allocated in
         memory.
 
     Examples
     --------
-
     A SparseArray is created in the same way as `~numpy.ndarray` by
     passing the array shape to the constructor with an optional
     argument for the array type:
@@ -78,7 +76,7 @@ class SparseArray(object):
     Alternatively you can create a new SparseArray from an
     `~numpy.ndarray` with `~SparseArray.from_array`:
 
-    >>> x = np.ndarray((10,20))
+    >>> x = np.ones((10,20))
     >>> v = SparseArray.from_array(x)
 
     SparseArray follows numpy indexing and slicing conventions for
@@ -90,11 +88,9 @@ class SparseArray(object):
     >>> print(v[0,0])
     >>> v[:,0] = 1.0
     >>> print(v[:,0])
-
     """
 
     def __init__(self, shape, idx=None, data=None, dtype=float, fill_value=0.0):
-
         self._shape = tuple(shape)
         self._fill_value = fill_value
         if idx is not None:
@@ -105,13 +101,11 @@ class SparseArray(object):
             self._data = np.zeros(0, dtype=dtype)
 
     def __getitem__(self, slices):
-
         idx = slices_to_idxs(slices, self.shape, self.ndim)
         idx = np.broadcast_arrays(*idx)
         return self.get(idx)
 
     def __setitem__(self, slices, vals):
-
         idx = slices_to_idxs(slices, self.shape, self.ndim)
         idx = np.broadcast_arrays(*idx)
         return self.set(idx, vals)
@@ -133,12 +127,12 @@ class SparseArray(object):
 
     @property
     def shape(self):
-        """Return the array shape."""
+        """Array shape."""
         return self._shape
 
     @property
     def ndim(self):
-        """Return the array dimension."""
+        """Array number of dimensions (int)."""
         return len(self._shape)
 
     @classmethod
@@ -149,7 +143,6 @@ class SparseArray(object):
         ----------
         data : `numpy.ndarray`
             Input data array.
-
         min_value : float
             Threshold for sparsifying the data vector.
 
@@ -176,7 +169,6 @@ class SparseArray(object):
 
     def set(self, idx_in, vals, fill=False):
         """Set array values at indices ``idx_in``."""
-
         o = np.broadcast_arrays(vals, *idx_in)
         vals = np.ravel(o[0])
 
@@ -197,12 +189,11 @@ class SparseArray(object):
         data = data[msk]
         self._idx = idx
         self._data = data
-        #idx, msk = find_in_array(idx_flat_in, self.idx)
-        #self._data[idx[msk]] = vals[msk]
+        # idx, msk = find_in_array(idx_flat_in, self.idx)
+        # self._data[idx[msk]] = vals[msk]
 
     def get(self, idx_in):
         """Get array values at indices ``idx_in``."""
-
         shape_out = idx_in[0].shape
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
         idx, msk = find_in_array(idx_flat_in, self.idx)
@@ -211,7 +202,6 @@ class SparseArray(object):
         return np.squeeze(val_out)
 
     def sum(self, axis=None, dtype=None, out=None, keepdims=False, **unused_kwargs):
-
         # FIXME: Figure out how to correctly support np.apply_over_axes
 
         if axis is None:

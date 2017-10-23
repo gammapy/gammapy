@@ -5,11 +5,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from ..utils import fill_poisson
 from ..geom import MapAxis
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
 from ..wcsnd import WcsMapND
-
 
 pytest.importorskip('scipy')
 pytest.importorskip('reproject')
@@ -46,7 +46,8 @@ def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m0 = WcsMapND(geom)
-    m0.fill_poisson(0.5)
+    coords = m0.geom.get_coords()
+    m0.set_by_coords(coords, coords[1])
     m1 = WcsMapND(geom, m0.data)
     assert_allclose(m0.data, m1.data)
 
@@ -54,13 +55,12 @@ def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
-
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     filename = str(tmpdir / 'skycube.fits')
     filename_sparse = str(tmpdir / 'skycube_sparse.fits')
     m0 = WcsMapND(geom)
-    m0.fill_poisson(0.5)
+    fill_poisson(m0, mu=0.5)
     m0.write(filename)
     m1 = WcsMapND.read(filename)
     assert_allclose(m0.data, m1.data)
@@ -132,8 +132,7 @@ def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
         pytest.xfail('Bug in reproject version <= 0.3.1')
 
     if geom.ndim > 3 or geom.npix[0].size > 1:
-        pytest.xfail(
-            "> 3 dimensions or multi-resolution geometries not supported")
+        pytest.xfail("> 3 dimensions or multi-resolution geometries not supported")
 
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                            skydir=skydir, coordsys=coordsys, axes=axes)
@@ -145,7 +144,6 @@ def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
 
 
 def test_wcsmapnd_reproject_allsky_car():
-
     geom = WcsGeom.create(binsz=10.0, proj='CAR', coordsys='CEL')
     m = WcsMapND(geom)
     coords = m.geom.get_coords()

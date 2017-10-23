@@ -29,9 +29,9 @@ def make_axes(axes_in, conv):
             ax = MapAxis(ax)
 
         if conv in ['fgst-ccube', 'fgst-template']:
-            ax.set_name('energy')
+            ax.name = 'energy'
         elif ax.name == '':
-            ax.set_name('axis%i' % i)
+            ax.name = 'axis%i' % i
 
         axes_out += [ax]
 
@@ -45,13 +45,14 @@ def make_axes_cols(axes, axis_names=None):
     ----------
     axes : list of `~MapAxis`
 
-    colnames : list of str
+    axis_names : list of str
 
     """
 
-    colname = {'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
-               'time': ['TIME', 'T_MIN', 'T_MAX'],
-               }
+    colname = {
+        'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
+        'time': ['TIME', 'T_MIN', 'T_MAX'],
+    }
 
     if axis_names is None:
         axis_names = [ax.name for ax in axes]
@@ -79,14 +80,15 @@ def find_and_read_bands(hdu, header=None):
 
     Parameters
     ----------
-    hdu : `~astropy.fits.BinTableHDU`
+    hdu : `~astropy.io.fits.BinTableHDU`
         The BANDS table HDU.
+    header : `~astropy.io.fits.Header`
+        TODO
 
     Returns
     -------
     axes : list of `~MapAxis`
         List of axis objects.
-
     """
     if hdu is None:
         return []
@@ -147,8 +149,7 @@ def coordsys_to_frame(coordsys):
     elif coordsys in ['GAL', 'G']:
         return 'galactic'
     else:
-        raise ValueError('Unrecognized coordinate system: {}',
-                         coordsys)
+        raise ValueError('Unrecognized coordinate system: {}'.format(coordsys))
 
 
 def skydir_to_lonlat(skydir, coordsys=None):
@@ -158,12 +159,12 @@ def skydir_to_lonlat(skydir, coordsys=None):
         skydir = skydir.transform_to('galactic')
 
     if skydir.frame.name in ['icrs', 'fk5']:
-        return (skydir.ra.deg, skydir.dec.deg)
+        return skydir.ra.deg, skydir.dec.deg
     elif skydir.frame.name in ['galactic']:
-        return (skydir.l.deg, skydir.b.deg)
+        return skydir.l.deg, skydir.b.deg
     else:
-        raise ValueError('Unrecognized SkyCoord frame: {}',
-                         skydir.frame.name)
+        raise ValueError(
+            'Unrecognized SkyCoord frame: {}'.format(skydir.frame.name))
 
 
 def pix_tuple_to_idx(pix):
@@ -198,7 +199,6 @@ def axes_pix_to_coord(axes, pix):
     pix : tuple
         Tuple of pixel coordinates.
     """
-
     coords = []
     for ax, t in zip(axes, pix):
         coords += [ax.pix_to_coord(t)]
@@ -219,6 +219,7 @@ def coord_to_idx(edges, x, bounded=False):
         ibin[x > edges[-1]] = len(edges) - 1
     else:
         ibin[x > edges[-1]] = -1
+
     return ibin
 
 
@@ -242,9 +243,11 @@ def coord_to_pix(edges, coord, interp='lin'):
     else:
         raise ValueError('Invalid interp: {}'.format(interp))
 
-    interp_fn = interp1d(fn(edges),
-                         np.arange(len(edges)).astype(float),
-                         fill_value='extrapolate')
+    interp_fn = interp1d(
+        fn(edges),
+        np.arange(len(edges)).astype(float),
+        fill_value='extrapolate',
+    )
 
     return interp_fn(fn(coord))
 
@@ -271,15 +274,19 @@ def pix_to_coord(edges, pix, interp='lin'):
     else:
         raise ValueError('Invalid interp: {}'.format(interp))
 
-    interp_fn = interp1d(np.arange(len(edges)).astype(float),
-                         fn0(edges),
-                         fill_value='extrapolate')
+    interp_fn = interp1d(
+        np.arange(len(edges)).astype(float),
+        fn0(edges),
+        fill_value='extrapolate',
+    )
 
     return fn1(interp_fn(pix))
 
 
 class MapAxis(object):
-    """Class representing an axis of a map.  Provides methods for
+    """Class representing an axis of a map.
+
+    Provides methods for
     transforming to/from axis and pixel coordinates.  An axis is
     defined by a sequence of node values that lie at the center of
     each bin.  The pixel coordinate at each node is equal to its index
@@ -295,6 +302,8 @@ class MapAxis(object):
     interp : str
         Interpolation method used to transform between axis and pixel
         coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+    name : str
+        Axis name
     node_type : str
         Flag indicating whether coordinate nodes correspond to pixel
         edges (node_type = 'edge') or pixel centers (node_type =
@@ -305,7 +314,6 @@ class MapAxis(object):
         counts histogram).
     unit : str
         String specifying the data units.
-
     """
 
     # TODO: Add methods to faciliate FITS I/O.
@@ -352,6 +360,10 @@ class MapAxis(object):
         """Name of the axis."""
         return self._name
 
+    @name.setter
+    def name(self, val):
+        self._name = val
+
     @property
     def edges(self):
         """Return array of bin edges."""
@@ -393,12 +405,10 @@ class MapAxis(object):
             Upper bound of last axis bin.
         nbin : int
             Number of bins.
-        interp : str
+        interp : {'lin', 'log', 'sqrt'}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
-
+            coordinates.  Default: 'lin'.
         """
-
         interp = kwargs.setdefault('interp', 'lin')
         node_type = kwargs.setdefault('node_type', 'edge')
 
@@ -435,9 +445,9 @@ class MapAxis(object):
         ----------
         nodes : `~numpy.ndarray`
             Axis nodes (bin center).
-        interp : str
+        interp : {'lin', 'log', 'sqrt'}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+            coordinates.  Default: 'lin'.
         """
         nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
@@ -457,17 +467,14 @@ class MapAxis(object):
         ----------
         edges : `~numpy.ndarray`
             Axis bin edges.
-        interp : str
+        interp : {'lin', 'log', 'sqrt'}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Valid options are `log`, `lin`, and `sqrt`.
+            coordinates.  Default: 'lin'.
         """
         if len(edges) < 2:
             raise ValueError('Edges array must have at least two elements.')
 
         return cls(edges, node_type='edge', **kwargs)
-
-    def set_name(self, name):
-        self._name = name
 
     def pix_to_coord(self, pix):
         """Transform from pixel to axis coordinates.
@@ -517,7 +524,6 @@ class MapAxis(object):
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
-
         """
         return coord_to_idx(self.edges, coord, bounded)
 
@@ -637,19 +643,23 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
 class MapGeom(object):
     """Base class for WCS and HEALPix geometries."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def allsky(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def center_coord(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def center_pix(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def center_skydir(self):
         pass
 
@@ -716,10 +726,11 @@ class MapGeom(object):
 
     @abc.abstractmethod
     def get_pixels(self, idx=None, local=False):
-        """Get tuple of pixel indices for this geometry.  Returns all pixels
-        in the geometry by default.  Pixel indices for a single image
-        plane can be accessed by setting ``idx`` to the index tuple of
-        a plane.
+        """Get tuple of pixel indices for this geometry.
+
+        Returns all pixels in the geometry by default. Pixel indices
+        for a single image plane can be accessed by setting ``idx``
+        to the index tuple of a plane.
 
         Parameters
         ----------
@@ -744,8 +755,9 @@ class MapGeom(object):
 
     @abc.abstractmethod
     def get_coords(self, idx=None):
-        """Get the coordinates of all the pixels in this geometry.  Returns
-        coordinates for all pixels in the geometry by default.
+        """Get the coordinates of all the pixels in this geometry.
+
+        Returns coordinates for all pixels in the geometry by default.
         Coordinates for a single image plane can be accessed by
         setting ``idx`` to the index tuple of a plane.
 
@@ -762,7 +774,6 @@ class MapGeom(object):
         coords : tuple
             Tuple of coordinate vectors with one vector for each
             dimension.
-
         """
         pass
 
@@ -843,8 +854,7 @@ class MapGeom(object):
 
     @abc.abstractmethod
     def contains(self, coords):
-        """
-        Check if a given coordinate is contained in the map.
+        """Check if a given coordinate is contained in the map.
 
         Parameters
         ----------
@@ -889,7 +899,6 @@ class MapGeom(object):
         -------
         geom : `~MapGeom`
             Image geometry.
-
         """
         pass
 
@@ -909,7 +918,6 @@ class MapGeom(object):
         -------
         geom : `~MapGeom`
             Map geometry.
-
         """
         pass
 

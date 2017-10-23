@@ -21,7 +21,7 @@ an all-sky 2D HEALPix image:
 
 .. code:: python
 
-   from gammapy.maps import HpxGeom
+   from gammapy.maps import HpxGeom, HpxMapND, HpxMap
    # Create a HEALPix geometry of NSIDE=16
    geom = HpxGeom(16, coordsys='GAL')
    m = HpxMapND(geom)

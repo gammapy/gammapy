@@ -106,6 +106,7 @@ Fermi-LAT PSF:
 
 .. code:: python
 
+   import numpy as np
    from gammapy.maps import MapBase, MapAxis
    from astropy.coordinates import SkyCoord
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
@@ -187,7 +188,7 @@ given operation across a grid of coordinate values.
 
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   coords = np.linspace(-5.0,5.0,11)
+   coords = np.linspace(-4.0,4.0,9)
 
    # Equivalent calls for accessing value at pixel (49,49)
    vals = m.get_by_idx( (49,49) )
@@ -199,7 +200,7 @@ given operation across a grid of coordinate values.
    # Retrieve map values on a 2D grid of latitude/longitude points
    vals = m.get_by_coords( (coords[None,:], coords[:,None]) )
    # Set map values along slice at longitude=0.0 to twice their existing value
-   m.set_by_coords((0.0, coords), 2.0*m.get_by_coords(0.0, coords))
+   m.set_by_coords((0.0, coords), 2.0*m.get_by_coords((0.0, coords)))
 
 The ``set`` and ``fill`` methods can both be used to set pixel values.
 The following demonstrates how one can set pixel values:
@@ -276,6 +277,7 @@ one can use this method to fill a map with a 2D Gaussian:
 
 .. code:: python
 
+   import numpy as np
    from astropy.coordinates import SkyCoord
    from gammapy.maps import MapBase
    m = MapBase.create(binsz=0.05, map_type='wcs', width=10.0)
@@ -363,8 +365,9 @@ objects that can be used to further tweak/customize the image.
 
    import matplotlib.pyplot as plt
    from gammapy.maps import MapBase
+   from gammapy.maps.utils import fill_poisson
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   m.fill_by_poisson(1.0)
+   fill_poisson(m, mu=1.0, random_state=0)
    fig, ax, im = m.plot(cmap='magma')
    plt.colorbar(im)
 

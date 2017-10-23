@@ -28,7 +28,6 @@ class HpxMapND(HpxMap):
     data : `~numpy.ndarray`
         HEALPIX data array.
         If none then an empty array will be allocated.
-
     """
 
     def __init__(self, hpx, data=None, dtype='float32'):
@@ -487,9 +486,7 @@ class HpxMapND(HpxMap):
 
         im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
             Image object.
-
         """
-
         if method == 'raster':
             m = self.to_wcs(sum_bands=True,
                             normalize=normalize,
@@ -510,9 +507,7 @@ class HpxMapND(HpxMap):
         step : int
             Set the number vertices that will be computed for each
             pixel in multiples of 4.
-
         """
-
         # FIXME: At the moment this only works for all-sky maps if the
         # projection is centered at (0,0)
 
@@ -555,7 +550,7 @@ class HpxMapND(HpxMap):
             dist = np.max(np.abs(pix[0][0] - pix[0]))
 
             # Split pixels that wrap around the edges of the projection
-            if(dist > wcs.npix[0] / 1.5):
+            if (dist > wcs.npix[0] / 1.5):
 
                 lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
                 lon0 = lon - 1E-4

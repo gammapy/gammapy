@@ -19,7 +19,6 @@ class WcsMap(MapBase):
     ----------
     geom : `~gammapy.maps.WcsGeom`
         A WCS geometry object.
-
     data : `~numpy.ndarray`
         Data array.
     """
@@ -126,7 +125,12 @@ class WcsMap(MapBase):
 
     def to_hdulist(self, extname=None, extname_bands=None, sparse=False,
                    conv=None):
+        """Convert to `~astropy.io.fits.HDUList`.
 
+        Parameters
+        ----------
+        TODO
+        """
         if sparse:
             extname = 'SKYMAP' if extname is None else extname.upper()
         else:
@@ -151,6 +155,7 @@ class WcsMap(MapBase):
 
         if self.geom.axes:
             hdulist += [bands_hdu]
+
         return fits.HDUList(hdulist)
 
     def make_hdu(self, extname='SKYMAP', extname_bands=None, sparse=False,

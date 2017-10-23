@@ -25,9 +25,10 @@ class MapBase(object):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.geom.MapGeom`
-
+    geom : `~gammapy.maps.MapGeom`
+        Geometry
     data : `~numpy.ndarray`
+        Data array
     """
 
     def __init__(self, geom, data):
@@ -36,12 +37,8 @@ class MapBase(object):
 
     @property
     def data(self):
-        """Array of data values."""
+        """Data array (`~numpy.ndarray`)"""
         return self._data
-
-    @property
-    def geom(self):
-        return self._geom
 
     @data.setter
     def data(self, val):
@@ -49,9 +46,16 @@ class MapBase(object):
             raise Exception('Wrong shape.')
         self._data = val
 
+    @property
+    def geom(self):
+        """Map geometry (`~gammapy.maps.MapGeom`)"""
+        return self._geom
+
     @classmethod
     def create(cls, **kwargs):
-        """Create an empty map object.  This method accepts generic options
+        """Create an empty map object.
+
+        This method accepts generic options
         listed below as well as options for `~HpxMap` and `~WcsMap`
         objects (see `~HpxMap.create` and `~WcsMap.create` for WCS-
         and HPX-specific options).
@@ -61,24 +65,18 @@ class MapBase(object):
         coordsys : str
             Coordinate system, either Galactic ('GAL') or Equatorial
             ('CEL').
-
         map_type : str
             Internal map representation.  Valid types are `wcs`,
-            `wcs-sparse`,`hpx`, and `hpx-sparse`.
-
+            `wcs-sparse`, `hpx`, and `hpx-sparse`.
         binsz : float or `~numpy.ndarray`
             Pixel size in degrees.
-
         skydir : `~astropy.coordinates.SkyCoord`
             Coordinate of map center.
-
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
             If None then the map will be a 2D image.
-
         dtype : str
-            Data type, default is float32
-
+            Data type, default is ``float32``
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -86,9 +84,7 @@ class MapBase(object):
         -------
         map : `~MapBase`
             Empty map object.
-
         """
-
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
 
@@ -120,7 +116,6 @@ class MapBase(object):
         -------
         map_out : `~MapBase`
             Map object
-
         """
         with fits.open(filename) as hdulist:
             map_out = cls.from_hdulist(hdulist, **kwargs)
@@ -168,7 +163,6 @@ class MapBase(object):
             Array of image plane values.
         idx : tuple
             Index of image plane.
-
         """
         pass
 
@@ -185,7 +179,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : `~np.ndarray`
+        val : `~numpy.ndarray`
             Map values.
         pix : tuple
             Tuple of pixel coordinates.
@@ -205,7 +199,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : `~np.ndarray`
+        val : `~numpy.ndarray`
             Map values.
         coords : tuple
             Tuple of map coordinates.
@@ -224,11 +218,9 @@ class MapBase(object):
         ----------
         geom : `~MapGeom`
             Geometry of projection.
-
         mode : str
             Method for reprojection.  'interp' method interpolates at pixel
             centers.  'exact' method integrates over intersection of pixels.
-
         order : int or str
             Order of interpolating polynomial (0 = nearest-neighbor, 1 =
             linear, 2 = quadratic, 3 = cubic).
@@ -237,7 +229,6 @@ class MapBase(object):
         -------
         map : `~MapBase`
             Reprojected map.
-
         """
         if geom.ndim == 2 and self.geom.ndim > 2:
             geom = geom.to_cube(self.geom.axes)
@@ -297,7 +288,6 @@ class MapBase(object):
         -------
         map : `~MapBase`
             Downsampled map.
-
         """
         pass
 
@@ -314,7 +304,6 @@ class MapBase(object):
         -------
         map : `~MapBase`
             Upsampled map.
-
         """
         pass
 
@@ -344,7 +333,6 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
-
         """
         if interp is None or interp == 'nearest':
             idx = self.geom.coord_to_pix(coords)
@@ -379,7 +367,6 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Array of pixel values.  np.nan used to flag coordinates
            outside of map
-
         """
         pass
 
@@ -399,7 +386,6 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Array of pixel values.
            np.nan used to flag coordinate outside of map
-
         """
         pass
 
@@ -430,7 +416,6 @@ class MapBase(object):
         vals : `~numpy.ndarray`
            Values of pixels in the flattened map.
            np.nan used to flag coords outside of map
-
         """
         pass
 
@@ -544,9 +529,3 @@ class MapBase(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
-
-    def fill_poisson(self, mu):
-
-        pix = self.geom.get_pixels()
-        mu = np.random.poisson(mu, len(pix[0]))
-        self.fill_by_idx(pix, mu)

@@ -105,7 +105,6 @@ class HpxMap(MapBase):
         hpx_map : `HpxMap`
             Map object
         """
-
         if hdu is None:
             hdu = find_bintable_hdu(hdulist)
         else:
@@ -149,7 +148,6 @@ class HpxMap(MapBase):
             WCS object
         data : `~numpy.ndarray`
             Reprojected data
-
         """
         pass
 
@@ -171,7 +169,6 @@ class HpxMap(MapBase):
         preserve_counts : bool
             Choose whether to preserve counts (total amplitude) or
             intensity (amplitude per unit solid angle).
-
         """
         pass
 

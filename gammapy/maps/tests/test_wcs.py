@@ -85,4 +85,4 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     geom1 = WcsGeom.from_header(hdulist[0].header, hdulist['BANDS'])
 
     assert_allclose(geom0.npix, geom1.npix)
-    assert(geom0.coordsys == geom1.coordsys)
+    assert (geom0.coordsys == geom1.coordsys)
