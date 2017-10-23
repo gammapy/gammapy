@@ -23,7 +23,7 @@ class HpxMapND(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HpxGeom`
+    hpx : `~gammapy.maps.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.

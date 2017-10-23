@@ -19,7 +19,7 @@ class HpxMap(MapBase):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HpxGeom`
+    hpx : `~gammapy.maps.HpxGeom`
         HEALPix geometry object.
 
     data : `~numpy.ndarray`

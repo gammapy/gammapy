@@ -253,9 +253,9 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HpxGeom`
+    hpx : `~gammapy.maps.HpxGeom`
        The HEALPIX geometry
-    wcs : `~gammapy.maps.wcs.WcsGeom`
+    wcs : `~gammapy.maps.WcsGeom`
        The WCS geometry
 
     Returns
@@ -1287,7 +1287,7 @@ class HpxGeom(MapGeom):
 
         Returns
         -------
-        wcs : `~gammapy.maps.wcs.WcsGeom`
+        wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
         """
 
@@ -1405,7 +1405,7 @@ class HpxToWcsMapping(object):
     ----------
     hpx : `~HpxGeom`
         HEALPix geometry object.
-    wcs : `~gammapy.maps.wcs.WcsGeom`
+    wcs : `~gammapy.maps.WcsGeom`
         WCS geometry object.
     """
 

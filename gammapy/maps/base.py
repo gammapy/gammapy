@@ -312,8 +312,8 @@ class MapBase(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.geom.MapCoords`
-            `~gammapy.maps.geom.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoords`
+            `~gammapy.maps.MapCoords` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -395,8 +395,8 @@ class MapBase(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.geom.MapCoords`
-            `~gammapy.maps.geom.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoords`
+            `~gammapy.maps.MapCoords` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -425,8 +425,8 @@ class MapBase(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.geom.MapCoords`
-            `~gammapy.maps.geom.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoords`
+            `~gammapy.maps.MapCoords` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -482,8 +482,8 @@ class MapBase(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.geom.MapCoords`
-            `~gammapy.maps.geom.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoords`
+            `~gammapy.maps.MapCoords` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.

@@ -25,7 +25,7 @@ class WcsMapND(WcsMap):
 
     Parameters
     ----------
-    wcs : `~gammapy.maps.wcs.WcsGeom`
+    wcs : `~gammapy.maps.WcsGeom`
         WCS geometry object.
     data : `~numpy.ndarray`
         Data array. If none then an empty array will be allocated.
