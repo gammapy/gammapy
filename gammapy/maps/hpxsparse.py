@@ -21,20 +21,20 @@ class HpxMapSparse(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.HpxGeom`
+    geom : `~gammapy.maps.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
     """
 
-    def __init__(self, hpx, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32'):
         if data is None:
-            shape = tuple([np.max(hpx.npix)] + [ax.nbin for ax in hpx.axes])
+            shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
             data = SparseArray(shape[::-1], dtype=dtype)
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        HpxMap.__init__(self, hpx, data)
+        HpxMap.__init__(self, geom, data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -89,7 +89,7 @@ class HpxMapSparse(HpxMap):
     def get_by_idx(self, idx):
         # Convert to local pixel indices
         idx = pix_tuple_to_idx(idx)
-        idx = self.hpx.global_to_local(idx)
+        idx = self.geom.global_to_local(idx)
         return self.data[idx[::-1]]
 
     def interp_by_coords(self, coords, interp=None):
@@ -99,7 +99,7 @@ class HpxMapSparse(HpxMap):
         idx = pix_tuple_to_idx(idx)
         if weights is None:
             weights = np.ones(idx[0].shape)
-        idx = self.hpx.global_to_local(idx)
+        idx = self.geom.global_to_local(idx)
         idx_flat = np.ravel_multi_index(idx, self.data.shape[::-1])
         idx_flat, idx_inv = np.unique(idx_flat, return_inverse=True)
         idx = np.unravel_index(idx_flat, self.data.shape[::-1])
@@ -109,7 +109,7 @@ class HpxMapSparse(HpxMap):
     def set_by_idx(self, idx, vals):
 
         idx = pix_tuple_to_idx(idx)
-        idx = self.hpx.global_to_local(idx)
+        idx = self.geom.global_to_local(idx)
         self.data[idx[::-1]] = vals
 
     def _make_cols(self, header, conv):

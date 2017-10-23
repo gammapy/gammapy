@@ -19,22 +19,16 @@ class HpxMap(MapBase):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.HpxGeom`
+    geom : `~gammapy.maps.HpxGeom`
         HEALPix geometry object.
-
     data : `~numpy.ndarray`
         Data array.
     """
 
-    def __init__(self, hpx, data):
-        MapBase.__init__(self, hpx, data)
+    def __init__(self, geom, data):
+        MapBase.__init__(self, geom, data)
         self._wcs2d = None
         self._hpx2wcs = None
-
-    @property
-    def hpx(self):
-        """HEALPix geometry object."""
-        return self.geom
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type=None, coordsys='CEL',
@@ -121,7 +115,7 @@ class HpxMap(MapBase):
     def to_hdulist(self, **kwargs):
 
         extname = kwargs.get('extname', 'SKYMAP')
-        #extname_bands = kwargs.get('extname_bands', self.hpx.conv.bands_hdu)
+        # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')
         hdulist = [fits.PrimaryHDU(), self.make_hdu(**kwargs)]
 
@@ -201,8 +195,8 @@ class HpxMap(MapBase):
         extname_bands = conv.bands_hdu
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxMapSparse)
-                            else False)
-        header = self.hpx.make_header()
+        else False)
+        header = self.geom.make_header()
 
         if self.geom.axes:
             header['BANDSHDU'] = extname_bands
@@ -212,7 +206,7 @@ class HpxMap(MapBase):
 
         cols = []
         if header['INDXSCHM'] == 'EXPLICIT':
-            cols.append(fits.Column('PIX', 'J', array=self.hpx._ipix))
+            cols.append(fits.Column('PIX', 'J', array=self.geom._ipix))
         elif header['INDXSCHM'] == 'LOCAL':
             cols.append(fits.Column('PIX', 'J',
                                     array=np.arange(data.shape[-1])))
