@@ -25,7 +25,7 @@ class WcsMapND(WcsMap):
 
     Parameters
     ----------
-    wcs : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         WCS geometry object.
     data : `~numpy.ndarray`
         Data array. If none then an empty array will be allocated.
@@ -33,18 +33,18 @@ class WcsMapND(WcsMap):
         Data type, default is float32
     """
 
-    def __init__(self, wcs, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32'):
         # TODO: Figure out how to mask pixels for integer data types
 
-        shape = tuple([np.max(wcs.npix[0]), np.max(wcs.npix[1])] +
-                      [ax.nbin for ax in wcs.axes])
+        shape = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])] +
+                      [ax.nbin for ax in geom.axes])
         if data is None:
-            data = self._init_data(wcs, shape, dtype)
+            data = self._init_data(geom, shape, dtype)
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        WcsMap.__init__(self, wcs, data)
+        WcsMap.__init__(self, geom, data)
 
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid
