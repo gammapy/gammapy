@@ -12,6 +12,7 @@ from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
+from ..image import SkyImage
 from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
 from .utils import _earth_location_from_dict
@@ -19,7 +20,9 @@ from .gti import GTI
 from . import InvalidDataError
 
 __all__ = [
+    'EventListBase',
     'EventList',
+    'EventListLAT',
     'EventListDataset',
     'EventListDatasetChecker',
 ]
@@ -27,10 +30,12 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-class EventList(object):
+class EventListBase(object):
     """Event list.
 
-    Data format specification: ref:`gadf:iact-events`
+    This class represents the base for two different event lists:
+    - EventList: targeted for IACT event lists
+    - EventListLAT: targeted for Fermi-LAT event lists
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
 
@@ -61,19 +66,6 @@ class EventList(object):
     ----------
     table : `~astropy.table.Table`
         Event list table
-
-    Examples
-    --------
-    To load an example H.E.S.S. event list:
-
-    >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-    >>> events = EventList.read(filename)
-
-    To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
-
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
-    >>> events = EventList.read(filename)
     """
 
     def __init__(self, table):
@@ -187,73 +179,18 @@ class EventList(object):
         self.table['GLON'] = galactic.l.degree
         self.table['GLAT'] = galactic.b.degree
 
-    # TODO: the following properties are also present on the `DataStoreObservation` class.
-    # This duplication should be removed.
-    # Maybe the EventList or EventListDataset should have an `observation` object member?
-    @property
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.table.meta)
-
-    @property
-    def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
-
-        The wall time, including dead-time.
-        """
-        return Quantity(self.table.meta['ONTIME'], 'second')
-
     @property
     def observation_live_time_duration(self):
         """Live-time duration in seconds (`~astropy.units.Quantity`).
 
         The dead-time-corrected observation time.
 
-        Computed as ``t_live = t_observation * (1 - f_dead)``
+        * In Fermi-LAT it is automatically provided in the header of the event list.
+        * In IACTs is computed as
+        ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
         return Quantity(self.table.meta['LIVETIME'], 'second')
-
-    @property
-    def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
-
-        Defined as dead-time over observation time.
-
-        Dead-time is defined as the time during the observation
-        where the detector didn't record events:
-        http://en.wikipedia.org/wiki/Dead_time
-        http://adsabs.harvard.edu/abs/2004APh....22..285F
-
-        The dead-time fraction is used in the live-time computation,
-        which in turn is used in the exposure and flux computation.
-        """
-        return 1 - self.table.meta['DEADC']
-
-    @property
-    def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        time = self.time
-        location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=time, location=location)
-
-        lon, lat = self.table['AZ'], self.table['ALT']
-        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
-
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self.table.meta
-        lon, lat = info['RA_PNT'], info['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
-
-    @property
-    def offset(self):
-        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
-        position = self.radec
-        center = self.pointing_radec
-        offset = center.separation(position)
-        return Angle(offset, unit='deg')
 
     @property
     def energy(self):
@@ -313,24 +250,6 @@ class EventList(object):
         energy = self.energy
         mask = (energy_band[0] <= energy)
         mask &= (energy < energy_band[1])
-        return self.select_row_subset(mask)
-
-    def select_offset(self, offset_band):
-        """Select events in offset band.
-
-        Parameters
-        ----------
-        offset_band : `~astropy.coordinates.Angle`
-            offset band ``[offset_min, offset_max)``
-
-        Returns
-        -------
-        event_list : `EventList`
-            Copy of event list with selection applied.
-        """
-        offset = self.offset
-        mask = (offset_band[0] <= offset)
-        mask &= (offset < offset_band[1])
         return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
@@ -435,119 +354,19 @@ class EventList(object):
             mask = np.union1d(mask, temp)
         return mask
 
-    def peek(self):
-        """Summary plots."""
-        import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
-        self.plot_image_radec(ax=axes[0])
-        #        self.plot_time_map(ax=axes[1])
-        self.plot_time(ax=axes[1])
-
-        # log-log scale for time map
-        #        xlims = axes[1].set_xlim()
-        #        ylims = axes[1].set_ylim()
-        #        axes[1].set_xlim(1e-3, xlims[1])
-        #        axes[1].set_ylim(1e-3, ylims[1])
-        #        axes[1].loglog()
-        # TODO: self.plot_energy_dependence(ax=axes[x])
-        # TODO: self.plot_offset_dependence(ax=axes[x])
-        plt.tight_layout()
-
-    def plot_image_radec(self, ax=None, number_bins=50):
-        """Plot a sky  counts image in RADEC coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
-        """
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        from matplotlib.colors import PowerNorm
-
-        ax = plt.gca() if ax is None else ax
-
-        # max_x = max(self.table['RA'])
-        # min_x = min(self.table['RA'])
-        # max_y = max(self.table['DEC'])
-        # min_y = min(self.table['DEC'])
-        #
-        # x_edges = np.linspace(min_x, max_x, number_bins)
-        # y_edges = np.linspace(min_y, max_y, number_bins)
-
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
-
-        ax.set_title('# Photons')
-
-        ax.set_xlabel('RA')
-        ax.set_ylabel('DEC')
-
-        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value, '+', ms=20, mew=3, color='white')
-
-        im = ax.imshow(count_image, interpolation='nearest', origin='low',
-                       extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
-                       norm=PowerNorm(gamma=0.5))
-
-        ax.invert_xaxis()
-        ax.grid()
-
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im, cax=cax)
-
-    def plot_image(self, ax=None, number_bins=50):
-        """Plot the counts as a function of x and y camera coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
-        """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        max_x = max(self.table['DETX'])
-        min_x = min(self.table['DETX'])
-        max_y = max(self.table['DETY'])
-        min_y = min(self.table['DETY'])
-
-        x_edges = np.linspace(min_x, max_x, number_bins)
-        y_edges = np.linspace(min_y, max_y, number_bins)
-
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['DETY'], self.table[:]['DETX'],
-            bins=(x_edges, y_edges)
-        )
-
-        ax.set_title('# Photons')
-
-        ax.set_xlabel('x / deg')
-        ax.set_ylabel('y / deg')
-        ax.imshow(count_image, interpolation='nearest', origin='low',
-                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
-
     def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
         """Plot counts as a function of energy."""
         from ..spectrum import CountsSpectrum
 
         if ebounds is None:
-            emin = np.min(self['ENERGY'].quantity)
-            emax = np.max(self['ENERGY'].quantity)
+            emin = np.min(self.table['ENERGY'].quantity)
+            emax = np.max(self.table['ENERGY'].quantity)
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
-        spec = CountsSpectrum(energy=ebounds)
-        spec.fill(self)
+        spec = CountsSpectrum(energy_lo = ebounds[:-1], energy_hi = ebounds[1:])
+        spec.fill(self.energy) # leaving spec.fill(self) was triggering an issue for the LAT event list
         spec.plot(ax=ax, **kwargs)
         return ax
-
-    def plot_offset_hist(self, ax=None):
-        """Plot counts as a function of camera offset."""
-        raise NotImplementedError
-
-    def plot_energy_offset(self, ax=None):
-        """Plot energy dependence as a function of camera offset."""
-        raise NotImplementedError
 
     def plot_time(self, ax=None):
         """Plots an event rate time curve.
@@ -653,6 +472,233 @@ class EventList(object):
 
         return ax
 
+
+class EventList(EventListBase):
+    """Event list for IACT dataset
+
+    Examples
+    --------
+    To load an example H.E.S.S. event list:
+
+    >>> from gammapy.data import EventList
+    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
+    >>> events = EventList.read(filename)
+    """
+
+    def __init__(self, table):
+        EventListBase.__init__(self, table)
+
+    # TODO: the following properties are also present on the `DataStoreObservation` class.
+    # This duplication should be removed.
+    # Maybe the EventList or EventListDataset should have an `observation` object member?
+    @property
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return _earth_location_from_dict(self.table.meta)
+
+    @property
+    def observation_time_duration(self):
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        This is a keyword related to IACTs
+        The wall time, including dead-time.
+        """
+        return Quantity(self.table.meta['ONTIME'], 'second')
+
+    @property
+    def observation_dead_time_fraction(self):
+        """Dead-time fraction (float).
+        This is a keyword related to IACTs
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector didn't record events:
+        http://en.wikipedia.org/wiki/Dead_time
+        http://adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+        """
+        return 1 - self.table.meta['DEADC']
+
+    @property
+    def altaz(self):
+        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        time = self.time
+        location = self.observatory_earth_location
+        altaz_frame = AltAz(obstime=time, location=location)
+
+        lon, lat = self.table['AZ'], self.table['ALT']
+        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
+
+    @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        info = self.table.meta
+        lon, lat = info['RA_PNT'], info['DEC_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @property
+    def offset(self):
+        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
+        position = self.radec
+        center = self.pointing_radec
+        offset = center.separation(position)
+        return Angle(offset, unit='deg')
+
+    def select_offset(self, offset_band):
+        """Select events in offset band.
+
+        Parameters
+        ----------
+        offset_band : `~astropy.coordinates.Angle`
+            offset band ``[offset_min, offset_max)``
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        offset = self.offset
+        mask = (offset_band[0] <= offset)
+        mask &= (offset < offset_band[1])
+        return self.select_row_subset(mask)
+
+
+    def peek(self):
+        """Summary plots."""
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
+        self.plot_image_radec(ax=axes[0])
+        #        self.plot_time_map(ax=axes[1])
+        self.plot_time(ax=axes[1])
+
+        # log-log scale for time map
+        #        xlims = axes[1].set_xlim()
+        #        ylims = axes[1].set_ylim()
+        #        axes[1].set_xlim(1e-3, xlims[1])
+        #        axes[1].set_ylim(1e-3, ylims[1])
+        #        axes[1].loglog()
+        # TODO: self.plot_energy_dependence(ax=axes[x])
+        # TODO: self.plot_offset_dependence(ax=axes[x])
+        plt.tight_layout()
+
+    def plot_image_radec(self, ax=None, number_bins=50):
+        """Plot a sky  counts image in RADEC coordinate.
+
+        TODO: fix the histogramming ... this example shows that it's currently incorrect:
+        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
+        Maybe we can use the FOVCube class for this with one energy bin.
+        Or add a separate FOVImage class.
+        """
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        from matplotlib.colors import PowerNorm
+
+        ax = plt.gca() if ax is None else ax
+
+        # max_x = max(self.table['RA'])
+        # min_x = min(self.table['RA'])
+        # max_y = max(self.table['DEC'])
+        # min_y = min(self.table['DEC'])
+        #
+        # x_edges = np.linspace(min_x, max_x, number_bins)
+        # y_edges = np.linspace(min_y, max_y, number_bins)
+
+        count_image, x_edges, y_edges = np.histogram2d(
+            self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
+
+        ax.set_title('# Photons')
+
+        ax.set_xlabel('RA')
+        ax.set_ylabel('DEC')
+
+        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value, '+', ms=20, mew=3, color='white')
+
+        im = ax.imshow(count_image, interpolation='nearest', origin='low',
+                       extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+                       norm=PowerNorm(gamma=0.5))
+
+        ax.invert_xaxis()
+        ax.grid()
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(im, cax=cax)
+
+    def plot_image(self, ax=None, number_bins=50):
+        """Plot the counts as a function of x and y camera coordinate.
+
+        TODO: fix the histogramming ... this example shows that it's currently incorrect:
+        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
+        Maybe we can use the FOVCube class for this with one energy bin.
+        Or add a separate FOVImage class.
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        max_x = max(self.table['DETX'])
+        min_x = min(self.table['DETX'])
+        max_y = max(self.table['DETY'])
+        min_y = min(self.table['DETY'])
+
+        x_edges = np.linspace(min_x, max_x, number_bins)
+        y_edges = np.linspace(min_y, max_y, number_bins)
+
+        count_image, x_edges, y_edges = np.histogram2d(
+            self.table[:]['DETY'], self.table[:]['DETX'],
+            bins=(x_edges, y_edges)
+        )
+
+        ax.set_title('# Photons')
+
+        ax.set_xlabel('x / deg')
+        ax.set_ylabel('y / deg')
+        ax.imshow(count_image, interpolation='nearest', origin='low',
+                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
+
+    def plot_offset_hist(self, ax=None):
+        """Plot counts as a function of camera offset."""
+        raise NotImplementedError
+
+    def plot_energy_offset(self, ax=None):
+        """Plot energy dependence as a function of camera offset."""
+        raise NotImplementedError
+
+
+class EventListLAT(EventListBase):
+    """Event list for IACT dataset
+
+    To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
+
+    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
+    >>> events = EventList.read(filename)
+    """
+    def __init__(self, table):
+        EventListBase.__init__(self, table)
+
+    def plot_image_radius(self, center, size):
+        """A quick look function to generate a count skymap
+        with all the photons within a certain radius.
+        Fermi-LAT eventlist could encompass large fraction of the sky,
+        this way we can restirct the skymap to a region of interest (ROI)
+
+        Parameters:
+        -----------
+        center : `~astropy.coordinates.SkyCoord`
+            Sky circle center
+        size : `~astropy.coordinates.Quantity`
+            size of the square defining our ROI
+
+        """
+        ref_image = SkyImage.empty(
+            nxpix=400, nypix=400, binsz=0.02,
+            xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
+            coordsys='CEL', proj='TAN',
+            )
+        counts_image = SkyImage.empty_like(ref_image)
+        counts_image.fill_events(self)
+        cutout = counts_image.cutout(center, size)
+        cutout.show()
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
