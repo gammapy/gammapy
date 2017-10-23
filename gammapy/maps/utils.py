@@ -1,24 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy.io import fits
+from ..utils.random import get_random_state
 
 
-def fill_poisson(map_in, mu):
+def fill_poisson(map_in, mu, random_state='random-seed'):
     """Fill a map object with a poisson random variable.
+
+    This can be useful for testing, to make a simulated counts image.
+    E.g. filling with ``mu=0.5`` fills the map so that many pixels
+    have value 0 or 1, and a few more "counts".
 
     Parameters
     ----------
     map_in : `~gammapy.maps.MapBase`
-        Input map.
-
+        Input map
     mu : scalar or `~numpy.ndarray`
-        Expectation value.
-
+        Expectation value
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
     """
-
+    random_state = get_random_state(random_state)
     pix = map_in.geom.get_pixels()
-    mu = np.random.poisson(mu, len(pix[0]))
+    mu = random_state.poisson(mu, len(pix[0]))
     map_in.fill_by_idx(pix, mu)
 
 

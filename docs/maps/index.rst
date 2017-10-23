@@ -365,8 +365,9 @@ objects that can be used to further tweak/customize the image.
 
    import matplotlib.pyplot as plt
    from gammapy.maps import MapBase
+   from gammapy.maps.utils import fill_poisson
    m = MapBase.create(binsz=0.1, map_type='wcs', width=10.0)
-   m.fill_poisson(1.0)
+   fill_poisson(m, mu=1.0, random_state=0)
    fig, ax, im = m.plot(cmap='magma')
    plt.colorbar(im)
 

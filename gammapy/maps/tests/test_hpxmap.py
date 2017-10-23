@@ -68,7 +68,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     filename = str(tmpdir / 'skycube.fits')
 
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    fill_poisson(m, 0.5)
+    fill_poisson(m, mu=0.5, random_state=0)
     m.write(filename)
 
     m2 = HpxMapND.read(filename)
@@ -155,7 +155,7 @@ def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
 def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    fill_poisson(m, 1.0)
+    fill_poisson(m, mu=1.0, random_state=0)
     m2 = m.to_swapped_scheme()
     coords = m.hpx.get_coords()
     assert_allclose(m.get_by_coords(coords), m2.get_by_coords(coords))
