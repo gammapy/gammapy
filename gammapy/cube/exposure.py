@@ -12,7 +12,7 @@ def make_exposure_cube(pointing,
                        livetime,
                        aeff,
                        ref_cube,
-                       offset_max=None,
+                       offset_max,
                        ):
     """Calculate exposure cube.
 
@@ -53,7 +53,7 @@ def make_background_cube(pointing,
                          obstime,
                          bkg,
                          ref_cube,
-                         offset_max=None,
+                         offset_max,
                          ):
     """Calculate background predicted counts cube.
 
