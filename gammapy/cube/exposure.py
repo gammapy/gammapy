@@ -58,10 +58,16 @@ def make_background_cube(pointing,
     """Calculate background predicted counts cube.
 
     This function evaluates the background rate model on
-    a sky cube, and then multiplies with
+    a sky cube, and then multiplies with the cube bin size,
+    computed via `gammapy.cube.SkyCube.bin_size`, resulting
+    in a cube with values that contain predicted background
+    counts per bin.
 
-    TODO: clarify if it should be livetime or obstime:
-    https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/97
+    Note that this method isn't very precise if the energy
+    bins are large. In that case you might consider implementing
+    a more precise method that integrates over energy (e.g. by
+    choosing a finer energy binning here and then to group
+    energy bins).
 
     Parameters
     ----------
@@ -70,7 +76,7 @@ def make_background_cube(pointing,
     obstime : `~astropy.units.Quantity`
         Observation time
     bkg : `~gammapy.irf.Background3D`
-        Effective area table
+        Background rate model
     ref_cube : `~gammapy.cube.SkyCube`
         Reference cube used to define geometry
     offset_max : `~astropy.coordinates.Angle`
@@ -79,7 +85,7 @@ def make_background_cube(pointing,
     Returns
     -------
     background : `~gammapy.cube.SkyCube`
-        Background cube (3D)
+        Background predicted counts sky cube
     """
     coordinates = ref_cube.sky_image_ref.coordinates()
     offset = coordinates.separation(pointing)

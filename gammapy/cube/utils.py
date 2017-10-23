@@ -111,12 +111,10 @@ def compute_npred_cube_simple(flux_cube, exposure_cube):
     """
     _validate_inputs(flux_cube, exposure_cube)
 
-    solid_angle = exposure_cube.sky_image_ref.solid_angle()
-    # TODO: is this OK? Exposure cube has no `ebounds`, only `ecenter`, but npred needs `ebounds`, no?
-    de = exposure_cube.energy_width
+    bin_size = exposure_cube.bin_size
     flux = flux_cube.data
     exposure = exposure_cube.data
-    npred = flux * exposure * solid_angle * de[:, np.newaxis, np.newaxis]
+    npred = flux * exposure * bin_size
 
     npred_cube = SkyCube.empty_like(exposure_cube)
     npred_cube.data = npred.to('')
