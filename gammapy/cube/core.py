@@ -333,9 +333,23 @@ class SkyCube(MapBase):
 
     @property
     def energy_width(self):
-        """Energy bin width vector (Quantity)"""
+        """Energy bin width vector (`~astropy.units.Quantity`)"""
         ebounds = self.energies(mode='edges')
         return ebounds[1:] - ebounds[:-1]
+
+    @property
+    def bin_size(self):
+        """Sky cube element bin size (`~astropy.units.Quantity`)
+
+        This is a convenience method which computes this::
+
+            cube.energy_width * cube.sky_image_ref.solid_angle()
+
+        Units could be "TeV" (or whatever ``energy_width`` returns) times "sr"
+        """
+        solid_angle = self.sky_image_ref.solid_angle()
+        de = self.energy_width
+        return solid_angle * de[:, np.newaxis, np.newaxis]
 
     def cutout(self, position, size):
         """Cut out rectangular piece of a cube.

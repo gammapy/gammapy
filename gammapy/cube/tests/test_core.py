@@ -196,6 +196,14 @@ class TestSkyCubeInterpolation(object):
         integral = self.sky_cube.sky_image_integral(emin, emax)
         assert_quantity_allclose(integral.data, self.pwl.integral(emin, emax))
 
+    def test_bin_size(self):
+        bin_size = self.sky_cube.bin_size
+        assert bin_size.shape == (4, 3, 3)
+        assert bin_size.unit == 'TeV sr'
+
+        assert_allclose(bin_size.value[0, 0, 0], 2.6346694056569e-07)
+        assert_allclose(bin_size.value.sum(), 0.00010856564234889744)
+
     @requires_dependency('reproject')
     def test_reproject(self):
         emin = 1 * u.TeV
