@@ -23,21 +23,21 @@ class HpxMapND(HpxMap):
 
     Parameters
     ----------
-    hpx : `~gammapy.maps.hpx.HpxGeom`
+    geom : `~gammapy.maps.HpxGeom`
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
         If none then an empty array will be allocated.
     """
 
-    def __init__(self, hpx, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32'):
 
-        shape = tuple([np.max(hpx.npix)] + [ax.nbin for ax in hpx.axes])
+        shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
         if data is None:
 
-            if hpx.npix.size > 1:
+            if geom.npix.size > 1:
                 data = np.nan * np.ones(shape, dtype=dtype).T
-                pix = hpx.get_pixels(local=True)
+                pix = geom.get_pixels(local=True)
                 data[pix[::-1]] = 0.0
             else:
                 data = np.zeros(shape, dtype=dtype).T
@@ -46,7 +46,7 @@ class HpxMapND(HpxMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        HpxMap.__init__(self, hpx, data)
+        HpxMap.__init__(self, geom, data)
         self._wcs2d = None
         self._hpx2wcs = None
 
@@ -92,6 +92,7 @@ class HpxMapND(HpxMap):
                 for i, cname in enumerate(cnames):
                     idx = np.unravel_index(i, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
+
         return map_out
 
     def make_wcs_mapping(self, sum_bands=False, proj='AIT', oversample=2):
@@ -117,15 +118,15 @@ class HpxMapND(HpxMap):
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
-        self._wcs2d = self.hpx.make_wcs(proj=proj, oversample=oversample,
+        self._wcs2d = self.geom.make_wcs(proj=proj, oversample=oversample,
                                         drop_axes=True)
-        self._hpx2wcs = HpxToWcsMapping.create(self.hpx, self._wcs2d)
+        self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
 
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
 
         from .wcsnd import WcsMapND
 
-        if sum_bands and self.hpx.nside.size > 1:
+        if sum_bands and self.geom.nside.size > 1:
             map_sum = self.sum_over_axes()
             return map_sum.to_wcs(sum_bands=False, normalize=normalize, proj=proj,
                                   oversample=oversample)
@@ -141,15 +142,15 @@ class HpxMapND(HpxMap):
             hpx_data = np.squeeze(hpx_data)
             wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.hpx.make_wcs(proj=proj,
+            wcs = self.geom.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=True)
         else:
             hpx_data = self.data
             wcs_shape = tuple([t.flat[0] for t in
-                               self._hpx2wcs.npix]) + self.hpx._shape
+                               self._hpx2wcs.npix]) + self.geom._shape
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.hpx.make_wcs(proj=proj,
+            wcs = self.geom.make_wcs(proj=proj,
                                     oversample=oversample,
                                     drop_axes=False)
 
@@ -189,12 +190,12 @@ class HpxMapND(HpxMap):
             Summed map.
         """
 
-        hpx_out = self.hpx.to_image()
+        hpx_out = self.geom.to_image()
         map_out = self.__class__(hpx_out)
 
-        if self.hpx.nside.size > 1:
-            vals = self.get_by_idx(self.hpx.get_pixels())
-            map_out.fill_by_coords(self.hpx.get_coords()[:2], vals)
+        if self.geom.nside.size > 1:
+            vals = self.get_by_idx(self.geom.get_pixels())
+            map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
         else:
             axes = np.arange(self.data.ndim - 1).tolist()
             data = np.apply_over_axes(np.sum, self.data, axes=axes)
@@ -272,7 +273,7 @@ class HpxMapND(HpxMap):
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
-        idx = self.hpx.global_to_local(idx)
+        idx = self.geom.global_to_local(idx)
         return self.data.T[idx]
 
     def _get_interp_weights(self, coords, idxs):
@@ -283,8 +284,8 @@ class HpxMapND(HpxMap):
         coords_ctr = list(coords[:2])
         coords_ctr += [ax.pix_to_coord(t)
                        for ax, t in zip(self.geom.axes, idxs)]
-        pix_ctr = pix_tuple_to_idx(self.hpx.coord_to_pix(coords_ctr))
-        pix_ctr = self.hpx.global_to_local(pix_ctr)
+        pix_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
+        pix_ctr = self.geom.global_to_local(pix_ctr)
 
         if np.any(pix_ctr[0] == -1):
             raise ValueError('HPX pixel index out of map bounds.')
@@ -292,18 +293,18 @@ class HpxMapND(HpxMap):
         theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
         phi = np.array(np.radians(c.lon), ndmin=1)
 
-        if self.hpx.nside.size > 1:
-            nside = self.hpx.nside[idxs]
+        if self.geom.nside.size > 1:
+            nside = self.geom.nside[idxs]
         else:
-            nside = self.hpx.nside
+            nside = self.geom.nside
 
         pix, wts = hp.pixelfunc.get_interp_weights(nside, theta,
-                                                   phi, nest=self.hpx.nest)
+                                                   phi, nest=self.geom.nest)
 
-        if self.hpx.nside.size > 1:
-            pix_local = [self.hpx.global_to_local([pix] + list(idxs))[0]]
+        if self.geom.nside.size > 1:
+            pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
         else:
-            pix_local = [self.hpx[pix]]
+            pix_local = [self.geom[pix]]
 
         m = pix_local[0] == -1
         pix_local[0][m] = (pix_ctr[0] * np.ones(pix.shape, dtype=int))[m]
@@ -316,18 +317,18 @@ class HpxMapND(HpxMap):
 
         c = MapCoords.create(coords)
         pix, wts = self._get_interp_weights(coords,
-                                            self.hpx.coord_to_idx(c)[1:])
+                                            self.geom.coord_to_idx(c)[1:])
 
-        if self.hpx.ndim == 2:
+        if self.geom.ndim == 2:
             return np.sum(self.data.T[pix] * wts, axis=0)
 
         val = np.zeros(pix[0].shape[1:])
         # Loop over function values at corners
-        for i, t in enumerate(range(2 ** len(self.hpx.axes))):
+        for i, t in enumerate(range(2 ** len(self.geom.axes))):
 
             pix_i = []
             wt = np.ones(pix[0].shape[1:])[None, ...]
-            for j, ax in enumerate(self.hpx.axes):
+            for j, ax in enumerate(self.geom.axes):
 
                 idx = coord_to_idx(ax.center[:-1],
                                    c[2 + j], bounded=True)  # [None, ...]
@@ -340,7 +341,7 @@ class HpxMapND(HpxMap):
                     wt *= (1.0 - (c[2 + j] - ax.center[idx]) / w)
                     pix_i += [idx]
 
-            if self.hpx.nside.size > 1:
+            if self.geom.nside.size > 1:
                 pix, wts = self._get_interp_weights(coords, pix_i)
 
             val += np.sum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
@@ -352,7 +353,7 @@ class HpxMapND(HpxMap):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
-        idx_local = list(self.hpx.global_to_local(idx))
+        idx_local = list(self.geom.global_to_local(idx))
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
@@ -365,7 +366,7 @@ class HpxMapND(HpxMap):
     def set_by_idx(self, idx, vals):
 
         idx = pix_tuple_to_idx(idx)
-        idx_local = (self.hpx[idx[0]],) + tuple(idx[1:])
+        idx_local = (self.geom[idx[0]],) + tuple(idx[1:])
         self.data.T[idx_local] = vals
 
     def _make_cols(self, header, conv):
@@ -401,20 +402,20 @@ class HpxMapND(HpxMap):
     def to_swapped_scheme(self):
 
         import healpy as hp
-        hpx_out = self.hpx.to_swapped()
+        hpx_out = self.geom.to_swapped()
         map_out = self.__class__(hpx_out)
-        idx = list(self.hpx.get_pixels())
+        idx = list(self.geom.get_pixels())
         vals = self.get_by_idx(idx)
         msk = vals > 0
         idx = [t[msk] for t in idx]
         vals = vals[msk]
 
-        if self.hpx.nside.size > 1:
-            nside = self.hpx.nside[idx[1:]]
+        if self.geom.nside.size > 1:
+            nside = self.geom.nside[idx[1:]]
         else:
-            nside = self.hpx.nside
+            nside = self.geom.nside
 
-        if self.hpx.nest:
+        if self.geom.nest:
             idx_new = tuple([hp.nest2ring(nside, idx[0])] + idx[1:])
         else:
             idx_new = tuple([hp.ring2nest(nside, idx[0])] + idx[1:])
@@ -432,11 +433,11 @@ class HpxMapND(HpxMap):
 
         import healpy as hp
         order = nside_to_order(nside)
-        new_hpx = self.hpx.ud_graded_hpx(order)
+        new_hpx = self.geom.ud_graded_hpx(order)
         map_out = self.__class__(new_hpx)
 
-        idx = list(self.hpx.get_pixels())
-        coords = self.hpx.get_coords()
+        idx = list(self.geom.get_pixels())
+        coords = self.geom.get_coords()
         vals = self.get_by_idx(idx)
         msk = vals > 0
         coords = [t[msk] for t in coords]
@@ -445,8 +446,8 @@ class HpxMapND(HpxMap):
         map_out.fill_by_coords(coords, vals)
 
         if not preserve_counts:
-            fact = (2 ** order) ** 2 / (2 ** self.hpx.order) ** 2
-            if self.hpx.nside.size > 1:
+            fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2
+            if self.geom.nside.size > 1:
                 fact = fact[..., None]
             map_out.data *= fact
 

@@ -70,7 +70,7 @@ class SparseArray(object):
     argument for the array type:
 
     >>> import numpy as np
-    >>> from gammapy.maps.sparse import SparseArray
+    >>> from gammapy.maps import SparseArray
     >>> v = SparseArray((10,20), dtype=float)
 
     Alternatively you can create a new SparseArray from an
