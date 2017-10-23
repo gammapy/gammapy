@@ -184,8 +184,8 @@ class EventListBase(object):
 
         The dead-time-corrected observation time.
 
-        * In Fermi-LAT it is automatically provided in the header of the event list.
-        * In IACTs is computed as
+        - In Fermi-LAT it is automatically provided in the header of the event list.
+        - In IACTs is computed as
         ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
@@ -475,6 +475,15 @@ class EventListBase(object):
 class EventList(EventListBase):
     """Event list for IACT dataset
 
+    Data format specification: :ref:`gadf:iact-events`
+
+    For further information, see the base class: `~gammapy.data.EventListBase`.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
     Examples
     --------
     To load an example H.E.S.S. event list:
@@ -483,9 +492,6 @@ class EventList(EventListBase):
     >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
     >>> events = EventList.read(filename)
     """
-
-    def __init__(self, table):
-        EventListBase.__init__(self, table)
 
     # TODO: the following properties are also present on the `DataStoreObservation` class.
     # This duplication should be removed.
@@ -665,23 +671,42 @@ class EventList(EventListBase):
 
 
 class EventListLAT(EventListBase):
-    """Event list for IACT dataset
+    """Event list for Fermi-LAT dataset
 
+    Fermi-LAT data products
+    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
+    Data format specification (columns)
+    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_Data_Columns.html
+
+    For further information, see the base class: `~gammapy.data.EventListBase`.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
+    Example
+    -------
     To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
 
+    >>> from gammapy.data import EventListLAT
     >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
-    >>> events = EventList.read(filename)
+    >>> events = EventListLAT.read(filename)
     """
-    def __init__(self, table):
-        EventListBase.__init__(self, table)
 
     def plot_image(self, center, size):
         """A quick look function to generate a count skymap with all the photons
-        within a certain square.
-        Fermi-LAT eventlist could encompass large fraction of the sky,
-        this way we can restirct the skymap to a squared region of interest (ROI)
+        within a certain square (rectangle).
 
-        Parameters:
+        Fermi-LAT eventlist could encompass large fraction of the sky,
+        this way we can restirct the skymap to a squared (rectangular)
+        region of interest (ROI)
+
+        We evaluate the number of pixel of the skymap such that we have a
+        bin size 0.1 deg, this is what is suggested by default in fermipy
+        http://fermipy.readthedocs.io/en/latest/config.html
+
+        Parameters
         -----------
         center : `~astropy.coordinates.SkyCoord`
             Sky circle center
@@ -689,15 +714,16 @@ class EventListLAT(EventListBase):
             size of the square defining our ROI
         """
         from ..image import SkyImage
-        ref_image = SkyImage.empty(
-            nxpix=400, nypix=400, binsz=0.02,
+        binsz = Quantity(0.1, 'deg')
+        nxpix = int(size[0]/binsz)
+        nypix = int(size[1]/binsz)
+        counts_image = SkyImage.empty(
+            nxpix=nxpix, nypix=nypix, binsz=binsz.value,
             xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
             coordsys='CEL', proj='TAN',
             )
-        counts_image = SkyImage.empty_like(ref_image)
         counts_image.fill_events(self)
-        cutout = counts_image.cutout(center, size)
-        cutout.show()
+        counts_image.show()
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
