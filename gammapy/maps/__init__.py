@@ -11,7 +11,7 @@ This is work in progress, we're prototyping.
 from .base import *
 from .geom import *
 from .hpx import *
-from .hpxcube import *
+from .hpxnd import *
 from .hpxsparse import *
 from .hpxmap import *
 from .wcs import *

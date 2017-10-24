@@ -647,7 +647,7 @@ class HpxGeom(MapGeom):
 
         # FIXME: Correctly apply bounds on non-spatial pixel
         # coordinates
-        idx = list(pix_tuple_to_idx(pix))
+        idx = list(pix_tuple_to_idx(pix, copy=True))
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
             idx[i][(idx_local[i] < 0) | (idx[i] < 0)] = -1
@@ -754,7 +754,7 @@ class HpxGeom(MapGeom):
         return self._region
 
     @property
-    def allsky(self):
+    def is_allsky(self):
         """Flag for all-sky maps."""
         if self._region is None:
             return True
@@ -762,7 +762,7 @@ class HpxGeom(MapGeom):
             return False
 
     @property
-    def regular(self):
+    def is_regular(self):
         """Flag identifying whether this geometry is regular in non-spatial
         dimensions.  False for multi-resolution or irregular
         geometries.  If true all image planes have the same pixel

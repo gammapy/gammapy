@@ -261,15 +261,10 @@ class HpxMapND(HpxMap):
         else:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
-    def get_by_pix(self, pix, interp=None):
-        # FIXME: Support local indexing here?
-        # FIXME: Support slicing?
-        # FIXME: What to return for pixels outside the map
-
-        if interp is None:
-            return self.get_by_idx(pix)
-        else:
-            raise NotImplementedError
+    def interp_by_pix(self, pix, interp=None):
+        """Interpolate map values at the given pixel coordinates.
+        """
+        raise NotImplementedError
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)

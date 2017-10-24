@@ -121,6 +121,11 @@ class SparseArray(object):
         return self._data
 
     @property
+    def dtype(self):
+        """Return the type of the data array member."""
+        return self._data.dtype
+
+    @property
     def idx(self):
         """Return flattened index vector."""
         return self._idx

@@ -167,10 +167,18 @@ def skydir_to_lonlat(skydir, coordsys=None):
             'Unrecognized SkyCoord frame: {}'.format(skydir.frame.name))
 
 
-def pix_tuple_to_idx(pix):
+def pix_tuple_to_idx(pix, copy=False):
     """Convert a tuple of pixel coordinate arrays to a tuple of pixel
     indices.  Pixel coordinates are rounded to the closest integer
     value.
+
+    Parameters
+    ----------
+    pix : tuple
+        Tuple of pixel coordinates with one element for each dimension.
+
+    copy : bool
+        Flag to set whether a copy or view is returned.
 
     Returns
     -------
@@ -179,7 +187,7 @@ def pix_tuple_to_idx(pix):
     """
     idx = []
     for i, p in enumerate(pix):
-        p = np.asarray(p)
+        p = np.array(p, copy=copy)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
@@ -571,19 +579,31 @@ class MapCoords(object):
     Parameters
     ----------
     data : tuple of `~numpy.ndarray`
-        Data
+        Tuple of coordinate values.  
     """
 
     def __init__(self, data, coordsys='CEL'):
-        self._data = data
+        data = tuple([np.array(c, ndmin=1, copy=False) for c in data])
+        self._data = np.broadcast_arrays(*data)
         self._coordsys = coordsys
 
     def __getitem__(self, idx):
         return self._data[idx]
 
+    def __iter__(self):
+        return iter(self._data)
+
     @property
     def ndim(self):
         return len(self._data)
+
+    @property
+    def shape(self):
+        return self._data[0].shape
+
+    @property
+    def size(self):
+        return self._data[0].size
 
     @property
     def lon(self):
@@ -645,7 +665,7 @@ class MapGeom(object):
 
     @property
     @abc.abstractmethod
-    def allsky(self):
+    def is_allsky(self):
         pass
 
     @property
@@ -854,19 +874,35 @@ class MapGeom(object):
 
     @abc.abstractmethod
     def contains(self, coords):
-        """Check if a given coordinate is contained in the map.
+        """Check if a given map coordinate is contained in the geometry.
 
         Parameters
         ----------
-        coords : tuple
+        coords : tuple or `~gammapy.maps.MapCoords`
             Tuple of map coordinates.
 
         Returns
         -------
         containment : `~np.ndarray`
-            Bool array
+            Bool array.
         """
         pass
+
+    def contains_pix(self, pix):
+        """Check if a given pixel coordinate is contained in the geometry.
+
+        Parameters
+        ----------
+        coords : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        containment : `~np.ndarray`
+            Bool array.
+        """
+        idx = self.pix_to_idx(pix)
+        return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
     @abc.abstractmethod
     def to_slice(self, slices, drop_axes=True):

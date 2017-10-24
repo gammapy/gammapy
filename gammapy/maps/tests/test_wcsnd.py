@@ -71,8 +71,36 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
+def test_wcsmapnd_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    pix = m.geom.get_pixels()
+    m.set_by_pix(pix, coords[0])
+    assert_allclose(coords[0], m.get_by_pix(pix))
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsmapnd_set_get_by_coords(npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsMapND(geom)
+    coords = m.geom.get_coords()
+    m.set_by_coords(coords, coords[0])
+    assert_allclose(coords[0], m.get_by_coords(coords))
+
+    if not geom.is_allsky:
+        coords[1][...] = 0.0
+        assert_allclose(
+            np.nan * np.ones(coords[0].shape), m.get_by_coords(coords))
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
 def test_wcsmapnd_fill_by_coords(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz,
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
     coords = m.geom.get_coords()
@@ -92,7 +120,7 @@ def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(coords[1], m.get_by_coords(coords, interp='nearest'))
     assert_allclose(coords[1], m.get_by_coords(coords, interp='linear'))
     assert_allclose(coords[1], m.get_by_coords(coords, interp=1))
-    if geom.regular and not geom.allsky:
+    if geom.is_regular and not geom.is_allsky:
         assert_allclose(coords[1], m.get_by_coords(coords, interp='cubic'))
 
 
@@ -128,11 +156,12 @@ def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
                           skydir=skydir, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
 
-    if geom.projection == 'AIT' and geom.allsky:
+    if geom.projection == 'AIT' and geom.is_allsky:
         pytest.xfail('Bug in reproject version <= 0.3.1')
 
     if geom.ndim > 3 or geom.npix[0].size > 1:
-        pytest.xfail("> 3 dimensions or multi-resolution geometries not supported")
+        pytest.xfail(
+            "> 3 dimensions or multi-resolution geometries not supported")
 
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                            skydir=skydir, coordsys=coordsys, axes=axes)

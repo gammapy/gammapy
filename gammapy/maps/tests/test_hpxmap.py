@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 from ..utils import fill_poisson
 from ..geom import MapAxis
 from ..hpx import HpxGeom
-from ..hpxcube import HpxMapND
+from ..hpxnd import HpxMapND
 from ..hpxsparse import HpxMapSparse
 
 pytest.importorskip('scipy')
