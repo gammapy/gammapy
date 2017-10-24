@@ -174,6 +174,7 @@ class TablePSF(object):
             Kernel 2D image of Quantities
         """
         from ..cube import SkyCube
+        rad_max = Angle(rad_max)
 
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref

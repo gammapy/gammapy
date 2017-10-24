@@ -478,7 +478,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
-        kernel = psf_mean.kernel(npred_total)
+        kernel = psf_mean.kernel(npred_total, rad_max=self.rad_max)
         npred_total = npred_total.convolve(kernel)
         return npred_total
 
