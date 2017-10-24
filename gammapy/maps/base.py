@@ -5,7 +5,7 @@ import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, MapCoords
 
 __all__ = [
     'MapBase',
@@ -334,13 +334,19 @@ class MapBase(object):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        if interp is None or interp == 'nearest':
+        if interp is None:
+            coords = MapCoords.create(coords)
+            msk = self.geom.contains(coords)
+            vals = np.empty(coords.shape, dtype=self.data.dtype)
+            coords = tuple([c[msk] for c in coords])
             idx = self.geom.coord_to_pix(coords)
-            return self.get_by_idx(idx)
+            vals[msk] = self.get_by_idx(idx)
+            vals[~msk] = np.nan
         else:
-            return self.interp_by_coords(coords, interp=interp)
+            vals = self.interp_by_coords(coords, interp=interp)
 
-    @abc.abstractmethod
+        return vals
+
     def get_by_pix(self, pix, interp=None):
         """Return map values at the given pixel coordinates.
 
@@ -368,7 +374,22 @@ class MapBase(object):
            Array of pixel values.  np.nan used to flag coordinates
            outside of map
         """
-        pass
+        # FIXME: Support local indexing here?
+        # FIXME: Support slicing?
+
+        if interp is None:
+            pix = [np.array(p, copy=False, ndmin=1) for p in pix]
+            pix = np.broadcast_arrays(*pix)
+            msk = self.geom.contains_pix(pix)
+            vals = np.empty(pix[0].shape, dtype=self.data.dtype)
+            pix = tuple([p[msk] for p in pix])
+            idx = self.geom.pix_to_idx(pix)
+            vals[msk] = self.get_by_idx(idx)
+            vals[~msk] = np.nan
+        else:
+            vals = self.interp_by_pix(pix, interp=interp)
+
+        return vals
 
     @abc.abstractmethod
     def get_by_idx(self, idx):

@@ -109,7 +109,7 @@ class WcsGeom(MapGeom):
         return self._projection
 
     @property
-    def allsky(self):
+    def is_allsky(self):
         """Flag for all-sky maps."""
         if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.)):
             return True
@@ -117,7 +117,7 @@ class WcsGeom(MapGeom):
             return False
 
     @property
-    def regular(self):
+    def is_regular(self):
         """Flag identifying whether this geometry is regular in non-spatial
         dimensions.  False for multi-resolution or irregular
         geometries.  If true all image planes have the same pixel
@@ -355,7 +355,7 @@ class WcsGeom(MapGeom):
             extname = 'BANDS'
 
         cols = make_axes_cols(self.axes, axis_names)
-        if self.npix[0].size > 1:
+        if not self.is_regular:
             cols += [fits.Column('NPIX', '2I', dim='(2)',
                                  array=np.vstack((np.ravel(self.npix[0]),
                                                   np.ravel(self.npix[1]))).T), ]
@@ -384,10 +384,10 @@ class WcsGeom(MapGeom):
     def get_image_shape(self, idx):
         """Get the shape of the image plane at index ``idx``."""
 
-        if self.npix[0].size > 1:
-            return (int(self.npix[0][idx]), int(self.npix[1][idx]))
-        else:
+        if self.is_regular:
             return (int(self.npix[0]), int(self.npix[1]))
+        else:
+            return (int(self.npix[0][idx]), int(self.npix[1][idx]))
 
     def get_image_wcs(self, idx):
         raise NotImplementedError
@@ -407,7 +407,7 @@ class WcsGeom(MapGeom):
             npix[0] += 1
             npix[1] += 1
 
-        if self.axes and self.npix[0].size > 1:
+        if self.axes and not self.is_regular:
 
             pix = [np.array([], dtype=float)
                    for i in range(2 + len(self.axes))]
@@ -457,6 +457,8 @@ class WcsGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         c = MapCoords.create(coords)
+        if c.size == 0:
+            return tuple([np.array([]) for i in range(c.ndim)])
 
         # Variable Bin Size
         if self.axes and self.npix[0].size > 1:
@@ -467,13 +469,14 @@ class WcsGeom(MapGeom):
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (c.lon, c.lat))
-            pix = tuple(list(pix) + bins)
+            pix = list(pix) + bins
         else:
-            pix = self._wcs.wcs_world2pix(c.lon, c.lat, 0)
+            pix = self._wcs.wcs_world2pix(np.array(c.lon, ndmin=1, copy=False),
+                                          np.array(c.lat, ndmin=1, copy=False), 0)
             for i, ax in enumerate(self.axes):
                 pix += [ax.coord_to_pix(c[i + 2])]
 
-        return pix
+        return tuple(pix)
 
     def pix_to_coord(self, pix):
         # Variable Bin Size
@@ -494,10 +497,14 @@ class WcsGeom(MapGeom):
         return tuple(coords)
 
     def pix_to_idx(self, pix):
-        idxs = pix_tuple_to_idx(pix)
-        if self.npix[0].size > 1:
+        idxs = pix_tuple_to_idx(pix, copy=True)
+        if not self.is_regular:
             ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
-            ibin = pix_tuple_to_idx(ibin)
+            ibin = pix_tuple_to_idx(ibin, copy=True)
+            m = np.all(np.stack([(t > 0) & (t < ax.nbin)
+                                 for t, ax in zip(idxs, self.axes)]), axis=0)
+            for i in range(len(ibin)):
+                ibin[i][~m] = 0
             npix = (self.npix[0][ibin], self.npix[1][ibin])
         else:
             npix = self.npix
@@ -510,7 +517,8 @@ class WcsGeom(MapGeom):
         return idxs
 
     def contains(self, coords):
-        raise NotImplementedError
+        idx = self.coord_to_idx(coords)
+        return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))

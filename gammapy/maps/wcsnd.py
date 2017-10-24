@@ -49,7 +49,7 @@ class WcsMapND(WcsMap):
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid
         coords = []
-        if not geom.regular:
+        if not geom.is_regular:
 
             for idx in np.ndindex(geom.shape):
                 pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
@@ -66,7 +66,7 @@ class WcsMapND(WcsMap):
 
         if np.all(np.isfinite(np.vstack(coords))):
 
-            if geom.regular:
+            if geom.is_regular:
                 data = np.zeros(shape, dtype=dtype).T
             else:
                 data = np.nan * np.ones(shape, dtype=dtype).T
@@ -117,18 +117,13 @@ class WcsMapND(WcsMap):
 
         return map_out
 
-    def get_by_pix(self, pix, interp=None):
-        if interp is None:
-            return self.get_by_idx(pix)
-        else:
-            return self.interp_by_pix(pix, interp=interp)
-
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
         return self._data.T[idx]
 
     def interp_by_coords(self, coords, interp=None):
-        if self.geom.regular:
+
+        if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
             return self.interp_by_pix(pix, interp=interp)
         else:
@@ -137,22 +132,24 @@ class WcsMapND(WcsMap):
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
         """
-        if not self.geom.regular:
+        if not self.geom.is_regular:
             raise ValueError('Pixel-based interpolation not supported for '
                              'non-regular geometries.')
 
         order = interp_to_order(interp)
-        if order == 0:
-            return self.get_by_pix(pix)
-        if order == 1:
-            return self._interp_by_pix_linear_grid(pix)
+        if order == 0 or order == 1:
+            return self._interp_by_pix_linear_grid(pix, order=order)
         elif order == 2 or order == 3:
             return self._interp_by_pix_map_coordinates(pix, order=order)
         else:
             raise ValueError('Invalid interpolation order: {}'.format(order))
 
-    def _interp_by_pix_linear_grid(self, pix):
+    def _interp_by_pix_linear_grid(self, pix, order=1):
         # TODO: Cache interpolator
+        method_lookup = {0: 'nearest', 1: 'linear'}
+        method = method_lookup.get(order, None)
+        if method is None:
+            raise ValueError('Invalid interpolation method: {}'.format(interp))
 
         from scipy.interpolate import RegularGridInterpolator
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -164,7 +161,7 @@ class WcsMapND(WcsMap):
             data = self.data.T
 
         fn = RegularGridInterpolator(grid_pix, data, fill_value=None,
-                                     bounds_error=False)
+                                     bounds_error=False, method=method)
         return fn(tuple(pix))
 
     def _interp_by_pix_map_coordinates(self, pix, order=1):
@@ -175,7 +172,7 @@ class WcsMapND(WcsMap):
 
     def _interp_by_coords_griddata(self, coords, interp=None):
         order = interp_to_order(interp)
-        method_lookup = {1: 'linear', 3: 'cubic'}
+        method_lookup = {0: 'nearest', 1: 'linear', 3: 'cubic'}
         method = method_lookup.get(order, None)
         if method is None:
             raise ValueError('Invalid interpolation method: {}'.format(interp))
@@ -302,7 +299,7 @@ class WcsMapND(WcsMap):
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
 
-            if self.geom.projection == 'CAR' and self.geom.allsky:
+            if self.geom.projection == 'CAR' and self.geom.is_allsky:
                 data, footprint = reproject_car_to_wcs((img, self.geom.wcs),
                                                        geom.wcs,
                                                        shape_out=shape_out)
@@ -341,7 +338,7 @@ class WcsMapND(WcsMap):
 
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
-            if self.geom.projection == 'CAR' and self.geom.allsky:
+            if self.geom.projection == 'CAR' and self.geom.is_allsky:
                 data, footprint = reproject_car_to_hpx((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,

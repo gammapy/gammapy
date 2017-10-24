@@ -24,7 +24,13 @@ wcs_allsky_test_geoms = [
      'GAL', 'AIT', skydir, axes2),
 ]
 
-wcs_test_geoms = wcs_allsky_test_geoms
+wcs_partialsky_test_geoms = [
+    (10, 0.1, 'GAL', 'AIT', skydir, None),
+    (10, 0.1, 'GAL', 'AIT', skydir, axes1),
+    (10, [0.1,0.2], 'GAL', 'AIT', skydir, axes1),
+    ]
+
+wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
@@ -86,3 +92,22 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 
     assert_allclose(geom0.npix, geom1.npix)
     assert (geom0.coordsys == geom1.coordsys)
+
+
+@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
+                         wcs_test_geoms)
+def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                          proj=proj, coordsys=coordsys, axes=axes)
+    coords = geom.get_coords()
+    assert_allclose(geom.contains(coords),
+                    np.ones(coords[0].shape, dtype=bool))
+
+    if axes is not None:
+        coords = [c[0] for c in coords[:2]] + \
+                 [ax.edges[-1] + 1.0 for ax in axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+    if not geom.is_allsky:
+        coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
+        assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
