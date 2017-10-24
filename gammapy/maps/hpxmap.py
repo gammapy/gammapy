@@ -62,7 +62,7 @@ class HpxMap(MapBase):
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
         """
-        from .hpxcube import HpxMapND
+        from .hpxnd import HpxMapND
         from .hpxsparse import HpxMapSparse
 
         hpx = HpxGeom.create(nside=nside, binsz=binsz,

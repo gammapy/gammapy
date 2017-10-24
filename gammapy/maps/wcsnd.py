@@ -321,7 +321,7 @@ class WcsMapND(WcsMap):
 
     def _reproject_hpx(self, geom, mode='interp', order=1):
         from reproject import reproject_from_healpix, reproject_to_healpix
-        from .hpxcube import HpxMapND
+        from .hpxnd import HpxMapND
 
         map_out = HpxMapND(geom)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
