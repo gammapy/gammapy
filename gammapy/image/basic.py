@@ -365,11 +365,10 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
     def __init__(self, reference, emin, emax, spectral_model=None,
                  rad_max=1 * u.deg):
-        self.parameters = OrderedDict(emin=emin, emax=emax)
+        self.parameters = OrderedDict(emin=emin, emax=emax, rad_max=rad_max)
         self.reference = reference
         if spectral_model is None:
             self.spectral_model = self._default_spectral_model
-        self.rad_max = rad_max
 
     def counts(self, dataset):
         """
@@ -478,7 +477,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
-        kernel = psf_mean.kernel(npred_total, rad_max=self.rad_max)
+        kernel = psf_mean.kernel(npred_total,
+                                 rad_max=self.parameters['rad_max'])
         npred_total = npred_total.convolve(kernel)
         return npred_total
 

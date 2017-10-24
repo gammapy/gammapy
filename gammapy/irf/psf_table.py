@@ -554,13 +554,7 @@ class EnergyDependentTablePSF(object):
         table_psf = TablePSF(self.rad, psf_value, **kwargs)
         return table_psf
 
-    # TODO: improve this method to work also if there are energy bins where PSF is bad
-    # Currently it fails because TablePSF.kernel calls containment, which can be `NaN`.
-    # Options:
-    # 1. Let the caller specify the kernel size and don't compute containment
-    # 2. try-except the TablePSF.kernel call and just return a single pixel with `NaN` as kernel where none is available
-    # Don't forget to add a test!
-    def kernels(self, cube, **kwargs):
+    def kernels(self, cube, rad_max, **kwargs):
         """
         Make a set of 2D kernel images, representing the PSF at different energies.
 
@@ -571,6 +565,8 @@ class EnergyDependentTablePSF(object):
         ----------
         cube : `~gammapy.cube.SkyCube`
             Reference sky cube.
+        rad_max `~astropy.coordinates.Angle`
+            PSF kernel size
         kwargs : dict
             Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
 
@@ -586,7 +582,6 @@ class EnergyDependentTablePSF(object):
             energy_band = Quantity([emin, emax])
             try:
                 psf = self.table_psf_in_energy_band(energy_band, **kwargs)
-                rad_max = psf.containment_radius(0.99)
                 kernel = psf.kernel(cube.sky_image_ref, rad_max=rad_max)
             except ValueError:
                 kernel = np.nan * np.ones((1, 1))  # Dummy, means "no kernel available"
