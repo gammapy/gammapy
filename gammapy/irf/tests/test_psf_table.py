@@ -112,7 +112,8 @@ def test_EnergyDependentTablePSF():
     psf_band = psf.table_psf_in_energy_band(energy_band)
 
     ref = SkyImage.empty(binsz=0.1)
-    actual = psf_band.kernel(ref, normalize=True).value.sum()
+    rad_max = psf_band.containment_radius(0.99)
+    actual = psf_band.kernel(ref, normalize=True, rad_max=rad_max).value.sum()
     assert_allclose(actual, desired)
 
 

@@ -336,6 +336,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         Upper bound of energy range.
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf images.
+    rad_max : `~astropy.coordinates.Angle`
+        PSF kernel size, passed to :func:`gammapy.irf.TablePSF.kernel`
 
     Examples
     --------
@@ -361,11 +363,13 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         result['counts'].show()
     """
 
-    def __init__(self, reference, emin, emax, spectral_model=None):
+    def __init__(self, reference, emin, emax, spectral_model=None,
+                 rad_max=1 * u.deg):
         self.parameters = OrderedDict(emin=emin, emax=emax)
         self.reference = reference
         if spectral_model is None:
             self.spectral_model = self._default_spectral_model
+        self.rad_max = rad_max
 
     def counts(self, dataset):
         """

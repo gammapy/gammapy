@@ -151,7 +151,7 @@ class TablePSF(object):
         rad = center.separation(point)
         return self.evaluate(rad)
 
-    def kernel(self, reference, containment=0.99, normalize=True,
+    def kernel(self, reference, rad_max, normalize=True,
                discretize_model_kwargs=dict(factor=10)):
         """
         Make a 2-dimensional kernel image.
@@ -163,8 +163,8 @@ class TablePSF(object):
         ----------
         reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
             Reference sky image or sky cube defining the spatial grid.
-        containment : float
-            Minimal containment fraction of the kernel image.
+        rad_max : `~astropy.coordinates.Angle`
+            Radial size of the kernel
         normalize : bool
             Whether to normalize the kernel.
 
@@ -174,7 +174,6 @@ class TablePSF(object):
             Kernel 2D image of Quantities
         """
         from ..cube import SkyCube
-        rad_max = self.containment_radius(containment)
 
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref
@@ -586,7 +585,8 @@ class EnergyDependentTablePSF(object):
             energy_band = Quantity([emin, emax])
             try:
                 psf = self.table_psf_in_energy_band(energy_band, **kwargs)
-                kernel = psf.kernel(cube.sky_image_ref)
+                rad_max = psf.containment_radius(0.99)
+                kernel = psf.kernel(cube.sky_image_ref, rad_max=rad_max)
             except ValueError:
                 kernel = np.nan * np.ones((1, 1))  # Dummy, means "no kernel available"
             kernels.append(kernel)
