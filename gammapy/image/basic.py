@@ -520,12 +520,13 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         exposure.name = 'exposure'
         return exposure.reproject(self.reference)
 
-    def _psf_image(self, dataset, nxpix=101, nypix=101, binsz=0.02):
+    def _psf_image(self, dataset, binsz=0.02):
         """
         Compute fermi PSF image.
         """
         p = self.parameters
-        psf_image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=binsz)
+        npix = p['rad_max'].deg / binsz
+        psf_image = SkyImage.empty(nxpix=npix, nypix=npix, binsz=binsz)
 
         psf = dataset.psf
         erange = u.Quantity((p['emin'], p['emax']))
