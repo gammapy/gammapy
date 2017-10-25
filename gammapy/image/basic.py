@@ -336,6 +336,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         Upper bound of energy range.
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf images.
+    rad_max : `~astropy.coordinates.Angle`
+        PSF kernel size, passed to :func:`gammapy.irf.TablePSF.kernel`
 
     Examples
     --------
@@ -361,8 +363,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         result['counts'].show()
     """
 
-    def __init__(self, reference, emin, emax, spectral_model=None):
-        self.parameters = OrderedDict(emin=emin, emax=emax)
+    def __init__(self, reference, emin, emax, spectral_model=None,
+                 rad_max=1 * u.deg):
+        self.parameters = OrderedDict(emin=emin, emax=emax, rad_max=rad_max)
         self.reference = reference
         if spectral_model is None:
             self.spectral_model = self._default_spectral_model
@@ -474,7 +477,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 
         # convolve with PSF kernel
         psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
-        kernel = psf_mean.kernel(npred_total)
+        kernel = psf_mean.kernel(npred_total,
+                                 rad_max=self.parameters['rad_max'])
         npred_total = npred_total.convolve(kernel)
         return npred_total
 
@@ -516,12 +520,13 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         exposure.name = 'exposure'
         return exposure.reproject(self.reference)
 
-    def _psf_image(self, dataset, nxpix=101, nypix=101, binsz=0.02):
+    def _psf_image(self, dataset, binsz=0.02):
         """
         Compute fermi PSF image.
         """
         p = self.parameters
-        psf_image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=binsz)
+        npix = p['rad_max'].deg / binsz
+        psf_image = SkyImage.empty(nxpix=npix, nypix=npix, binsz=binsz)
 
         psf = dataset.psf
         erange = u.Quantity((p['emin'], p['emax']))

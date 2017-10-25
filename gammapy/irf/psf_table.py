@@ -151,7 +151,7 @@ class TablePSF(object):
         rad = center.separation(point)
         return self.evaluate(rad)
 
-    def kernel(self, reference, containment=0.99, normalize=True,
+    def kernel(self, reference, rad_max, normalize=True,
                discretize_model_kwargs=dict(factor=10)):
         """
         Make a 2-dimensional kernel image.
@@ -163,8 +163,8 @@ class TablePSF(object):
         ----------
         reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
             Reference sky image or sky cube defining the spatial grid.
-        containment : float
-            Minimal containment fraction of the kernel image.
+        rad_max : `~astropy.coordinates.Angle`
+            Radial size of the kernel
         normalize : bool
             Whether to normalize the kernel.
 
@@ -174,7 +174,7 @@ class TablePSF(object):
             Kernel 2D image of Quantities
         """
         from ..cube import SkyCube
-        rad_max = self.containment_radius(containment)
+        rad_max = Angle(rad_max)
 
         if isinstance(reference, SkyCube):
             reference = reference.sky_image_ref
@@ -554,13 +554,7 @@ class EnergyDependentTablePSF(object):
         table_psf = TablePSF(self.rad, psf_value, **kwargs)
         return table_psf
 
-    # TODO: improve this method to work also if there are energy bins where PSF is bad
-    # Currently it fails because TablePSF.kernel calls containment, which can be `NaN`.
-    # Options:
-    # 1. Let the caller specify the kernel size and don't compute containment
-    # 2. try-except the TablePSF.kernel call and just return a single pixel with `NaN` as kernel where none is available
-    # Don't forget to add a test!
-    def kernels(self, cube, **kwargs):
+    def kernels(self, cube, rad_max, **kwargs):
         """
         Make a set of 2D kernel images, representing the PSF at different energies.
 
@@ -571,6 +565,8 @@ class EnergyDependentTablePSF(object):
         ----------
         cube : `~gammapy.cube.SkyCube`
             Reference sky cube.
+        rad_max `~astropy.coordinates.Angle`
+            PSF kernel size
         kwargs : dict
             Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
 
@@ -586,7 +582,7 @@ class EnergyDependentTablePSF(object):
             energy_band = Quantity([emin, emax])
             try:
                 psf = self.table_psf_in_energy_band(energy_band, **kwargs)
-                kernel = psf.kernel(cube.sky_image_ref)
+                kernel = psf.kernel(cube.sky_image_ref, rad_max=rad_max)
             except ValueError:
                 kernel = np.nan * np.ones((1, 1))  # Dummy, means "no kernel available"
             kernels.append(kernel)
