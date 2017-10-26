@@ -47,7 +47,7 @@ def test_compute_npred_cube():
 
     # Convolve with Energy-dependent Fermi LAT PSF
     psf = fermi_vela.psf()
-    kernels = psf.kernels(npred_cube)
+    kernels = psf.kernels(npred_cube, rad_max=2 * u.deg)
     convolved_npred_cube = npred_cube.convolve(kernels)
 
     actual = convolved_npred_cube.data.value.sum()
