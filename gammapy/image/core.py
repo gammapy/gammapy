@@ -1336,7 +1336,7 @@ class SkyImage(MapBase):
 
         geom = WcsGeom(wcs=self.wcs, npix=npix)
 
-        return WcsMapND(wcs=geom, data=self.data)
+        return WcsMapND(geom=geom, data=self.data)
 
     @classmethod
     def from_wcs_map_nd(cls, wcs_map_nd):

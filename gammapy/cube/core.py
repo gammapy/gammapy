@@ -911,7 +911,7 @@ class SkyCube(MapBase):
         data = np.asarray(self.data)
         # unit = getattr(self.data, 'unit', None)
 
-        return WcsMapND(wcs=geom, data=data)
+        return WcsMapND(geom=geom, data=data)
 
     @classmethod
     def from_wcs_map_nd(cls, wcs_map_nd):
