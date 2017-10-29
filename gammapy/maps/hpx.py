@@ -282,10 +282,12 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
     m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
-    ipix[m] = hp.pixelfunc.ang2pix(hpx.nside[..., None],
-                                   sky_crds[:, 1][mask][None, ...],
-                                   sky_crds[:, 0][mask][None, ...],
-                                   hpx.nest).flatten()
+    ipix[m] = hp.ang2pix(
+        hpx.nside[..., None],
+        sky_crds[:, 1][mask][None, ...],
+        sky_crds[:, 0][mask][None, ...],
+         hpx.nest,
+    ).flatten()
 
     # Here we are counting the number of HEALPIX pixels each WCS pixel
     # points to and getting a multiplicative factor that tells use how

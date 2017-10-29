@@ -293,8 +293,8 @@ class HpxMapND(HpxMap):
         else:
             nside = self.geom.nside
 
-        pix, wts = hp.pixelfunc.get_interp_weights(nside, theta,
-                                                   phi, nest=self.geom.nest)
+        pix, wts = hp.get_interp_weights(nside, theta,
+                                         phi, nest=self.geom.nest)
 
         if self.geom.nside.size > 1:
             pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
@@ -523,7 +523,7 @@ class HpxMapND(HpxMap):
         pix = self.geom.get_pixels()
         vtx = hp.boundaries(self.geom.nside, pix[0],
                             nest=self.geom.nest, step=step)
-        theta, phi = hp.pixelfunc.vec2ang(np.rollaxis(vtx, 2))
+        theta, phi = hp.vec2ang(np.rollaxis(vtx, 2))
         theta = theta.reshape((4 * step, -1)).T
         phi = phi.reshape((4 * step, -1)).T
 
