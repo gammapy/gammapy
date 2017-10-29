@@ -30,28 +30,24 @@ class TestFermiLATBasicImageEstimator:
         self.dataset = FermiLATDataset(filename)
 
     def test_run(self):
-        images = OrderedDict()
-        images['counts'] = dict(sum=155.0)
-        images['background'] = dict(sum=1294.44777903)
-        images['exposure'] = dict(sum=71671503335592.98)
-        # Note: excess / flux is negative, because diffuse background
-        # is overestimated for the Galactic center region used here.
-        images['excess'] = dict(sum=-1139.44777903)
-        images['flux'] = dict(sum=-3.67226151181e-09)
-        images['psf'] = dict(sum=1)
-
         if 'FERMI_DIFFUSE_DIR' in os.environ:
-            names = list(images.keys())
+            which = 'all'
         else:
-            names = ['counts', 'exposure', 'psf']
+            which = ['counts', 'exposure', 'psf']
 
         results = self.estimator.run(
             self.dataset,
-            which=names,
+            which=which,
         )
 
-        for name in names:
-            assert_allclose(results[name].data.sum(), images[name]['sum'], rtol=1e-3)
+        assert_allclose(results['counts'].data.sum(), 155, rtol=1e-3)
+        assert_allclose(results['background'].data.sum(), 1294.44777903, rtol=1e-3)
+        assert_allclose(results['exposure'].data.sum(), 71418159853641.08, rtol=1e-3)
+        # Note: excess / flux is negative, because diffuse background
+        # is overestimated for the Galactic center region used here.
+        assert_allclose(results['excess'].data.sum(), -1139.44777903, rtol=1e-3)
+        assert_allclose(results['flux'].data.sum(), -3.686393029491402e-09, rtol=1e-3)
+        assert_allclose(results['psf'].data.sum(), 1, rtol=1e-3)
 
 
 @requires_dependency('scipy')

@@ -66,14 +66,17 @@ It will print the following output to the console:
     Fit Range: [  5.99484250e+08   1.00000000e+11] keV
 
 
+
+Using `gammapy.spectrum`
+========================
+
 For more advanced use cases please go to the tutorial notebooks:
 
 * :gp-extra-notebook:`spectrum_simulation` - simulate and fit 1D spectra using pre-defined or a user-defined model.
 * :gp-extra-notebook:`spectrum_analysis` - spectral analysis starting from event lists and field-of-view IRFs.
 
+The following pages describe ``gammapy.spectrum`` in more detail:
 
-Content
-=======
 .. toctree::
    :maxdepth: 1
 

@@ -138,7 +138,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         self.spectral_model = spectral_model
 
-    def _get_ref_cube(self, observation,  enumbins=11):
+    def _get_ref_cube(self, observation, enumbins=11):
         from ..cube import SkyCube
         from ..spectrum import LogEnergyAxis
 
@@ -248,7 +248,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         input_images = SkyImageList()
         input_images['counts'] = counts
 
-        #TODO: instead of using a constant exposure, the acceptance model should
+        # TODO: instead of using a constant exposure, the acceptance model should
         # be taken into account
         exposure_on = exposure.copy()
         exposure_on.name = 'exposure_on'
@@ -287,7 +287,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
             if 'counts' in which:
                 counts = self._counts(observation)
-                #TODO: on the left side of the field of view there is one extra
+                # TODO: on the left side of the field of view there is one extra
                 # row of pixels in the counts image compared to the exposure and
                 # background image. Check why this happends and remove the fix below
                 not_has_exposure = ~(exposure.data > 0)
@@ -329,11 +329,9 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
     Parameters
     ----------
     reference : `~gammapy.image.SkyImage`
-        Reference sky image.
-    emin : `~astropy.units.Quantity`
-        Lower bound of energy range.
-    emax : `~astropy.units.Quantity`
-        Upper bound of energy range.
+        Reference sky image
+    emin, emax : `~astropy.units.Quantity`
+        Energy range
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model assumption to compute mean exposure and psf images.
     rad_max : `~astropy.coordinates.Angle`
@@ -460,8 +458,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         energy_band = u.Quantity([p['emin'], p['emax']])
 
         background_cube = self._total_background_cube(dataset)
-        exposure_cube = dataset.exposure.reproject(background_cube)
-        psf = dataset.psf
+
+        exposure_cube = reproject_exposure(dataset.exposure, background_cube)
 
         # compute npred cube
         npred_cube = compute_npred_cube(background_cube, exposure_cube, ebounds=energy_band)
@@ -476,9 +474,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         npred_total.data /= (norm.value.mean()) ** 2
 
         # convolve with PSF kernel
-        psf_mean = psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
-        kernel = psf_mean.kernel(npred_total,
-                                 rad_max=self.parameters['rad_max'])
+        psf_mean = dataset.psf.table_psf_in_energy_band(energy_band, spectrum=self.spectral_model)
+        kernel = psf_mean.kernel(npred_total, rad_max=self.parameters['rad_max'])
         npred_total = npred_total.convolve(kernel)
         return npred_total
 
@@ -496,18 +493,18 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         exposure : `~gammapy.image.SkyImage`
             Exposure sky image.
         """
-        from ..cube import SkyCube
         from ..catalog.gammacat import NoDataAvailableError
 
         p = self.parameters
 
         try:
             ref_cube = self._cutout_background_cube(dataset)
-            exposure_cube = dataset.exposure.reproject(ref_cube)
         except NoDataAvailableError:
-            exposure_cube = dataset.exposure.reproject(self.reference)
+            ref_cube = self.reference
 
-        exposure_weighted = SkyCube.empty_like(exposure_cube)
+        exposure_cube = reproject_exposure(dataset.exposure, ref_cube)
+
+        exposure_weighted = exposure_cube.empty_like(exposure_cube)
         energies = exposure_weighted.energies('center')
 
         weights = self.spectral_model(energies)
@@ -525,7 +522,8 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         Compute fermi PSF image.
         """
         p = self.parameters
-        npix = p['rad_max'].deg / binsz
+        npix = p['rad_max'].to('deg').value / binsz
+        npix = np.round(npix).astype('int')
         psf_image = SkyImage.empty(nxpix=npix, nypix=npix, binsz=binsz)
 
         psf = dataset.psf
@@ -541,8 +539,7 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
         return psf_image
 
     def run(self, dataset, which='all'):
-        """
-        Estimate sky images.
+        """Estimate sky images.
 
         Parameters
         ----------
@@ -591,3 +588,39 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
             images['psf'] = self._psf_image(dataset)
 
         return images
+
+
+def reproject_exposure(exposure, ref_cube):
+    """Helper function to reproject exposure to a reference cube.
+
+    TODO: this is a temp solution, as long as we use HpxMapND objects for exposure
+    and SkyCube objects otherwise. This should be changed to use WCSMapND
+    instead of SkyCube in the future.
+
+    Parameters
+    ----------
+    exposure : `~gammapy.maps.HpxMapND`
+        Exposure cube from gtexmpcube2
+    ref_cube : `~gammapy.cube.SkyCube`
+        Reference cube to reproject to
+
+    Returns
+    -------
+    exposure : `~gammapy.cube.SkyCube`
+        Exposure reprojected onto reference cube.
+    """
+    from ..cube import SkyCube
+    exposure_cube = SkyCube.empty_like(ref_cube)
+
+    ref_image = ref_cube.sky_image_ref
+    geom = ref_image.to_wcs_map_nd().geom
+    coords = geom.get_coords()
+    for idx, energy in enumerate(ref_cube.energies().value):
+        coords_hpx = coords[0], coords[1], energy
+        vals = exposure.get_by_coords(coords_hpx, interp='linear')
+        exposure_cube.data[idx] = vals.reshape(ref_image.data.shape)
+
+    exposure_cube.data = exposure_cube.data * u.Unit('cm2 s')
+
+    return exposure_cube
+

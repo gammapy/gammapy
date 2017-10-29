@@ -37,6 +37,13 @@ class MapBase(object):
 
     This is just a temp solution to put code that's common
     between `SkyImage` and `SkyCube`.
+
+    .. note::
+
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
     """
 
     @property
@@ -57,10 +64,16 @@ class MapBase(object):
 
 
 class SkyImage(MapBase):
-    """
-    Sky image.
+    """Sky image.
 
-    For a usage example see :gp-extra-notebook:`image_analysis`
+    .. note::
+
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
+
+    For further information, see :ref:`image`.
 
     Parameters
     ----------
@@ -1129,7 +1142,7 @@ class SkyImage(MapBase):
         return mask
 
     @staticmethod
-    def assert_allclose(image1, image2, check_wcs=True):
+    def assert_allclose(image1, image2, check_wcs=True, check_name=True, check_unit=True):
         """Assert all-close for `SkyImage`.
 
         A useful helper function to implement tests.
@@ -1137,7 +1150,8 @@ class SkyImage(MapBase):
         from numpy.testing import assert_allclose
         from gammapy.utils.testing import assert_wcs_allclose
 
-        assert image1.name == image2.name
+        if check_name:
+            assert image1.name == image2.name
 
         if (image1.data is None) and (image2.data is None):
             pass
@@ -1154,6 +1168,9 @@ class SkyImage(MapBase):
             assert_wcs_allclose(image1.wcs, image2.wcs)
         else:
             raise ValueError('One image has `wcs==None` and the other does not.')
+
+        if check_unit:
+            assert image1.unit == image2.unit
 
     def convolve(self, kernel, use_fft=False, **kwargs):
         """
@@ -1303,3 +1320,34 @@ class SkyImage(MapBase):
         distance = np.where(self.data, distance_outside, -distance_inside)
 
         return SkyImage(data=distance, wcs=self.wcs)
+
+    def to_wcs_map_nd(self):
+        """Convert to a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyImage`
+        over to the new maps classes.
+        """
+        from gammapy.maps import WcsMapND, WcsGeom
+
+        # Axis order in SkyImage: lat, lon
+        npix = (self.data.shape[1], self.data.shape[0])
+
+        geom = WcsGeom(wcs=self.wcs, npix=npix)
+
+        return WcsMapND(geom=geom, data=self.data)
+
+    @classmethod
+    def from_wcs_map_nd(cls, wcs_map_nd):
+        """Create from a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyImage`
+        over to the new maps classes.
+        """
+        return cls(
+            data=wcs_map_nd.data,
+            wcs=wcs_map_nd.geom.wcs,
+        )

@@ -71,7 +71,7 @@ class HpxMapND(HpxMap):
 
         colnames = hdu.columns.names
         cnames = []
-        if hdu.header['INDXSCHM'] == 'SPARSE':
+        if hdu.header.get('INDXSCHM', None) == 'SPARSE':
             pix = hdu.data.field('PIX')
             vals = hdu.data.field('VALUE')
             if 'CHANNEL' in hdu.data.columns.names:

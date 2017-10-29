@@ -12,7 +12,7 @@ from astropy.utils import lazyproperty
 from .core import gammapy_extra
 from ..data import EventList
 from ..cube import SkyCube
-from ..cube.healpix import SkyCubeHealpix
+from ..maps import HpxMapND
 from ..irf import EnergyDependentTablePSF
 from ..utils.scripts import make_path
 from ..spectrum.models import TableModel
@@ -248,9 +248,10 @@ class FermiLATDataset(object):
 
     def __init__(self, filename):
         import yaml
-        filename = make_path(filename)
-        self._path = filename.parents[0].resolve()
-        self.config = yaml.load(open(str(filename), 'r'))
+        path = make_path(filename)
+        self._path = path.parents[0].resolve()
+        with path.open() as fh:
+            self.config = yaml.load(fh)
 
     @property
     def name(self):
@@ -279,7 +280,7 @@ class FermiLATDataset(object):
 
         Returns
         -------
-        cube : `~gammapy.cube.SkyCube` or `~gammapy.cube.SkyCubeHealpix`
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxMapND`
             Exposure cube.
         """
         filename = self.filenames['exposure']
@@ -288,10 +289,8 @@ class FermiLATDataset(object):
                 warnings.simplefilter("ignore")
                 cube = SkyCube.read(filename, format='fermi-exposure')
         except (ValueError, KeyError):
-            cube = SkyCubeHealpix.read(filename, format='fermi-exposure')
-        cube.name = 'exposure'
-        # TODO: check why fixing the unit is needed
-        cube.data = u.Quantity(cube.data.value, 'cm2 s')
+            cube = HpxMapND.read(filename)
+
         return cube
 
     @lazyproperty
@@ -300,7 +299,7 @@ class FermiLATDataset(object):
 
         Returns
         -------
-        cube : `~gammapy.cube.SkyCube` or `~gammapy.cube.SkyCubeHealpix`
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxMapND`
             Counts cube
         """
         try:
@@ -311,10 +310,8 @@ class FermiLATDataset(object):
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
         except (ValueError, KeyError):
-            from ..cube.healpix import SkyCubeHealpix
-            cube = SkyCubeHealpix.read(filename, format='fermi-counts')
+            cube = HpxMapND.read(filename)
 
-        cube.name = 'counts'
         return cube
 
     @lazyproperty

@@ -1010,7 +1010,7 @@ class HpxGeom(MapGeom):
         try:
             coordsys = header[conv.coordsys]
         except KeyError:
-            coordsys = header['COORDSYS']
+            coordsys = header.get('COORDSYS', 'CEL')
 
         try:
             region = header['HPX_REG']

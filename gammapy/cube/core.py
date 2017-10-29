@@ -1,12 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gamma-ray spectral cube: longitude, latitude and spectral axis.
-
-TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
-
-* ``SkyCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
-* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SkyCube`` (``gtexpcube`` format)
-* ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
@@ -34,18 +26,17 @@ class SkyCube(MapBase):
 
     .. note::
 
-        There is a very nice ``SkyCube`` implementation here:
-        http://spectral-cube.readthedocs.io/en/latest/index.html
-
-        Here is some discussion if / how it could be used:
-        https://github.com/radio-astro-tools/spectral-cube/issues/110
-
-    For now we re-implement what we need here.
+        A new set of map and cube classes is being developed in `gammapy.maps`
+        and long-term will replace the existing `gammapy.image.SkyImage` and
+        `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+        and changing your scripts to use those new classes. See :ref:`maps`.
 
     The order of the sky cube axes is defined as following:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
     * The ``wcs`` object is a two dimensional celestial WCS with axis order ``(lon, lat)``.
+
+    For further information, see :ref:`cube`.
 
     Parameters
     ----------
@@ -884,4 +875,71 @@ class SkyCube(MapBase):
         from ..utils.testing import assert_wcs_allclose
         assert cube1.name == cube2.name
         assert_allclose(cube1.data, cube2.data)
+
+        # TODO: add check_unit option, just like SkyImage has it.
+
+        assert_allclose(cube1.energies(), cube2.energies())
         assert_wcs_allclose(cube1.wcs, cube2.wcs)
+
+    def to_wcs_map_nd(self, energy_axis_mode='center'):
+        """Convert to a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyCube`
+        over to the new maps classes.
+        """
+        from gammapy.maps import WcsMapND, WcsGeom, MapAxis
+
+        if energy_axis_mode == 'center':
+            energy = self.energies(mode='center')
+            energy_axis = MapAxis.from_nodes(energy.value, unit=energy.unit)
+        elif energy_axis_mode == 'edges':
+            energy = self.energies(mode='edges')
+            energy_axis = MapAxis.from_edges(energy.value, unit=energy.unit)
+        else:
+            raise ValueError('Invalid energy_axis_mode: {}'.format(energy_axis_mode))
+
+        # Axis order in SkyCube: energy, lat, lon
+        npix = (self.data.shape[2], self.data.shape[1])
+
+        geom = WcsGeom(wcs=self.wcs, npix=npix, axes=[energy_axis])
+
+        # TODO: change maps and SkyCube to have a unit attribute
+        # For now, SkyCube is a mix of numpy array and quantity in `data`
+        # and we just strip the unit here
+        data = np.asarray(self.data)
+        # unit = getattr(self.data, 'unit', None)
+
+        return WcsMapND(geom=geom, data=data)
+
+    @classmethod
+    def from_wcs_map_nd(cls, wcs_map_nd):
+        """Create from a `gammapy.maps.WcsMapND`.
+
+        There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
+
+        This is meant to help migrate code using `SkyCube`
+        over to the new maps classes.
+        """
+        geom_axis = wcs_map_nd.geom.axes[0]
+
+        if geom_axis.node_type == 'center':
+            energy = geom_axis.center * geom_axis.unit
+            energy_axis = LogEnergyAxis(energy, mode='center')
+        elif geom_axis.node_type == 'edges':
+            energy = geom_axis.edges * geom_axis.unit
+            energy_axis = LogEnergyAxis(energy, mode='edges')
+        else:
+            raise ValueError('Not supported: node_type: {}'.format(geom_axis.node_type))
+
+        data = wcs_map_nd.data
+        # TODO: copy unit once it's added to
+        # if wcs_map_nd.unit is not None:
+        #     data = data * wcs_map_nd.unit
+
+        return cls(
+            data=data,
+            wcs=wcs_map_nd.geom.wcs,
+            energy_axis=energy_axis,
+        )

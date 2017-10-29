@@ -1,5 +1,12 @@
 .. include:: ../references.txt
 
+.. note::
+
+    A new set of map and cube classes is being developed in `gammapy.maps`
+    and long-term will replace the existing `gammapy.image.SkyImage` and
+    `gammapy.cube.SkyCube` classes. Please consider trying out `gammapy.maps`
+    and changing your scripts to use those new classes. See :ref:`maps`.
+
 .. _image:
 
 *****************************************************
@@ -41,7 +48,13 @@ in an interactive python environment or see the :doc:`sky_image` page.
 Using `gammapy.image`
 =====================
 
-If you'd like to learn more about using `gammapy.image`, read the following sub-pages:
+Many of the `Gammapy tutorial notebooks`_ show examples using ``gammapy.image``:
+
+* :gp-extra-notebook:`first_steps`
+* :gp-extra-notebook:`image_pipe`
+* :gp-extra-notebook:`image_analysis`
+
+Documentation pages with more detailed information:
 
 .. toctree::
    :maxdepth: 1
