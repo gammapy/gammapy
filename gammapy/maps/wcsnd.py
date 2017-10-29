@@ -44,7 +44,7 @@ class WcsMapND(WcsMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        WcsMap.__init__(self, geom, data)
+        super(WcsMapND, self).__init__(geom, data)
 
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid

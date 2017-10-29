@@ -46,7 +46,7 @@ class HpxMapND(HpxMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        HpxMap.__init__(self, geom, data)
+        super(HpxMapND, self).__init__(geom, data)
         self._wcs2d = None
         self._hpx2wcs = None
 
