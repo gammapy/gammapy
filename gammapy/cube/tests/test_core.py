@@ -249,6 +249,7 @@ def test_bin_events_in_cube():
     assert counts.data.sum() == counts_image.data.sum()
 
 
+@requires_dependency('scipy')
 def test_conversion_wcs_map_nd():
     """Check conversion SkyCube <-> WCSMapNd"""
     cube = make_test_sky_cube()

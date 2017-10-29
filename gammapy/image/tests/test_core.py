@@ -466,6 +466,7 @@ def test_distance_image():
     assert_allclose(distance, expected)
 
 
+@requires_dependency('scipy')
 def test_conversion_wcs_map_nd():
     """Check conversion SkyCube <-> WCSMapNd"""
     image = SkyImage.empty(nxpix=3, nypix=2, unit='cm', name='axel')

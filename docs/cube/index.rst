@@ -52,7 +52,7 @@ Use the cube methods to do computations::
 Using `gammapy.cube`
 =====================
 
-`Gammapy tutorial notebooks`_ that show examples using ``gammapy.cube``:
+Gammapy tutorial notebooks that show examples using ``gammapy.cube``:
 
 * :gp-extra-notebook:`data_fermi_lat`
 * :gp-extra-notebook:`cube_analysis_part1`
