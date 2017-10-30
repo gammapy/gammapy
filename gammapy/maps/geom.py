@@ -745,7 +745,7 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def get_pixels(self, idx=None, local=False):
+    def get_idx(self, idx=None, local=False):
         """Get tuple of pixel indices for this geometry.
 
         Returns all pixels in the geometry by default. Pixel indices
@@ -767,7 +767,7 @@ class MapGeom(object):
 
         Returns
         -------
-        pix : tuple
+        idx : tuple
             Tuple of pixel index vectors with one vector for each
             dimension.
         """

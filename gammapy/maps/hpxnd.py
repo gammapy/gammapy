@@ -37,8 +37,8 @@ class HpxMapND(HpxMap):
 
             if geom.npix.size > 1:
                 data = np.nan * np.ones(shape, dtype=dtype).T
-                pix = geom.get_pixels(local=True)
-                data[pix[::-1]] = 0.0
+                idx = geom.get_idx(local=True)
+                data[idx[::-1]] = 0.0
             else:
                 data = np.zeros(shape, dtype=dtype).T
 
@@ -168,9 +168,9 @@ class HpxMapND(HpxMap):
             yield self.data[idx[::-1]], idx
 
     def iter_by_pix(self, buffersize=1):
-        pix = list(self.geom.get_pixels())
+        idx = list(self.geom.get_idx())
         vals = self.data[np.isfinite(self.data)]
-        return unpack_seq(np.nditer([vals] + pix,
+        return unpack_seq(np.nditer([vals] + idx,
                                     flags=['external_loop', 'buffered'],
                                     buffersize=buffersize))
 
@@ -194,7 +194,7 @@ class HpxMapND(HpxMap):
         map_out = self.__class__(hpx_out)
 
         if self.geom.nside.size > 1:
-            vals = self.get_by_idx(self.geom.get_pixels())
+            vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
         else:
             axes = np.arange(self.data.ndim - 1).tolist()
@@ -399,7 +399,7 @@ class HpxMapND(HpxMap):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
         map_out = self.__class__(hpx_out)
-        idx = list(self.geom.get_pixels())
+        idx = list(self.geom.get_idx())
         vals = self.get_by_idx(idx)
         msk = vals > 0
         idx = [t[msk] for t in idx]
@@ -431,7 +431,7 @@ class HpxMapND(HpxMap):
         new_hpx = self.geom.ud_graded_hpx(order)
         map_out = self.__class__(new_hpx)
 
-        idx = list(self.geom.get_pixels())
+        idx = list(self.geom.get_idx())
         coords = self.geom.get_coords()
         vals = self.get_by_idx(idx)
         msk = vals > 0
@@ -520,8 +520,8 @@ class HpxMapND(HpxMap):
             ax = fig.add_subplot(111, projection=wcs.wcs)
 
         wcs_lonlat = wcs.center_coord[:2]
-        pix = self.geom.get_pixels()
-        vtx = hp.boundaries(self.geom.nside, pix[0],
+        idx = self.geom.get_idx()
+        vtx = hp.boundaries(self.geom.nside, idx[0],
                             nest=self.geom.nest, step=step)
         theta, phi = hp.vec2ang(np.rollaxis(vtx, 2))
         theta = theta.reshape((4 * step, -1)).T
@@ -539,11 +539,11 @@ class HpxMapND(HpxMap):
             # Add a small ofset to avoid vertices wrapping to the
             # other size of the projection
             if get_angle(np.median(lon), wcs_lonlat[0]) > 0.0:
-                pix = wcs.coord_to_pix((lon - 1E-4, lat))
+                idx = wcs.coord_to_pix((lon - 1E-4, lat))
             else:
-                pix = wcs.coord_to_pix((lon + 1E-4, lat))
+                idx = wcs.coord_to_pix((lon + 1E-4, lat))
 
-            dist = np.max(np.abs(pix[0][0] - pix[0]))
+            dist = np.max(np.abs(idx[0][0] - idx[0]))
 
             # Split pixels that wrap around the edges of the projection
             if (dist > wcs.npix[0] / 1.5):
@@ -566,7 +566,7 @@ class HpxMapND(HpxMap):
                 data.append(self.data[i])
 
             else:
-                polygon = Polygon(np.vstack((pix[0], pix[1])).T, True)
+                polygon = Polygon(np.vstack((idx[0], idx[1])).T, True)
                 patches.append(polygon)
                 data.append(self.data[i])
 

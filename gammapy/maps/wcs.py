@@ -392,7 +392,7 @@ class WcsGeom(MapGeom):
     def get_image_wcs(self, idx):
         raise NotImplementedError
 
-    def get_pixels(self, idx=None, local=False):
+    def get_idx(self, idx=None, local=False):
         return pix_tuple_to_idx(self._get_pix_coords(idx=idx,
                                                      mode='center'))
 
@@ -452,7 +452,7 @@ class WcsGeom(MapGeom):
 #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
     def get_coords(self, idx=None):
-        pix = self.get_pixels(idx=idx)
+        pix = self.get_idx(idx=idx)
         return self.pix_to_coord(pix)
 
     def coord_to_pix(self, coords):

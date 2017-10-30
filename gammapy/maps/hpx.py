@@ -151,7 +151,7 @@ def coords_to_vec(lon, lat):
     return out
 
 
-def get_nside_from_pixel_size(pixsz):
+def get_nside_from_pix_size(pixsz):
     """Get the NSIDE that is closest to the given pixel size.
 
     Parameters
@@ -171,7 +171,7 @@ def get_nside_from_pixel_size(pixsz):
     return nside[np.argmin(np.abs(nside_pixsz - pixsz[..., None]), axis=-1)]
 
 
-def get_pixel_size_from_nside(nside):
+def get_pix_size_from_nside(nside):
     """Estimate of the pixel size from the HEALPIX nside coordinate.
 
     This just uses a lookup table to provide a nice round number
@@ -307,7 +307,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     return ipix, mult_val, npix
 
 
-def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
+def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
     """TODO
     """
     import healpy as hp
@@ -428,8 +428,8 @@ class HpxGeom(MapGeom):
 
         if self._ipix is not None:
             self._rmap = {}
-            for i, ipixel in enumerate(self._ipix.flat):
-                self._rmap[ipixel] = i
+            for i, ipix in enumerate(self._ipix.flat):
+                self._rmap[ipix] = i
 
         self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
@@ -679,7 +679,7 @@ class HpxGeom(MapGeom):
 
         if self.region == 'explicit':
             idxs = [np.arange(ax.nbin)[s] for ax, s in zip(self.axes, slices)]
-            pix = self.get_pixels()
+            pix = self.get_idx()
             m = np.all([np.in1d(t, i) for i, t in zip(idxs, pix[1:])], axis=0)
             region = tuple([t[m]
                             for i, t in enumerate(pix) if i in slice_dims])
@@ -808,7 +808,7 @@ class HpxGeom(MapGeom):
     @property
     def ipix(self):
         """HEALPIX pixel and band indices for every pixel in the map."""
-        return self.get_pixels()
+        return self.get_idx()
 
     def ud_graded_hpx(self, order):
         """Upgrade or downgroad the resolution of this geometry to the given
@@ -905,7 +905,7 @@ class HpxGeom(MapGeom):
             raise ValueError('Either nside or binsz must be defined.')
 
         if nside is None and binsz is not None:
-            nside = get_nside_from_pixel_size(binsz)
+            nside = get_nside_from_pix_size(binsz)
 
         if skydir is None:
             lonlat = (0.0, 0.0)
@@ -1208,7 +1208,7 @@ class HpxGeom(MapGeom):
             else:
                 raise ValueError(
                     'Did not recognize ordering scheme: {}'.format(tokens[1]))
-            ilist = match_hpx_pixel(nside, nest, nside_pix, ipix_ring)
+            ilist = match_hpx_pix(nside, nest, nside_pix, ipix_ring)
         else:
             raise ValueError(
                 'Did not recognize region type: {}'.format(tokens[0]))
@@ -1266,8 +1266,8 @@ class HpxGeom(MapGeom):
         if tokens[0] in ['DISK', 'DISK_INC']:
             return float(tokens[3])
         elif tokens[0] == 'HPX_PIXEL':
-            pixel_size = get_pixel_size_from_nside(int(tokens[2]))
-            return 2. * pixel_size
+            pix_size = get_pix_size_from_nside(int(tokens[2]))
+            return 2. * pix_size
         else:
             raise Exception(
                 'Did not recognize region type: {}'.format(tokens[0]))
@@ -1294,9 +1294,9 @@ class HpxGeom(MapGeom):
         """
 
         skydir = self.get_ref_dir(self._region, self.coordsys)
-        binsz = np.min(get_pixel_size_from_nside(self.nside)) / oversample
+        binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
         width = (2.0 * self.get_region_size(self._region) +
-                 np.max(get_pixel_size_from_nside(self.nside)))
+                 np.max(get_pix_size_from_nside(self.nside)))
 
         if width > 90.:
             width = (min(360., width), min(180.0, width))
@@ -1311,7 +1311,7 @@ class HpxGeom(MapGeom):
 
         return geom
 
-    def get_pixels(self, idx=None, local=False):
+    def get_idx(self, idx=None, local=False):
 
         if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
             raise ValueError('Image index out of range: {}'.format(idx))
@@ -1367,8 +1367,7 @@ class HpxGeom(MapGeom):
             return pix
 
     def get_coords(self, idx=None):
-
-        pix = self.get_pixels(idx=idx)
+        pix = self.get_idx(idx=idx)
         return self.pix_to_coord(pix)
 
     def contains(self, coords):
@@ -1382,7 +1381,7 @@ class HpxGeom(MapGeom):
         frame = 'galactic' if self.coordsys == 'GAL' else 'icrs'
         return SkyCoord(coords[0], coords[1], unit='deg', frame=frame)
 
-    def skydir_to_pixel(self, skydir):
+    def skydir_to_pix(self, skydir):
         """Return the pixel index of a SkyCoord object."""
 
         # FIXME: What should this method do for maps with non-spatial

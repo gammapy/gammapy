@@ -76,8 +76,8 @@ class WcsMapND(WcsMap):
                          slice(geom.npix[1][idx])] = 0.0
         else:
             data = np.nan * np.ones(shape, dtype=dtype).T
-            pix = geom.get_pixels()
-            data[pix[::-1]] = 0.0
+            idx = geom.get_idx()
+            data[idx[::-1]] = 0.0
 
         return data
 
@@ -246,7 +246,7 @@ class WcsMapND(WcsMap):
             yield self.data[idx[::-1]], idx
 
     def iter_by_pix(self, buffersize=1):
-        pix = list(self.geom.get_pixels())
+        pix = list(self.geom.get_idx())
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + pix,
                                     flags=['external_loop', 'buffered'],
@@ -265,7 +265,7 @@ class WcsMapND(WcsMap):
 
         map_out = self.__class__(self.geom.to_image())
         if self.geom.npix[0].size > 1:
-            vals = self.get_by_idx(self.geom.get_pixels())
+            vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
         else:
             data = np.apply_over_axes(np.sum, self.data,
