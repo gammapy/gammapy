@@ -34,7 +34,7 @@ class HpxMapSparse(HpxMap):
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        HpxMap.__init__(self, geom, data)
+        super(HpxMapSparse, self).__init__(geom, data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):

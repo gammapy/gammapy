@@ -76,7 +76,7 @@ def test_wcsmapnd_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
     coords = m.geom.get_coords()
-    pix = m.geom.get_pixels()
+    pix = m.geom.get_idx()
     m.set_by_pix(pix, coords[0])
     assert_allclose(coords[0], m.get_by_pix(pix))
 

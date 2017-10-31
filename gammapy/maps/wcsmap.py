@@ -23,9 +23,6 @@ class WcsMap(MapBase):
         Data array.
     """
 
-    def __init__(self, geom, data=None):
-        MapBase.__init__(self, geom, data)
-
     @classmethod
     def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,

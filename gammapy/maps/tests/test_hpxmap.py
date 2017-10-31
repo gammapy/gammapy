@@ -92,9 +92,9 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     coords = m.geom.get_coords()
-    pix = m.geom.get_pixels()
-    m.set_by_pix(pix, coords[0])
-    assert_allclose(coords[0], m.get_by_pix(pix))
+    idx = m.geom.get_idx()
+    m.set_by_pix(idx, coords[0])
+    assert_allclose(coords[0], m.get_by_pix(idx))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),

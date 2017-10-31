@@ -22,9 +22,9 @@ def fill_poisson(map_in, mu, random_state='random-seed'):
         Passed to `~gammapy.utils.random.get_random_state`.
     """
     random_state = get_random_state(random_state)
-    pix = map_in.geom.get_pixels()
-    mu = random_state.poisson(mu, len(pix[0]))
-    map_in.fill_by_idx(pix, mu)
+    idx = map_in.geom.get_idx()
+    mu = random_state.poisson(mu, len(idx[0]))
+    map_in.fill_by_idx(idx, mu)
 
 
 def swap_byte_order(arr_in):

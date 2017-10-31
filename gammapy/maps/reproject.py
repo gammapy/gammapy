@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-def _get_input_pixels_celestial(wcs_in, wcs_out, shape_out):
+def _get_input_pix_celestial(wcs_in, wcs_out, shape_out):
     """
     Get the pixel coordinates of the pixels in an array of shape ``shape_out``
     in the input WCS.
@@ -83,9 +83,9 @@ def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     array_new = np.zeros(shape_out)
     slice_out = array_new
 
-    xp_in, yp_in = _get_input_pixels_celestial(wcs_in.celestial,
-                                               wcs_out.celestial,
-                                               slice_out.shape)
+    xp_in, yp_in = _get_input_pix_celestial(wcs_in.celestial,
+                                            wcs_out.celestial,
+                                            slice_out.shape)
     coordinates = np.array([yp_in.ravel(), xp_in.ravel()])
 
     jmin, imin = np.floor(np.nanmin(coordinates, axis=1)).astype(int) - 1

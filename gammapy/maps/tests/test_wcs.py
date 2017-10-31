@@ -42,13 +42,13 @@ def test_wcsgeom_init(npix, binsz, coordsys, proj, skydir, axes):
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
-def test_wcsgeom_get_pixels(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_get_pix(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    pix = geom.get_pixels()
+    pix = geom.get_idx()
     if axes is not None:
         idx = tuple([1] * len(axes))
-        pix_img = geom.get_pixels(idx=idx)
+        pix_img = geom.get_idx(idx=idx)
         m = np.all(np.stack([x == y for x, y in zip(idx, pix[2:])]), axis=0)
         assert_allclose(pix[0][m], pix_img[0])
         assert_allclose(pix[1][m], pix_img[1])
@@ -60,7 +60,7 @@ def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_coords()[0],
-                    geom.pix_to_coord(geom.get_pixels())[0])
+                    geom.pix_to_coord(geom.get_idx())[0])
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
@@ -68,7 +68,7 @@ def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    assert_allclose(geom.get_pixels()[0],
+    assert_allclose(geom.get_idx()[0],
                     geom.coord_to_idx(geom.get_coords())[0])
 
 

@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from ..geom import MapAxis
-from ..hpx import HpxGeom, get_pixel_size_from_nside, nside_to_order, lonlat_to_colat
+from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order, lonlat_to_colat
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
 pytest.importorskip('scipy')
@@ -122,14 +122,14 @@ def test_hpx_global_to_local():
 def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
 
-    pix0 = geom.get_pixels()
-    pix1 = tuple([t[::10] for t in pix0])
-    geom = HpxGeom(nside, nested, coordsys, region=pix0, axes=axes)
-    assert_allclose(pix0, geom.get_pixels())
-    assert_allclose(len(pix0[0]), np.sum(geom.npix))
-    geom = HpxGeom(nside, nested, coordsys, region=pix1, axes=axes)
-    assert_allclose(pix1, geom.get_pixels())
-    assert_allclose(len(pix1[0]), np.sum(geom.npix))
+    idx0 = geom.get_idx()
+    idx1 = tuple([t[::10] for t in idx0])
+    geom = HpxGeom(nside, nested, coordsys, region=idx0, axes=axes)
+    assert_allclose(idx0, geom.get_idx())
+    assert_allclose(len(idx0[0]), np.sum(geom.npix))
+    geom = HpxGeom(nside, nested, coordsys, region=idx1, axes=axes)
+    assert_allclose(idx1, geom.get_idx())
+    assert_allclose(len(idx1[0]), np.sum(geom.npix))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -141,42 +141,42 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     assert_allclose(geom_slice.ndim, 2)
     assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
 
-    pix = geom.get_pixels()
-    pix_slice = geom_slice.get_pixels()
+    idx = geom.get_idx()
+    idx_slice = geom_slice.get_idx()
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in pix[1:]], axis=0)
-        assert_allclose(pix_slice, (pix[0][m],))
+        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
+        assert_allclose(idx_slice, (idx[0][m],))
     else:
-        assert_allclose(pix_slice, pix)
+        assert_allclose(idx_slice, idx)
 
     # Test slicing with explicit geometry
     geom = HpxGeom(nside, nested, coordsys, region=tuple(
-        [t[::10] for t in pix]), axes=axes)
+        [t[::10] for t in idx]), axes=axes)
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
     assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
 
-    pix = geom.get_pixels()
-    pix_slice = geom_slice.get_pixels()
+    idx = geom.get_idx()
+    idx_slice = geom_slice.get_idx()
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in pix[1:]], axis=0)
-        assert_allclose(pix_slice, (pix[0][m],))
+        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
+        assert_allclose(idx_slice, (idx[0][m],))
     else:
-        assert_allclose(pix_slice, pix)
+        assert_allclose(idx_slice, idx)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxgeom_get_pixels(nside, nested, coordsys, region, axes):
+def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    pix = geom.get_pixels(local=False)
-    pix_local = geom.get_pixels(local=True)
-    assert_allclose(pix, geom.local_to_global(pix_local))
+    idx = geom.get_idx(local=False)
+    idx_local = geom.get_idx(local=True)
+    assert_allclose(idx, geom.local_to_global(idx_local))
 
     if axes is not None:
-        pix_img = geom.get_pixels(local=False, idx=tuple([1] * len(axes)))
-        pix_img_local = geom.get_pixels(local=True, idx=tuple([1] * len(axes)))
-        assert_allclose(pix_img, geom.local_to_global(pix_img_local))
+        idx_img = geom.get_idx(local=False, idx=tuple([1] * len(axes)))
+        idx_img_local = geom.get_idx(local=True, idx=tuple([1] * len(axes)))
+        assert_allclose(idx_img, geom.local_to_global(idx_img_local))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -268,8 +268,8 @@ def test_hpx_nside_to_order():
                     order.reshape((2, 5)))
 
 
-def test_hpx_get_pixel_size_from_nside():
-    assert_allclose(get_pixel_size_from_nside(np.array([1, 2, 4])),
+def test_hpx_get_pix_size_from_nside():
+    assert_allclose(get_pix_size_from_nside(np.array([1, 2, 4])),
                     np.array([32.0, 16.0, 8.0]))
 
 

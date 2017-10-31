@@ -32,8 +32,8 @@ class MapBase(object):
     """
 
     def __init__(self, geom, data):
-        self._data = data
         self._geom = geom
+        self._data = data
 
     @property
     def data(self):

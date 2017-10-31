@@ -26,7 +26,7 @@ class HpxMap(MapBase):
     """
 
     def __init__(self, geom, data):
-        MapBase.__init__(self, geom, data)
+        super(HpxMap, self).__init__(geom, data)
         self._wcs2d = None
         self._hpx2wcs = None
 
