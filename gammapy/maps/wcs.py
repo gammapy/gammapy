@@ -364,8 +364,12 @@ class WcsGeom(MapGeom):
 
     def make_header(self):
         header = self.wcs.to_header()
-        header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
-                                              np.max(self.npix[1]))
+        self._fill_header_from_axes(header)
+        shape = '{},{}'.format(np.max(self.npix[0]),
+                               np.max(self.npix[1]))
+        for ax in self.axes:
+            shape += ',{}'.format(ax.nbin)
+        header['WCSSHAPE'] = '({})'.format(shape)
         return header
 
     def distance_to_edge(self, skydir):
