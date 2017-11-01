@@ -231,11 +231,11 @@ class WcsNDMap(WcsMap):
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
         if weights is not None:
-            weights = np.asarray(weights)
+            weights = np.asarray(weights, dtype=self.data.dtype)
             weights = weights[msk]
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
-        weights = np.bincount(idx_inv, weights=weights)
+        weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
         self.data.T.flat[idx] += weights
 
     def set_by_idx(self, idx, vals):
@@ -265,7 +265,7 @@ class WcsNDMap(WcsMap):
             return copy.deepcopy(self)
 
         map_out = self.__class__(self.geom.to_image())
-        if self.geom.npix[0].size > 1:
+        if self.geom.is_regular:
             vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
         else:

@@ -265,6 +265,24 @@ class Map(object):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
+    def coadd(self, map_in):
+        """Fill this map with the contents of another map.  This method can be
+        used to sum maps containing integral quantities (e.g. counts)
+        or differential quantities if the maps have the same binning.
+
+        Parameters
+        ----------
+        map_in : `~MapBase`
+            Input map.
+
+        """
+        # TODO: Check whether geometries are aligned and if so sum the
+        # data vectors directly
+        idx = map_in.geom.get_pixels()
+        coords = map_in.geom.get_coords()
+        vals = map_in.get_by_idx(idx)
+        self.fill_by_coords(coords, vals)
+
     def reproject(self, geom, order=1, mode='interp'):
         """Reproject this map to a different geometry.
 
