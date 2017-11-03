@@ -270,27 +270,23 @@ class LightCurveEstimator(object):
             off_evt = self.off_evt_list[t_index]
             on_evt = self.on_evt_list[t_index]
 
-            # Loop on energy bins (default binning set to SpectrumObservation.e_reco)
+            # introduce the e_reco binning here, since it's also used
+            # in the calculation of predicted counts
             e_reco = spec.e_reco
-            for e_index in range(len(e_reco) - 1):
-                emin = e_reco[e_index]
-                emax = e_reco[e_index + 1]
+            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
+            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1]))-1]
 
-                # discard bins not matching the energy threshold of SpectrumObservation
-                if emin < spec.lo_threshold or emax > spec.hi_threshold:
-                    continue
+            # compute ON events
+            on = on_evt.select_energy([emin, emax])
+            on = on.select_energy(energy_range)
+            on = on.select_time([tmin, tmax])
+            n_on_obs = len(on.table)
 
-                # Loop on ON evts (time and energy)
-                on = on_evt.select_energy([emin, emax])  # evt in bin energy range
-                on = on.select_energy(energy_range)  # evt in user energy range
-                on = on.select_time([tmin, tmax])
-                n_on_obs += len(on.table)
-
-                # Loop on OFF evts
-                off = off_evt.select_energy([emin, emax])  # evt in bin energy range
-                off = off.select_energy(energy_range)  # evt in user energy range
-                off = off.select_time([tmin, tmax])
-                n_off_obs += len(off.table)
+            # compute OFF events
+            off = off_evt.select_energy([emin, emax])
+            off = off.select_energy(energy_range)
+            off = off.select_time([tmin, tmax])
+            n_off_obs = len(off.table)
 
             # compute effective livetime (for the interval)
             livetime_to_add = 0.
@@ -329,15 +325,12 @@ class LightCurveEstimator(object):
                 livetime=livetime_to_add,
                 aeff=spec.aeff,
                 edisp=spec.edisp,
-                model=spectral_model,
-                # e_reco=e_reco[e_idx],
+                model=spectral_model
             )
             counts_predictor.run()
             counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
 
             obs_predicted_excess = np.sum(counts_predicted_excess)
-            obs_predicted_excess /= obs.observation_live_time_duration.to('s').value
-            obs_predicted_excess *= livetime_to_add.value
 
             # compute effective normalisation between ON/OFF (for the interval)
             livetime += livetime_to_add
@@ -359,7 +352,7 @@ class LightCurveEstimator(object):
 
         flux = measured_excess / predicted_excess.value
         flux *= int_flux
-        flux_err = int_flux / measured_excess
+        flux_err = int_flux / predicted_excess.value
         # Gaussian errors, TODO: should be improved
         flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
 
