@@ -50,8 +50,9 @@ def test_wcsgeom_get_pix(npix, binsz, coordsys, proj, skydir, axes):
         idx = tuple([1] * len(axes))
         pix_img = geom.get_idx(idx=idx)
         m = np.all(np.stack([x == y for x, y in zip(idx, pix[2:])]), axis=0)
-        assert_allclose(pix[0][m], pix_img[0])
-        assert_allclose(pix[1][m], pix_img[1])
+        m2 = pix_img[0] != -1
+        assert_allclose(pix[0][m], np.ravel(pix_img[0][m2]))
+        assert_allclose(pix[1][m], np.ravel(pix_img[1][m2]))
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
@@ -100,6 +101,7 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
     coords = geom.get_coords()
+    coords = [c[np.isfinite(c)] for c in coords]
     assert_allclose(geom.contains(coords),
                     np.ones(coords[0].shape, dtype=bool))
 

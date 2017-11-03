@@ -187,11 +187,14 @@ def pix_tuple_to_idx(pix, copy=False):
     """
     idx = []
     for i, p in enumerate(pix):
-        p = np.array(p, copy=copy)
+        p = np.array(p, copy=copy, ndmin=1)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
-            idx += [np.rint(p).astype(int)]
+            #idx += [np.rint(p).astype(int)]
+            p_idx = np.rint(p).astype(int)
+            p_idx[~np.isfinite(p)] = -1
+            idx += [p_idx]
     return tuple(idx)
 
 
@@ -745,7 +748,7 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def get_idx(self, idx=None, local=False):
+    def get_idx(self, idx=None, local=False, flat=False):
         """Get tuple of pixel indices for this geometry.
 
         Returns all pixels in the geometry by default. Pixel indices
@@ -765,6 +768,10 @@ class MapGeom(object):
             indices run from 0 to the number of pixels in a given
             image plane.
 
+        flat : bool, optional
+            Return a flattened array containing only indices for
+            pixels contained in the geometry.
+
         Returns
         -------
         idx : tuple
@@ -774,10 +781,11 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def get_coords(self, idx=None):
-        """Get the coordinates of all the pixels in this geometry.
+    def get_coords(self, idx=None, flat=False):
+        """Get the coordinate array for this geometry.
 
-        Returns coordinates for all pixels in the geometry by default.
+        Returns a coordinate array with the same shape as the data
+        array.  Pixels outside the geometry are set to NaN.
         Coordinates for a single image plane can be accessed by
         setting ``idx`` to the index tuple of a plane.
 
@@ -789,11 +797,16 @@ class MapGeom(object):
             plane with this index will be returned.  If none then
             coordinates for all pixels will be returned.
 
+        flat : bool, optional
+            Return a flattened array containing only coordinates for
+            pixels contained in the geometry.
+
         Returns
         -------
         coords : tuple
             Tuple of coordinate vectors with one vector for each
             dimension.
+
         """
         pass
 

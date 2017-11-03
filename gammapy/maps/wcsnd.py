@@ -75,9 +75,10 @@ class WcsMapND(WcsMap):
                          slice(geom.npix[0][idx]),
                          slice(geom.npix[1][idx])] = 0.0
         else:
-            data = np.nan * np.ones(shape, dtype=dtype).T
+            data = np.full(shape, np.nan, dtype=dtype).T
             idx = geom.get_idx()
-            data[idx[::-1]] = 0.0
+            m = np.all(np.stack([t != -1 for t in idx]), axis=0)
+            data[m] = 0.0
 
         return data
 
@@ -178,7 +179,7 @@ class WcsMapND(WcsMap):
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
         from scipy.interpolate import griddata
-        grid_coords = self.geom.get_coords()
+        grid_coords = self.geom.get_coords(flat=True)
         data = self.data[np.isfinite(self.data)]
         vals = griddata(grid_coords, data, coords, method=method)
         m = ~np.isfinite(vals)
@@ -246,14 +247,14 @@ class WcsMapND(WcsMap):
             yield self.data[idx[::-1]], idx
 
     def iter_by_pix(self, buffersize=1):
-        pix = list(self.geom.get_idx())
+        pix = list(self.geom.get_idx(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + pix,
                                     flags=['external_loop', 'buffered'],
                                     buffersize=buffersize))
 
     def iter_by_coords(self, buffersize=1):
-        coords = list(self.geom.get_coords())
+        coords = list(self.geom.get_coords(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + coords,
                                     flags=['external_loop', 'buffered'],
