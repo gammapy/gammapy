@@ -374,14 +374,20 @@ class TablePSF(object):
         # ppf = "percent point function" (inverse of cdf)
         # Here's a discussion on methods to compute the ppf
         # http://mail.scipy.org/pipermail/scipy-user/2010-May/025237.html
-        x = self._rad.value
-        y = self.integral(Angle(0, 'rad'), self._rad)
+        y = self._rad.value
+        x = self.integral(Angle(0, 'rad'), self._rad)
 
-        # This is a hack to stabilize the univariate spline. Only use the first
-        # i entries, where the integral is srictly increasing, to build the spline.
-        i = (np.diff(y) <= 0).argmax()
-        i = len(y) if i == 0 else i
-        self._ppf_spline = UnivariateSpline(y[:i], x[:i], **spline_kwargs)
+        # Since scipy 1.0 the UnivariateSpline requires that x is strictly increasing
+        # So only keep nodes where this is the case (and always keep the first one):
+        x, idx = np.unique(x, return_index=True)
+        y = y[idx]
+
+        # Dummy values, for cases where one really doesn't have a valid PSF.
+        if len(x) < 4:
+            x = [0, 1, 2, 3]
+            y = [0, 0, 0, 0]
+
+        self._ppf_spline = UnivariateSpline(x, y, **spline_kwargs)
 
     def _rad_clip(self, rad):
         """Clip to radius support range, because spline extrapolation is unstable."""
