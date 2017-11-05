@@ -417,12 +417,12 @@ class EnergyDependentTablePSF(object):
 
         self.energy = Quantity(energy).to('GeV')
         self.rad = Quantity(rad).to('radian')
-        if not exposure:
+        if exposure is None:
             self.exposure = Quantity(np.ones(len(energy)), 'cm^2 s')
         else:
             self.exposure = Quantity(exposure).to('cm^2 s')
 
-        if not psf_value:
+        if psf_value is None:
             self.psf_value = Quantity(np.zeros(len(energy), len(rad)), 'sr^-1')
         else:
             self.psf_value = Quantity(psf_value).to('sr^-1')
@@ -521,7 +521,7 @@ class EnergyDependentTablePSF(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        if not interp_kwargs:
+        if interp_kwargs is None:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 
         from scipy.interpolate import RegularGridInterpolator
