@@ -139,8 +139,9 @@ class LightCurve(QTable):
 
 
 class LightCurveEstimator(object):
-    """
-    Class producing light curve.
+    """Light curve estimator.
+
+    For a usage example see :gp-extra-notebook:`light_curve`.
 
     Parameters
     ----------
@@ -183,9 +184,6 @@ class LightCurveEstimator(object):
 
         To be discussed: assumption that threshold energy in the
         same in reco and true energy.
-
-        TODO: For the moment there is an issue with the rebinning in reconstructed
-        energy, do not use it: https://github.com/gammapy/gammapy/issues/953
 
         Parameters
         ----------
@@ -257,9 +255,6 @@ class LightCurveEstimator(object):
 
             spec = self.obs_spec[t_index]
 
-            n_on_obs = 0
-            n_off_obs = 0
-
             # discard observations not matching the time interval
             obs_start = obs.events.time[0]
             obs_stop = obs.events.time[-1]
@@ -274,7 +269,7 @@ class LightCurveEstimator(object):
             # in the calculation of predicted counts
             e_reco = spec.e_reco
             emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
-            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1]))-1]
+            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
 
             # compute ON events
             on = on_evt.select_energy([emin, emax])
@@ -289,21 +284,20 @@ class LightCurveEstimator(object):
             n_off_obs = len(off.table)
 
             # compute effective livetime (for the interval)
-            livetime_to_add = 0.
-            # interval included in obs
             if tmin >= obs_start and tmax <= obs_stop:
+                # interval included in obs
                 livetime_to_add = (tmax - tmin).to('s')
-            # interval min above tstart from obs
             elif tmin >= obs_start and tmax >= obs_stop:
+                # interval min above tstart from obs
                 livetime_to_add = (obs_stop - tmin).to('s')
-            # interval min below tstart from obs
             elif tmin <= obs_start and tmax <= obs_stop:
+                # interval min below tstart from obs
                 livetime_to_add = (tmax - obs_start).to('s')
-            # obs included in interval
             elif tmin <= obs_start and tmax >= obs_stop:
+                # obs included in interval
                 livetime_to_add = (obs_stop - obs_start).to('s')
             else:
-                pass
+                livetime_to_add = 0 * u.sec
 
             # Take into account dead time
             livetime_to_add *= (1. - obs.observation_dead_time_fraction)
@@ -343,6 +337,7 @@ class LightCurveEstimator(object):
 
         # Fill time interval information
         int_flux = spectral_model.integral(energy_range[0], energy_range[1])
+
         if n_off > 0.:
             alpha_mean /= n_off
         if livetime > 0.:

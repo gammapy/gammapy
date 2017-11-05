@@ -26,9 +26,11 @@ class SpectrumExtraction(object):
     beforehand, using e.g. the
     `~gammapy.background.ReflectedRegionsBackgroundEstimator`. For point
     sources analyzed with 'full containment' IRFs, a correction for PSF
-    leakage out of the circular ON region can be applied.  For more info see
-    :ref:`spectral_fitting`. For a usage example see
-    :gp-extra-notebook:`spectrum_analysis`
+    leakage out of the circular ON region can be applied.
+
+    For more info see :ref:`spectral_fitting`.
+
+    For a usage example see :gp-extra-notebook:`spectrum_analysis`
 
     Parameters
     ----------
