@@ -119,8 +119,9 @@ class SkyImageList(UserList):
         ``kwargs`` are passed to `astropy.io.fits.open`.
         """
         filename = make_path(filename)
-        hdu_list = fits.open(str(filename), **kwargs)
-        return cls.from_hdu_list(hdu_list)
+        with fits.open(str(filename), **kwargs) as hdu_list:
+            images = cls.from_hdu_list(hdu_list)
+        return images
 
     def to_hdu_list(self):
         """Convert to `~astropy.io.fits.HDUList`.

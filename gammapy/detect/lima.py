@@ -103,12 +103,12 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     kernel.normalize('peak')
     conv_opt = dict(mode='constant', cval=np.nan)
 
-    n_on_conv = convolve(n_on, kernel.array, **conv_opt)
-    a_on_conv = convolve(a_on, kernel.array, **conv_opt)
+    n_on_conv = convolve(n_on.data, kernel.array, **conv_opt)
+    a_on_conv = convolve(a_on.data, kernel.array, **conv_opt)
     alpha_conv = a_on_conv / a_off
-    background_conv = alpha_conv * n_off
+    background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
-    significance_conv = significance_on_off(n_on_conv, n_off, alpha_conv, method='lima')
+    significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
 
     images = SkyImageList([
         SkyImage(name='significance', data=significance_conv),

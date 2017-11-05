@@ -81,9 +81,9 @@ class EnergyDependentMultiGaussPSF(object):
                                                            self.energy_hi)
         self.energy = ebounds.log_centers
         self.theta = theta.to('deg')
-        sigmas[0][np.where(sigmas[0] == 0)] = 1
-        sigmas[1][np.where(sigmas[1] == 0)] = 1
-        sigmas[2][np.where(sigmas[2] == 0)] = 1
+        sigmas[0][sigmas[0] == 0] = 1
+        sigmas[1][sigmas[1] == 0] = 1
+        sigmas[2][sigmas[2] == 0] = 1
         self.sigmas = sigmas
 
         self.norms = norms
@@ -121,12 +121,14 @@ class EnergyDependentMultiGaussPSF(object):
         shape = (len(theta), len(energy_hi))
         sigmas = []
         for key in ['SIGMA_1', 'SIGMA_2', 'SIGMA_3']:
-            sigmas.append(hdu.data[key].reshape(shape))
+            sigma = hdu.data[key].reshape(shape).copy()
+            sigmas.append(sigma)
 
         # Get amplitudes
         norms = []
         for key in ['SCALE', 'AMPL_2', 'AMPL_3']:
-            norms.append(hdu.data[key].reshape(shape))
+            norm = hdu.data[key].reshape(shape).copy()
+            norms.append(norm)
 
         opts = {}
         try:
