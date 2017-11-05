@@ -327,22 +327,24 @@ def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
         Boolean mask array for a rectangular sub-region defined by specified
         maxima and minima lon and lat.
     """
-    if lon_min:
+    if lon_min is not None:
         mask_lon_min = (lon_min <= lons)
     else:
         mask_lon_min = np.ones(lons.shape, dtype=bool)
-    if lon_max:
+
+    if lon_max is not None:
         mask_lon_max = (lons < lon_max)
     else:
         mask_lon_max = np.ones(lons.shape, dtype=bool)
 
     lon_mask = mask_lon_min & mask_lon_max
 
-    if lat_min:
+    if lat_min is not None:
         mask_lat_min = (lat_min <= lats)
     else:
         mask_lat_min = np.ones(lats.shape, dtype=bool)
-    if lat_max:
+
+    if lat_max is not None:
         mask_lat_max = (lats < lat_max)
     else:
         mask_lat_max = np.ones(lats.shape, dtype=bool)
