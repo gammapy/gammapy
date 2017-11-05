@@ -22,7 +22,7 @@ Getting started
 
 .. note::
 
-    Start learning about Gammapy using the `Gammapy tutorial notebooks`_.
+    Start learning about Gammapy using the :ref:`tutorials`.
 
 Other introductory pages:
 
@@ -48,8 +48,9 @@ General documentation
 
 .. _gammapy_notebooks:
 
-IPython notebooks
----------------------
+Tutorial notebooks
+------------------
+
 .. toctree::
   :maxdepth: 1
 

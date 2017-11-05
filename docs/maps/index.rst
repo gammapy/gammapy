@@ -412,7 +412,7 @@ diffuse model cube using the `~MapBase.reproject` method:
 Using `gammapy.maps`
 ====================
 
-`Gammapy tutorial notebooks`_ that show examples using ``gammapy.maps``:
+:ref:`tutorials` that show examples using ``gammapy.maps``:
 
 * :gp-extra-notebook:`data_fermi_lat`
 
