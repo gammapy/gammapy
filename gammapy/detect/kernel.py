@@ -177,7 +177,7 @@ class KernelBackgroundEstimator(object):
         # update exclusion mask
         radius = p['mask_dilation_radius'].to('deg')
         scale = images['counts'].wcs_pixel_scale()[0]
-        structure = Tophat2DKernel((radius / scale).value)
+        structure = np.array(Tophat2DKernel((radius / scale).value))
 
         mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
         mask = binary_erosion(mask, structure, border_value=1)
