@@ -195,7 +195,7 @@ class HpxMap(MapBase):
         extname_bands = conv.bands_hdu
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxMapSparse)
-        else False)
+                            else False)
         header = self.geom.make_header()
 
         if self.geom.axes:

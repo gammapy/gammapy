@@ -91,8 +91,8 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
                          hpx_test_geoms_sparse)
 def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords()
-    idx = m.geom.get_idx()
+    coords = m.geom.get_coords(flat=True)
+    idx = m.geom.get_idx(flat=True)
     m.set_by_pix(idx, coords[0])
     assert_allclose(coords[0], m.get_by_pix(idx))
 
@@ -101,7 +101,7 @@ def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
                          hpx_test_geoms_sparse)
 def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[0])
     assert_allclose(coords[0], m.get_by_coords(coords))
 
@@ -122,7 +122,7 @@ def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
                          hpx_test_geoms_sparse)
 def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.fill_by_coords(coords, coords[1])
     m.fill_by_coords(coords, coords[1])
     assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])
@@ -133,7 +133,7 @@ def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
 def test_hpxmap_iter(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.fill_by_coords(coords, coords[0])
     for vals, pix in m.iter_by_pix(buffersize=100):
         assert_allclose(vals, m.get_by_pix(pix))
@@ -157,7 +157,7 @@ def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
                          coordsys=coordsys, region=region, axes=axes))
     fill_poisson(m, mu=1.0, random_state=0)
     m2 = m.to_swapped_scheme()
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     assert_allclose(m.get_by_coords(coords), m2.get_by_coords(coords))
 
 
@@ -174,6 +174,6 @@ def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
 def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
     m = HpxMapND(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.fill_by_coords(coords, coords[0])
     msum = m.sum_over_axes()

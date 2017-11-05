@@ -22,8 +22,8 @@ def fill_poisson(map_in, mu, random_state='random-seed'):
         Passed to `~gammapy.utils.random.get_random_state`.
     """
     random_state = get_random_state(random_state)
-    idx = map_in.geom.get_idx()
-    mu = random_state.poisson(mu, len(idx[0]))
+    idx = map_in.geom.get_idx(flat=True)
+    mu = random_state.poisson(mu, idx[0].shape)
     map_in.fill_by_idx(idx, mu)
 
 

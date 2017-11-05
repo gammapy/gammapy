@@ -122,13 +122,13 @@ def test_hpx_global_to_local():
 def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
 
-    idx0 = geom.get_idx()
+    idx0 = geom.get_idx(flat=True)
     idx1 = tuple([t[::10] for t in idx0])
     geom = HpxGeom(nside, nested, coordsys, region=idx0, axes=axes)
-    assert_allclose(idx0, geom.get_idx())
+    assert_allclose(idx0, geom.get_idx(flat=True))
     assert_allclose(len(idx0[0]), np.sum(geom.npix))
     geom = HpxGeom(nside, nested, coordsys, region=idx1, axes=axes)
-    assert_allclose(idx1, geom.get_idx())
+    assert_allclose(idx1, geom.get_idx(flat=True))
     assert_allclose(len(idx1[0]), np.sum(geom.npix))
 
 
@@ -141,8 +141,8 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     assert_allclose(geom_slice.ndim, 2)
     assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
 
-    idx = geom.get_idx()
-    idx_slice = geom_slice.get_idx()
+    idx = geom.get_idx(flat=True)
+    idx_slice = geom_slice.get_idx(flat=True)
     if geom.ndim > 2:
         m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
         assert_allclose(idx_slice, (idx[0][m],))
@@ -160,7 +160,7 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     idx_slice = geom_slice.get_idx()
     if geom.ndim > 2:
         m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0][m],))
+        assert_allclose(idx_slice, (idx[0].flat[m],))
     else:
         assert_allclose(idx_slice, idx)
 
@@ -169,13 +169,13 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
                          hpx_test_geoms)
 def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    idx = geom.get_idx(local=False)
-    idx_local = geom.get_idx(local=True)
+    idx = geom.get_idx(local=False, flat=True)
+    idx_local = geom.get_idx(local=True, flat=True)
     assert_allclose(idx, geom.local_to_global(idx_local))
 
     if axes is not None:
-        idx_img = geom.get_idx(local=False, idx=tuple([1] * len(axes)))
-        idx_img_local = geom.get_idx(local=True, idx=tuple([1] * len(axes)))
+        idx_img = geom.get_idx(local=False, idx=tuple([1] * len(axes)), flat=True)
+        idx_img_local = geom.get_idx(local=True, idx=tuple([1] * len(axes)), flat=True)
         assert_allclose(idx_img, geom.local_to_global(idx_img_local))
 
 
@@ -311,9 +311,9 @@ def test_hpxgeom_get_coords():
     # 3D all-sky
     hpx = HpxGeom(16, False, 'GAL', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
-    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
-    assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0,:3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][0,:3], np.array([87.075819, 87.075819, 87.075819]))
+    assert_allclose(c[2][0,:3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
@@ -324,14 +324,14 @@ def test_hpxgeom_get_coords():
     # 3D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
-    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
-    assert_allclose(c[2][:3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0,:3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][0,:3], np.array([76.813533, 76.813533, 76.07742]))
+    assert_allclose(c[2][0,:3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
     hpx = HpxGeom([16, 32, 64], False, 'GAL',
                   region='DISK(110.,75.,2.)', axes=[ax0])
-    c = hpx.get_coords()
+    c = hpx.get_coords(flat=True)
     assert_allclose(c[0][:3], np.array([117., 103.5, 112.5]))
     assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
@@ -341,9 +341,9 @@ def test_hpxgeom_get_coords():
                          hpx_test_geoms)
 def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    coords = geom.get_coords()
-    assert_allclose(geom.contains(coords), np.ones(
-        coords[0].shape, dtype=bool))
+    coords = geom.get_coords(flat=True)
+    assert_allclose(geom.contains(coords),
+                    np.ones(coords[0].shape, dtype=bool))
 
     if axes is not None:
         coords = [c[0] for c in coords[:2]] + \

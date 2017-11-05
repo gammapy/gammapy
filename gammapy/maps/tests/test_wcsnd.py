@@ -115,7 +115,7 @@ def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsMapND(geom)
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[1])
     assert_allclose(coords[1], m.get_by_coords(coords, interp='nearest'))
     assert_allclose(coords[1], m.get_by_coords(coords, interp='linear'))

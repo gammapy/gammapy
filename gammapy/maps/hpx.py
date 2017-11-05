@@ -286,7 +286,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
         hpx.nside[..., None],
         sky_crds[:, 1][mask][None, ...],
         sky_crds[:, 0][mask][None, ...],
-         hpx.nest,
+        hpx.nest,
     ).flatten()
 
     # Here we are counting the number of HEALPIX pixels each WCS pixel
@@ -504,27 +504,32 @@ class HpxGeom(MapGeom):
             idx = ravel_hpx_index(idx_tmp, self._npix)
 
         idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
-        return idx_global[:1] + idx_local[1:]
+        return idx_global[:1] + tuple(idx_local[1:])
 
     def global_to_local(self, idx_global):
         """Compute a global (all-sky) index from a local (partial-sky)
         index.
 
+        Parameters
+        ----------
+        idx_global : tuple
+            A tuple of pixel indices with global HEALPix pixel
+            indices.
+
         Returns
         -------
         idx_local : tuple
-            A tuple of pixel index vectors with local HEALPIX pixel
+            A tuple of pixel indices with local HEALPIX pixel
             indices.
-        """
 
+        """
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
         else:
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
         if self._rmap is not None:
-            retval = np.empty((idx.size), 'i')
-            retval.fill(-1)
+            retval = np.full((idx.size), -1, 'i')
             m = np.in1d(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
             retval = retval.reshape(idx.shape)
@@ -532,11 +537,15 @@ class HpxGeom(MapGeom):
             retval = idx
 
         if self.nside.size == 1:
-            retval = tuple([retval] + list(idx_global[1:]))
+            idx_local = tuple([retval] + list(idx_global[1:]))
         else:
-            retval = unravel_hpx_index(retval, self._npix)
+            idx_local = unravel_hpx_index(retval, self._npix)
 
-        return retval
+        m = np.any(np.stack([t == -1 for t in idx_local]), axis=0)
+        for i, t in enumerate(idx_local):
+            idx_local[i][m] = -1
+
+        return idx_local
 
     def __getitem__(self, idx_global):
         """This implements the global-to-local index lookup.
@@ -635,9 +644,15 @@ class HpxGeom(MapGeom):
                 nside = self.nside
 
             ipix = np.round(pix[0]).astype(int)
+            m = ipix == -1
+            ipix[m] = 0
             theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
             coords = [np.degrees(phi), np.degrees(np.pi / 2. - theta)]
             coords = tuple(coords + vals)
+            if np.any(m):
+                for c in coords:
+                    c[m] = np.nan
+
         else:
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
@@ -678,11 +693,13 @@ class HpxGeom(MapGeom):
             slice_dims = np.arange(self.ndim)
 
         if self.region == 'explicit':
-            idxs = [np.arange(ax.nbin)[s] for ax, s in zip(self.axes, slices)]
-            pix = self.get_idx()
-            m = np.all([np.in1d(t, i) for i, t in zip(idxs, pix[1:])], axis=0)
-            region = tuple([t[m]
-                            for i, t in enumerate(pix) if i in slice_dims])
+            idx = self.get_idx()
+            slices = (slice(None),) + slices
+            idx = [p[slices[::-1]] for p in idx]
+            idx = [p[p != -1] for p in idx]
+            if drop_axes:
+                idx = [idx[i] for i in range(len(idx)) if i in slice_dims]
+            region = tuple(idx)
         else:
             region = self.region
 
@@ -770,7 +787,7 @@ class HpxGeom(MapGeom):
         geometries.  If true all image planes have the same pixel
         geometry.
         """
-        if self.nside.size > 1:
+        if self.nside.size > 1 or self.region == 'explicit':
             return False
         else:
             return True
@@ -1311,25 +1328,50 @@ class HpxGeom(MapGeom):
 
         return geom
 
-    def get_idx(self, idx=None, local=False):
+    def get_idx(self, idx=None, local=False, flat=False):
 
         if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
             raise ValueError('Image index out of range: {}'.format(idx))
 
-        if self._ipix is None and idx is None:
-            ipix = np.concatenate([np.arange(t) for t in self._maxpix.flat])
-            if not len(self._shape):
-                return ipix,
+        # Regular all- and partial-sky maps
+        if self.is_regular:
 
-            ibnd = np.concatenate([i * np.ones(t, dtype=int)
-                                   for i, t in enumerate(self._maxpix.flat)])
-            ibnd = list(np.unravel_index(ibnd, self._shape))
-            pix = tuple([ipix] + ibnd)
-        elif self._ipix is None:
-            ipix = np.arange(self._maxpix[idx])
-            ibnd = [t * np.ones(len(ipix), dtype=int) for t in idx]
-            pix = tuple([ipix] + ibnd)
-        elif self.nside.shape == self._maxpix.shape or self.region == 'explicit':
+            pix = [np.arange(np.max(self._npix))]
+            if idx is None:
+                pix += [np.arange(ax.nbin, dtype=int) for ax in self.axes]
+            else:
+                pix += [t for t in idx]
+            pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
+            pix = self.local_to_global(pix)
+
+        # Non-regular all-sky
+        elif self.is_allsky and not self.is_regular:
+
+            shape = (np.max(self.npix), )
+            if idx is None:
+                shape = shape + self.shape
+            else:
+                shape = shape + (1,) * len(self.axes)
+            pix = [np.full(shape, -1, dtype=int)
+                   for i in range(1 + len(self.axes))]
+            for idx_img in np.ndindex(self.shape):
+
+                if idx is not None and idx_img != idx:
+                    continue
+
+                npix = self._npix[idx_img]
+                if idx is None:
+                    s_img = (slice(0, npix),) + idx_img
+                else:
+                    s_img = (slice(0, npix),) + (0,) * len(self.axes)
+
+                pix[0][s_img] = np.arange(self._npix[idx_img])
+                for j in range(len(self.axes)):
+                    pix[j + 1][s_img] = idx_img[j]
+            pix = [p.T for p in pix]
+
+        # Explicit pixel indices
+        else:
 
             if idx is not None:
                 npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
@@ -1337,37 +1379,49 @@ class HpxGeom(MapGeom):
                 s = slice(npix_sum[idx_ravel], npix_sum[idx_ravel + 1])
             else:
                 s = slice(None)
+            pix_flat = unravel_hpx_index(self._ipix[s], self._maxpix)
 
-            pix = unravel_hpx_index(self._ipix[s], self._maxpix)
-        else:
-
-            # For fixed nside we only store an ipix vector for the
-            # first plane. Here we construct global pixel index vectors
-            # for all planes
+            shape = (np.max(self.npix), )
             if idx is None:
-
-                nimg = np.prod(self._shape)
-                npix = self._npix.flat[0]
-                ibnd = np.ravel(
-                    np.arange(nimg)[:, None] * np.ones(npix, dtype=int)[None, :])
-                ibnd = np.unravel_index(ibnd, self._shape, order='F')
-                ipix = np.ravel(self._ipix[None, :]
-                                * np.ones(nimg, dtype=int)[:, None])
-                pix = tuple([ipix] + list(ibnd))
+                shape = shape + self.shape
             else:
+                shape = shape + (1,) * len(self.axes)
+            pix = [np.full(shape, -1, dtype=int)
+                   for i in range(1 + len(self.axes))]
 
-                npix = self._npix.flat[0]
-                ibnd = [t * np.ones(npix, dtype=int) for t in idx]
-                ipix = self._ipix.copy()
-                pix = tuple([ipix] + list(ibnd))
+            for idx_img in np.ndindex(self.shape):
+
+                if idx is not None and idx_img != idx:
+                    continue
+
+                npix = int(self._npix[idx_img])
+                if idx is None:
+                    s_img = (slice(0, npix),) + idx_img
+                else:
+                    s_img = (slice(0, npix),) + (0,) * len(self.axes)
+
+                if self.axes:
+                    m = np.all(np.stack([pix_flat[i + 1] == t
+                                         for i, t in enumerate(idx_img)]), axis=0)
+                    pix[0][s_img] = pix_flat[0][m]
+                else:
+                    pix[0][s_img] = pix_flat[0]
+
+                for j in range(len(self.axes)):
+                    pix[j + 1][s_img] = idx_img[j]
+
+            pix = [p.T for p in pix]
 
         if local:
-            return self.global_to_local(pix)
-        else:
-            return pix
+            pix = self.global_to_local(pix)
 
-    def get_coords(self, idx=None):
-        pix = self.get_idx(idx=idx)
+        if flat:
+            pix = tuple([p[p != -1] for p in pix])
+
+        return pix
+
+    def get_coords(self, idx=None, flat=False):
+        pix = self.get_idx(idx=idx, flat=flat)
         return self.pix_to_coord(pix)
 
     def contains(self, coords):

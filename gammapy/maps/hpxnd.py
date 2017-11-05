@@ -119,7 +119,7 @@ class HpxMapND(HpxMap):
         self._wcs_proj = proj
         self._wcs_oversample = oversample
         self._wcs2d = self.geom.make_wcs(proj=proj, oversample=oversample,
-                                        drop_axes=True)
+                                         drop_axes=True)
         self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
 
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
@@ -143,16 +143,16 @@ class HpxMapND(HpxMap):
             wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.geom.make_wcs(proj=proj,
-                                    oversample=oversample,
-                                    drop_axes=True)
+                                     oversample=oversample,
+                                     drop_axes=True)
         else:
             hpx_data = self.data
             wcs_shape = tuple([t.flat[0] for t in
                                self._hpx2wcs.npix]) + self.geom._shape
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.geom.make_wcs(proj=proj,
-                                    oversample=oversample,
-                                    drop_axes=False)
+                                     oversample=oversample,
+                                     drop_axes=False)
 
         # FIXME: Should reimplement instantiating map first and fill data array
 
@@ -168,14 +168,14 @@ class HpxMapND(HpxMap):
             yield self.data[idx[::-1]], idx
 
     def iter_by_pix(self, buffersize=1):
-        idx = list(self.geom.get_idx())
+        idx = list(self.geom.get_idx(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + idx,
                                     flags=['external_loop', 'buffered'],
                                     buffersize=buffersize))
 
     def iter_by_coords(self, buffersize=1):
-        coords = list(self.geom.get_coords())
+        coords = list(self.geom.get_coords(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + coords,
                                     flags=['external_loop', 'buffered'],
@@ -194,8 +194,8 @@ class HpxMapND(HpxMap):
         map_out = self.__class__(hpx_out)
 
         if self.geom.nside.size > 1:
-            vals = self.get_by_idx(self.geom.get_idx())
-            map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
+            vals = self.get_by_idx(self.geom.get_idx(flat=True))
+            map_out.fill_by_coords(self.geom.get_coords(flat=True)[:2], vals)
         else:
             axes = np.arange(self.data.ndim - 1).tolist()
             data = np.apply_over_axes(np.sum, self.data, axes=axes)
