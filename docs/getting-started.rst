@@ -108,7 +108,7 @@ Jupyter notebooks are documents that combine code input and text and graphical o
 and are wonderful tools to learn and explore (both programming and the data),
 and finally to share results with your colleagues.
 
-So now is a good time to have a look at the `Gammapy tutorial notebooks`_.
+So now is a good time to have a look here: :ref:`tutorials`.
 Try executing the cells locally on your machine as you read through the text and code.
 
 
@@ -152,7 +152,7 @@ TODO: add example here, maybe for ``gammapy-image-bin`` or something more intere
 What next?
 ----------
 
-If you'd like to continue with tutorials to learn Gammapy, go to the `Gammapy tutorial notebooks`_.
+If you'd like to continue with tutorials to learn Gammapy, go here: :ref:`tutorials`.
 
 To learn about some specific functionality that could be useful for your work,
 start browsing the "Getting Started" section of Gammapy sub-package that

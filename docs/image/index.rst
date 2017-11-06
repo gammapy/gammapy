@@ -48,7 +48,7 @@ in an interactive python environment or see the :doc:`sky_image` page.
 Using `gammapy.image`
 =====================
 
-Many of the `Gammapy tutorial notebooks`_ show examples using ``gammapy.image``:
+Many of the :ref:`tutorials` show examples using ``gammapy.image``:
 
 * :gp-extra-notebook:`first_steps`
 * :gp-extra-notebook:`image_pipe`
