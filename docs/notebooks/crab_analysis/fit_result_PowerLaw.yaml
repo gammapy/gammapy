@@ -1,0 +1,27 @@
+covariance:
+  axis:
+  - index
+  - amplitude
+  matrix:
+  - - 0.0020127360180692885
+    - 2.2593242974672436e-14
+  - - 2.2593242974672432e-14
+    - 1.044895874445007e-24
+fit_range:
+  max: 100000000000.0
+  min: 681292069.0579611
+  unit: keV
+model:
+  name: PowerLaw
+  parameters:
+  - name: index
+    unit: ''
+    val: 2.1696426626130396
+  - name: amplitude
+    unit: 1 / (cm2 s TeV)
+    val: 2.0089954890489386e-11
+  - name: reference
+    unit: TeV
+    val: 1.0
+statname: wstat
+statval: 34.322009186051915
