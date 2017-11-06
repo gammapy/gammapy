@@ -16,6 +16,14 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 Summary
 +++++++
 
+- Coming soon (November 2017)
+- 16 contributors (7 new)
+- 7 months of work (from April 28, 2017 to November 2017)
+- 120 pull requests (not all listed below)
+
+**What's new?**
+
+
 - New sub-package ``gammapy.maps`` that features WCS and HEALPix based maps,
   arbitrary extra axes in addition to the two spatial dimensions (e.g. energy, time or event type).
   Support for multi-resolution and sparse maps is being added.
@@ -169,7 +177,7 @@ Summary
 - For CTA
     - Better support for CTA IRFs
     - A notebook showing how to analyse some simulated CTA data (preliminary files from first data challenge)
-    - Better support and documentation for CTA will be the focus of the next release (0.7), coming in a few weeks.
+    - Better support and documentation for CTA will be the focus of the next release (0.7).
 - For Fermi-LAT
     - Introduced a reference dataset: https://github.com/gammapy/gammapy-fermi-lat-data
     - Added convenience class to work with Fermi-LAT datasets
