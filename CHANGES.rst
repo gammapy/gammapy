@@ -1,12 +1,12 @@
-.. _gammapy_1p0_release:
+.. _gammapy_0p8_release:
 
-1.0 (unreleased)
+0.8 (unreleased)
 ----------------
 
 Summary
 +++++++
 
-For plans and progress for Gammapy 1.0, see https://github.com/gammapy/gammapy/milestones/1.0
+For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/milestones/0.8
 
 .. _gammapy_0p7_release:
 
@@ -16,16 +16,44 @@ For plans and progress for Gammapy 1.0, see https://github.com/gammapy/gammapy/m
 Summary
 +++++++
 
-For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/milestones/0.7
-
-- Dropped support for Python 3.4. (probably everything still works with Python 3.4, but we don't
-  test with Python 3.4 anymore in our continuous integration).
-- New sub-package ``gammapy.maps``. Possibly will replace ``SkyImage`` and ``SkyCube``.
-  Please try it out and give feedback.
+- New sub-package ``gammapy.maps`` that features WCS and HEALPix based maps,
+  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy, time or event type).
+  Support for multi-resolution and sparse maps is being added.
+  These new maps classes were implemented based on the experience gained from
+  the existing ``SkyImage`` and ``SkyCube`` classes as well as the Fermi science tools,
+  Fermipy and pointlike.
+- The long-term plan is to build all analysis on top of ``gammapy.maps``,
+  and to deprecate and remove ``SkyImage`` and ``SkyCube`` at some point (not now, to be
+  discussed later). ``gammapy.maps`` is still under heavy development, especially the interface
+  for coordinates isn't stable yet, and we plan to exchange the HEALPix library from ``healpy``
+  to ``astropy-healpix``, which will evolve into ``astropy.healpix``, i.e. we avoid an extra dependency,
+  and it is a simple and small package that also supports Windows (``healpy`` doesn't).
+  So ``gammapy.maps`` is not finished / complete / stable yet.
+  But if you're interested, please try it out and give feedback or ask questions how to do something!
+- Many bug fixes and improvements, ranging from IRF interpolation to spectrum and lightcurve computation.
+  This is mostly driven by user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis
+  (see the list of pull requests below).
+  Please update to the new version and keep filing bug reports and feature requests!
+- A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
+  notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
+  in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
 - Gammapy conda package (and dependencies like Astropy regions, reproject, ...) changed
   from the ``astropy`` and ``openastronomy`` conda channel to ``conda-forge``,
   the main community-maintained conda build infrastructure and distribution channel.
   See installation instructions; in short: ``conda install gammapy -c conda-forge``.
+- We dropped support for Python 3.4. Probably everything still works with Python 3.4, but we don't
+  test with Python 3.4 anymore in our continuous integration. If you're on Python 3.4, please update
+  to Python 3.6 (or Python 3.5 if that's e.g. what your package manager ships).
+- Note that many packages are dropping Python 2 support (now, 10 years after Python 3 was released):
+  Jupyter already did, Astropy will in the next release (but they have the long-term support Astropy 2.0 release),
+  Python / Numpy / Scipy will drop Python 2 support in the coming years.
+  So all Gammapy users are encouraged to change to Python 3.6 now. Let us know if you have any
+  questions or need help making your scripts run with Python 3! In many cases it's just a matter
+  of making some mechanical changes like putting parentheses for ``print``, because it was changed
+  from a special statement to a normal function in Python 3.
+  We will keep Python 2.7 support for now, the discussion on timescale for dropping that support
+  (and taking advantage of all the nice new Python 3 features and a simpler codebase) can start after
+  the Fermi science tools have added Python 3 support.
 
 **Contributors:**
 
@@ -36,6 +64,7 @@ For plans and progress for Gammapy 0.7, see https://github.com/gammapy/gammapy/m
 - Christoph Deil
 - Cosimo Nigro (new)
 - Johannes King
+- José Enrique Ruiz (new)
 - Julien Lefaucheur
 - Lars Mohrmann
 - Léa Jouvin
@@ -52,6 +81,18 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1190] Refactor gammapy.maps methods for calculating index and coordinate arrays (Matthew Wood)
+- [#1183] Add function to compute background cube (Roberta Zanin and Christoph Deil)
+- [#1179] Fix two bugs in LightCurveEstimator, and improve speed considerably (Lars Mohrmann)
+- [#1176] Integrate tutorial notebooks in Sphinx documentation (Jose Enrique Ruiz)
+- [#1170] Add sparse map prototype (Matthew Wood)
+- [#1169] Remove old HEALPix image and cube classes (Christoph Deil)
+- [#1166] Fix ring background estimation (Axel Donath)
+- [#1162] Add ``gammapy.irf.Background3D`` (Roberta Zanin and Christoph Deil)
+- [#1150] Fix PSF evaluate error at low energy and high offset (Bruno Khelifi)
+- [#1134] Add MAGIC Crab reference spectrum (Cosimo Nigro)
+- [#1133] Fix energy_resolution method in EnergyDispersion class (Lars Mohrmann)
+- [#1127] Fix 3FHL spectral indexes for PowerLaw model (Julien Lefaucheur)
 - [#1115] Fix energy bias computation (Cosimo Nigro)
 - [#1110] Remove ATNF catalog class and Green catalog load function (Christoph Deil)
 - [#1108] Add HAWC 2HWC catalog (Peter Deiml)
