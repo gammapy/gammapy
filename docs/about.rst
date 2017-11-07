@@ -165,10 +165,7 @@ that have supported Gammapy development!
 Publications using Gammapy
 --------------------------
 
-Here's a list of publications using Gammapy (in reverse chronological order).
-
-A few of them don't "use" Gammapy, but describe or discuss and reference it.
-We list those as well because they might also be of interest to you if you are interested in Gammapy.
+Here's a list of publications using, describing or related to Gammapy (in reverse chronological order).
 
 If something is missing, please let us know (e.g. drop a line to the Gammapy mailing list).
 
@@ -176,6 +173,22 @@ If something is missing, please let us know (e.g. drop a line to the Gammapy mai
 - Deil et al. (2017),
   "Gammapy - A prototype for the CTA science tools",
   `2017arXiv170901751D <https://ui.adsabs.harvard.edu/#abs/2017arXiv170901751D>`__
+
+- Zanin et al. (2017)
+  "Observing the Galactic Plane with the Cherenkov Telescope Array"
+  `2017arXiv170904354Z <https://ui.adsabs.harvard.edu/#abs/2017arXiv170904354Z>`__
+
+- Trichard et al. (2017),
+  "Searching for PeVatrons in the CTA Galactic Plane Survey"
+  `2017arXiv170901311T <https://ui.adsabs.harvard.edu/#abs/2017arXiv170901311T>`__
+
+- Lefaucheur et al. (2017)
+  "Gammapy: high level data analysis for extragalactic science cases with the Cherenkov Telescope Array"
+  `2017arXiv170910169L <https://ui.adsabs.harvard.edu/#abs/2017arXiv170910169L>`__
+
+- Gaté et al. (2017)
+  "Studying cosmological gamma-ray propagation with the Cherenkov Telescope Array"
+  `2017arXiv170904185G <https://ui.adsabs.harvard.edu/#abs/2017arXiv170904185G>`__
 
 - Wood et al. (2017),
   "Fermipy: An open-source Python package for analysis of Fermi-LAT Data",
