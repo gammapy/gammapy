@@ -10,6 +10,7 @@ from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
+pytest.importorskip('numpy', '1.12.0')
 
 hpx_allsky_test_geoms = [
     # 2D All-sky
@@ -174,8 +175,10 @@ def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
     assert_allclose(idx, geom.local_to_global(idx_local))
 
     if axes is not None:
-        idx_img = geom.get_idx(local=False, idx=tuple([1] * len(axes)), flat=True)
-        idx_img_local = geom.get_idx(local=True, idx=tuple([1] * len(axes)), flat=True)
+        idx_img = geom.get_idx(
+            local=False, idx=tuple([1] * len(axes)), flat=True)
+        idx_img_local = geom.get_idx(
+            local=True, idx=tuple([1] * len(axes)), flat=True)
         assert_allclose(idx_img, geom.local_to_global(idx_img_local))
 
 
@@ -311,9 +314,9 @@ def test_hpxgeom_get_coords():
     # 3D all-sky
     hpx = HpxGeom(16, False, 'GAL', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][0,:3], np.array([45., 135., 225.]))
-    assert_allclose(c[1][0,:3], np.array([87.075819, 87.075819, 87.075819]))
-    assert_allclose(c[2][0,:3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0, :3], np.array([45., 135., 225.]))
+    assert_allclose(c[1][0, :3], np.array([87.075819, 87.075819, 87.075819]))
+    assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
@@ -324,9 +327,9 @@ def test_hpxgeom_get_coords():
     # 3D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
     c = hpx.get_coords()
-    assert_allclose(c[0][0,:3], np.array([107.5, 112.5, 106.57894737]))
-    assert_allclose(c[1][0,:3], np.array([76.813533, 76.813533, 76.07742]))
-    assert_allclose(c[2][0,:3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0, :3], np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][0, :3], np.array([76.813533, 76.813533, 76.07742]))
+    assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
     hpx = HpxGeom([16, 32, 64], False, 'GAL',
