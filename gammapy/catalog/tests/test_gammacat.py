@@ -20,6 +20,8 @@ SOURCES = [
         'eflux_1_10TeV': 9.265778680255336e-11 * u.Unit('erg cm-2 s-1'),
         'eflux_1_10TeV_err': 9.590978299538194e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 24,
+        'is_pointlike': False,
+        'spatial_model': 'Gaussian2D',
     },
     {
         'name': 'HESS J1848-018',
@@ -31,6 +33,8 @@ SOURCES = [
         'eflux_1_10TeV': 6.235650344765057e-12 * u.Unit('erg cm-2 s-1'),
         'eflux_1_10TeV_err': 1.2210315515569183e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 11,
+        'is_pointlike': False,
+        'spatial_model': 'Gaussian2D',
     },
     {
         'name': 'HESS J1813-178',
@@ -42,6 +46,8 @@ SOURCES = [
         'eflux_1_10TeV': 8.923614018939419e-12 * u.Unit('erg cm-2 s-1'),
         'eflux_1_10TeV_err': 1.4613807070890267e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 13,
+        'is_pointlike': False,
+        'spatial_model': 'Gaussian2D',
     },
 ]
 
@@ -96,6 +102,7 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_str(self, gammacat, ref):
         ss = str(gammacat[ref['name']])
+        print(ss)
         assert ss == SOURCES_STR[ref['name']]
 
     def test_data_python_dict(self, gammacat):
@@ -151,6 +158,19 @@ class TestSourceCatalogObjectGammaCat:
         flux_points = source.flux_points
 
         assert len(flux_points.table) == ref['n_flux_points']
+
+    @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
+    def test_spatial_model(self, gammacat, ref):
+        source = gammacat[ref['name']]
+
+        spatial_model = source.spatial_model()
+
+        # print(spatial_model); 1 /0
+        # TODO: put better asserts on model properties
+        # TODO: add a point and shell source -> separate list of sources for morphology test parametrization?
+        assert spatial_model.__class__.__name__ == ref['spatial_model']
+
+        assert source.is_pointlike == ref['is_pointlike']
 
 
 class TestGammaCatResource:
@@ -275,8 +295,9 @@ class TestGammaCatResourceIndex:
         assert resource_index.resources[0].global_id == '42|2010A&A...516A..62A|2|sed'
 
 
-SOURCES_STR = {
-    'Vela X': """
+SOURCES_STR = {}
+
+SOURCES_STR['Vela X'] = """
 *** Basic info ***
 
 Catalog row index (zero-based) : 36
@@ -350,35 +371,125 @@ SED reference id          : 2012A&A...548A..38A
 Number of spectral points : 24
 Number of upper limits    : 0
 
-e_ref       dnde         dnde_errn       dnde_errp   
- TeV  1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
------ --------------- --------------- ---------------
-  0.7       1.055e-11       3.284e-12        3.28e-12
-  0.9       1.304e-11        2.13e-12        2.13e-12
-  1.1       9.211e-12       1.401e-12       1.399e-12
-  1.3       8.515e-12        9.58e-13        9.61e-13
-  1.5       5.378e-12        7.07e-13        7.09e-13
-  1.9       4.455e-12        5.05e-13        5.07e-13
-  2.3       3.754e-12         3.3e-13        3.34e-13
-  2.8       2.418e-12        2.68e-13         2.7e-13
-  3.4       1.605e-12         1.8e-13        1.83e-13
-  4.1       1.445e-12        1.26e-13        1.29e-13
-  5.0        9.24e-13        9.49e-14         9.7e-14
-  6.0       7.348e-13        6.47e-14        6.71e-14
-  7.3       3.863e-13        4.54e-14         4.7e-14
-  8.8       3.579e-13        3.57e-14        3.75e-14
- 10.6       1.696e-13        2.49e-14        2.59e-14
- 12.9       1.549e-13        2.06e-14        2.16e-14
- 15.6       6.695e-14       1.134e-14        1.23e-14
- 18.9       2.105e-14      1.3904e-14        1.32e-14
- 22.6       3.279e-14        6.83e-15        7.51e-15
- 26.9       3.026e-14        5.91e-15        6.66e-15
- 31.6       1.861e-14        4.38e-15        5.12e-15
- 37.0       5.653e-15       2.169e-15       2.917e-15
- 43.1       3.479e-15       1.641e-15        2.41e-15
- 52.4       1.002e-15       8.327e-16       1.615e-15
-""",
-    'HESS J1813-178': """
+e_ref        dnde         dnde_errn       dnde_errp   
+ TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+------ --------------- --------------- ---------------
+ 0.719       1.055e-11       3.284e-12       3.280e-12
+ 0.868       1.304e-11       2.130e-12       2.130e-12
+ 1.051       9.211e-12       1.401e-12       1.399e-12
+ 1.274       8.515e-12       9.580e-13       9.610e-13
+ 1.546       5.378e-12       7.070e-13       7.090e-13
+ 1.877       4.455e-12       5.050e-13       5.070e-13
+ 2.275       3.754e-12       3.300e-13       3.340e-13
+ 2.759       2.418e-12       2.680e-13       2.700e-13
+ 3.352       1.605e-12       1.800e-13       1.830e-13
+ 4.078       1.445e-12       1.260e-13       1.290e-13
+ 4.956       9.240e-13       9.490e-14       9.700e-14
+ 6.008       7.348e-13       6.470e-14       6.710e-14
+ 7.271       3.863e-13       4.540e-14       4.700e-14
+ 8.795       3.579e-13       3.570e-14       3.750e-14
+10.650       1.696e-13       2.490e-14       2.590e-14
+12.910       1.549e-13       2.060e-14       2.160e-14
+15.650       6.695e-14       1.134e-14       1.230e-14
+18.880       2.105e-14       1.390e-14       1.320e-14
+22.620       3.279e-14       6.830e-15       7.510e-15
+26.870       3.026e-14       5.910e-15       6.660e-15
+31.610       1.861e-14       4.380e-15       5.120e-15
+36.970       5.653e-15       2.169e-15       2.917e-15
+43.080       3.479e-15       1.641e-15       2.410e-15
+52.370       1.002e-15       8.327e-16       1.615e-15
+"""
+
+SOURCES_STR['HESS J1848-018'] = """
+*** Basic info ***
+
+Catalog row index (zero-based) : 134
+Common name     : HESS J1848-018
+Other names     : HESS J1848-018,1HWC J1849-017c,WR121a,W43
+Location        : gal
+Class           : unid
+
+TeVCat ID       : 187
+TeVCat 2 ID     : hcE3Ou
+TeVCat name     : TeV J1848-017
+
+TGeVCat ID      : 128
+TGeVCat name    : TeV J1848-0147
+
+Discoverer      : hess
+Discovery date  : 2008-07
+Seen by         : hess
+Reference       : 2008AIPC.1085..372C
+
+*** Position info ***
+
+SIMBAD:
+RA                   : 282.120 deg
+DEC                  : -1.792 deg
+GLON                 : 31.000 deg
+GLAT                 : -0.159 deg
+
+Measurement:
+RA                   : 282.121 deg
+DEC                  : -1.792 deg
+GLON                 : 31.000 deg
+GLAT                 : -0.160 deg
+Position error       : nan deg
+
+*** Morphology info ***
+
+Morphology model type     : gauss
+Sigma                     : 0.320 deg
+Sigma error               : 0.020 deg
+Sigma2                    : nan deg
+Sigma2 error              : nan deg
+Position angle            : nan deg
+Position angle error      : nan deg
+Position angle frame      : 
+
+*** Spectral info ***
+
+Significance    : 9.000
+Livetime        : 50.000 h
+
+Spectrum type   : pl
+norm            : 3.7e-12 +- 4e-13 (stat) +- 7e-13 (sys) cm-2 s-1 TeV-1
+index           : 2.8 +- 0.2 (stat) +- 0.2 (sys)
+reference       : 1.0 TeV
+
+Energy range         : (0.9, 12.0) TeV
+theta                : 0.2 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 3.7e-12 +- 4e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.06e-12 +- 3.19e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 9.909 +- 1.536 (% Crab)
+Integrated flux (1-10 TeV)     : 6.24e-12 +- 1.22e-12 (stat) erg cm-2 s-1
+
+*** Spectral points ***
+
+SED reference id          : 2008AIPC.1085..372C
+Number of spectral points : 11
+Number of upper limits    : 0
+
+e_ref        dnde         dnde_errn       dnde_errp   
+ TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+------ --------------- --------------- ---------------
+ 0.624       9.942e-12       3.301e-12       3.265e-12
+ 0.878       6.815e-12       1.042e-12       1.029e-12
+ 1.284       1.707e-12       3.889e-13       3.826e-13
+ 1.881       5.027e-13       1.566e-13       1.533e-13
+ 2.754       3.266e-13       7.526e-14       7.323e-14
+ 4.033       8.183e-14       3.609e-14       3.503e-14
+ 5.905       2.979e-14       1.981e-14       1.921e-14
+ 8.648       4.022e-15       9.068e-15       8.729e-15
+12.663      -6.647e-15       3.786e-15       3.675e-15
+18.542       3.735e-15       2.009e-15       1.786e-15
+27.173      -5.317e-16       9.236e-16       8.568e-16
+"""
+
+SOURCES_STR['HESS J1813-178'] = """
 *** Basic info ***
 
 Catalog row index (zero-based) : 118
@@ -452,109 +563,20 @@ SED reference id          : 2006ApJ...636..777A
 Number of spectral points : 13
 Number of upper limits    : 0
 
-e_ref       dnde         dnde_errn       dnde_errp   
- TeV  1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
------ --------------- --------------- ---------------
-  0.3     2.73577e-11     5.69046e-12     5.97149e-12
-  0.4      1.5539e-11     3.35562e-12     3.55928e-12
-  0.6     8.14211e-12     1.60278e-12     1.71637e-12
-  0.8     4.56709e-12     9.31895e-13      1.0075e-12
-  1.0     2.66915e-12     5.58626e-13     6.10985e-13
-  1.4     1.51816e-12     3.37844e-13     3.72122e-13
-  1.8      7.9658e-13     2.16613e-13     2.42646e-13
-  2.5     3.56979e-13     1.13516e-13     1.29469e-13
-  3.2     3.32097e-13     8.75657e-14     1.01182e-13
-  4.4     1.93378e-13     5.76383e-14     6.85693e-14
-  5.6     4.46083e-14     2.12963e-14      2.8445e-14
- 10.8     1.31758e-14     6.05638e-15     1.08496e-14
- 22.1     1.37179e-14     6.12777e-15     1.17835e-14
-""",
-    'HESS J1848-018': """
-*** Basic info ***
-
-Catalog row index (zero-based) : 134
-Common name     : HESS J1848-018
-Other names     : HESS J1848-018,1HWC J1849-017c,WR121a,W43
-Location        : gal
-Class           : unid
-
-TeVCat ID       : 187
-TeVCat 2 ID     : hcE3Ou
-TeVCat name     : TeV J1848-017
-
-TGeVCat ID      : 128
-TGeVCat name    : TeV J1848-0147
-
-Discoverer      : hess
-Discovery date  : 2008-07
-Seen by         : hess
-Reference       : 2008AIPC.1085..372C
-
-*** Position info ***
-
-SIMBAD:
-RA                   : 282.120 deg
-DEC                  : -1.792 deg
-GLON                 : 31.000 deg
-GLAT                 : -0.159 deg
-
-Measurement:
-RA                   : 282.121 deg
-DEC                  : -1.792 deg
-GLON                 : 31.000 deg
-GLAT                 : -0.160 deg
-Position error       : nan deg
-
-*** Morphology info ***
-
-Morphology model type     : gauss
-Sigma                     : 0.320 deg
-Sigma error               : 0.020 deg
-Sigma2                    : nan deg
-Sigma2 error              : nan deg
-Position angle            : nan deg
-Position angle error      : nan deg
-Position angle frame      : 
-
-*** Spectral info ***
-
-Significance    : 9.000
-Livetime        : 50.000 h
-
-Spectrum type   : pl
-norm            : 3.7e-12 +- 4e-13 (stat) +- 7e-13 (syst) cm-2 s-1 TeV-1
-index           : 2.8 +- 0.2 (stat) +- 0.2 (sys)
-reference       : 1.0 TeV
-
-Energy range         : (0.9, 12.0) TeV
-theta                : 0.2 deg
-
-
-Derived fluxes:
-Spectral model norm (1 TeV)    : 3.7e-12 +- 4e-13 (stat) cm-2 s-1 TeV-1
-Integrated flux (>1 TeV)       : 2.06e-12 +- 3.19e-13 (stat) cm-2 s-1
-Integrated flux (>1 TeV)       : 9.909 +- 1.536 (% Crab)
-Integrated flux (1-10 TeV)     : 6.24e-12 +- 1.22e-12 (stat) erg cm-2 s-1
-
-*** Spectral points ***
-
-SED reference id          : 2008AIPC.1085..372C
-Number of spectral points : 11
-Number of upper limits    : 0
-
-e_ref       dnde         dnde_errn       dnde_errp   
- TeV  1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
------ --------------- --------------- ---------------
-  0.6     9.94175e-12     3.30083e-12     3.26451e-12
-  0.9     6.81516e-12     1.04206e-12     1.02928e-12
-  1.3     1.70718e-12     3.88868e-13     3.82595e-13
-  1.9     5.02674e-13     1.56604e-13     1.53321e-13
-  2.8     3.26588e-13     7.52648e-14     7.32347e-14
-  4.0     8.18333e-14     3.60923e-14     3.50318e-14
-  5.9      2.9794e-14      1.9812e-14     1.92094e-14
-  8.6      4.0217e-15     9.06779e-15     8.72854e-15
- 12.7    -6.64708e-15     3.78572e-15     3.67482e-15
- 18.5     3.73541e-15     2.00875e-15     1.78617e-15
- 27.2    -5.31736e-16      9.2363e-16     8.56839e-16
+e_ref        dnde         dnde_errn       dnde_errp   
+ TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+------ --------------- --------------- ---------------
+ 0.323       2.736e-11       5.690e-12       5.971e-12
+ 0.427       1.554e-11       3.356e-12       3.559e-12
+ 0.574       8.142e-12       1.603e-12       1.716e-12
+ 0.777       4.567e-12       9.319e-13       1.007e-12
+ 1.023       2.669e-12       5.586e-13       6.110e-13
+ 1.373       1.518e-12       3.378e-13       3.721e-13
+ 1.841       7.966e-13       2.166e-13       2.426e-13
+ 2.476       3.570e-13       1.135e-13       1.295e-13
+ 3.159       3.321e-13       8.757e-14       1.012e-13
+ 4.414       1.934e-13       5.764e-14       6.857e-14
+ 5.560       4.461e-14       2.130e-14       2.844e-14
+10.765       1.318e-14       6.056e-15       1.085e-14
+22.052       1.372e-14       6.128e-15       1.178e-14
 """
-}

@@ -232,8 +232,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '{:<25s} : {}\n\n'.format('Number of upper limits', d['sed_n_ul'])
 
         try:
-            txt = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
-            ss += '\n'.join(txt)
+            lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+            ss += '\n'.join(lines)
         except NoDataAvailableError:
             ss += '\nNo spectral points available for this source.'
 
@@ -243,7 +243,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def spectral_model(self):
         """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
-        TODO: how to handle systematic errors? (ignored at the moment)
+        Parameter errors are statistical errors only.
         """
         data = self.data
         spec_type = data['spec_type']
@@ -338,10 +338,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        table['e_ref'].format = '.1f'
+        table['e_ref'].format = '.3f'
         flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_err']
-        for _ in flux_cols:
-            if _ in table: table[_].format = '.3'
+        for _ in set(table.colnames) & set(flux_cols):
+            table[_].format = '.3e'
         return table
 
     @property

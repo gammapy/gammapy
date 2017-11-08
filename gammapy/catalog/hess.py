@@ -348,7 +348,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             flux_points[_].format = '.3e'
 
         # convert table to string
-        ss += '\n\t'.join(flux_points.pformat(-1))
+        lines = flux_points.pformat(max_width=-1, max_lines=-1)
+        ss += '\n'.join(lines)
         return ss + '\n'
 
     def _info_components(self):
