@@ -27,8 +27,8 @@ wcs_allsky_test_geoms = [
 wcs_partialsky_test_geoms = [
     (10, 0.1, 'GAL', 'AIT', skydir, None),
     (10, 0.1, 'GAL', 'AIT', skydir, axes1),
-    (10, [0.1,0.2], 'GAL', 'AIT', skydir, axes1),
-    ]
+    (10, [0.1, 0.2], 'GAL', 'AIT', skydir, axes1),
+]
 
 wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 
