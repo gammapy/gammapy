@@ -13,6 +13,7 @@ SOURCES = [
     {
         'name': 'Vela X',
 
+        'spec_type': 'ecpl',
         'dnde_1TeV': 1.36e-11 * u.Unit('cm-2 s-1 TeV-1'),
         'dnde_1TeV_err': 7.531e-13 * u.Unit('cm-2 s-1 TeV-1'),
         'flux_1TeV': 2.104e-11 * u.Unit('cm-2 s-1'),
@@ -25,6 +26,7 @@ SOURCES = [
     {
         'name': 'HESS J1848-018',
 
+        'spec_type': 'pl',
         'dnde_1TeV': 3.7e-12 * u.Unit('cm-2 s-1 TeV-1'),
         'dnde_1TeV_err': 4e-13 * u.Unit('cm-2 s-1 TeV-1'),
         'flux_1TeV': 2.056e-12 * u.Unit('cm-2 s-1'),
@@ -37,6 +39,7 @@ SOURCES = [
     {
         'name': 'HESS J1813-178',
 
+        'spec_type': 'pl2',
         'dnde_1TeV': 2.678e-12 * u.Unit('cm-2 s-1 TeV-1'),
         'dnde_1TeV_err': 2.55e-13 * u.Unit('cm-2 s-1 TeV-1'),
         'flux_1TeV': 2.457e-12 * u.Unit('cm-2 s-1'),
@@ -96,13 +99,11 @@ class TestSourceCatalogObjectGammaCat:
         assert source.data['common_name'] == 'CTA 1'
         assert_quantity_allclose(source.data['dec'], 72.782997 * u.deg)
 
-    def test_str(self, gammacat):
-        source = gammacat[0]
-        ss = str(source) # CTA 1
-        assert 'Common name     : CTA 1' in ss
-        assert 'RA                   : 1.650 deg' in ss
-        assert 'norm            : 9.1e-14 +- 1.3e-14 cm-2 s-1 TeV-1 (statistical)' in ss
-        assert 'Integrated flux (<1 TeV)       : 8.5e-13 +- 1.3e-13 cm-2 s-1 (statistical)' in ss
+    @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
+    def test_str(self, gammacat, ref):
+        ss = gammacat[ref['name']]._info_spectral_fit()
+        print(ss)
+        assert ss == STRING_REPRESENTATION[ref['name']]
 
     def test_data_python_dict(self, gammacat):
         source = gammacat[0]
@@ -117,6 +118,8 @@ class TestSourceCatalogObjectGammaCat:
     def test_spectral_model(self, gammacat, ref):
         source = gammacat[ref['name']]
         spectral_model = source.spectral_model
+
+        assert source.data['spec_type'] == ref['spec_type']
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
@@ -277,3 +280,72 @@ class TestGammaCatResourceIndex:
         resource_index = self.resource_index.query('type == "sed" and source_id == 42')
         assert len(resource_index.resources) == 1
         assert resource_index.resources[0].global_id == '42|2010A&A...516A..62A|2|sed'
+
+
+STRING_REPRESENTATION = {
+    'Vela X': """
+*** Spectral info ***
+
+Significance    : 27.900
+Livetime        : 53.100 h
+
+Spectrum type   : ecpl
+norm            : 1.46e-11 +- 8e-13 (stat) +- 3e-12 (sys) cm-2 s-1 TeV-1
+index           : 1.32 +- 0.06 (stat) +- 0.12 (sys)
+e_cut           : 14.0 +- 1.6 (stat) +- 2.6 (stat) TeV
+reference       : 1.0 TeV
+
+Energy range         : (0.75, nan) TeV
+theta                : 1.2 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 1.36e-11 +- 7.53e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.1e-11 +- 1.97e-12 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 101.425 +- 9.511 (% Crab)
+Integrated flux (1-10 TeV)     : 9.27e-11 +- 9.59e-12 (stat) erg cm-2 s-1
+""",
+    'HESS J1813-178': """
+*** Spectral info ***
+
+Significance    : 13.500
+Livetime        : 9.700 h
+
+Spectrum type   : pl2
+flux            : 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
+index           : 2.09 +- 0.08 (stat)
+e_min           : 0.2 TeV
+e_max           : nan TeV
+
+Energy range         : (nan, nan) TeV
+theta                : 0.15 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 2.68e-12 +- 2.55e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.46e-12 +- 3.69e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 11.844 +- 1.780 (% Crab)
+Integrated flux (1-10 TeV)     : 8.92e-12 +- 1.46e-12 (stat) erg cm-2 s-1
+""",
+    'HESS J1848-018': """
+*** Spectral info ***
+
+Significance    : 9.000
+Livetime        : 50.000 h
+
+Spectrum type   : pl
+norm            : 3.7e-12 +- 4e-13 (stat) +- 7e-13 (syst) cm-2 s-1 TeV-1
+index           : 2.8 +- 0.2 (stat) +- 0.2 (sys)
+reference       : 1.0 TeV
+
+Energy range         : (0.9, 12.0) TeV
+theta                : 0.2 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 3.7e-12 +- 4e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.06e-12 +- 3.19e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 9.909 +- 1.536 (% Crab)
+Integrated flux (1-10 TeV)     : 6.24e-12 +- 1.22e-12 (stat) erg cm-2 s-1
+"""
+}
