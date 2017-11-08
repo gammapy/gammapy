@@ -168,7 +168,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         # Spectral model parameters
         if spec_type == 'pl':
-            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (syst) {}\n'.format(
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
                 'norm', d['spec_pl_norm'].value, d['spec_pl_norm_err'].value,
                 d['spec_pl_norm_err_sys'].value, 'cm-2 s-1 TeV-1')
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
@@ -232,7 +232,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '{:<25s} : {}\n\n'.format('Number of upper limits', d['sed_n_ul'])
 
         try:
-            ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
+            txt = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+            ss += '\n'.join(txt)
         except NoDataAvailableError:
             ss += '\nNo spectral points available for this source.'
 
