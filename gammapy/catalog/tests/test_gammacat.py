@@ -191,6 +191,8 @@ class TestGammaCatResource:
     def test_lt(self):
         resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
 
+        assert not resource < resource
+
         assert resource < GammaCatResource(source_id=43, reference_id='2010A&A...516A..62A', file_id=2)
         assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62B', file_id=2)
         assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=3)

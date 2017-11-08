@@ -5,7 +5,8 @@ Gammacat open TeV source catalog.
 https://github.com/gammapy/gamma-cat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+import functools
 import logging
 import numpy as np
 from ..extern import six
@@ -485,6 +486,7 @@ class GammaCatDataCollection(object):
         return ss
 
 
+@functools.total_ordering
 class GammaCatResource(object):
     """Reference for a single resource in gamma-cat.
 
@@ -538,22 +540,15 @@ class GammaCatResource(object):
                           self.file_id, str(self.type), str(self.location))
 
     def __eq__(self, other):
-        return (
-                self.source_id == other.source_id and
-                self.reference_id == other.reference_id and
-                self.file_id == other.file_id and
-                self.type == other.type and
-                self.location == other.location
-        )
+        return self.to_namedtuple() == other.to_namedtuple()
 
     def __lt__(self, other):
-        return (
-                self.source_id < other.source_id or
-                self.reference_id < other.reference_id or
-                self.file_id < other.file_id or
-                self.type < other.type or
-                self.location < other.location
-        )
+        return self.to_namedtuple() < other.to_namedtuple()
+
+    def to_namedtuple(self):
+        """Convert to `collections.namedtuple`."""
+        d = self.to_dict()
+        return namedtuple('GammaCatResourceNamedTuple', d.keys())(**d)
 
     def to_dict(self):
         """Convert to `collections.OrderedDict`."""
