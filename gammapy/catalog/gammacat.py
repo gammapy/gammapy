@@ -5,7 +5,8 @@ Gammacat open TeV source catalog.
 https://github.com/gammapy/gamma-cat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+import functools
 import logging
 import numpy as np
 from ..extern import six
@@ -25,8 +26,8 @@ __all__ = [
     'SourceCatalogGammaCat',
     'SourceCatalogObjectGammaCat',
     'GammaCatDataCollection',
-    'GammaCatResource',  # TODO: public or not?
-    'GammaCatResourceIndex',  # TODO: public or not?
+    'GammaCatResource',
+    'GammaCatResourceIndex',
 ]
 
 log = logging.getLogger(__name__)
@@ -163,106 +164,63 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '{:<15s} : {:.3f}\n'.format('Significance', d['significance'])
         ss += '{:<15s} : {:.3f}\n'.format('Livetime', d['livetime'])
 
-        spec = d['spec_type']
-        str = ''
-        if spec == 'pl2':
-            str = '(integral power law)'
-        ss += '\n{:<15s} : {} {}\n'.format('Spectrum type', spec, str)
+        spec_type = d['spec_type']
+        ss += '\n{:<15s} : {}\n'.format('Spectrum type', spec_type)
 
         # Spectral model parameters
-        if spec == 'pl':
-            unit = 'cm-2 s-1 TeV-1'
-            fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
-            args = ('norm', d['spec_pl_norm'].value, d['spec_pl_norm_err'].value, unit)
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} {} (systematic)\n'
-            args = ('', d['spec_pl_norm'].value, d['spec_pl_norm_err_sys'].value, unit)
-            ss += fmt.format(*args)
-
-            fmt = '{:<15s} : {:.3} +- {:.3} (statistical)\n'
-            args = ('index', d['spec_pl_index'], d['spec_pl_index_err'])
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} (systematic)\n'
-            args = ('', d['spec_pl_index'], d['spec_pl_index_err_sys'])
-            ss += fmt.format(*args)
-
+        if spec_type == 'pl':
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
+                'norm', d['spec_pl_norm'].value, d['spec_pl_norm_err'].value,
+                d['spec_pl_norm_err_sys'].value, 'cm-2 s-1 TeV-1')
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
+                'index', d['spec_pl_index'], d['spec_pl_index_err'],
+                d['spec_pl_index_err_sys'])
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_pl_e_ref'])
 
-        elif spec == 'pl2':
-            unit = 'cm-2 s-1'
-            fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
-            args = ('flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value, unit)
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} {} (systematic)\n'
-            args = ('', d['spec_pl2_flux'].value, d['spec_pl2_flux_err_sys'].value, unit)
-            ss += fmt.format(*args)
-
-            fmt = '{:<15s} : {:.3} +- {:.3} (statistical)\n'
-            args = ('index', d['spec_pl2_index'], d['spec_pl2_index_err'])
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} (systematic)\n'
-            args = ('', d['spec_pl2_index'], d['spec_pl2_index_err_sys'])
-            ss += fmt.format(*args)
-
+        elif spec_type == 'pl2':
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
+                'flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value,
+                d['spec_pl2_flux_err_sys'].value, 'cm-2 s-1')
+            ss += '{:<15s} : {:.3} +- {:.3} (stat)\n'.format(
+                'index', d['spec_pl2_index'], d['spec_pl2_index_err'],
+                d['spec_pl2_index_err_sys'])
             ss += '{:<15s} : {:.3}\n'.format('e_min', d['spec_pl2_e_min'])
             ss += '{:<15s} : {:.3}\n'.format('e_max', d['spec_pl2_e_max'])
 
-        elif spec == 'ecpl':
-            unit = 'cm-2 s-1 TeV-1'
-            fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
-            args = ('norm', d['spec_ecpl_norm'].value, d['spec_ecpl_norm_err'].value, unit)
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} {} (systematic)\n'
-            args = ('', d['spec_ecpl_norm'].value, d['spec_ecpl_norm_err_sys'].value, unit)
-            ss += fmt.format(*args)
-
-            fmt = '{:<15s} : {:.3} +- {:.3} (statistical)\n'
-            args = ('index', d['spec_ecpl_index'], d['spec_ecpl_index_err'])
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} (systematic)\n'
-            args = ('', d['spec_ecpl_index'], d['spec_ecpl_index_err_sys'])
-            ss += fmt.format(*args)
-
-            unit = 'TeV'
-            fmt = '{:<15s} : {:.3} +- {:.3} {} (statistical)\n'
-            args = ('e_cut', d['spec_ecpl_e_cut'].value, d['spec_ecpl_e_cut_err'].value, unit)
-            ss += fmt.format(*args)
-            fmt = '{:<15s}   {:.3} +- {:.3} {} (systematic)\n'
-            args = ('', d['spec_ecpl_e_cut'].value, d['spec_ecpl_e_cut_err_sys'].value, unit)
-            ss += fmt.format(*args)
-
+        elif spec_type == 'ecpl':
+            ss += '{:<15s} : {:.3g} +- {:.3g} (stat) +- {:.03g} (sys) {}\n'.format(
+                'norm', d['spec_ecpl_norm'].value, d['spec_ecpl_norm_err'].value,
+                d['spec_ecpl_norm_err_sys'].value, 'cm-2 s-1 TeV-1')
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
+                'index', d['spec_ecpl_index'], d['spec_ecpl_index_err'],
+                d['spec_ecpl_index_err_sys'])
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (stat) {}\n'.format(
+                'e_cut', d['spec_ecpl_e_cut'].value, d['spec_ecpl_e_cut_err'].value,
+                d['spec_ecpl_e_cut_err_sys'].value, 'TeV')
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_ecpl_e_ref'])
 
         else:
             # raise ValueError('Spectral model printout not implemented: {}'.format(spec))
             ss += '\nSpectral model printout not yet implemented.\n'
 
-        ss += '\n{:<20s} : {:.3}\n'.format('energy range min', d['spec_erange_min'])
-        ss += '{:<20s} : {:.3}\n'.format('energy range max', d['spec_erange_max'])
+        ss += '\n{:<20s} : ({:.3}, {:.3}) TeV\n'.format(
+            'Energy range', d['spec_erange_min'].value, d['spec_erange_max'].value)
         ss += '{:<20s} : {:.3}\n'.format('theta', d['spec_theta'])
 
         ss += '\n\nDerived fluxes:\n'
 
-        unit = 'cm-2 s-1 TeV-1'
-        fmt = '{:<30s} : {:.3} +- {:.3} {} (statistical)\n'
-        args = ('Spectral model norm (1 TeV)', d['spec_dnde_1TeV'].value, d['spec_dnde_1TeV_err'].value, unit)
-        ss += fmt.format(*args)
-
-        unit = 'cm-2 s-1'
-        fmt = '{:<30s} : {:.3} +- {:.3} {} (statistical)\n'
-        args = ('Integrated flux (<1 TeV)', d['spec_flux_1TeV'].value, d['spec_flux_1TeV_err'].value, unit)
-        ss += fmt.format(*args)
-
-        unit = '(crab units)'
-        fmt = '{:<30s} : {:.3} +- {:.3} {}\n'
-        args = ('Integrated flux (<1 TeV)', d['spec_flux_1TeV_crab'], d['spec_flux_1TeV_crab_err'], unit)
-        ss += fmt.format(*args)
-
-        unit = 'erg cm-2 s-1'
-        fmt = '{:<30s} : {:.3} +- {:.3} {} (statistical)\n'
-        args = (
-        'Integrated flux (1-10 TeV)', d['spec_eflux_1TeV_10TeV'].value, d['spec_eflux_1TeV_10TeV_err'].value, unit)
-        ss += fmt.format(*args)
+        ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
+            'Spectral model norm (1 TeV)', d['spec_dnde_1TeV'].value,
+            d['spec_dnde_1TeV_err'].value, 'cm-2 s-1 TeV-1')
+        ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
+            'Integrated flux (>1 TeV)', d['spec_flux_1TeV'].value,
+            d['spec_flux_1TeV_err'].value, 'cm-2 s-1')
+        ss += '{:<30s} : {:.3f} +- {:.3f} {}\n'.format(
+            'Integrated flux (>1 TeV)', d['spec_flux_1TeV_crab'],
+            d['spec_flux_1TeV_crab_err'], '(% Crab)')
+        ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
+            'Integrated flux (1-10 TeV)', d['spec_eflux_1TeV_10TeV'].value,
+            d['spec_eflux_1TeV_10TeV_err'].value, 'erg cm-2 s-1')
 
         return ss
 
@@ -275,7 +233,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '{:<25s} : {}\n\n'.format('Number of upper limits', d['sed_n_ul'])
 
         try:
-            ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
+            lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+            ss += '\n'.join(lines)
         except NoDataAvailableError:
             ss += '\nNo spectral points available for this source.'
 
@@ -285,7 +244,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def spectral_model(self):
         """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
-        TODO: how to handle systematic errors? (ignored at the moment)
+        Parameter errors are statistical errors only.
         """
         data = self.data
         spec_type = data['spec_type']
@@ -380,10 +339,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        table['e_ref'].format = '.1f'
+        table['e_ref'].format = '.3f'
         flux_cols = ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_err']
-        for _ in flux_cols:
-            if _ in table: table[_].format = '.3'
+        for _ in set(table.colnames) & set(flux_cols):
+            table[_].format = '.3e'
         return table
 
     @property
@@ -527,6 +486,7 @@ class GammaCatDataCollection(object):
         return ss
 
 
+@functools.total_ordering
 class GammaCatResource(object):
     """Reference for a single resource in gamma-cat.
 
@@ -580,22 +540,15 @@ class GammaCatResource(object):
                           self.file_id, str(self.type), str(self.location))
 
     def __eq__(self, other):
-        return (
-            self.source_id == other.source_id and
-            self.reference_id == other.reference_id and
-            self.file_id == other.file_id and
-            self.type == other.type and
-            self.location == other.location
-        )
+        return self.to_namedtuple() == other.to_namedtuple()
 
     def __lt__(self, other):
-        return (
-            self.source_id < other.source_id or
-            self.reference_id < other.reference_id or
-            self.file_id < other.file_id or
-            self.type < other.type or
-            self.location < other.location
-        )
+        return self.to_namedtuple() < other.to_namedtuple()
+
+    def to_namedtuple(self):
+        """Convert to `collections.namedtuple`."""
+        d = self.to_dict()
+        return namedtuple('GammaCatResourceNamedTuple', d.keys())(**d)
 
     def to_dict(self):
         """Convert to `collections.OrderedDict`."""

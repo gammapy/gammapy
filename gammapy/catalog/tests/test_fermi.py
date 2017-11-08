@@ -86,6 +86,12 @@ class TestFermi3FGLObject:
         assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
         assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
 
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    def test_str_all(self, ref):
+        ss = str(self.cat[ref['idx']])
+        # TODO: put better assert on content. Maybe like for gamma-cat?
+        assert 'Source name' in ss
+
     def test_data_python_dict(self):
         data = self.source._data_python_dict
         assert type(data['RAJ2000']) == float
