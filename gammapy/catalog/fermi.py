@@ -180,7 +180,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += fmt.format(*args)
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
-        if spec_type == 'LogParabola':
+        if spec_type == 'PowerLaw':
+            pass
+        elif spec_type == 'LogParabola':
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         elif spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
             fmt = '{:<45s} : {:.0f} +- {:.0f} {}\n'
@@ -218,9 +220,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     def _info_spectral_points(self):
         """Print spectral points."""
-        d = self.data
         ss = '\n*** Spectral points ***\n\n'
-        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
+        lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+        ss += '\n'.join(lines)
 
         return ss + '\n'
 
@@ -744,8 +746,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = '\n*** Spectral points ***\n\n'
-        ss += '\n'.join(self._flux_points_table_formatted.pformat(max_width=-1))
-
+        lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+        ss += '\n'.join(lines)
         return ss + '\n'
 
     def _info_other(self):
