@@ -942,7 +942,7 @@ class SkyImage(MapBase):
         kwargs['origin'] = kwargs.get('origin', 'lower')
         kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
         kwargs['interpolation'] = kwargs.get('interpolation', 'None')
-        norm = simple_norm(data[~np.isnan(data)], stretch)
+        norm = simple_norm(data[(~np.isnan(data))&(~np.isinf(data))], stretch)
         kwargs.setdefault('norm', norm)
 
         caxes = ax.imshow(data, **kwargs)
