@@ -33,7 +33,7 @@ class HpxMap(MapBase):
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type=None, coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None):
+               region=None, axes=None, conv='gadf'):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -61,13 +61,16 @@ class HpxMap(MapBase):
             geometry will be created.
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
+        conv : str, optional
+            FITS format convention ('fgst-ccube', 'fgst-template',
+            'gadf').  Default is 'gadf'.
         """
         from .hpxnd import HpxMapND
         from .hpxsparse import HpxMapSparse
 
         hpx = HpxGeom.create(nside=nside, binsz=binsz,
                              nest=nest, coordsys=coordsys, region=region,
-                             conv=None, axes=axes, skydir=skydir, width=width)
+                             conv=conv, axes=axes, skydir=skydir, width=width)
         if cls.__name__ == 'HpxMapND':
             return HpxMapND(hpx, dtype=dtype)
         elif cls.__name__ == 'HpxMapSparse':
@@ -186,13 +189,12 @@ class HpxMap(MapBase):
 
         from .hpxsparse import HpxMapSparse
 
-        conv = kwargs.get('conv', HpxConv.create('GADF'))
+        conv = kwargs.get('conv', HpxConv.create('gadf'))
 
         data = self.data
         shape = data.shape
         extname = kwargs.get('extname', conv.extname)
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
-        extname_bands = conv.bands_hdu
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxMapSparse)
                             else False)

@@ -26,7 +26,7 @@ class WcsMap(MapBase):
     @classmethod
     def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv=None):
+               axes=None, skydir=None, dtype='float32', conv='gadf'):
         """Factory method to create an empty WCS map.
 
         Parameters
