@@ -19,6 +19,7 @@ hpx_test_geoms = [
     (8, False, 'GAL', None, None),
     (8, False, 'GAL', None, axes1),
     ([4, 8], False, 'GAL', None, axes1),
+    ([4, 8], False, 'GAL', 'DISK(110.,75.,10.)', axes1),
     (8, False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 4))]),
     (8, False, 'GAL', 'DISK(110.,75.,10.)',
