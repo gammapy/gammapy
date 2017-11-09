@@ -103,8 +103,6 @@ def find_and_read_bands(hdu, header=None):
         for i in range(5):
             if 'AXCOLS%i' % i in hdu.header:
                 axis_cols += [hdu.header['AXCOLS%i' % i].split(',')]
-            else:
-                break
 
     for i, cols in enumerate(axis_cols):
 
@@ -975,14 +973,14 @@ class MapGeom(object):
         for i, ax in enumerate(self.axes):
 
             if ax.name == 'energy' and ax.node_type == 'edge':
-                header['AXCOLS%i' % i] = 'E_MIN,E_MAX'
+                header['AXCOLS%i' % (i + 1)] = 'E_MIN,E_MAX'
             elif ax.name == 'energy' and ax.node_type == 'center':
-                header['AXCOLS%i' % i] = 'ENERGY'
+                header['AXCOLS%i' % (i + 1)] = 'ENERGY'
             elif ax.node_type == 'edge':
-                header['AXCOLS%i' % i] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
-                                                                ax.name.upper())
+                header['AXCOLS%i' % (i + 1)] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
+                                                                      ax.name.upper())
             elif ax.node_type == 'center':
-                header['AXCOLS%i' % i] = ax.name.upper()
+                header['AXCOLS%i' % (i + 1)] = ax.name.upper()
             else:
                 raise ValueError('Invalid node type '
                                  '{}'.format(ax.node_type))
