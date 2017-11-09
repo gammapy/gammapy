@@ -1073,13 +1073,11 @@ class HpxGeom(MapGeom):
         """"Build and return FITS header for this HEALPIX map."""
 
         header = fits.Header()
-        print(kwargs)
         conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['gadf'])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
         indxschm = kwargs.get('indxschm', None)
-        #'EXPLICIT' if self._region else 'IMPLICIT')
 
         if indxschm is None:
             if self._region is None:
