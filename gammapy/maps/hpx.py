@@ -49,30 +49,30 @@ class HpxConv(object):
         return '{}{}'.format(self.colstring, indx)
 
     @classmethod
-    def create(cls, convname='GADF'):
+    def create(cls, convname='gadf'):
         return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
 
 
 # Various conventions for storing HEALPIX maps in FITS files
 HPX_FITS_CONVENTIONS = OrderedDict()
-HPX_FITS_CONVENTIONS[None] = HpxConv('GADF', bands_hdu='BANDS')
-HPX_FITS_CONVENTIONS['GADF'] = HpxConv('GADF', bands_hdu='BANDS')
-HPX_FITS_CONVENTIONS['FGST_CCUBE'] = HpxConv('FGST_CCUBE')
-HPX_FITS_CONVENTIONS['FGST_LTCUBE'] = HpxConv(
-    'FGST_LTCUBE', colstring='COSBINS', extname='EXPOSURE', bands_hdu='CTHETABOUNDS')
-HPX_FITS_CONVENTIONS['FGST_BEXPCUBE'] = HpxConv(
-    'FGST_BEXPCUBE', colstring='ENERGY', extname='HPXEXPOSURES', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['FGST_SRCMAP'] = HpxConv(
-    'FGST_SRCMAP', extname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['FGST_TEMPLATE'] = HpxConv(
-    'FGST_TEMPLATE', colstring='ENERGY', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['FGST_SRCMAP_SPARSE'] = HpxConv(
-    'FGST_SRCMAP_SPARSE', colstring=None, extname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['GALPROP'] = HpxConv(
-    'GALPROP', colstring='Bin', extname='SKYMAP2',
+HPX_FITS_CONVENTIONS[None] = HpxConv('gadf', bands_hdu='BANDS')
+HPX_FITS_CONVENTIONS['gadf'] = HpxConv('gadf', bands_hdu='BANDS')
+HPX_FITS_CONVENTIONS['fgst-ccube'] = HpxConv('fgst-ccube')
+HPX_FITS_CONVENTIONS['fgst-ltcube'] = HpxConv(
+    'fgst-ltcube', colstring='COSBINS', extname='EXPOSURE', bands_hdu='CTHETABOUNDS')
+HPX_FITS_CONVENTIONS['fgst-bexpcube'] = HpxConv(
+    'fgst-bexpcube', colstring='ENERGY', extname='HPXEXPOSURES', bands_hdu='ENERGIES')
+HPX_FITS_CONVENTIONS['fgst-srcmap'] = HpxConv(
+    'fgst-srcmap', extname=None, quantity_type='differential')
+HPX_FITS_CONVENTIONS['fgst-template'] = HpxConv(
+    'fgst-template', colstring='ENERGY', bands_hdu='ENERGIES')
+HPX_FITS_CONVENTIONS['fgst-srcmap-sparse'] = HpxConv(
+    'fgst-srcmap-sparse', colstring=None, extname=None, quantity_type='differential')
+HPX_FITS_CONVENTIONS['galprop'] = HpxConv(
+    'galprop', colstring='Bin', extname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential', coordsys='COORDTYPE')
-HPX_FITS_CONVENTIONS['GALPROP2'] = HpxConv(
-    'GALPROP', colstring='Bin', extname='SKYMAP2',
+HPX_FITS_CONVENTIONS['galprop2'] = HpxConv(
+    'galprop', colstring='Bin', extname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential')
 
 
@@ -403,7 +403,7 @@ class HpxGeom(MapGeom):
     """
 
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
-                 axes=None, conv='GADF', sparse=False):
+                 axes=None, conv='gadf', sparse=False):
 
         # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
@@ -870,7 +870,7 @@ class HpxGeom(MapGeom):
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
-               axes=None, conv='GADF', skydir=None, width=None):
+               axes=None, conv='gadf', skydir=None, width=None):
         """Create an HpxGeom object.
 
         Parameters
@@ -947,19 +947,19 @@ class HpxGeom(MapGeom):
         # Hopefully the file contains the HPX_CONV keyword specifying
         # the convention used
         try:
-            return header['HPX_CONV']
+            return header['HPX_CONV'].lower()
         except KeyError:
             pass
 
         # Try based on the EXTNAME keyword
         extname = header.get('EXTNAME', None)
         if extname == 'HPXEXPOSURES':
-            return 'FGST_BEXPCUBE'
+            return 'fgst-bexpcube'
         elif extname == 'SKYMAP2':
             if 'COORDTYPE' in header.keys():
-                return 'GALPROP'
+                return 'galprop'
             else:
-                return 'GALPROP2'
+                return 'galprop2'
 
         # Check the name of the first column
         colname = header['TTYPE1']
@@ -967,18 +967,18 @@ class HpxGeom(MapGeom):
             colname = header['TTYPE2']
 
         if colname == 'KEY':
-            return 'FGST_SRCMAP_SPARSE'
+            return 'fgst-srcmap-sparse'
         elif colname == 'ENERGY1':
-            return 'FGST_TEMPLATE'
+            return 'fgst-template'
         elif colname == 'COSBINS':
-            return 'FGST_LTCUBE'
+            return 'fgst-ltcube'
         elif colname == 'Bin0':
-            return 'GALPROP'
+            return 'galprop'
         elif colname == 'CHANNEL1' or colname == 'CHANNEL0':
             if extname == 'SKYMAP':
-                return 'FGST_CCUBE'
+                return 'fgst-ccube'
             else:
-                return 'FGST_SRCMAP'
+                return 'fgst-srcmap'
         else:
             raise ValueError('Could not identify HEALPIX convention')
 
@@ -1073,18 +1073,16 @@ class HpxGeom(MapGeom):
         """"Build and return FITS header for this HEALPIX map."""
 
         header = fits.Header()
-
-        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['GADF'])
+        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['gadf'])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
-        indxschm = kwargs.get('indxschm',
-                              'EXPLICIT' if self._region else 'IMPLICIT')
+        indxschm = kwargs.get('indxschm', None)
 
         if indxschm is None:
             if self._region is None:
                 indxschm = 'IMPLICIT'
-            elif self.nside.size == 1:
+            elif self.is_regular == 1:
                 indxschm = 'EXPLICIT'
             else:
                 indxschm = 'LOCAL'
@@ -1101,9 +1099,7 @@ class HpxGeom(MapGeom):
         header["NSIDE"] = np.max(self._nside)
         header["FIRSTPIX"] = 0
         header["LASTPIX"] = np.max(self._maxpix) - 1
-        header["HPX_CONV"] = conv.convname
-
-        self._fill_header_from_axes(header)
+        header["HPX_CONV"] = conv.convname.upper()
 
         if self.coordsys == 'CEL':
             header['EQUINOX'] = (2000.0,
@@ -1116,7 +1112,8 @@ class HpxGeom(MapGeom):
 
     def make_bands_hdu(self, extname='BANDS'):
 
-        header = self.make_header()
+        header = fits.Header()
+        self._fill_header_from_axes(header)
         cols = make_axes_cols(self.axes)
         if self.nside.size > 1:
             cols += [fits.Column('NSIDE', 'I', array=np.ravel(self.nside)), ]

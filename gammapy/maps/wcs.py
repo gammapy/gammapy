@@ -190,7 +190,7 @@ class WcsGeom(MapGeom):
 
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, width=None, conv=None):
+               axes=None, skydir=None, width=None, conv='gadf'):
         """Create a WCS geometry object.
 
         Pixelization of the map is set with
@@ -316,8 +316,6 @@ class WcsGeom(MapGeom):
             elif hdu_bands.name == 'ENERGIES':
                 conv = 'fgst-template'
 
-        # FIXME: Propagate CRPIX
-
         if hdu_bands is not None and 'NPIX' in hdu_bands.columns.names:
             npix = hdu_bands.data.field('NPIX').reshape(shape + (2,))
             npix = (npix[..., 0], npix[..., 1])
@@ -339,7 +337,8 @@ class WcsGeom(MapGeom):
 
     def make_bands_hdu(self, extname=None, conv=None):
         conv = self._conv if conv is None else conv
-        header = self.make_header(conv)
+        header = fits.Header()
+        self._fill_header_from_axes(header)
         axis_names = None
 
         # FIXME: Check whether convention is compatible with
@@ -371,7 +370,6 @@ class WcsGeom(MapGeom):
 
     def make_header(self, conv=None):
         header = self.wcs.to_header()
-        self._fill_header_from_axes(header)
         header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
                                               np.max(self.npix[1]))
         return header

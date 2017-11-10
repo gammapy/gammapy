@@ -80,6 +80,7 @@ class HpxMapND(HpxMap):
                 idx = chan + (pix,)
             else:
                 idx = (pix,)
+
             map_out.set_by_idx(idx[::-1], vals)
         else:
             for c in colnames:
@@ -347,12 +348,16 @@ class HpxMapND(HpxMap):
 
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
+        if weights is not None:
+            weights = weights[msk]
         idx = [t[msk] for t in idx]
+
         idx_local = list(self.geom.global_to_local(idx))
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
             weights = weights[msk]
+
         idx_local = np.ravel_multi_index(idx_local, self.data.T.shape)
         idx_local, idx_inv = np.unique(idx_local, return_inverse=True)
         weights = np.bincount(idx_inv, weights=weights)
@@ -361,7 +366,7 @@ class HpxMapND(HpxMap):
     def set_by_idx(self, idx, vals):
 
         idx = pix_tuple_to_idx(idx)
-        idx_local = (self.geom[idx[0]],) + tuple(idx[1:])
+        idx_local = self.geom.global_to_local(idx)
         self.data.T[idx_local] = vals
 
     def _make_cols(self, header, conv):
