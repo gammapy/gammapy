@@ -653,6 +653,53 @@ class EventList(object):
 
         return ax
 
+    def plot_theta2_distribution(self, ax=None, number_bins=50, pointing_radec=None):
+        """Plot the theta2 distribution of the events.
+        A pointing direction can be given in the same units as the event list as (ra,dec).
+        If None is given, the average of incoming directions of the events is taken.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+        number_bins: integer
+        pointing_radec: Tuple of floats or None
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes
+
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        events_ra = self.table[:]['RA']
+        events_dec = self.table[:]['DEC']
+
+        if pointing_radec != None:
+            assert len(pointing)==2, "Pointing must be a tuple of length equals 2"
+            pointing_ra = pointing_radec[0]
+            pointing_dec = pointing_radec[1]
+
+        else:
+            pointing_ra = events_ra.mean()
+            pointing_dec = events_dec.mean()
+
+        theta2 = (events_ra - pointing_ra)**2 + (events_dec - pointing_dec)**2
+
+        count_theta2, x_edges, y_edges = ax.hist(theta2, bins=number_bins)
+
+        r68_containement_radius = np.sort(theta2)[int(0.68 * len(theta2))]
+
+        ax.set_title('Theta2 distribution. R68 = {:.2f} deg'.format(np.sqrt(r68_containement_radius)))
+
+        ax.set_xlabel('deg2')
+        ax.set_ylabel('# Photons')
+
+        return ax
+
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
