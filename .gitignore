@@ -60,6 +60,7 @@ MANIFEST
 gammapy/gammapy.cfg
 
 docs/_generated
+docs/notebooks
 docs/api
 .coverage
 
