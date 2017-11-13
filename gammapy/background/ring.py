@@ -328,7 +328,7 @@ class RingBackgroundEstimator(object):
 
         exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
 
-        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='reflect',
+        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='constant',
                                                                use_fft=p['use_fft_convolution'])
 
         with np.errstate(divide='ignore'):
