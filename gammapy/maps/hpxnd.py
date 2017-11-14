@@ -312,8 +312,8 @@ class HpxMapND(HpxMap):
         import healpy as hp
 
         c = MapCoords.create(coords)
-        pix, wts = self._get_interp_weights(coords,
-                                            self.geom.coord_to_idx(c)[1:])
+        idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
+        pix, wts = self._get_interp_weights(coords, idx_ax)
 
         if self.geom.ndim == 2:
             return np.sum(self.data.T[pix] * wts, axis=0)
@@ -327,7 +327,7 @@ class HpxMapND(HpxMap):
             for j, ax in enumerate(self.geom.axes):
 
                 idx = coord_to_idx(ax.center[:-1],
-                                   c[2 + j], bounded=True)  # [None, ...]
+                                   c[2 + j], clip=True)  # [None, ...]
 
                 w = ax.center[idx + 1] - ax.center[idx]
                 if (i & (1 << j)):
