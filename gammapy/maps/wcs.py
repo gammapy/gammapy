@@ -516,24 +516,30 @@ class WcsGeom(MapGeom):
 
         return tuple(coords)
 
-    def pix_to_idx(self, pix):
+    def pix_to_idx(self, pix, clip=False):
         idxs = pix_tuple_to_idx(pix, copy=True)
         if not self.is_regular:
             ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
             ibin = pix_tuple_to_idx(ibin, copy=True)
-            m = np.all(np.stack([(t > 0) & (t < ax.nbin)
-                                 for t, ax in zip(idxs, self.axes)]), axis=0)
-            for i in range(len(ibin)):
-                ibin[i][~m] = 0
+            for i, ax in enumerate(self.axes):
+                np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
             npix = (self.npix[0][ibin], self.npix[1][ibin])
         else:
             npix = self.npix
 
         for i, idx in enumerate(idxs):
-            if i < 2:
-                idxs[i][(idx < 0) | (idx >= npix[i])] = -1
+            if clip:
+                if i < 2:
+                    np.clip(idxs[i], 0, npix[i], out=idxs[i])
+                else:
+                    np.clip(idxs[i], 0, self.axes[i - 2].nbin - 1, out=idxs[i])
             else:
-                idxs[i][(idx < 0) | (idx >= self.axes[i - 2].nbin)] = -1
+                if i < 2:
+                    np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
+                else:
+                    np.putmask(idxs[i], (idx < 0) | (
+                        idx >= self.axes[i - 2].nbin), -1)
+
         return idxs
 
     def contains(self, coords):

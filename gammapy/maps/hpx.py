@@ -660,16 +660,24 @@ class HpxGeom(MapGeom):
 
         return coords
 
-    def pix_to_idx(self, pix):
+    def pix_to_idx(self, pix, clip=False):
 
-        # FIXME: Correctly apply bounds on non-spatial pixel
-        # coordinates
+        # FIXME: Look for better method to clip HPX indices
         idx = list(pix_tuple_to_idx(pix, copy=True))
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
-            idx[i][(idx_local[i] < 0) | (idx[i] < 0)] = -1
-            if i > 0:
-                idx[i][idx[i] > self.axes[i - 1].nbin - 1] = -1
+
+            if clip:
+                if i > 0:
+                    np.clip(idx[i], 0, self.axes[i - 1].nbin - 1, out=idx[i])
+                else:
+                    np.clip(idx[i], 0, None, out=idx[i])
+            else:
+                if i > 0:
+                    np.putmask(idx[i],
+                               (idx[i] < 0) | (idx[i] >= self.axes[i - 1].nbin), -1)
+                else:
+                    np.putmask(idx[i], (idx_local[i] < 0) | (idx[i] < 0), -1)
 
         return tuple(idx)
 
