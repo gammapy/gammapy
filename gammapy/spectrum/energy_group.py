@@ -113,7 +113,7 @@ class SpectrumEnergyGroupMaker(object):
         bins = self.obs.on_vector.bins_in_safe_range
 
         underflow = bins[0] - 1
-
+        
         # If no low threshold is set no underflow bin is needed
         if underflow >= 0:
             self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
@@ -140,12 +140,21 @@ class SpectrumEnergyGroupMaker(object):
         if np.all(ebounds == self.obs.e_reco):
             log.warn('ebounds {} is the default binning, nothing to do'.format(ebounds))
             return
+        
+        # Check for edge effect (low)
+        precision = 1.e-3
+        idx = np.where(self.table['energy_min'] == ebounds[0])
+        if len(idx[0]) == 0:
+            self.groups.apply_energy_min(energy=ebounds[0])
+        else:
+            if idx[0][0] > 0:
+                self.groups.apply_energy_min(energy=ebounds[0] * (1 - precision))
+            else:
+                pass
 
-        self.groups.apply_energy_min(energy=ebounds[0])
         self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
-
-
+        
 class SpectrumEnergyGroup(object):
     """Spectrum energy group.
 
@@ -344,7 +353,7 @@ class SpectrumEnergyGroups(UserList):
         idx_min = 0
         idx_max = self.find_list_idx(energy)
         self.make_and_replace_merged_group(idx_min, idx_max, bin_type='underflow')
-
+        
     def apply_energy_max(self, energy):
         """Modify list in-place to apply a max energy cut."""
         idx_min = self.find_list_idx(energy)

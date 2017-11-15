@@ -10,13 +10,12 @@ import astropy.units as u
 from ...catalog.fermi import SourceCatalog3FGL
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.modeling import ParameterList
-from ...spectrum import SpectrumResult, SpectrumFit
-from ...spectrum.models import PowerLaw, SpectralModel, ExponentialCutoffPowerLaw
-from ..flux_point import FluxPoints
-from ..flux_point import FluxPointProfiles
-from ..flux_point import FluxPointFitter
-from ..flux_point import FluxPointEstimator
-from .test_energy_group import seg, obs
+from ..results import SpectrumResult
+from ..fit import SpectrumFit
+from ..observation import SpectrumObservation
+from ..energy_group import SpectrumEnergyGroupMaker
+from ..models import PowerLaw, SpectralModel, ExponentialCutoffPowerLaw
+from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFitter, FluxPointEstimator
 
 
 FLUX_POINTS_FILES = [
@@ -156,6 +155,14 @@ def test_compute_flux_points_dnde_exp(method):
 @requires_dependency('scipy')
 @pytest.mark.parametrize('config', ['pl', 'ecpl'])
 def test_flux_points(config):
+    # TODO: replace this with a simple test case in a fixture
+    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+    obs = SpectrumObservation.read(filename)
+    seg = SpectrumEnergyGroupMaker(obs=obs)
+    ebounds = [0.3, 1, 3, 10, 30] * u.TeV
+    seg.compute_range_safe()
+    seg.compute_groups_fixed(ebounds=ebounds)
+
     if config == 'pl':
         config = dict(
             model=PowerLaw(
@@ -163,8 +170,8 @@ def test_flux_points(config):
                 amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
                 reference=Quantity(1, 'TeV')
             ),
-            obs=obs(),
-            seg=seg(obs()),
+            obs=obs,
+            seg=seg,
             dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
             dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
             dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
