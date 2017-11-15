@@ -41,3 +41,10 @@ def test_background_3d_evalutate(bkg_3d):
     bkg_rate = bkg_3d.data.evaluate(energy='1 TeV', detx='0.2 deg', dety='0.5 deg')
     assert_allclose(bkg_rate.value, 0.00013652553025167435)
     bkg_rate.unit == u.Unit('s-1 MeV-1 sr-1')
+
+
+def test_Background3D_write(bkg_3d):
+    head = ([('ORIGIN', 'TEST', 'TEST')])
+    hdu = bkg_3d.to_table
+    assert hdu.data['DETX_LO'][0].all() == bkg_3d.detx.lo.value.all()
+    assert hdu.header['TUNIT1'] == bkg_3d.detx.lo.unit

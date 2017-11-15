@@ -139,3 +139,9 @@ class TestEnergyDispersion2D:
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.edisp.peek()
+
+    def test_write(self):
+        head = ([('ORIGIN', 'TEST', 'TEST')])
+        hdu = self.edisp.to_table(head)
+        assert hdu.data['ENERGY_LO'][0].all() == self.edisp.energy.lo.value.all()
+        assert hdu.header['TUNIT1'] == self.edisp.energy.lo.unit

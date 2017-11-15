@@ -592,7 +592,7 @@ class EnergyDispersion2D(object):
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, data, interp_kwargs=None):
+                 offset_hi, data, interp_kwargs=None, meta=None,):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
@@ -605,6 +605,7 @@ class EnergyDispersion2D(object):
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
+        self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -924,3 +925,60 @@ class EnergyDispersion2D(object):
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
+
+    def to_table(self, provenance=None):
+        """Offset-dependent energy dispersion matrix.
+
+        Data format specification: :ref:`gadf:edisp_2d`
+
+        Parameters
+        ----------
+        provenance : `list`
+            dict containing required information for fits header
+
+        Examples
+        --------
+        Read energy dispersion IRF from disk:
+        from gammapy.irf import EnergyDispersion2D
+        
+        head = ([  
+            ('ORIGIN', 'IRAP', 'Name of organization making this file'),
+            ('DATE', '2017-09-27T12:02:24', 'File creation date (YYYY-MM-DDThh:mm:ss UTC)'),
+            ('TELESCOP', 'CTA', 'Name of telescope'),
+            ('INSTRUME', 'PROD3B', 'Name of instrument'),
+            ('DETNAM', 'NONE', 'Name of detector'),
+            ('HDUCLASS', 'OGIP', 'HDU class'),
+            ('HDUDOC', '???', 'HDU documentation'),
+            ('HDUCLAS1', 'RESPONSE', 'HDU class'),
+            ('HDUCLAS2', 'EDISP', 'HDU class)
+            ...])
+            ...
+            
+        edisp = EnergyDispersion2D(e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo, offset_hi, data)
+        hdu = edisp.to_table(head)
+        prim_hdu = fits.PrimaryHDU()
+        fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
+        """
+        print('UNDERGOING CONSTRUCTION')
+        c1 = fits.Column(name='ETRUE_LO', array=np.asarray([self.e_true.lo]),
+                         format='{}E'.format(self.e_true.nbins), unit='{}'.format(self.e_true.unit))
+        c2 = fits.Column(name='ETRUE_HI', array=np.asarray([self.e_true.hi]),
+                         format='{}E'.format(self.e_true.nbins), unit='{}'.format(self.e_true.unit))
+        c3 = fits.Column(name='MIGRA_LO', array=np.asarray([self.migra.lo]),
+                         format='{}E'.format(self.migra.nbins), unit='{}'.format(self.migra.unit))
+        c4 = fits.Column(name='MIGRA_HI', array=np.asarray([self.migra.hi]),
+                         format='{}E'.format(self.migra.nbins), unit='{}'.format(self.migra.unit))
+        c5 = fits.Column(name='THETA_LO', array=np.asarray([self.offset.lo]),
+                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
+        c6 = fits.Column(name='THETA_HI', array=np.asarray([self.offset.hi]),
+                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
+        c7 = fits.Column(name='MATRIX', array=np.asarray([self.data.data.T]),
+                         format='{}E'.format(self.e_true.nbins * self.offset.nbins * self.migra.nbins),
+                         dim='({},{},{})'.format(self.e_true.nbins, self.migra.nbins, self.offset.nbins),
+                         unit='{}'.format(self.data.data.unit))
+        # self.provenance()
+        header = fits.Header()
+        header.update(provenance)
+        table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=header, name='ENERGY DISPERSION')
+
+        return table

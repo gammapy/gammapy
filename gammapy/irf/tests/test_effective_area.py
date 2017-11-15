@@ -117,3 +117,22 @@ def test_EffectiveAreaTable_from_parametrization():
     assert area.data.data.unit == area_ref.unit
 
     # TODO: Use this to test interpolation behaviour etc.
+
+def test_EffectiveAreaTable2D_write():
+    energy = np.logspace(0, 1, 11) * u.TeV
+    energy_lo = energy[:-1]
+    energy_hi = energy[1:]
+    offset = np.linspace(0, 1, 4) * u.deg
+    offset_lo = offset[:-1]
+    offset_hi = offset[1:]
+    data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
+
+    aeff = EffectiveAreaTable2D(energy_lo=energy_lo,energy_hi=energy_hi,
+                                offset_lo=offset_lo, offset_hi=offset_hi,
+                                data=data)
+    head = ([('ORIGIN', 'TEST', 'TEST')])
+
+    hdu = aeff.to_table(head)
+
+    assert hdu.data['ENERGY_LO'][0].all() == aeff.energy.lo.value.all()
+    assert hdu.header['TUNIT1'] == aeff.energy.lo.unit

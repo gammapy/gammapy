@@ -570,3 +570,55 @@ class EffectiveAreaTable2D(object):
         self.plot_energy_dependence(ax=axes[0])
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
+
+    def to_table(self, provenance=None):
+        """    
+        Create HDU for Effective Area
+
+        Parameters
+        ----------
+        provenance : `list`
+            dict containing required information for fits header
+
+        Examples
+        --------
+        Read energy dispersion IRF from disk:
+        from gammapy.irf import EffectiveAreaTable2D
+        
+        head = ([  
+            ('ORIGIN', 'IRAP', 'Name of organization making this file'),
+            ('DATE', '2017-09-27T12:02:24', 'File creation date (YYYY-MM-DDThh:mm:ss UTC)'),
+            ('TELESCOP', 'CTA', 'Name of telescope'),
+            ('INSTRUME', 'PROD3B', 'Name of instrument'),
+            ('DETNAM', 'NONE', 'Name of detector'),
+            ('HDUCLASS', 'OGIP', 'HDU class'),
+            ('HDUDOC', 'CAL/GEN/92-019', 'HDU documentation'),
+            ('HDUCLAS1', 'RESPONSE', 'HDU class'),
+            ('HDUCLAS2', 'EFF_AREA', 'HDU class)
+            ...])
+            
+        aeff = EffectiveAreaTable2D(energy_lo, energy_hi, offset_lo, offset_hi, data)
+        hdu = aeff.to_table(head)
+        prim_hdu = fits.PrimaryHDU()
+        fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
+        """
+        print('UNDERGOING CONSTRUCTION')
+        c1 = fits.Column(name='ENERGY_LO', array=np.asarray([self.energy.lo]),
+                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
+        c2 = fits.Column(name='ENERGY_HI', array=np.asarray([self.energy.hi]),
+                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
+        c3 = fits.Column(name='OFFSET_LO', array=np.asarray([self.offset.lo]),
+                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
+        c4 = fits.Column(name='OFFSET_HI', array=np.asarray([self.offset.hi]),
+                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
+        c5 = fits.Column(name='EFFAREA', array=np.asarray([self.data.data.T]),
+                         format='{}E'.format(self.energy.nbins * self.offset.nbins),
+                         dim='({},{})'.format(self.energy.nbins, self.offset.nbins),
+                         unit='{}'.format(self.data.data.unit))
+        header = fits.Header()
+        header.update(provenance)
+        table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5], header=header, name='EFFECTIVE AREA')
+
+        return table
+
+
