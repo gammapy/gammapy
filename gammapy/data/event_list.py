@@ -653,17 +653,17 @@ class EventList(object):
 
         return ax
 
-    def plot_theta2_distribution(self, ax=None, number_bins=50):
+    def plot_theta2_distribution(self, ax=None, center=None, **kwargs):
         """Plot the theta2 distribution of the events.
-        A pointing direction can be given in the same units as the event list as (ra,dec).
-        If None is given, the average of incoming directions of the events is taken.
+        A center direction in RA-DEC may be given for offset pointing.
+        If None, the EventList pointing direction is used.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None
             Axes
-        number_bins: integer
-        pointing_radec: Tuple of floats or None
+        center: astropy.coordinates.sky_coordinate.SkyCoord or None
+        **kwargs: keywords arguments for matplotlib.pyplot.hist()
 
         Returns
         -------
@@ -675,15 +675,12 @@ class EventList(object):
 
         ax = plt.gca() if ax is None else ax
 
-        events_ra = self.table[:]['RA']
-        events_dec = self.table[:]['DEC']
+        if center:
+            theta2 = self.radec.separation(center).value**2
+        else:
+            theta2 = self.offset.value**2
 
-        pointing_ra = self.pointing_radec.ra.value
-        pointing_dec = self.pointing_radec.dec.value
-
-        theta2 = (events_ra - pointing_ra)**2 + (events_dec - pointing_dec)**2
-
-        count_theta2, x_edges, y_edges = ax.hist(theta2, bins=number_bins)
+        count_theta2, x_edges, y_edges = ax.hist(theta2, **kwargs)
 
         r68_containement_radius = np.sort(theta2)[int(0.68 * len(theta2))]
 
