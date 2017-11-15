@@ -602,7 +602,6 @@ class EffectiveAreaTable2D(object):
         prim_hdu = fits.PrimaryHDU()
         fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
         """
-        print('UNDERGOING CONSTRUCTION')
         c1 = fits.Column(name='ENERGY_LO', array=np.asarray([self.energy.lo]),
                          format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
         c2 = fits.Column(name='ENERGY_HI', array=np.asarray([self.energy.hi]),

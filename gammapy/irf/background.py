@@ -159,7 +159,6 @@ class Background3D(object):
         prim_hdu = fits.PrimaryHDU()
         fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
         """
-        print('UNDERGOING CONSTRUCTION')
         c1 = fits.Column(name='DETX_LO', array=np.asarray([self.detx.lo]),
                          format='{}E'.format(self.detx.nbins), unit='{}'.format(self.detx.unit))
         c2 = fits.Column(name='DETX_HI', array=np.asarray([self.detx.hi]),

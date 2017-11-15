@@ -959,7 +959,6 @@ class EnergyDispersion2D(object):
         prim_hdu = fits.PrimaryHDU()
         fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
         """
-        print('UNDERGOING CONSTRUCTION')
         c1 = fits.Column(name='ETRUE_LO', array=np.asarray([self.e_true.lo]),
                          format='{}E'.format(self.e_true.nbins), unit='{}'.format(self.e_true.unit))
         c2 = fits.Column(name='ETRUE_HI', array=np.asarray([self.e_true.hi]),
