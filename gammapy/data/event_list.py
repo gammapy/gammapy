@@ -653,41 +653,74 @@ class EventList(object):
 
         return ax
 
-    def plot_theta2_distribution(self, ax=None, center=None, **kwargs):
-        """Plot the theta2 distribution of the events.
-        A center direction in RA-DEC may be given for offset pointing.
-        If None, the EventList pointing direction is used.
+    def plot_offset2_distribution(self, ax=None, center=None, **kwargs):
+        """Plot offset^2 distribution of the events.
+
+        The distribution shown in this plot is for this quantity::
+
+            offset = center.separation(events.radec).deg
+            offset2 = offset ** 2
+
+        Note that this method is just for a quicklook plot.
+
+        If you want to do computations with the offset or offset^2 values, you can
+        use the line above. As an example, here's how to compute the 68% event
+        containment radius using `numpy.percentile`::
+
+            import numpy as np
+            r68 = np.percentile(offset, q=68)
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
+        ax : `~matplotlib.axes.Axes` (optional)
             Axes
-        center: astropy.coordinates.sky_coordinate.SkyCoord or None
-        **kwargs: keywords arguments for matplotlib.pyplot.hist()
+        center : `astropy.coordinates.SkyCoord`
+            Center position for the offset^2 distribution.
+            Default is the observation pointing position.
+        **kwargs :
+            Extra keyword arguments are passed to `matplotlib.pyplot.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
             Axes
 
+        Examples
+        --------
+        Load an example event list:
+
+        >>> from gammapy.data import EventList
+        >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
+        >>> events = EventList.read(filename)
+
+        Plot the offset^2 distribution wrt. the observation pointing position
+        (this is a commonly used plot to check the background spatial distribution):
+
+        >>> events.plot_offset2_distribution()
+
+        Plot the offset^2 distribution wrt. the Crab pulsar position
+        (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
+
+        >>> import numpy as np
+        >>> from astropy.coordinates import SkyCoord
+        >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
+        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30)
+        >>> events.plot_offset2_distribution(center=center, bins=bins)
+
+        Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
+        in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
         import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
-        if center:
-            theta2 = self.radec.separation(center).value**2
-        else:
-            theta2 = self.offset.value**2
+        if center is None:
+            center = self.pointing_radec
 
-        count_theta2, x_edges, y_edges = ax.hist(theta2, **kwargs)
+        offset2 = center.separation(self.radec).deg ** 2
 
-        r68_containement_radius = np.sort(theta2)[int(0.68 * len(theta2))]
-
-        ax.set_title('Theta2 distribution. R68 = {:.2f} deg'.format(np.sqrt(r68_containement_radius)))
-
-        ax.set_xlabel('deg2')
-        ax.set_ylabel('# Photons')
+        ax.hist(offset2, **kwargs)
+        ax.set_xlabel('Offset^2 (deg^2)')
+        ax.set_ylabel('Counts')
 
         return ax
 
