@@ -45,6 +45,6 @@ def test_background_3d_evalutate(bkg_3d):
 
 def test_Background3D_write(bkg_3d):
     head = ([('ORIGIN', 'TEST', 'TEST')])
-    hdu = bkg_3d.to_table
+    hdu = bkg_3d.to_table(head)
     assert hdu.data['DETX_LO'][0].all() == bkg_3d.detx.lo.value.all()
     assert hdu.header['TUNIT1'] == bkg_3d.detx.lo.unit

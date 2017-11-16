@@ -175,7 +175,6 @@ class Background3D(object):
                          format='{}E'.format(self.energy.nbins * self.detx.nbins * self.dety.nbins),
                          dim='({},{},{})'.format(self.detx.nbins, self.dety.nbins, self.energy.nbins),
                          unit='{}'.format(self.data.data.unit))
-        # self.provenance()
         header = fits.Header()
         header.update(provenance)
         table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=header, name='BACKGROUND')

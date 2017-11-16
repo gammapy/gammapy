@@ -975,7 +975,6 @@ class EnergyDispersion2D(object):
                          format='{}E'.format(self.e_true.nbins * self.offset.nbins * self.migra.nbins),
                          dim='({},{},{})'.format(self.e_true.nbins, self.migra.nbins, self.offset.nbins),
                          unit='{}'.format(self.data.data.unit))
-        # self.provenance()
         header = fits.Header()
         header.update(provenance)
         table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=header, name='ENERGY DISPERSION')
