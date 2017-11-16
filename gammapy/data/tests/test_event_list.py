@@ -52,8 +52,10 @@ class TestEventListHESS:
     def test_peek(self):
         self.events.peek()
 
+    @requires_dependency('matplotlib')
     def test_plot_offset2_distribution(self):
         self.events.plot_offset2_distribution()
+
 
 @requires_data('gammapy-extra')
 class TestEventListFermi:
