@@ -204,6 +204,7 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
     for i, z in enumerate(zidx):
         assert_allclose(z, idx[i + 1])
 
+    # Test w/ coords outside the geometry
     lon = np.array([0.0, 5.0, 10.0])
     lat = np.array([75.3, 75.3, 74.6])
     coords = make_test_coords(geom, lon, lat)
@@ -211,8 +212,11 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
 
     idx = geom.coord_to_idx(coords)
     if geom.region is not None:
-        assert_allclose(-1 * np.ones(len(coords[0]), dtype=int),
-                        idx[0])
+        assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
+
+    idx = geom.coord_to_idx(coords, clip=True)
+    assert(np.all(np.not_equal(np.full_like(
+        coords[0], -1, dtype=int), idx[0])))
 
 
 def test_hpxgeom_coord_to_pix():
@@ -346,7 +350,7 @@ def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     coords = geom.get_coords(flat=True)
     assert_allclose(geom.contains(coords),
-                    np.ones(coords[0].shape, dtype=bool))
+                    np.ones_like(coords[0], dtype=bool))
 
     if axes is not None:
         coords = [c[0] for c in coords[:2]] + \

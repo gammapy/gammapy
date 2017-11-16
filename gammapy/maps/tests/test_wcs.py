@@ -72,6 +72,16 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(geom.get_idx()[0],
                     geom.coord_to_idx(geom.get_coords())[0])
 
+    if not geom.is_allsky:
+        coords = geom.center_coord[:2] + \
+            tuple([ax.center[0] for ax in geom.axes])
+        coords[0][...] += 2.0 * np.max(geom.width[0])
+        idx = geom.coord_to_idx(coords)
+        assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
+        idx = geom.coord_to_idx(coords, clip=True)
+        assert(np.all(np.not_equal(np.full_like(
+            coords[0], -1, dtype=int), idx[0])))
+
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)

@@ -215,7 +215,7 @@ def axes_pix_to_coord(axes, pix):
     return coords
 
 
-def coord_to_idx(edges, x, bounded=False):
+def coord_to_idx(edges, x, clip=False):
     """Convert axis coordinates ``x`` to bin indices.
 
     Returns -1 for values below/above the lower/upper edge.
@@ -223,7 +223,7 @@ def coord_to_idx(edges, x, bounded=False):
     x = np.array(x, ndmin=1)
     ibin = np.digitize(x, edges) - 1
 
-    if bounded:
+    if clip:
         ibin[x < edges[0]] = 0
         ibin[x > edges[-1]] = len(edges) - 1
     else:
@@ -517,14 +517,14 @@ class MapAxis(object):
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
         return np.array(pix + self._pix_offset, ndmin=1)
 
-    def coord_to_idx(self, coord, bounded=False):
+    def coord_to_idx(self, coord, clip=False):
         """Transform from axis coordinate to bin index.
 
         Parameters
         ----------
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
-        bounded : bool
+        clip : bool
             Choose whether to clip the index to the valid range of the
             axis.  If false then indices for values outside the axis
             range will be set -1.
@@ -534,7 +534,7 @@ class MapAxis(object):
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        return coord_to_idx(self.edges, coord, bounded)
+        return coord_to_idx(self.edges, coord, clip)
 
     def coord_to_idx_interp(self, coord):
         """Compute indices of two nearest bins to the given coordinate.
@@ -545,8 +545,8 @@ class MapAxis(object):
             Array of axis coordinate values.
         """
 
-        return (coord_to_idx(self.center[:-1], coord, bounded=True),
-                coord_to_idx(self.center[:-1], coord, bounded=True) + 1,)
+        return (coord_to_idx(self.center[:-1], coord, clip=True),
+                coord_to_idx(self.center[:-1], coord, clip=True) + 1,)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -828,7 +828,7 @@ class MapGeom(object):
         """
         pass
 
-    def coord_to_idx(self, coords):
+    def coord_to_idx(self, coords, clip=False):
         """Convert map coordinates to pixel indices.
 
         Parameters
@@ -839,6 +839,10 @@ class MapGeom(object):
             If passed as a tuple then the ordering should be
             (longitude, latitude, c_0, ..., c_N) where c_i is the
             coordinate vector for axis i.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            geometry.  If false then indices for coordinates outside
+            the geometry range will be set -1.
 
         Returns
         -------
@@ -846,9 +850,10 @@ class MapGeom(object):
             Tuple of pixel indices in image and band dimensions.
             Elements set to -1 correspond to coordinates outside the
             map.
+
         """
         pix = self.coord_to_pix(coords)
-        return self.pix_to_idx(pix)
+        return self.pix_to_idx(pix, clip=clip)
 
     @abc.abstractmethod
     def pix_to_coord(self, pix):
@@ -867,7 +872,7 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def pix_to_idx(self, pix):
+    def pix_to_idx(self, pix, clip=False):
         """Convert pixel coordinates to pixel indices.  Returns -1 for pixel
         coordinates that lie outside of the map.
 
@@ -875,6 +880,10 @@ class MapGeom(object):
         ----------
         pix : tuple
             Tuple of pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            geometry.  If false then indices for coordinates outside
+            the geometry range will be set -1.
 
         Returns
         -------
