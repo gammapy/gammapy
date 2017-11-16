@@ -52,8 +52,8 @@ class TestEventListHESS:
     def test_peek(self):
         self.events.peek()
 
-    def test_plot_theta2_distribution(self):
-        self.events.plot_theta2_distribution()
+    def test_plot_offset2_distribution(self):
+        self.events.plot_offset2_distribution()
 
 @requires_data('gammapy-extra')
 class TestEventListFermi:
