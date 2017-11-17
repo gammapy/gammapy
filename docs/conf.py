@@ -28,7 +28,7 @@
 import datetime
 import os
 import sys
-from distutils.dir_util import copy_tree
+from shutil import copytree
 
 try:
     import astropy_helpers
@@ -80,6 +80,7 @@ intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')
+exclude_patterns.append('_static')
 exclude_patterns.append('**.ipynb_checkpoints')
 
 
@@ -190,10 +191,13 @@ from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
 # copy notebooks
-if os.environ['GAMMAPY_EXTRA']:
+if os.environ.get('GAMMAPY_EXTRA'):
     gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
     if os.path.isdir(gammapy_extra_notebooks_folder):
-        copy_tree(gammapy_extra_notebooks_folder, 'notebooks')
+        ignorefiles = lambda d, files: [f for f in files
+            if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
+        copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
+        copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
 
 html_style = 'gammapy.css'
 

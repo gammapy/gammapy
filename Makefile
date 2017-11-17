@@ -48,7 +48,7 @@ help:
 	@echo ''
 
 clean:
-	rm -rf build dist docs/_build docs/api docs/notebooks htmlcov MANIFEST gammapy.egg-info .coverage .cache
+	rm -rf build dist docs/_build docs/api docs/notebooks _static/notebooks htmlcov MANIFEST gammapy.egg-info .coverage .cache
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
