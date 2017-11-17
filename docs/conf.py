@@ -29,6 +29,7 @@ import datetime
 import os
 import sys
 from shutil import copytree, rmtree
+import re
 
 try:
     import astropy_helpers
@@ -194,18 +195,40 @@ if on_rtd:
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
-# copy notebooks
+# ---
+# notebooks
+# make relative links
+def modif_links(folder):
+    url_docs = setup_cfg.get('url_docs')
+    for file in os.listdir(folder):
+        filepath = os.path.join(folder, file)
+        if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
+            with open(filepath, "r") as f:
+                txt = f.read()
+            if folder=='notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\1rst\2', txt, flags = re.M | re.I)
+            if folder=='_static/notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\/..\1html\2', txt, flags = re.M | re.I)
+            with open(filepath, "w") as f:
+                f.write(txt)
+
+# remove existing notebooks if rebuilding
 if eval(setup_cfg.get('rebuild_notebooks')):
     rmtree('notebooks', ignore_errors=True)
     rmtree('_static/notebooks', ignore_errors=True)
 
-if os.environ.get('GAMMAPY_EXTRA'):
+# copy and build notebooks if empty
+if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
     gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
     if os.path.isdir(gammapy_extra_notebooks_folder):
         ignorefiles = lambda d, files: [f for f in files
             if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
         copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
         copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+        modif_links('notebooks')
+        modif_links('_static/notebooks')
+
+# ---
 
 html_style = 'gammapy.css'
 

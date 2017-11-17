@@ -18,5 +18,6 @@ dependencies:
   - aplpy
   - sphinx
   - pyyaml
-  - nbsphinx
   - ipython
+  - pip:
+    - nbsphinx==0.2.17
