@@ -89,7 +89,11 @@ exclude_patterns.append('**.ipynb_checkpoints')
 extensions.append('nbsphinx')
 extensions.append('IPython.sphinxext.ipython_console_highlighting')
 extensions.append('sphinx.ext.mathjax')
-nbsphinx_execute = 'never'
+if eval(setup_cfg.get('execute_notebooks')):
+    nbsphinx_execute = 'always'
+else:
+    nbsphinx_execute = 'never'
+
 # --
 
 # This is added to the end of RST files - a good place to put substitutions to
