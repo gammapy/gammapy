@@ -19,6 +19,8 @@ recursive-include dev *
 prune build
 prune docs/_build
 prune docs/api
+prune docs/notebooks
+prune docs/_static/notebooks
 
 recursive-include astropy_helpers *
 exclude astropy_helpers/.git
