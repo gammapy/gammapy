@@ -28,7 +28,7 @@
 import datetime
 import os
 import sys
-from shutil import copytree
+from shutil import copytree, rmtree
 
 try:
     import astropy_helpers
@@ -191,6 +191,10 @@ from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
 # copy notebooks
+if eval(setup_cfg.get('rebuild_notebooks')):
+    rmtree('notebooks', ignore_errors=True)
+    rmtree('_static/notebooks', ignore_errors=True)
+
 if os.environ.get('GAMMAPY_EXTRA'):
     gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
     if os.path.isdir(gammapy_extra_notebooks_folder):
