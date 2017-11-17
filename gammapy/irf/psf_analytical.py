@@ -371,7 +371,7 @@ class EnergyDependentMultiGaussPSF(object):
                            "".format(100 * fraction, theta, energy, radius))
         return ss
 
-    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None, emid=None):
         """
         Convert triple Gaussian PSF ot table PSF.
 
@@ -385,6 +385,8 @@ class EnergyDependentMultiGaussPSF(object):
         exposure : `~astropy.units.Quantity`
             Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
             Default exposure = 1.
+        emid : `gammapy.utils.energy.EnergyBounds`
+            True Energy bounds at which a PSF is requested.
 
         Returns
         -------
@@ -392,7 +394,7 @@ class EnergyDependentMultiGaussPSF(object):
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        energies = self.energy
+        energies = self.energy if emid is None else emid
 
         # Defaults and input handling
         if theta:

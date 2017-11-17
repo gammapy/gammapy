@@ -584,13 +584,19 @@ class FluxPointEstimator(object):
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    nsigma_ul_threshold : float
+        Significance for an energy bin for which an UL should be computed
+    nsigma_ul : float
+        Number of sigma used for the UL computation
     """
 
-    def __init__(self, obs, groups, model):
+    def __init__(self, obs, groups, model, nsigma_ul_threshold=1.5, nsigma_ul=3.):
         self.obs = obs
         self.groups = groups
         self.model = model
         self.flux_points = None
+        self.nsigma_ul_threshold = nsigma_ul_threshold
+        self.nsigma_ul = nsigma_ul
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -606,7 +612,7 @@ class FluxPointEstimator(object):
                 log.debug('Skipping energy group:\n{}'.format(group))
                 continue
 
-            row = self.compute_flux_point(group)
+            row = self.compute_flux_point(group, self.nsigma_ul_threshold, self.nsigma_ul)
             rows.append(row)
 
         meta = OrderedDict([
@@ -616,7 +622,7 @@ class FluxPointEstimator(object):
         table = table_from_row_data(rows=rows, meta=meta)
         self.flux_points = FluxPoints(table)
 
-    def compute_flux_point(self, energy_group):
+    def compute_flux_point(self, energy_group, nsigma_ul_threshold=1.5, nsigma_ul=3):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
         model = self.compute_approx_model(
             global_model=self.model,
@@ -628,7 +634,9 @@ class FluxPointEstimator(object):
             model=model,
             energy_group=energy_group,
             energy_ref=energy_ref,
-        )
+            nsigma_ul_threshold=nsigma_ul_threshold,
+            nsigma_ul=nsigma_ul
+            )
 
     def compute_energy_ref(self, energy_group):
         return energy_group.energy_range.log_center
@@ -778,7 +786,24 @@ class FluxPointEstimator(object):
         ts = np.abs(stat_null - stat_best_fit)
         return np.sign(amplitude) * np.sqrt(ts)
 
-    def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
+    def fit_point(self, model, energy_group, energy_ref, nsigma_ul_threshold=1.5, nsigma_ul=3.):
+        """
+        Main function that computes flux points, with errors and ULs.
+
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+        energy_group : `~gammapy.spectrum.SpectrumEnergyGroups`
+            Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
+        energy_ref : `~astropy.units.Quantity`
+            Reference energy.
+        sqrt_ts_threshold : `float`
+            Significance for an energy bin for which an UL should be computed
+        sigma_for_ul : `float`
+            Number of sigma used for the UL computation
+        """
         from .fit import SpectrumFit
 
         # Set reference and remove min amplitude
@@ -803,12 +828,18 @@ class FluxPointEstimator(object):
 
         e_max = energy_group.energy_range.max
         e_min = energy_group.energy_range.min
-        dnde, dnde_err = res.model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
+        dnde, dnde_err = fit.model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, best_fit=res)
-        dnde_errp = self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=res, delta_ts=1., negative=True)
+        from scipy.stats import chi2, norm
+        cl = 1 - 2 * norm.sf(nsigma_ul)
+        delta_ts_ul = chi2.isf(1 - cl, df=1)
+        dnde_ul = self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=delta_ts_ul)
+        dnde_errp = self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(fit, best_fit=best_fit, delta_ts=1., negative=True)
+
+        cl2 = 1 - 2 * norm.sf(nsigma_ul_threshold)
+        delta_ts_threshold = chi2.isf(1 - cl2, df=1)
 
         return OrderedDict([
             ('e_ref', energy_ref),
@@ -817,7 +848,7 @@ class FluxPointEstimator(object):
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
-            ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            ('is_ul', sqrt_ts < delta_ts_threshold),
             ('sqrt_ts', sqrt_ts),
             ('dnde_errp', dnde_errp),
             ('dnde_errn', dnde_errn)

@@ -36,6 +36,10 @@ class SpectrumAnalysisIACT(object):
         Forwareded to `~gammapy.spectrum.SpectrumFit`
     * fp_binning : `~astropy.units.Quantity`
         Flux points binning
+    * nsigma_ul_threshold : `float`
+        Significance for an energy bin for which an UL should be computed
+    * nsigma_ul : `float`
+        Number of sigma used for the UL computation
 
     Parameters
     ----------
@@ -87,10 +91,22 @@ class SpectrumAnalysisIACT(object):
         self.egm = SpectrumEnergyGroupMaker(stacked_obs)
         self.egm.compute_groups_fixed(self.config['fp_binning'])
 
+        try:
+            nsigma_ul_threshold = self.config['fit']['nsigma_ul_threshold']
+        except:
+            nsigma_ul_threshold = 1.5
+        try:
+            nsigma_ul = self.config['fit']['nsigma_ul']
+        except:
+            nsigma_ul = 3.
+
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.observations)
+            obs=self.extraction.observations,
+            nsigma_ul_threshold=nsigma_ul_threshold,
+            nsigma_ul=nsigma_ul
+            )
         self.flux_point_estimator.compute_points()
 
     @property
