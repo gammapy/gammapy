@@ -7,7 +7,8 @@ from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ..observation import SpectrumObservation
-from ..energy_group import SpectrumEnergyGroupMaker, calculate_flux_point_binning
+from ..energy_group import (SpectrumEnergyGroups, SpectrumEnergyGroupMaker,
+                            calculate_flux_point_binning)
 from ..core import PHACountsSpectrum
 
 @pytest.fixture(scope='session')
@@ -71,6 +72,73 @@ class TestSpectrumEnergyGrouping:
     def _test_plot(self, seg):
         seg.plot()
 
+
+class TestSpectrumEnergyGroups:
+    def get_groups(self, obs):
+        table = obs.stats_table()
+        table['bin_idx'] = np.arange(len(table))
+        table['energy_group_idx'] = table['bin_idx']
+        return SpectrumEnergyGroups.from_total_table(table) 
+    
+    def test_str(self, obs):
+        groups = self.get_groups(obs)
+        out = str(groups)
+        assert 'Number of groups: 9' in out
+        assert 'Bin range: (0, 8)' in out
+        assert 'Energy range: EnergyRange(min=1.0 TeV, max=10.0 TeV)' in out
+        
+    def test_find_list_idx(self, obs):
+        groups = self.get_groups(obs)
+        bin_idx_1TeV = groups.find_list_idx(energy=1 * u.TeV)
+        bin_idx_5_9TeV = groups.find_list_idx(energy=5.9 * u.TeV)
+        bin_idx_10TeV = groups.find_list_idx(energy=10 * u.TeV)
+        assert_equal(bin_idx_1TeV, 0)
+        assert_equal(bin_idx_5_9TeV, 4)
+        assert_equal(bin_idx_10TeV, 8)
+
+    def test_make_and_replace_merged_group(self, obs):        
+        groups = self.get_groups(obs)
+        # Merge first 4 bins
+        groups.make_and_replace_merged_group(0, 3, 'underflow')
+        assert_equal(groups[0].bin_type, 'underflow')
+        assert_equal(groups[0].bin_idx_min, 0)
+        assert_equal(groups[0].bin_idx_max, 3)
+        assert_equal(groups[0].energy_group_idx, 0)
+
+        # Flag 5th bin as normal
+        groups.make_and_replace_merged_group(1, 1, 'normal')
+        assert_equal(groups[1].bin_type, 'normal')
+        assert_equal(groups[1].energy_group_idx, 1)
+        
+        # Merge last 4 bins
+        groups.make_and_replace_merged_group(2, 5, 'overflow')
+        assert_equal(groups[2].bin_type, 'overflow')
+        assert_equal(groups[2].bin_idx_min, 5)
+        assert_equal(groups[2].bin_idx_max, 8)
+        assert_equal(groups[2].energy_group_idx, 2)
+        assert_equal(len(groups), 3)
+
+    def test_flag_and_merge_out_of_range(self, obs):
+        groups = self.get_groups(obs)
+        ebounds = [2, 5, 7] * u.TeV
+        groups.flag_and_merge_out_of_range(ebounds)
+
+        t = groups.to_total_table()
+        assert_equal(t['bin_type'], ['underflow', 'normal', 'normal', 'normal',
+                                     'normal', 'normal', 'overflow', 'overflow', 'overflow'])
+        assert_equal(t['energy_group_idx'], [0, 1, 2, 3, 4, 5, 6, 6, 6])
+        
+    def test_apply_energy_binning(self, obs):
+        groups = self.get_groups(obs)
+        ebounds = [2, 5, 7] * u.TeV
+        groups.apply_energy_binning(ebounds)
+        
+        t = groups.to_total_table()
+        assert_equal(t['energy_group_idx'], [0, 1, 1, 1, 2, 2, 3, 4, 5])
+        assert_equal(t['bin_idx'], [0, 1, 2, 3, 4, 5, 6, 7 ,8])
+        assert_equal(t['bin_type'], ['normal', 'normal', 'normal', 'normal',
+                                     'normal', 'normal', 'normal', 'normal', 'normal'])       
+        
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')

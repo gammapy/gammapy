@@ -136,25 +136,10 @@ class SpectrumEnergyGroupMaker(object):
     # Methods to compute groupings
     def compute_groups_fixed(self, ebounds):
         """Compute grouping for a given fixed energy binning."""
-        # Sanity check
-        if np.all(ebounds == self.obs.e_reco):
-            log.warn('ebounds {} is the default binning, nothing to do'.format(ebounds))
-            return
-        
-        # Check for edge effect (low)
-        precision = 1.e-3
-        idx = np.where(self.table['energy_min'] == ebounds[0])
-        if len(idx[0]) == 0:
-            self.groups.apply_energy_min(energy=ebounds[0])
-        else:
-            if idx[0][0] > 0:
-                self.groups.apply_energy_min(energy=ebounds[0] * (1 - precision))
-            else:
-                pass
-
-        self.groups.apply_energy_max(energy=ebounds[-1])
+        self.groups.flag_and_merge_out_of_range(ebounds=ebounds)
         self.groups.apply_energy_binning(ebounds=ebounds)
-        
+
+
 class SpectrumEnergyGroup(object):
     """Spectrum energy group.
 
@@ -359,11 +344,13 @@ class SpectrumEnergyGroups(UserList):
         idx_min = self.find_list_idx(energy)
         idx_max = len(self) - 1
         self.make_and_replace_merged_group(idx_min, idx_max, bin_type='overflow')
-
+        
     def apply_energy_binning(self, ebounds):
         """Apply an energy binning.
         
-        TODO: document method.
+        Before application of the energy binning, overflow
+        and underflow bins are flaged. After application of
+        energy binning, u/o bins are merged
         """
         for energy_range in EnergyRange.list_from_ebounds(ebounds):
             list_idx_min, list_idx_max = self.find_list_idx_range(energy_range)
@@ -395,7 +382,7 @@ class SpectrumEnergyGroups(UserList):
         return list_idx
 
     def make_and_replace_merged_group(self, list_idx_min, list_idx_max, bin_type):
-        """TODO: document"""
+        """Merge energy groups and update indexes"""
         # Create a merged group object
         group = self.make_merged_group(
             list_idx_min=list_idx_min,
@@ -411,12 +398,12 @@ class SpectrumEnergyGroups(UserList):
         self.reindex_groups()
 
     def reindex_groups(self):
-        """TODO: document"""
+        """Re-index groups"""
         for energy_group_idx, group in enumerate(self):
             group.energy_group_idx = energy_group_idx
 
     def make_merged_group(self, list_idx_min, list_idx_max, bin_type):
-        """TODO: document"""
+        """Merge group according to indexes"""
         left_group = self[list_idx_min]
         right_group = self[list_idx_max]
 
@@ -429,7 +416,30 @@ class SpectrumEnergyGroups(UserList):
             energy_max=right_group.energy_max,
         )
 
+    def flag_and_merge_out_of_range(self, ebounds):
+        """Flag underflow and overflow bins, merge them afterwards"""
+        t = self.to_group_table()
+        idx_u = np.where(t['energy_min'] < ebounds[0])[0]
+        idx_o = np.where(t['energy_max'] > ebounds[-1])[0]
+        for idx in idx_u:
+            self[idx].bin_type = 'underflow'
+        self.make_and_replace_merged_group(
+            list_idx_min=idx_u[0],
+            list_idx_max=idx_u[-1],
+            bin_type='underflow',
+        )
+        
+        for idx in idx_o:
+            self[idx].bin_type = 'overflow'
+        self.make_and_replace_merged_group(
+            list_idx_min=idx_o[0],
+            list_idx_max=idx_o[-1],
+            bin_type='overflow',
+        )
+        
 
+
+                
 class EnergyRange(object):
     """Energy range.
 
