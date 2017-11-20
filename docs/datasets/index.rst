@@ -25,7 +25,7 @@ The functions have a naming pattern (following the `sklearn.datasets` lead):
           And there is a separate section describing the :ref:`dataformats`
           that are commonly used in gamma-ray astronomy.
 
-.. _gammapy-extra:
+.. _gammapyextra:
 
 gammapy-extra
 =============
