@@ -20,11 +20,11 @@ def aeff():
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_EffectiveAreaTable2D(aeff):
-    assert aeff.energy.nbins == 73
+    assert aeff.data.axis('energy').nbins == 73
     assert aeff.data.axis('offset').nbins == 6
     assert aeff.data.data.shape == (73, 6)
 
-    assert aeff.energy.unit == 'TeV'
+    assert aeff.data.axis('energy').unit == 'TeV'
     assert aeff.data.axis('offset').unit == 'deg'
     assert aeff.data.data.unit == 'm2'
 
@@ -78,7 +78,7 @@ def test_EffectiveAreaTable(tmpdir, aeff):
 
     test_aeff = 0.6 * arf.max_area
     node_above = np.where(arf.data.data > test_aeff)[0][0]
-    energy = arf.energy
+    energy = arf.data.axis('energy')
     ener_above = energy.nodes[node_above]
     ener_below = energy.nodes[node_above - 1]
     test_ener = arf.find_energy(test_aeff)
@@ -119,7 +119,8 @@ def test_EffectiveAreaTable_from_parametrization():
 
     # TODO: Use this to test interpolation behaviour etc.
 
-def test_EffectiveAreaTable2D_write():
+
+def test_EffectiveAreaTable2d_write():
     energy = np.logspace(0, 1, 11) * u.TeV
     energy_lo = energy[:-1]
     energy_hi = energy[1:]

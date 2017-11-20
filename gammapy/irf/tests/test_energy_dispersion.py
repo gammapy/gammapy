@@ -98,9 +98,9 @@ class TestEnergyDispersion2D:
         e_node = 12
         off_node = 3
         m_node = 5
-        offset = self.edisp.offset.nodes[off_node]
-        energy = self.edisp.e_true.nodes[e_node]
-        migra = self.edisp.migra.nodes[m_node]
+        offset = self.edisp.data.axis('offset').nodes[off_node]
+        energy = self.edisp.data.axis('e_true').nodes[e_node]
+        migra = self.edisp.data.axis('migra').nodes[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
         desired = self.edisp.data.data[e_node, m_node, off_node]
         assert_allclose(actual, desired, rtol=1e-06)
@@ -115,9 +115,9 @@ class TestEnergyDispersion2D:
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
-        desired = (self.edisp.e_true.nbins,
-                   self.edisp.migra.nbins,
-                   self.edisp.offset.nbins)
+        desired = (self.edisp.data.axis('e_true').nbins,
+                   self.edisp.data.axis('migra').nbins,
+                   self.edisp.data.axis('offset').nbins)
         assert_equal(actual, desired)
 
     def test_get_response(self):
@@ -143,5 +143,5 @@ class TestEnergyDispersion2D:
 
     def test_write(self):
         hdu = table_to_fits_table(self.edisp.to_table())
-        assert hdu.data['ENERGY_LO'][0].all() == self.edisp.data.axis('energy').lo.value.all()
-        assert hdu.header['TUNIT1'] == self.edisp.data.axis('energy').lo.unit
+        assert hdu.data['ENERGY_LO'][0].all() == self.edisp.data.axis('e_true').lo.value.all()
+        assert hdu.header['TUNIT1'] == self.edisp.data.axis('e_true').lo.unit
