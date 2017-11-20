@@ -344,8 +344,9 @@ class EffectiveAreaTable2D(object):
     >>> import numpy as np
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
-    >>> data = np.ones(shape=(10,4)) * u.cm * u.cm
-    >>> aeff = EffectiveAreaTable2D(energy=energy, offset=offset, data= data)
+    >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
+    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1], 
+    >>>                             offset_hi=offset[1:], data= data)
     >>> print(aeff)
     Data array summary info
     energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
@@ -376,14 +377,6 @@ class EffectiveAreaTable2D(object):
         ss = self.__class__.__name__
         ss += '\n{}'.format(self.data)
         return ss
-
-    @property
-    def energy(self):
-        return self.data.axis('energy')
-
-    @property
-    def offset(self):
-        return self.data.axis('offset')
 
     @property
     def low_threshold(self):
@@ -432,7 +425,7 @@ class EffectiveAreaTable2D(object):
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.energy.bins
+            energy = self.data.axis('energy').bins
 
         energy = EnergyBounds(energy)
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
@@ -471,7 +464,7 @@ class EffectiveAreaTable2D(object):
             offset = np.linspace(off_min, off_max, 4) * self.data.axis('offset').unit
 
         if energy is None:
-            energy = self.energy.nodes
+            energy = self.data.axis('energy').nodes
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
@@ -479,7 +472,7 @@ class EffectiveAreaTable2D(object):
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.data.axis('energy').unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
@@ -508,8 +501,8 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.energy.nodes[[0, -1]].value)
-            energy = np.logspace(e_min, e_max, 4) * self.energy.unit
+            e_min, e_max = np.log10(self.data.axis('energy').nodes[[0, -1]].value)
+            energy = np.logspace(e_min, e_max, 4) * self.data.axis('energy').unit
 
         if offset is None:
             off_lo, off_hi = self.data.axis('offset').nodes[[0, -1]].to('deg').value
@@ -571,53 +564,14 @@ class EffectiveAreaTable2D(object):
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
 
-    def to_table(self, provenance=None):
-        """    
-        Create HDU for Effective Area
-
-        Parameters
-        ----------
-        provenance : `list`
-            dict containing required information for fits header
-
-        Examples
-        --------
-        Read energy dispersion IRF from disk:
-        from gammapy.irf import EffectiveAreaTable2D
-        
-        head = ([  
-            ('ORIGIN', 'IRAP', 'Name of organization making this file'),
-            ('DATE', '2017-09-27T12:02:24', 'File creation date (YYYY-MM-DDThh:mm:ss UTC)'),
-            ('TELESCOP', 'CTA', 'Name of telescope'),
-            ('INSTRUME', 'PROD3B', 'Name of instrument'),
-            ('DETNAM', 'NONE', 'Name of detector'),
-            ('HDUCLASS', 'OGIP', 'HDU class'),
-            ('HDUDOC', 'CAL/GEN/92-019', 'HDU documentation'),
-            ('HDUCLAS1', 'RESPONSE', 'HDU class'),
-            ('HDUCLAS2', 'EFF_AREA', 'HDU class)
-            ...])
-            
-        aeff = EffectiveAreaTable2D(energy_lo, energy_hi, offset_lo, offset_hi, data)
-        hdu = aeff.to_table(head)
-        prim_hdu = fits.PrimaryHDU()
-        fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
-        """
-        c1 = fits.Column(name='ENERGY_LO', array=np.asarray([self.energy.lo]),
-                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
-        c2 = fits.Column(name='ENERGY_HI', array=np.asarray([self.energy.hi]),
-                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
-        c3 = fits.Column(name='OFFSET_LO', array=np.asarray([self.offset.lo]),
-                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
-        c4 = fits.Column(name='OFFSET_HI', array=np.asarray([self.offset.hi]),
-                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
-        c5 = fits.Column(name='EFFAREA', array=np.asarray([self.data.data.T]),
-                         format='{}E'.format(self.energy.nbins * self.offset.nbins),
-                         dim='({},{})'.format(self.energy.nbins, self.offset.nbins),
-                         unit='{}'.format(self.data.data.unit))
-        header = fits.Header()
-        header.update(provenance)
-        table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5], header=header, name='EFFECTIVE AREA')
-
+    def to_table(self):
+        table = Table()
+        table['ENERGY_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
+        table['ENERGY_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
+        table['OFFSET_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
+        table['OFFSET_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
+        table['EFFAREA'] = [self.data.data.T]*self.data.data.unit
+        self.meta.update({'name':'EFFECTIVE AREA'})
+        table.meta = self.meta
         return table
-
 

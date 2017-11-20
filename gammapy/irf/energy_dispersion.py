@@ -612,21 +612,6 @@ class EnergyDispersion2D(object):
         ss += '\n{}'.format(self.data)
         return ss
 
-    @property
-    def e_true(self):
-        """True energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('e_true')
-
-    @property
-    def migra(self):
-        """Energy migration axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('migra')
-
-    @property
-    def offset(self):
-        """Field of view offset axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('offset')
-
     @classmethod
     def from_gauss(cls, e_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion2D`).
@@ -734,8 +719,8 @@ class EnergyDispersion2D(object):
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.e_true.bins if e_true is None else e_true
-        e_reco = self.e_true.bins if e_reco is None else e_reco
+        e_true = self.data.axis('e_true').bins if e_true is None else e_true
+        e_reco = self.data.axis('e_true').bins if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
@@ -780,8 +765,8 @@ class EnergyDispersion2D(object):
         # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
             e_reco = EnergyBounds.from_lower_and_upper_bounds(
-                self.migra.lo * e_true, self.migra.hi * e_true)
-            migra = self.migra.nodes
+                self.data.axis('migra').lo * e_true, self.data.axis('migra').hi * e_true)
+            migra = self.data.axis('migra').nodes
         # Translate given e_reco binning to migra at bin center
         else:
             e_reco = EnergyBounds(e_reco)
@@ -792,8 +777,8 @@ class EnergyDispersion2D(object):
         migra_e_reco = e_reco / e_true
 
         # Define a vector of migration with mig_step step
-        mrec_min = self.migra.lo[0]
-        mrec_max = self.migra.hi[-1]
+        mrec_min = self.data.axis('migra').lo[0]
+        mrec_max = self.data.axis('migra').hi[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
         # Compute energy dispersion probability dP/dm for each element of migration array
@@ -845,7 +830,7 @@ class EnergyDispersion2D(object):
             e_true = Energy([0.1, 1, 10], 'TeV')
         else:
             e_true = np.atleast_1d(Energy(e_true))
-        migra = self.migra.nodes if migra is None else migra
+        migra = self.data.axis('migra').nodes if migra is None else migra
 
         for ener in e_true:
             for off in offset:
@@ -889,8 +874,8 @@ class EnergyDispersion2D(object):
         if offset is None:
             offset = Angle([1], 'deg')
 
-        e_true = self.e_true.bins
-        migra = self.migra.bins
+        e_true = self.data.axis('e_true').bins
+        migra = self.data.axis('migra').bins
 
         x = e_true.value
         y = migra.value
@@ -926,57 +911,15 @@ class EnergyDispersion2D(object):
 
         plt.tight_layout()
 
-    def to_table(self, provenance=None):
-        """Offset-dependent energy dispersion matrix.
-
-        Data format specification: :ref:`gadf:edisp_2d`
-
-        Parameters
-        ----------
-        provenance : `list`
-            dict containing required information for fits header
-
-        Examples
-        --------
-        Read energy dispersion IRF from disk:
-        from gammapy.irf import EnergyDispersion2D
-        
-        head = ([  
-            ('ORIGIN', 'IRAP', 'Name of organization making this file'),
-            ('DATE', '2017-09-27T12:02:24', 'File creation date (YYYY-MM-DDThh:mm:ss UTC)'),
-            ('TELESCOP', 'CTA', 'Name of telescope'),
-            ('INSTRUME', 'PROD3B', 'Name of instrument'),
-            ('DETNAM', 'NONE', 'Name of detector'),
-            ('HDUCLASS', 'OGIP', 'HDU class'),
-            ('HDUDOC', '???', 'HDU documentation'),
-            ('HDUCLAS1', 'RESPONSE', 'HDU class'),
-            ('HDUCLAS2', 'EDISP', 'HDU class)
-            ...])
-            ...
-            
-        edisp = EnergyDispersion2D(e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo, offset_hi, data)
-        hdu = edisp.to_table(head)
-        prim_hdu = fits.PrimaryHDU()
-        fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
-        """
-        c1 = fits.Column(name='ETRUE_LO', array=np.asarray([self.e_true.lo]),
-                         format='{}E'.format(self.e_true.nbins), unit='{}'.format(self.e_true.unit))
-        c2 = fits.Column(name='ETRUE_HI', array=np.asarray([self.e_true.hi]),
-                         format='{}E'.format(self.e_true.nbins), unit='{}'.format(self.e_true.unit))
-        c3 = fits.Column(name='MIGRA_LO', array=np.asarray([self.migra.lo]),
-                         format='{}E'.format(self.migra.nbins), unit='{}'.format(self.migra.unit))
-        c4 = fits.Column(name='MIGRA_HI', array=np.asarray([self.migra.hi]),
-                         format='{}E'.format(self.migra.nbins), unit='{}'.format(self.migra.unit))
-        c5 = fits.Column(name='THETA_LO', array=np.asarray([self.offset.lo]),
-                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
-        c6 = fits.Column(name='THETA_HI', array=np.asarray([self.offset.hi]),
-                         format='{}E'.format(self.offset.nbins), unit='{}'.format(self.offset.unit))
-        c7 = fits.Column(name='MATRIX', array=np.asarray([self.data.data.T]),
-                         format='{}E'.format(self.e_true.nbins * self.offset.nbins * self.migra.nbins),
-                         dim='({},{},{})'.format(self.e_true.nbins, self.migra.nbins, self.offset.nbins),
-                         unit='{}'.format(self.data.data.unit))
-        header = fits.Header()
-        header.update(provenance)
-        table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=header, name='ENERGY DISPERSION')
-
+    def to_table(self):
+        table = Table()
+        table['ENERGY_LO'] = [self.data.axis('e_true').lo]*self.data.axis('e_true').unit
+        table['ENERGY_HI'] = [self.data.axis('e_true').hi]*self.data.axis('e_true').unit
+        table['MIGRA_LO'] = [self.data.axis('migra').hi]
+        table['MIGRA_HI'] = [self.data.axis('migra').hi]
+        table['THETA_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
+        table['THETA_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
+        table['MATRIX'] = [self.data.data.T]*self.data.data.unit
+        self.meta.update({'name':'ENERGY DISPERSION'})
+        table.meta = self.meta
         return table

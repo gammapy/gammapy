@@ -8,6 +8,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
+from ...utils.fits import table_to_fits_table
 
 
 @requires_dependency('scipy')
@@ -141,7 +142,6 @@ class TestEnergyDispersion2D:
         self.edisp.peek()
 
     def test_write(self):
-        head = ([('ORIGIN', 'TEST', 'TEST')])
-        hdu = self.edisp.to_table(head)
-        assert hdu.data['ENERGY_LO'][0].all() == self.edisp.energy.lo.value.all()
-        assert hdu.header['TUNIT1'] == self.edisp.energy.lo.unit
+        hdu = table_to_fits_table(self.edisp.to_table())
+        assert hdu.data['ENERGY_LO'][0].all() == self.edisp.data.axis('energy').lo.value.all()
+        assert hdu.header['TUNIT1'] == self.edisp.data.axis('energy').lo.unit

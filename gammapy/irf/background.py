@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -72,18 +73,6 @@ class Background3D(object):
         ss += '\n{}'.format(self.data)
         return ss
 
-    @property
-    def energy(self):
-        return self.data.axis('energy')
-
-    @property
-    def detx(self):
-        return self.data.axis('detx')
-
-    @property
-    def dety(self):
-        return self.data.axis('dety')
-
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
@@ -127,56 +116,15 @@ class Background3D(object):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, hdu=hdu)
 
-    def to_table(self, provenance=None):
-        """ Convert data to bintable HDU in CTA IRF format
-
-        Data format specification: :ref:`gadf:edisp_2d`
-
-        Parameters
-        ----------
-        provenance : `list`
-            dict containing required information for fits header
-
-        Examples
-        --------
-        Read energy dispersion IRF from disk:
-        from gammapy.irf import Background3D
-        
-        head = ([  
-            ('ORIGIN', 'IRAP', 'Name of organization making this file'),
-            ('DATE', '2017-09-27T12:02:24', 'File creation date (YYYY-MM-DDThh:mm:ss UTC)'),
-            ('TELESCOP', 'CTA', 'Name of telescope'),
-            ('INSTRUME', 'PROD3B', 'Name of instrument'),
-            ('DETNAM', 'NONE', 'Name of detector'),
-            ('HDUCLASS', 'OGIP', 'HDU class'),
-            ('HDUDOC', '???', 'HDU documentation'),
-            ('HDUCLAS1', 'RESPONSE', 'HDU class'),
-            ('HDUCLAS2', 'BKG', 'HDU class)
-            ...])
-            
-        bkg = Background3D(detx_lo, detx_hi, dety_lo, dety_hi, e_true_lo, e_true_hi, data)
-        hdu = bgk.to_table(head)
-        prim_hdu = fits.PrimaryHDU()
-        fits.HDUList([prim_hdu, hdu]).writeto('irffile.fits')
-        """
-        c1 = fits.Column(name='DETX_LO', array=np.asarray([self.detx.lo]),
-                         format='{}E'.format(self.detx.nbins), unit='{}'.format(self.detx.unit))
-        c2 = fits.Column(name='DETX_HI', array=np.asarray([self.detx.hi]),
-                         format='{}E'.format(self.detx.nbins), unit='{}'.format(self.detx.unit))
-        c3 = fits.Column(name='DETY_LO', array=np.asarray([self.dety.lo]),
-                         format='{}E'.format(self.dety.nbins), unit='{}'.format(self.detx.unit))
-        c4 = fits.Column(name='DETY_HI', array=np.asarray([self.dety.hi]),
-                         format='{}E'.format(self.dety.nbins), unit='{}'.format(self.detx.unit))
-        c5 = fits.Column(name='ENERGY_LO', array=np.asarray([self.energy.lo]),
-                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
-        c6 = fits.Column(name='ENERGY_HI', array=np.asarray([self.energy.hi]),
-                         format='{}E'.format(self.energy.nbins), unit='{}'.format(self.energy.unit))
-        c7 = fits.Column(name='BGD', array=np.asarray([self.data.data]),
-                         format='{}E'.format(self.energy.nbins * self.detx.nbins * self.dety.nbins),
-                         dim='({},{},{})'.format(self.detx.nbins, self.dety.nbins, self.energy.nbins),
-                         unit='{}'.format(self.data.data.unit))
-        header = fits.Header()
-        header.update(provenance)
-        table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=header, name='BACKGROUND')
-
+    def to_table(self):
+        table = Table()
+        table['DETX_LO'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
+        table['DETX_HI'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
+        table['DETY_LO'] = [self.data.axis('dety').lo]*self.data.axis('dety').unit
+        table['DETY_HI'] = [self.data.axis('dety').hi]*self.data.axis('dety').unit
+        table['ENERGY_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
+        table['ENERGY_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
+        table['BGD'] = [self.data.data]*self.data.data.unit
+        self.meta.update({'name':'BACKGROUND'})
+        table.meta = self.meta
         return table

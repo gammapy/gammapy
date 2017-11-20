@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
+from ...utils.fits import table_to_fits_table
 
 
 @pytest.fixture(scope='session')
@@ -130,9 +131,6 @@ def test_EffectiveAreaTable2D_write():
     aeff = EffectiveAreaTable2D(energy_lo=energy_lo,energy_hi=energy_hi,
                                 offset_lo=offset_lo, offset_hi=offset_hi,
                                 data=data)
-    head = ([('ORIGIN', 'TEST', 'TEST')])
-
-    hdu = aeff.to_table(head)
-
-    assert hdu.data['ENERGY_LO'][0].all() == aeff.energy.lo.value.all()
-    assert hdu.header['TUNIT1'] == aeff.energy.lo.unit
+    hdu = table_to_fits_table(aeff.to_table())
+    assert hdu.data['ENERGY_LO'][0].all() == aeff.data.axis('energy').lo.value.all()
+    assert hdu.header['TUNIT1'] == aeff.data.axis('energy').lo.unit

@@ -5,6 +5,7 @@ import astropy.units as u
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D
+from ...utils.fits import table_to_fits_table
 
 
 @pytest.fixture(scope='session')
@@ -40,11 +41,10 @@ def test_background_3d_basics(bkg_3d):
 def test_background_3d_evalutate(bkg_3d):
     bkg_rate = bkg_3d.data.evaluate(energy='1 TeV', detx='0.2 deg', dety='0.5 deg')
     assert_allclose(bkg_rate.value, 0.00013652553025167435)
-    bkg_rate.unit == u.Unit('s-1 MeV-1 sr-1')
+    assert bkg_rate.unit == u.Unit('s-1 MeV-1 sr-1')
 
-
-def test_Background3D_write(bkg_3d):
-    head = ([('ORIGIN', 'TEST', 'TEST')])
-    hdu = bkg_3d.to_table(head)
-    assert hdu.data['DETX_LO'][0].all() == bkg_3d.detx.lo.value.all()
-    assert hdu.header['TUNIT1'] == bkg_3d.detx.lo.unit
+@requires_data('gammapy-extra')
+def test_background3d_write(bkg_3d):
+    hdu =  table_to_fits_table(bkg_3d.to_table())
+    assert hdu.data['DETX_LO'][0].all() == bkg_3d.data.axis('detx').lo.value.all()
+    assert hdu.header['TUNIT1'] == bkg_3d.data.axis('detx').lo.unit
