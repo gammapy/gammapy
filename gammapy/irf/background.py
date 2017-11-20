@@ -117,13 +117,14 @@ class Background3D(object):
         return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):
+        #TODO: BGD or BKG - see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html
         table = Table()
         table['DETX_LO'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
         table['DETX_HI'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
         table['DETY_LO'] = [self.data.axis('dety').lo]*self.data.axis('dety').unit
         table['DETY_HI'] = [self.data.axis('dety').hi]*self.data.axis('dety').unit
-        table['ENERGY_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
-        table['ENERGY_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
+        table['ENERG_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
+        table['ENERG_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
         table['BGD'] = [self.data.data]*self.data.data.unit
         self.meta.update({'name':'BACKGROUND'})
         table.meta = self.meta

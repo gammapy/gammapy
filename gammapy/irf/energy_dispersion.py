@@ -912,9 +912,10 @@ class EnergyDispersion2D(object):
         plt.tight_layout()
 
     def to_table(self):
+        #TODO : ETRUE or ENERG? See https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/edisp/index.html
         table = Table()
-        table['ENERGY_LO'] = [self.data.axis('e_true').lo]*self.data.axis('e_true').unit
-        table['ENERGY_HI'] = [self.data.axis('e_true').hi]*self.data.axis('e_true').unit
+        table['ETRUE_LO'] = [self.data.axis('e_true').lo]*self.data.axis('e_true').unit
+        table['ETRUE_HI'] = [self.data.axis('e_true').hi]*self.data.axis('e_true').unit
         table['MIGRA_LO'] = [self.data.axis('migra').hi]
         table['MIGRA_HI'] = [self.data.axis('migra').hi]
         table['THETA_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit

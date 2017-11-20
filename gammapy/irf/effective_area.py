@@ -566,10 +566,10 @@ class EffectiveAreaTable2D(object):
 
     def to_table(self):
         table = Table()
-        table['ENERGY_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
-        table['ENERGY_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
-        table['OFFSET_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
-        table['OFFSET_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
+        table['ENERG_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
+        table['ENERG_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
+        table['THETA_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
+        table['THETA_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
         table['EFFAREA'] = [self.data.data.T]*self.data.data.unit
         self.meta.update({'name':'EFFECTIVE AREA'})
         table.meta = self.meta
