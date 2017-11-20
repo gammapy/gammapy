@@ -50,7 +50,7 @@ The equivalent of ``make clean`` is:
 
 .. code-block:: bash
 
-    $ rm -r build docs/_build docs/api htmlcov
+    $ rm -r build docs/_build docs/api htmlcov docs/notebooks docs/_static/notebooks
 
 These folders only contain generated files and are always safe to delete!
 Most of the time you don't have to delete them, but if you e.g. remove or rename files or functions / classes,
@@ -64,6 +64,7 @@ on travis-ci or for other developers.
 * The  ``docs/_build`` folder is where ``python setup.py build_docs`` generates the HTML and other Sphinx
   documentation output files.
 * The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
+* The ``docs/notebooks`` and ``docs/_static/notebooks`` folders are where *fixed* and *live* versions of Jupyter notebooks files are stored.
 
 If you use ``python setup.py build_ext --inplace``, then files are generated in the ``gammapy`` source folder.
 Usually that's not a problem, but if you want to clean up those generated files, you can use
@@ -528,6 +529,14 @@ You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 The PDF is also generated on Read the Docs and available online here:
 https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
 
+Jupyter notebooks present in the `gammapy-extra` repository are by default copied
+to the `docs/notebooks` and `docs/_static/notebooks` tree-folder structure during
+the process of generating HTML docs. This triggers its conversion to *fixed-text*
+Sphinx formatted documentation files and at the same time provides access to raw
+.ipynb Jupyter notebooks for the same version of the gammapy documentation. This
+behaviour may be modified in the  `setup.cfg` configuration file changing the
+value of `rebuild_notebooks` boolean.
+
 Documentation guidelines
 ------------------------
 
@@ -827,7 +836,7 @@ In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response fun
 data grids, or to reproject diffuse models on data grids.
 
 Note: For some use cases that require interpolation the
-`~gammapy.utils.nddata.NDDataArray` base class might be useful. 
+`~gammapy.utils.nddata.NDDataArray` base class might be useful.
 
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
@@ -959,7 +968,7 @@ and have an coherent I/O interface, mainly in `~gammapy.irf`.
 A usage example can be found in :gp-extra-notebooks:``nddata_demo``.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
-setup your interpolator. 
+setup your interpolator.
 
 
 Write a test for an IPython notebook

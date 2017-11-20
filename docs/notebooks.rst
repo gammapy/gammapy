@@ -13,9 +13,6 @@ What is this?
    gamma-ray astronomy.
 -  The notebooks complement the Gammapy Sphinx-based documentation at
    http://docs.gammapy.org
--  You can read a static HTML version of these notebooks (i.e. code
-   can't be executed) online
-   `here <http://nbviewer.ipython.org/github/gammapy/gammapy-extra/tree/master/notebooks/>`.
 -  The notebooks and example datasets are available at
    https://github.com/gammapy/gammapy-extra
 
@@ -27,6 +24,9 @@ examples, or to try to do one of the exercises, you have to first
 install Gammapy and get the ``gammapy-extra`` repository. This is
 described in `Gammapy tutorial
 setup <notebooks/tutorial_setup.html>`__.
+
+You may also download the whole HTML documentation for this version of gammapy
+and execute the notebooks in your local desktop inside the `_static/notebooks/` folder.
 
 The basics
 ----------

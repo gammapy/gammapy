@@ -105,3 +105,4 @@
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
 .. _Gammapy tutorial notebooks on nbviewer: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
+.. _nbsphinx: http://nbsphinx.readthedocs.io
