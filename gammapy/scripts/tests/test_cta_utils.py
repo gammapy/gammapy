@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, requires_dependency
@@ -39,26 +40,9 @@ def obs_param():
                                  emin=emin, emax=emax)
 
 
-@pytest.fixture(scope='session')
-def perf():
-    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-    return CTAPerf.read(filename)
-
-
 @requires_data('gammapy-extra')
-@pytest.fixture(scope='session')
-def cta_simu():
-    return CTAObservationSimulation.simulate_obs(
-        perf=perf(),
-        target=target(),
-        obs_param=obs_param(),
-        random_state=0,
-    )
-
-
-@requires_data('gammapy-extra')
-def test_target():
-    text = str(target())
+def test_target(target):
+    text = str(target)
     assert '*** Target parameters ***' in text
     assert 'Name=test' in text
     assert 'index=3.' in text
@@ -68,8 +52,8 @@ def test_target():
 
 
 @requires_data('gammapy-extra')
-def test_observation_parameters():
-    text = str(obs_param())
+def test_observation_parameters(obs_param):
+    text = str(obs_param)
     assert '*** Observation parameters summary ***' in text
     assert 'alpha=0.2' in text
     assert 'livetime=5.0' in text
@@ -79,9 +63,33 @@ def test_observation_parameters():
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
-def test_cta_simulation():
-    text = str(cta_simu())
-    assert '*** Observation summary report ***' in text
+def test_cta_simulation(target, obs_param):
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
 
-    stats = cta_simu().total_stats
+    perf = CTAPerf.read(filename)
+    simu = CTAObservationSimulation.simulate_obs(
+        perf=perf,
+        target=target,
+        obs_param=obs_param,
+        random_state=0,
+    )
+    text = str(simu)
+    assert '*** Observation summary report ***' in text
+    stats = simu.total_stats
     assert_allclose(stats.sigma, 36.51439765644547)
+    assert_allclose(stats.excess, 5322.799999999996)
+    assert_allclose(stats.background, 15712.200000000004)
+
+    # With reprojection of background rate
+    e_reco = np.logspace(np.log10(0.02), np.log10(100), 51) * u.TeV
+    perf = CTAPerf.read(filename, e_reco=e_reco)
+    simu = CTAObservationSimulation.simulate_obs(
+        perf=perf,
+        target=target,
+        obs_param=obs_param,
+        random_state=0,
+    )
+    stats = simu.total_stats
+    assert_allclose(stats.sigma, 40.326731781633505)
+    assert_allclose(stats.excess, 5319.200000000001)
+    assert_allclose(stats.background, 12519.8)
