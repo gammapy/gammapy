@@ -133,5 +133,5 @@ def test_EffectiveAreaTable2d_write():
                                 offset_lo=offset_lo, offset_hi=offset_hi,
                                 data=data)
     hdu = table_to_fits_table(aeff.to_table())
-    assert hdu.data['ENERGY_LO'][0].all() == aeff.data.axis('energy').lo.value.all()
+    assert hdu.data['ENERG_LO'][0].all() == aeff.data.axis('energy').lo.value.all()
     assert hdu.header['TUNIT1'] == aeff.data.axis('energy').lo.unit
