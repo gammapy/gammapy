@@ -144,7 +144,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
     url_docs = setup_cfg.get('url_docs')
 
     # remove existing notebooks if rebuilding
-    if eval(setup_cfg.get('rebuild_notebooks')):
+    if bool(setup_cfg.get('clean_notebooks')):
         print('*** Cleaning notebooks')
         rmtree('notebooks', ignore_errors=True)
         rmtree('_static/notebooks', ignore_errors=True)
