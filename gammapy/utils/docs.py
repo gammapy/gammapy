@@ -110,7 +110,7 @@ def modif_nb_links(folder, url_docs):
 
     DOWNLOAD_CELL = """
 <div class='admonition note'>
-[Download notebook](../_static/notebooks/nbfilename.ipynb)
+[Download notebook](../_static/notebooks/{nb_filename})
 
 This is a *fixed-text* formatted version of a Jupyter notebook.
 
@@ -123,7 +123,8 @@ in your local desktop inside the `_static/notebooks/` folder.
         filepath = os.path.join(folder, filename)
         if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
             if folder=='notebooks':
-                strcell = DOWNLOAD_CELL.replace('nbfilename.ipynb', filename)
+                ctx = dict(nb_filename=filename)
+                strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
