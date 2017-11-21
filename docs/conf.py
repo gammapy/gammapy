@@ -88,10 +88,7 @@ exclude_patterns.append('**.ipynb_checkpoints')
 extensions.append('nbsphinx')
 extensions.append('IPython.sphinxext.ipython_console_highlighting')
 extensions.append('sphinx.ext.mathjax')
-if eval(setup_cfg.get('execute_notebooks')):
-    nbsphinx_execute = 'always'
-else:
-    nbsphinx_execute = 'never'
+nbsphinx_execute = setup_cfg['execute_notebooks']
 
 # --
 
