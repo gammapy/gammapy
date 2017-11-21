@@ -346,12 +346,7 @@ class SpectrumEnergyGroups(UserList):
         self.make_and_replace_merged_group(idx_min, idx_max, bin_type='overflow')
         
     def apply_energy_binning(self, ebounds):
-        """Apply an energy binning.
-        
-        Before application of the energy binning, overflow
-        and underflow bins are flaged. After application of
-        energy binning, u/o bins are merged
-        """
+        """Apply an energy binning."""
         for energy_range in EnergyRange.list_from_ebounds(ebounds):
             list_idx_min, list_idx_max = self.find_list_idx_range(energy_range)
 
@@ -420,7 +415,6 @@ class SpectrumEnergyGroups(UserList):
         """Flag underflow and overflow bins, merge them afterwards"""
         t = self.to_group_table()
         idx_u = np.where(t['energy_min'] < ebounds[0])[0]
-        idx_o = np.where(t['energy_max'] > ebounds[-1])[0]
         for idx in idx_u:
             self[idx].bin_type = 'underflow'
         self.make_and_replace_merged_group(
@@ -429,6 +423,8 @@ class SpectrumEnergyGroups(UserList):
             bin_type='underflow',
         )
         
+        t = self.to_group_table()
+        idx_o = np.where(t['energy_max'] > ebounds[-1])[0]
         for idx in idx_o:
             self[idx].bin_type = 'overflow'
         self.make_and_replace_merged_group(
