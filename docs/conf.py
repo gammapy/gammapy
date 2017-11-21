@@ -246,6 +246,7 @@ if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
             if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
         copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
         copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+        os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')
         modif_links('notebooks')
         modif_links('_static/notebooks')
 
