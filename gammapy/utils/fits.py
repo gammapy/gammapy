@@ -261,7 +261,7 @@ def table_from_row_data(rows, type='qtable', **kwargs):
     return table
 
 
-def table_to_fits_table(table):
+def table_to_fits_table(table, name=None):
     """Convert `~astropy.table.Table` to `astropy.io.fits.BinTableHDU`.
 
     The name of the table can be stored in the Table meta information
@@ -282,7 +282,8 @@ def table_to_fits_table(table):
     """
     # read name and drop it from the meta information, otherwise
     # it would be stored as a header keyword in the BinTableHDU
-    name = table.meta.pop('name', None)
+    if name is None:
+        name = table.meta.pop('name', None)
 
     table.convert_unicode_to_bytestring(python3_only=True)
     data = table.as_array()

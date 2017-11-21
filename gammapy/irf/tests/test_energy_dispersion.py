@@ -143,5 +143,5 @@ class TestEnergyDispersion2D:
 
     def test_write(self):
         hdu = table_to_fits_table(self.edisp.to_table())
-        assert hdu.data['ETRUE_LO'][0].all() == self.edisp.data.axis('e_true').lo.value.all()
+        assert hdu.data['ENERG_LO'][0].all() == self.edisp.data.axis('e_true').lo.value.all()
         assert hdu.header['TUNIT1'] == self.edisp.data.axis('e_true').lo.unit

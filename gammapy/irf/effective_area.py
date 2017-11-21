@@ -565,13 +565,16 @@ class EffectiveAreaTable2D(object):
         plt.tight_layout()
 
     def to_table(self):
-        table = Table()
-        table['ENERG_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
-        table['ENERG_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
-        table['THETA_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
-        table['THETA_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
-        table['EFFAREA'] = [self.data.data.T]*self.data.data.unit
-        self.meta.update({'name':'EFFECTIVE AREA'})
-        table.meta = self.meta
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
+        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
+        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
+        table['EFFAREA'] = self.data.data.T[np.newaxis]
         return table
 
+    def to_fits(self, name='EFFECTIVE AREA'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)

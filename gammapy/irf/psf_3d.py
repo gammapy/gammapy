@@ -112,20 +112,20 @@ class PSF3D(object):
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        theta_lo = table['THETA_LO'].squeeze()
-        theta_hi = table['THETA_HI'].squeeze()
+        theta_lo = table['THETA_LO'].quantity[0]
+        theta_hi = table['THETA_HI'].quantity[0]
         offset = (theta_hi + theta_lo) / 2
         offset = Angle(offset, unit=table['THETA_LO'].unit)
 
-        energy_lo = table['ENERG_LO'].squeeze()
-        energy_hi = table['ENERG_HI'].squeeze()
+        energy_lo = table['ENERG_LO'].quantity[0]
+        energy_hi = table['ENERG_HI'].quantity[0]
         energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
         energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
 
-        rad_lo = Quantity(table['RAD_LO'].squeeze(), table['RAD_LO'].unit)
-        rad_hi = Quantity(table['RAD_HI'].squeeze(), table['RAD_HI'].unit)
+        rad_lo = Quantity(table['RAD_LO'].quantity[0], table['RAD_LO'].unit)
+        rad_hi = Quantity(table['RAD_HI'].quantity[0], table['RAD_HI'].unit)
 
-        psf_value = Quantity(table['RPSF'].squeeze(), table['RPSF'].unit)
+        psf_value = Quantity(table['RPSF'].quantity[0], table['RPSF'].unit)
 
         opts = {}
         try:

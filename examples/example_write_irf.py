@@ -69,4 +69,8 @@ hdu_edisp = table_to_fits_table(table_edisp)
 hdu_bkg = table_to_fits_table(table_bkg)
 prim_hdu = fits.PrimaryHDU()
 
+# Alternatively, HDU can be obtained directly:
+# hdu_aeff = aeff.to_fits()
+
+
 fits.HDUList([prim_hdu, hdu_aeff, hdu_edisp, hdu_bkg]).writeto('irf_test.fits')

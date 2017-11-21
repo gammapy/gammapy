@@ -10,6 +10,7 @@ from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.fits import energy_axis_to_ebounds, fits_table_to_table
+from ..utils.fits import fits_table_to_table, table_to_fits_table
 
 __all__ = [
     'EnergyDispersion',
@@ -666,14 +667,14 @@ class EnergyDispersion2D(object):
     @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`."""
-        e_lo = table['ETRUE_LO'].quantity.squeeze()
-        e_hi = table['ETRUE_HI'].quantity.squeeze()
-        o_lo = table['THETA_LO'].quantity.squeeze()
-        o_hi = table['THETA_HI'].quantity.squeeze()
-        m_lo = table['MIGRA_LO'].quantity.squeeze()
-        m_hi = table['MIGRA_HI'].quantity.squeeze()
+        e_lo = table['ETRUE_LO'].quantity[0]
+        e_hi = table['ETRUE_HI'].quantity[0]
+        o_lo = table['THETA_LO'].quantity[0]
+        o_hi = table['THETA_HI'].quantity[0]
+        m_lo = table['MIGRA_LO'].quantity[0]
+        m_hi = table['MIGRA_HI'].quantity[0]
 
-        matrix = table['MATRIX'].squeeze().transpose()
+        matrix = table['MATRIX'].quantity[0].transpose() ## TODO Why does this need to be transposed?
         return cls(e_true_lo=e_lo, e_true_hi=e_hi,
                    offset_lo=o_lo, offset_hi=o_hi,
                    migra_lo=m_lo, migra_hi=m_hi, data=matrix)
@@ -912,15 +913,18 @@ class EnergyDispersion2D(object):
         plt.tight_layout()
 
     def to_table(self):
-        #TODO : ETRUE or ENERG? See https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/edisp/index.html
-        table = Table()
-        table['ETRUE_LO'] = [self.data.axis('e_true').lo]*self.data.axis('e_true').unit
-        table['ETRUE_HI'] = [self.data.axis('e_true').hi]*self.data.axis('e_true').unit
-        table['MIGRA_LO'] = [self.data.axis('migra').hi]
-        table['MIGRA_HI'] = [self.data.axis('migra').hi]
-        table['THETA_LO'] = [self.data.axis('offset').lo]*self.data.axis('offset').unit
-        table['THETA_HI'] = [self.data.axis('offset').hi]*self.data.axis('offset').unit
-        table['MATRIX'] = [self.data.data.T]*self.data.data.unit
-        self.meta.update({'name':'ENERGY DISPERSION'})
-        table.meta = self.meta
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['ENERG_LO'] = self.data.axis('e_true').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('e_true').hi[np.newaxis]
+        table['MIGRA_LO'] = self.data.axis('migra').hi[np.newaxis]
+        table['MIGRA_HI'] = self.data.axis('migra').hi[np.newaxis]
+        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
+        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
+        table['MATRIX'] = self.data.data.T[np.newaxis]
         return table
+
+    def to_fits(self, name='ENERGY DISPERSION'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)

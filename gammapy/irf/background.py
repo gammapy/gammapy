@@ -6,7 +6,8 @@ from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-from ..utils.fits import fits_table_to_table
+from ..utils.fits import fits_table_to_table, table_to_fits_table
+
 import numpy as np
 __all__ = [
     'Background3D',
@@ -117,15 +118,18 @@ class Background3D(object):
         return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):
-        #TODO: BGD or BKG - see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html
-        table = Table()
-        table['DETX_LO'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
-        table['DETX_HI'] = [self.data.axis('detx').hi]*self.data.axis('detx').unit
-        table['DETY_LO'] = [self.data.axis('dety').lo]*self.data.axis('dety').unit
-        table['DETY_HI'] = [self.data.axis('dety').hi]*self.data.axis('dety').unit
-        table['ENERG_LO'] = [self.data.axis('energy').lo]*self.data.axis('energy').unit
-        table['ENERG_HI'] = [self.data.axis('energy').hi]*self.data.axis('energy').unit
-        table['BGD'] = [self.data.data]*self.data.data.unit
-        self.meta.update({'name':'BACKGROUND'})
-        table.meta = self.meta
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['DETX_LO'] = self.data.axis('detx').lo[np.newaxis]
+        table['DETX_HI'] = self.data.axis('detx').hi[np.newaxis]
+        table['DETY_LO'] = self.data.axis('dety').lo[np.newaxis]
+        table['DETY_HI'] = self.data.axis('dety').hi[np.newaxis]
+        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
+        table['BKG'] = self.data.data[np.newaxis]
         return table
+
+    def to_fits(self, name='BACKGROUND'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)
