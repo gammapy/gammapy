@@ -16,6 +16,10 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
+import re
+import nbformat
+from nbformat.v4 import new_markdown_cell
+from shutil import copytree, rmtree
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst import roles
@@ -96,3 +100,63 @@ def gammapy_sphinx_ext_activate():
     # Register our directives and roles with Sphinx
     register_directive('gp-extra-image', ExtraImage)
     roles.register_local_role('gp-extra-notebook', notebook_role)
+
+def modif_nb_links(folder, url_docs):
+    """
+    Modifies links in raw and sphinx formatted notebooks and so they
+    point to and from the same version of the documentation. Adds a box to the
+    sphinx formatted notebooks with info and link to the ipynb file.
+    """
+
+    DOWNLOAD_CELL = """
+<div class='admonition note'>
+[Download notebook](../_static/notebooks/nbfilename.ipynb)
+
+This is a *fixed-text* formatted version of a Jupyter notebook.
+
+You may download the whole HTML documentation for this version of gammapy
+using the link at the bottom of this page and execute the notebooks
+in your local desktop inside the `_static/notebooks/` folder.
+</div>"""
+
+    for filename in os.listdir(folder):
+        filepath = os.path.join(folder, filename)
+        if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
+            if folder=='notebooks':
+                strcell = DOWNLOAD_CELL.replace('nbfilename.ipynb', filename)
+                nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
+                nb.cells.insert(0, new_markdown_cell(strcell))
+                nbformat.write(nb, filepath)
+            with open(filepath, "r") as f:
+                txt = f.read()
+            if folder=='notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\1rst\2', txt, flags=re.M|re.I)
+            if folder=='_static/notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\/..\1html\2', txt, flags=re.M|re.I)
+            with open(filepath, "w") as f:
+                f.write(txt)
+
+def gammapy_sphinx_notebooks(setup_cfg):
+    """
+    Manages the processes for the building of sphinx formatted notebooks
+    """
+
+    url_docs = setup_cfg.get('url_docs')
+
+    # remove existing notebooks if rebuilding
+    if eval(setup_cfg.get('rebuild_notebooks')):
+        print('*** Cleaning notebooks')
+        rmtree('notebooks', ignore_errors=True)
+        rmtree('_static/notebooks', ignore_errors=True)
+
+    # copy and build notebooks if empty
+    if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
+        gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
+        if os.path.isdir(gammapy_extra_notebooks_folder):
+            ignorefiles = lambda d, files: [f for f in files
+                if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
+            print('*** Building sphinx formatted notebooks')
+            copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
+            copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+            modif_nb_links('notebooks', url_docs)
+            modif_nb_links('_static/notebooks', url_docs)

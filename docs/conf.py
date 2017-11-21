@@ -28,10 +28,6 @@
 import datetime
 import os
 import sys
-from shutil import copytree, rmtree
-import re
-import nbformat
-from nbformat.v4 import new_markdown_cell
 
 try:
     import astropy_helpers
@@ -197,60 +193,9 @@ if on_rtd:
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
-# ---
-# notebooks
-# make relative links
-DOWNLOAD_CELL = """
-<div class='admonition note'>
-[Download notebook](../_static/notebooks/nbfilename.ipynb)
-
-This is a *fixed-text* formatted version of a Jupyter notebook. """
-if on_rtd:
-    DOWNLOAD_CELL += """
-    You may download the whole HTML documentation for this version of gammapy
-    using the link at the bottom of this page and execute the notebooks
-    in your local desktop inside the `_static/notebooks/` folder.
-    """
-DOWNLOAD_CELL += """</div>"""
-
-url_docs = setup_cfg.get('url_docs')
-
-def modif_links(folder):
-    for filename in os.listdir(folder):
-        filepath = os.path.join(folder, filename)
-        if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
-            if folder=='notebooks':
-                strcell = DOWNLOAD_CELL.replace('nbfilename.ipynb', filename)
-                nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
-                nb.cells.insert(0, new_markdown_cell(strcell))
-                nbformat.write(nb, filepath)
-            with open(filepath, "r") as f:
-                txt = f.read()
-            if folder=='notebooks':
-                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\1rst\2', txt, flags=re.M|re.I)
-            if folder=='_static/notebooks':
-                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\/..\1html\2', txt, flags=re.M|re.I)
-            with open(filepath, "w") as f:
-                f.write(txt)
-
-# remove existing notebooks if rebuilding
-if eval(setup_cfg.get('rebuild_notebooks')):
-    rmtree('notebooks', ignore_errors=True)
-    rmtree('_static/notebooks', ignore_errors=True)
-
-# copy and build notebooks if empty
-if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
-    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
-    if os.path.isdir(gammapy_extra_notebooks_folder):
-        ignorefiles = lambda d, files: [f for f in files
-            if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
-        copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-        copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
-        os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')
-        modif_links('notebooks')
-        modif_links('_static/notebooks')
-
-# ---
+# integration of notebooks from gamapy-extra repo
+from gammapy.utils.docs import gammapy_sphinx_notebooks
+gammapy_sphinx_notebooks(setup_cfg)
 
 html_style = 'gammapy.css'
 
