@@ -19,5 +19,6 @@ dependencies:
   - sphinx
   - pyyaml
   - ipython
+  - pandoc
   - pip:
     - nbsphinx==0.2.17
