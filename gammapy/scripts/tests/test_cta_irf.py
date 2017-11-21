@@ -49,7 +49,7 @@ def test_point_like_perf():
     perf = CTAPerf.read(filename)
     perf.peek()
 
-
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_point_like_perf_bkg_reproj():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
