@@ -110,25 +110,31 @@ def modif_nb_links(folder, url_docs):
 
     DOWNLOAD_CELL = """
 <div class='admonition note'>
-[Download notebook](../_static/notebooks/{nb_filename})
-
 This is a *fixed-text* formatted version of a Jupyter notebook.
 
-You may download the whole HTML documentation for this version of gammapy
-using the link at the bottom of this page and execute the notebooks
-in your local desktop inside the `_static/notebooks/` folder.
+You can download for each version of *gammapy* a
+[HTMLZip pack](http://readthedocs.org/projects/gammapy/downloads/) containing
+the whole documentation and full collection of notebooks, so you can execute
+them in your local _static/notebooks/ folder. You can also contribute with
+your own notebooks in this
+[GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
+
+**Download source files:**
+[{nb_filename}](../_static/notebooks/{nb_filename}) |
+[{py_filename}](../_static/notebooks/{py_filename})
 </div>"""
 
     for filename in os.listdir(folder):
         filepath = os.path.join(folder, filename)
         if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
             if folder=='notebooks':
-                ctx = dict(nb_filename=filename)
+                py_filename = filename.replace('ipynb', 'py')
+                ctx = dict(nb_filename=filename, py_filename=py_filename)
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 txt = f.read()
             if folder=='notebooks':
                 txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\1rst\2', txt, flags=re.M|re.I)
@@ -156,8 +162,9 @@ def gammapy_sphinx_notebooks(setup_cfg):
         if os.path.isdir(gammapy_extra_notebooks_folder):
             ignorefiles = lambda d, files: [f for f in files
                 if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
-            print('*** Building sphinx formatted notebooks')
+            print('*** Converting notebooks to scripts')
             copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
             copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+            os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')
             modif_nb_links('notebooks', url_docs)
             modif_nb_links('_static/notebooks', url_docs)
