@@ -18,6 +18,7 @@ Here's some good resources with working examples:
 import os
 import re
 import nbformat
+from sphinx.util import logging
 from nbformat.v4 import new_markdown_cell
 from shutil import copytree, rmtree
 from docutils.parsers.rst.directives.images import Image
@@ -33,6 +34,7 @@ try:
 except KeyError:
     HAS_GP_EXTRA = False
 
+logger = logging.getLogger('__name__')
 
 class ExtraImage(Image):
     """Directive to add optional images from gammapy-extra"""
@@ -88,14 +90,15 @@ def make_link_node(rawtext, app, notebook, options):
 
 
 def gammapy_sphinx_ext_activate():
+
     if HAS_GP_EXTRA:
-        print('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
-        print('*** Nice!')
+        logger.info('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
+        logger.info('*** Nice!')
     else:
-        print('*** gammapy-extra *not* found.')
-        print('*** Set the GAMMAPY_EXTRA environment variable!')
-        print('*** Docs build will be incomplete.')
-        print('*** Notebook links will not be verified.')
+        logger.info('*** gammapy-extra *not* found.')
+        logger.info('*** Set the GAMMAPY_EXTRA environment variable!')
+        logger.info('*** Docs build will be incomplete.')
+        logger.info('*** Notebook links will not be verified.')
 
     # Register our directives and roles with Sphinx
     register_directive('gp-extra-image', ExtraImage)
@@ -121,6 +124,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{txt_filename})
+*(right-click and select "save as")*
 </div>"""
 
     for filename in os.listdir(folder):
@@ -157,11 +161,11 @@ def gammapy_sphinx_notebooks(setup_cfg):
     Manages the processes for the building of sphinx formatted notebooks
     """
 
-    url_docs = setup_cfg.get('url_docs')
+    url_docs = setup_cfg['url_docs']
 
     # remove existing notebooks if rebuilding
-    if bool(setup_cfg.get('clean_notebooks')):
-        print('*** Cleaning notebooks')
+    if bool(setup_cfg['clean_notebooks']):
+        logger.info('*** Cleaning notebooks')
         rmtree('notebooks', ignore_errors=True)
         rmtree('_static/notebooks', ignore_errors=True)
 
@@ -171,7 +175,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
         if os.path.isdir(gammapy_extra_notebooks_folder):
             ignorefiles = lambda d, files: [f for f in files
                 if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
-            print('*** Converting notebooks to scripts')
+            logger.info('*** Converting notebooks to scripts')
             copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
             copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
             os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')

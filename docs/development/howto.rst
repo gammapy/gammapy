@@ -535,7 +535,7 @@ the process of generating HTML docs. This triggers its conversion to *fixed-text
 Sphinx formatted documentation files and at the same time provides access to raw
 .ipynb Jupyter notebooks for the same version of the gammapy documentation. This
 behaviour may be modified in the  `setup.cfg` configuration file changing the
-value of `rebuild_notebooks` boolean.
+value of `clean_notebooks` boolean.
 
 Documentation guidelines
 ------------------------
