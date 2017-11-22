@@ -28,7 +28,6 @@
 import datetime
 import os
 import sys
-from distutils.dir_util import copy_tree
 
 try:
     import astropy_helpers
@@ -80,6 +79,7 @@ intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')
+exclude_patterns.append('_static')
 exclude_patterns.append('**.ipynb_checkpoints')
 
 
@@ -88,7 +88,8 @@ exclude_patterns.append('**.ipynb_checkpoints')
 extensions.append('nbsphinx')
 extensions.append('IPython.sphinxext.ipython_console_highlighting')
 extensions.append('sphinx.ext.mathjax')
-nbsphinx_execute = 'never'
+nbsphinx_execute = setup_cfg['execute_notebooks']
+
 # --
 
 # This is added to the end of RST files - a good place to put substitutions to
@@ -189,11 +190,9 @@ if on_rtd:
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
-# copy notebooks
-if os.environ['GAMMAPY_EXTRA']:
-    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
-    if os.path.isdir(gammapy_extra_notebooks_folder):
-        copy_tree(gammapy_extra_notebooks_folder, 'notebooks')
+# integration of notebooks from gamapy-extra repo
+from gammapy.utils.docs import gammapy_sphinx_notebooks
+gammapy_sphinx_notebooks(setup_cfg)
 
 html_style = 'gammapy.css'
 

@@ -41,7 +41,7 @@ To check if the Gammapy command line tools have been installed and are available
     $ gammapy-info --version
 
 The Gammapy tutorials use some example datasets that are stored in the ``gammapy-extra`` repository on Github.
-So please go follow the instructions at :ref:`gammapy-extra` to fetch those, then come back here.
+So please go follow the instructions at :ref:`gammapyextra` to fetch those, then come back here.
 
 To check if ``gammapy-extra`` is available and the ``GAMMAPY_EXTRA`` shell environment variable set, use this command::
 
@@ -157,4 +157,3 @@ If you'd like to continue with tutorials to learn Gammapy, go here: :ref:`tutori
 To learn about some specific functionality that could be useful for your work,
 start browsing the "Getting Started" section of Gammapy sub-package that
 might be of interest to you (e.g. `gammapy.data`, `gammapy.catalog`, `gammapy.spectrum`, ...).
-

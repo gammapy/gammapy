@@ -16,6 +16,11 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
+import re
+import nbformat
+from sphinx.util import logging
+from nbformat.v4 import new_markdown_cell
+from shutil import copytree, rmtree
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst import roles
@@ -29,6 +34,7 @@ try:
 except KeyError:
     HAS_GP_EXTRA = False
 
+logger = logging.getLogger('__name__')
 
 class ExtraImage(Image):
     """Directive to add optional images from gammapy-extra"""
@@ -84,15 +90,95 @@ def make_link_node(rawtext, app, notebook, options):
 
 
 def gammapy_sphinx_ext_activate():
+
     if HAS_GP_EXTRA:
-        print('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
-        print('*** Nice!')
+        logger.info('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
+        logger.info('*** Nice!')
     else:
-        print('*** gammapy-extra *not* found.')
-        print('*** Set the GAMMAPY_EXTRA environment variable!')
-        print('*** Docs build will be incomplete.')
-        print('*** Notebook links will not be verified.')
+        logger.info('*** gammapy-extra *not* found.')
+        logger.info('*** Set the GAMMAPY_EXTRA environment variable!')
+        logger.info('*** Docs build will be incomplete.')
+        logger.info('*** Notebook links will not be verified.')
 
     # Register our directives and roles with Sphinx
     register_directive('gp-extra-image', ExtraImage)
     roles.register_local_role('gp-extra-notebook', notebook_role)
+
+def modif_nb_links(folder, url_docs):
+    """
+    Modifies links in raw and sphinx formatted notebooks and so they
+    point to and from the same version of the documentation. Adds a box to the
+    sphinx formatted notebooks with info and link to the ipynb file.
+    """
+
+    DOWNLOAD_CELL = """
+<div class='admonition note'>
+**This is a fixed-text formatted version of a Jupyter notebook.**
+
+You can download for each version of *gammapy* a
+[HTMLZip pack](http://readthedocs.org/projects/gammapy/downloads/) containing
+the whole HTML documentation and full collection of notebooks, so you can execute
+them in your local `_static/notebooks/` folder. You can also contribute with your
+own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
+
+**Source files:**
+[{nb_filename}](../_static/notebooks/{nb_filename}) |
+[{py_filename}](../_static/notebooks/{txt_filename})
+*(right-click and select "save as")*
+</div>"""
+
+    for filename in os.listdir(folder):
+        filepath = os.path.join(folder, filename)
+        if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
+            if folder=='notebooks':
+                py_filename = filename.replace('ipynb', 'py')
+                txt_filename = filename.replace('ipynb', 'txt')
+                ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename)
+                strcell = DOWNLOAD_CELL.format(**ctx)
+                nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
+                nb.cells.insert(0, new_markdown_cell(strcell))
+                nbformat.write(nb, filepath)
+            with open(filepath) as f:
+                txt = f.read()
+            if folder=='notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\1rst\2', txt, flags=re.M|re.I)
+            if folder=='_static/notebooks':
+                txt = re.sub(url_docs+'(.*?)html(\)|#)',r'..\/..\1html\2', txt, flags=re.M|re.I)
+            with open(filepath, "w") as f:
+                f.write(txt)
+
+def replace_extension(folder):
+    """
+    Replaces extension of .py files so they can be served for download
+    """
+
+    for filename in os.listdir(folder):
+        txtfilename = filename.replace('.py', '.txt')
+        os.rename(os.path.join(folder, filename), os.path.join(folder, txtfilename))
+
+def gammapy_sphinx_notebooks(setup_cfg):
+    """
+    Manages the processes for the building of sphinx formatted notebooks
+    """
+
+    url_docs = setup_cfg['url_docs']
+
+    # remove existing notebooks if rebuilding
+    if bool(setup_cfg['clean_notebooks']):
+        logger.info('*** Cleaning notebooks')
+        rmtree('notebooks', ignore_errors=True)
+        rmtree('_static/notebooks', ignore_errors=True)
+
+    # copy and build notebooks if empty
+    if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
+        gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
+        if os.path.isdir(gammapy_extra_notebooks_folder):
+            ignorefiles = lambda d, files: [f for f in files
+                if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png']
+            logger.info('*** Converting notebooks to scripts')
+            copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
+            copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+            os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')
+            replace_extension('_static/notebooks')
+            modif_nb_links('notebooks', url_docs)
+            modif_nb_links('_static/notebooks', url_docs)
