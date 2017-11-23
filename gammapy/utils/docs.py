@@ -141,6 +141,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
                 ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename)
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
+                nb.metadata['nbsphinx'] = {'orphan':bool('true')}
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
             with open(filepath) as f:
