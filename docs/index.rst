@@ -54,7 +54,7 @@ Tutorial notebooks
 .. toctree::
   :maxdepth: 1
 
-  notebooks
+  tutorials
 
 .. _gammapy_toolbox:
 
