@@ -115,7 +115,11 @@ def modif_nb_links(folder, url_docs):
 <div class='admonition note'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-You can download for each version of *gammapy* a
+Try online on Binder
+
+[![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/master?filepath={nb_filename})
+
+Alternatively you can download for each version of Gammapy a
 [HTMLZip pack](http://readthedocs.org/projects/gammapy/downloads/) containing
 the whole HTML documentation and full collection of notebooks, so you can execute
 them in your local `_static/notebooks/` folder. You can also contribute with your
@@ -125,7 +129,8 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{txt_filename})
 *(right-click and select "save as")*
-</div>"""
+</div>
+"""
 
     for filename in os.listdir(folder):
         filepath = os.path.join(folder, filename)
