@@ -30,7 +30,7 @@ You can also download **for each version of Gammapy** a
 containing the whole documentation and full collection of notebooks, so you can execute
 them in your local desktop inside the `_static/notebooks/` folder.
 
-Alternatively you may execute the collection of notebooks on-line
+Alternatively you may execute latest version of the collection of notebooks on-line
 accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
 
 .. image:: http://mybinder.org/badge.svg

@@ -964,6 +964,18 @@ Constructor parameters
 
 TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
 
+Different versions of notebooks in Binder
+-----------------------------------------
+
+Jupyter notebooks may be accessed and executed on-line in the
+`Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space. Each *fixed-text* sphinx
+formatted notebook present in the documentation has its own link pointing to its specific space in
+Gammapy Binder. Since notebooks are evolving with Gammapy functionalities and documentation, it is
+possible to link the different versions of the notebooks stored in GitHub repository ``gammapy-extra``
+to the same versions built in Gammapy Binder. For this purpose just edit the variable **git_commit**
+in ``setup.cfg`` file and provide the branch, tag or commit of GitHub repository ``gammapy-extra``
+that will be used to access the same version of the notebook in Gammapy Binder.
+
 Link to a notebook in gammapy-extra from the docs
 -------------------------------------------------
 
