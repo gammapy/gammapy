@@ -99,11 +99,9 @@ class PSFKing(object):
 
         energy_lo = table['ENERG_LO'].quantity[0]
         energy_hi = table['ENERG_HI'].quantity[0]
-        energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
-        energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
 
-        gamma = Quantity(table['GAMMA'].quantity[0], table['GAMMA'].unit)
-        sigma = Quantity(table['SIGMA'].quantity[0], table['SIGMA'].unit)
+        gamma = table['GAMMA'].quantity[0]
+        sigma = table['SIGMA'].quantity[0]
 
         opts = {}
         try:

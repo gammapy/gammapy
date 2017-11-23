@@ -102,7 +102,7 @@ class TestEnergyDispersion2D:
         energy = self.edisp.data.axis('e_true').nodes[e_node]
         migra = self.edisp.data.axis('migra').nodes[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
-        desired = self.edisp.data.data[e_node, m_node, off_node]
+        desired = self.edisp.data.data[off_node, m_node, e_node]
         assert_allclose(actual, desired, rtol=1e-06)
         assert_allclose(actual, 0.09388659149, rtol=1e-06)
 
@@ -115,9 +115,10 @@ class TestEnergyDispersion2D:
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
-        desired = (self.edisp.data.axis('e_true').nbins,
+        desired = (self.edisp.data.axis('offset').nbins,
                    self.edisp.data.axis('migra').nbins,
-                   self.edisp.data.axis('offset').nbins)
+                   self.edisp.data.axis('e_true').nbins
+                   )
         assert_equal(actual, desired)
 
     def test_get_response(self):
@@ -142,6 +143,20 @@ class TestEnergyDispersion2D:
         self.edisp.peek()
 
     def test_write(self):
-        hdu = table_to_fits_table(self.edisp.to_table())
-        assert hdu.data['ENERG_LO'][0].all() == self.edisp.data.axis('e_true').lo.value.all()
-        assert hdu.header['TUNIT1'] == self.edisp.data.axis('e_true').lo.unit
+        energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
+        energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
+        offset_lo = np.linspace(0, 1, 4)[:-1] * u.deg
+        offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
+        migra_lo = np.linspace(0, 3, 4)[:-1]
+        migra_hi = np.linspace(0, 3, 4)[1:]
+
+        data = np.ones(shape=(len(offset_lo), len(migra_lo), len(energy_lo))) * u.cm * u.cm
+
+        edisp = EnergyDispersion2D(e_true_lo=energy_lo, e_true_hi=energy_hi,
+                                   migra_lo=migra_lo, migra_hi=migra_hi,
+                                   offset_lo=offset_lo, offset_hi=offset_hi,
+                                   data=data)
+
+        hdu = table_to_fits_table(edisp.to_table())
+        assert_equal(hdu.data['ENERG_LO'][0], edisp.data.axis('e_true').lo.value)
+        assert hdu.header['TUNIT1'] == edisp.data.axis('e_true').lo.unit

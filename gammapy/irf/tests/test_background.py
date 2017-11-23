@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import astropy.units as u
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D
 from ...utils.fits import table_to_fits_table
@@ -46,5 +46,5 @@ def test_background_3d_evalutate(bkg_3d):
 @requires_data('gammapy-extra')
 def test_background3d_write(bkg_3d):
     hdu =  table_to_fits_table(bkg_3d.to_table())
-    assert hdu.data['DETX_LO'][0].all() == bkg_3d.data.axis('detx').lo.value.all()
+    assert_equal(hdu.data['DETX_LO'][0], bkg_3d.data.axis('detx').lo.value)
     assert hdu.header['TUNIT1'] == bkg_3d.data.axis('detx').lo.unit

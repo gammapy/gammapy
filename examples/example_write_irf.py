@@ -33,8 +33,8 @@ detx_hi = detx[1:]
 dety = np.linspace(-6,6,11) * u.deg
 dety_lo = dety[:-1]
 dety_hi = dety[1:]
-aeff_data = np.ones(shape=(10, 3))*u.cm*u.cm
-edisp_data = np.ones(shape=(10, 3, 3))
+aeff_data = np.ones(shape=(3,10))*u.cm*u.cm
+edisp_data = np.ones(shape=(3, 3, 10))
 bkg_data = np.ones(shape=(10,10,10)) / u.MeV / u.s / u.sr
 
 
@@ -64,13 +64,14 @@ table_edisp.meta.update(provenance)
 table_bkg.meta.update(provenance)
 
 # Convert to fits HDU objects
-hdu_aeff = table_to_fits_table(table_aeff)
-hdu_edisp = table_to_fits_table(table_edisp)
-hdu_bkg = table_to_fits_table(table_bkg)
+hdu_aeff = table_to_fits_table(table_aeff, name='EFFECTIVE AREA')
+hdu_edisp = table_to_fits_table(table_edisp, name='ENERGY DISPERSION')
+hdu_bkg = table_to_fits_table(table_bkg, name='BACKGROUND')
 prim_hdu = fits.PrimaryHDU()
 
 # Alternatively, HDU can be obtained directly:
-# hdu_aeff = aeff.to_fits()
+# hdu_aeff = aeff.to_fits(name='EFFECTIVE AREA')
+# ...
 
 
 fits.HDUList([prim_hdu, hdu_aeff, hdu_edisp, hdu_bkg]).writeto('irf_test.fits')

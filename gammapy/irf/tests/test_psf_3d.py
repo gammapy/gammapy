@@ -21,13 +21,13 @@ class TestPSF3D:
 
     def test_read(self):
         table = self.table
-        energy_lo = Energy(table["ENERG_LO"].quantity[0], unit=table["ENERG_LO"].unit)
-        energy_hi = Energy(table["ENERG_HI"].quantity[0], unit=table["ENERG_HI"].unit)
-        offset_lo = Angle(table["THETA_LO"].quantity[0], unit=table["THETA_LO"].unit)
-        offset_hi = Angle(table["THETA_HI"].quantity[0], unit=table["THETA_HI"].unit)
-        rad_lo = Angle(table["RAD_LO"].quantity[0], unit=table["RAD_LO"].unit)
-        rad_hi = Angle(table["RAD_HI"].quantity[0], unit=table["RAD_HI"].unit)
-        psf_value = Quantity(table["RPSF"].quantity[0], unit=table["RPSF"].unit)
+        energy_lo = table["ENERG_LO"].quantity[0]
+        energy_hi = table["ENERG_HI"].quantity[0]
+        offset_lo = table["THETA_LO"].quantity[0]
+        offset_hi = table["THETA_HI"].quantity[0]
+        rad_lo = table["RAD_LO"].quantity[0]
+        rad_hi = table["RAD_HI"].quantity[0]
+        psf_value = table["RPSF"].quantity[0]
 
         assert_quantity_allclose(self.psf.energy_lo, energy_lo)
         assert_quantity_allclose(self.psf.energy_hi, energy_hi)

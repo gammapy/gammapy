@@ -119,13 +119,11 @@ class PSF3D(object):
 
         energy_lo = table['ENERG_LO'].quantity[0]
         energy_hi = table['ENERG_HI'].quantity[0]
-        energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
-        energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
 
-        rad_lo = Quantity(table['RAD_LO'].quantity[0], table['RAD_LO'].unit)
-        rad_hi = Quantity(table['RAD_HI'].quantity[0], table['RAD_HI'].unit)
+        rad_lo = table['RAD_LO'].quantity[0]
+        rad_hi = table['RAD_HI'].quantity[0]
 
-        psf_value = Quantity(table['RPSF'].quantity[0], table['RPSF'].unit)
+        psf_value = table['RPSF'].quantity[0]
 
         opts = {}
         try:
@@ -238,7 +236,7 @@ class PSF3D(object):
         theta = theta or Angle(0, 'deg')
         energies = self.energy_logcenter()
         rad = self.rad_center()
-        psf_value = self.evaluate(offset=theta).squeeze().T
+        psf_value = self.evaluate(offset=theta).quantity[0].T
 
         return EnergyDependentTablePSF(
             energy=energies, rad=rad,
