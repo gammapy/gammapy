@@ -148,28 +148,6 @@ these old versions and to find workarounds for their missing features or bugs.
 Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
 weren't available for testing on travis-ci.
 
-.. _development-wipe_readthedocs:
-
-Wipe readthedocs
-----------------
-
-After things (classes, methods, functions) are removed, the Sphinx API docs often show these old items.
-If you notice this, you have to "wipe" the Gammapy install on Readthedocs and start a fresh build.
-If you don't have permissions on Readthedocs, file a Github issue or mention this on the mailing list.
-
-The wipe procedure is described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__.
-
-The steps are:
-
-* log in `here <https://readthedocs.org/accounts/login/>`__
-* hit this URL and click the "wipe" button to wipe the existing install:
-
-   https://readthedocs.org/wipe/gammapy/latest/
-* go `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
-* go `here <https://readthedocs.org/builds/gammapy/>`__ and check if the build succeeded
-* re-check the output docs page where you had previously seen something outdated.
-
-
 .. _development-skip_tests:
 
 Skip unit tests for some Astropy versions
@@ -506,148 +484,6 @@ This pattern was inspired by the way
 We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'global-rng'``,
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
-
-Sphinx docs build
------------------
-
-Generating the HTML docs for Gammapy is straight-forward::
-
-    python setup.py build_docs
-    open docs/_build/html/index.html
-
-Generating the PDF docs is more complex.
-This should work::
-
-    python setup.py build_docs -b latex
-    cd docs/_build/latex
-    makeindex -s python.ist gammapy.idx
-    pdflatex -interaction=nonstopmode gammapy.tex
-    open gammapy.pdf
-
-You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
-
-The PDF is also generated on Read the Docs and available online here:
-https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
-
-Jupyter notebooks present in the `gammapy-extra` repository are by default copied
-to the `docs/notebooks` and `docs/_static/notebooks` tree-folder structure during
-the process of generating HTML docs. This triggers its conversion to *fixed-text*
-Sphinx formatted documentation files and at the same time provides access to raw
-.ipynb Jupyter notebooks for the same version of the gammapy documentation. This
-behaviour may be modified in the  `setup.cfg` configuration file changing the
-value of `clean_notebooks` boolean.
-
-Documentation guidelines
-------------------------
-
-Like almost all Python projects, the Gammapy documentation is written in a format called
-`restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
-which are based on the `Numpy docstring standard`_,
-which is what most scientific Python packages use.
-
-.. _restructured text (RST) : http://sphinx-doc.org/rest.html
-.. _Sphinx: http://sphinx-doc.org/
-.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-
-There's a few details that are not easy to figure out by browsing the Numpy or Astropy
-documentation guidelines, or that we actually do differently in Gammapy.
-These are listed here so that Gammapy developers have a reference.
-
-Usually the quickest way to figure out how something should be done is to browse the Astropy
-or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
-or search the Numpy or Astropy documentation guidelines mentioned above.
-If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
-pull request you're working on on Github, or send an email to the Gammapy mailing list.
-
-
-Functions or class methods that return a single object
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-For functions or class methods that return a single object, following the
-Numpy docstring standard and adding a *Returns* section usually means
-that you duplicate the one-line description and repeat the function name as
-return variable name.
-See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
-as examples in the Astropy codebase. Here's a simple example:
-
-.. code-block:: python
-
-    def circle_area(radius):
-        """Circle area.
-
-        Parameters
-        ----------
-        radius : `~astropy.units.Quantity`
-            Circle radius
-
-        Returns
-        -------
-        area : `~astropy.units.Quantity`
-            Circle area
-        """
-        return 3.14 * (radius ** 2)
-
-In these cases, the following shorter format omitting the *Returns* section is recommended:
-
-.. code-block:: python
-
-    def circle_area(radius):
-        """Circle area (`~astropy.units.Quantity`).
-
-        Parameters
-        ----------
-        radius : `~astropy.units.Quantity`
-            Circle radius
-        """
-        return 3.14 * (radius ** 2)
-
-Usually the parameter description doesn't fit on the one line, so it's
-recommended to always keep this in the *Parameters* section.
-
-This is just a recommendation, e.g. for `gammapy.cube.SkyCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.cube.SkyCube.flux` we
-decided to stick with the more verbose format, because the return type and units
-didn't fit on the first line.
-
-A common case where the short format is appropriate are class properties,
-because they always return a single object.
-As an example see `gammapy.data.EventList.radec`, which is reproduced here:
-
-.. code-block:: python
-
-    @property
-    def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-        """
-        lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
-
-
-Class attributes
-++++++++++++++++
-
-Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.cube.SkyCube` as an example.
-Attributes are listed in an *Attributes* section because I've listed them in a class-level
-docstring attributes section as recommended `here`__.
-Properties are listed in separate *Attributes summary* and *Attributes Documentation*
-sections, which is confusing to users ("what's the difference between attributes and properties?").
-
-.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
-
-One solution is to always use properties, but that can get very verbose if we have to write
-so many getters and setters. I don't have a solution for this yet ... for now I'll go read
-`this`__ and meditate.
-
-.. __: https://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
-
-TODO: make a decision on this and describe the issue / solution here.
-
-Constructor parameters
-++++++++++++++++++++++
-
-TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
 
 Logging
 -------
@@ -987,20 +823,175 @@ Note that there is also the command ``make test-notebooks`` which is used for
 continuous integration on travis CI. It is not recommended to use this locally,
 since it overwrides your gammapy installation (see issue 727).
 
+Sphinx docs build
+-----------------
+
+Generating the HTML docs for Gammapy is straight-forward::
+
+    python setup.py build_docs
+    open docs/_build/html/index.html
+
+Generating the PDF docs is more complex.
+This should work::
+
+    python setup.py build_docs -b latex
+    cd docs/_build/latex
+    makeindex -s python.ist gammapy.idx
+    pdflatex -interaction=nonstopmode gammapy.tex
+    open gammapy.pdf
+
+You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
+
+The PDF is also generated on Read the Docs and available online here:
+https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
+
+Jupyter notebooks present in the ``gammapy-extra`` repository are by default copied
+to the ``docs/notebooks`` and ``docs/_static/notebooks`` tree-folder structure during
+the process of generating HTML docs. This triggers its conversion to *fixed-text*
+Sphinx formatted documentation files and at the same time provides access to raw
+.ipynb Jupyter notebooks for the same version of the gammapy documentation. This
+behaviour may be modified in the  `setup.cfg` configuration file changing the
+value of `clean_notebooks` boolean.
+
+Documentation guidelines
+------------------------
+
+Like almost all Python projects, the Gammapy documentation is written in a format called
+`restructured text (RST)`_ and built using `Sphinx`_.
+We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+which are based on the `Numpy docstring standard`_,
+which is what most scientific Python packages use.
+
+.. _restructured text (RST) : http://sphinx-doc.org/rest.html
+.. _Sphinx: http://sphinx-doc.org/
+.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+
+There's a few details that are not easy to figure out by browsing the Numpy or Astropy
+documentation guidelines, or that we actually do differently in Gammapy.
+These are listed here so that Gammapy developers have a reference.
+
+Usually the quickest way to figure out how something should be done is to browse the Astropy
+or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
+or search the Numpy or Astropy documentation guidelines mentioned above.
+If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
+pull request you're working on on Github, or send an email to the Gammapy mailing list.
+
+Functions or class methods that return a single object
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+For functions or class methods that return a single object, following the
+Numpy docstring standard and adding a *Returns* section usually means
+that you duplicate the one-line description and repeat the function name as
+return variable name.
+See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
+as examples in the Astropy codebase. Here's a simple example:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+
+        Returns
+        -------
+        area : `~astropy.units.Quantity`
+            Circle area
+        """
+        return 3.14 * (radius ** 2)
+
+In these cases, the following shorter format omitting the *Returns* section is recommended:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area (`~astropy.units.Quantity`).
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+        """
+        return 3.14 * (radius ** 2)
+
+Usually the parameter description doesn't fit on the one line, so it's
+recommended to always keep this in the *Parameters* section.
+
+This is just a recommendation, e.g. for `gammapy.cube.SkyCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.cube.SkyCube.flux` we
+decided to stick with the more verbose format, because the return type and units
+didn't fit on the first line.
+
+A common case where the short format is appropriate are class properties,
+because they always return a single object.
+As an example see `gammapy.data.EventList.radec`, which is reproduced here:
+
+.. code-block:: python
+
+    @property
+    def radec(self):
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """
+        lon, lat = self['RA'], self['DEC']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+
+Class attributes
+++++++++++++++++
+
+Class attributes (data members) and properties are currently a bit of a mess,
+see `~gammapy.cube.SkyCube` as an example.
+Attributes are listed in an *Attributes* section because I've listed them in a class-level
+docstring attributes section as recommended `here`__.
+Properties are listed in separate *Attributes summary* and *Attributes Documentation*
+sections, which is confusing to users ("what's the difference between attributes and properties?").
+
+.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
+
+One solution is to always use properties, but that can get very verbose if we have to write
+so many getters and setters. I don't have a solution for this yet ... for now I'll go read
+`this`__ and meditate.
+
+.. __: https://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
+
+TODO: make a decision on this and describe the issue / solution here.
+
+Constructor parameters
+++++++++++++++++++++++
+
+TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
+
 Link to a notebook in gammapy-extra from the docs
 -------------------------------------------------
 
-From docstrings and high-level docs in Gammapy, you can use the ``gp-extra-notebook``
-Sphinx role to link to notebooks in ``gammapy-extra/notebooks`` on NBViewer, by using the filename.
+Jupyter notebooks stored in ``gammpy-extra`` are copied to thew ``notebooks`` folder
+during the process of Sphinx building documentation. They are converted to HTML files
+using `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides
+a source parser for .ipynb files.
+
+From docstrings and high-level docs in Gammapy, you can link to these *fixed-text*
+formatted version of the notebooks **providing the relative path to** ``notebooks`` **folder and .html file extension**:
+
+Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
+
+Sphinx directive to generate that link::
+
+    `First steps with Gammapy <../notebooks/first_steps.html>`__
+
+If you want to link to notebooks rendered on the external
+**NBViewer platform** you can use the ``gp-extra-notebook``
+Sphinx role providing **only the filename**.
 
 Example: :gp-extra-notebook:`image_analysis`
 
 Sphinx directive to generate that link::
 
-    :gp-extra-notebook:`image_analysis`
+      :gp-extra-notebook:`image_analysis`
 
-
-More info on sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
+More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------
@@ -1017,3 +1008,24 @@ instead of the usual Sphinx ``image`` directive like this:
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+.. _development-wipe_readthedocs:
+
+Wipe readthedocs
+----------------
+
+After things (classes, methods, functions) are removed, the Sphinx API docs often show these old items.
+If you notice this, you have to "wipe" the Gammapy install on Readthedocs and start a fresh build.
+If you don't have permissions on Readthedocs, file a Github issue or mention this on the mailing list.
+
+The wipe procedure is described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__.
+
+The steps are:
+
+* log in `here <https://readthedocs.org/accounts/login/>`__
+* hit this URL and click the "wipe" button to wipe the existing install:
+
+   https://readthedocs.org/wipe/gammapy/latest/
+* go `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
+* go `here <https://readthedocs.org/builds/gammapy/>`__ and check if the build succeeded
+* re-check the output docs page where you had previously seen something outdated.
