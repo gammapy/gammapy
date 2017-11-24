@@ -227,7 +227,7 @@ class SpectrumEnergyGroups(UserList):
 
         raise IndexError('No group found with energy: {}'.format(energy))
 
-    def find_list_idx_range(self, energy_range):
+    def find_list_idx_range(self, energy_min, energy_max):
         """TODO: document.
 
         * Min index is the bin that contains ``energy_range.min``
@@ -235,24 +235,9 @@ class SpectrumEnergyGroups(UserList):
         * This way we don't loose any bins or count them twice.
         * Containment is checked for each bin as [min, max)
         """
-        idx_min = self.find_list_idx(energy=energy_range.min)
-        idx_max = self.find_list_idx(energy=energy_range.max) - 1
+        idx_min = self.find_list_idx(energy=energy_min)
+        idx_max = self.find_list_idx(energy=energy_max) - 1
         return idx_min, idx_max
-
-    def clip_to_valid_range(self, list_idx):
-        """TODO: document"""
-        if self[list_idx].bin_type == 'underflow':
-            list_idx += 1
-
-        if self[list_idx].bin_type == 'overflow':
-            list_idx -= 1
-
-        if list_idx < 0:
-            raise IndexError('list_idx {} < 0'.format(list_idx))
-        if list_idx >= len(self):
-            raise IndexError('list_idx {} > len(self) {}'.format(list_idx))
-
-        return list_idx
 
     def make_and_replace_merged_group(self, list_idx_min, list_idx_max, bin_type):
         """Merge energy groups and update indexes"""
@@ -290,49 +275,51 @@ class SpectrumEnergyGroups(UserList):
             energy_max=right_group.energy_max,
         )
 
-    def make_underflow_group(self, energy):
-        """Modify list in-place to apply a min energy cut."""
-        idx_min = 0
-        idx_max = self.find_list_idx(energy)
-        self.make_and_replace_merged_group(idx_min, idx_max, bin_type='underflow')
+    # TODO: choose one of the apply energy min / max methods!
 
-    def apply_energy_max(self, energy):
+    def apply_energy_min_old(self, energy):
+        """Modify list in-place to apply a min energy cut."""
+        idx_max = self.find_list_idx(energy)
+        self.make_and_replace_merged_group(0, idx_max, 'underflow')
+
+    def apply_energy_min(self, energy):
+        t = self.to_group_table()
+        idx_max = np.where(t['energy_min'] < energy)[0][-1]
+        self.make_and_replace_merged_group(0, idx_max, 'underflow')
+
+    def apply_energy_max_old(self, energy):
         """Modify list in-place to apply a max energy cut."""
         idx_min = self.find_list_idx(energy)
         idx_max = len(self) - 1
-        self.make_and_replace_merged_group(idx_min, idx_max, bin_type='overflow')
+        self.make_and_replace_merged_group(idx_min, idx_max, 'overflow')
 
-    # TODO: get rid of this method? Just use min / max separately?
-    def apply_energy_min_and_max(self, ebounds):
-        # self.apply_energy_min(ebounds[0])
-        # self.apply_energy_max(ebounds[-1])
-        # return
-
+    def apply_energy_max(self, energy):
         t = self.to_group_table()
-        idx_u = np.where(t['energy_min'] < ebounds[0])[0]
-        for idx in idx_u:
-            self[idx].bin_type = 'underflow'
-        self.make_and_replace_merged_group(
-            list_idx_min=idx_u[0],
-            list_idx_max=idx_u[-1],
-            bin_type='underflow',
-        )
+        idx_min = np.where(t['energy_max'] > energy)[0][0]
+        self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
 
-        t = self.to_group_table()
-        idx_o = np.where(t['energy_max'] > ebounds[-1])[0]
-        for idx in idx_o:
-            self[idx].bin_type = 'overflow'
-        self.make_and_replace_merged_group(
-            list_idx_min=idx_o[0],
-            list_idx_max=idx_o[-1],
-            bin_type='overflow',
-        )
+    def clip_to_valid_range(self, list_idx):
+        """TODO: document"""
+        if self[list_idx].bin_type == 'underflow':
+            list_idx += 1
+
+        if self[list_idx].bin_type == 'overflow':
+            list_idx -= 1
+
+        if list_idx < 0:
+            raise IndexError('list_idx {} < 0'.format(list_idx))
+        if list_idx >= len(self):
+            raise IndexError('list_idx {} > len(self)'.format(list_idx))
+
+        return list_idx
 
     def apply_energy_binning(self, ebounds):
         """Apply an energy binning."""
 
-        for energy_range in EnergyRange.list_from_ebounds(ebounds):
-            list_idx_min, list_idx_max = self.find_list_idx_range(energy_range)
+        for idx in range(len(ebounds) - 1):
+            energy_min = ebounds[idx]
+            energy_max = ebounds[idx + 1]
+            list_idx_min, list_idx_max = self.find_list_idx_range(energy_min, energy_max)
 
             # Be sure to leave underflow and overflow bins alone
             # TODO: this is pretty ugly ... make it better somehow!
@@ -439,7 +426,8 @@ class SpectrumEnergyGroupMaker(object):
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
-        self.groups.apply_energy_min_and_max(ebounds=ebounds)
+        self.groups.apply_energy_min(energy=ebounds[0])
+        self.groups.apply_energy_max(energy=ebounds[-1])
         self.groups.apply_energy_binning(ebounds=ebounds)
 
     def compute_groups_adaptive(self, min_signif, rebin_factor=2):
@@ -494,46 +482,3 @@ class SpectrumEnergyGroupMaker(object):
         # self.groups.apply_energy_binning(binning)
 
         return binning
-
-
-class EnergyRange(object):
-    """Energy range.
-
-    This is just a little helper class.
-    We could have used length-2 tuple or Quantity for this.
-
-    TODO: Merge with `~gammapy.utils.energy.EnergyBounds`
-    """
-
-    def __init__(self, min, max):
-        self.min = min
-        self.max = max
-
-    def __contains__(self, energy):
-        if (self.min <= energy) and (energy < self.max):
-            return True
-        else:
-            return False
-
-    def __repr__(self):
-        fmt = 'EnergyRange(min={min}, max={max})'
-        return fmt.format(min=self.min, max=self.max)
-
-    @classmethod
-    def list_from_ebounds(cls, ebounds):
-        """Create list of ``EnergyRange`` from array of energy bounds.
-
-        Examples
-        --------
-        >>> import astropy.units as u
-        >>> from gammapy.spectrum.energy_group import EnergyRange
-        >>> ebounds = [0.3, 1, 3, 10] * u.TeV
-        >>> EnergyRange.list_from_ebounds(ebounds)
-        [EnergyRange(min=0.3 TeV, max=1.0 TeV),
-         EnergyRange(min=1.0 TeV, max=3.0 TeV),
-         EnergyRange(min=3.0 TeV, max=10.0 TeV)]
-        """
-        return [
-            EnergyRange(min=emin, max=emax)
-            for (emin, emax) in zip(ebounds[:-1], ebounds[1:])
-        ]

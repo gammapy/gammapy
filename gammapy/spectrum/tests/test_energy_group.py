@@ -130,8 +130,8 @@ class TestSpectrumEnergyGroups:
         assert groups == expected
 
     def test_apply_energy_min_and_max(self, groups):
-        ebounds = [210, 260] * u.TeV
-        groups.apply_energy_min_and_max(ebounds)
+        groups.apply_energy_min(210 * u.TeV)
+        groups.apply_energy_max(260 * u.TeV)
 
         expected = SpectrumEnergyGroups([
             SpectrumEnergyGroup(0, 10, 20, 'underflow', 100 * u.TeV, 210 * u.TeV),
