@@ -26,19 +26,19 @@ class TestIRFWrite:
         self.detx_hi = np.linspace(-6, 6, 11)[1:] * u.deg
         self.dety_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.dety_hi = np.linspace(-6, 6, 11)[1:] * u.deg
-        self.aeff_data = np.random.rand(3, 10) * u.cm * u.cm
-        self.edisp_data = np.random.rand(3, 3, 10)
+        self.aeff_data = np.random.rand(10, 3) * u.cm * u.cm
+        self.edisp_data = np.random.rand(10, 3, 3)
         self.bkg_data = np.random.rand(10, 10, 10) / u.MeV / u.s / u.sr
-        self.aeff = EffectiveAreaTable2D(self.energy_lo, self.energy_hi,
-                                         self.offset_lo, self.offset_hi,
+        self.aeff = EffectiveAreaTable2D(energy_lo=self.energy_lo, energy_hi=self.energy_hi,
+                                         offset_lo=self.offset_lo, offset_hi=self.offset_hi,
                                          data=self.aeff_data)
-        self.edisp = EnergyDispersion2D(self.energy_lo, self.energy_hi,
-                                        self.migra_lo, self.migra_hi,
-                                        self.offset_lo, self.offset_hi,
+        self.edisp = EnergyDispersion2D(e_true_lo=self.energy_lo, e_true_hi=self.energy_hi,
+                                        migra_lo=self.migra_lo, migra_hi=self.migra_hi,
+                                        offset_lo=self.offset_lo, offset_hi=self.offset_hi,
                                         data=self.edisp_data)
-        self.bkg = Background3D(self.energy_lo, self.energy_hi,
-                                self.detx_lo, self.detx_hi,
-                                self.dety_lo, self.dety_hi,
+        self.bkg = Background3D(energy_lo=self.energy_lo, energy_hi=self.energy_hi,
+                                detx_lo=self.detx_lo, detx_hi=self.detx_hi,
+                                dety_lo=self.dety_lo, dety_hi=self.dety_hi,
                                 data=self.bkg_data)
 
     def test_array_to_container(self):
@@ -51,8 +51,8 @@ class TestIRFWrite:
         assert_equal(self.edisp.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
         assert_equal(self.bkg.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
 
-        assert_equal(self.aeff.to_table()['EFFAREA'].quantity[0], self.aeff_data)
-        assert_equal(self.edisp.to_table()['MATRIX'].quantity[0], self.edisp_data)
+        assert_equal(self.aeff.to_table()['EFFAREA'].quantity[0].T, self.aeff_data)
+        assert_equal(self.edisp.to_table()['MATRIX'].quantity[0].T, self.edisp_data)
         assert_equal(self.bkg.to_table()['BKG'].quantity[0], self.bkg_data)
 
         assert self.aeff.to_table()['EFFAREA'].quantity[0].unit == self.aeff_data.unit
@@ -70,15 +70,15 @@ class TestIRFWrite:
         assert self.bkg.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
         assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE1']][0]
                      * u.Unit(self.aeff.to_fits().header['TUNIT1']),
-                     self.aeff.data.axes[1].lo)
-        assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE5']][0]
+                     self.aeff.data.axes[0].lo)
+        assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE5']][0].T
                      * u.Unit(self.aeff.to_fits().header['TUNIT5']),
                      self.aeff.data.data)
 
         assert_equal(self.edisp.to_fits().data[self.edisp.to_fits().header['TTYPE1']][0]
                      * u.Unit(self.edisp.to_fits().header['TUNIT1']),
-                     self.edisp.data.axes[2].lo)
-        assert_equal(self.edisp.to_fits().data[self.edisp.to_fits().header['TTYPE7']][0]
+                     self.edisp.data.axes[0].lo)
+        assert_equal(self.edisp.to_fits().data[self.edisp.to_fits().header['TTYPE7']][0].T
                      * u.Unit(self.edisp.to_fits().header['TUNIT7']),
                      self.edisp.data.data)
 

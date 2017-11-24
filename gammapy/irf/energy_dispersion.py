@@ -490,7 +490,7 @@ class EnergyDispersion(object):
         x = e_true.value
         y = e_reco.value
         z = self.pdf_matrix
-        caxes = ax.pcolormesh(x, y, z, **kwargs)
+        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if show_energy is not None:
             ener_val = Quantity(show_energy).to(self.reco_energy.unit).value
@@ -547,12 +547,12 @@ class EnergyDispersion2D(object):
 
     Parameters
     ----------
-    offset_lo, offset_hi : `~astropy.coordinates.Angle`
-        Field of view offset axis binning
-    migra_lo, migra_hi : `~numpy.ndarray`
-        Energy migration axis binning
     e_true_lo, e_true_hi : `~astropy.units.Quantity`
         True energy axis binning
+    migra_lo, migra_hi : `~numpy.ndarray`
+        Energy migration axis binning
+    offset_lo, offset_hi : `~astropy.coordinates.Angle`
+        Field of view offset axis binning
     data : `~numpy.ndarray`
         Energy dispersion probability density
 
@@ -567,9 +567,9 @@ class EnergyDispersion2D(object):
     >>> print(edisp2d)
     EnergyDispersion2D
     NDDataArray summary info
-    offset         : size =     6, min =  0.125 deg, max =  2.500 deg
-    migra          : size =   100, min =  0.051, max = 10.051
     e_true         : size =    15, min =  0.125 TeV, max = 80.000 TeV
+    migra          : size =   100, min =  0.051, max = 10.051
+    offset         : size =     6, min =  0.125 deg, max =  2.500 deg
     Data           : size =  9000, min =  0.000, max =  3.405
 
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
@@ -597,12 +597,12 @@ class EnergyDispersion2D(object):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
-            BinnedDataAxis(offset_lo, offset_hi,
-                           interpolation_mode='linear', name='offset'),
+            BinnedDataAxis(e_true_lo, e_true_hi,
+                           interpolation_mode='log', name='e_true'),
             BinnedDataAxis(migra_lo, migra_hi,
                            interpolation_mode='linear', name='migra'),
-            BinnedDataAxis(e_true_lo, e_true_hi,
-                           interpolation_mode='log', name='e_true')
+            BinnedDataAxis(offset_lo, offset_hi,
+                           interpolation_mode='linear', name='offset')
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
@@ -659,7 +659,7 @@ class EnergyDispersion2D(object):
 
         pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
 
-        pdf_array = np.where(pdf_array > pdf_threshold, pdf_array, 0).T
+        pdf_array = np.where(pdf_array > pdf_threshold, pdf_array, 0)
 
         return cls(e_true[:-1], e_true[1:], migra[:-1], migra[1:],
                    offset[:-1], offset[1:], pdf_array)
@@ -680,7 +680,7 @@ class EnergyDispersion2D(object):
         m_lo = table['MIGRA_LO'].quantity[0]
         m_hi = table['MIGRA_HI'].quantity[0]
 
-        matrix = table['MATRIX'].quantity[0]
+        matrix = table['MATRIX'].quantity[0].transpose() ## TODO Why does this need to be transposed?
         return cls(e_true_lo=e_lo, e_true_hi=e_hi,
                    offset_lo=o_lo, offset_hi=o_hi,
                    migra_lo=m_lo, migra_hi=m_hi, data=matrix)
@@ -888,7 +888,7 @@ class EnergyDispersion2D(object):
         y = migra.value
         z = self.data.evaluate(offset=offset, e_true=e_true, migra=migra)
 
-        caxes = ax.pcolormesh(x, y, z, **kwargs)
+        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if add_cbar:
             label = 'Probability density (A.U.)'
@@ -928,7 +928,7 @@ class EnergyDispersion2D(object):
         table['MIGRA_HI'] = self.data.axis('migra').hi[np.newaxis]
         table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
         table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
-        table['MATRIX'] = self.data.data[np.newaxis]
+        table['MATRIX'] = self.data.data.T[np.newaxis]
         return table
 
     def to_fits(self, name='ENERGY DISPERSION'):

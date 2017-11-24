@@ -283,7 +283,10 @@ def table_to_fits_table(table, name=None):
     # read name and drop it from the meta information, otherwise
     # it would be stored as a header keyword in the BinTableHDU
     if name is None:
-        name = table.meta.pop('EXTNAME', None)
+        if 'EXTNAME' in table.meta:
+            name = table.meta.pop('EXTNAME', None)
+        elif 'name' in table.meta:
+            name = table.meta.pop('name', None)
 
     table.convert_unicode_to_bytestring(python3_only=True)
     data = table.as_array()

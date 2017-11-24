@@ -22,7 +22,7 @@ def aeff():
 def test_EffectiveAreaTable2D(aeff):
     assert aeff.data.axis('energy').nbins == 73
     assert aeff.data.axis('offset').nbins == 6
-    assert aeff.data.data.shape == (6, 73)
+    assert aeff.data.data.shape == (73, 6)
 
     assert aeff.data.axis('energy').unit == 'TeV'
     assert aeff.data.axis('offset').unit == 'deg'
@@ -127,7 +127,7 @@ def test_EffectiveAreaTable2d_write():
     offset = np.linspace(0, 1, 4) * u.deg
     offset_lo = offset[:-1]
     offset_hi = offset[1:]
-    data = np.ones(shape=(len(offset_lo), len(energy_lo))) * u.cm * u.cm
+    data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
 
     aeff = EffectiveAreaTable2D(energy_lo=energy_lo,energy_hi=energy_hi,
                                 offset_lo=offset_lo, offset_hi=offset_hi,

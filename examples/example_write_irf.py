@@ -33,8 +33,8 @@ detx_hi = detx[1:]
 dety = np.linspace(-6,6,11) * u.deg
 dety_lo = dety[:-1]
 dety_hi = dety[1:]
-aeff_data = np.ones(shape=(3,10))*u.cm*u.cm
-edisp_data = np.ones(shape=(3, 3, 10))
+aeff_data = np.ones(shape=(10,3))*u.cm*u.cm
+edisp_data = np.ones(shape=(10, 3, 3))
 bkg_data = np.ones(shape=(10,10,10)) / u.MeV / u.s / u.sr
 
 

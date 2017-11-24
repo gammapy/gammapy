@@ -315,10 +315,10 @@ class EffectiveAreaTable2D(object):
 
     Parameters
     -----------
-    offset_lo, offset_hi : `~astropy.units.Quantity`
-        Field of view offset angle.
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
+    offset_lo, offset_hi : `~astropy.units.Quantity`
+        Field of view offset angle.
     data : `~astropy.units.Quantity`
         Effective area
 
@@ -332,8 +332,8 @@ class EffectiveAreaTable2D(object):
     >>> print(aeff)
     EffectiveAreaTable2D
     NDDataArray summary info
-    offset         : size =     6, min =  0.500 deg, max =  5.500 deg
     energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
+    offset         : size =     6, min =  0.500 deg, max =  5.500 deg
     Data           : size =   126, min =  0.000 m2, max = 4263992.500 m2
 
 
@@ -344,13 +344,13 @@ class EffectiveAreaTable2D(object):
     >>> import numpy as np
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
-    >>> data = np.ones(shape=(3,10)) * u.cm * u.cm
+    >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
     >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1], 
     >>>                             offset_hi=offset[1:], data= data)
     >>> print(aeff)
     Data array summary info
-    offset         : size =     3, min =  0.167 deg, max =  0.833 deg
-    energy         : size =    10, min =  1.122 TeV, max =  8.913 TeV
+    energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
+    offset         : size =     4, min =  0.000 deg, max =  1.000 deg
     Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
@@ -363,11 +363,11 @@ class EffectiveAreaTable2D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                offset_lo, offset_hi,
-                interpolation_mode='linear', name='offset'),
-            BinnedDataAxis(
                 energy_lo, energy_hi,
-                interpolation_mode='log', name='energy')
+                interpolation_mode='log', name='energy'),
+            BinnedDataAxis(
+                offset_lo, offset_hi,
+                interpolation_mode='linear', name='offset')
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
@@ -396,7 +396,7 @@ class EffectiveAreaTable2D(object):
             energy_hi=table['ENERG_HI'].quantity[0],
             offset_lo=table['THETA_LO'].quantity[0],
             offset_hi=table['THETA_HI'].quantity[0],
-            data=table['EFFAREA'].quantity[0],
+            data=table['EFFAREA'].quantity[0].transpose(),
             meta=table.meta,
         )
 
@@ -540,7 +540,7 @@ class EffectiveAreaTable2D(object):
         kwargs.setdefault('vmin', vmin)
         kwargs.setdefault('vmax', vmax)
 
-        caxes = ax.pcolormesh(energy.value, offset.value, aeff.value, **kwargs)
+        caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
         ax.set_xscale('log')
         ax.set_ylabel('Offset ({})'.format(offset.unit))
@@ -572,7 +572,7 @@ class EffectiveAreaTable2D(object):
         table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
         table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
         table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
-        table['EFFAREA'] = self.data.data[np.newaxis]
+        table['EFFAREA'] = self.data.data.T[np.newaxis]
         return table
 
     def to_fits(self, name='EFFECTIVE AREA'):

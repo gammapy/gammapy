@@ -102,7 +102,7 @@ class TestEnergyDispersion2D:
         energy = self.edisp.data.axis('e_true').nodes[e_node]
         migra = self.edisp.data.axis('migra').nodes[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
-        desired = self.edisp.data.data[off_node, m_node, e_node]
+        desired = self.edisp.data.data[e_node, m_node, off_node]
         assert_allclose(actual, desired, rtol=1e-06)
         assert_allclose(actual, 0.09388659149, rtol=1e-06)
 
@@ -115,10 +115,9 @@ class TestEnergyDispersion2D:
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
-        desired = (self.edisp.data.axis('offset').nbins,
+        desired = (self.edisp.data.axis('e_true').nbins,
                    self.edisp.data.axis('migra').nbins,
-                   self.edisp.data.axis('e_true').nbins
-                   )
+                   self.edisp.data.axis('offset').nbins)
         assert_equal(actual, desired)
 
     def test_get_response(self):
@@ -150,7 +149,7 @@ class TestEnergyDispersion2D:
         migra_lo = np.linspace(0, 3, 4)[:-1]
         migra_hi = np.linspace(0, 3, 4)[1:]
 
-        data = np.ones(shape=(len(offset_lo), len(migra_lo), len(energy_lo))) * u.cm * u.cm
+        data = np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
 
         edisp = EnergyDispersion2D(e_true_lo=energy_lo, e_true_hi=energy_hi,
                                    migra_lo=migra_lo, migra_hi=migra_hi,
