@@ -11,7 +11,7 @@ from ...catalog.fermi import SourceCatalog3FGL
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.modeling import ParameterList
 from ...spectrum import SpectrumResult, SpectrumFit
-from ...spectrum.models import PowerLaw, SpectralModel
+from ...spectrum.models import PowerLaw, SpectralModel, ExponentialCutoffPowerLaw
 from ..flux_point import FluxPoints
 from ..flux_point import FluxPointProfiles
 from ..flux_point import FluxPointFitter
@@ -154,7 +154,7 @@ def test_compute_flux_points_dnde_exp(method):
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_dependency('scipy')
-@pytest.mark.parametrize('config', ['pl'])
+@pytest.mark.parametrize('config', ['pl', 'ecpl'])
 def test_flux_points(config):
     if config == 'pl':
         config = dict(
@@ -172,6 +172,24 @@ def test_flux_points(config):
             dnde_ul=3.7998e-11 * u.Unit('cm-2 s-1 TeV-1'),
             res=-0.1126,
             res_err=0.1536,
+        )
+    elif config == 'ecpl':
+        config = dict(
+            model=ExponentialCutoffPowerLaw(
+                index=Quantity(2, ''),
+                amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
+                reference=Quantity(1, 'TeV'),
+                lambda_= Quantity(0.1, 'TeV-1')
+            ),
+            obs=obs(),
+            seg=seg(obs()),
+            dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_errp=5.0050e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde_ul=3.7998e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            res=-0.057955,
+            res_err=0.1634,
         )
 
     tester = FluxPointTester(config)
