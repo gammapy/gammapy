@@ -92,18 +92,16 @@ class PSFKing(object):
         table : `~astropy.table.Table`
             Table King PSF info.
         """
-        offset_lo = table['THETA_LO'].squeeze()
-        offset_hi = table['THETA_HI'].squeeze()
+        offset_lo = table['THETA_LO'].quantity[0]
+        offset_hi = table['THETA_HI'].quantity[0]
         offset = (offset_hi + offset_lo) / 2
         offset = Angle(offset, unit=table['THETA_LO'].unit)
 
-        energy_lo = table['ENERG_LO'].squeeze()
-        energy_hi = table['ENERG_HI'].squeeze()
-        energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
-        energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
+        energy_lo = table['ENERG_LO'].quantity[0]
+        energy_hi = table['ENERG_HI'].quantity[0]
 
-        gamma = Quantity(table['GAMMA'].squeeze(), table['GAMMA'].unit)
-        sigma = Quantity(table['SIGMA'].squeeze(), table['SIGMA'].unit)
+        gamma = table['GAMMA'].quantity[0]
+        sigma = table['SIGMA'].quantity[0]
 
         opts = {}
         try:

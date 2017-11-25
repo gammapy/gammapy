@@ -201,7 +201,7 @@ class EffectiveAreaTable(object):
         """
         table = Table()
         table.meta = OrderedDict([
-            ('name', 'SPECRESP'),
+            ('EXTNAME', 'SPECRESP'),
             ('hduclass', 'OGIP'),
             ('hduclas1', 'RESPONSE'),
             ('hduclas2', 'SPECRESP'),
@@ -344,13 +344,14 @@ class EffectiveAreaTable2D(object):
     >>> import numpy as np
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
-    >>> data = np.ones(shape=(10,4)) * u.cm * u.cm
-    >>> aeff = EffectiveAreaTable2D(energy=energy, offset=offset, data= data)
+    >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
+    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1], 
+    >>>                             offset_hi=offset[1:], data= data)
     >>> print(aeff)
     Data array summary info
     energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
-    Data           : size =    40, min =  1.000 cm2, max =  1.000 cm2
+    Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
@@ -376,14 +377,6 @@ class EffectiveAreaTable2D(object):
         ss = self.__class__.__name__
         ss += '\n{}'.format(self.data)
         return ss
-
-    @property
-    def energy(self):
-        return self.data.axis('energy')
-
-    @property
-    def offset(self):
-        return self.data.axis('offset')
 
     @property
     def low_threshold(self):
@@ -432,7 +425,7 @@ class EffectiveAreaTable2D(object):
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.energy.bins
+            energy = self.data.axis('energy').bins
 
         energy = EnergyBounds(energy)
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
@@ -471,7 +464,7 @@ class EffectiveAreaTable2D(object):
             offset = np.linspace(off_min, off_max, 4) * self.data.axis('offset').unit
 
         if energy is None:
-            energy = self.energy.nodes
+            energy = self.data.axis('energy').nodes
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
@@ -479,7 +472,7 @@ class EffectiveAreaTable2D(object):
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_xlabel('Energy [{}]'.format(self.data.axis('energy').unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc='upper left')
@@ -508,8 +501,8 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.energy.nodes[[0, -1]].value)
-            energy = np.logspace(e_min, e_max, 4) * self.energy.unit
+            e_min, e_max = np.log10(self.data.axis('energy').nodes[[0, -1]].value)
+            energy = np.logspace(e_min, e_max, 4) * self.data.axis('energy').unit
 
         if offset is None:
             off_lo, off_hi = self.data.axis('offset').nodes[[0, -1]].to('deg').value
@@ -570,3 +563,18 @@ class EffectiveAreaTable2D(object):
         self.plot_energy_dependence(ax=axes[0])
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
+        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
+        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
+        table['EFFAREA'] = self.data.data.T[np.newaxis]
+        return table
+
+    def to_fits(self, name='EFFECTIVE AREA'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)

@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-from ..utils.fits import fits_table_to_table
+from ..utils.fits import fits_table_to_table, table_to_fits_table
 
+import numpy as np
 __all__ = [
     'Background3D',
 ]
@@ -114,3 +116,20 @@ class Background3D(object):
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, hdu=hdu)
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['DETX_LO'] = self.data.axis('detx').lo[np.newaxis]
+        table['DETX_HI'] = self.data.axis('detx').hi[np.newaxis]
+        table['DETY_LO'] = self.data.axis('dety').lo[np.newaxis]
+        table['DETY_HI'] = self.data.axis('dety').hi[np.newaxis]
+        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
+        table['BKG'] = self.data.data[np.newaxis]
+        return table
+
+    def to_fits(self, name='BACKGROUND'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)

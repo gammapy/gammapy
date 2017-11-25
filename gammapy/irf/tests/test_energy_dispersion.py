@@ -8,6 +8,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
+from ...utils.fits import table_to_fits_table
 
 
 @requires_dependency('scipy')
@@ -97,9 +98,9 @@ class TestEnergyDispersion2D:
         e_node = 12
         off_node = 3
         m_node = 5
-        offset = self.edisp.offset.nodes[off_node]
-        energy = self.edisp.e_true.nodes[e_node]
-        migra = self.edisp.migra.nodes[m_node]
+        offset = self.edisp.data.axis('offset').nodes[off_node]
+        energy = self.edisp.data.axis('e_true').nodes[e_node]
+        migra = self.edisp.data.axis('migra').nodes[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
         desired = self.edisp.data.data[e_node, m_node, off_node]
         assert_allclose(actual, desired, rtol=1e-06)
@@ -114,9 +115,9 @@ class TestEnergyDispersion2D:
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
-        desired = (self.edisp.e_true.nbins,
-                   self.edisp.migra.nbins,
-                   self.edisp.offset.nbins)
+        desired = (self.edisp.data.axis('e_true').nbins,
+                   self.edisp.data.axis('migra').nbins,
+                   self.edisp.data.axis('offset').nbins)
         assert_equal(actual, desired)
 
     def test_get_response(self):
@@ -139,3 +140,22 @@ class TestEnergyDispersion2D:
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.edisp.peek()
+
+    def test_write(self):
+        energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
+        energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
+        offset_lo = np.linspace(0, 1, 4)[:-1] * u.deg
+        offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
+        migra_lo = np.linspace(0, 3, 4)[:-1]
+        migra_hi = np.linspace(0, 3, 4)[1:]
+
+        data = np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
+
+        edisp = EnergyDispersion2D(e_true_lo=energy_lo, e_true_hi=energy_hi,
+                                   migra_lo=migra_lo, migra_hi=migra_hi,
+                                   offset_lo=offset_lo, offset_hi=offset_hi,
+                                   data=data)
+
+        hdu = table_to_fits_table(edisp.to_table())
+        assert_equal(hdu.data['ENERG_LO'][0], edisp.data.axis('e_true').lo.value)
+        assert hdu.header['TUNIT1'] == edisp.data.axis('e_true').lo.unit

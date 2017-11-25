@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
+from ...utils.fits import table_to_fits_table
 
 
 @pytest.fixture(scope='session')
@@ -19,11 +20,11 @@ def aeff():
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_EffectiveAreaTable2D(aeff):
-    assert aeff.energy.nbins == 73
+    assert aeff.data.axis('energy').nbins == 73
     assert aeff.data.axis('offset').nbins == 6
     assert aeff.data.data.shape == (73, 6)
 
-    assert aeff.energy.unit == 'TeV'
+    assert aeff.data.axis('energy').unit == 'TeV'
     assert aeff.data.axis('offset').unit == 'deg'
     assert aeff.data.data.unit == 'm2'
 
@@ -77,7 +78,7 @@ def test_EffectiveAreaTable(tmpdir, aeff):
 
     test_aeff = 0.6 * arf.max_area
     node_above = np.where(arf.data.data > test_aeff)[0][0]
-    energy = arf.energy
+    energy = arf.data.axis('energy')
     ener_above = energy.nodes[node_above]
     ener_below = energy.nodes[node_above - 1]
     test_ener = arf.find_energy(test_aeff)
@@ -117,3 +118,20 @@ def test_EffectiveAreaTable_from_parametrization():
     assert area.data.data.unit == area_ref.unit
 
     # TODO: Use this to test interpolation behaviour etc.
+
+
+def test_EffectiveAreaTable2d_write():
+    energy = np.logspace(0, 1, 11) * u.TeV
+    energy_lo = energy[:-1]
+    energy_hi = energy[1:]
+    offset = np.linspace(0, 1, 4) * u.deg
+    offset_lo = offset[:-1]
+    offset_hi = offset[1:]
+    data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
+
+    aeff = EffectiveAreaTable2D(energy_lo=energy_lo,energy_hi=energy_hi,
+                                offset_lo=offset_lo, offset_hi=offset_hi,
+                                data=data)
+    hdu = table_to_fits_table(aeff.to_table())
+    assert_equal(hdu.data['ENERG_LO'][0], aeff.data.axis('energy').lo.value)
+    assert hdu.header['TUNIT1'] == aeff.data.axis('energy').lo.unit

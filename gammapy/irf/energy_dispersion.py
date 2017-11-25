@@ -10,6 +10,7 @@ from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.fits import energy_axis_to_ebounds, fits_table_to_table
+from ..utils.fits import fits_table_to_table, table_to_fits_table
 
 __all__ = [
     'EnergyDispersion',
@@ -592,7 +593,7 @@ class EnergyDispersion2D(object):
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, data, interp_kwargs=None):
+                 offset_hi, data, interp_kwargs=None, meta=None,):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
@@ -605,26 +606,12 @@ class EnergyDispersion2D(object):
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
+        self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n{}'.format(self.data)
         return ss
-
-    @property
-    def e_true(self):
-        """True energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('e_true')
-
-    @property
-    def migra(self):
-        """Energy migration axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('migra')
-
-    @property
-    def offset(self):
-        """Field of view offset axis (`~gammapy.utils.nddata.BinnedDataAxis`)."""
-        return self.data.axis('offset')
 
     @classmethod
     def from_gauss(cls, e_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
@@ -680,14 +667,20 @@ class EnergyDispersion2D(object):
     @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`."""
-        e_lo = table['ETRUE_LO'].quantity.squeeze()
-        e_hi = table['ETRUE_HI'].quantity.squeeze()
-        o_lo = table['THETA_LO'].quantity.squeeze()
-        o_hi = table['THETA_HI'].quantity.squeeze()
-        m_lo = table['MIGRA_LO'].quantity.squeeze()
-        m_hi = table['MIGRA_HI'].quantity.squeeze()
+        if 'ENERG_LO' in table.colnames:
+            e_lo = table['ENERG_LO'].quantity[0]
+            e_hi = table['ENERG_HI'].quantity[0]
+        elif 'ETRUE_LO' in table.colnames:
+            e_lo = table['ETRUE_LO'].quantity[0]
+            e_hi = table['ETRUE_HI'].quantity[0]
+        else:
+            raise ValueError('Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"')
+        o_lo = table['THETA_LO'].quantity[0]
+        o_hi = table['THETA_HI'].quantity[0]
+        m_lo = table['MIGRA_LO'].quantity[0]
+        m_hi = table['MIGRA_HI'].quantity[0]
 
-        matrix = table['MATRIX'].squeeze().transpose()
+        matrix = table['MATRIX'].quantity[0].transpose() ## TODO Why does this need to be transposed?
         return cls(e_true_lo=e_lo, e_true_hi=e_hi,
                    offset_lo=o_lo, offset_hi=o_hi,
                    migra_lo=m_lo, migra_hi=m_hi, data=matrix)
@@ -733,8 +726,8 @@ class EnergyDispersion2D(object):
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.e_true.bins if e_true is None else e_true
-        e_reco = self.e_true.bins if e_reco is None else e_reco
+        e_true = self.data.axis('e_true').bins if e_true is None else e_true
+        e_reco = self.data.axis('e_true').bins if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
@@ -779,8 +772,8 @@ class EnergyDispersion2D(object):
         # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
             e_reco = EnergyBounds.from_lower_and_upper_bounds(
-                self.migra.lo * e_true, self.migra.hi * e_true)
-            migra = self.migra.nodes
+                self.data.axis('migra').lo * e_true, self.data.axis('migra').hi * e_true)
+            migra = self.data.axis('migra').nodes
         # Translate given e_reco binning to migra at bin center
         else:
             e_reco = EnergyBounds(e_reco)
@@ -791,8 +784,8 @@ class EnergyDispersion2D(object):
         migra_e_reco = e_reco / e_true
 
         # Define a vector of migration with mig_step step
-        mrec_min = self.migra.lo[0]
-        mrec_max = self.migra.hi[-1]
+        mrec_min = self.data.axis('migra').lo[0]
+        mrec_max = self.data.axis('migra').hi[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
         # Compute energy dispersion probability dP/dm for each element of migration array
@@ -844,7 +837,7 @@ class EnergyDispersion2D(object):
             e_true = Energy([0.1, 1, 10], 'TeV')
         else:
             e_true = np.atleast_1d(Energy(e_true))
-        migra = self.migra.nodes if migra is None else migra
+        migra = self.data.axis('migra').nodes if migra is None else migra
 
         for ener in e_true:
             for off in offset:
@@ -888,8 +881,8 @@ class EnergyDispersion2D(object):
         if offset is None:
             offset = Angle([1], 'deg')
 
-        e_true = self.e_true.bins
-        migra = self.migra.bins
+        e_true = self.data.axis('e_true').bins
+        migra = self.data.axis('migra').bins
 
         x = e_true.value
         y = migra.value
@@ -924,3 +917,20 @@ class EnergyDispersion2D(object):
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`."""
+        meta = self.meta.copy()
+        table = Table(meta=meta)
+        table['ENERG_LO'] = self.data.axis('e_true').lo[np.newaxis]
+        table['ENERG_HI'] = self.data.axis('e_true').hi[np.newaxis]
+        table['MIGRA_LO'] = self.data.axis('migra').hi[np.newaxis]
+        table['MIGRA_HI'] = self.data.axis('migra').hi[np.newaxis]
+        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
+        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
+        table['MATRIX'] = self.data.data.T[np.newaxis]
+        return table
+
+    def to_fits(self, name='ENERGY DISPERSION'):
+        """Convert to `~astropy.io.fits.BinTable`."""
+        return table_to_fits_table(self.to_table(), name)
