@@ -741,7 +741,8 @@ class FluxPointEstimator(object):
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
-            return 1E-12 * result * u.Unit(fit.model.parameters['amplitude'].unit)
+            fit.model.parameters['amplitude'].value = result * 1E-12
+            return fit.model(fit.model.parameters['reference'].quantity)
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
