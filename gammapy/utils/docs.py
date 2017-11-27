@@ -104,7 +104,7 @@ def gammapy_sphinx_ext_activate():
     register_directive('gp-extra-image', ExtraImage)
     roles.register_local_role('gp-extra-notebook', notebook_role)
 
-def modif_nb_links(folder, url_docs):
+def modif_nb_links(folder, url_docs, git_commit):
     """
     Modifies links in raw and sphinx formatted notebooks and so they
     point to and from the same version of the documentation. Adds a box to the
@@ -115,7 +115,11 @@ def modif_nb_links(folder, url_docs):
 <div class='admonition note'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-You can download for each version of *gammapy* a
+Try online on Binder
+
+[![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})
+
+Alternatively you can download for each version of Gammapy a
 [HTMLZip pack](http://readthedocs.org/projects/gammapy/downloads/) containing
 the whole HTML documentation and full collection of notebooks, so you can execute
 them in your local `_static/notebooks/` folder. You can also contribute with your
@@ -125,7 +129,8 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{txt_filename})
 *(right-click and select "save as")*
-</div>"""
+</div>
+"""
 
     for filename in os.listdir(folder):
         filepath = os.path.join(folder, filename)
@@ -133,9 +138,11 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
             if folder=='notebooks':
                 py_filename = filename.replace('ipynb', 'py')
                 txt_filename = filename.replace('ipynb', 'txt')
-                ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename)
+                ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename,
+                           git_commit=git_commit)
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
+                nb.metadata['nbsphinx'] = {'orphan':bool('true')}
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
             with open(filepath) as f:
@@ -162,6 +169,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
     """
 
     url_docs = setup_cfg['url_docs']
+    git_commit = setup_cfg['git_commit']
 
     # remove existing notebooks if rebuilding
     if bool(setup_cfg['clean_notebooks']):
@@ -180,5 +188,5 @@ def gammapy_sphinx_notebooks(setup_cfg):
             copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
             os.system('jupyter nbconvert --to script _static/notebooks/*.ipynb')
             replace_extension('_static/notebooks')
-            modif_nb_links('notebooks', url_docs)
-            modif_nb_links('_static/notebooks', url_docs)
+            modif_nb_links('notebooks', url_docs, git_commit)
+            modif_nb_links('_static/notebooks', url_docs, git_commit)

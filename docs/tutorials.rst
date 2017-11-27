@@ -25,10 +25,16 @@ install Gammapy and get the ``gammapy-extra`` repository. This is
 described in `Gammapy tutorial
 setup <notebooks/tutorial_setup.html>`__.
 
-You can also download for each version of *gammapy* a
+You can also download **for each version of Gammapy** a
 `HTMLZip pack <http://readthedocs.org/projects/gammapy/downloads/>`__
 containing the whole documentation and full collection of notebooks, so you can execute
 them in your local desktop inside the `_static/notebooks/` folder.
+
+Alternatively you may execute latest version of the collection of notebooks on-line
+accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
+
+.. image:: http://mybinder.org/badge.svg
+    :target: http://mybinder.org/repo/gammapy/gammapy-extra
 
 The basics
 ----------
@@ -127,15 +133,3 @@ Please help make these better, or write new, better ones!
 -  `Diffuse model computation <notebooks/diffuse_model_computation.html>`__ (diffuse model computation) | *diffuse_model_computation.ipynb*
 -  `Fermi Vela model <notebooks/fermi_vela_model.html>`__ (Fermi Vela model) | *fermi_vela_model.ipynb*
 -  `Simulating and analysing sources and diffuse emission <notebooks/source_diffuse_estimation.html>`__ | *source_diffuse_estimation.ipynb*
-
-List of notebooks
-~~~~~~~~~~~~~~~~~~
-
-Here's a complete list of all notebooks. Note that some are for experts and debugging.
-All end-user notebooks are listed above grouped by topic.
-
-.. toctree::
-   :titlesonly:
-   :glob:
-
-   notebooks/*
