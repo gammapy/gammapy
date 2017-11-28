@@ -618,11 +618,14 @@ class FluxPointEstimator(object):
 
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
+
         model = self.compute_approx_model(
             global_model=self.model,
-            energy_range=energy_group.energy_range,
+            energy_group=energy_group,
         )
-        energy_ref = self.compute_energy_ref(energy_group)
+
+        # Put at log center of the bin
+        energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
 
         return self.fit_point(
             model=model,
@@ -630,11 +633,8 @@ class FluxPointEstimator(object):
             energy_ref=energy_ref,
         )
 
-    def compute_energy_ref(self, energy_group):
-        return energy_group.energy_range.log_center
-
     @staticmethod
-    def compute_approx_model(global_model, energy_range):
+    def compute_approx_model(global_model, energy_group):
         """
         Compute approximate model, to be used in the energy bin.
         TODO: At the moment just the global model with fixed parameters is
@@ -782,14 +782,16 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
+        energy_min = energy_group.energy_min
+        energy_max = energy_group.energy_max
+
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
         fit = SpectrumFit(self.obs, model)
-        erange = energy_group.energy_range
 
         # TODO: Notice channels contained in energy_group
-        fit.fit_range = erange.min, erange.max
+        fit.fit_range = energy_min, energy_max
 
         log.debug(
             'Calling Sherpa fit for flux point '
@@ -802,8 +804,6 @@ class FluxPointEstimator(object):
         # First result contain correct model
         res = fit.result[0]
 
-        e_max = energy_group.energy_range.max
-        e_min = energy_group.energy_range.min
         dnde, dnde_err = res.model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(fit, best_fit=res)
 
@@ -813,8 +813,8 @@ class FluxPointEstimator(object):
 
         return OrderedDict([
             ('e_ref', energy_ref),
-            ('e_min', e_min),
-            ('e_max', e_max),
+            ('e_min', energy_min),
+            ('e_max', energy_max),
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),

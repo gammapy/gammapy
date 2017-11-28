@@ -41,5 +41,5 @@ def test_spectrum_analysis_iact(tmpdir):
     print(flux_points.table)
 
     actual = flux_points.table['dnde'].quantity[0]
-    desired = 7.208219780210792e-12 * u.Unit('cm-2 s-1 TeV-1')
+    desired = 7.987394752616973e-12 * u.Unit('cm-2 s-1 TeV-1')
     assert_quantity_allclose(actual, desired)
