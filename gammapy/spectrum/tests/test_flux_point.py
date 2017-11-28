@@ -188,8 +188,8 @@ def test_flux_points(config):
                 reference=Quantity(1, 'TeV'),
                 lambda_= Quantity(0.1, 'TeV-1')
             ),
-            obs=obs(),
-            seg=seg(obs()),
+            obs=obs,
+            seg=seg,
             dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
             dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
             dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
