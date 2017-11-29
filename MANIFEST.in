@@ -1,7 +1,7 @@
 include README.rst
 include LONG_DESCRIPTION.rst
 include CHANGES.rst
-include gammapy-conda-install.sh
+include environment-dev.yml
 include gammapy/tests/coveragerc
 
 include ez_setup.py

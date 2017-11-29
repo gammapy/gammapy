@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _development-release:
+.. _dev-release:
 
 *****************************
 How to make a Gammapy release
@@ -54,7 +54,7 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
        make code-analysis
        python setup.py test -V --remote-data
 
-#. Check external HTML links from the docs (see :ref:`here <development-check_html_links>`).
+#. Check external HTML links from the docs (see :ref:`here <dev-check_html_links>`).
 #. Check that the travis-ci and readthedocs build is working (it usually always is).
 
    Links are at https://github.com/gammapy/gammapy#status-shields

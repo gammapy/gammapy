@@ -1,6 +1,6 @@
 # See http://read-the-docs.readthedocs.io/en/latest/yaml-config.html
 conda:
-  file: docs/environment.yml
+  file: environment-rtd.yml
 
 python:
   setup_py_install: true

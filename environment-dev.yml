@@ -1,0 +1,34 @@
+# Conda environment for Gammapy development
+name: gammapy-dev
+
+channels:
+  - conda-forge
+  - sherpa
+
+dependencies:
+  # Required dependencies
+  - python==3.6
+  - cython
+  - numpy
+  - astropy
+  - regions
+  - click
+  - pyyaml
+  # Optional dependencies
+  - scipy
+  - matplotlib
+  - scikit-image
+  - uncertainties
+  - healpy
+  - reproject
+  - sherpa
+  # Testing dependencies
+  - pytest
+
+  # Documentation build dependencies
+  - sphinx
+  - aplpy
+  - ipython
+  - pandoc
+#  - pip:
+#    - nbsphinx==0.2.17

@@ -11,6 +11,7 @@ Overview
 --------
 
 Gammapy is a community-developed, open-source Python package for gamma-ray astronomy.
+It is a prototype for the `CTA`_ science tools.
 
 It is an in-development `affiliated package`_ of `Astropy`_ that builds on the core
 `scientific Python stack`_ to provide tools to simulate and analyse the gamma-ray sky

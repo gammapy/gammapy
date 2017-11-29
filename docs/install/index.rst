@@ -50,7 +50,7 @@ of if you're using conda, you can install the development version like this::
 
     git clone https://github.com/gammapy/gammapy.git
     cd gammapy
-    conda install -f environment.yml
+    conda env create -f environment-dev.yml
     source activate gammapy-dev
 
 Verify

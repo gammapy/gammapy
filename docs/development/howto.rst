@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _development_howto:
+.. _dev_howto:
 
 ***************
 Developer HOWTO
@@ -8,29 +8,6 @@ Developer HOWTO
 
 This page is a collection of notes for Gammapy contributors and maintainers,
 in the form of short "How to" or "Q & A" entries.
-
-
-.. _development-contact:
-
-Contact points
---------------
-
-If you want to talk about Gammapy, what are the options?
-
-* You can always post on the `Gammapy mailing list`_!
-  E.g. if you have an issue with Gammapy installation, analysis, a feature request or found a possible issue.
-* You can also file and issue or pull request on the `Gammapy Github page`_.
-  Making an account on Github takes only a minute and is free.
-  Github is where Gammapy development takes place, i.e. anything that might / will lead
-  to a change to the Gammapy code or documentation will eventually result in a pull request on Github.
-* Often it's unclear if some issue (e.g. an error during installation) is the result of you executing
-  the wrong command, or an actual issue in Gammapy that must be addressed by a documentation or code change.
-  In those cases we suggest you post on the mailing list first.
-* We have a `Slack`_ set up for Gammapy developer chat. You can use it via the Slack app or from your
-  web browser at `Gammapy on Slack`_. If you need help with git, Github, Python or have questions about
-  Github development (e.g. how to run tests, build the docs, ...), i.e. chat that isn't directly related
-  to an issue or pull request on Github, you can use Slack.
-* If you want to have a non-public conversation about Gammapy, or added to the Gammapy slack, please email `Christoph Deil`_.
 
 
 .. _make_clean:
@@ -82,7 +59,7 @@ At least for now we prefer not to add a ``Makefile`` to Gammapy, because that sp
 those that use ``setup.py`` and those that use ``make``, which can grow into an overall **more** complicated
 system where some things are possible only with ``setup.py`` and others only with ``make``.
 
-.. _development-import_from:
+.. _dev_import:
 
 Where should I import from?
 ---------------------------
@@ -112,7 +89,7 @@ Note that this means that in the definition of an "end-user namespace", e.g. in 
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
 modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package.
 
-.. _development-result_object:
+.. _dev-result_object:
 
 Functions returning several values
 ----------------------------------
@@ -124,7 +101,7 @@ values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeRes
 An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyImageList`
 class.
 
-.. _development-python2and3:
+.. _dev-python2and3:
 
 Python 2 and 3 support
 ----------------------
@@ -148,7 +125,7 @@ these old versions and to find workarounds for their missing features or bugs.
 Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
 weren't available for testing on travis-ci.
 
-.. _development-skip_tests:
+.. _dev-skip_tests:
 
 Skip unit tests for some Astropy versions
 -----------------------------------------
@@ -162,9 +139,6 @@ Skip unit tests for some Astropy versions
    @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
    def test_something():
       ...
-
-.. _development-check_html_links:
-
 
 Fix non-Unix line endings
 -------------------------
@@ -180,6 +154,8 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c ascii
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
+
+.. _dev-check_html_links:
 
 Check HTML links
 ----------------
@@ -423,7 +399,7 @@ In this case, use
 at the top of the file and then just use ``assert_quantity_allclose``
 for the tests.
 
-.. _development_random:
+.. _dev_random:
 
 Random numbers
 --------------
@@ -1021,7 +997,7 @@ instead of the usual Sphinx ``image`` directive like this:
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
 
-.. _development-wipe_readthedocs:
+.. _dev-wipe_rtd:
 
 Wipe readthedocs
 ----------------
