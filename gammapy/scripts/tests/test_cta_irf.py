@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-from astropy.tests.helper import assert_quantity_allclose
-from astropy.units import Quantity
+from numpy.testing import assert_allclose, assert_equal
+import astropy.units as u
+import numpy as np
 from ...utils.testing import requires_data, requires_dependency
 from ...scripts import CTAIrf, CTAPerf
 
@@ -18,9 +19,9 @@ def test_cta_irf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/South_5h/irf_file.fits.gz'
     irf = CTAIrf.read(filename)
 
-    energy = Quantity(1, 'TeV')
-    offset = Quantity(3, 'deg')
-    rad = Quantity(0.1, 'deg')
+    energy = 1 * u.TeV
+    offset = 3 * u.deg
+    rad = 0.1 * u.deg
     migra = 1
 
     val = irf.aeff.data.evaluate(energy=energy, offset=offset)
@@ -45,5 +46,13 @@ def test_cta_irf():
 @requires_data('gammapy-extra')
 def test_point_like_perf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-    cta_perf = CTAPerf.read(filename)
-    cta_perf.peek()
+    perf = CTAPerf.read(filename)
+    perf.peek()
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_point_like_perf_bkg_reproj():
+    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
+    e_reco = np.logspace(np.log10(0.02), np.log10(100), 50) * u.TeV
+    perf = CTAPerf.read(filename, e_reco=e_reco)
+    assert_equal(len(perf.bkg.data.data), 49)

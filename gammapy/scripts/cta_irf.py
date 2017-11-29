@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.io import fits
+import numpy as np
 from ..utils.fits import fits_table_to_table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -383,7 +384,7 @@ class CTAPerf(object):
         self.rmf = rmf
 
     @classmethod
-    def read(cls, filename, offset='0.5 deg'):
+    def read(cls, filename, e_reco=None, offset='0.5 deg'):
         """Read from a FITS file.
 
         Compute RMF at 0.5 deg offset on fly.
@@ -392,24 +393,42 @@ class CTAPerf(object):
         ----------
         filename : `str`
             File containing the IRFs
+        e_reco : `~astropy.units.Quantity` array
+            Array of energies to reproject the background rate
         """
         filename = str(make_path(filename))
-
+        
         hdulist = fits.open(filename)
         aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-        bkg = BgRateTable.from_hdulist(hdulist=hdulist)
         psf = Psf68Table.from_hdulist(hdulist=hdulist)
         sens = SensitivityTable.from_hdulist(hdulist=hdulist)
 
-        # Create rmf with appropriate dimensions (e_reco->bkg, e_true->area)
-        e_reco_min = bkg.energy.lo[0]
-        e_reco_max = bkg.energy.hi[-1]
-        e_reco_bin = bkg.energy.nbins
-        e_reco_axis = EnergyBounds.equal_log_spacing(
-            e_reco_min, e_reco_max, e_reco_bin, 'TeV',
-        )
+        # Reproject background if needed
+        e_reco_axis = None
+        bkg = None
+        if e_reco is None:
+            bkg = BgRateTable.from_hdulist(hdulist=hdulist)
+            e_reco_min = bkg.energy.lo[0]
+            e_reco_max = bkg.energy.hi[-1]
+            e_reco_bin = bkg.energy.nbins
+            e_reco_axis = EnergyBounds.equal_log_spacing(
+                e_reco_min, e_reco_max, e_reco_bin, 'TeV',
+            )
+        else:
+            bkg_e = BgRateTable.from_hdulist(hdulist=hdulist)  # 1 / s
+            bkg_e.data.data = bkg_e.data.data / bkg_e.energy.bin_width  # 1 / (s TeV)
+            e_reco_axis = EnergyBounds(e_reco)
+            vals = bkg_e.data.evaluate(energy=e_reco_axis.log_centers,
+                                       method = 'linear')
+            idx = np.where(np.isfinite(vals))[0]
+            vals[np.arange(idx[0])] = 0
+            vals[np.arange(idx[-1], len(vals))] = vals[idx[-1]]
+            bkg = BgRateTable(e_reco_axis.lower_bounds,
+                              e_reco_axis.upper_bounds,
+                              vals * e_reco_axis.diff())
 
+        # Create rmf with appropriate dimensions (e_reco->bkg, e_true->area)
         e_true_min = aeff.energy.lo[0]
         e_true_max = aeff.energy.hi[-1]
         e_true_bin = aeff.energy.nbins
