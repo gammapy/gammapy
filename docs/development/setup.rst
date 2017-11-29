@@ -169,7 +169,9 @@ but it's hard to implement something better.
 Other repositories
 ==================
 
+Performance benchmarks for Gammapy:
 
+* https://github.com/gammapy/gammapy-benchmarks
 
 Data from tutorials sometimes accesses files here:
 
