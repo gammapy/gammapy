@@ -160,16 +160,20 @@ class NDDataArray(object):
             raise ValueError("Input given for unknown axis: {}".format(kwargs))
 
         if method is None:
-            return self._eval_regular_grid_interp(
-                values) * self.data.unit
+            out = self._eval_regular_grid_interp(values)
         elif method == 'linear':
-            return self._eval_regular_grid_interp(
-                values, method='linear') * self.data.unit
+            out = self._eval_regular_grid_interp(values, method='linear')
         elif method == 'nearest':
-            return self._eval_regular_grid_interp(
-                values, method='nearest') * self.data.unit
+            out = self._eval_regular_grid_interp(values, method='nearest')
         else:
             raise ValueError('Interpolator {} not available'.format(method))
+
+        # Clip interpolated values to be non-negative
+        np.clip(out, 0, None, out=out)
+        # Attach units to the output
+        out = out * self.data.unit
+
+        return out
 
     def _eval_regular_grid_interp(self, values, **kwargs):
         """Evaluate linear interpolator
