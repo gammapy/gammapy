@@ -1,12 +1,12 @@
 .. include:: ../references.txt
 
-.. _dev_setup:
+.. _dev_things:
 
-=========================
-Gammapy development setup
-=========================
+=====================
+Gammapy project setup
+=====================
 
-This page gives an overview of the infrastructure we have set up to develop and maintain Gammapy.
+This page gives an overview of the technical infrastructure we have set up to develop and maintain Gammapy.
 
 If you just want to make contribution to the Gammapy code or documentation,
 you don't need to know about most of the things mentioned on this page!
@@ -39,6 +39,9 @@ Build
 
 The ``setup.py`` and ``Makefile`` contain code to build and install Gammapy,
 as well as to run the tests and build the documentation, see :ref:`dev_intro`.
+
+The ``environment-dev.yml`` file contains the conda environment specification that
+allows one to quickly set up a conda environment for Gammapy development, see :ref:`dev_conda`.
 
 The ``astropy_helpers`` folder is a git submodule pointing to https://github.com/astropy/astropy-helpers
 It is used from ``setup.py`` (also using ``ah_bootstrap.py``) and provides helpers related to
@@ -92,7 +95,7 @@ could move all content to notebooks) or automated tests. The idea for the ``dev`
 to just have a place for scripts and checks and notes by Gammapy developers. Like for ``examples``,
 it's mostly outdated cruft and should probably be cleaned out.
 
-The files ``.travis.yml``, ``appveyor.yml`` and ``readthedocs.yml`` are the configuration files
+The files ``.travis.yml``, ``appveyor.yml``, ``readthedocs.yml`` and ``environment-rtd.yml`` are the configuration files
 for the continuous integration (CI) and documentation build / hosting cloud services we use.
 They are described in sections further down on this page.
 
@@ -165,6 +168,8 @@ but it's hard to implement something better.
 
 Other repositories
 ==================
+
+
 
 Data from tutorials sometimes accesses files here:
 

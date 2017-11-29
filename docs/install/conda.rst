@@ -32,17 +32,6 @@ to use Sherpa for modeling / fitting, install Anaconda Python 2 and
 
     conda install sherpa
 
-For a quick (depending on your download and disk speed, usually a few minutes),
-non-interactive install of `Miniconda <http://conda.pydata.org/miniconda.html>`__
-and Gammapy from scratch, use the commands from this script:
-`gammapy-conda-install.sh <https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh>`__.
-
-Executing it like this should also work:
-
-.. code-block:: bash
-
-    bash "$(curl -fsSL https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh)"
-
 To update to the latest version:
 
 .. code-block:: bash

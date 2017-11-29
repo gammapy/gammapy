@@ -99,8 +99,29 @@ So pull requests that are small, e.g. one bug fix with the addition of one regre
 or one new function or class or file, or one documentation example, and that get reviewed and merged quickly
 (ideally the same day, certainly the same week), are best.
 
+.. _dev_setup:
+
 Get set up
 ==========
+
+Commands to set up an environment for Gammapy development:
+
+.. code-block:: bash
+
+    cd code  # Go somewhere on your machine where you want to code
+    git clone https://github.com/gammapy/gammapy.git
+    cd gammapy
+    conda env create -f environment-dev.yml
+    source activate gammapy-dev
+
+
+For tests
+
+.. code-block:: bash
+
+    cd code
+    git clone https://github.com/gammapy/gammapy-extra.git
+
 
 * install dependencies
 * git clone dev version

@@ -1,3 +1,4 @@
+# Conda environment for Gammapy on ReadTheDocs
 name: gammapy-rtd
 
 channels:
