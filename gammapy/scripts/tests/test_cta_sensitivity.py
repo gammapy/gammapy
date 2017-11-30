@@ -26,13 +26,13 @@ def test_cta_sensitivity():
     # Assert on relevant values in three energy bins
     # TODO: add asserts on other quantities: excess, exposure
     assert_allclose(table['ENERGY'][0], 0.015848932787775993)
-    assert_allclose(table['FLUX'][0], 1.2234342551880124e-10)
+    assert_allclose(table['FLUX'][0], 1.265689381204479e-10)
 
     assert_allclose(table['ENERGY'][9], 1)
-    assert_allclose(table['FLUX'][9], 4.28759401411e-13)
+    assert_allclose(table['FLUX'][9], 4.2875940141105596e-13)
 
     assert_allclose(table['ENERGY'][20], 158.4893035888672)
-    assert_allclose(table['FLUX'][20], 9.04770579058e-12)
+    assert_allclose(table['FLUX'][20], 9.048305001092968e-12)
 
 
 # TODO: fix this test
