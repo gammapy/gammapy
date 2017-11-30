@@ -1,149 +1,117 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from ..testing import requires_dependency
 from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
-configs = [
-    dict(
-        tag='1D linear',
-        data=np.arange(10),
-        axes=[
-            DataAxis(np.arange(10), name='x-axis')
-        ],
-        linear_val={'x-axis': 8.5},
-        linear_res=8.5,
-    ),
-    dict(
-        tag='2D log-linear',
+pytest.importorskip('scipy')
+
+
+@pytest.fixture(scope='session')
+def axis_x():
+    return DataAxis([1, 3, 6], name='x')
+
+
+@pytest.fixture(scope='session')
+def axis_energy():
+    return BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log')
+
+
+@pytest.fixture(scope='session')
+def axis_offset():
+    return DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name='offset')
+
+
+@pytest.fixture(scope='session')
+def nddata_1d(axis_x):
+    return NDDataArray(
+        axes=[axis_x],
+        data=[1, -1, 2],
+        interp_kwargs=dict(bounds_error=False, fill_value=None),
+    )
+
+
+@pytest.fixture(scope='session')
+def nddata_2d(axis_energy, axis_offset):
+    return NDDataArray(
+        axes=[axis_energy, axis_offset],
         data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
-        axes=[
-            BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log'),
-            DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name='offset')
-        ],
-        linear_val={'energy': 4.54 * u.TeV, 'offset': 0.23 * u.deg},
-        linear_res=6.184670234285248 * u.cm ** 2,
-    ),
-]
+        interp_kwargs=dict(bounds_error=False, fill_value=None),
+    )
 
 
-@pytest.mark.parametrize('config', configs)
-@requires_dependency('scipy')
-def test_nddata(config):
-    tester = NDDataArrayTester(config)
-    tester.test_all()
+class TestNDDataArray:
 
-
-class NDDataArrayTester:
-    def __init__(self, config):
-        self.config = config
-        self.data = config['data']
-        self.axes = config['axes']
-        self.nddata = NDDataArray(axes=self.axes, data=self.data)
-
-    def test_all(self):
-        self.test_basic()
-        self.test_wrong_init()
-        self.test_find_node()
-        self.test_evaluate_nodes()
-        self.test_linear_interpolation()
-        self.test_return_shape()
-        self.test_1d()
-        self.test_2d()
-
-    def test_basic(self):
-        assert self.axes[0].name in str(self.nddata)
-
-    def test_wrong_init(self):
-        wrong_data = np.arange(8).reshape(4, 2)
+    def test_init_error(self):
         with pytest.raises(ValueError):
-            NDDataArray(axes=self.axes, data=wrong_data)
+            NDDataArray(
+                axes=[DataAxis([1, 3, 6], name='x')],
+                data=np.arange(8).reshape(4, 2),
+            )
 
-    def test_find_node(self):
-        kwargs = {}
-        for axis in self.nddata.axes:
-            kwargs[axis.name] = axis.nodes[1] * 1.24
-        node = self.nddata.find_node(**kwargs)
-        actual = self.data[node]
-        desired = self.nddata.evaluate(method='nearest', **kwargs)
-        assert_quantity_allclose(actual, desired)
+    def test_str(self, nddata_1d):
+        assert 'x' in str(nddata_1d)
 
-    def test_evaluate_nodes(self):
-        nodes = [2, 3, 1]
-        kwargs = dict()
-        for dim, axis in enumerate(self.axes):
-            kwargs[axis.name] = axis.nodes[nodes[dim]]
+    def test_find_node_1d(self, nddata_1d):
+        node = nddata_1d.find_node(x=4)
+        assert_equal(node, [1])
 
-        actual = self.nddata.evaluate(method='nearest', **kwargs)
-        desired = self.nddata.data[tuple(nodes[0:dim + 1])]
-        assert_allclose(actual, desired)
+    def test_find_node_2d(self, nddata_2d):
+        node = nddata_2d.find_node(energy=4 * u.TeV, offset=0.4 * u.deg)
+        assert_equal(node[0], [1])
+        assert_equal(node[1], [2])
 
-        actual = self.nddata.evaluate(method='linear', **kwargs)
-        desired = self.nddata.data[tuple(nodes[0:dim + 1])]
-        assert_allclose(actual, desired)
+    def test_evaluate_shape_1d(self, nddata_1d):
+        # Scalar input
+        out = nddata_1d.evaluate(x=1.5)
+        assert out.shape == ()
 
-    def test_linear_interpolation(self):
-        actual = self.nddata.evaluate(method='linear',
-                                      **self.config['linear_val'])
-        desired = self.config['linear_res']
-        assert_quantity_allclose(actual, desired)
+        # Array input
+        out = nddata_1d.evaluate(x=[0, 1.5])
+        assert out.shape == (2,)
 
-    def test_return_shape(self):
-        # Case 0; no kwargs
-        actual = self.nddata.evaluate().shape
-        desired = self.data.shape
-        assert actual == desired
+        # No input
+        out = nddata_1d.evaluate()
+        assert out.shape == (3,)
 
-    def test_1d(self):
-        if self.nddata.dim != 1:
-            return
-
-        # Case 1: scalar input
-        kwargs = {self.axes[0].name: self.axes[0].nodes[2] * 0.75}
-        actual = self.nddata.evaluate(**kwargs).shape
-        desired = ()
-        assert actual == desired
-
-        # Case 2: array input
-        kwargs = {self.axes[0].name: self.axes[0].nodes[0:2] * 0.75}
-        actual = self.nddata.evaluate(**kwargs).shape
-        desired = np.zeros(2).shape
-        assert actual == desired
-
-    def test_2d(self):
-        if self.nddata.dim != 2:
-            return
-
+    def test_evaluate_2d(self, nddata_2d):
         # Case 1: axis1 = scalar, axis2 = array
-        kwargs = {self.axes[0].name: self.axes[0].lo[1] * 0.75,
-                  self.axes[1].name: self.axes[1].nodes[0:-1] * 1.1}
-        actual = self.nddata.evaluate(**kwargs).shape
-        desired = np.zeros(len(self.axes[1].nodes) - 1).shape
-        assert actual == desired
+        out = nddata_2d.evaluate(energy=0 * u.TeV, offset=[0, 0] * u.deg)
+        assert out.shape == (2,)
 
         # Case 2: axis1 = array, axis2 = array
-        kwargs = {self.axes[0].name: self.axes[0].lo[1:3] * 0.75,
-                  self.axes[1].name: self.axes[1].nodes[0:3] * 1.1}
-        actual = self.nddata.evaluate(**kwargs).shape
-        desired = (2, 3)
-        assert actual == desired
+        out = nddata_2d.evaluate(energy=[0, 0, 0] * u.TeV, offset=[0, 0] * u.deg)
+        assert out.shape == (3, 2)
 
         # Case 3: axis1 array, axis2 = 2Darray
-        nx, ny = (12, 3)
+        out = nddata_2d.evaluate(energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg)
+        assert out.shape == (12, 3, 2)
 
-        # NOTE:  np.linspace does not work with Quantities and numpy 1.10
-        eval_field = np.linspace(self.axes[1].nodes[1].value,
-                                 self.axes[1].nodes[2].value,
-                                 nx * ny).reshape(nx, ny) * self.axes[1].unit
-        kwargs = {self.axes[0].name: self.axes[0].lo[0:2],
-                  self.axes[1].name: eval_field}
-        actual = self.nddata.evaluate(**kwargs).shape
-        desired = np.zeros([2, nx, ny]).shape
-        assert actual == desired
+    def test_evaluate_1d_linear(self, nddata_1d):
+        # This should test all cases of interest:
+        # - evaluate outside node array, i.e. extrapolate: x=0
+        # - evaluate on a given node: x=1
+        # - evaluate in between nodes: x=2
+        # - check that values < 0 are clipped to 0: x=3
+        out = nddata_1d.evaluate(x=[0, 1, 2, 3], method='linear')
+        assert_allclose(out, [2, 1, 0, 0])
+
+    def test_evaluate_on_nodes(self, nddata_2d):
+        # evaluating on interpolation nodes should give back the interpolation values
+        out = nddata_2d.evaluate()
+        assert_allclose(out, nddata_2d.data)
+
+
+# TODO: implement tests!
+class TestDataAxis:
+    pass
+
+
+# TODO: implement tests!
+class TestBinnedDataAxis:
+    pass
 
 
 def test_sqrt_space():

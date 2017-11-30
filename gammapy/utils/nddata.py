@@ -50,6 +50,14 @@ class NDDataArray(object):
 
         self._regular_grid_interp = None
 
+    def __str__(self):
+        """String representation"""
+        ss = 'NDDataArray summary info\n'
+        for axis in self.axes:
+            ss += array_stats_str(axis.nodes, axis.name)
+        ss += array_stats_str(self.data, 'Data')
+        return ss
+
     @property
     def axes(self):
         """Array holding the axes in correct order"""
@@ -101,14 +109,6 @@ class NDDataArray(object):
     def dim(self):
         """Dimension (number of axes)"""
         return len(self.axes)
-
-    def __str__(self):
-        """String representation"""
-        ss = 'NDDataArray summary info\n'
-        for axis in self.axes:
-            ss += array_stats_str(axis.nodes, axis.name)
-        ss += array_stats_str(self.data, 'Data')
-        return ss
 
     def find_node(self, **kwargs):
         """Find next node
