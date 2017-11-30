@@ -16,7 +16,7 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 Summary
 +++++++
 
-- Coming soon (November 2017)
+- Coming soon (December 2017)
 - 17 contributors (8 new)
 - 7 months of work (from April 28, 2017 to November 2017)
 - 120 pull requests (not all listed below)
@@ -90,7 +90,13 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1220] Fix flux point computation for non-power-law models (Axel Donath)
+- [#1215] Finish integration of Jupyter notebooks with Sphinx docs (Jose Enrique Ruiz)
+- [#1211] Add IRF write methods (Thomas Armstrong)
+- [#1210] Fix min energy handling in SpectrumEnergyGrouper (Julien Lefaucheur and Christoph Deil)
 - [#1207] Add theta2 distribution plot to EventList class (Thomas Vuillaume)
+- [#1204] Consistently use mode='constant' in convolutions of RingBackgroundEstimator (Lars Mohrmann)
+- [#1195] Change IRF extrapolation behaviour (Christoph Deil)
 - [#1190] Refactor gammapy.maps methods for calculating index and coordinate arrays (Matthew Wood)
 - [#1183] Add function to compute background cube (Roberta Zanin and Christoph Deil)
 - [#1179] Fix two bugs in LightCurveEstimator, and improve speed considerably (Lars Mohrmann)
