@@ -84,4 +84,4 @@ def test_cta_simulation():
     assert '*** Observation summary report ***' in text
 
     stats = cta_simu().total_stats
-    assert_allclose(stats.sigma, 36.51439765644547)
+    assert_allclose(stats.sigma, 36.404120931670384)
