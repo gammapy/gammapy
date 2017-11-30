@@ -41,7 +41,7 @@ The ``setup.py`` and ``Makefile`` contain code to build and install Gammapy,
 as well as to run the tests and build the documentation, see :ref:`dev_intro`.
 
 The ``environment-dev.yml`` file contains the conda environment specification that
-allows one to quickly set up a conda environment for Gammapy development, see :ref:`dev_conda`.
+allows one to quickly set up a conda environment for Gammapy development, see :ref:`dev_setup`.
 
 The ``astropy_helpers`` folder is a git submodule pointing to https://github.com/astropy/astropy-helpers
 It is used from ``setup.py`` (also using ``ah_bootstrap.py``) and provides helpers related to
