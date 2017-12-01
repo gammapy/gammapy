@@ -154,3 +154,18 @@ def assert_time_allclose(actual, desired):
     assert_allclose(actual.value, desired.value)
     assert actual.scale == desired.scale
     assert actual.format == desired.format
+
+
+def mpl_savefig_check():
+    """Call matplotlib savefig for the current figure.
+
+    This will trigger a render of the Figure, which can sometimes
+    raise errors if there is a problem; i.e. we call this at the
+    end of every plotting test for now.
+
+    This is writing to an in-memory byte buffer, i.e. is faster
+    than writing to disk.
+    """
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    plt.savefig(BytesIO(), format='png')
