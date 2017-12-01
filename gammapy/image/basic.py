@@ -308,11 +308,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
                 flux = self.flux(SkyImageList([counts, background, exposure]))
                 result['flux'].paste(flux)
 
-            # TODO: this is needed, otherwise the memory runs full, check why this
-            # happens and what the correct way is to handle this, e.g. implement
-            # a generator method for observation lists
-            del observation.events
-
         if 'psf' in which:
             result['psf'] = self.psf(observations)
         return result
