@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency, requires_data
-from ...datasets import FermiGalacticCenter
+from ...utils.testing import requires_dependency, mpl_savefig_check
 from ...image import SkyImage
 from ..profile import compute_binning, ImageProfile, ImageProfileEstimator
 
@@ -124,3 +123,4 @@ class TestImageProfile(object):
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.profile.peek()
+        mpl_savefig_check()
