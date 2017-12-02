@@ -263,17 +263,11 @@ class SourceCatalog(object):
             Source data
         """
         data = OrderedDict()
-        for colname in table.colnames:
-            col = table[colname]
-
-            if isinstance(col, Quantity):
-                val = col[idx]
-            else:
-                val = col.data[idx]
-                if col.unit:
-                    val = Quantity(val, col.unit)
-
-            data[colname] = val
+        for name, col in table.columns.items():
+            val = col[idx]
+            if col.unit:
+                val = val * col.unit
+            data[name] = val
         return data
 
     @property
