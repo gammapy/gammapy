@@ -40,7 +40,6 @@ Data
 
 - ``gammapy-data-manage`` calls `gammapy.scripts.data_manage`
 - ``gammapy-data-select`` calls `gammapy.scripts.data_select`
-- ``gammapy-data-show`` calls `gammapy.scripts.data_show`
 
 Spectrum
 --------
