@@ -7,7 +7,6 @@ from .check import *
 from .info import *
 
 from .data_select import *
-from .data_show import *
 
 from .image_bin import *
 from .image_fit import *
