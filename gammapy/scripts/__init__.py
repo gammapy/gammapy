@@ -15,7 +15,6 @@ from .image_pipe import *
 from .image_ts import *
 
 from .cube_background import *
-from .cube_bin import *
 
 from .cta_irf import *
 from .cta_utils import *
