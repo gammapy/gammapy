@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
 from ...scripts import CTAIrf, CTAPerf
 
 
@@ -47,3 +47,4 @@ def test_point_like_perf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     cta_perf = CTAPerf.read(filename)
     cta_perf.peek()
+    mpl_savefig_check()

@@ -8,6 +8,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
+from ...utils.testing import mpl_savefig_check
 from ...utils.fits import table_to_fits_table
 
 
@@ -65,14 +66,17 @@ class TestEnergyDispersion:
     @requires_dependency('matplotlib')
     def test_plot_matrix(self):
         self.edisp.plot_matrix()
+        mpl_savefig_check()
 
     @requires_dependency('matplotlib')
     def test_plot_bias(self):
         self.edisp.plot_bias()
+        mpl_savefig_check()
 
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.edisp.peek()
+        mpl_savefig_check()
 
 
 @requires_dependency('scipy')
@@ -137,10 +141,6 @@ class TestEnergyDispersion2D:
         desired = self.edisp.get_response(offset, e_val, e_reco)
         assert_equal(actual, desired)
 
-    @requires_dependency('matplotlib')
-    def test_peek(self):
-        self.edisp.peek()
-
     def test_write(self):
         energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
         energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
@@ -159,3 +159,18 @@ class TestEnergyDispersion2D:
         hdu = table_to_fits_table(edisp.to_table())
         assert_equal(hdu.data['ENERG_LO'][0], edisp.data.axis('e_true').lo.value)
         assert hdu.header['TUNIT1'] == edisp.data.axis('e_true').lo.unit
+
+    @requires_dependency('matplotlib')
+    def test_plot_migration(self):
+        self.edisp.plot_migration()
+        mpl_savefig_check()
+
+    @requires_dependency('matplotlib')
+    def test_plot_migration(self):
+        self.edisp.plot_bias()
+        mpl_savefig_check()
+
+    @requires_dependency('matplotlib')
+    def test_peek(self):
+        self.edisp.peek()
+        mpl_savefig_check()

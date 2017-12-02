@@ -2,10 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
-from astropy.units import Quantity
-from astropy.coordinates import Angle
-from ...utils.energy import Energy
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_savefig_check
 from ...utils.scripts import make_path
 from ...irf import PSF3D
 
@@ -51,3 +48,5 @@ class TestPSF3D:
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.psf.peek()
+        mpl_savefig_check()
+
