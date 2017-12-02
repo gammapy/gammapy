@@ -9,8 +9,8 @@ from pprint import pprint
 import numpy as np
 from ..extern import six
 from astropy.utils import lazyproperty
-from astropy.units import Quantity
 from ..utils.array import _is_int
+from ..utils.table import table_row_to_dict
 from .utils import skycoord_from_table
 
 __all__ = [
@@ -229,13 +229,13 @@ class SourceCatalog(object):
         source : `SourceCatalogObject`
             Source object
         """
-        data = self._make_source_dict(self.table, index)
+        data = table_row_to_dict(self.table[index])
         data[self._source_index_key] = index
 
         try:
             name_extended = data['Extended_Source_Name'].strip()
             idx = self._lookup_extended_source_idx[name_extended]
-            data_extended = self._make_source_dict(self.extended_sources_table, idx)
+            data_extended = table_row_to_dict(self.extended_sources_table[idx])
         except KeyError:
             data_extended = None
 
@@ -247,28 +247,6 @@ class SourceCatalog(object):
         names = [_.strip() for _ in self.extended_sources_table['Source_Name']]
         idx = range(len(names))
         return dict(zip(names, idx))
-
-    @staticmethod
-    def _make_source_dict(table, idx):
-        """Make one source data dict.
-
-        Parameters
-        ----------
-        idx : int
-            Row index
-
-        Returns
-        -------
-        data : `~collections.OrderedDict`
-            Source data
-        """
-        data = OrderedDict()
-        for name, col in table.columns.items():
-            val = col[idx]
-            if col.unit:
-                val = val * col.unit
-            data[name] = val
-        return data
 
     @property
     def _data_python_list(self):
