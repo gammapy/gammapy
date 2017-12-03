@@ -132,10 +132,8 @@ them in your local `_static/notebooks/` folder. You can also contribute with you
 own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 
 **Source files:**
-<br/><br/>
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{txt_filename})
-*(right-click and select "save as")*
 </div>
 """
 
