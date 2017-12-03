@@ -117,7 +117,8 @@ def modif_nb_links(folder, url_docs, git_commit):
     """
 
     DOWNLOAD_CELL = """
-<div class='admonition note'>
+<script type="text/javascript" src="../_static/linksdl.js"></script>
+<div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
 Try online on Binder
@@ -131,6 +132,7 @@ them in your local `_static/notebooks/` folder. You can also contribute with you
 own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 
 **Source files:**
+<br/><br/>
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{txt_filename})
 *(right-click and select "save as")*
