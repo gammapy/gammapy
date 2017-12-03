@@ -133,7 +133,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
 
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
-[{py_filename}](../_static/notebooks/{txt_filename})
+[{py_filename}](../_static/notebooks/{py_filename})
 </div>
 """
 
@@ -142,8 +142,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
         if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
             if folder == 'notebooks':
                 py_filename = filename.replace('ipynb', 'py')
-                txt_filename = filename.replace('ipynb', 'txt')
-                ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename,
+                ctx = dict(nb_filename=filename, py_filename=py_filename,
                            git_commit=git_commit)
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
@@ -177,7 +176,7 @@ def convert_nb_to_script(path):
     exporter = PythonExporter()
     source, meta = exporter.from_notebook_node(nb)
 
-    path = path.with_suffix('.txt')
+    path = path.with_suffix('.py')
     log.info('Writing {}'.format(path))
     path.write_text(source, encoding='utf-8')
 
