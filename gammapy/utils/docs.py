@@ -117,7 +117,8 @@ def modif_nb_links(folder, url_docs, git_commit):
     """
 
     DOWNLOAD_CELL = """
-<div class='admonition note'>
+<script type="text/javascript" src="../_static/linksdl.js"></script>
+<div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
 Try online on Binder
@@ -132,8 +133,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
 
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
-[{py_filename}](../_static/notebooks/{txt_filename})
-*(right-click and select "save as")*
+[{py_filename}](../_static/notebooks/{py_filename})
 </div>
 """
 
@@ -142,8 +142,7 @@ own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-ext
         if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
             if folder == 'notebooks':
                 py_filename = filename.replace('ipynb', 'py')
-                txt_filename = filename.replace('ipynb', 'txt')
-                ctx = dict(nb_filename=filename, py_filename=py_filename, txt_filename=txt_filename,
+                ctx = dict(nb_filename=filename, py_filename=py_filename,
                            git_commit=git_commit)
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
@@ -177,7 +176,7 @@ def convert_nb_to_script(path):
     exporter = PythonExporter()
     source, meta = exporter.from_notebook_node(nb)
 
-    path = path.with_suffix('.txt')
+    path = path.with_suffix('.py')
     log.info('Writing {}'.format(path))
     path.write_text(source, encoding='utf-8')
 
