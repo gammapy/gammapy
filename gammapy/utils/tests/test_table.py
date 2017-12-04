@@ -4,17 +4,17 @@ import pytest
 from collections import OrderedDict
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table, QTable, Column
+from astropy.table import Table, Column
 from ..table import table_standardise_units_copy, table_row_to_dict, table_from_row_data
 
 
-@pytest.mark.parametrize('table_class', [Table, QTable])
-def test_table_standardise_units(table_class):
-    table = table_class()
-    table['a'] = Column([1], unit='ph cm-2 s-1')
-    table['b'] = Column([1], unit='ct cm-2 s-1')
-    table['c'] = Column([1], unit='cm-2 s-1')
-    table['d'] = Column([1])
+def test_table_standardise_units():
+    table = Table([
+        Column([1], 'a', unit='ph cm-2 s-1'),
+        Column([1], 'b', unit='ct cm-2 s-1'),
+        Column([1], 'c', unit='cm-2 s-1'),
+        Column([1], 'd'),
+    ])
 
     table = table_standardise_units_copy(table)
 

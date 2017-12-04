@@ -22,7 +22,7 @@ def table_standardise_units_copy(table):
 
     Parameters
     ----------
-    table : `~astropy.table.Table` or `~astropy.table.QTable`
+    table : `~astropy.table.Table`
         Input table (won't be modified)
 
     Returns
@@ -31,7 +31,6 @@ def table_standardise_units_copy(table):
         Copy of the input table with standardised column units
     """
     # Note: we could add an `inplace` option (or variant of this function)
-    # for `Table`, but not for `QTable`.
     # See https://github.com/astropy/astropy/issues/6098
     table = Table(table)
     return table_standardise_units_inplace(table)

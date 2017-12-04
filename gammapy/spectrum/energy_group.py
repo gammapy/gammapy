@@ -166,7 +166,7 @@ class SpectrumEnergyGroups(UserList):
         ])
 
     def to_total_table(self):
-        """Table with one energy bin per row (`~astropy.table.QTable`).
+        """Table with one energy bin per row (`~astropy.table.Table`).
 
         Columns:
 
@@ -181,7 +181,7 @@ class SpectrumEnergyGroups(UserList):
         return table_vstack(tables)
 
     def to_group_table(self):
-        """Table with one energy group per row (`~astropy.table.QTable`).
+        """Table with one energy group per row (`~astropy.table.Table`).
 
         Columns:
 
