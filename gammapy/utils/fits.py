@@ -294,7 +294,6 @@ def table_to_fits_table(table, name=None):
     header = fits.Header()
     header.update(table.meta)
 
-
     hdu = fits.BinTableHDU(data, header, name=name)
 
     # Copy over column meta-data
@@ -325,7 +324,7 @@ def table_to_fits_table(table, name=None):
     return hdu
 
 
-def fits_table_to_table(tbhdu):
+def fits_table_to_table(hdu):
     """Convert astropy table to binary table FITS format.
 
     This is a generic method to convert a `~astropy.io.fits.BinTableHDU`
@@ -346,13 +345,13 @@ def fits_table_to_table(tbhdu):
     table : `~astropy.table.Table`
         astropy table containing the desired columns
     """
-    data = tbhdu.data
-    header = tbhdu.header
+    data = hdu.data
+    header = hdu.header
     table = Table(data, meta=header)
 
     # Copy over column meta-data
-    for idx, colname in enumerate(tbhdu.columns.names):
-        table[colname].unit = tbhdu.columns[colname].unit
+    for idx, colname in enumerate(hdu.columns.names):
+        table[colname].unit = hdu.columns[colname].unit
         description = table.meta.pop('TCOMM' + str(idx + 1), None)
         table[colname].meta['description'] = description
         ucd = table.meta.pop('TUCD' + str(idx + 1), None)
