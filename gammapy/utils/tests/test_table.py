@@ -4,7 +4,7 @@ import pytest
 from collections import OrderedDict
 import astropy.units as u
 from astropy.table import Table, QTable, Column
-from ..table import table_standardise_units_copy, table_row_to_dict
+from ..table import table_standardise_units_copy, table_row_to_dict, table_from_row_data
 
 
 @pytest.mark.parametrize('table_class', [Table, QTable])

@@ -7,8 +7,7 @@ from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
-from ..utils.fits import table_from_row_data
-from ..utils.table import table_standardise_units_copy
+from ..utils.table import table_standardise_units_copy, table_from_row_data
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
 

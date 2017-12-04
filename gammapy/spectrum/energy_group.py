@@ -21,7 +21,7 @@ from ..extern.six.moves import UserList
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
-from ..utils.fits import table_from_row_data
+from ..utils.table import table_from_row_data
 from ..data import ObservationStats
 
 __all__ = [

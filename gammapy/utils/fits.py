@@ -4,15 +4,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from astropy.units import Quantity
 from astropy.io import fits
-from astropy.table import Table, QTable
+from astropy.table import Table
 from .scripts import make_path
 from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-    'table_from_row_data',
     'table_to_fits_table',
     'fits_table_to_table',
     'energy_axis_to_ebounds',
@@ -220,45 +218,6 @@ def fits_header_to_meta_dict(header):
     meta.pop('HISTORY', None)
 
     return meta
-
-
-# TODO: remove type = 'qtable' to avoid issues?
-# see https://github.com/astropy/astropy/issues/6098
-# see https://github.com/gammapy/gammapy/issues/980
-def table_from_row_data(rows, type='qtable', **kwargs):
-    """Helper function to create table objects from row data.
-
-    - Works with quantities.
-    - Preserves order of keys if OrderedDicts are used.
-
-    Parameters
-    ----------
-    rows : list
-        List of row data (each row a dict or OrderedDict)
-    type : {'table', 'qtable'}
-        Type of table to create
-    """
-    # Creating `QTable` from list of row data with `Quantity` objects
-    # doesn't work. So we're reformatting to list of column `Quantity`
-    # objects here.
-    # table = QTable(rows=rows)
-
-    if type == 'table':
-        cls = Table
-    elif type == 'qtable':
-        cls = QTable
-    else:
-        raise ValueError('Invalid type: {}'.format(type))
-
-    table = cls(**kwargs)
-    colnames = list(rows[0].keys())
-    for name in colnames:
-        coldata = [_[name] for _ in rows]
-        if isinstance(rows[0][name], Quantity):
-            coldata = Quantity(coldata, unit=rows[0][name].unit)
-        table[name] = coldata
-
-    return table
 
 
 def table_to_fits_table(table, name=None):
