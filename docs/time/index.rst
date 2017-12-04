@@ -11,7 +11,8 @@ Introduction
 
 `gammapy.time` contains methods for timing analysis.
 
-TODO: explain `gammapy.utils.time` and why it's separate.
+There is also `gammapy.utils.time`, which contains low-level helper functions
+for time conversions e.g. following the
 
 At the moment there isn't a lot of functionality yet ... contributions welcome!
 
@@ -24,26 +25,26 @@ Getting Started
 Lightcurve
 ----------
 
-The `~gammapy.time.LightCurve` class can be used to read a lightcurve and plot it:
+This section introduces the `~gammapy.time.LightCurve` class.
 
-.. TODO: make better example from file or Fermi-LAT
-.. >>> lc = LightCurve.read('$GAMMAPY_EXTRA/todo/make/example-lightcurve.fits.gz')
+Read a table that contains a lightcurve:
 
-.. plot::
-   :include-source:
+>>> from astropy.table import Table
+>>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
+>>> table = Table.read(url, format='ascii.ecsv')
 
-    >>> from gammapy.time import LightCurve
-    >>> lc = LightCurve.simulate_example()
-    >>> lc.plot()
+Create a ``LightCurve`` object:
 
-Here's how to compute some summary statistics for the lightcurve:
+>>> from gammapy.time import LightCurve
+>>> lc = LightCurve(table)
 
-.. code-block:: python
+``LightCurve`` is a simple container that stores the LC table,
+and provices a few conveniences, like creating time objects
+and a quick-look plot:
 
-    >>> lc['FLUX'].mean()
-    <Quantity 5.25 1 / (cm2 s)>
-
-TODO: please help extend the functionality and examples for `~gammapy.time.LightCurve`!
+>>> lc.time[:2].iso
+['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']
+>>> lc.plot()
 
 .. _time-variability:
 

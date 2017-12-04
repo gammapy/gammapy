@@ -75,10 +75,6 @@ class TestFermi3FGLObject:
         # TODO: add assert on output
         self.source.pprint()
 
-    @pytest.mark.xfail
-    def _test_plot_lightcurve(self):
-        self.source.plot_lightcurve()
-
     def test_str(self):
         ss = str(self.source)
         assert 'Source name          : 3FGL J0534.5+2201' in ss
@@ -129,15 +125,16 @@ class TestFermi3FGLObject:
 
     def test_lightcurve(self):
         lc = self.source.lightcurve
-        assert len(lc) == 48
-        assert set(['TIME_MIN', 'TIME_MAX', 'FLUX', 'FLUX_ERR']).issubset(lc.colnames)
+        table = lc.table
 
-        point = lc[0]
+        assert len(table) == 48
+        assert table.colnames == ['time_min', 'time_max', 'flux', 'flux_errp', 'flux_errn']
 
-        assert point['TIME_MIN'].fits == '2008-08-02T00:33:19.000(UTC)'
-        assert point['TIME_MAX'].fits == '2008-09-01T10:31:04.625(UTC)'
-        assert_quantity_allclose(point['FLUX'], 2.38471262e-06 * u.Unit('cm-2 s-1'))
-        assert_quantity_allclose(point['FLUX_ERR'], 8.07127023e-08 * u.Unit('cm-2 s-1'))
+        assert lc.time_min[0].fits == '2008-08-02T00:33:19.000(UTC)'
+        assert lc.time_max[0].fits == '2008-09-01T10:31:04.625(UTC)'
+        assert_quantity_allclose(table['flux'].quantity[0], 2.38471262e-06 * u.Unit('cm-2 s-1'))
+        assert_quantity_allclose(table['flux_errp'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1'))
+        assert_quantity_allclose(table['flux_errn'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1'))
 
     @pytest.mark.parametrize('name', [
         'Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',

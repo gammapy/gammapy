@@ -400,17 +400,21 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`)."""
+        """Lightcurve (`~gammapy.time.LightCurve`).
+
+        Examples
+        --------
+
+        >>> from gammapy.catalog import source_catalogs
+        >>> source = source_catalogs['3fgl']['3FGL J0349.9-2102']
+        >>> lc = source.lightcurve
+        >>> lc.plot()
+        """
         flux = self.data['Flux_History']
 
         # Flux error is given as asymmetric high/low
-        flux_err_lo = self.data['Unc_Flux_History'][:, 0]
-        flux_err_hi = self.data['Unc_Flux_History'][:, 1]
-
-        # TODO: Change lightcurve class to support this,
-        # then fill appropriately here
-        # for now, we just use the mean
-        flux_err = 0.5 * (-flux_err_lo + flux_err_hi)
+        flux_errn = -self.data['Unc_Flux_History'][:, 0]
+        flux_errp = self.data['Unc_Flux_History'][:, 1]
 
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
@@ -424,15 +428,16 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         # for plotting the difference doesn't matter, only for analysis
         time_start = Time('2008-08-02T00:33:19')
         time_end = Time('2012-07-31T22:45:47')
-
         n_points = len(flux)
         time_step = (time_end - time_start) / n_points
         time_bounds = time_start + np.arange(n_points + 1) * time_step
+
         table = Table([
-            Column(time_bounds[:-1], 'TIME_MIN'),
-            Column(time_bounds[1:], 'TIME_MAX'),
-            Column(flux, 'FLUX'),
-            Column(flux_err, 'FLUX_ERR'),
+            Column(time_bounds[:-1].utc.mjd, 'time_min'),
+            Column(time_bounds[1:].utc.mjd, 'time_max'),
+            Column(flux, 'flux'),
+            Column(flux_errp, 'flux_errp'),
+            Column(flux_errn, 'flux_errn'),
         ])
         return LightCurve(table)
 

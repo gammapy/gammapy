@@ -1,18 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_almost_equal
-from astropy.time import TimeDelta
-from ..time import time_ref_from_dict, time_relative_to_ref, absolute_time
+from numpy.testing import assert_allclose
+from astropy.time import TimeDelta, Time
+from ..time import time_ref_from_dict, time_ref_to_dict, time_relative_to_ref, absolute_time
 
 
 def test_time_ref_from_dict():
-    mjd_int = 500
-    mjd_frac = 0.5
-    time_ref_dict = dict(MJDREFI=mjd_int, MJDREFF=mjd_frac)
+    d = dict(MJDREFI=51910, MJDREFF=0.00074287036841269583)
+    mjd = d['MJDREFF'] + d['MJDREFI']
 
-    time_ref = time_ref_from_dict(time_ref_dict)
+    time = time_ref_from_dict(d)
+    assert time.format == 'mjd'
+    assert time.scale == 'tt'
+    assert_allclose(time.mjd, mjd)
 
-    assert_almost_equal(time_ref.mjd, mjd_int + mjd_frac, decimal=4)
+
+def test_time_ref_to_dict():
+    time = Time('2001-01-01T00:00:00')
+
+    d = time_ref_to_dict(time)
+
+    assert set(d) == {'MJDREFI', 'MJDREFF', 'TIMESYS'}
+    assert d['MJDREFI'] == 51910
+    assert_allclose(d['MJDREFF'], 0.00074287036841269583)
+    assert d['TIMESYS'] == 'tt'
 
 
 def test_time_relative_to_ref():
@@ -23,7 +34,7 @@ def test_time_relative_to_ref():
 
     delta_time = time_relative_to_ref(time, time_ref_dict)
 
-    assert_almost_equal(delta_time.sec, delta_time_1sec.sec, decimal=4)
+    assert_allclose(delta_time.sec, delta_time_1sec.sec)
 
 
 def test_absolute_time():
