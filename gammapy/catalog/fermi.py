@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from astropy.table import QTable, Table
+from astropy.table import Table, Column
 from astropy.time import Time
 from astropy.tests.helper import ignore_warnings
 from astropy.modeling.models import Gaussian2D, Disk2D
@@ -428,13 +428,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         n_points = len(flux)
         time_step = (time_end - time_start) / n_points
         time_bounds = time_start + np.arange(n_points + 1) * time_step
-        table = QTable()
-        table['TIME_MIN'] = time_bounds[:-1]
-        table['TIME_MAX'] = time_bounds[1:]
-        table['FLUX'] = flux
-        table['FLUX_ERR'] = flux_err
-        lc = LightCurve(table)
-        return lc
+        table = Table([
+            Column(time_bounds[:-1], 'TIME_MIN'),
+            Column(time_bounds[1:], 'TIME_MAX'),
+            Column(flux, 'FLUX'),
+            Column(flux_err, 'FLUX_ERR'),
+        ])
+        return LightCurve(table)
 
 
 class SourceCatalogObject1FHL(SourceCatalogObject):

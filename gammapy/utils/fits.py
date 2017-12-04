@@ -4,15 +4,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from astropy.units import Quantity
 from astropy.io import fits
-from astropy.table import Table, QTable
+from astropy.table import Table
 from .scripts import make_path
 from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-    'table_from_row_data',
     'table_to_fits_table',
     'fits_table_to_table',
     'energy_axis_to_ebounds',
@@ -222,45 +220,6 @@ def fits_header_to_meta_dict(header):
     return meta
 
 
-# TODO: remove type = 'qtable' to avoid issues?
-# see https://github.com/astropy/astropy/issues/6098
-# see https://github.com/gammapy/gammapy/issues/980
-def table_from_row_data(rows, type='qtable', **kwargs):
-    """Helper function to create table objects from row data.
-
-    - Works with quantities.
-    - Preserves order of keys if OrderedDicts are used.
-
-    Parameters
-    ----------
-    rows : list
-        List of row data (each row a dict or OrderedDict)
-    type : {'table', 'qtable'}
-        Type of table to create
-    """
-    # Creating `QTable` from list of row data with `Quantity` objects
-    # doesn't work. So we're reformatting to list of column `Quantity`
-    # objects here.
-    # table = QTable(rows=rows)
-
-    if type == 'table':
-        cls = Table
-    elif type == 'qtable':
-        cls = QTable
-    else:
-        raise ValueError('Invalid type: {}'.format(type))
-
-    table = cls(**kwargs)
-    colnames = list(rows[0].keys())
-    for name in colnames:
-        coldata = [_[name] for _ in rows]
-        if isinstance(rows[0][name], Quantity):
-            coldata = Quantity(coldata, unit=rows[0][name].unit)
-        table[name] = coldata
-
-    return table
-
-
 def table_to_fits_table(table, name=None):
     """Convert `~astropy.table.Table` to `astropy.io.fits.BinTableHDU`.
 
@@ -294,7 +253,6 @@ def table_to_fits_table(table, name=None):
     header = fits.Header()
     header.update(table.meta)
 
-
     hdu = fits.BinTableHDU(data, header, name=name)
 
     # Copy over column meta-data
@@ -325,7 +283,7 @@ def table_to_fits_table(table, name=None):
     return hdu
 
 
-def fits_table_to_table(tbhdu):
+def fits_table_to_table(hdu):
     """Convert astropy table to binary table FITS format.
 
     This is a generic method to convert a `~astropy.io.fits.BinTableHDU`
@@ -346,13 +304,13 @@ def fits_table_to_table(tbhdu):
     table : `~astropy.table.Table`
         astropy table containing the desired columns
     """
-    data = tbhdu.data
-    header = tbhdu.header
+    data = hdu.data
+    header = hdu.header
     table = Table(data, meta=header)
 
     # Copy over column meta-data
-    for idx, colname in enumerate(tbhdu.columns.names):
-        table[colname].unit = tbhdu.columns[colname].unit
+    for idx, colname in enumerate(hdu.columns.names):
+        table[colname].unit = hdu.columns[colname].unit
         description = table.meta.pop('TCOMM' + str(idx + 1), None)
         table[colname].meta['description'] = description
         ucd = table.meta.pop('TUCD' + str(idx + 1), None)

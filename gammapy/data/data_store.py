@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.energy import Energy
 from ..utils.time import time_ref_from_dict
+from ..utils.table import table_row_to_dict
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
@@ -429,33 +430,32 @@ class DataStore(object):
 
         Parameters
         ----------
-        obs_id : array-like, `~gammapy.data.ObservationTable`
-            Observations to create summary for
+        obs_id : array-like
+            Observation IDs to include in the summary
         summed : bool
-            Add up file size over all obs
+            Sum up file size?
         """
         if obs_id is None:
             obs_id = self.obs_table['OBS_ID'].data
-        elif isinstance(obs_id, ObservationTable):
-            obs_id = obs_id['OBS_ID'].data
 
         hdut = self.hdu_table
         hdut.add_index('OBS_ID')
         subhdut = hdut.loc[obs_id]
 
         subhdut_grpd = subhdut.group_by('OBS_ID')
-        colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
+        colnames = subhdut_grpd.groups[0]['HDU_CLASS']
         temp = np.zeros(len(colnames), dtype=int)
 
         rows = []
         for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
             # This is needed to get the column order right
             group.add_index('HDU_CLASS')
-            vals = group.loc[colnames]['SIZE'].data
+            vals = group.loc[colnames]['SIZE']
             if summed:
                 temp = temp + vals
             else:
                 rows.append(np.append(key['OBS_ID'], vals))
+
         if summed:
             rows.append(temp)
         else:
@@ -572,7 +572,7 @@ class DataStoreObservation(object):
     def obs_info(self):
         """Observation information (`~collections.OrderedDict`)."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
-        return OrderedDict(zip(row.colnames, row.as_void()))
+        return table_row_to_dict(row)
 
     @lazyproperty
     def tstart(self):
