@@ -118,7 +118,7 @@ class SpectrumObservationTester:
     def test_stats_table(self):
         table = self.obs.stats_table()
         assert table['n_on'].sum() == self.vals['total_on']
-        assert_quantity_allclose(table['livetime'].max(), self.vals['livetime'])
+        assert_quantity_allclose(table['livetime'].quantity.max(), self.vals['livetime'])
 
     def test_total_stats(self):
         excess = self.obs.total_stats.excess

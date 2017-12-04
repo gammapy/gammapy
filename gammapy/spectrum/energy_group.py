@@ -21,7 +21,7 @@ from ..extern.six.moves import UserList
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
-from ..utils.table import table_from_row_data
+from ..utils.table import table_from_row_data, table_row_to_dict
 from ..data import ObservationStats
 
 __all__ = [
@@ -142,8 +142,8 @@ class SpectrumEnergyGroups(UserList):
                 bin_type = 'overflow'
             else:
                 bin_type = 'normal'
-            energy_min = group_table['energy_min'][0]
-            energy_max = group_table['energy_max'][-1]
+            energy_min = group_table['energy_min'].quantity[0]
+            energy_max = group_table['energy_max'].quantity[-1]
 
             group = SpectrumEnergyGroup(
                 energy_group_idx=energy_group_idx,
@@ -160,7 +160,10 @@ class SpectrumEnergyGroups(UserList):
     @classmethod
     def from_group_table(cls, table):
         """Create from energy groups in `~astropy.table.Table` format."""
-        return cls([SpectrumEnergyGroup.from_dict(row) for row in table])
+        return cls([
+            SpectrumEnergyGroup.from_dict(table_row_to_dict(row))
+            for row in table
+        ])
 
     def to_total_table(self):
         """Table with one energy bin per row (`~astropy.table.QTable`).
@@ -284,7 +287,7 @@ class SpectrumEnergyGroups(UserList):
 
     def apply_energy_min(self, energy):
         t = self.to_group_table()
-        idx_max = np.where(t['energy_min'] < energy)[0][-1]
+        idx_max = np.where(t['energy_min'].quantity < energy)[0][-1]
         self.make_and_replace_merged_group(0, idx_max, 'underflow')
 
     def apply_energy_max_old(self, energy):
@@ -295,7 +298,7 @@ class SpectrumEnergyGroups(UserList):
 
     def apply_energy_max(self, energy):
         t = self.to_group_table()
-        idx_min = np.where(t['energy_max'] > energy)[0][0]
+        idx_min = np.where(t['energy_max'].quantity > energy)[0][0]
         self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
 
     def clip_to_valid_range(self, list_idx):

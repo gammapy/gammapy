@@ -71,10 +71,7 @@ def table_row_to_dict(row, make_quantity=True):
     return data
 
 
-# TODO: remove type = 'qtable' to avoid issues?
-# see https://github.com/astropy/astropy/issues/6098
-# see https://github.com/gammapy/gammapy/issues/980
-def table_from_row_data(rows, type='qtable', **kwargs):
+def table_from_row_data(rows, **kwargs):
     """Helper function to create table objects from row data.
 
     - Works with quantities.
@@ -84,22 +81,8 @@ def table_from_row_data(rows, type='qtable', **kwargs):
     ----------
     rows : list
         List of row data (each row a dict or OrderedDict)
-    type : {'table', 'qtable'}
-        Type of table to create
     """
-    # Creating `QTable` from list of row data with `Quantity` objects
-    # doesn't work. So we're reformatting to list of column `Quantity`
-    # objects here.
-    # table = QTable(rows=rows)
-
-    if type == 'table':
-        cls = Table
-    elif type == 'qtable':
-        cls = QTable
-    else:
-        raise ValueError('Invalid type: {}'.format(type))
-
-    table = cls(**kwargs)
+    table = Table(**kwargs)
     colnames = list(rows[0].keys())
     for name in colnames:
         coldata = [_[name] for _ in rows]
