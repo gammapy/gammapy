@@ -236,7 +236,7 @@ class LightCurve(object):
             yp = self.table['flux_errp'].quantity.to('cm-2 s-1').value
             yn = self.table['flux_errn'].quantity.to('cm-2 s-1').value
             yerr = yn, yp
-        elif 'flux_err' in self.table.colunames:
+        elif 'flux_err' in self.table.colnames:
             yerr = self.table['flux_err'].quantity.to('cm-2 s-1').value
         else:
             yerr = None
