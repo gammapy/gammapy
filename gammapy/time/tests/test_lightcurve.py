@@ -81,6 +81,7 @@ def test_lightcurve_properties_flux(lc):
 # TODO: extend these tests to cover other time scales.
 # In those cases, CSV should not round-trip because there
 # is no header info in CSV to store the time scale!
+@requires_dependency('yaml')
 @pytest.mark.parametrize('format', ['fits', 'ascii.ecsv', 'ascii.csv'])
 def test_lightcurve_read_write(tmpdir, lc, format):
     filename = str(tmpdir / 'spam')
