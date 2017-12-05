@@ -14,7 +14,7 @@ background cube models from the data files at a given path location.
 For more details, please refer to `~gammapy.scripts.make_bg_cube_models`.
 
 Examples
-~~~~~~~~
+++++++++
 
 The ``gammapy-make-bg-cube-models`` tool has a few options. For a full list of options, please use:
 
@@ -73,7 +73,7 @@ the ``examples/wip_bg_cube_model_comparison.py`` can be used.
 .. _background_make_background_models_datasets_for_testing:
 
 Datasets for testing
-~~~~~~~~~~~~~~~~~~~~
+++++++++++++++++++++
 
 In order to test the background model generation tools, real
 data from existing experiments such as H.E.S.S. can be used.
