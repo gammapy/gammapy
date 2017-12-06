@@ -4,14 +4,14 @@ import pytest
 from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
-from ..hess import SourceCatalogHGPS
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...image import SkyImage
+from ..hess import SourceCatalogHGPS
 
 
 @requires_data('hgps')
 class TestSourceCatalogHGPS:
-    def setup(self):
+    def setup_class(self):
         self.cat = SourceCatalogHGPS()
 
     def test_source_table(self):
@@ -34,12 +34,12 @@ class TestSourceCatalogHGPS:
         rspec = source.data['RSpec']
         npix = int(2.5 * rspec.value / 0.02)
 
-        wcs_spec = {'xref': source.position.galactic.l.deg,
-                    'yref': source.position.galactic.b.deg,
-                    'nxpix': npix,
-                    'nypix': npix}
-
-        image = SkyImage.empty(**wcs_spec)
+        image = SkyImage.empty(
+            xref=source.position.galactic.l.deg,
+            yref=source.position.galactic.b.deg,
+            nxpix=npix,
+            nypix=npix,
+        )
         coordinates = image.coordinates()
         image.data = ls_model.evaluate(coordinates)
         image.data *= image.solid_angle()
@@ -49,36 +49,15 @@ class TestSourceCatalogHGPS:
 
         assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
 
-    def test_hessj1801_spatial_model(self):
-        # special test for the only extern source with a gaussian morphology
-        source = self.cat['HESS J1801-233']
-        assert_allclose(source.spatial_model().amplitude, 2.488E-12, rtol=1E-3)
-
 
 @requires_data('hgps')
 class TestSourceCatalogObjectHGPS:
-    def setup(self):
+    def setup_class(self):
         self.cat = SourceCatalogHGPS()
-        self.source_name = 'HESS J1843-033'
-        self.source = self.cat[self.source_name]
-
-    def test_single_gauss(self):
-        source = self.cat['HESS J1930+188']
-        assert source.data['Spatial_Model'] == 'Gaussian'
-        assert 'Spatial components   : HGPSC 097' in str(source)
-
-    def test_multi_gauss(self):
-        source = self.cat['HESS J1825-137']
-        assert source.data['Spatial_Model'] == '3-Gaussian'
-        assert 'Spatial components   : HGPSC 065, HGPSC 066, HGPSC 067' in str(source)
-
-    def test_snr(self):
-        source = self.cat['HESS J1713-397']
-        assert source.data['Spatial_Model'] == 'Shell'
-        assert 'Source name          : HESS J1713-397' in str(source)
+        self.source = self.cat['HESS J1843-033']
 
     def test_name(self):
-        assert self.source.name == self.source_name
+        assert self.source.name == 'HESS J1843-033'
 
     def test_index(self):
         assert self.source.index == 64
@@ -87,15 +66,30 @@ class TestSourceCatalogObjectHGPS:
         data = self.source.data
         assert data['Source_Class'] == 'Unid'
 
-    def test_pprint(self):
-        self.source.pprint()
-
     def test_str(self):
         ss = self.source.__str__()
         assert 'Source name          : HESS J1843-033' in ss
         assert 'Component HGPSC 083:' in ss
 
-    def test_model(self):
+    def test_str_single_gauss(self):
+        source = self.cat['HESS J1930+188']
+        assert source.data['Spatial_Model'] == 'Gaussian'
+        assert 'Spatial components   : HGPSC 097' in str(source)
+
+    def test_str_multi_gauss(self):
+        source = self.cat['HESS J1825-137']
+        assert source.data['Spatial_Model'] == '3-Gaussian'
+        assert 'Spatial components   : HGPSC 065, HGPSC 066, HGPSC 067' in str(source)
+
+    def test_str_snr(self):
+        source = self.cat['HESS J1713-397']
+        assert source.data['Spatial_Model'] == 'Shell'
+        assert 'Source name          : HESS J1713-397' in str(source)
+
+    def test_pprint(self):
+        self.source.pprint()
+
+    def test_spectral_model_pl(self):
         source = self.source
         model = source.spectral_model
         pars = model.parameters
@@ -108,7 +102,7 @@ class TestSourceCatalogObjectHGPS:
         desired = source.data['Flux_Spec_Int_1TeV'].value
         assert_allclose(actual, desired, rtol=0.01)
 
-    def test_ecpl_model(self):
+    def test_spectral_model_ecpl(self):
         source = self.cat['HESS J0835-455']
         model = source.spectral_model
         pars = model.parameters
@@ -121,12 +115,6 @@ class TestSourceCatalogObjectHGPS:
         actual = model.integral(emin, emax).value
         desired = source.data['Flux_Spec_Int_1TeV'].value
         assert_allclose(actual, desired, rtol=0.01)
-
-    @requires_dependency('matplotlib')
-    def test_model_plot(self):
-        model = self.source.spectral_model
-        erange = [1, 10] * u.TeV
-        model.plot(erange)
 
     def test_spatial_model_gaussian(self):
         source = self.cat['HESS J1119-614']
@@ -148,3 +136,8 @@ class TestSourceCatalogObjectHGPS:
         actual = model.amplitude
         desired = 8.353370e-13
         assert_allclose(actual, desired, rtol=1e-3)
+
+    def test_hessj1801_spatial_model(self):
+        # special test for the only extern source with a gaussian morphology
+        source = self.cat['HESS J1801-233']
+        assert_allclose(source.spatial_model().amplitude, 2.488E-12, rtol=1E-3)

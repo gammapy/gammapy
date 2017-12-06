@@ -7,7 +7,6 @@ TODO:
 - [ ] Load HGPS maps
 - [ ] Source object should contain info on components and associations
 - [ ] Links to SNRCat
-- [ ] Show image in ds9 or js9
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
@@ -82,18 +81,18 @@ class HGPSGaussComponent(object):
         Component spatial model.
         """
         d = self.data
-
-        amplitude = d['Flux_Map'].to('cm-2 s-1').value
-        pars = {}
+        # At the moment spatial models are normalised by deg^2
+        amplitude = d['Flux_Map'].value / (2 * np.pi * d['Size'].value ** 2)
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        pars['x_mean'] = glon.value
-        pars['y_mean'] = glat.value
-        pars['x_stddev'] = d['Size'].to('deg').value
-        pars['y_stddev'] = d['Size'].to('deg').value
-        pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
-        return Gaussian2D(**pars)
+        return Gaussian2D(
+            x_mean=glon.value,
+            y_mean=glat.value,
+            x_stddev=d['Size'].value,
+            y_stddev=d['Size'].value,
+            amplitude=amplitude,
+        )
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
@@ -101,7 +100,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def energy_range(self):
-        return u.Quantity([self.data['Energy_Range_Spec_Lo'], self.data['Energy_Range_Spec_Hi']])
+        return u.Quantity([self.data['Energy_Range_Spec_Min'], self.data['Energy_Range_Spec_Max']])
 
     def __str__(self):
         return self.info()
