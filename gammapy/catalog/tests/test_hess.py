@@ -67,7 +67,7 @@ class TestSourceCatalogObjectHGPS:
         assert data['Source_Class'] == 'Unid'
 
     def test_str(self):
-        ss = self.source.__str__()
+        ss = str(self.source)
         assert 'Source name          : HESS J1843-033' in ss
         assert 'Component HGPSC 083:' in ss
 
@@ -88,6 +88,11 @@ class TestSourceCatalogObjectHGPS:
 
     def test_pprint(self):
         self.source.pprint()
+
+    def test_energy_range(self):
+        energy_range = self.source.energy_range
+        assert energy_range.unit == 'TeV'
+        assert_allclose(energy_range.value, [0.21544346, 61.89658356])
 
     def test_spectral_model_pl(self):
         source = self.source
@@ -116,28 +121,30 @@ class TestSourceCatalogObjectHGPS:
         desired = source.data['Flux_Spec_Int_1TeV'].value
         assert_allclose(actual, desired, rtol=0.01)
 
+    def test_spatial_model_point(self):
+        source = self.cat['HESS J1826-148']
+        model = source.spatial_model()
+        assert_allclose(model.amplitude, 8.354304806121845e-13)
+
     def test_spatial_model_gaussian(self):
         source = self.cat['HESS J1119-614']
-        model = source.spatial_model(emin=1 * u.TeV, emax=1e3 * u.TeV)
-        actual = model.amplitude
-        desired = 1.52453e-11
-        assert_allclose(actual, desired, rtol=1e-3)
+        model = source.spatial_model()
+        assert_allclose(model.amplitude, 1.524557226374496e-11)
+
+    def test_spatial_model_gaussian3(self):
+        source = self.cat['HESS J1825-137']
+        model = source.spatial_model()
+        assert_allclose(model[0].amplitude, 3.662450902166903e-12)
+        assert_allclose(model[1].amplitude, 1.2805462035898928e-11)
+        assert_allclose(model[2].amplitude, 2.1553481912856457e-11)
+
+    def test_spatial_model_gaussian_extern(self):
+        # special test for the only extern source with a gaussian morphology
+        source = self.cat['HESS J1801-233']
+        model = source.spatial_model()
+        assert_allclose(model.amplitude, 2.4881435269261268e-12)
 
     def test_spatial_model_shell(self):
         source = self.cat['Vela Junior']
-        model = source.spatial_model(emin=1 * u.TeV, emax=1e3 * u.TeV)
-        actual = model.amplitude
-        desired = 2.33949e-11
-        assert_allclose(actual, desired, rtol=1e-3)
-
-    def test_spatial_model_point(self):
-        source = self.cat['HESS J1826-148']
-        model = source.spatial_model(emin=1 * u.TeV, emax=1e3 * u.TeV)
-        actual = model.amplitude
-        desired = 8.353370e-13
-        assert_allclose(actual, desired, rtol=1e-3)
-
-    def test_hessj1801_spatial_model(self):
-        # special test for the only extern source with a gaussian morphology
-        source = self.cat['HESS J1801-233']
-        assert_allclose(source.spatial_model().amplitude, 2.488E-12, rtol=1E-3)
+        model = source.spatial_model()
+        assert_allclose(model.amplitude, 2.3394972370498355e-11)

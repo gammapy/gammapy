@@ -38,7 +38,6 @@ FF = 1e-12
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
-SHELL_WIDTH = 0.05  # Default shell width (fraction of R_out)
 
 
 class HGPSGaussComponent(object):
@@ -97,10 +96,6 @@ class HGPSGaussComponent(object):
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog."""
-
-    @property
-    def energy_range(self):
-        return u.Quantity([self.data['Energy_Range_Spec_Min'], self.data['Energy_Range_Spec_Max']])
 
     def __str__(self):
         return self.info()
@@ -242,8 +237,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime_Spec'].value)
 
-        lo = d['Energy_Range_Spec_Lo'].value
-        hi = d['Energy_Range_Spec_Hi'].value
+        lo = d['Energy_Range_Spec_Min'].value
+        hi = d['Energy_Range_Spec_Max'].value
         ss += '{:<20s} : {:.2f} to {:.2f} TeV\n'.format('Energy range:', lo, hi)
 
         ss += '{:<20s} : {:.1f}\n'.format('Background', d['Background_Spec'])
@@ -367,6 +362,21 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     @property
+    def energy_range(self):
+        """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
+        e = u.Quantity([
+            self.data['Energy_Range_Spec_Min'],
+            self.data['Energy_Range_Spec_Max'],
+        ])
+        # Some EXTERN sources have no energy range information.
+        # In those cases, we put a default
+        use_default = np.isnan(e)
+        e_default = [0.2, 50] * u.TeV
+        e[use_default] = e_default[use_default]
+
+        return e
+
+    @property
     def spectral_model(self):
         """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
@@ -440,11 +450,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             return Delta2D(**pars)
 
         elif spatial_model == 'Shell':
+            # HGPS contains no information on shell width
+            # Here we assuma a 5% shell width for all shells.
+            shell_width_fraction = 0.05
             pars['x_0'] = glon.value
             pars['y_0'] = glat.value
             r_out = d['Size'].to('deg').value
-            pars['width'] = r_out * SHELL_WIDTH
-            pars['r_in'] = r_out * (1 - SHELL_WIDTH)
+            pars['width'] = r_out * shell_width_fraction
+            pars['r_in'] = r_out * (1 - shell_width_fraction)
             pars['amplitude'] = amplitude
             return Shell2D(**pars)
 
