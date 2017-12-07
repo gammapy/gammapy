@@ -106,3 +106,4 @@
 
 .. _Gammapy tutorial notebooks on nbviewer: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
 .. _nbsphinx: http://nbsphinx.readthedocs.io
+.. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
