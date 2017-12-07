@@ -174,7 +174,7 @@ To check all internal and external links use this `linkchecker <https://github.c
 
 .. code-block:: bash
 
-   $ pip install linkchecker
+   $ python -m pip install linkchecker
    $ linkchecker --check-extern docs/_build/html/index.html
 
 Because Sphinx doesn't warn about some broken internal links for some reason,

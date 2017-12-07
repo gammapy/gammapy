@@ -28,7 +28,7 @@ You can install the latest stable version of Gammapy with conda::
 
 or with pip::
 
-    pip install gammapy
+    python -m pip install gammapy
 
 or with Macports (a package manager for Mac OS)::
 
@@ -44,7 +44,7 @@ To install the development version of Gammapy::
 
     git clone https://github.com/gammapy/gammapy.git
     cd gammapy
-    pip install .
+    python -m pip install .
 
 of if you're using conda, you can install the development version like this::
 

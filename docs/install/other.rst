@@ -44,7 +44,7 @@ The following packages have to be installed with pip:
 
 .. code-block:: bash
 
-    pip3 install --user \
+    python3 -m pip install --user \
         gammapy naima photutils reproject gwcs astroplan \
         iminuit emcee healpy
 
@@ -95,7 +95,7 @@ and then
 
 .. code-block:: bash
 
-   $ pip install ipython astropy gammapy
+   $ python -m pip install ipython astropy gammapy
 
 If this doesn't work (which is not uncommon, this is known to fail to compile the C
 extensions of Astropy on some platforms), ask your Python-installation-savvy co-worker

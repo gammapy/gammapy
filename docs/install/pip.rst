@@ -14,18 +14,18 @@ To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_) u
 
 .. code-block:: bash
 
-   $ pip install gammapy
+   $ python -m pip install gammapy
 
 To install the current Gammapy **development** version using `pip`_:
 
 .. code-block:: bash
 
-   $ pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
+   $ python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
 If that doesn't work because the download from PyPI or Github is blocked by your network,
 but you have some other means of copying files onto that machine,
 you can get the tarball (``.tar.gz`` file) from PyPI or ``.zip`` file from Github, and then
-``pip install <filename>``.
+``python -m pip install <filename>``.
 
 .. _install-setuppy:
 
