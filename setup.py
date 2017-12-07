@@ -116,7 +116,6 @@ setup(
           'scikit-image>=0.10',
           'photutils',
           'reproject',
-          'gwcs',
           'astroplan',
           'uncertainties>=2.4',
           'naima',
