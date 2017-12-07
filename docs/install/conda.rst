@@ -10,7 +10,7 @@ and then run these commands:
 .. code-block:: bash
 
     conda config --add channels conda-forge --add channels sherpa
-    conda install gammapy naima \
+    conda install gammapy naima sherpa \
         scipy matplotlib ipython-notebook \
         cython click
 
@@ -19,18 +19,7 @@ functionality available:
 
 .. code-block:: bash
 
-    conda install \
-        scikit-image scikit-learn h5py pandas \
-        aplpy photutils reproject
-
-    python -m pip install iminuit
-
-Sherpa is the only Gammapy dependency that's not yet available on Python 3, so if you want
-to use Sherpa for modeling / fitting, install Anaconda Python 2 and
-
-.. code-block:: bash
-
-    conda install sherpa
+    conda install scikit-image aplpy photutils reproject iminuit
 
 To update to the latest version:
 
