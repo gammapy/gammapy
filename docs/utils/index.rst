@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _utils:
 
 *************************************************
@@ -79,8 +81,8 @@ This is done automatically by `astropy.coordinates.AltAz` when the
 no need for explicit time scale transformations in Gammapy
 (although if you do want to explicitly compute it, it's easy, see `here <http://docs.astropy.org/en/latest/time/index.html#sidereal-time>`__).
 
-The "Time Systems in a nutshell" section `here <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html>`__
-gives a good, brief explanation of the differences between the relevant time scales ``UT1``, ``UTC`` and ``TT``.
+The `Fermi-LAT time systems in a nutshell`_ page gives a good, brief explanation of the differences
+between the relevant time scales ``UT1``, ``UTC`` and ``TT``.
 
 .. _MET_definition:
 
@@ -90,9 +92,7 @@ Mission elapsed times (MET)
 [MET]_ time references are times representing UTC seconds after a
 specific origin. Each experiment may have a different MET origin
 that should be included in the header of the corresponding data
-files. For more details see `Cicerone: Data - Time in Fermi Data Analysis
-<http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/
-Time_in_ScienceTools.html>`_.
+files. For more details see `Fermi-LAT time systems in a nutshell`_.
 
 It's not clear yet how to best implement METs in Gammapy, it's one
 of the tasks here:

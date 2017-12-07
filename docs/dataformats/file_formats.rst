@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _dataformats_file_formats:
 
 File formats
@@ -19,15 +21,10 @@ where no suitable standardised format exists.
 Introduction
 ------------
 
-In Gammapy we use existing file formats by
-`Fermi-LAT <http://fermi.gsfc.nasa.gov/>`__ and
-`CTA <https://www.cta-observatory.org/>`__ where available.
+In Gammapy we use existing file formats by `Fermi-LAT`_ and `CTA`_ where available.
 
-This increases inter-operability with the
-`Fermi science tools <http://fermi.gsfc.nasa.gov/ssc/data/>`__
-and the
-`CTA science tools <http://cta.irap.omp.eu/ctools/>`__
-as well as mind share with users of those tools.
+This increases inter-operability with the `Fermi ScienceTools`_
+and `ctools`_ as well as mind share with users of those tools.
 
 We also introduce new file formats for things that should be easy to store and exchange,
 but no well-defined format exists. E.g. we could define a Gaussian PSF in XML format as
@@ -122,8 +119,7 @@ Almost all entries in the above table are debatable ... here's some caveats:
   E.g. I put FITS as "no" for tree data (a.k.a. structured or hierarchical data such as
   in the JSON example above) even though people have found ways to encode such information
   in FITS headers or data extensions.
-* The schema supports is best (very common, well-understood, good tools) for
-  `XML schema <http://en.wikipedia.org/wiki/XML_schema>`__,
+* The schema supports is best (very common, well-understood, good tools) for `XML schema`_,
   but there's some schema support for the other formats as well.
   This will be discussed in the section `Validation`_ below.
 
@@ -132,7 +128,7 @@ Here's a short description of each format with references if you want to learn m
 INI
 +++
 
-**INI** files (see `Wikipedia <http://en.wikipedia.org/wiki/INI_file>`__)
+**INI** files (see `Wikipedia <https://en.wikipedia.org/wiki/INI_file>`__)
 are the most easy to write and edit for humans and can contain ``#`` comments
 and are thus a good for configuration files.
 file extensions of ``.ini``, ``.conf`` and ``.cfg`` are common.
@@ -150,13 +146,13 @@ Unfortunately INI files are not standardised, so there's only conventions and to
 CSV
 +++
 
-**CSV** files (see `Wikipedia <http://en.wikipedia.org/wiki/Comma-separated_values>`__),
+**CSV** files (see `Wikipedia <https://en.wikipedia.org/wiki/Comma-separated_values>`__),
 store tables as comma-separated values (or tab or whitespace separated),
 sometimes with the column names in the first row, sometimes with ``#`` comments.
 The good thing is that you can import and export data in CSV format from all spreadsheet
-programs (e.g. `Microsoft Excel <http://en.wikipedia.org/wiki/Microsoft_Excel>`__,
-`Apple Keynote <http://en.wikipedia.org/wiki/Keynote_(presentation_software)>`__ or
-`LibreOffice Calc <http://en.wikipedia.org/wiki/LibreOffice_Calc>`__)
+programs (e.g. `Microsoft Excel <https://en.wikipedia.org/wiki/Microsoft_Excel>`__,
+`Apple Keynote <https://en.wikipedia.org/wiki/Keynote_(presentation_software)>`__ or
+`LibreOffice Calc <https://en.wikipedia.org/wiki/LibreOffice_Calc>`__)
 as well as astronomy table programs such as e.g.
 `TOPCAT <http://www.star.bris.ac.uk/~mbt/topcat/>`__.
 Since it's a simple text format it's easy to read or edit in any text editor or
@@ -204,21 +200,20 @@ TODO: describe
 FITS
 ++++
 
-**FITS** files (see `Wikipedia <http://en.wikipedia.org/wiki/FITS>`__)
+**FITS** files (see `Wikipedia <https://en.wikipedia.org/wiki/FITS>`__)
 
 TODO: describe
 
 ROOT
 ++++
 
-**ROOT** files (see `Wikipedia <http://en.wikipedia.org/wiki/ROOT>`__)
-This is a binary serialisation format (see `TFile <http://root.cern.ch/root/html/TFile.html>`__)
+**ROOT** files (see `Wikipedia <https://en.wikipedia.org/wiki/ROOT>`__)
+This is a binary serialisation format (see `TFile <https://root.cern.ch/root/html/TFile.html>`__)
 that is very common for low-level data in high-energy physics and astronomy and for
 computing and storing instrument response functions.
-If only ROOT built-in objects like simple `TTree <http://root.cern.ch/root/html/TTree.html>`__ and
-`Histogram <http://root.cern.ch/root/html/TH1.html>`__  objects are stored it is
-possible to exchange those files and read them from C++, Python (via
-`PyROOT <http://root.cern.ch/drupal/content/pyroot>`__ or  `rootpy <http://www.rootpy.org/>`__).
+If only ROOT built-in objects like simple `TTree <https://root.cern.ch/root/html/TTree.html>`__ and
+`Histogram <https://root.cern.ch/root/html/TH1.html>`__  objects are stored it is
+possible to exchange those files and read them from C++, Python (via `PyROOT`_ or `rootpy`_).
 Access to your own serialised C++ objects is only possible if you distribute ROOT and
 a C++ library ... but storing data this way is anyways a bad idea
 (see e.g. `here <https://www.youtube.com/watch?v=7KnfGDajDQw>`__).
@@ -230,13 +225,13 @@ Other
 
 Other file formats that are very useful but not commonly used in gamma-ray astronomy (yet):
 
-* **HDF5** files (see `Wikipedia <http://en.wikipedia.org/wiki/Hierarchical_Data_Format#HDF5>`__).
+* **HDF5** files (see `Wikipedia <https://en.wikipedia.org/wiki/Hierarchical_Data_Format#HDF5>`__).
   Advantages over FITS: much faster for some applications,
   more flexible metadata, more widespread use (not astro specific),
   some tools for schema validation.
 * There's a bunch of efficient and flexible binary data serialization formats, e.g.
   `Google Protobuf <https://code.google.com/p/protobuf/>`__ or
-  `MessagePack <http://msgpack.org/>`__ or `BSON <http://bsonspec.org/>`__.
+  `MessagePack <https://msgpack.org/>`__ or `BSON <https://bsonspec.org/>`__.
 
 TODO: describe that most of these formats are only being considered for low-level data
 for CTA, e.g. shower image I/O can be much more efficient that with FITS variable-length columns.
@@ -246,7 +241,7 @@ for CTA, e.g. shower image I/O can be much more efficient that with FITS variabl
   pickled. (Do we care at all for Gammapy or is our policy that we don't support pickling
   Gammapy objects?)
 
-* `SQLite <http://sqlite.org/>`__ gives you a `SQL <http://en.wikipedia.org/wiki/SQL>`__
+* `SQLite <https://sqlite.org/>`__ gives you a `SQL <https://en.wikipedia.org/wiki/SQL>`__
   database in memory or a simple file (no server, no configuration).
   TODO: describe how it can be useful for pipeline processing (async I/O and easy select)
 
@@ -275,7 +270,7 @@ output with incorrect structure or content, so this is not only an issue for use
 Checking the structure (and where possible content) is the responsibility of
 the tool author and can be done either by writing a schema or code.
 If you don't know what a schema is, please take a few minutes to read about it
-`here <http://spacetelescope.github.io/understanding-json-schema/about.html>`__
+`here <https://spacetelescope.github.io/understanding-json-schema/about.html>`__
 using JSON as an example, I won't try to explain it here.
 
 Existing Tools

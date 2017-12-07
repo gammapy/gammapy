@@ -6,11 +6,8 @@ Other package managers
 ======================
 
 Besides conda, Gammapy and some of the optional dependencies (Sherpa, Astropy-affiliated packages)
-as not yet available in other package managers (such as
-e.g. `apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__
-or `yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ on Linux
-or `Macports <https://www.macports.org/>`__
-or `homebrew <http://brew.sh/>`__ on Mac.
+are not yet available in other package managers, such as e.g. `apt-get`_ or `yum`_ on Linux
+or `Macports`_ or `Homebrew`_ on Mac.
 
 So installing Gammapy this way is not recommended at this time.
 (The recommended method is conda as mentioned above).
@@ -28,8 +25,7 @@ available in those distributions and versions are updated.
 apt-get
 -------
 
-`apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__ is a popular package manager on Linux,
-e.g. on Debian or Ubuntu.
+On Ubuntu or Debian Linux, you can use `apt-get`_ and `pip`_ to install Gammapy and it's dependencies.
 
 The following packages are available:
 
@@ -44,24 +40,16 @@ The following packages have to be installed with pip:
 
 .. code-block:: bash
 
-    pip3 install --user \
-        gammapy naima photutils reproject gwcs astroplan \
-        iminuit emcee healpy
+    python3 -m pip install --user \
+        gammapy naima photutils reproject \
+        iminuit emcee healpy sherpa
 
-Sherpa currently doesn't work on Python 3.
-You could try to use Python 2 and pip-installing Sherpa (don't know if that works).
-
-A Debian package for Sherpa is in preparation: https://github.com/sherpa/sherpa/issues/75
-
-A Debian package for Gammapy is in preparation: https://github.com/gammapy/gammapy/issues/324
-
-As far as I can see there's no HEALPIX or healpy package.
+Another option to install software on Debian (and any system) is to use conda.
 
 yum
 ---
 
-`yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ is a popular package manager on Linux,
-e.g. on Scientific linux or Red Hat Linux.
+`yum`_ is a popular package manager on Linux, e.g. on Scientific linux or Red Hat Linux.
 
 If you are a ``yum`` user, please contribute the equivalent commands
 (see e.g. the Macports section below).
@@ -69,17 +57,20 @@ If you are a ``yum`` user, please contribute the equivalent commands
 Homebrew
 --------
 
-`Homebrew <http://brew.sh/>`_ is a popular package manager on Mac.
+`Homebrew`_ is a popular package manager on Mac.
 
-If you are a ``brew`` user, please contribute the equivalent commands
-(see e.g. the Macports section above).
+Gammapy currently isn't packaged with Homebrew. It should be possible to install
+Python / pip / Numpy / Astropy with ``brew`` and then to install Gammapy with ``pip``.
 
+If you're a ``brew`` user, please let us know if it works and what the exact commands are.
+
+Note that we have some Gammapy developers and users on Mac that use Macports.
+For this you can find detailed instructions here: :ref:`install-macports`
 
 Fermi ScienceTools
 ------------------
 
-The `Fermi ScienceTools <http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
-ships with it's own Python 2.7 interpreter.
+The `Fermi ScienceTools`_ ships with it's own Python 2.7 interpreter.
 
 If you want to use Astropy or Gammapy with that Python, you have to install it using
 that Python interpreter, other existing Python interpreters or installed packages
@@ -89,13 +80,11 @@ Fermi ScienceTools version ``v10r0p5`` (released Jun 24, 2015) includes
 Python 2.7.8, Numpy 1.9.1, Scipy 0.14.0, matplotlib 1.1.1, PyFITS 3.1.2.
 Unfortunately pip, ipython or Astropy are not included.
 
-So first in stall `pip`_ (see
-`instructions <https://pip.pypa.io/en/latest/installing.html#install-pip>`__),
-and then
+So first in stall `pip`_ (see `pip install instructions`_), and then
 
 .. code-block:: bash
 
-   $ pip install ipython astropy gammapy
+   $ python -m pip install ipython astropy gammapy
 
 If this doesn't work (which is not uncommon, this is known to fail to compile the C
 extensions of Astropy on some platforms), ask your Python-installation-savvy co-worker

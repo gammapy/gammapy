@@ -40,7 +40,7 @@ where :math:`F`, :math:`R`, :math:`t_{obs}` and :math:`N` are the following quan
 * Expected observed counts model :math:`N(p', E')` (unit: :math:`sr^{-1} TeV^{-1}`)
 
 If you'd like to learn more about instrument response functions, have a look at the descriptions for
-`Fermi <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_LAT_IRFs/index.html>`__,
+`Fermi <https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_LAT_IRFs/index.html>`__,
 for `TeV data analysis <http://inspirehep.net/record/1122589>`__
 and for `GammaLib <http://gammalib.sourceforge.net/user_manual/modules/obs.html#handling-the-instrument-response>`__.
 

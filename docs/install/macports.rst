@@ -12,7 +12,7 @@ To install Gammapy and it's core dependencies:
 
 .. code-block:: bash
 
-    sudo port install py35-gammapy
+    sudo port install py36-gammapy
 
 The commands to update Gammapy and it's dependencies to the latest stable versions are:
 
@@ -52,7 +52,7 @@ Macports also has a convenience command ``port select`` built in to select a giv
 
 .. code-block:: bash
 
-    sudo port select python python35
+    sudo port select python python36
 
 This will create a symbolic link ``/opt/local/bin/python -> /opt/local/bin/python3.5`` and means that
 now if you execute ``python``, you will get the Macports Python 3.5.
@@ -73,10 +73,10 @@ Here's some examples for some scientific computing and astronomy packages:
 .. code-block:: bash
 
     sudo port install \
-        py35-pip py35-pytest \
-        py35-scipy py35-matplotlib py35-scikit-image py35-scikit-learn \
-        py35-pandas py35-emcee py35-h5py py35-ipython py35-uncertainties \
-        py35-healpy py35-cython
+        py36-pip py36-pytest \
+        py36-scipy py36-matplotlib py36-scikit-image py36-scikit-learn \
+        py36-pandas py36-emcee py36-h5py py36-ipython py36-uncertainties \
+        py36-healpy py36-cython
 
 To search which software is available in Macports (searches package name and description):
 
@@ -115,7 +115,7 @@ There's a few things worth pointing out about how we execute ``pip`` to install 
   the ``site-packages`` folder where Macports installs packages.
   This will usually work, but can then cause problems later on when you try to upgrade or add packages
   via ``sudo port install``. Macports updates work so well because it is very well organised and e.g. keeps
-  manifests of all files installed (you can list them with ``port contents py35-gammapy``). So basically,
+  manifests of all files installed (you can list them with ``port contents py36-gammapy``). So basically,
   to not mess with this, you should never touch files in ``/opt/local`` except through ``port`` commands.
   The ``--user`` option of ``pip`` means "install in my user site-packages folder", which at this time
   on macOS is ``/Users/<username>/Library/Python/3.5/lib/python/site-packages`` and is by default on the
@@ -126,7 +126,7 @@ To uninstall Python packages:
 .. code-block:: bash
 
     sudo port uninstall <packagename>
-    pip uninstall <packagename>
+    python -m pip uninstall <packagename>
 
 To check where a given package you're using is installed:
 

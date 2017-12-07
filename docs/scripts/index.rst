@@ -83,7 +83,7 @@ This means that to be able to use the tools you have to install Gammapy:
 
 .. code-block:: bash
 
-    $ pip install --user .
+    $ python -m pip install --user .
 
 
 This will install the ``gammapy-*`` wrappers in a ``bin`` folder that you need to add to your ``$PATH``,
@@ -94,7 +94,7 @@ Gammapy and the tools and don't have to re-install after every change.
 
 .. code-block:: bash
 
-    $ pip install --user --editable .
+    $ python -m pip install --user --editable .
 
 
 Most of the command line tools are implemented in the `gammapy.scripts` sub-package as thin wrappers

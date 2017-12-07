@@ -28,7 +28,7 @@ You can install the latest stable version of Gammapy with conda::
 
 or with pip::
 
-    pip install gammapy
+    python -m pip install gammapy
 
 or with Macports (a package manager for Mac OS)::
 
@@ -40,30 +40,33 @@ install it with e.g. ``apt-get`` or ``yum``.
 Development version
 -------------------
 
-To install the development version of Gammapy::
+You can install the development version of Gammapy like this::
 
-    git clone https://github.com/gammapy/gammapy.git
-    cd gammapy
-    pip install .
+    python -m pip install --user git+https://github.com/gammapy/gammapy.git
 
-of if you're using conda, you can install the development version like this::
+This will ``git clone`` the Gammapy repository from Github into a temp folder
+and then build and install Gammapy from there.
 
-    git clone https://github.com/gammapy/gammapy.git
-    cd gammapy
-    conda env create -f environment-dev.yml
-    source activate gammapy-dev
+If there are any errors related to Cython, Numpy or Astropy, you should install
+those first and try again::
+
+    conda install -c cython numpy astropy click regions
+    python -m pip install --user git+https://github.com/gammapy/gammapy.git
+
+How to get set up for Gammapy development is described here: :ref:`dev_setup`
 
 Verify
 ------
 
-To verify that Gammapy is installed and available, type this::
+To verify that Gammapy is installed and available,
+and to check it's version and where it's located, type this::
 
     $ python
 
     >>> import gammapy
     >>> print(gammapy.__version__)
+    >>> print(gammapy.__path__)
 
-To find out
 
 Need help?
 ==========
@@ -74,6 +77,11 @@ It's a binary package manager (so generally installation is fast), and allows yo
 install any software in your home folder (without needing ``sudo``) and works the
 same on Linux, Mac OS and Windows. Many Gammapy users and developers use conda
 and are happy with it.
+
+There is a nice blog post `Installing Python Packages from a Jupyter Notebook`_ that
+explains how to install Python packages in general with ``pip`` and ``conda``,
+specifically from inisde Jupyter notebooks, but also in general it's a good introduction
+how Python package installation with ``pip`` and ``conda`` work.
 
 If you have any questions or issues, don't hesitate to ask on the `Gammapy mailing list`_!
 

@@ -13,7 +13,7 @@ varying other parameters.
 CSV format
 ----------
 
-We use the `CSV <http://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for target lists.
+We use the `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for target lists.
 
 A target list must have at least a column called ``Number`` with unique entries:
 

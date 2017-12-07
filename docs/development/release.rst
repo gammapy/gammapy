@@ -66,7 +66,7 @@ Make release
 
 Steps for the day of the release:
 
-#. Mention release in the :ref:`gammapy_news` section.
+#. Mention release on the front page and on the news page of the Gammapy webpage.
 #. Follow the instructions how to release an Astropy affiliated package
    `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.

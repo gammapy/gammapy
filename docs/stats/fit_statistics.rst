@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _fit-statistics:
 
 Fit statistics
@@ -7,9 +9,7 @@ Introduction
 ------------
 
 This page describes common fit statistics used in gamma-ray astronomy.
-Results were tested against results from the
-`Sherpa <http://cxc.harvard.edu/sherpa/>`_ and
-`XSpec <https://heasarc.gsfc.nasa.gov/xanadu/xspec/>`_
+Results were tested against results from the `Sherpa`_ and `XSpec`_
 X-ray analysis packages.
 
 .. Likelihood defined per bin -> take sum
@@ -286,10 +286,8 @@ scenarios
 Notes
 ^^^^^
 
-All above formulae are equivalent to what is given on the 
-`XSpec manual statistics page
-<http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
-with the substitutions
+All above formulae are equivalent to what is given on the
+`XSpec manual statistics page`_ with the substitutions:
 
 .. math::
 
@@ -300,7 +298,6 @@ with the substitutions
 
 Further references
 ------------------
-* `Sherpa statistics page <http://cxc.cfa.harvard.edu/sherpa/statistics>`_ 
-* `XSpec manual statistics page
-  <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
- 
+
+* `Sherpa statistics page`_
+* `XSpec manual statistics page`_

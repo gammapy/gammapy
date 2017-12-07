@@ -23,23 +23,23 @@ Not that with ``EarthLocation`` the orientation of angles is as follows:
 Available observatories (alphabetical order):
 
 - ``cta_south`` and ``cta_north`` for CTA, see
-  `Website <http://www.cta-observatory.org/>`__ and
-  `Wikipedia <http://en.wikipedia.org/wiki/Cherenkov_Telescope_Array>`__
+  `Website <https://www.cta-observatory.org/>`__ and
+  `Wikipedia <https://en.wikipedia.org/wiki/Cherenkov_Telescope_Array>`__
 - ``hawc`` for HAWC, see
   `Website <https://www.hawc-observatory.org/>`__ and
-  `Wikipedia <http://en.wikipedia.org/wiki/High_Altitude_Water_Cherenkov_Experiment>`__
-- ``hegra`` for HEGRA, see `Wikipedia <http://en.wikipedia.org/wiki/HEGRA>`__
+  `Wikipedia <https://en.wikipedia.org/wiki/High_Altitude_Water_Cherenkov_Experiment>`__
+- ``hegra`` for HEGRA, see `Wikipedia <https://en.wikipedia.org/wiki/HEGRA>`__
 - ``hess`` for HESS, see
   `Website <https://www.mpi-hd.mpg.de/hfm/HESS/>`__ and
-  `Wikipedia <http://en.wikipedia.org/wiki/HESS>`__
+  `Wikipedia <https://en.wikipedia.org/wiki/HESS>`__
 - ``magic`` for MAGIC, see
   `Website <https://wwwmagic.mpp.mpg.de/>`__ and
-  `Wikipedia <http://en.wikipedia.org/wiki/MAGIC_(telescope)>`__
+  `Wikipedia <https://en.wikipedia.org/wiki/MAGIC_(telescope)>`__
 - ``milagro`` for MILAGRO, see
-  `Wikipedia <http://en.wikipedia.org/wiki/Milagro_(experiment)>`__)
+  `Wikipedia <https://en.wikipedia.org/wiki/Milagro_(experiment)>`__)
 - ``veritas`` for VERITAS, see
-  `Website <http://veritas.sao.arizona.edu/>`__ and `Wikipedia <http://en.wikipedia.org/wiki/VERITAS>`__
-- ``whipple`` for WHIPPLE, see `Wikipedia <http://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory>`__
+  `Website <https://veritas.sao.arizona.edu/>`__ and `Wikipedia <https://en.wikipedia.org/wiki/VERITAS>`__
+- ``whipple`` for WHIPPLE, see `Wikipedia <https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory>`__
 
 Examples
 --------
@@ -61,7 +61,7 @@ observatory_locations['cta_south'] = EarthLocation(lon='-70d18m58.84s', lat='-24
 # lon=-17.891571d, lat=28.762158d, height=2147m
 observatory_locations['cta_north'] = EarthLocation(lon='-17d53m31.218s', lat='28d45m43.7904s', height='2147m')
 
-# HAWC location taken from http://arxiv.org/pdf/1108.6034v2.pdf
+# HAWC location taken from https://arxiv.org/pdf/1108.6034v2.pdf
 observatory_locations['hawc'] = EarthLocation(lon='-97d18m34s', lat='18d59m48s', height='4100m')
 
 # https://en.wikipedia.org/wiki/HEGRA
@@ -77,5 +77,5 @@ observatory_locations['milagro'] = EarthLocation(lon='-106.67625d', lat='35.8783
 observatory_locations['veritas'] = EarthLocation(lon='-110d57m07.77s', lat='31d40m30.21s', height='1268m')
 
 # WHIPPLE coordinates taken from the Observatory Wikipedia page:
-# http://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory
+# https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory
 observatory_locations['whipple'] = EarthLocation(lon='-110d52m42s', lat='31d40m52s', height='2606m')

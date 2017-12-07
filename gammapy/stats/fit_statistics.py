@@ -140,7 +140,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     * `Habilitation M. de Naurois, p. 141
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
     * `XSPEC page on Poisson data with Poisson background
-      <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
+      <https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
     # Note: This is equivalent to what's defined on the XSPEC page under the
     # following assumptions
@@ -212,18 +212,17 @@ def get_wstat_gof_terms(n_on, n_off):
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
 
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-
+    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
-    pass
+    raise NotImplementedError
 
 
 def pgstat():
     r"""PG statistic, for Poisson data with Gaussian background.
 
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
-    pass
+    raise NotImplementedError
 
 
 def chi2(N_S, B, S, sigma2):

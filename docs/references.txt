@@ -9,18 +9,17 @@
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _3ML: https://threeml.stanford.edu/
 .. _Numpy: http://www.numpy.org/
-.. _Astropy: http://astropy.org
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _regions: http://astropy-regions.readthedocs.io
 .. _reproject: http://reproject.readthedocs.io
 .. _photutils: http://photutils.readthedocs.io
 .. _astroplan: http://astroplan.readthedocs.io
-.. _gwcs: http://gwcs.readthedocs.io
 .. _iminuit: https://github.com/iminuit/iminuit
 .. _probfit: https://github.com/iminuit/probfit
 .. _h5py: http://www.h5py.org/
 .. _naima: https://github.com/zblz/naima
 .. _ROOT: https://root.cern.ch/drupal/
+.. _PyROOT: https://root.cern.ch/drupal/content/pyroot
 .. _rootpy: http://www.rootpy.org/
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _CIAO: http://cxc.cfa.harvard.edu/ciao/
@@ -29,6 +28,7 @@
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org
 .. _pip: https://pip.pypa.io/en/stable/
+.. _pip install instructions: https://pip.pypa.io/en/latest/installing.html#install-pip
 .. _conda: http://conda.pydata.org/
 .. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.io/en/latest/
@@ -48,18 +48,19 @@
 .. _pointlike: https://github.com/tburnett/Fermi-LAT
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 
-.. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
+.. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/
 .. _APC Paris: http://www.apc.univ-paris7.fr/
 .. _Paris Observatory: https://www.obspm.fr
 
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
 
 .. _CTA: https://www.cta-observatory.org/
-.. _H.E.S.S.: http://www.mpi-hd.mpg.de/hfm/HESS/
-.. _HAWC: http://www.hawc-observatory.org/
-.. _VERITAS: http://veritas.sao.arizona.edu/
+.. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
+.. _HAWC: https://www.hawc-observatory.org/
+.. _VERITAS: https://veritas.sao.arizona.edu/
 .. _MAGIC: https://magic.mpp.mpg.de/
-.. _Fermi-LAT: http://fermi.gsfc.nasa.gov/
+.. _Fermi-LAT: https://fermi.gsfc.nasa.gov/
+.. _Fermi ScienceTools: https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: http://gamma-astro-data-formats.readthedocs.io/
 
@@ -81,7 +82,7 @@
 .. _gamma-sky.net: http://gamma-sky.net/
 .. _Gammapy binder: http://mybinder.org/repo/gammapy/gammapy-extra
 
-.. _Gammapy mailing list: http://groups.google.com/group/gammapy
+.. _Gammapy mailing list: https://groups.google.com/forum/#!forum/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: http://docs.gammapy.org/
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
@@ -92,17 +93,29 @@
 .. _Slack: https://slack.com
 .. _PyPI: https://pypi.python.org
 
-.. _scientific Python stack: http://www.scipy.org/about.html
+.. _scientific Python stack: https://www.scipy.org/about.html
 
 .. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
-.. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
+.. _gtpsf: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
 .. _rsync: https://en.wikipedia.org/wiki/Rsync
 
 .. _PHA: https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html
-.. _ARF: http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc4
-.. _RMF: http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1
+.. _ARF: https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc4
+.. _RMF: https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
 .. _Gammapy tutorial notebooks on nbviewer: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
 .. _nbsphinx: http://nbsphinx.readthedocs.io
+.. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
+
+.. _apt-get: https://en.wikipedia.org/wiki/Advanced_Packaging_Tool
+.. _yum: https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified
+.. _Macports: https://www.macports.org/
+.. _Homebrew: https://brew.sh/
+.. _Fermi-LAT time systems in a nutshell: https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
+.. _FTOOLS: https://heasarc.gsfc.nasa.gov/ftools/ftools_menu.html
+.. _XSpec: https://heasarc.gsfc.nasa.gov/xanadu/xspec/
+.. _XSpec manual statistics page: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+.. _Sherpa statistics page: https://cxc.cfa.harvard.edu/sherpa/statistics
+.. _XML schema: https://en.wikipedia.org/wiki/XML_schema
