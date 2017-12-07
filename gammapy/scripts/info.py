@@ -28,25 +28,22 @@ def print_info_main(args=None):
     print_info(**vars(args))
 
 
-def print_info(version=False, tools=False, dependencies=False):
+def print_info(args):
     """Print various info on Gammapy to the console.
 
     TODO: explain.
     """
-    if version:
+    if args.version or args.all:
         _print_info_version()
 
-    if tools:
-        _print_info_tools()
-
-    if dependencies:
+    if args.dependencies or args.all:
         _print_info_dependencies()
 
 
 def _print_info_version():
     """Print Gammapy version info."""
     from gammapy import version
-    print('\n*** Gammapy version info ***\n')
+    print('\n*** Gammapy version ***\n')
     print('version: {}'.format(version.version))
     print('release: {}'.format(version.release))
     print('githash: {}'.format(version.githash))
