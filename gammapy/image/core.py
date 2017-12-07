@@ -225,8 +225,8 @@ class SkyImage(MapBase):
         """
         Create an empty image from scratch.
 
-        Uses the same parameter names as the Fermi tool gtbin
-        (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
+        Uses the same parameter names as the Fermi tool ``gtbin``
+        (see https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
 
         If no reference pixel position is given it is assumed to be
         at the center of the image.

@@ -320,10 +320,9 @@ def fits_table_to_table(hdu):
 
 
 def energy_axis_to_ebounds(energy):
-    """Convert `~gammapy.utils.energy.EnergyBounds` to OGIP ``EBOUNDS`` extension
+    """Convert `~gammapy.utils.energy.EnergyBounds` to OGIP ``EBOUNDS`` extension.
 
-    see
-    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+    See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
     """
     energy = EnergyBounds(energy)
     table = Table()

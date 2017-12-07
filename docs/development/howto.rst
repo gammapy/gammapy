@@ -279,18 +279,15 @@ In Gammapy we use on ``overwrite`` bool option for `gammapy.scripts` and functio
 write to files.
 
 Why not use ``clobber`` instead?
-After all the
-`FTOOLS <http://heasarc.gsfc.nasa.gov/ftools/ftools_menu.html>`__
-always use ``clobber``.
+After all the `FTOOLS`_ always use ``clobber``.
 
 The reason is that ``overwrite`` is clear to everyone, but ``clobber`` is defined by the dictionary
 (e.g. see `here <http://dictionary.reference.com/browse/clobber>`__)
 as "to batter severely; strike heavily. to defeat decisively. to denounce or criticize vigorously."
 and isn't intuitively clear to new users.
 
-Astropy uses both ``clobber`` and ``overwrite`` in various places at the moment.
-For Gammapy we can re-visit this decision before the 1.0 release, but for now,
-please be consistent and use ``overwrite``.
+Astropy has started the process of changing their APIs to consistently use ``overwrite``
+and deprecated the use of ``clobber``. So we do the same in Gammapy.
 
 Pixel coordinate convention
 ---------------------------

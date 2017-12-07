@@ -242,8 +242,7 @@ class EnergyDispersion(object):
         Notes
         -----
         For more info on the RMF FITS file format see:
-        http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
-
+        https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
         """
         # Cannot use table_to_fits here due to variable length array
         # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
@@ -276,7 +275,7 @@ class EnergyDispersion(object):
         """Convert to `~astropy.table.Table`.
 
         The output table is in the OGIP RMF format.
-        http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
+        https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
         """
         rows = self.pdf_matrix.shape[0]
         n_grp = []

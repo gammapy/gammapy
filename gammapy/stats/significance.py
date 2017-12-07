@@ -81,11 +81,11 @@ def convert_likelihood(to, probability=None, significance=None,
     Note that the `~gammapy.stats.cash` statistic already contains the factor 2,
     i.e. you should compute ``TS`` as ``TS = cash_alt - cash_null``.
 
-    - http://en.wikipedia.org/wiki/Chi-squared_distribution
+    - https://en.wikipedia.org/wiki/Chi-squared_distribution
     - http://docs.scipy.org/doc/scipy-dev/reference/generated/scipy.stats.chi2.html
-    - http://en.wikipedia.org/wiki/Likelihood-ratio_test#Wilks.27s_theorem
-    - http://adsabs.harvard.edu/abs/1979ApJ...228..939C
-    - http://adsabs.harvard.edu/abs/2009A%26A...495..989S
+    - https://en.wikipedia.org/wiki/Likelihood-ratio_test
+    - https://adsabs.harvard.edu/abs/1979ApJ...228..939C
+    - https://adsabs.harvard.edu/abs/2009A%26A...495..989S
 
     **Physical limits**
 

@@ -1,7 +1,7 @@
 """XSPEC statistics tests.
 
 Here you find a direct implementation of the formulae at
-http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
 
 Then I'll try to translate to the notation I use in gammapy.stats
 and get some test cases.

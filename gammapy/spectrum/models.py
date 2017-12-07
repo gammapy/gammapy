@@ -687,7 +687,7 @@ class PowerLaw(SpectralModel):
 class PowerLaw2(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
 
-    See also: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
+    See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 
     .. math::
 
