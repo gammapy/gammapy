@@ -294,6 +294,10 @@ class TestSourceCatalog3FGL:
         selection = self.cat.select_source_class('ALL')
         assert len(selection.table) == 239
 
+        selection = self.cat.select_source_class('PSR')
+        assert len(selection.table) == 143
+
+
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog1FHL:
@@ -358,3 +362,6 @@ class TestSourceCatalog3FHL:
 
         selection = self.cat.select_source_class('ALL')
         assert len(selection.table) == 135
+
+        selection = self.cat.select_source_class('PSR')
+        assert len(selection.table) == 53

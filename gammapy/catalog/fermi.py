@@ -982,7 +982,7 @@ class SourceCatalog3FGL(SourceCatalog):
             category = set(self.source_categories['extra-galactic']
                            + self.source_categories['galactic'])
         elif source_class in np.unique(source_class_info):
-            category = set(source_class)
+            category = set([source_class])
         else:
             raise ValueError("'{}' ist not a valid source class.".format(source_class))
 
@@ -1140,7 +1140,7 @@ class SourceCatalog3FHL(SourceCatalog):
             category = set(self.source_categories['extra-galactic']
                            + self.source_categories['galactic'])
         elif source_class in np.unique(source_class_info):
-            category = set(source_class)
+            category = set([source_class])
         else:
             raise ValueError("'{}' ist not a valid source class.".format(source_class))
 
