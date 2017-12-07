@@ -160,28 +160,12 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
 Check HTML links
 ----------------
 
-There's two ways to check the docs for broken links.
-
-
-This will check external links (not nice because you have to install first):
+To check for broken external links from the Sphinx documentation:
 
 .. code-block:: bash
 
    $ python setup.py install
    $ cd docs; make linkcheck
-
-To check all internal and external links use this `linkchecker <https://github.com/wummel/linkchecker>`__:
-
-.. code-block:: bash
-
-   $ python -m pip install linkchecker
-   $ linkchecker --check-extern docs/_build/html/index.html
-
-Because Sphinx doesn't warn about some broken internal links for some reason,
-we run ``linkchecker docs/_build/html/index.html`` on travis-ci,
-but not with the ``--check-extern`` option as that would probably fail
-randomly quite often whenever one of the external websites is down.
-
 
 Other codes
 -----------
