@@ -9,7 +9,6 @@
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _3ML: https://threeml.stanford.edu/
 .. _Numpy: http://www.numpy.org/
-.. _Astropy: http://www.astropy.org/
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _regions: http://astropy-regions.readthedocs.io
 .. _reproject: http://reproject.readthedocs.io

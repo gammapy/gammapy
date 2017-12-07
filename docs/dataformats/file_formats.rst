@@ -1,4 +1,4 @@
-.. include:: ../../references.txt
+.. include:: ../references.txt
 
 .. _dataformats_file_formats:
 
@@ -23,7 +23,7 @@ Introduction
 
 In Gammapy we use existing file formats by `Fermi-LAT`_ and `CTA`_ where available.
 
-This increases inter-operability with the `Fermi science tools`_
+This increases inter-operability with the `Fermi ScienceTools`_
 and `ctools`_ as well as mind share with users of those tools.
 
 We also introduce new file formats for things that should be easy to store and exchange,

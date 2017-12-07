@@ -4,6 +4,7 @@
     :width: 400px
 
 |
+
 .. _gammapy_welcome:
 
 What is Gammapy?
