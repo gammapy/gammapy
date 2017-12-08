@@ -23,7 +23,7 @@ def cmd_main(args, parser):
         parser.print_help()
 
 
-def main():
+def main(args):
     # create the top-level parser
     parser = argparse.ArgumentParser(
         prog='gammapy',
@@ -55,7 +55,7 @@ def main():
     configure_parse_info(sub_parsers)
     configure_parse_check(sub_parsers)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     set_up_logging_from_args(args)
     call_command(args, parser)
 
