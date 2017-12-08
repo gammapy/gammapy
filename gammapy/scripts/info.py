@@ -3,100 +3,58 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 import logging
 import importlib
+import argparse
+import pprint
 from ..utils.scripts import get_parser
+from ..conftest import PYTEST_HEADER_MODULES
+from .. import version
 
-__all__ = ['print_info']
+
+__all__ = ['main']
 
 log = logging.getLogger(__name__)
 
 
-def print_info_main(args=None):
-    parser = get_parser(print_info)
-    parser.add_argument('--version', action='store_true',
-                        help='Print Gammapy version number')
-    # TODO: fix or remove:
-    # parser.add_argument('--tools', action='store_true',
-    #                     help='Print available command line tools')
-    parser.add_argument('--dependencies', action='store_true',
-                        help='Print available versions of dependencies')
-    args = parser.parse_args(args)
-
-    if len(sys.argv) <= 1:
-        parser.print_help()
-        sys.exit(1)
-
-    print_info(**vars(args))
-
-
-def print_info(args):
+def main(args):
     """Print various info on Gammapy to the console.
 
     TODO: explain.
     """
     if args.version or args.all:
-        _print_info_version()
+        info = get_info_version()
+        print_info(info=info, title='Gammapy version')
 
     if args.dependencies or args.all:
-        _print_info_dependencies()
+        info = get_info_dependencies()
+        print_info(info=info, title='Gammapy dependencies')
 
 
-def _print_info_version():
-    """Print Gammapy version info."""
-    from gammapy import version
-    print('\n*** Gammapy version ***\n')
-    print('version: {}'.format(version.version))
-    print('release: {}'.format(version.release))
-    print('githash: {}'.format(version.githash))
-    print('')
+def print_info(info, title):
+    info_all = '\n*** {title} ***\n\n'.format(title=title)
+
+    for key in sorted(info):
+        info_all += '\t{key:12s} : {value:10s} \n'.format(key=key, value=info[key])
+
+    print(info_all)
 
 
-def _print_info_tools():
-    """Print info about Gammapy command line tools."""
-    print('\n*** Gammapy tools ***\n')
-
-    # TODO: how to get a one-line description or
-    # full help text from the docstring or ArgumentParser?
-    # This is the function names, we want the command-line names
-    # that are defined in setup.py !???
-    from gammapy.utils.scripts import get_all_main_functions
-    scripts = get_all_main_functions()
-    names = sorted(scripts.keys())
-    for name in names:
-        print(name)
-
-    # Old stuff that doesn't work any more ...
-    # We assume all tools are installed in the same folder as this script
-    # and their names start with "gammapy-".
-    # import os
-    # from glob import glob
-    # DIR = os.path.dirname(__file__)
-    # os.chdir(DIR)
-    # tools = glob('gammapy-*')
-    # for tool in tools:
-    #     # Extract first line from docstring as description
-    #     description = 'no description available'
-    #     lines = open(tool).readlines()
-    #     for line in lines:
-    #         if line.startswith('"""'):
-    #             description = line.strip()[3:]
-    #             if description.endswith('"""'):
-    #                 description = description[:-3]
-    #             break
-    #     print('{0:35s} : {1}'.format(tool, description))
-
-    print('')
+def get_info_version():
+    info_version = {}
+    info_version['version'] = version.version
+    info_version['release'] = str(version.release)
+    info_version['githash'] = version.githash
+    return info_version
 
 
-def _print_info_dependencies():
+def get_info_dependencies():
     """Print info about Gammapy dependencies."""
-    print('\n*** Gammapy dependencies ***\n')
-    from gammapy.conftest import PYTEST_HEADER_MODULES
 
+    info_dependencies = {}
     for label, name in PYTEST_HEADER_MODULES.items():
         try:
             module = importlib.import_module(name)
             version = module.__version__
         except ImportError:
             version = 'not available'
-
-        print('{:>20s} -- {}'.format(label, version))
+        info_dependencies[label] = version
+    return info_dependencies
