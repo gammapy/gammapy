@@ -3,9 +3,9 @@ Gammapy
 
 A Python Package for Gamma-ray Astronomy.
 
+* Webpage: http://gammapy.org
 * Code: https://github.com/gammapy/gammapy
-* Docs: http://docs.gammapy.org/
-* Tutorials: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
+* Documentation: http://docs.gammapy.org/
 * License: BSD-3
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
@@ -36,9 +36,6 @@ Status shields
 * .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
     :target: http://docs.gammapy.org/en/latest/
     :alt: Documentation Status
-
-* .. image:: http://img.shields.io/pypi/l/gammapy.svg
-    :alt: License
 
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
     :target: https://pypi.python.org/pypi/gammapy/
