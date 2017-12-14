@@ -5,9 +5,10 @@ import argparse
 from ..import version
 from ..utils.scripts import set_up_logging_from_args
 
+
 # This trick is taken from the conda command line tool, which does a delayed
 # import on call of the subcommand
-def call_command(args, parser):
+def do_call(args, parser):
     relative_mod, func_name = args.func.rsplit('.', 1)
     from importlib import import_module
     module = import_module(relative_mod, 'gammapy')
@@ -21,9 +22,10 @@ def cmd_main(args, parser):
         print('gammapy {}'.format(version.version))
     else:
         parser.print_help()
+    return 0
 
 
-def main():
+def generate_parser():
     # create the top-level parser
     parser = argparse.ArgumentParser(
         prog='gammapy',
@@ -54,10 +56,15 @@ def main():
 
     configure_parse_info(sub_parsers)
     configure_parse_check(sub_parsers)
+    return parser
 
+
+def main(*args):
+    parser = generate_parser()
     args = parser.parse_args()
     set_up_logging_from_args(args)
-    call_command(args, parser)
+    exit_code = do_call(args, parser)
+    return exit_code
 
 
 def configure_parse_info(sub_parsers):
