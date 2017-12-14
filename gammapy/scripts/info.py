@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import os
 import logging
 import importlib
-import argparse
-import pprint
-from ..utils.scripts import get_parser
 from ..conftest import PYTEST_HEADER_MODULES
 from .. import version
+
+GAMMAPY_ENV_VARIABLES = ['GAMMAPY_EXTRA', 'HGPS_DATA', 'GAMMAPY_FERMI_LAT_DATA',
+                         'CTADATA', 'CALDB', 'GAMMA_CAT']
 
 
 log = logging.getLogger(__name__)
@@ -75,9 +75,7 @@ def get_info_system():
     """Print info about Gammapy dependencies."""
     info_system = {}
 
-    env_variables = ['GAMMAPY_EXTRA', 'HGPS_DATA', 'GAMMAPY_FERMI_LAT_DATA',
-                     'CTADATA', 'CALDB', 'GAMMA_CAT']
-    for name in env_variables:
+    for name in GAMMAPY_ENV_VARIABLES:
         info_system[name] = os.environ.get(name, 'not set')
 
     return info_system
