@@ -5,7 +5,7 @@ from ...utils.scripts import get_all_main_functions
 
 SCRIPTS = get_all_main_functions()
 NAMES = sorted(SCRIPTS.keys())
-NAMES2 = sorted(set(NAMES) - set(['check']))
+NAMES2 = sorted(set(NAMES) - set(['check', 'main']))
 
 
 @pytest.mark.parametrize("name", NAMES)

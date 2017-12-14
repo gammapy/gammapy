@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import logging
 import importlib
@@ -15,10 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def cmd_info(args, parser):
-    """Print various info on Gammapy to the console.
-
-    TODO: explain.
-    """
+    """Info command to display various info on Gammapy to the console."""
     no_args = True
 
     if args.version or args.all:
@@ -41,6 +37,7 @@ def cmd_info(args, parser):
 
 
 def print_info(info, title):
+    """Print Gammapy info."""
     info_all = '\n{title}:\n\n'.format(title=title)
 
     for key in sorted(info):
@@ -50,6 +47,7 @@ def print_info(info, title):
 
 
 def get_info_version():
+    """Get detailed info about Gammapy version."""
     info_version = {}
     info_version['version'] = version.version
     info_version['release'] = str(version.release)
@@ -59,7 +57,6 @@ def get_info_version():
 
 def get_info_dependencies():
     """Get info about Gammapy dependencies."""
-
     info_dependencies = {}
     for label, name in PYTEST_HEADER_MODULES.items():
         try:
@@ -72,7 +69,7 @@ def get_info_dependencies():
 
 
 def get_info_system():
-    """Print info about Gammapy dependencies."""
+    """Get info about Gammapy environment variables."""
     info_system = {}
 
     for name in GAMMAPY_ENV_VARIABLES:

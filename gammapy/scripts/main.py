@@ -125,9 +125,3 @@ def configure_parse_check(sub_parsers):
         help='Print logging examples (for debugging)')
 
     p_log.set_defaults(func='.scripts.check.cmd_log_examples')
-
-    # data_parser = subparsers.add_parser('fitsexport', help='Test fits data')
-    # data_parser.add_argument('--directory', default='out', type=str,
-    #                          help="FITS export output folder")
-
-    # p.set_defaults(func='.scripts.check.main')
