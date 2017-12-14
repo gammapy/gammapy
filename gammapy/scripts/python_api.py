@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from shlex import split
 
-from .main import generate_parser, do_call
+from .cli import generate_parser, do_call
 
 log = logging.getLogger(__name__)
 

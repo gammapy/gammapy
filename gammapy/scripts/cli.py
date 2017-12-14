@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import argparse
+import sys
 
 from ..import version
 from ..utils.scripts import set_up_logging_from_args
@@ -14,15 +15,6 @@ def do_call(args, parser):
     module = import_module(relative_mod, 'gammapy')
     exit_code = getattr(module, func_name)(args, parser)
     return exit_code
-
-
-def cmd_main(args, parser):
-    """Command executed when gammapy tool is called without subcommand"""
-    if args.version:
-        print('gammapy {}'.format(version.version))
-    else:
-        parser.print_help()
-    return 0
 
 
 def generate_parser():
@@ -42,11 +34,10 @@ def generate_parser():
 
     parser.add_argument(
         '--version',
-        help='Show the gammapy version number and exit',
-        action='store_true',
+        action='version',
+        version='gammapy {}'.format(version.version),
+        help="Show the gammapy version number and exit."
     )
-
-    parser.set_defaults(func='.scripts.main.cmd_main')
 
     sub_parsers = parser.add_subparsers(
         title='Available gammapy commands',
@@ -60,8 +51,14 @@ def generate_parser():
 
 
 def main(*args):
+    if not args:
+        args = tuple(sys.argv)
+    
+    if len(args) == 1:
+        args = args + ('--help',)
+    
     parser = generate_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args[1:])
     set_up_logging_from_args(args)
     exit_code = do_call(args, parser)
     return exit_code

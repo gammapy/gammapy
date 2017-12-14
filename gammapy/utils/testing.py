@@ -4,9 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import pytest
-from astropy.coordinates import Angle, SkyCoord
+from collections import namedtuple
 from astropy.time import Time
-from numpy.testing import assert_array_less, assert_allclose
+from astropy.coordinates import SkyCoord
+from numpy.testing import assert_allclose
 
 from ..data import DataManager
 from ..datasets import gammapy_extra
