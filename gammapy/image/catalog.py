@@ -51,6 +51,35 @@ class CatalogImageEstimator(object):
         catalog = SourceCatalogGammaCat()
         result = image_estimator.run(catalog)
         result['flux'].show()
+
+    Currently the `CatalogImageEstimator` class does not support to compute model
+    cubes of catalogs. But this can achieved with only a little more of python code:
+
+        from astropy import units as u
+        from gammapy.image import CatalogImageEstimator, SkyImage
+        from gammapy.cube import SkyCube
+        from gammapy.catalog import SourceCatalogGammaCat
+        from gammapy.utils.energy import EnergyBounds
+
+        reference = SkyImage.empty(xref=265, yref=-1.5, nxpix=201,
+                                   nypix=201, binsz=0.04)
+
+        energies = EnergyBounds.equal_log_spacing(1 * u.TeV, 100 * u.TeV, 3)
+
+        flux_cube = SkyCube.empty_like(reference=reference, energies=energies)
+
+        catalog = SourceCatalogGammaCat()
+
+        for idx in range(energies.size - 1):
+            image_estimator = CatalogImageEstimator(reference=reference,
+                                                    emin=energies[idx],
+                                                    emax=energies[idx + 1])
+
+            result = image_estimator.run(catalog)
+            flux_cube.data[idx, :, :] = result['flux'].data
+
+        flux_cube.show()
+
     """
 
     def __init__(self, reference, emin, emax):
