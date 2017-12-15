@@ -132,6 +132,17 @@ class TestFit:
         fit.fit_range = [0.11659144 + 1.e-5, 1. - 1.e-5] * u.TeV
         assert np.sum(fit._bins_in_fit_range[0]) == 14
 
+        # Check different fit ranges for different observations
+        on_vector2 = self.src.copy()
+        obs2 = SpectrumObservation(on_vector=on_vector2)
+        obs2.lo_threshold = 5 * u.TeV
+        obs_list.append(obs2)
+        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
+                          stat=None, forward_folded=False)
+        fit.fit_range = [2, 8] * u.TeV
+        assert(fit.true_fit_range[0][0] == 2.1544346900318834 * u.TeV)
+        assert(fit.true_fit_range[1][0] == 5.4116952654646380 * u.TeV)
+
     def test_likelihood_profile(self):
         obs = SpectrumObservation(on_vector=self.src)
         fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
