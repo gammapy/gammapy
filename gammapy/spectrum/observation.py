@@ -896,3 +896,4 @@ class SpectrumObservationStacker(object):
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
         )
+
