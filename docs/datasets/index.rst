@@ -77,7 +77,7 @@ Example usage:
 
 .. _gammapy-cat:
 
-gammapy-cat
+Gamma-cat
 ===========
 
 Gamma-cat is an open catalog for TeV gamma-ray sources. It is maintained as an
@@ -122,8 +122,8 @@ the Astropy cache and need internet access on first call):
 
 .. code-block:: python
 
-   >>> from gammapy.datasets import fetch_fermi_catalog
-   >>> catalog = fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')
+   >>> from gammapy.datasets import fetch_fermi_diffuse_background_model
+   >>> catalog = fetch_fermi_diffuse_background_model()
 
 TODO: explain how the Astropy cache works and make it configurable for Gammapy.
 
