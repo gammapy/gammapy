@@ -17,6 +17,11 @@ def do_call(args, parser):
     return exit_code
 
 
+# command executed when the gammapy command line tool is called without any arguments
+def cmd_main(args, parser):
+    parser.print_help()
+
+
 def generate_parser():
     # create the top-level parser
     parser = argparse.ArgumentParser(
@@ -38,6 +43,7 @@ def generate_parser():
         version='gammapy {}'.format(version.version),
         help="Show the gammapy version number and exit."
     )
+    parser.set_defaults(func='.scripts.cli.cmd_main')
 
     sub_parsers = parser.add_subparsers(
         title='Available gammapy commands',
@@ -50,15 +56,9 @@ def generate_parser():
     return parser
 
 
-def main(*args):
-    if not args:
-        args = tuple(sys.argv)
-    
-    if len(args) == 1:
-        args = args + ('--help',)
-    
+def main(args=None):
     parser = generate_parser()
-    args = parser.parse_args(args[1:])
+    args = parser.parse_args(args)
     set_up_logging_from_args(args)
     exit_code = do_call(args, parser)
     return exit_code
@@ -113,6 +113,7 @@ def configure_parse_check(sub_parsers):
         description='Check current gammapy install.',
         help='Check current gammapy install.',
     )
+    p.set_defaults(func='.scripts.check.cmd_check')
 
     sub_parsers_check = p.add_subparsers(
         title='Available check commands',

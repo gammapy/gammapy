@@ -11,6 +11,11 @@ import warnings
 log = logging.getLogger(__name__)
 
 
+def cmd_check(args, parser):
+    """Check subcommand"""
+    parser.print_help()
+
+
 def cmd_tests(args, parser):
     """Check command to run Gammapy tests."""
     import gammapy
