@@ -4,7 +4,7 @@ import pytest
 from ...utils.testing import requires_data, run_cli
 from ...datasets import gammapy_extra
 from ...data import ObservationTable
-from .. import data_select_main
+from ..data_select import data_select_main
 
 
 # TODO: Fix this test: obs table format changed a bit -> KeyErrror on TSTART

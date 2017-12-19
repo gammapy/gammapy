@@ -6,7 +6,7 @@ from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
 from ...background.tests.test_reflected import obs_list, on_region
 from ...spectrum.models import PowerLaw
-from .. import SpectrumAnalysisIACT
+from ..spectrum_pipe import SpectrumAnalysisIACT
 
 
 def get_config():
