@@ -17,9 +17,7 @@ def test_bin_image_main(tmpdir):
     args = ['image', 'bin', event_file, reference_file, out_file]
     result = CliRunner().invoke(cli, args)
     assert result.exit_code == 0
-    assert "Executing cli_image_bin" in result.output
 
     actual = SkyImage.read(out_file)
     expected = SkyImage.read(reference_file)
-
     SkyImage.assert_allclose(actual, expected)
