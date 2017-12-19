@@ -7,23 +7,26 @@ for developers and the test runner from including it in test collection.
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import warnings
+import click
+from .. import test
 
 log = logging.getLogger(__name__)
 
 
-def cmd_check(args, parser):
-    """Check subcommand"""
-    parser.print_help()
+@click.group('check')
+def cli_check():
+    """Run checks for Gammapy"""
 
 
-def cmd_tests(args, parser):
-    """Check command to run Gammapy tests."""
-    import gammapy
-    gammapy.test(args.package, verbose=True)
+@cli_check.command('runtests')
+def cli_check_runtests():
+    """Run Gammapy tests"""
+    test(verbose=True)
 
 
-def cmd_log_examples(args, parser):
-    """Check command to run some example code that generates log output."""
+@cli_check.command('logging')
+def cli_check_logging():
+    """Check logging"""
     log.debug('this is log.debug() output')
     log.info('this is log.info() output')
     log.warning('this is log.warning() output')

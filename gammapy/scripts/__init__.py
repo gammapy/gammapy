@@ -3,9 +3,6 @@
 Gammapy command line and GUI tools.
 """
 
-from .check import *
-from .info import *
-
 from .data_select import *
 
 from .image_bin import *

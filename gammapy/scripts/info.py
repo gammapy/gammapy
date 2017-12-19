@@ -3,37 +3,40 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import logging
 import importlib
+import click
 from ..conftest import PYTEST_HEADER_MODULES
 from .. import version
 
-GAMMAPY_ENV_VARIABLES = ['GAMMAPY_EXTRA', 'HGPS_DATA', 'GAMMAPY_FERMI_LAT_DATA',
-                         'CTADATA', 'CALDB', 'GAMMA_CAT']
-
-
 log = logging.getLogger(__name__)
 
+GAMMAPY_ENV_VARIABLES = [
+    'GAMMAPY_EXTRA',
+    'HGPS_DATA',
+    'GAMMAPY_FERMI_LAT_DATA',
+    'CTADATA',
+    'CALDB',
+    'GAMMA_CAT',
+]
 
-def cmd_info(args, parser):
-    """Info command to display various info on Gammapy to the console."""
-    no_args = True
 
-    if args.version or args.all:
+@click.command(name='info')
+@click.option('--version/--no-version', default=True, help='Show version info')
+@click.option('--dependencies/--no-dependencies', default=True, help='Show dependencies info')
+@click.option('--system/--no-system', default=True, help='Show system info')
+def cli_info(version, dependencies, system):
+    """Display information about Gammapy
+    """
+    if version:
         info = get_info_version()
         print_info(info=info, title='Gammapy current install')
-        no_args = False
 
-    if args.dependencies or args.all:
+    if dependencies:
         info = get_info_dependencies()
         print_info(info=info, title='Gammapy dependencies')
-        no_args = False
 
-    if args.system or args.all:
+    if system:
         info = get_info_system()
         print_info(info=info, title='Gammapy environment variables')
-        no_args = False
-
-    if no_args:
-        print(parser.description)
 
 
 def print_info(info, title):
@@ -48,11 +51,11 @@ def print_info(info, title):
 
 def get_info_version():
     """Get detailed info about Gammapy version."""
-    info_version = {}
-    info_version['version'] = version.version
-    info_version['release'] = str(version.release)
-    info_version['githash'] = version.githash
-    return info_version
+    return {
+        'version': version.version,
+        'release': str(version.release),
+        'githash': version.githash,
+    }
 
 
 def get_info_dependencies():
@@ -61,18 +64,16 @@ def get_info_dependencies():
     for label, name in PYTEST_HEADER_MODULES.items():
         try:
             module = importlib.import_module(name)
-            version = module.__version__
+            module_version = module.__version__
         except ImportError:
-            version = 'not available'
-        info_dependencies[label] = version
+            module_version = 'not available'
+        info_dependencies[label] = module_version
     return info_dependencies
 
 
 def get_info_system():
     """Get info about Gammapy environment variables."""
-    info_system = {}
-
-    for name in GAMMAPY_ENV_VARIABLES:
-        info_system[name] = os.environ.get(name, 'not set')
-
-    return info_system
+    return {
+        name: os.environ.get(name, 'not set')
+        for name in GAMMAPY_ENV_VARIABLES
+    }
