@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
-from numpy.testing.utils import assert_allclose
 import pytest
-
+from numpy.testing.utils import assert_allclose
 from astropy.stats import gaussian_sigma_to_fwhm
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import load_poisson_stats_image

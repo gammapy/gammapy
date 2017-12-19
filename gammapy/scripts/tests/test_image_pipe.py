@@ -7,7 +7,7 @@ from ...utils.energy import Energy
 from ...data import DataStore
 from ...image import SkyImage
 from ...background import OffDataBackgroundMaker
-from ...scripts import StackedObsImageMaker
+from ..image_pipe import StackedObsImageMaker
 
 
 @requires_dependency('reproject')

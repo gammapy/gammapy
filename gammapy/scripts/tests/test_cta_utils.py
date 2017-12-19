@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
 import pytest
 from numpy.testing import assert_allclose
+import astropy.units as u
 from ...utils.testing import requires_data, requires_dependency
-from ...scripts.cta_irf import CTAPerf
-from ...scripts.cta_utils import Target, ObservationParameters, CTAObservationSimulation
 from ...spectrum.models import PowerLaw, AbsorbedSpectralModel, Absorption
+from ..cta_irf import CTAPerf
+from ..cta_utils import Target, ObservationParameters, CTAObservationSimulation
 
 
 @requires_data('gammapy-extra')

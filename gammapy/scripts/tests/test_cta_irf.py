@@ -4,7 +4,7 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
-from ...scripts import CTAIrf, CTAPerf
+from ..cta_irf import CTAIrf, CTAPerf
 
 
 # TODO: fix this test - currently fails like this:
