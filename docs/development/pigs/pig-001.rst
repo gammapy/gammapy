@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _pig-001:
 
@@ -6,48 +6,40 @@
 PIG 1 - PIG purpose and guidelines
 **********************************
 
+* Author: Christoph Deil
+* Created: December 20, 2017
+* Status: draft
+
 What is a PIG?
 ==============
 
 Proposals for improvement of Gammapy (PIGs) are short documents proposing a major
 addition or change to Gammapy.
 
-The primary goal of PIGs is to have an open
-and structured way of working on Gammapy, forcing the person making the
-change to think it through and motivate the proposal before taking action,
-and for others to review and comment on the proposal. The PIGs will also
-serve as a record of major design decisions taking in Gammapy, which can
-be useful in the future when things are re-discussed or new proposals to
-do things differently arrive.
-
 PIGs are like `APEs`_, `PEPs`_, `NEPs`_ and `JEPs`_, just for Gammapy.
 Using such enhancement proposals is common for large and long-term
 open-source Python projects.
 
-.. _PEPs: https://www.python.org/dev/peps/pep-0001/
-.. _NEPs: https://docs.scipy.org/doc/numpy-dev/neps/index.html
-.. _APEs: https://github.com/astropy/astropy-APEs
-.. _JEPs: https://github.com/jupyter/enhancement-proposals
+The primary goal of PIGs is to have an open
+and structured way of working on Gammapy, forcing the person making the
+change to think it through and motivate the proposal before taking action,
+and for others to have a chance to review and comment on the proposal. The PIGs will also
+serve as a record of major design decisions taken in Gammapy, which can
+be useful in the future when things are re-discussed or new proposals to
+do things differently arrive.
 
-We expect that using PIGs will be rare, but we think they can be useful
+We expect that we will not use PIGs very often, but we think they can be useful
 e.g. in the following cases:
 
 * Outline design for something that requires significant work,
-  e.g. on topics lik "Modeling in Gammapy" or "High-level user interface in Gammapy".
-  These APEs can be rather long, more than one page, explaining the
+  e.g. on topics like "Modeling in Gammapy" or "High-level user interface in Gammapy".
+  These PIGs can be rather long, i.e. more than one page, explaining the
   design in detail and even explaining which alternatives were
   considered and why the proposed solution was preferred.
 * Have a conscious decision and make sure all interested parties
   are aware for things that might be controversial and have long-term
-  effects for Gammapy, e.g. when to drop Python 2 support or
-  the Gammapy release cycle. These PIGs can usually be very short.
-
-Most discussions concerning Gammapy will happen by talking to each other directly
-(calls or face-to-face), or online on the mailing list or Github.
-If you're not sure if you should write a GEP, please don't. Instead bring up the
-topic up in discussions with other Gammapy developers, or on the mailing list first,
-to get some initial feedback. This will let you figure out if writing a PIG
-will be needed or helpful or not to realise your proposal.
+  effects for Gammapy, e.g. when to drop Python 2 support or defining
+  a release cycle for Gammapy. These PIGs can usually be very short, a page or less.
 
 Writing a PIG
 =============
@@ -57,16 +49,25 @@ Anyone is welcome to write a PIG!
 PIGs are written as RST files in the ``docs/development/pigs`` folder in the
 main Gammapy repository, and submitted as pull requests.
 
-For now, we don't require a formal structure. Please make your proposal clearly
-and keep the initial proposal short. If more information is needed, people that
-will review it will ask for it.
+Most discussions concerning Gammapy will happen by talking to each other directly
+(calls or face-to-face), or online on the mailing list or Github.
+If you're not sure if you should write a PIG, please don't! Instead bring the
+topic up in discussions first with other Gammapy developers, or on the mailing list,
+to get some initial feedback. This will let you figure out if writing a PIG
+will be helpful or not to realise your proposal.
+
+For now, we don't require a formal structure, apart from adding the author,
+creation date and status points at the top, as done at the top of this PIG.
+Please make your proposal clearly and keep the initial proposal short.
+If more information is needed, people that will review it will ask for it.
 
 Writing a PIG doesn't mean you have to implement it. That said, we expect that
 most PIGs will propose something that requires developments where someone has
 the intention to implement it within the near future (say within the next year).
 But it's not required, e.g. if you have a great idea or vision for Gammapy
-that requires a lot of development without the manpower to execute the idea,
-writing a PIG could be a nice way to share this idea in some detail.
+that requires a lot of development, without the manpower to execute the idea,
+writing a PIG could be a nice way to share this idea in some detail, with the
+hope that in collaboration with others it can eventually be realised.
 
 PIG review
 ==========
@@ -76,23 +77,44 @@ PIG review happens on the pull request on Github.
 When a PIG is put up, an announcement with a link to the pull request should
 be sent both to the Gammapy mailing list and the Gammapy coordinator list.
 
-Anyone is welcome to review it and encouraged to share their thoughts
+Anyone is welcome to review it and is encouraged to share their thoughts
 in the discussion!
 
 Please note that Github hides inline comments after they have been edited,
-so we suggest that you use inline comments for minor points like spelling mistakes,
-but put your main feedback as normal comments in the "Conversation" tab,
+so we suggest that you use inline comments for minor points like spelling mistakes only.
+Put your main feedback as normal comments in the "Conversation" tab,
 so that for someone reading the discussion later they will see your comment directly.
 
-The final decison on any PIG is made by the Gammapy coordination committee.
+The final decision on any PIG is made by the Gammapy coordination committee.
 We expect that in most cases, the people participating in the PIG review will
 reach a consensus and the coordination committee will simply follow the outcome
 of the public discussion. But in unusual cases where disagreement remains,
 the coordination committee will talk to the people involved in the discussion
-and then make a decision.
+with the goal to reach consensus or compromise, and then make the final decision.
 
 PIG status
 ==========
 
-PIGs can have the status "draft", "accepted", "rejected", "withdrawn".
+PIGs can have a status of:
 
+* "draft" - in draft status, either in the writing or dicussion phase
+* "withdrawn" - withdrawn by the author
+* "accepted" - accepted by the coordination committee
+* "rejected" - rejected by the coordination committee
+
+Final remarks
+=============
+
+This PIG leaves some points open. Specifically we don't say whether
+PIGs are accepted and merged before or after the actual implementation is done,
+and whether PIGs are fixed or live documents, i.e. whether they are edited
+when things change. We also don't specify how the Gammapy coordination committee
+should make they decision if opinions from the people in that group differ.
+This is intentional. We want to keep the process flexible
+and first gain some experience. The goal of PIGs is to help the Gammapy developer
+team to be more efficient, not to have a rigid or bureaucratic process.
+
+.. _PEPs: https://www.python.org/dev/peps/pep-0001/
+.. _NEPs: https://docs.scipy.org/doc/numpy-dev/neps/index.html
+.. _APEs: https://github.com/astropy/astropy-APEs
+.. _JEPs: https://github.com/jupyter/enhancement-proposals
