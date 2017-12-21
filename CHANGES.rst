@@ -10,16 +10,16 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 
 .. _gammapy_0p7_release:
 
-0.7 (unreleased)
-----------------
+0.7 (Dec 21, 2017)
+------------------
 
 Summary
 +++++++
 
-- Coming soon (December 2017)
+- Released on Dec 21, 2017 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
 - 17 contributors (8 new)
-- 7 months of work (from April 28, 2017 to November 2017)
-- 120 pull requests (not all listed below)
+- 7 months of work (from April 28, 2017 to Dec 21, 2017)
+- 144 pull requests (not all listed below)
 
 **What's new?**
 
@@ -90,6 +90,9 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1235] Introduce main `gammapy` command line tool (Axel Donath and Christoph Deil)
+- [#1227] Remove gammapy-data-show and gammapy-cube-bin (Christoph Deil)
+- [#1226] Make DataStoreObservation properties less lazy (Christoph Deil)
 - [#1220] Fix flux point computation for non-power-law models (Axel Donath)
 - [#1215] Finish integration of Jupyter notebooks with Sphinx docs (Jose Enrique Ruiz)
 - [#1211] Add IRF write methods (Thomas Armstrong)
