@@ -2,67 +2,55 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import logging
+import click
 from ..extern.pathlib import Path
-from ..utils.scripts import get_parser, set_up_logging_from_args, make_path
+from ..utils.scripts import make_path
 from ..image import SkyImage, SkyImageList
 from ..detect import compute_ts_image_multiscale
-
-__all__ = ['run_image_ts']
 
 log = logging.getLogger(__name__)
 
 
-def image_ts_main(args=None):
-    parser = get_parser(run_image_ts)
-    parser.add_argument('input_file', type=str,
-                        help='Input data FITS file name')
-    parser.add_argument('output_file', type=str,
-                        help='Output data FITS file name, can contain new or existing folder')
-    parser.add_argument('--psf', type=str, default='psf.json',
-                        help='JSON file containing PSF information. ')
-    parser.add_argument('--morphology', type=str, default='Gaussian2D',
-                        help="Which source morphology to use for TS calculation."
-                             "Either 'Gaussian2D' or 'Shell2D'.")
-    parser.add_argument('--width', type=float, default=None,
-                        help="Width of the shell, measured as fraction of the"
-                             " inner radius.")
-    parser.add_argument('--scales', type=float, default=[0], nargs='+',
-                        help='List of scales to compute TS images for in deg.')
-    parser.add_argument('--downsample', type=str, default='auto',
-                        help="Downsample factor of the data to obtain optimal"
-                             " performance."
-                             "Must be power of 2. Can be 'auto' to choose the downsample"
-                             "factor automatically depending on the scale.")
-    parser.add_argument('--residual', action='store_true',
-                        help="Whether to compute a residual TS image. If a residual"
-                             "TS image is computed an excess model has to be provided"
-                             "using the '--model' parameter.")
-    parser.add_argument('--model', type=str,
-                        help='Input excess model FITS file name')
-    parser.add_argument('--overwrite', action='store_true',
-                        help='Overwrite output files.')
-    parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        help="Set the logging level")
-    parser.add_argument('--threshold', type=float, default=None,
-                        help="Minimal required initial (before fitting) TS value,"
-                             " that the fit is done at all.")
-    args = parser.parse_args(args)
-    set_up_logging_from_args(args)
-    run_image_ts(**vars(args))
-
-
-def run_image_ts(input_file, output_file, psf, model, scales, downsample, residual,
+@click.command('ts')
+@click.argument('input_file', type=str)
+@click.argument('output_file', type=str)
+@click.option('--psf', default='psf.json',
+              help='JSON file containing PSF information. ')
+@click.option('--morphology', type=click.Choice(['Gaussian2D', 'Shell2D']), default='Gaussian2D',
+              help='Which source morphology to use for TS calculation.')
+@click.option('--width', type=float, default=None,
+              help='Width of the shell, measured as fraction of the'
+                   ' inner radius.')
+@click.option('--scales', default='0',
+              help='Angular kernel scales in deg (comma-separated list).')
+@click.option('--downsample', type=str, default='auto',
+              help='Downsample factor of the data to obtain optimal performance.'
+                   ' Must be power of 2. Can be "auto" to choose the downsample'
+                   ' factor automatically depending on the scale.')
+@click.option('--residual', is_flag=True,
+              help='Whether to compute a residual TS image. If a residual'
+                   ' TS image is computed an excess model has to be provided'
+                   ' using the "--model" parameter.')
+@click.option('--model', type=str,
+              help='Input excess model FITS file name')
+@click.option('--threshold', type=float, default=None,
+              help='Minimal required initial (before fitting) TS value,'
+                   ' that the fit is done at all.')
+@click.option('--overwrite', is_flag=True, help='Overwrite output files.')
+def cli_image_ts(input_file, output_file, psf, model, scales, downsample, residual,
                  morphology, width, overwrite, threshold):
-    """
-    Compute source model residual images.
+    """Compute TS image.
 
-    The input ``data`` FITS file must contain the following HDU extensions:
+    The INPUT_FILE and OUTPUT_FILE arguments are FITS filenames.
 
+    \b
+    The INPUT_FILE FITS file must contain the following HDU extensions:
     * 'counts' -- Counts image
     * 'background' -- Background image
     * 'exposure' -- Exposure image
     """
+    scales = [float(_) for _ in scales.split(',')]
+
     # Read data
     log.info('Reading {}'.format(input_file))
     images = SkyImageList.read(input_file)
@@ -75,9 +63,11 @@ def run_image_ts(input_file, output_file, psf, model, scales, downsample, residu
         log.info('Reading {}'.format(model))
         images['model'] = SkyImage.read(model)
 
-    results = compute_ts_image_multiscale(images, psf_parameters, scales, downsample,
-                                          residual, morphology, width,
-                                          threshold=threshold)
+    results = compute_ts_image_multiscale(
+        images, psf_parameters, scales, downsample,
+        residual, morphology, width,
+        threshold=threshold,
+    )
 
     filename = Path(output_file).name
     folder = Path(output_file).parent

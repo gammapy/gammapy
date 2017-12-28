@@ -2,10 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import pytest
-from click.testing import CliRunner
 from numpy.testing.utils import assert_allclose
 from astropy.stats import gaussian_sigma_to_fwhm
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, run_cli
 from ...datasets import load_poisson_stats_image
 from ..main import cli
 
@@ -57,8 +56,7 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
     if psf:
         args.extend(['--psf', filenames['psf']])
 
-    result = CliRunner().invoke(cli, args, catch_exceptions=False)
-    assert result.exit_code == 0
+    run_cli(cli, args)
 
     with outfile.open() as fh:
         data = json.load(fh)

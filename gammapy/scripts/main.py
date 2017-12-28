@@ -56,6 +56,9 @@ def add_subcommands():
     from .image_fit import cli_image_fit
     cli_image.add_command(cli_image_fit)
 
+    from .image_ts import cli_image_ts
+    cli_image.add_command(cli_image_ts)
+
 
 add_subcommands()
 

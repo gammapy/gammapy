@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from click.testing import CliRunner
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, run_cli
 from ...image import SkyImage
 from ..main import cli
 
@@ -15,8 +14,7 @@ def test_bin_image_main(tmpdir):
     out_file = str(tmpdir / 'gammapy_ctskymap.fits.gz')
 
     args = ['image', 'bin', event_file, reference_file, out_file]
-    result = CliRunner().invoke(cli, args)
-    assert result.exit_code == 0
+    run_cli(cli, args)
 
     actual = SkyImage.read(out_file)
     expected = SkyImage.read(reference_file)

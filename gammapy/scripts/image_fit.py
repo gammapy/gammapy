@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
               help='Output JSON file with fit results')
 def cli_image_fit(counts, exposure, background, psf,
                   sources, roi, outfile):
-    """Image morphology fit using Sherpa.
+    """Fit morphology model to image using Sherpa.
 
     Uses initial parameters from a JSON file (for now only Gaussians).
     """
