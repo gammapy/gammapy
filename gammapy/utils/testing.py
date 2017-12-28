@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-
+import sys
 import os
 import pytest
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from numpy.testing import assert_allclose
-
 from ..data import DataManager
 from ..datasets import gammapy_extra
 
@@ -108,16 +107,35 @@ def requires_data(name):
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
-def run_cli(cli, args, assert_ok=True):
-    """Helper function to run command line tools.
+def run_cli(cli, args, exit_code=0):
+    """Run Click command line tool.
+
+    Thin wrapper around `click.testing.CliRunner`
+    that prints info to stderr if the command fails.
+
+    Parameters
+    ----------
+    cli : click.Command
+        Click command
+    args : list of str
+        Argument list
+    exit_code : int
+        Expected exit code of the command
+
+    Returns
+    -------
+    result : `click.testing.Result`
+        Result
     """
-    with pytest.raises(SystemExit) as exc:
-        cli(args)
+    from click.testing import CliRunner
+    result = CliRunner().invoke(cli, args, catch_exceptions=False)
 
-    if assert_ok:
-        assert exc.value.args[0] == 0
+    if result.exit_code != exit_code:
+        sys.stderr.write('Exit code mismatch!\n')
+        sys.stderr.write('Ouput:\n')
+        sys.stderr.write(result.output)
 
-    return exc
+    return result
 
 
 # https://pytest.org/latest/tmpdir.html#the-tmpdir-factory-fixture
