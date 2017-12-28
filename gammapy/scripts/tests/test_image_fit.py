@@ -2,11 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import pytest
+from click.testing import CliRunner
 from numpy.testing.utils import assert_allclose
 from astropy.stats import gaussian_sigma_to_fwhm
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import load_poisson_stats_image
-from ..image_fit import run_image_fit_sherpa
+from ..main import cli
 
 EXPECTED = ([9.016526, 99.865985, 100.147877, 1010.824189],
             [4 * gaussian_sigma_to_fwhm, 100, 100, 1e3],
@@ -24,7 +25,6 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
     """
     Fit Poisson stats image test data.
     """
-
     # load test data
     filenames = load_poisson_stats_image(extra_info=True, return_filenames=True)
     outfile = tmpdir / 'test_sherpa_like.json'
@@ -41,23 +41,24 @@ def test_sherpa_like(tmpdir, expected, rtol, psf, data):
         json.dump(sources_data, fh)
 
     # set up args
-    args = {'exposure': str(filenames['exposure']),
-            'background': str(filenames['background']),
-            'sources': str(filename),
-            'roi': None,
-            'outfile': str(outfile)}
+    args = [
+        'image', 'fit',
+        '--exposure', filenames['exposure'],
+        '--background', filenames['background'],
+        '--sources', str(filename),
+        '--outfile', str(outfile),
+    ]
 
     if data:
-        args['counts'] = str(filenames['counts'])
+        args.extend(['--counts', filenames['counts']])
     else:
-        args['counts'] = str(filenames['model'])
+        args.extend(['--counts', filenames['model']])
 
     if psf:
-        args['psf'] = filenames['psf']
-    else:
-        args['psf'] = None
+        args.extend(['--psf', filenames['psf']])
 
-    run_image_fit_sherpa(**args)
+    result = CliRunner().invoke(cli, args, catch_exceptions=False)
+    assert result.exit_code == 0
 
     with outfile.open() as fh:
         data = json.load(fh)

@@ -1,47 +1,31 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from ..utils.scripts import get_parser, set_up_logging_from_args
+import click
 from ..irf._utils_old import read_json, write_all
-
-__all__ = ['run_image_fit_sherpa']
 
 log = logging.getLogger(__name__)
 
 
-def image_fit_main(args=None):
-    parser = get_parser(run_image_fit_sherpa)
-    parser.add_argument('--counts', type=str, default='counts.fits',
-                        help='Counts FITS file name')
-    parser.add_argument('--exposure', type=str, default='exposure.fits',
-                        help='Exposure FITS file name')
-    parser.add_argument('--background', type=str, default='background.fits',
-                        help='Background FITS file name')
-    parser.add_argument('--psf', type=str, default=None,
-                        help='PSF JSON file name')
-    parser.add_argument('--sources', type=str, default='sources.json',
-                        help='Sources JSON file name (contains start '
-                             'values for fit of Gaussians)')
-    parser.add_argument('--roi', type=str, default=None,
-                        help='Region of interest (ROI) file name (ds9 reg format)')
-    parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        help="Set the logging level")
-    parser.add_argument('outfile', type=str, default='fit_results.json',
-                        help='Output JSON file with fit results')
-    args = parser.parse_args(args)
-    set_up_logging_from_args(args)
-    run_image_fit_sherpa(**vars(args))
-
-
-def run_image_fit_sherpa(counts,
-                         exposure,
-                         background,
-                         psf,
-                         sources,
-                         roi,
-                         outfile):
-    """Fit the morphology of a number of sources.
+@click.command('fit')
+@click.option('--counts', default='counts.fits',
+              help='Counts FITS file name')
+@click.option('--exposure', default='exposure.fits',
+              help='Exposure FITS file name')
+@click.option('--background', default='background.fits',
+              help='Background FITS file name')
+@click.option('--psf', type=str, default=None,
+              help='PSF JSON file name')
+@click.option('--sources', default='sources.json',
+              help='Sources JSON file name (contains start '
+                   'values for fit of Gaussians)')
+@click.option('--roi', type=str, default=None,
+              help='Region of interest (ROI) file name (ds9 reg format)')
+@click.option('--outfile', default='fit_results.json',
+              help='Output JSON file with fit results')
+def cli_image_fit(counts, exposure, background, psf,
+                  sources, roi, outfile):
+    """Image morphology fit using Sherpa.
 
     Uses initial parameters from a JSON file (for now only Gaussians).
     """
