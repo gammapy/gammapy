@@ -66,7 +66,6 @@ The Gammapy toolbox
 .. toctree::
   :maxdepth: 1
 
-  scripts/index
   astro/index
   background/index
   catalog/index
@@ -81,3 +80,4 @@ The Gammapy toolbox
   time/index
   utils/index
   maps/index
+  scripts/index
