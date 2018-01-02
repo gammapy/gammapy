@@ -240,57 +240,130 @@ Implementation
 
 Currently, the command line interface (CLI) of Gammapy is implemented using `click`_
 to define sub-commands, arguments and options, as well as calling the right function
-that implements a given sub-command. `sphinx-click`_  is used to generate a nice
-version of the help for each sub-command on this HTML page.
+that implements a given sub-command.
 
 We have chosen to implement all functionality via a single command line tool called
-``gammapy``, with each task as a subcommand like ``gammapy bin``. This
+``gammapy``, with each task as a subcommand. The ``gammapy`` command line tool uses
+the `setuptools console_scripts entry point`_ method to automatically create command
+line tools when Gammapy is installed.
 
-The ``gammapy`` command line tool uses the `setuptools console_scripts entry point`
-method to automatically create command line tools when Gammapy is installed.
-
-This means that to be able to use the tools you have to install Gammapy:
+This means that to be able to use the tools you have to install Gammapy.
+Although, from the source folder you can still execute it without installing via
 
 .. code-block:: bash
 
-    $ python -m pip install .
+    $ python -m gammapy
 
+which executes ``gammapy/__main__.py`` as a script as explained
+`here <https://docs.python.org/3/library/__main__.html>`__.
 
-This will install the ``gammapy-*`` wrappers in a ``bin`` folder that you need to add to your ``$PATH``,
-which will then call into the appropriate function in the Gammapy package.
-
-For Gammapy development we recommend you run this command so that you can edit
-Gammapy and the tools and don't have to re-install after every change.
+Another way to install the ``gammapy`` command line tool once, but to have
+it point at the Gammapy git source folder while you're hacking on Gammapy is to use
 
 .. code-block:: bash
 
     $ python -m pip install --editable .
 
 
-Most of the command line tools are implemented in the `gammapy.scripts` sub-package as thin wrappers
-around functionality that's implemented in the Gammapy package as re-usable functions and classes.
-In most cases all the command line tool ``main`` function does is argument passing and setting up logging.
+Either ``gammapy`` or ``python -m gammapy`` call the ``gammapy.scripts.main.cli`` function,
+which is a ``click.Group`` object. If you want you can also import and execute it yourself::
 
-TODO: explain somewhere that we use `sphinx-click`_ to generate cli documentation.
+    >>> from gammapy.scripts.main import cli
+    >>> type(cli)
+    click.core.Group
+    >>> cli()
+    >>> cli(['--version'])
+    >>> cli(['image', 'bin', '--help'])
 
-TODO: explain how one can call the cli directly and how we test it.
+This is what we do to test the CLI, we import ``gammapy.scripts.main.cli`` and run it via
+``gammapy.utils.testing.run_cli`` and check the return code and sometimes console output
+or generated files. Note that this means that all tests run in a single Python process,
+we don't "shell out" and create a subprocess that calls ``gammapy`` from a sub-shell.
+
+This is also how the auto-generated CLI documentation in the :ref:`scripts_ref`
+section above was generated: we use the `sphinx-click`_ Sphinx extension that imports and
+inspects ``gammapy.scripts.main.cli`` to find out about all the available sub-commands
+and help text / arguments / options. The ``click.Group`` object exposes all information
+as attributes and methods. To just give one example::
+
+    >>> from gammapy.scripts.main import cli
+    >>> cli.commands
+    {'check': <click.core.Group at 0x112107048>,
+     'image': <click.core.Group at 0x112102e10>,
+     'info': <click.core.Command at 0x1120bb278>}
+
+If you're new to Python command line tools or Click, probably setuptools entry points
+and click groups seem very complex. And they are, compared to the rest of Gammapy which
+is just `def` and `class` statements to make functions and classes, i.e. "normal" Python code.
+Just know that to use and even work on the Gammapy CLI you don't have to understand how
+it works under the hood, but if you want to, it's actually not that complex.
+
+A good path to learn is to start by reading `gammapy/__main__.py`_ and `gammapy/scripts/main.py`_
+and then to look at an example of how a sub-command in Gammapy is implemented and tested,
+e.g. `gammapy/scripts/image_bin.py`_ and `gammapy/scripts/tests/test_image_bin.py`_.
+
+Note how sub-commands are ``click.Command`` objects::
+
+    >>> from gammapy.scripts.image_bin import cli_image_bin
+    >>> type(cli_image_bin)
+    click.core.Command
+
+that are independent and how the main ``cli`` is created via ``cli.add_command`` calls in
+`gammapy/scripts/main.py`.
+
+Now you have a basic understanding how things work and should be able to work on Gammapy CLI
+(e.g. add more functionality to the CLI interface). If you're curious to learn how it
+works in detail, we suggest you read the `click`_ docs and play with the Gammapy ``cli``
+object in IPython like we did above when looking at ``cli.commands``, or read and play with
+the standalone example in the :ref:`scripts_user_cli` section below.
+
+.. _gammapy/__main__.py: https://github.com/gammapy/gammapy/blob/master/gammapy/__main__.py
+.. _gammapy/scripts/main.py: https://github.com/gammapy/gammapy/blob/master/gammapy/scripts/main.py
+.. _gammapy/scripts/image_bin.py: https://github.com/gammapy/gammapy/blob/master/gammapy/scripts/image_bin.py
+.. _gammapy/scripts/tests/test_image_bin.py: https://github.com/gammapy/gammapy/blob/master/gammapy/scripts/tests/test_image_bin.py
 
 .. _scripts_limitations:
 
 Limitations
 ===========
 
-``click`` is nice and simple to use, and it's a pure Python package that we could
-just bundle as a few ``.py`` files in ``gammapy.extern`` if we want to avoid
-the extra external dependency. However, probably ``click`` is not the long-term
-solution for Gammapy, the main features we'd like to have that the current solution
-doesn't offer are:
+The current `click`_-based Gammapy CLI is pretty nice, it is very simple to add commands
+and also documenting and testing them is pretty nice.
 
-* Support in-memory tool chain analysis pipeline. E.g. ``gammapy bin`` followed
-  by ``gammapy fit`` without writing intermediate files and starting the two
-  commands as separate processes.
+However, the current implementation has some issues and limitations. We describe
+them in this section, and then in the next one discuss more generally the plan
+and options for the Gammapy high-level (CLI or non-CLI) interface.
 
+* There is no support for in-memory tool chain analysis pipelines.
+  I mean something lik e.g. ``gammapy bin`` followed by ``gammapy fit``
+  without writing intermediate files and starting the two commands as separate processes.
+* There is no support for configuring or writing provenance information
+  for commands or command pipelines (i.e. store which commands were executed with
+  which arguments in input config or "workflow" files as well as output result files).
+* More generally, we have to see if the separation of Gammapy as a library
+  of "normal" Python functions and classes that can't be driven by config
+  files or the command line, and then separate functions that represent the CLI
+  is what we want. It means that we have two different ways to use Gammapy
+  in very different ways, and there is duplication and not a nice transition
+  and re-use between the two ways.
 
+More technical issues that can certainly be fixed if we want to stick
+with the current click-based CLI:
+
+* ``gammapy`` always imports all code from all sub-commands, which drags in
+  large fraction of ``astropy`` and ``gammapy`` whether it is used or not.
+  This means that ``gammapy --help`` takes a few seconds, whereas other commands
+  like ``git --help`` just take a very small fraction of a second.
+  This can be improved either by optimising import times throughout Astropy
+  and Gammapy in general, or by lazy-loading the subcommands or by delaying
+  imports into the callbacks from the subcommands.
+* The CLI documentation isn't nice yet (see the :ref:`scripts_ref` section above).
+  The `sphinx-click`_ package that we use isn't very well-developed or configurable.
+  However, it's a single Python file that we could just copy into Gammapy and
+  modify and extend to generate documentation in exactly the way we like.
+  E.g. we probably would want to have help text including examples and links to
+  other parts for the Gammapy API and CLI docs that appear nicely on the console
+  as well on in the HTML docs.
 
 .. _scripts_plan:
 
@@ -298,37 +371,64 @@ Plan
 ====
 
 There is no concrete plan yet concerning the high-level user interface for Gammapy.
+Feedback from users and developers on the mailing list is highly welcome!
+What do you want?
 
-Some thoughts:
+Some options we are considering to build the high-level end-user interface for Gammapy:
 
-.. _python-cli-examples: https://github.com/cdeil/python-cli-examples/
-.. _cliff: https://docs.openstack.org/cliff/latest/
-.. _cement: http://builtoncement.com/
+1. Collection of command line tools. Examples: FTOOLs_, `Fermi ScienceTools`_, `ctools`_
+2. Config-file driven analysis. Examples: `FermiPy`_, or the H.E.S.S.-internal HAP
+3. No special config- or CLI interface, just normal Python functions and classes.
+   Examples: Sherpa_ and most Python package like e.g. `Astropy`_ or `scikit-learn`_.
+4. Something more fancy that supports tool configuration and running from Python,
+   config files or a CLI using a single implementation. Examples: `ctapipe`_, `fact-tools`_,
+   `python-fire`_
 
-In addition, we are considering options how to implement a high-level interface
-for Gammapy. The two standard options for such a high-level interface are
-either a bunch of command line tools (example: `Fermi ScienceTools`_), or
-a config file (example: `FermiPy`_ or also HAP tool in `H.E.S.S.`_). There are
-also other more fancy options for configurable analysis pipelines or systems
-that let users compose analysis workflows via configuration files (e.g. YAML
-or XML) instead of Python code (examples: `fact-tools`_, `ctapipe`_)
-or ways to auto-expose functionality in a Python package as command line tools
-(example: `python-fire`_).
+Options 1 and 2 are nice and simple, and they are user-friendly interfaces, and they
+would allow us to have a stable high-level interface while being able to continue to
+improve the Gammapy package without breaking user scripts over the coming years.
 
-Please note that the existing high-level interface in Gammapy in this
-``gammapy.scripts`` package is experimental. We haven't committed to a
-way to expose the available functionality via a high-level interface yet,
-and only a very small subset of the functionality from Gammapy is available
-in that way. Once the Gammapy Python package is a little more developed,
-we probably will add a high-level interface to Gammapy. At least
-for the most common functionality, advanced users will probably always
-find the exiting Python interface to be the best way to use Gammapy.
-Please let us know on the Gammapy mailing list what interface you would like to have!
+Their drawback is that they create a second way to use Gammapy, with some users learning
+and using the more flexible and powerful Python package, and some the simpler to use,
+but less flexible high-level interface. And note that eventually this second interface
+will grow into a config file with 100 options (that's what we have in HAP) or into
+10s of CLI tools with in total again 100s of options (see the ctools). However, the Fermi
+Science tools CLI and Fermipy config interface are examples where the interface size
+remains at a reasonable level (for users to learn and for developers to implement and maintain)
+while still exposing everything that most users need.
 
-Example for config-based analysis in Gammapy: `gammapy.scripts.SpectrumAnalysisIACT`.
+Options 3 and 4 are similar, in either case the analysis functionality that is available
+in Gammapy would be written once. Option 3 is what we have now in the Gammapy Python package.
+Changing to option 4 would mean adding some boilerplate code everywhere (e.g. Python decorators
+or sub-classing from "tool" base classes like what ctapipe is developing)
+or relying on the dynamic and inspection features of the Python language offers (see e.g.
+python-fire), to make it possible to configure and drive analyses not just via Python
+code, but via some configuration coming either from configuration files (YAML or XML)
+or command line options.
+
+So what should we do for Gammapy?
+
+I would suggest we continue with the prototyping of the CLI interface as well
+as of a config-file based interface (`gammapy.scripts.SpectrumAnalysisIACT` is a starting point).
+Pull requests that improve and extend what we have are welcome any time!
+
+In parallel, we continue to learn and evaluate solutions others have developed.
+In `python-cli-examples`_ I have started an exploration and evaluation of Python
+CLI packages, namely `click`_, but also `cliff`_ and `traitlets`_, and I might
+take a closer look also at `cement`_ and `python-fire`_ there.
+We should also look in detail at what other projects like LSST, JWST, Fermi, ctapipe,
+and others do concerning configuration and interface of their science tools.
+Later in 2018 we will need a comprehensive proposal for code organisation and
+high-level interface for Gammapy. Suggestions or even contributions are welcome any time!
+
 
 .. _fact-tools: https://pos.sissa.it/236/865/
+.. _cement: http://builtoncement.com/
 .. _python-fire: https://github.com/google/python-fire
+.. _python-cli-examples: https://github.com/cdeil/python-cli-examples/
+.. _cliff: https://docs.openstack.org/cliff/latest/
+.. _traitlets: http://traitlets.readthedocs.io/
+
 
 .. _scripts_user_cli:
 
