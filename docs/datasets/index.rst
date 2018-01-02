@@ -64,7 +64,7 @@ After you've done this, open up a new terminal (or ``source .profile``) and chec
 .. code-block:: bash
 
     # TODO: make this print some info about gammapy-extra (including a version!!!)
-    gammapy-info
+    gammapy info
 
 Example usage:
 

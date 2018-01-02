@@ -26,11 +26,24 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option('--version', is_flag=True, callback=print_version,
               expose_value=False, is_eager=True, help='Print version and exit')
 def cli(log_level, ignore_warnings):
-    """Gammapy command line interface.
+    """Gammapy command line interface (CLI).
 
     Gammapy is a Python package for gamma-ray astronomy.
 
-    For further information, see http://gammapy.org/
+    Use ``--help`` to see available sub-commands, as well as the available
+    arguments and options for each sub-command.
+
+    For further information, see http://gammapy.org/ and http://docs.gammapy.org/
+
+    \b
+    Examples
+    --------
+
+    \b
+    $ gammapy --help
+    $ gammapy --version
+    $ gammapy info --help
+    $ gammapy info
     """
     logging.basicConfig(level=log_level.upper())
 

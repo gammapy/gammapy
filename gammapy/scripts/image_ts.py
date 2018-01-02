@@ -43,8 +43,8 @@ def cli_image_ts(input_file, output_file, psf, model, scales, downsample, residu
 
     The INPUT_FILE and OUTPUT_FILE arguments are FITS filenames.
 
-    \b
     The INPUT_FILE FITS file must contain the following HDU extensions:
+    \b
     * 'counts' -- Counts image
     * 'background' -- Background image
     * 'exposure' -- Exposure image
