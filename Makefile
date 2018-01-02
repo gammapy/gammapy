@@ -42,10 +42,13 @@ help:
 	@echo '     GAMMAPY_EXTRA = $(GAMMAPY_EXTRA)'
 	@echo ''
 	@echo ' To get more info about your Gammapy installation and setup run this command'
-	@echo ' (Gammapy needs to be installed and on your PATH)'
 	@echo ''
-	@echo '     gammapy-info'
+	@echo '     gammapy info'
 	@echo ''
+	@echo ' For this to work, Gammapy needs to be installed and on your PATH.'
+	@echo ' If it is not, then use this equivalent command:'
+	@echo ''
+	@echo '     python -m gammapy info'
 
 clean:
 	rm -rf build dist docs/_build docs/api docs/notebooks docs/_static/notebooks htmlcov MANIFEST gammapy.egg-info .coverage .cache

@@ -36,9 +36,9 @@ You can use this command to make sure the Python package is available::
 
    $ python -c 'import gammapy'
 
-To check if the Gammapy command line tools have been installed and are available on your PATH, use this command::
+To check if the Gammapy command line tool has been installed and are available on your PATH, use this command::
 
-    $ gammapy-info --version
+    $ gammapy --version
 
 The Gammapy tutorials use some example datasets that are stored in the ``gammapy-extra`` repository on Github.
 So please go follow the instructions at :ref:`gammapyextra` to fetch those, then come back here.
@@ -115,39 +115,19 @@ Try executing the cells locally on your machine as you read through the text and
 Using Gammapy via command line tools
 ------------------------------------
 
-At the moment we are mostly focused on developing the Gammapy Python package.
-But we already have a few command line tools to execute common analysis tasks.
+The ``gammapy`` command line tool lets you execute some very common analysis tasks
+directly from the command line. Try this::
 
-At the terminal (the shell, not the Python prompt), you can type ``gammapy<TAB><TAB>`` to get
-a list of available command line tools.
+    $ gammapy --help
+    $ gammapy --version
 
-.. code-block:: bash
+Further information about the ``gammapy`` command line interface is here: :ref:`scripts`
 
-    $ gammapy<TAB><TAB>
-
-You can use the ``--help`` option on each one to get some help what it's arguments and options are.
-
-.. code-block:: bash
-
-    $ gammapy-image-bin --help
-    usage: gammapy-image-bin [-h] [--overwrite] event_file reference_file out_file
-
-    Bin events into an image.
-
-    positional arguments:
-      event_file      Input FITS event file name
-      reference_file  Input FITS reference image file name
-      out_file        Output FITS counts cube file name
-
-    optional arguments:
-      -h, --help      show this help message and exit
-      --overwrite     Overwrite existing output file? (default: False)
-
-Again ... the command line tools don't expose much functionality yet.
-We will improve this (and add examples and documentation) for the command line tools soon!
-
-TODO: add example here, maybe for ``gammapy-image-bin`` or something more interesting?
-
+That page also includes information how the ``gammapy`` command line tool works
+and what to do if it doesn't work (likely you have to add the ``bin`` directory
+where Gammapy is installed to your ``PATH`` shell environment variable). It even
+has a section with a tutorial how to write your own command line tools if this is
+something you want.
 
 What next?
 ----------

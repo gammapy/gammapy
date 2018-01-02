@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 @click.argument('out_file', type=str)
 @click.option('--overwrite', is_flag=True, help='Overwrite existing files?')
 def cli_image_bin(event_file, reference_file, out_file, overwrite):
-    """Bin events into an image
+    """Bin events into an image.
 
     You have to give the event, reference and out FITS filename.
     """

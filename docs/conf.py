@@ -85,9 +85,12 @@ exclude_patterns.append('**.ipynb_checkpoints')
 
 #
 # -- nbsphinx settings
-extensions.append('nbsphinx')
-extensions.append('IPython.sphinxext.ipython_console_highlighting')
-extensions.append('sphinx.ext.mathjax')
+extensions.extend([
+    'nbsphinx',
+    'sphinx_click.ext',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx.ext.mathjax',
+])
 nbsphinx_execute = setup_cfg['execute_notebooks']
 
 # --

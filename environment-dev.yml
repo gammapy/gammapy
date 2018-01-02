@@ -6,7 +6,6 @@ channels:
   - sherpa
 
 dependencies:
-  # Required dependencies
   - python==3.6
   - cython
   - numpy
@@ -14,7 +13,6 @@ dependencies:
   - regions
   - click
   - pyyaml
-  # Optional dependencies
   - scipy
   - matplotlib
   - scikit-image
@@ -22,13 +20,11 @@ dependencies:
   - healpy
   - reproject
   - sherpa
-  # Testing dependencies
   - pytest
-
-  # Documentation build dependencies
   - sphinx
   - aplpy
   - ipython
   - pandoc
-#  - pip:
-#    - nbsphinx==0.2.17
+  - pip:
+    - nbsphinx==0.2.17
+    - sphinx-click

@@ -13,11 +13,11 @@ import Gammapy and run the unit tests::
 
 To check if the Gammapy command line tools are on your ``$PATH`` try this::
 
-   $ gammapy-info --tools
+   $ gammapy info --tools
 
 To check which dependencies of Gammapy you have installed::
 
-   $ gammapy-info --dependencies
+   $ gammapy info --dependencies
 
 .. _install-issues:
 

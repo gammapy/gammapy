@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing.utils import assert_allclose
 import pytest
-from ...utils.testing import requires_dependency, requires_data
+from numpy.testing.utils import assert_allclose
+from ...utils.testing import requires_dependency, requires_data, run_cli
 from ...image import SkyImageList
-from ..image_ts import image_ts_main
+from ..main import cli
 
 SCALES = ['0.000', '0.050', '0.100', '0.200']
 
@@ -20,14 +20,18 @@ def test_command_line_gammapy_image_ts(tmpdir, scale):
     input_filename = input_dir + 'input_all.fits.gz'
     psf_filename = input_dir + 'psf.json'
     expected_filename = input_dir + 'expected_ts_{}.fits.gz'.format(scale)
-    actual_filename = str(tmpdir / 'output.fits')
+    output_filename = str(tmpdir / 'output.fits')
 
-    args = [input_filename, actual_filename,
-            "--psf", psf_filename,
-            "--scales", scale]
-    image_ts_main(args)
+    args = [
+        'image', 'ts',
+        input_filename, output_filename,
+        '--psf', psf_filename,
+        '--scales', scale,
+    ]
 
-    actual = SkyImageList.read(actual_filename)
+    run_cli(cli, args)
+
+    actual = SkyImageList.read(output_filename)
     expected = SkyImageList.read(expected_filename)
 
     opts = dict(rtol=1e-2, atol=1e-5, equal_nan=True)

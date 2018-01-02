@@ -48,7 +48,7 @@ class CTAIrf(object):
         Point spread function
     bkg : `~gammapy.background.FOVCube`
         Background rate
-    ref_sensi: `~gammapy.irf.SensitivityTable`
+    ref_sensi : `~gammapy.irf.SensitivityTable`
         Reference Sensitivity
     """
 
