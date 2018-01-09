@@ -175,7 +175,7 @@ htmlhelp_basename = project + 'doc'
 html_static_path = ['_static']
 
 # download gammapy-extra for read the docs build
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get('READTHEDOCS') == 'False'
 if on_rtd:
     from zipfile import ZipFile
     from astropy.extern.six.moves import urllib

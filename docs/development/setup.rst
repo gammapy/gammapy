@@ -29,7 +29,7 @@ and the ``docs`` folder. In ``gammapy`` you find the Gammapy package, i.e.
 all code, but also tests are included there in sub-folders called ``tests``.
 The ``docs`` folder contains the documentation pages in restructured text (RST)
 format. The Sphinx documentation generator is used to convert those RST files
-to the HTML documentation at https://gammapy.readthedocs.io/ .
+to the HTML documentation.
 
 In the repository you will find a bunch of other files and folders. We will explain
 some of them here, but not all. Just ignore the rest.
@@ -205,13 +205,7 @@ docs.gammapy.org
 http://docs.gammapy.org/ contains most of the documentation for Gammapy,
 including information about Gammapy, the changelog, tutorials, ...
 
-The docs.gammapy.org URL serves the content from https://gammapy.readthedocs.io
-ReadTheDocs (RTD) is a free cloud service to build and host documentation.
-
-To update the content, edit the RST files in the ``docs`` folder of the main
-``gammapy`` repo and make a pull request. Once it's merged, a docs build on
-the RTD servers will start, and if it succeeds, the updated documentation
-will appear at https://gammapy.readthedocs.io/en/latest/ about 10 minutes later.
+TODO: describe how to update.
 
 Gammapy Binder
 --------------
@@ -262,4 +256,3 @@ Data formats should be defined here, and then linked to from the Gammapy docs:
 
 * https://github.com/open-gamma-ray-astro/gamma-astro-data-formats
 * http://gamma-astro-data-formats.readthedocs.io
-

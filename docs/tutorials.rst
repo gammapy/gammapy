@@ -25,11 +25,6 @@ install Gammapy and get the ``gammapy-extra`` repository. This is
 described in `Gammapy tutorial
 setup <notebooks/tutorial_setup.html>`__.
 
-You can also download **for each version of Gammapy** a
-`HTMLZip pack <http://readthedocs.org/projects/gammapy/downloads/>`__
-containing the whole documentation and full collection of notebooks, so you can execute
-them in your local desktop inside the `_static/notebooks/` folder.
-
 Alternatively you may execute latest version of the collection of notebooks on-line
 accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
 

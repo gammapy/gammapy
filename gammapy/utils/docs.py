@@ -125,11 +125,8 @@ Try online on Binder
 
 [![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})
 
-Alternatively you can download for each version of Gammapy a
-[HTMLZip pack](http://readthedocs.org/projects/gammapy/downloads/) containing
-the whole HTML documentation and full collection of notebooks, so you can execute
-them in your local `_static/notebooks/` folder. You can also contribute with your
-own notebooks in this [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
+ You can also contribute with your own notebooks in this
+ [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
