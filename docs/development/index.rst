@@ -49,3 +49,4 @@ Pages
   setup
   howto
   release
+  pigs/index
