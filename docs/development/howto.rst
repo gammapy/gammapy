@@ -799,9 +799,6 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
-The PDF is also generated on Read the Docs and available online here:
-https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
-
 Jupyter notebooks present in the ``gammapy-extra`` repository are by default copied
 to the ``docs/notebooks`` and ``docs/_static/notebooks`` tree-folder structure during
 the process of generating HTML docs. This triggers its conversion to *fixed-text*
@@ -977,24 +974,3 @@ instead of the usual Sphinx ``image`` directive like this:
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
-
-.. _dev-wipe_rtd:
-
-Wipe readthedocs
-----------------
-
-After things (classes, methods, functions) are removed, the Sphinx API docs often show these old items.
-If you notice this, you have to "wipe" the Gammapy install on Readthedocs and start a fresh build.
-If you don't have permissions on Readthedocs, file a Github issue or mention this on the mailing list.
-
-The wipe procedure is described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__.
-
-The steps are:
-
-* log in `here <https://readthedocs.org/accounts/login/>`__
-* hit this URL and click the "wipe" button to wipe the existing install:
-
-   https://readthedocs.org/wipe/gammapy/latest/
-* go `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
-* go `here <https://readthedocs.org/builds/gammapy/>`__ and check if the build succeeded
-* re-check the output docs page where you had previously seen something outdated.
