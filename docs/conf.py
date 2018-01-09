@@ -174,22 +174,6 @@ htmlhelp_basename = project + 'doc'
 # Static files to copy after template files
 html_static_path = ['_static']
 
-# download gammapy-extra for read the docs build
-on_rtd = os.environ.get('READTHEDOCS') == 'False'
-if on_rtd:
-    from zipfile import ZipFile
-    from astropy.extern.six.moves import urllib
-    from tempfile import mktemp
-
-    filename = mktemp('gammapy-extra-master.zip')
-    url = 'https://github.com/gammapy/gammapy-extra/archive/master.zip'
-    name, hdrs = urllib.request.urlretrieve(url, filename)
-    gp_extra_zip = ZipFile(filename)
-    path = os.path.dirname(filename)
-    gp_extra_zip.extractall(path)
-    gp_extra_zip.close()
-    os.environ['GAMMAPY_EXTRA'] = os.path.join(path, 'gammapy-extra-master')
-
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
