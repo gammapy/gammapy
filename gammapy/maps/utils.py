@@ -133,3 +133,33 @@ def find_bintable_hdu(hdulist):
             return hdu
 
     raise AttributeError('No BinTable HDU found.')
+
+
+def get_map_type(hdu, map_type=None):
+    """Infer map type from a FITS HDU.
+
+    Parameters
+    ----------
+    hdu :  `~astropy.io.fits.ImageHDU` or  `~astropy.io.fits.BinTableHDU`
+        The HDU containing the map data.
+
+    map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
+        Map representation.  If none then the representation will be
+        inferred from the FITS header.
+
+    """
+
+    # Infer pixel type from file
+    pix_type = 'wcs'
+    if 'PIXTYPE' in hdu.header and hdu.header['PIXTYPE'] == 'HEALPIX':
+        pix_type = 'hpx'
+
+    # if map type is not specified then default to non-sparse map for
+    # the appropriate pixelization
+    if map_type is None:
+        return pix_type
+    else:
+        if (('wcs' in map_type and pix_type != 'wcs') or
+                ('hpx' in map_type and pix_type != 'hpx')):
+            raise Exception('Mismatch between requested map type and file.')
+        return map_type
