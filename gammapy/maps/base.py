@@ -5,6 +5,7 @@ import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
+from .utils import find_hdu, get_map_type
 from .geom import pix_tuple_to_idx, MapCoords
 
 __all__ = [
@@ -65,9 +66,9 @@ class MapBase(object):
         coordsys : str
             Coordinate system, either Galactic ('GAL') or Equatorial
             ('CEL').
-        map_type : str
-            Internal map representation.  Valid types are `wcs`,
-            `wcs-sparse`, `hpx`, and `hpx-sparse`.
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         binsz : float or `~numpy.ndarray`
             Pixel size in degrees.
         skydir : `~astropy.coordinates.SkyCoord`
@@ -84,6 +85,7 @@ class MapBase(object):
         -------
         map : `~MapBase`
             Empty map object.
+
         """
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
@@ -98,7 +100,7 @@ class MapBase(object):
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, hdu=None, hdu_bands=None, map_type=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -111,14 +113,44 @@ class MapBase(object):
             Name or index of the HDU with the BANDS table.  If not
             defined this will be inferred from the FITS header of the
             map HDU.
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.  The map type should be consistent
+            the format of the input file.  If map_type is None then an
+            appropriate map type will be inferred from the input file.
 
         Returns
         -------
         map_out : `~MapBase`
             Map object
+
         """
+        from .hpxnd import HpxMapND
+        from .hpxsparse import HpxMapSparse
+        from .hpxmap import HpxMap
+        from .wcsnd import WcsMapND
+        from .wcsmap import WcsMap
+
         with fits.open(filename) as hdulist:
-            map_out = cls.from_hdulist(hdulist, **kwargs)
+            h = find_hdu(hdulist) if hdu is None else hdulist[hdu]
+            map_type = get_map_type(h, map_type)
+
+            # If not a base class then determine class from call signature
+            if cls not in [MapBase, WcsMap, HpxMap]:
+                map_out = cls.from_hdulist(
+                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            elif map_type == 'wcs':
+                map_out = WcsMapND.from_hdulist(
+                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            elif map_type == 'hpx':
+                map_out = HpxMapND.from_hdulist(
+                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            elif map_type == 'hpx-sparse':
+                map_out = HpxMapSparse.from_hdulist(
+                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            else:
+                raise Exception('Unrecognized map type.')
+
         return map_out
 
     def write(self, filename, **kwargs):
@@ -218,7 +250,7 @@ class MapBase(object):
         ----------
         geom : `~MapGeom`
             Geometry of projection.
-        mode : str
+        mode : {'interp', 'exact'}
             Method for reprojection.  'interp' method interpolates at pixel
             centers.  'exact' method integrates over intersection of pixels.
         order : int or str
