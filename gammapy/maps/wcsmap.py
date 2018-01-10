@@ -31,9 +31,9 @@ class WcsMap(MapBase):
 
         Parameters
         ----------
-        map_type : str
-            Internal map representation.  Valid types are `WcsMapND`/`wcs` and
-            `WcsMapSparse`/`wcs-sparse`.
+        map_type : {'wcs', 'wcs-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         npix : int or tuple or list
             Width of the map in pixels. A tuple will be interpreted as
             parameters for longitude and latitude axes.  For maps with

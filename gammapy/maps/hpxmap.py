@@ -53,9 +53,9 @@ class HpxMap(MapBase):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        map_type : str
-            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
-            `HpxMapSparse`/`hpx-sparse`.
+        map_type : {'hpx', 'hpx-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         width : float
             Diameter of the map in degrees.  If None then an all-sky
             geometry will be created.
