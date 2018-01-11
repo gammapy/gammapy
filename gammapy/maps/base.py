@@ -5,7 +5,7 @@ import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .utils import find_hdu, get_map_type
+from .utils import find_hdu
 from .geom import pix_tuple_to_idx, MapCoords
 
 __all__ = [
@@ -100,7 +100,7 @@ class MapBase(object):
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
-    def read(cls, filename, hdu=None, hdu_bands=None, map_type=None):
+    def read(cls, filename, hdu=None, hdu_bands=None, map_type='auto'):
         """Read a map from a FITS file.
 
         Parameters
@@ -113,45 +113,69 @@ class MapBase(object):
             Name or index of the HDU with the BANDS table.  If not
             defined this will be inferred from the FITS header of the
             map HDU.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
-            the format of the input file.  If map_type is None then an
+            the format of the input file.  If map_type is 'auto' then an
             appropriate map type will be inferred from the input file.
 
         Returns
         -------
         map_out : `~MapBase`
             Map object
-
         """
-        from .hpxnd import HpxMapND
-        from .hpxsparse import HpxMapSparse
-        from .hpxmap import HpxMap
-        from .wcsnd import WcsMapND
-        from .wcsmap import WcsMap
-
         with fits.open(filename) as hdulist:
-            h = find_hdu(hdulist) if hdu is None else hdulist[hdu]
-            map_type = get_map_type(h, map_type)
+            if map_type == 'auto':
+                map_type = cls._get_map_type(hdulist, hdu)
 
-            # If not a base class then determine class from call signature
-            if cls not in [MapBase, WcsMap, HpxMap]:
-                map_out = cls.from_hdulist(
-                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
-            elif map_type == 'wcs':
-                map_out = WcsMapND.from_hdulist(
-                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
-            elif map_type == 'hpx':
-                map_out = HpxMapND.from_hdulist(
-                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
-            elif map_type == 'hpx-sparse':
-                map_out = HpxMapSparse.from_hdulist(
-                    hdulist, hdu=hdu, hdu_bands=hdu_bands)
-            else:
-                raise Exception('Unrecognized map type.')
+            cls_out = cls._get_map_cls(map_type)
+            map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
 
         return map_out
+
+    @staticmethod
+    def _get_map_type(hdu_list, hdu_name):
+        """Infer map type from a FITS HDU.
+
+        Only read header, never data, to have good performance.
+        """
+        if hdu_name is None:
+            # Find the header of the first non-empty HDU
+            header = hdu_list[0].header
+            if header['NAXIS'] == 0:
+                header = hdu_list[1].header
+        else:
+            header = hdu_list[hdu_name].header
+
+        if ('PIXTYPE' in header) and (header['PIXTYPE'] == 'HEALPIX'):
+            return 'hpx'
+        else:
+            return 'wcs'
+
+    @staticmethod
+    def _get_map_cls(map_type):
+        """Get map class for given `map_type` string.
+
+        This should probably be a registry dict so that users
+        can add supported map types to the `gammapy.maps` I/O
+        (see e.g. the Astropy table format I/O registry),
+        but that's non-trivial to implement without avoiding circular imports.
+        """
+        if map_type == 'wcs':
+            from .wcsnd import WcsMapND
+            return WcsMapND
+        elif map_type == 'wcs-sparse':
+            raise NotImplementedError()
+        elif map_type == 'hpx':
+            from .hpxnd import HpxMapND
+            return HpxMapND
+        elif map_type == 'hpx-sparse':
+            from .hpxsparse import HpxMapSparse
+            return HpxMapSparse
+        else:
+            raise ValueError('Unrecognized map type: {!r}'.format(map_type))
+
+
 
     def write(self, filename, **kwargs):
         """Write to a FITS file.
