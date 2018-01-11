@@ -24,16 +24,16 @@ class WcsMap(MapBase):
     """
 
     @classmethod
-    def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
+    def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
                axes=None, skydir=None, dtype='float32', conv='gadf'):
         """Factory method to create an empty WCS map.
 
         Parameters
         ----------
-        map_type : str
-            Internal map representation.  Valid types are `WcsMapND`/`wcs` and
-            `WcsMapSparse`/`wcs-sparse`.
+        map_type : {'wcs', 'wcs-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         npix : int or tuple or list
             Width of the map in pixels. A tuple will be interpreted as
             parameters for longitude and latitude axes.  For maps with
@@ -82,12 +82,12 @@ class WcsMap(MapBase):
                               coordsys=coordsys, refpix=refpix, axes=axes,
                               conv=conv)
 
-        if map_type in [None, 'wcs', 'WcsMapND']:
+        if map_type == 'wcs':
             return WcsMapND(geom, dtype=dtype)
-        elif map_type in ['wcs-sparse', 'WcsMapSparse']:
+        elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:
-            raise ValueError('Unregnized Map type: {}'.format(map_type))
+            raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):

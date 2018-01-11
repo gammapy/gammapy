@@ -5,7 +5,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 from ..utils import fill_poisson
 from ..geom import MapAxis
+from ..base import MapBase
 from ..hpx import HpxGeom
+from ..hpxmap import HpxMap
 from ..hpxnd import HpxMapND
 from ..hpxsparse import HpxMapSparse
 
@@ -75,6 +77,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 
     m2 = HpxMapND.read(filename)
     m3 = HpxMapSparse.read(filename)
+    m4 = MapBase.read(filename, map_type='hpx')
     if sparse:
         msk = np.isfinite(m2.data[...])
     else:
@@ -82,11 +85,15 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 
     assert_allclose(m.data[...][msk], m2.data[...][msk])
     assert_allclose(m.data[...][msk], m3.data[...][msk])
+    assert_allclose(m.data[...][msk], m4.data[...][msk])
+
     m.write(filename, sparse=True)
     m2 = HpxMapND.read(filename)
-    m3 = HpxMapND.read(filename)
+    m3 = HpxMap.read(filename, map_type='hpx')
+    m4 = MapBase.read(filename, map_type='hpx')
     assert_allclose(m.data[...][msk], m2.data[...][msk])
     assert_allclose(m.data[...][msk], m3.data[...][msk])
+    assert_allclose(m.data[...][msk], m4.data[...][msk])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),

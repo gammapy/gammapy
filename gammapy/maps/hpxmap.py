@@ -31,7 +31,7 @@ class HpxMap(MapBase):
         self._hpx2wcs = None
 
     @classmethod
-    def create(cls, nside=None, binsz=None, nest=True, map_type=None, coordsys='CEL',
+    def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
                region=None, axes=None, conv='gadf'):
         """Factory method to create an empty HEALPix map.
@@ -53,9 +53,9 @@ class HpxMap(MapBase):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        map_type : str
-            Internal map representation.  Valid types are `HpxMapND`/`hpx` and
-            `HpxMapSparse`/`hpx-sparse`.
+        map_type : {'hpx', 'hpx-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         width : float
             Diameter of the map in degrees.  If None then an all-sky
             geometry will be created.
@@ -75,12 +75,12 @@ class HpxMap(MapBase):
             return HpxMapND(hpx, dtype=dtype)
         elif cls.__name__ == 'HpxMapSparse':
             return HpxMapSparse(hpx, dtype=dtype)
-        elif map_type in [None, 'hpx', 'HpxMapND']:
+        elif map_type == 'hpx':
             return HpxMapND(hpx, dtype=dtype)
-        elif map_type in ['hpx-sparse', 'HpxMapSparse']:
+        elif map_type == 'hpx-sparse':
             return HpxMapSparse(hpx, dtype=dtype)
         else:
-            raise ValueError('Unregnized Map type: {}'.format(map_type))
+            raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):

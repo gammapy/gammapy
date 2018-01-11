@@ -7,8 +7,10 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
 from ..geom import MapAxis
+from ..base import MapBase
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
+from ..wcsmap import WcsMap
 from ..wcsnd import WcsMapND
 
 pytest.importorskip('scipy')
@@ -63,10 +65,19 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     fill_poisson(m0, mu=0.5)
     m0.write(filename)
     m1 = WcsMapND.read(filename)
+    m2 = MapBase.read(filename)
+    m3 = MapBase.read(filename, map_type='wcs')
     assert_allclose(m0.data, m1.data)
+    assert_allclose(m0.data, m2.data)
+    assert_allclose(m0.data, m3.data)
+
     m0.write(filename_sparse, sparse=True)
     m1 = WcsMapND.read(filename_sparse)
+    m2 = MapBase.read(filename)
+    m3 = MapBase.read(filename, map_type='wcs')
     assert_allclose(m0.data, m1.data)
+    assert_allclose(m0.data, m2.data)
+    assert_allclose(m0.data, m3.data)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
