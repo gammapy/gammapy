@@ -116,20 +116,23 @@ class MapBase(object):
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
-            the format of the input file.  If map_type is 'auto' then an
-            appropriate map type will be inferred from the input file.
+            with the format of the input file.  If map_type is 'auto'
+            then an appropriate map type will be inferred from the
+            input file.
 
         Returns
         -------
         map_out : `~MapBase`
             Map object
+
         """
         with fits.open(filename) as hdulist:
             if map_type == 'auto':
                 map_type = cls._get_map_type(hdulist, hdu)
 
             cls_out = cls._get_map_cls(map_type)
-            map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            map_out = cls_out.from_hdulist(hdulist, hdu=hdu,
+                                           hdu_bands=hdu_bands)
 
         return map_out
 
@@ -174,8 +177,6 @@ class MapBase(object):
             return HpxMapSparse
         else:
             raise ValueError('Unrecognized map type: {!r}'.format(map_type))
-
-
 
     def write(self, filename, **kwargs):
         """Write to a FITS file.
