@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class EventList(object):
     """Event list.
 
-    Data format specification: ref:`gadf:iact-events`
+    Data format specification: :ref:`gadf:iact-events`
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
 

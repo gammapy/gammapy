@@ -18,7 +18,7 @@ __all__ = [
 class ObservationTable(Table):
     """Observation table.
 
-    Data format specification: ref:`gadf:obs-index`
+    Data format specification: :ref:`gadf:obs-index`
     """
 
     @classmethod

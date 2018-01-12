@@ -116,4 +116,4 @@ Command line tools
 Data formats
 ------------
 
-See :gadf:`iact-storage`.
+See :ref:`gadf:iact-storage`.
