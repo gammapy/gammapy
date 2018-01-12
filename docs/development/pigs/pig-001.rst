@@ -8,8 +8,9 @@ PIG 1 - PIG purpose and guidelines
 
 * Author: Christoph Deil
 * Created: December 20, 2017
-* Status: draft
-* Discussion: https://github.com/gammapy/gammapy/pull/1239
+* Accepted: Jan 9, 2018
+* Status: accepted
+* Discussion: `GH 1239`_
 
 Abstract
 ========
@@ -182,7 +183,8 @@ Specifically the following points remain flexible:
 Decision rationale
 ==================
 
-<To be filled in by the coordinating committee when the APE is accepted or rejected>
+This PIG was discussed extensively in `GH 1239`_, resulting in several improvements and additions.
+Everyone thought it was one honking good idea - let's do more of those!
 
 .. _Pig (disambiguation): https://en.wikipedia.org/wiki/Pig_(disambiguation)
 .. _PEPs: https://www.python.org/dev/peps/pep-0001/
@@ -198,3 +200,4 @@ Decision rationale
 .. _PEP 8: https://www.python.org/dev/peps/pep-0008/
 .. _PEP 389: https://www.python.org/dev/peps/pep-0389/
 .. _PEP 481: https://www.python.org/dev/peps/pep-0481/
+.. _GH 1239: https://github.com/gammapy/gammapy/pull/1239
