@@ -77,23 +77,15 @@ Glossary
 
 .. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
 
-Other related packages
-----------------------
+Other gamma-ray packages
+------------------------
 
-Besides Gammapy, there are two other major open-source analysis packages (that we are aware of)
-for multi-mission gamma-ray likelihood analysis:
+Here are some other software packages for gamma-ray astronomy:
 
 * `Gammalib`_ /`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
   that to a large degree uses the same input data formats as Gammapy.
 * `3ML`_ is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
   to deal with the data and IRFs and compute the likelihood for a given model.
-
-So there is some overlap of Gammapy with other efforts, but as mentioned in  :ref:`about-overview` the scope
-of Gammapy is larger. And also all packages are new and the implementations radically different, so that's
-a good thing when it comes to flexibility and the ability to cross-check results and methods.
-
-Make sure to also check out the following packages that contain very useful functionality for gamma-ray astronomy:
-
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `ctapipe`_ --- CTA Python pipeline experimental version
 * `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
@@ -103,13 +95,12 @@ Make sure to also check out the following packages that contain very useful func
 * `Gamera`_, `Gappa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
 * `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
-
-Some other projects:
-
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
 * `photon_simulator`_ --- Python code to simulate X-ray observations
 * `pycrflux`_ --- Python module to plot cosmic-ray flux
+* Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
+  and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .
 
 Other useful packages
 ---------------------
@@ -120,5 +111,3 @@ here's a few other Python packages you might find useful / interesting:
 * See the list here: http://www.astropy.org/affiliated/
 * Pulsar timing package `PINT`_
 * `iminuit`_ fitter and `probfit`_ likelihood function builder.
-* Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
-  and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .
