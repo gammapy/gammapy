@@ -1,6 +1,0 @@
-stores:
-  - name: crab_example
-    base_dir: $GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2
-    obs_table: obs-index.fits.gz
-    hdu_table: hdu-index.fits.gz
-

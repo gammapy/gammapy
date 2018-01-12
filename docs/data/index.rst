@@ -43,11 +43,8 @@ If you'd like to learn more about using `gammapy.data`, read the following sub-p
 .. toctree::
    :maxdepth: 1
 
-   obs_select
-   obs_group
    dm
-   server
-   index-old-obs
+   obs_group
 
 
 Reference/API
