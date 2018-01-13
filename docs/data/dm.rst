@@ -82,9 +82,6 @@ a list of datastores that can be accessed by name. By default, Gammapy looks for
 ``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml``
 in order to proceed with the example.
 
-.. include:: ./example-data-register.yaml
-    :code: yaml
-
 
 Now the data access work like this
 
