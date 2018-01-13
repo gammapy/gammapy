@@ -4,7 +4,7 @@ import pytest
 from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...image import SkyImage
 from ..hess import SourceCatalogHGPS
 
@@ -24,6 +24,7 @@ class TestSourceCatalogHGPS:
     def test_associations_table(self):
         assert len(self.cat.associations) == 223
 
+    @requires_dependency('scipy')
     @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
     def test_large_scale_component(self, source_name):
         # This test compares the flux values from the LS model within source

@@ -11,8 +11,6 @@ We don't list every pull request.
 Maintenance and cleanup changes (e.g. to update astropy-helpers or fix the docs build)
 are not of interest to users and are not listed here.
 
-After the 1.0 release we will keep a more detailed changelog for users.
-
-A complete list of Gammapy contributors is at :ref:`about-contributors`.
+A complete list of Gammapy contributors is at http://gammapy.org/team.html .
 
 .. include:: ../CHANGES.rst

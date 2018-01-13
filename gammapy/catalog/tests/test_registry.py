@@ -14,6 +14,8 @@ class TestSourceCatalogs:
     def setup(self):
         self.source_catalogs = SourceCatalogRegistry.builtins()
 
+    # 2HWC catalog is in ECSV format, which requires yaml to read the header
+    @requires_dependency('yaml')
     @requires_data('hgps')
     def test_info_table(self):
         table = self.source_catalogs.info_table

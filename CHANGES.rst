@@ -10,16 +10,16 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 
 .. _gammapy_0p7_release:
 
-0.7 (Dec 21, 2017)
-------------------
+0.7 (unreleased)
+----------------
 
 Summary
 +++++++
 
-- Released on Dec 21, 2017 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
+- Released on TBD (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
 - 17 contributors (8 new)
-- 7 months of work (from April 28, 2017 to Dec 21, 2017)
-- 144 pull requests (not all listed below)
+- TBD months of work (from April 28, 2017 to TBD)
+- TBD pull requests (not all listed below)
 
 **What's new?**
 
@@ -38,6 +38,8 @@ Summary
   and it is a simple and small package that also supports Windows (``healpy`` doesn't).
   So ``gammapy.maps`` is not finished / complete / stable yet.
   But if you're interested, please try it out and give feedback or ask questions how to do something!
+- The Gammapy command-line interface was changed to use a single command ``gammapy`` multiple
+  sub-commands (like ``gammapy info`` or ``gammapy image bin``). See :ref:`scripts`.
 - Many bug fixes and improvements, ranging from IRF interpolation to spectrum and lightcurve computation.
   This is mostly driven by user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis
   (see the list of pull requests below).
@@ -53,12 +55,12 @@ Summary
   test with Python 3.4 anymore in our continuous integration. If you're on Python 3.4, please update
   to Python 3.6 (or Python 3.5 if that's e.g. what your package manager ships).
 - Note that many packages are dropping Python 2 support (now, 10 years after Python 3 was released):
-  Jupyter already did, Astropy will in the next release (but they have the long-term support Astropy 2.0 release),
-  Python / Numpy / Scipy will drop Python 2 support in the coming years.
-  So all Gammapy users are encouraged to change to Python 3.6 now. Let us know if you have any
-  questions or need help making your scripts run with Python 3! In many cases it's just a matter
-  of making some mechanical changes like putting parentheses for ``print``, because it was changed
-  from a special statement to a normal function in Python 3.
+  Jupyter and Astropy already did (but they have the long-term support Astropy 2.0 release),
+  Python / Numpy / Scipy will drop Python 2 support soon.
+  So if you are using Gammapy and are still using Python 2, please update to Python 3.6 now!
+  Let us know if you have any questions or need help making your scripts run with Python 3!
+  In many cases it's just a matter of making some mechanical changes like putting parentheses for ``print``,
+  because it was changed from a special statement to a normal function in Python 3.
   We will keep Python 2.7 support for now, the discussion on timescale for dropping that support
   (and taking advantage of all the nice new Python 3 features and a simpler codebase) can start after
   the Fermi science tools have added Python 3 support.
@@ -90,6 +92,9 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1246] Improve map read method (Matthew Wood)
+- [#1240] Finish change to Click in gammapy.scripts (Christoph Deil)
+- [#1238] Clean up catalog image code (Axel Donath)
 - [#1235] Introduce main `gammapy` command line tool (Axel Donath and Christoph Deil)
 - [#1227] Remove gammapy-data-show and gammapy-cube-bin (Christoph Deil)
 - [#1226] Make DataStoreObservation properties less lazy (Christoph Deil)

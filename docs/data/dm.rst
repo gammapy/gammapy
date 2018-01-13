@@ -82,9 +82,6 @@ a list of datastores that can be accessed by name. By default, Gammapy looks for
 ``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml``
 in order to proceed with the example.
 
-.. include:: ./example-data-register.yaml
-    :code: yaml
-
 
 Now the data access work like this
 
@@ -116,54 +113,4 @@ Command line tools
 Data formats
 ------------
 
-Data registry config file
-+++++++++++++++++++++++++
-
-Here's an example of a data store registry YAML config file that Gammapy understands:
-
-.. include:: ../../gammapy/data/tests/data/data-register.yaml
-    :code: yaml
-
-Observation table
-+++++++++++++++++
-
-The required format of observation lists is described at :ref:`dataformats_observation_lists`.
-
-File table
-++++++++++
-
-File tables should contain the following columns (not all required)
-
-============  ============================================================================
-Name          Description
-============  ============================================================================
-OBS_ID        Observation ID (int)
-TYPE          File type (str)
-NAME          File location relative to ``BASE_DIR`` (str)
-SIZE          File size in bytes
-MTIME         File modification time (double)
-MD5           MD5 checksum (str)
-HDUNAME       HDU extension name (str)
-HDUCLASS      HDU class (str)
-============  ============================================================================
-
-* ``TYPE`` should be one of the formats listed at :ref:`dataformats_overview`.
-* ``HDUCLASS`` should be one of the formats listed at :ref:`dataformats_overview`.
-* ``NAME`` are relative to a ``BASE_DIR`` that is not stored in the file table,
-  but must be supplied by the user in the data registry config file
-  (it will change if data is copied to other machines, and we want to keep the file index
-  table unchanged).
-
-The file table header can contain information such as:
-
-============  ============================================================================
-Name          Description
-============  ============================================================================
-TELESCOP      Mission name
-CHAIN         Analysis chain
-CONFIG        Analysis configuration
-...           ...
-============  ============================================================================
-
-
-
+See :ref:`gadf:iact-storage`.

@@ -18,9 +18,7 @@ __all__ = [
 class ObservationTable(Table):
     """Observation table.
 
-    This is an `~astropy.table.Table` sub-class, with a few
-    convenience methods. The format of the observation table
-    is described in :ref:`dataformats_observation_lists`.
+    Data format specification: :ref:`gadf:obs-index`
     """
 
     @classmethod
