@@ -5,11 +5,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from ..utils import fill_poisson
 from ..geom import MapAxis
-from ..base import MapBase
+from ..base import Map
 from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
-from ..hpxnd import HpxMapND
-from ..hpxsparse import HpxMapSparse
+from ..hpxnd import HpxNDMap
+from ..hpxsparse import HpxSparseMap
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -35,10 +35,10 @@ hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
 
 def create_map(nside, nested, coordsys, region, axes, sparse):
     if sparse:
-        m = HpxMapSparse(HpxGeom(nside=nside, nest=nested,
+        m = HpxSparseMap(HpxGeom(nside=nside, nest=nested,
                                  coordsys=coordsys, region=region, axes=axes))
     else:
-        m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+        m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                              coordsys=coordsys, region=region, axes=axes))
 
     return m
@@ -54,9 +54,9 @@ def test_hpxmap_init(nside, nested, coordsys, region, axes):
         shape += [ax.nbin for ax in axes]
     shape = shape[::-1]
     data = np.random.uniform(0, 1, shape)
-    m = HpxMapND(geom)
+    m = HpxNDMap(geom)
     assert m.data.shape == data.shape
-    m = HpxMapND(geom, data)
+    m = HpxNDMap(geom, data)
     assert_allclose(m.data, data)
 
 
@@ -75,9 +75,9 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     fill_poisson(m, mu=0.5, random_state=0)
     m.write(filename)
 
-    m2 = HpxMapND.read(filename)
-    m3 = HpxMapSparse.read(filename)
-    m4 = MapBase.read(filename, map_type='hpx')
+    m2 = HpxNDMap.read(filename)
+    m3 = HpxSparseMap.read(filename)
+    m4 = Map.read(filename, map_type='hpx')
     if sparse:
         msk = np.isfinite(m2.data[...])
     else:
@@ -88,9 +88,9 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
     m.write(filename, sparse=True)
-    m2 = HpxMapND.read(filename)
+    m2 = HpxNDMap.read(filename)
     m3 = HpxMap.read(filename, map_type='hpx')
-    m4 = MapBase.read(filename, map_type='hpx')
+    m4 = Map.read(filename, map_type='hpx')
     assert_allclose(m.data[...][msk], m2.data[...][msk])
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
@@ -119,7 +119,7 @@ def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse)
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords()
     m.set_by_coords(coords, coords[1])
@@ -140,7 +140,7 @@ def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_iter(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords(flat=True)
     m.fill_by_coords(coords, coords[0])
@@ -153,7 +153,7 @@ def test_hpxmap_iter(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m_wcs = m.to_wcs(sum_bands=False, oversample=2, normalize=False)
     m_wcs = m.to_wcs(sum_bands=True, oversample=2, normalize=False)
@@ -162,7 +162,7 @@ def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     fill_poisson(m, mu=1.0, random_state=0)
     m2 = m.to_swapped_scheme()
@@ -173,7 +173,7 @@ def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m.to_ud_graded(4)
 
@@ -181,7 +181,7 @@ def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
-    m = HpxMapND(HpxGeom(nside=nside, nest=nested,
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords(flat=True)
     m.fill_by_coords(coords, coords[0])

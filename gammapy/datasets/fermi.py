@@ -12,7 +12,7 @@ from astropy.utils import lazyproperty
 from .core import gammapy_extra
 from ..data import EventList
 from ..cube import SkyCube
-from ..maps import HpxMapND
+from ..maps import HpxNDMap
 from ..irf import EnergyDependentTablePSF
 from ..utils.scripts import make_path
 from ..spectrum.models import TableModel
@@ -280,7 +280,7 @@ class FermiLATDataset(object):
 
         Returns
         -------
-        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxMapND`
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxNDMap`
             Exposure cube.
         """
         filename = self.filenames['exposure']
@@ -289,7 +289,7 @@ class FermiLATDataset(object):
                 warnings.simplefilter("ignore")
                 cube = SkyCube.read(filename, format='fermi-exposure')
         except (ValueError, KeyError):
-            cube = HpxMapND.read(filename)
+            cube = HpxNDMap.read(filename)
 
         return cube
 
@@ -299,7 +299,7 @@ class FermiLATDataset(object):
 
         Returns
         -------
-        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxMapND`
+        cube : `~gammapy.cube.SkyCube` or `~gammapy.maps.HpxNDMap`
             Counts cube
         """
         try:
@@ -310,7 +310,7 @@ class FermiLATDataset(object):
         try:
             cube = SkyCube.read(filename, format='fermi-counts')
         except (ValueError, KeyError):
-            cube = HpxMapND.read(filename)
+            cube = HpxNDMap.read(filename)
 
         return cube
 

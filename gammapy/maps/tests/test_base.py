@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from astropy.coordinates import SkyCoord
-from ..base import MapBase
+from ..base import Map
 from ..geom import MapAxis
 
 pytest.importorskip('scipy')
@@ -27,5 +27,5 @@ mapbase_args = [
 @pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes'),
                          mapbase_args)
 def test_mapbase_create(binsz, width, map_type, skydir, axes):
-    m = MapBase.create(binsz=binsz, width=width, map_type=map_type,
+    m = Map.create(binsz=binsz, width=width, map_type=map_type,
                        skydir=skydir, axes=axes)

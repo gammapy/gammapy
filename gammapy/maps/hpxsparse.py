@@ -9,11 +9,11 @@ from .hpxmap import HpxMap
 from .hpx import HpxGeom, ravel_hpx_index
 
 __all__ = [
-    'HpxMapSparse',
+    'HpxSparseMap',
 ]
 
 
-class HpxMapSparse(HpxMap):
+class HpxSparseMap(HpxMap):
     """Representation of a N+2D map using HEALPIX with two spatial
     dimensions and N non-spatial dimensions.
 
@@ -34,11 +34,11 @@ class HpxMapSparse(HpxMap):
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        super(HpxMapSparse, self).__init__(geom, data)
+        super(HpxSparseMap, self).__init__(geom, data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
-        """Make a HpxMapND object from a FITS HDU.
+        """Make a HpxNDMap object from a FITS HDU.
 
         Parameters
         ----------

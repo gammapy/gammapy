@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from ..geom import MapAxis
 from ..hpx import HpxGeom
-from ..hpxsparse import HpxMapSparse
+from ..hpxsparse import HpxSparseMap
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -26,5 +26,5 @@ hpx_test_geoms = [
                          hpx_test_geoms)
 def test_hpxsparse_init(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    m = HpxMapSparse(geom)
+    m = HpxSparseMap(geom)
     # TODO: Test initialization w/ data array

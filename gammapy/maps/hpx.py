@@ -1518,10 +1518,10 @@ class HpxToWcsMapping(object):
     def write(self, fitsfile, clobber=True):
         """Write this mapping to a FITS file, to avoid having to recompute it
         """
-        from .wcsnd import WcsMapND
+        from .wcsnd import WcsNDMap
         hpx_header = self._hpx.make_header()
-        index_map = WcsMapND(self.ipix, self.wcs)
-        mult_map = WcsMapND(self.mult_val, self.wcs)
+        index_map = WcsNDMap(self.ipix, self.wcs)
+        mult_map = WcsNDMap(self.mult_val, self.wcs)
 
         # TODO: Figure out where to write HPX header information
 
@@ -1544,9 +1544,9 @@ class HpxToWcsMapping(object):
     @classmethod
     def read(cls, filename):
         """Read a FITS file and use it to make a mapping."""
-        from .wcsnd import WcsMapND
-        index_map = WcsMapND.read(filename)
-        mult_map = WcsMapND.read(filename, hdu=1)
+        from .wcsnd import WcsNDMap
+        index_map = WcsNDMap.read(filename)
+        mult_map = WcsNDMap.read(filename, hdu=1)
         with fits.open(filename) as ff:
             hpx = HpxGeom.from_header(ff[0])
             ipix = index_map.data

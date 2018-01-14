@@ -11,11 +11,11 @@ from .wcsmap import WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 
 __all__ = [
-    'WcsMapND',
+    'WcsNDMap',
 ]
 
 
-class WcsMapND(WcsMap):
+class WcsNDMap(WcsMap):
     """Representation of a N+2D map using WCS with two spatial dimensions
     and N non-spatial dimensions.
 
@@ -44,7 +44,7 @@ class WcsMapND(WcsMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        super(WcsMapND, self).__init__(geom, data)
+        super(WcsNDMap, self).__init__(geom, data)
 
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid
@@ -84,7 +84,7 @@ class WcsMapND(WcsMap):
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
-        """Make a WcsMapND object from a FITS HDU.
+        """Make a WcsNDMap object from a FITS HDU.
 
         Parameters
         ----------
@@ -278,7 +278,7 @@ class WcsMapND(WcsMap):
     def _reproject_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
 
-        map_out = WcsMapND(geom)
+        map_out = WcsNDMap(geom)
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])
 
@@ -322,9 +322,9 @@ class WcsMapND(WcsMap):
 
     def _reproject_hpx(self, geom, mode='interp', order=1):
         from reproject import reproject_from_healpix, reproject_to_healpix
-        from .hpxnd import HpxMapND
+        from .hpxnd import HpxNDMap
 
-        map_out = HpxMapND(geom)
+        map_out = HpxNDMap(geom)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])

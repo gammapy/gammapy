@@ -4,9 +4,9 @@ HEALPix-based Maps
 ==================
 
 This page provides examples and documentation specific to the HEALPix
-map classes (`~gammapy.maps.HpxMapND` and
+map classes (`~gammapy.maps.HpxNDMap` and
 `~gammapy.maps.HpxMapSparse`).  All HEALPix classes inherit from
-`~gammapy.maps.MapBase` which provides generic interface methods that can be be
+`~gammapy.maps.Map` which provides generic interface methods that can be be
 used to access or update the contents of a map without reference to
 its pixelization scheme.
 
@@ -21,10 +21,10 @@ an all-sky 2D HEALPix image:
 
 .. code:: python
 
-   from gammapy.maps import HpxGeom, HpxMapND, HpxMap
+   from gammapy.maps import HpxGeom, HpxNDMap, HpxMap
    # Create a HEALPix geometry of NSIDE=16
    geom = HpxGeom(16, coordsys='GAL')
-   m = HpxMapND(geom)
+   m = HpxNDMap(geom)
 
    # Equivalent factory method call
    m = HpxMap.create(nside=16, coordsys='GAL')
@@ -35,12 +35,12 @@ the `~gammapy.maps.HpxMap.create` factory method:
 
 .. code:: python
 
-   from gammapy.maps import HpxGeom, HpxMap, HpxMapND
+   from gammapy.maps import HpxGeom, HpxMap, HpxNDMap
    from astropy.coordinates import SkyCoord
 
    # Create a partial-sky HEALPix geometry of NSIDE=16
    geom = HpxGeom(16, region='DISK(0.0,5.0,10.0)', coordsys='GAL')
-   m = HpxMapND(geom)
+   m = HpxNDMap(geom)
 
    # Equivalent factory method call
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')

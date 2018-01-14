@@ -13,7 +13,7 @@ def fill_poisson(map_in, mu, random_state='random-seed'):
 
     Parameters
     ----------
-    map_in : `~gammapy.maps.MapBase`
+    map_in : `~gammapy.maps.Map`
         Input map
     mu : scalar or `~numpy.ndarray`
         Expectation value

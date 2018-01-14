@@ -7,11 +7,11 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
 from ..geom import MapAxis
-from ..base import MapBase
+from ..base import Map
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
 from ..wcsmap import WcsMap
-from ..wcsnd import WcsMapND
+from ..wcsnd import WcsNDMap
 
 pytest.importorskip('scipy')
 pytest.importorskip('reproject')
@@ -47,10 +47,10 @@ wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 def test_wcsmapnd_init(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m0 = WcsMapND(geom)
+    m0 = WcsNDMap(geom)
     coords = m0.geom.get_coords()
     m0.set_by_coords(coords, coords[1])
-    m1 = WcsMapND(geom, m0.data)
+    m1 = WcsNDMap(geom, m0.data)
     assert_allclose(m0.data, m1.data)
 
 
@@ -61,20 +61,20 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
                           proj=proj, coordsys=coordsys, axes=axes)
     filename = str(tmpdir / 'skycube.fits')
     filename_sparse = str(tmpdir / 'skycube_sparse.fits')
-    m0 = WcsMapND(geom)
+    m0 = WcsNDMap(geom)
     fill_poisson(m0, mu=0.5)
     m0.write(filename)
-    m1 = WcsMapND.read(filename)
-    m2 = MapBase.read(filename)
-    m3 = MapBase.read(filename, map_type='wcs')
+    m1 = WcsNDMap.read(filename)
+    m2 = Map.read(filename)
+    m3 = Map.read(filename, map_type='wcs')
     assert_allclose(m0.data, m1.data)
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
 
     m0.write(filename_sparse, sparse=True)
-    m1 = WcsMapND.read(filename_sparse)
-    m2 = MapBase.read(filename)
-    m3 = MapBase.read(filename, map_type='wcs')
+    m1 = WcsNDMap.read(filename_sparse)
+    m2 = Map.read(filename)
+    m3 = Map.read(filename, map_type='wcs')
     assert_allclose(m0.data, m1.data)
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
@@ -85,7 +85,7 @@ def test_wcsmapnd_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     pix = m.geom.get_idx()
     m.set_by_pix(pix, coords[0])
@@ -97,7 +97,7 @@ def test_wcsmapnd_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_set_get_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     m.set_by_coords(coords, coords[0])
     assert_allclose(coords[0], m.get_by_coords(coords))
@@ -113,7 +113,7 @@ def test_wcsmapnd_set_get_by_coords(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_fill_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     m.fill_by_coords(tuple([np.concatenate((t, t)) for t in coords]),
                      np.concatenate((coords[1], coords[1])))
@@ -125,7 +125,7 @@ def test_wcsmapnd_fill_by_coords(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[1])
     assert_allclose(coords[1], m.get_by_coords(coords, interp='nearest'))
@@ -140,7 +140,7 @@ def test_wcsmapnd_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_iter(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     m.fill_by_coords(coords, coords[0])
     for vals, pix in m.iter_by_pix(buffersize=100):
@@ -154,7 +154,7 @@ def test_wcsmapnd_iter(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     m.fill_by_coords(coords, coords[0])
     msum = m.sum_over_axes()
@@ -165,7 +165,7 @@ def test_wcsmapnd_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                           skydir=skydir, coordsys=coordsys, axes=axes)
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
 
     if geom.projection == 'AIT' and geom.is_allsky:
         pytest.xfail('Bug in reproject version <= 0.3.1')
@@ -185,7 +185,7 @@ def test_wcsmapnd_reproject(npix, binsz, coordsys, proj, skydir, axes):
 
 def test_wcsmapnd_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj='CAR', coordsys='CEL')
-    m = WcsMapND(geom)
+    m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     m.set_by_coords(coords, coords[0])
 
