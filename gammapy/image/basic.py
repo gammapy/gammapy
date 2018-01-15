@@ -608,7 +608,7 @@ def reproject_exposure(exposure, ref_cube):
     exposure_cube = SkyCube.empty_like(ref_cube)
 
     ref_image = ref_cube.sky_image_ref
-    geom = ref_image.to_wcs_map_nd().geom
+    geom = ref_image.to_wcs_nd_map().geom
     coords = geom.get_coords()
     for idx, energy in enumerate(ref_cube.energies().value):
         coords_hpx = coords[0], coords[1], energy

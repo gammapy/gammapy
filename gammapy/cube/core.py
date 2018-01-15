@@ -881,7 +881,7 @@ class SkyCube(MapBase):
         assert_allclose(cube1.energies(), cube2.energies())
         assert_wcs_allclose(cube1.wcs, cube2.wcs)
 
-    def to_wcs_map_nd(self, energy_axis_mode='center'):
+    def to_wcs_nd_map(self, energy_axis_mode='center'):
         """Convert to a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
@@ -914,7 +914,7 @@ class SkyCube(MapBase):
         return WcsNDMap(geom=geom, data=data)
 
     @classmethod
-    def from_wcs_map_nd(cls, wcs_map_nd):
+    def from_wcs_nd_map(cls, wcs_map_nd):
         """Create from a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.

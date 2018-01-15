@@ -1321,7 +1321,7 @@ class SkyImage(MapBase):
 
         return SkyImage(data=distance, wcs=self.wcs)
 
-    def to_wcs_map_nd(self):
+    def to_wcs_nd_map(self):
         """Convert to a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
@@ -1339,7 +1339,7 @@ class SkyImage(MapBase):
         return WcsNDMap(geom=geom, data=self.data)
 
     @classmethod
-    def from_wcs_map_nd(cls, wcs_map_nd):
+    def from_wcs_nd_map(cls, wcs_map_nd):
         """Create from a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
