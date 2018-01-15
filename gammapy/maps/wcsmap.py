@@ -2,8 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from .geom import find_and_read_bands
-from .base import MapBase
+from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu
 
@@ -12,7 +11,7 @@ __all__ = [
 ]
 
 
-class WcsMap(MapBase):
+class WcsMap(Map):
     """Base class for WCS map classes.
 
     Parameters
@@ -74,7 +73,7 @@ class WcsMap(MapBase):
         map : `~WcsMap`
             A WCS map object.
         """
-        from .wcsnd import WcsMapND
+        from .wcsnd import WcsNDMap
         # from .wcssparse import WcsMapSparse
 
         geom = WcsGeom.create(npix=npix, binsz=binsz, width=width,
@@ -83,7 +82,7 @@ class WcsMap(MapBase):
                               conv=conv)
 
         if map_type == 'wcs':
-            return WcsMapND(geom, dtype=dtype)
+            return WcsNDMap(geom, dtype=dtype)
         elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:

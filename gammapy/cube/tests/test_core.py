@@ -256,6 +256,6 @@ def test_conversion_wcs_map_nd():
     # TODO: add unit back once it's properly supported
     cube.data = cube.data.value
 
-    map = cube.to_wcs_map_nd()
-    cube2 = SkyCube.from_wcs_map_nd(map)
+    map = cube.to_wcs_nd_map()
+    cube2 = SkyCube.from_wcs_nd_map(map)
     SkyCube.assert_allclose(cube, cube2)

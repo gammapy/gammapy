@@ -471,8 +471,8 @@ def test_conversion_wcs_map_nd():
     """Check conversion SkyCube <-> WCSMapNd"""
     image = SkyImage.empty(nxpix=3, nypix=2, unit='cm', name='axel')
 
-    map = image.to_wcs_map_nd()
-    image2 = SkyImage.from_wcs_map_nd(map)
+    map = image.to_wcs_nd_map()
+    image2 = SkyImage.from_wcs_nd_map(map)
 
     # Note: WCSMapNd doesn't store name or unit at the moment
     SkyImage.assert_allclose(image, image2, check_name=False, check_unit=False)

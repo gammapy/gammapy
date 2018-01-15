@@ -5,11 +5,10 @@ import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .utils import find_hdu
 from .geom import pix_tuple_to_idx, MapCoords
 
 __all__ = [
-    'MapBase',
+    'Map',
 ]
 
 
@@ -18,7 +17,7 @@ class MapMeta(InheritDocstrings, abc.ABCMeta):
 
 
 @six.add_metaclass(MapMeta)
-class MapBase(object):
+class Map(object):
     """Abstract map class.
 
     This can represent WCS- or HEALPIX-based maps
@@ -83,9 +82,8 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Empty map object.
-
         """
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
@@ -122,9 +120,8 @@ class MapBase(object):
 
         Returns
         -------
-        map_out : `~MapBase`
+        map_out : `~Map`
             Map object
-
         """
         with fits.open(filename) as hdulist:
             if map_type == 'auto':
@@ -165,16 +162,16 @@ class MapBase(object):
         but that's non-trivial to implement without avoiding circular imports.
         """
         if map_type == 'wcs':
-            from .wcsnd import WcsMapND
-            return WcsMapND
+            from .wcsnd import WcsNDMap
+            return WcsNDMap
         elif map_type == 'wcs-sparse':
             raise NotImplementedError()
         elif map_type == 'hpx':
-            from .hpxnd import HpxMapND
-            return HpxMapND
+            from .hpxnd import HpxNDMap
+            return HpxNDMap
         elif map_type == 'hpx-sparse':
-            from .hpxsparse import HpxMapSparse
-            return HpxMapSparse
+            from .hpxsparse import HpxSparseMap
+            return HpxSparseMap
         else:
             raise ValueError('Unrecognized map type: {!r}'.format(map_type))
 
@@ -216,7 +213,7 @@ class MapBase(object):
 
         Returns
         -------
-        val : `~np.ndarray`
+        val : `~numpy.ndarray`
             Array of image plane values.
         idx : tuple
             Index of image plane.
@@ -284,7 +281,7 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Reprojected map.
         """
         if geom.ndim == 2 and self.geom.ndim > 2:
@@ -310,7 +307,7 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Padded map.
         """
         pass
@@ -327,7 +324,7 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Cropped map.
         """
         pass
@@ -343,7 +340,7 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Downsampled map.
         """
         pass
@@ -359,7 +356,7 @@ class MapBase(object):
 
         Returns
         -------
-        map : `~MapBase`
+        map : `~Map`
             Upsampled map.
         """
         pass

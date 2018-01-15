@@ -143,9 +143,9 @@ class SkyImage(MapBase):
         filename : str
             Name of the FITS file.
         *args : list
-            Arguments passed to `~astropy.fits.ImageHDU.writeto`.
+            Arguments passed to `~astropy.io.fits.ImageHDU.writeto`.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
+            Keyword arguments passed to `~astropy.io.fits.ImageHDU.writeto`.
         """
         filename = str(make_path(filename))
         hdu = self.to_image_hdu()
@@ -1321,26 +1321,26 @@ class SkyImage(MapBase):
 
         return SkyImage(data=distance, wcs=self.wcs)
 
-    def to_wcs_map_nd(self):
-        """Convert to a `gammapy.maps.WcsMapND`.
+    def to_wcs_nd_map(self):
+        """Convert to a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 
         This is meant to help migrate code using `SkyImage`
         over to the new maps classes.
         """
-        from gammapy.maps import WcsMapND, WcsGeom
+        from gammapy.maps import WcsNDMap, WcsGeom
 
         # Axis order in SkyImage: lat, lon
         npix = (self.data.shape[1], self.data.shape[0])
 
         geom = WcsGeom(wcs=self.wcs, npix=npix)
 
-        return WcsMapND(geom=geom, data=self.data)
+        return WcsNDMap(geom=geom, data=self.data)
 
     @classmethod
-    def from_wcs_map_nd(cls, wcs_map_nd):
-        """Create from a `gammapy.maps.WcsMapND`.
+    def from_wcs_nd_map(cls, wcs_map_nd):
+        """Create from a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 

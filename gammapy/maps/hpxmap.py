@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
-import re
 import numpy as np
 from astropy.io import fits
-from .base import MapBase
+from .base import Map
 from .hpx import HpxGeom, HpxConv
-from .geom import MapAxis, find_and_read_bands
 from .utils import find_bintable_hdu, find_bands_hdu
 
 __all__ = [
@@ -14,7 +12,7 @@ __all__ = [
 ]
 
 
-class HpxMap(MapBase):
+class HpxMap(Map):
     """Base class for HEALPIX map classes.
 
     Parameters
@@ -65,20 +63,20 @@ class HpxMap(MapBase):
             FITS format convention ('fgst-ccube', 'fgst-template',
             'gadf').  Default is 'gadf'.
         """
-        from .hpxnd import HpxMapND
-        from .hpxsparse import HpxMapSparse
+        from .hpxnd import HpxNDMap
+        from .hpxsparse import HpxSparseMap
 
         hpx = HpxGeom.create(nside=nside, binsz=binsz,
                              nest=nest, coordsys=coordsys, region=region,
                              conv=conv, axes=axes, skydir=skydir, width=width)
-        if cls.__name__ == 'HpxMapND':
-            return HpxMapND(hpx, dtype=dtype)
-        elif cls.__name__ == 'HpxMapSparse':
-            return HpxMapSparse(hpx, dtype=dtype)
+        if cls.__name__ == 'HpxNDMap':
+            return HpxNDMap(hpx, dtype=dtype)
+        elif cls.__name__ == 'HpxSparseMap':
+            return HpxSparseMap(hpx, dtype=dtype)
         elif map_type == 'hpx':
-            return HpxMapND(hpx, dtype=dtype)
+            return HpxNDMap(hpx, dtype=dtype)
         elif map_type == 'hpx-sparse':
-            return HpxMapSparse(hpx, dtype=dtype)
+            return HpxSparseMap(hpx, dtype=dtype)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
@@ -116,7 +114,6 @@ class HpxMap(MapBase):
         return cls.from_hdu(hdu, hdu_bands)
 
     def to_hdulist(self, **kwargs):
-
         extname = kwargs.get('extname', 'SKYMAP')
         # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')
@@ -184,10 +181,10 @@ class HpxMap(MapBase):
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
         """
-        # FIXME: Should this be a method of HpxMapND?
+        # FIXME: Should this be a method of HpxNDMap?
         # FIXME: Should we assign extname in this method?
 
-        from .hpxsparse import HpxMapSparse
+        from .hpxsparse import HpxSparseMap
 
         conv = kwargs.get('conv', HpxConv.create('gadf'))
 
@@ -196,7 +193,7 @@ class HpxMap(MapBase):
         extname = kwargs.get('extname', conv.extname)
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
 
-        sparse = kwargs.get('sparse', True if isinstance(self, HpxMapSparse)
+        sparse = kwargs.get('sparse', True if isinstance(self, HpxSparseMap)
                             else False)
         header = self.geom.make_header()
 
