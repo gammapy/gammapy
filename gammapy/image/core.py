@@ -1322,25 +1322,25 @@ class SkyImage(MapBase):
         return SkyImage(data=distance, wcs=self.wcs)
 
     def to_wcs_map_nd(self):
-        """Convert to a `gammapy.maps.WcsMapND`.
+        """Convert to a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 
         This is meant to help migrate code using `SkyImage`
         over to the new maps classes.
         """
-        from gammapy.maps import WcsMapND, WcsGeom
+        from gammapy.maps import WcsNDMap, WcsGeom
 
         # Axis order in SkyImage: lat, lon
         npix = (self.data.shape[1], self.data.shape[0])
 
         geom = WcsGeom(wcs=self.wcs, npix=npix)
 
-        return WcsMapND(geom=geom, data=self.data)
+        return WcsNDMap(geom=geom, data=self.data)
 
     @classmethod
     def from_wcs_map_nd(cls, wcs_map_nd):
-        """Create from a `gammapy.maps.WcsMapND`.
+        """Create from a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 

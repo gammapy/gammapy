@@ -882,14 +882,14 @@ class SkyCube(MapBase):
         assert_wcs_allclose(cube1.wcs, cube2.wcs)
 
     def to_wcs_map_nd(self, energy_axis_mode='center'):
-        """Convert to a `gammapy.maps.WcsMapND`.
+        """Convert to a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 
         This is meant to help migrate code using `SkyCube`
         over to the new maps classes.
         """
-        from gammapy.maps import WcsMapND, WcsGeom, MapAxis
+        from gammapy.maps import WcsNDMap, WcsGeom, MapAxis
 
         if energy_axis_mode == 'center':
             energy = self.energies(mode='center')
@@ -911,11 +911,11 @@ class SkyCube(MapBase):
         data = np.asarray(self.data)
         # unit = getattr(self.data, 'unit', None)
 
-        return WcsMapND(geom=geom, data=data)
+        return WcsNDMap(geom=geom, data=data)
 
     @classmethod
     def from_wcs_map_nd(cls, wcs_map_nd):
-        """Create from a `gammapy.maps.WcsMapND`.
+        """Create from a `gammapy.maps.WcsNDMap`.
 
         There is no copy of the ``data`` or ``wcs`` object, this conversion is cheap.
 
