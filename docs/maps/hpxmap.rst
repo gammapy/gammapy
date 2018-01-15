@@ -5,7 +5,7 @@ HEALPix-based Maps
 
 This page provides examples and documentation specific to the HEALPix
 map classes (`~gammapy.maps.HpxNDMap` and
-`~gammapy.maps.HpxMapSparse`).  All HEALPix classes inherit from
+`~gammapy.maps.HpxSparseMap`).  All HEALPix classes inherit from
 `~gammapy.maps.Map` which provides generic interface methods that can be be
 used to access or update the contents of a map without reference to
 its pixelization scheme.
@@ -47,13 +47,10 @@ the `~gammapy.maps.HpxMap.create` factory method:
    m = HpxMap.create(nside=16, skydir=position, width=20.0)
 
 
-
-
-
 Sparse Maps
 -----------
 
-The `~gammapy.maps.HpxMapSparse` class is a memory-efficient
+The `~gammapy.maps.HpxSparseMap` class is a memory-efficient
 implementation of a HEALPix map that uses a sparse data structure to
 store map values.  Sparse maps can be useful when working with maps
 that have many empty pixels (e.g. a low-statistics counts map).

@@ -57,9 +57,9 @@ def find_in_array(np.ndarray[int_t, ndim=1] idx0,
 
     Parameters
     ----------
-    idx0 : `~np.ndarray`
+    idx0 : `~numpy.ndarray`
         Array of unsorted input values.
-    idx1 : `~np.ndarray`
+    idx1 : `~numpy.ndarray`
         Array of sorted values to be searched. 
 
     Returns

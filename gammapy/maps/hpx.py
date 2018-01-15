@@ -8,10 +8,9 @@ import numpy as np
 from ..extern import six
 from ..extern.six.moves import range
 from astropy.io import fits
-from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from .wcs import WcsGeom
-from .geom import MapGeom, MapCoords, MapAxis, bin_to_val, pix_tuple_to_idx
+from .geom import MapGeom, MapCoords, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skydir_to_lonlat, make_axes_cols
 from .geom import find_and_read_bands, make_axes
 
@@ -836,13 +835,13 @@ class HpxGeom(MapGeom):
         return self.get_idx()
 
     def ud_graded_hpx(self, order):
-        """Upgrade or downgroad the resolution of this geometry to the given
+        """Upgrade or downgrade the resolution of this geometry to the given
         order.
 
         Returns
         -------
         geom : `~HpxGeom`
-            A HEALPix geoemtry object.
+            A HEALPix geometry object.
         """
         if np.any(self.order < 0):
             raise ValueError(
@@ -860,7 +859,7 @@ class HpxGeom(MapGeom):
         Returns
         -------
         geom : `~HpxGeom`
-            A HEALPix geoemtry object.
+            A HEALPix geometry object.
         """
         # FIXME: Pass ipix as argument
 
@@ -916,16 +915,13 @@ class HpxGeom(MapGeom):
 
         Examples
         --------
-        >>> from gammapy.maps import HpxGeom
-        >>> from gammapy.maps import MapAxis
+        >>> from gammapy.maps import HpxGeom, MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
         >>> geom = HpxGeom.create(nside=16)
         >>> geom = HpxGeom.create(binsz=0.1, width=10.0)
         >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis])
         >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis])
-
         """
-
         if nside is None and binsz is None:
             raise ValueError('Either nside or binsz must be defined.')
 
@@ -998,7 +994,7 @@ class HpxGeom(MapGeom):
         ----------
         header : `~astropy.io.fits.Header`
             The FITS header
-        hdu_bands : `~astropy.fits.BinTableHDU` 
+        hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
         pix : tuple
             List of pixel index vectors defining the pixels
@@ -1314,7 +1310,6 @@ class HpxGeom(MapGeom):
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
         """
-
         skydir = self.get_ref_dir(self._region, self.coordsys)
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
         width = (2.0 * self.get_region_size(self._region) +
@@ -1334,7 +1329,6 @@ class HpxGeom(MapGeom):
         return geom
 
     def get_idx(self, idx=None, local=False, flat=False):
-
         if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
             raise ValueError('Image index out of range: {}'.format(idx))
 
@@ -1430,7 +1424,6 @@ class HpxGeom(MapGeom):
         return self.pix_to_coord(pix)
 
     def contains(self, coords):
-
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
@@ -1442,7 +1435,6 @@ class HpxGeom(MapGeom):
 
     def skydir_to_pix(self, skydir):
         """Return the pixel index of a SkyCoord object."""
-
         # FIXME: What should this method do for maps with non-spatial
         # dimensions
 

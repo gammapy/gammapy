@@ -143,9 +143,9 @@ class SkyImage(MapBase):
         filename : str
             Name of the FITS file.
         *args : list
-            Arguments passed to `~astropy.fits.ImageHDU.writeto`.
+            Arguments passed to `~astropy.io.fits.ImageHDU.writeto`.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
+            Keyword arguments passed to `~astropy.io.fits.ImageHDU.writeto`.
         """
         filename = str(make_path(filename))
         hdu = self.to_image_hdu()

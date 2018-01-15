@@ -72,6 +72,7 @@ def reproject_car_to_hpx(input_data, coord_system_out,
 
 def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     """Reproject an all-sky CAR projection to another WCS projection.
+
     This method performs special handling of the projection edges to
     ensure that the interpolation of the CAR projection is correctly
     wrapped in longitude.

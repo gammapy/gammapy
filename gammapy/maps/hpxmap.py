@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
-import re
 import numpy as np
 from astropy.io import fits
 from .base import Map
 from .hpx import HpxGeom, HpxConv
-from .geom import MapAxis, find_and_read_bands
 from .utils import find_bintable_hdu, find_bands_hdu
 
 __all__ = [
@@ -116,7 +114,6 @@ class HpxMap(Map):
         return cls.from_hdu(hdu, hdu_bands)
 
     def to_hdulist(self, **kwargs):
-
         extname = kwargs.get('extname', 'SKYMAP')
         # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')

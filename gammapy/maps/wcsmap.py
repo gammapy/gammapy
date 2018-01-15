@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from .geom import find_and_read_bands
 from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu

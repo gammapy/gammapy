@@ -56,9 +56,9 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        hdu : `~astropy.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             The FITS HDU
-        hdu_bands  : `~astropy.fits.BinTableHDU`
+        hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
@@ -190,7 +190,6 @@ class HpxNDMap(HpxMap):
         map_out : `~HpxNDMap`
             Summed map.
         """
-
         hpx_out = self.geom.to_image()
         map_out = self.__class__(hpx_out)
 
@@ -233,7 +232,6 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def _reproject_hpx(self, geom, order=1, mode='interp'):
-
         map_out = HpxNDMap(geom)
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])
@@ -256,7 +254,6 @@ class HpxNDMap(HpxMap):
         raise NotImplementedError
 
     def interp_by_coords(self, coords, interp=None):
-
         if interp == 'linear':
             return self._interp_by_coords(coords, interp)
         else:
@@ -309,8 +306,6 @@ class HpxNDMap(HpxMap):
 
     def _interp_by_coords(self, coords, interp):
         """Linearly interpolate map values."""
-        import healpy as hp
-
         c = MapCoords.create(coords)
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
         pix, wts = self._get_interp_weights(coords, idx_ax)
@@ -330,7 +325,7 @@ class HpxNDMap(HpxMap):
                                    c[2 + j], clip=True)  # [None, ...]
 
                 w = ax.center[idx + 1] - ax.center[idx]
-                if (i & (1 << j)):
+                if i & (1 << j):
                     wt *= (c[2 + j] - ax.center[idx]) / w
                     pix_i += [1 + idx]
                 else:
@@ -345,7 +340,6 @@ class HpxNDMap(HpxMap):
         return val
 
     def fill_by_idx(self, idx, weights=None):
-
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         if weights is not None:
@@ -364,13 +358,11 @@ class HpxNDMap(HpxMap):
         self.data.T.flat[idx_local] += weights
 
     def set_by_idx(self, idx, vals):
-
         idx = pix_tuple_to_idx(idx)
         idx_local = self.geom.global_to_local(idx)
         self.data.T[idx_local] = vals
 
     def _make_cols(self, header, conv):
-
         shape = self.data.shape
         cols = []
         if header['INDXSCHM'] == 'SPARSE':
@@ -400,7 +392,6 @@ class HpxNDMap(HpxMap):
         return cols
 
     def to_swapped_scheme(self):
-
         import healpy as hp
         hpx_out = self.geom.to_swapped()
         map_out = self.__class__(hpx_out)
@@ -424,7 +415,6 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def to_ud_graded(self, nside, preserve_counts=False):
-
         # FIXME: For partial sky maps we should ensure that a higher
         # order map fully encompasses the lower order map
 

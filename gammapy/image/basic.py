@@ -588,13 +588,13 @@ class FermiLATBasicImageEstimator(BasicImageEstimator):
 def reproject_exposure(exposure, ref_cube):
     """Helper function to reproject exposure to a reference cube.
 
-    TODO: this is a temp solution, as long as we use HpxMapND objects for exposure
+    TODO: this is a temp solution, as long as we use HpxNDMap objects for exposure
     and SkyCube objects otherwise. This should be changed to use WCSMapND
     instead of SkyCube in the future.
 
     Parameters
     ----------
-    exposure : `~gammapy.maps.HpxMapND`
+    exposure : `~gammapy.maps.HpxNDMap`
         Exposure cube from gtexmpcube2
     ref_cube : `~gammapy.cube.SkyCube`
         Reference cube to reproject to

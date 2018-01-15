@@ -5,7 +5,6 @@ import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .utils import find_hdu
 from .geom import pix_tuple_to_idx, MapCoords
 
 __all__ = [
@@ -85,7 +84,6 @@ class Map(object):
         -------
         map : `~Map`
             Empty map object.
-
         """
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
@@ -124,7 +122,6 @@ class Map(object):
         -------
         map_out : `~Map`
             Map object
-
         """
         with fits.open(filename) as hdulist:
             if map_type == 'auto':
@@ -216,7 +213,7 @@ class Map(object):
 
         Returns
         -------
-        val : `~np.ndarray`
+        val : `~numpy.ndarray`
             Array of image plane values.
         idx : tuple
             Index of image plane.

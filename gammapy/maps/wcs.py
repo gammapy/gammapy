@@ -290,7 +290,7 @@ class WcsGeom(MapGeom):
         ----------
         header : `~astropy.io.fits.Header`
             The FITS header
-        hdu_bands : `~astropy.fits.BinTableHDU` 
+        hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
         conv : str
             Override FITS format convention.

@@ -2,11 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from .utils import swap_byte_order
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
-from .hpx import HpxGeom, ravel_hpx_index
+from .hpx import HpxGeom
 
 __all__ = [
     'HpxSparseMap',
@@ -38,13 +37,13 @@ class HpxSparseMap(HpxMap):
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
-        """Make a HpxNDMap object from a FITS HDU.
+        """Create from a FITS HDU.
 
         Parameters
         ----------
-        hdu : `~astropy.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             The FITS HDU
-        hdu_bands  : `~astropy.fits.BinTableHDU`
+        hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
@@ -78,6 +77,7 @@ class HpxSparseMap(HpxMap):
                 for i, cname in enumerate(cnames):
                     idx = np.unravel_index(i, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
+
         return map_out
 
     def get_by_pix(self, pix, interp=None):

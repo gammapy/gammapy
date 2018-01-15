@@ -48,7 +48,6 @@ def make_axes_cols(axes, axis_names=None):
     axis_names : list of str
 
     """
-
     colname = {
         'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
         'time': ['TIME', 'T_MIN', 'T_MAX'],
@@ -167,8 +166,9 @@ def skydir_to_lonlat(skydir, coordsys=None):
 
 def pix_tuple_to_idx(pix, copy=False):
     """Convert a tuple of pixel coordinate arrays to a tuple of pixel
-    indices.  Pixel coordinates are rounded to the closest integer
-    value.
+    indices.
+
+    Pixel coordinates are rounded to the closest integer value.
 
     Parameters
     ----------
@@ -189,7 +189,6 @@ def pix_tuple_to_idx(pix, copy=False):
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
-            #idx += [np.rint(p).astype(int)]
             p_idx = np.rint(p).astype(int)
             p_idx[~np.isfinite(p)] = -1
             idx += [p_idx]
@@ -400,8 +399,9 @@ class MapAxis(object):
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
-        """Generate an axis object from a lower/upper bound and number of
-        bins.  If node_type = 'edge' then bounds correspond to the
+        """Generate an axis object from a lower/upper bound and number of bins.
+
+        If node_type = 'edge' then bounds correspond to the
         lower and upper bound of the first and last bin.  If node_type
         = 'center' then bounds correspond to the centers of the first
         and last bin.
@@ -544,7 +544,6 @@ class MapAxis(object):
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
         """
-
         return (coord_to_idx(self.center[:-1], coord, clip=True),
                 coord_to_idx(self.center[:-1], coord, clip=True) + 1,)
 
@@ -804,7 +803,6 @@ class MapGeom(object):
         coords : tuple
             Tuple of coordinate vectors with one vector for each
             dimension.
-
         """
         pass
 
@@ -850,7 +848,6 @@ class MapGeom(object):
             Tuple of pixel indices in image and band dimensions.
             Elements set to -1 correspond to coordinates outside the
             map.
-
         """
         pix = self.coord_to_pix(coords)
         return self.pix_to_idx(pix, clip=clip)
@@ -903,7 +900,7 @@ class MapGeom(object):
 
         Returns
         -------
-        containment : `~np.ndarray`
+        containment : `~numpy.ndarray`
             Bool array.
         """
         pass
@@ -913,12 +910,12 @@ class MapGeom(object):
 
         Parameters
         ----------
-        coords : tuple
+        pix : tuple
             Tuple of pixel coordinates.
 
         Returns
         -------
-        containment : `~np.ndarray`
+        containment : `~numpy.ndarray`
             Bool array.
         """
         idx = self.pix_to_idx(pix)

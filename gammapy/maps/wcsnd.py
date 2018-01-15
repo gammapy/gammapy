@@ -88,9 +88,9 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        hdu : `~astropy.fits.BinTableHDU` or `~astropy.fits.ImageHDU`
+        hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             The map FITS HDU.
-        hdu_bands : `~astropy.fits.BinTableHDU`
+        hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands)
