@@ -623,13 +623,12 @@ class MapCoords(object):
         """Create from vector of `~astropy.coordinates.SkyCoord`."""
         if skydir.frame.name in ['icrs', 'fk5']:
             return cls.from_lonlat(skydir.ra.deg, skydir.dec.deg, *args,
-                                   coordsys='CEL')
+                                   coordsys='CEL', **kwargs)
         elif skydir.frame.name in ['galactic']:
             return cls.from_lonlat(skydir.l.deg, skydir.b.deg, *args,
-                                   coordsys='GAL')
+                                   coordsys='GAL', **kwargs)
         else:
-            raise Exception(
-                'Unrecognized coordinate frame: {}'.format(skydir.frame.name))
+            raise ValueError('Unrecognized coordinate frame: {}'.format(skydir.frame.name))
 
     @classmethod
     def from_tuple(cls, coords, **kwargs):

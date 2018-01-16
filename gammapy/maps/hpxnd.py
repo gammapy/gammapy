@@ -160,10 +160,6 @@ class HpxNDMap(HpxMap):
         self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data)
 
-    def get_pixel_skydirs(self):
-        """Get a list of sky coordinates for the centers of every pixel. """
-        return self._hpx.get_skydirs()
-
     def iter_by_image(self):
         for idx in np.ndindex(self.geom.shape):
             yield self.data[idx[::-1]], idx

@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
-from .geom import MapAxis, get_shape, make_axes_cols, make_axes
+from .geom import get_shape, make_axes_cols, make_axes
 from .geom import find_and_read_bands
 
 __all__ = [
@@ -283,7 +283,7 @@ class WcsGeom(MapGeom):
         return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None, conv=None):
+    def from_header(cls, header, hdu_bands=None):
         """Create a WCS geometry object from a FITS header.
 
         Parameters
@@ -292,8 +292,6 @@ class WcsGeom(MapGeom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
-        conv : str
-            Override FITS format convention.
 
         Returns
         -------
@@ -321,17 +319,13 @@ class WcsGeom(MapGeom):
             npix = (npix[..., 0], npix[..., 1])
             cdelt = hdu_bands.data.field('CDELT').reshape(shape + (2,))
             cdelt = (cdelt[..., 0], cdelt[..., 1])
-            crpix = hdu_bands.data.field('CRPIX').reshape(shape + (2,))
-            crpix = (crpix[..., 0], crpix[..., 1])
         elif 'WCSSHAPE' in header:
             wcs_shape = eval(header['WCSSHAPE'])
             npix = (wcs_shape[0], wcs_shape[1])
             cdelt = None
-            crpix = None
         else:
             npix = (header['NAXIS1'], header['NAXIS2'])
             cdelt = None
-            crpix = None
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
@@ -368,7 +362,7 @@ class WcsGeom(MapGeom):
         hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
         return hdu
 
-    def make_header(self, conv=None):
+    def make_header(self):
         header = self.wcs.to_header()
         header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
                                               np.max(self.npix[1]))
@@ -383,9 +377,9 @@ class WcsGeom(MapGeom):
         """Get the shape of the image plane at index ``idx``."""
 
         if self.is_regular:
-            return (int(self.npix[0]), int(self.npix[1]))
+            return int(self.npix[0]), int(self.npix[1])
         else:
-            return (int(self.npix[0][idx]), int(self.npix[1][idx]))
+            return int(self.npix[0][idx]), int(self.npix[1][idx])
 
     def get_image_wcs(self, idx):
         raise NotImplementedError
