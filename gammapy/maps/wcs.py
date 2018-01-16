@@ -475,6 +475,27 @@ class WcsGeom(MapGeom):
             coords = tuple([c[np.isfinite(c)] for c in coords])
         return coords
 
+    def skydir_to_pix(self, skydir):
+        """
+        Convert SkyCoord to pixels in the MapGeom
+
+        Parameters:
+        ___________
+
+        skydir : `~astropy.coordinates.SkyCoord`
+                 input coordinate
+
+        Returns
+        _______
+        tuple of pixels
+        """
+        if self.coordsys == 'CEL':
+            return self.coord_to_pix(skydir.fk5)
+        elif  self.coordsys == 'GAL':
+            return self.coord_to_pix(skydir.galactic)
+        else:
+            raise ValueError('Unrecognized WCS coordinate system.')
+
     def coord_to_pix(self, coords):
         c = MapCoords.create(coords)
         if c.size == 0:
