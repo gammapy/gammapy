@@ -71,10 +71,6 @@ class TestSourceCatalogGammaCat:
         for name in names:
             assert str(gammacat[name]) == str(gammacat['W28'])
 
-    # TODO: remove this xfail once the issue in Astropy has been fixed
-    # https://github.com/astropy/astropy/issues/6862#issuecomment-348811300
-    # https://github.com/gammapy/gammapy/pull/1228
-    @pytest.mark.xfail
     def test_sort_table(self):
         name = 'HESS J1848-018'
         sort_keys = ['ra', 'dec', 'reference_id']

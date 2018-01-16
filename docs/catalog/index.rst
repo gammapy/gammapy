@@ -21,7 +21,8 @@ Available catalogs
 
 Support for the following catalogs is available::
 
-       Name                       Description                      Sources
+    Source catalog registry:
+       name                       description                      sources
     --------- ---------------------------------------------------- -------
          hgps H.E.S.S. Galactic plane survey (HGPS) source catalog      78
     gamma-cat                 An open catalog of gamma-ray sources     166

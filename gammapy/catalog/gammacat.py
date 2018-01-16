@@ -422,7 +422,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     description = 'An open catalog of gamma-ray sources'
     source_object_class = SourceCatalogObjectGammaCat
 
-    def __init__(self, filename='$GAMMA_CAT/docs/data/gammacat.fits.gz'):
+    def __init__(self, filename='$GAMMA_CAT/output/gammacat.fits.gz'):
         filename = str(make_path(filename))
 
         with ignore_warnings():  # ignore FITS units warnings

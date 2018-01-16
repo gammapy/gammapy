@@ -16,7 +16,8 @@ class TestCatalogImageEstimator(object):
         reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=41,
                                    nxpix=41, binsz=0.1)
 
-        catalog = SourceCatalogGammaCat()
+        filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz'
+        catalog = SourceCatalogGammaCat(filename)
         estimator = CatalogImageEstimator(reference=reference,
                                           emin=1 * u.TeV,
                                           emax=1E4 * u.TeV)

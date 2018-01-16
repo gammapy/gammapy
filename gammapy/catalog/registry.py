@@ -63,13 +63,12 @@ class SourceCatalogRegistry(object):
         """Catalog names (`list`)."""
         return list(self._available_catalogs.keys())
 
-    def register(self, name, factory, args=()):
+    def register(self, name, cls, args=()):
         """Register a source catalog.
 
-        It must be possible to load it via ``factory(*args)``.
+        It must be possible to load it via ``cls(*args)``.
         """
-        data = dict(factory=factory, args=args)
-        self._available_catalogs[name] = data
+        self._available_catalogs[name] = dict(cls=cls, args=args)
 
     def __getitem__(self, name):
         if name not in self._available_catalogs:
@@ -79,20 +78,13 @@ class SourceCatalogRegistry(object):
 
         if name not in self._loaded_catalogs:
             cat = self._available_catalogs[name]
-            factory = cat['factory']
-            args = cat['args']
-            self._loaded_catalogs[name] = factory(*args)
+            self._loaded_catalogs[name] = cat['cls'](*cat['args'])
 
         return self._loaded_catalogs[name]
 
-    def info(self, file=None):
-        """Print summary info about catalogs.
-        """
-        if not file:
-            file = sys.stdout
-
-        print('Source catalog registry:', file=file)
-        # TODO: how can we print to file?
+    def info(self):
+        """Print summary info about catalogs."""
+        print('Source catalog registry:')
         self.info_table.pprint()
 
     @property
@@ -101,16 +93,16 @@ class SourceCatalogRegistry(object):
 
         Loads all catalogs.
         """
-        table = []
+        rows = []
         for name in self._available_catalogs.keys():
             cat = self[name]
-            data = dict()
-            data['Name'] = name
-            data['Description'] = cat.description
-            data['Sources'] = len(cat.table)
-            table.append(data)
-        table = Table(rows=table, names=['Name', 'Description', 'Sources'])
-        return table
+            rows.append(dict(
+                name=name,
+                description=cat.description,
+                sources=len(cat.table),
+            ))
+
+        return Table(rows=rows, names=['name', 'description', 'sources'])
 
 
 source_catalogs = SourceCatalogRegistry.builtins()
