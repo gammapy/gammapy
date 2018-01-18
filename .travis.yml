@@ -58,9 +58,9 @@ matrix:
     include:
 
         # MacOS X tests
-#        - os: osx
-#          env: PYTHON_VERSION=2.7 SETUP_CMD='test'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
+        - os: osx
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         - os: osx
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
@@ -82,9 +82,9 @@ matrix:
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Build docs
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 SETUP_CMD='build_docs -w'
-#               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='build_docs -w'
+               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
         - os: linux
           env: PYTHON_VERSION=3.6 SETUP_CMD='build_docs -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
@@ -99,8 +99,8 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
 
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
 
 
         # Test with Astropy dev and LTS versions
@@ -126,8 +126,8 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 NUMPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.10 SETUP_CMD='test -V'
 
@@ -136,9 +136,9 @@ matrix:
           env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
+        - os: linux
+          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
     # You can move builds that temporarily fail because of some non-Gammapy here.
     # Please add a link to a GH issue that tracks the upstream issue.
@@ -148,9 +148,9 @@ matrix:
           env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
-#        - os: linux
-#          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
+        - os: linux
+          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
 
 install:
