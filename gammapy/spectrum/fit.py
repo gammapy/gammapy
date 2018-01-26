@@ -31,9 +31,11 @@ class SpectrumFit(object):
     forward_folded : bool, default: True
         Fold ``model`` with the IRFs given in ``obs_list``
     fit_range : tuple of `~astropy.units.Quantity`
-        Fit range, will be convolved with observation thresholds. If you want to
-        control which bins are taken into account in the fit for each
-        observations, use :func:`~gammapy.spectrum.SpectrumObservation.qualitiy`
+        Fit range, will be convolved with observation thresholds (unless ``apply_thresholds``
+        is False). If you want to control which bins are taken into account in the fit for each
+        observations, use :func:`~gammapy.spectrum.SpectrumObservation.quality`
+    apply_thresholds : bool, default: True
+        Apply energy thresholds of observations in addition to fit range
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
     method : {'sherpa'}
@@ -43,12 +45,13 @@ class SpectrumFit(object):
     """
 
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
-                 fit_range=None, background_model=None,
+                 fit_range=None, apply_thresholds=True, background_model=None,
                  method='sherpa', err_method='sherpa'):
         self.obs_list = self._convert_obs_list(obs_list)
         self.model = model
         self.stat = stat
         self.forward_folded = forward_folded
+        self.apply_thresholds = apply_thresholds
         self.fit_range = fit_range
         self.background_model = background_model
         self.method = method
@@ -156,15 +159,18 @@ class SpectrumFit(object):
                     idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
                 valid_range[idx_hi] = 1
 
-            # Take into account thresholds
-            try:
-                quality = obs.on_vector.quality
-            except AttributeError:
-                quality = np.zeros(obs.e_reco.nbins)
+            # Take into account thresholds, if requested
+            if self.apply_thresholds:
+                try:
+                    quality = obs.on_vector.quality
+                except AttributeError:
+                    quality = np.zeros(obs.e_reco.nbins)
 
-            convolved = np.logical_and(1 - quality, 1 - valid_range)
+                valid_bins = np.logical_and(1 - quality, 1 - valid_range)
+            else:
+                valid_bins = (1 - valid_range).astype(bool)
 
-            self._bins_in_fit_range.append(convolved)
+            self._bins_in_fit_range.append(valid_bins)
 
     def predict_counts(self):
         """Predict counts for all observations.

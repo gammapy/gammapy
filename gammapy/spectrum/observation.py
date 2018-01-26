@@ -579,9 +579,16 @@ class SpectrumObservationList(UserList):
         """Off `~gammapy.spectrum.PHACountsSpectrumList`"""
         return PHACountsSpectrumList([o.off_vector for o in self])
 
-    def stack(self):
-        """Return stacked `~gammapy.spectrum.SpectrumObservation`"""
-        stacker = SpectrumObservationStacker(obs_list=self)
+    def stack(self, threshold_axis='e_reco'):
+        """Return stacked `~gammapy.spectrum.SpectrumObservation`
+
+        Parameters
+        ----------
+        threshold_axis : string, {'e_reco', 'e_true'}
+            axis along which to apply energy thresholds
+        """
+        stacker = SpectrumObservationStacker(obs_list=self,
+                                             threshold_axis=threshold_axis)
         stacker.run()
         return stacker.stacked_obs
 
@@ -737,6 +744,8 @@ class SpectrumObservationStacker(object):
     ----------
     obs_list : `~gammapy.spectrum.SpectrumObservationList`
         Observations to stack
+    threshold_axis : string, {'e_reco', 'e_true'}
+        Axis along which to apply energy thresholds
 
     Examples
     --------
@@ -760,8 +769,9 @@ class SpectrumObservationStacker(object):
     energy range: 681292069.06 keV - 87992254356.91 keV
     """
 
-    def __init__(self, obs_list):
+    def __init__(self, obs_list, threshold_axis='e_reco'):
         self.obs_list = SpectrumObservationList(obs_list)
+        self.threshold_axis = threshold_axis
         self.stacked_on_vector = None
         self.stacked_off_vector = None
         self.stacked_aeff = None
@@ -884,6 +894,7 @@ class SpectrumObservationStacker(object):
             list_edisp=[obs.edisp for obs in self.obs_list],
             list_low_threshold=[obs.lo_threshold for obs in self.obs_list],
             list_high_threshold=[obs.hi_threshold for obs in self.obs_list],
+            threshold_axis=self.threshold_axis,
         )
         irf_stacker.stack_edisp()
         self.stacked_edisp = irf_stacker.stacked_edisp

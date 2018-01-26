@@ -49,15 +49,19 @@ class IRFStacker(object):
         list of low energy threshold, optional for effective area mean computation
     list_high_threshold : list
         list of high energy threshold, optional for effective area mean computation
+    threshold_axis : string, {'e_reco', 'e_true'}
+        axis along which to apply energy thresholds
     """
 
     def __init__(self, list_aeff, list_livetime, list_edisp=None,
-                 list_low_threshold=None, list_high_threshold=None):
+                 list_low_threshold=None, list_high_threshold=None,
+                 threshold_axis='e_reco'):
         self.list_aeff = list_aeff
         self.list_livetime = Quantity(list_livetime)
         self.list_edisp = list_edisp
         self.list_low_threshold = list_low_threshold
         self.list_high_threshold = list_high_threshold
+        self.thresh_axis = threshold_axis == 'e_reco'
         self.stacked_aeff = None
         self.stacked_edisp = None
 
@@ -97,7 +101,8 @@ class IRFStacker(object):
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
             edisp_data = edisp.pdf_in_safe_range(self.list_low_threshold[i],
-                                                 self.list_high_threshold[i])
+                                                 self.list_high_threshold[i],
+                                                 self.thresh_axis)
 
             aefftedisp += edisp_data.transpose() * aefft_current
 
