@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
@@ -548,6 +549,9 @@ class EnergyDispersion(object):
         self.plot_bias(ax=axes[0])
         self.plot_matrix(ax=axes[1])
         plt.tight_layout()
+
+    def copy(self):
+        return deepcopy(self)
 
 
 class EnergyDispersion2D(object):

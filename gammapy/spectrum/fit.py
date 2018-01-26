@@ -31,11 +31,13 @@ class SpectrumFit(object):
     forward_folded : bool, default: True
         Fold ``model`` with the IRFs given in ``obs_list``
     fit_range : tuple of `~astropy.units.Quantity`
-        Fit range, will be convolved with observation thresholds (unless ``apply_thresholds``
-        is False). If you want to control which bins are taken into account in the fit for each
-        observations, use :func:`~gammapy.spectrum.SpectrumObservation.quality`
-    apply_thresholds : bool, default: True
-        Apply energy thresholds of observations in addition to fit range
+        Fit range for the fit.
+        Will be convolved with observation thresholds if ``threshold_axis`` is 'e_reco' or 'both'.
+        Use :func:`~gammapy.spectrum.SpectrumObservation.quality` to control which
+        bins are taken into account in the fit for each observation in this case.
+    threshold_axis : {'e_reco', 'e_true', 'none', 'both'}, default: 'e_reco'
+        Apply energy thresholds of individual observations, in reconstructed or true energy.
+        The latter only makes sense in case ``forward_folded`` is True.
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
     method : {'sherpa'}
@@ -45,13 +47,13 @@ class SpectrumFit(object):
     """
 
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
-                 fit_range=None, apply_thresholds=True, background_model=None,
+                 fit_range=None, threshold_axis='e_reco', background_model=None,
                  method='sherpa', err_method='sherpa'):
         self.obs_list = self._convert_obs_list(obs_list)
         self.model = model
         self.stat = stat
         self.forward_folded = forward_folded
-        self.apply_thresholds = apply_thresholds
+        self.threshold_axis = threshold_axis
         self.fit_range = fit_range
         self.background_model = background_model
         self.method = method
@@ -160,7 +162,7 @@ class SpectrumFit(object):
                 valid_range[idx_hi] = 1
 
             # Take into account thresholds, if requested
-            if self.apply_thresholds:
+            if self.threshold_axis in ['e_reco', 'both']:
                 try:
                     quality = obs.on_vector.quality
                 except AttributeError:
@@ -213,7 +215,10 @@ class SpectrumFit(object):
         if forward_folded:
             predictor.livetime = obs.livetime
             predictor.aeff = obs.aeff
-            predictor.edisp = obs.edisp
+            edisp = obs.edisp.copy()
+            if self.threshold_axis in ['e_true', 'both']:
+                edisp.data.data = edisp.pdf_in_safe_range(obs.lo_threshold, obs.hi_threshold, axis=0)
+            predictor.edisp = edisp
         else:
             predictor.e_true = obs.e_reco
 
