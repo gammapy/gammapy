@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
@@ -119,7 +120,7 @@ class EnergyDispersion(object):
         """
         return self.data.data.value
 
-    def pdf_in_safe_range(self, lo_threshold, hi_threshold):
+    def pdf_in_safe_range(self, lo_threshold, hi_threshold, axis=1):
         """PDF matrix with bins outside threshold set to 0.
 
         Parameters
@@ -128,11 +129,22 @@ class EnergyDispersion(object):
             Low reco energy threshold
         hi_threshold : `~astropy.units.Quantity`
             High reco energy threshold
+        axis : int
+            Axis along which to apply thresholds.
+                0 - true energy
+                1 - reconstructed energy
         """
         data = self.pdf_matrix.copy()
-        idx = np.where((self.e_reco.lo < lo_threshold) |
-                       (self.e_reco.hi > hi_threshold))
-        data[:, idx] = 0
+        if axis == 0:
+            idx = np.where((self.e_true.lo < lo_threshold) |
+                           (self.e_true.hi > hi_threshold))
+            data[idx, :] = 0
+        elif axis == 1:
+            idx = np.where((self.e_reco.lo < lo_threshold) |
+                           (self.e_reco.hi > hi_threshold))
+            data[:, idx] = 0
+        else:
+            raise ValueError("`axis` must be either 0 (true energy) or 1 (reconstructed energy)")
         return data
 
     @classmethod
@@ -537,6 +549,9 @@ class EnergyDispersion(object):
         self.plot_bias(ax=axes[0])
         self.plot_matrix(ax=axes[1])
         plt.tight_layout()
+
+    def copy(self):
+        return deepcopy(self)
 
 
 class EnergyDispersion2D(object):

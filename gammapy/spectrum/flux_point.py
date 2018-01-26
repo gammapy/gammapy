@@ -583,12 +583,15 @@ class FluxPointEstimator(object):
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    apply_thresholds : bool, default: True
+        Apply energy thresholds of individual observations
     """
 
-    def __init__(self, obs, groups, model):
+    def __init__(self, obs, groups, model, apply_thresholds=True):
         self.obs = obs
         self.groups = groups
         self.model = model
+        self.apply_thresholds = apply_thresholds
         self.flux_points = None
 
     def __str__(self):
@@ -787,7 +790,7 @@ class FluxPointEstimator(object):
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
-        fit = SpectrumFit(self.obs, model)
+        fit = SpectrumFit(self.obs, model, apply_thresholds=self.apply_thresholds)
 
         # TODO: Notice channels contained in energy_group
         fit.fit_range = energy_min, energy_max
