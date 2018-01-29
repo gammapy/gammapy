@@ -14,7 +14,7 @@ from .. import SkyCube
 
 @pytest.fixture(scope='session')
 def bkg_3d():
-    filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     return Background3D.read(filename, hdu='BACKGROUND')
 
 
@@ -66,8 +66,9 @@ def test_background_cube(bkg_3d, counts_cube):
     assert bkg_cube.data.shape == (15, 120, 200)
     assert bkg_cube.data.unit == ''
 
-    assert_allclose(bkg_cube.data[0, 0, 0], 0.014835371179768773)
-    assert_allclose(bkg_cube.data.sum(), 1359.1700828673065)
+    print(bkg_cube.data.sum())
+    assert_allclose(bkg_cube.data[0, 0, 0], 0.013959329891790048)
+    assert_allclose(bkg_cube.data.sum(), 1315.7910319477235)
 
     # Check that `offset_max` is working properly
     pos = SkyCoord(85.6, 23, unit='deg')
