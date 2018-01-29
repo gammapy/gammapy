@@ -35,15 +35,15 @@ class Background3D(object):
     Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import Background3D
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
+    >>> filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     >>> bkg_3d = Background3D.read(filename, hdu='BACKGROUND')
     >>> print(bkg_3d)
     Background3D
     NDDataArray summary info
     energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
-    detx           : size =    12, min = -5.500 deg, max =  5.500 deg
-    dety           : size =    12, min = -5.500 deg, max =  5.500 deg
-    Data           : size =  3024, min =  0.000 1 / (MeV s sr), max =  0.269 1 / (MeV s sr)
+    detx           : size =    36, min = -5.833 deg, max =  5.833 deg
+    dety           : size =    36, min = -5.833 deg, max =  5.833 deg
+    Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""

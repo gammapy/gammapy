@@ -120,7 +120,7 @@ def test_EnergyDependentTablePSF():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_psf_cta_1dc():
-    filename = "$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits"
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
     # Check that PSF is filled with 0 for energy / offset where no PSF info is given.
@@ -133,7 +133,7 @@ def test_psf_cta_1dc():
     # Check that evaluation works for an energy / offset where an energy is available
     psf = psf_irf.to_energy_dependent_table_psf('2 deg')
     psf = psf.table_psf_at_energy('1 TeV')
-    assert_allclose(psf.containment_radius(0.68).deg, 0.05175066714958721)
+    assert_allclose(psf.containment_radius(0.68).deg, 0.053728, atol=1e-4)
 
 
 @requires_data('gammapy-extra')

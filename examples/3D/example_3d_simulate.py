@@ -20,7 +20,7 @@ from configuration import get_model_gammapy, make_ref_cube
 
 
 def get_irfs(config):
-    filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
 
     offset = Angle(config['selection']['offset_fov'] * u.deg)
 

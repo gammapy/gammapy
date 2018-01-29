@@ -327,15 +327,14 @@ class EffectiveAreaTable2D(object):
     Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/cta_1dc/caldb/data/cta/prod3b/bcf/South_z20_50h/irf_file.fits'
+    >>> filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
     >>> print(aeff)
     EffectiveAreaTable2D
     NDDataArray summary info
-    energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
+    energy         : size =    42, min =  0.014 TeV, max = 177.828 TeV
     offset         : size =     6, min =  0.500 deg, max =  5.500 deg
-    Data           : size =   126, min =  0.000 m2, max = 4263992.500 m2
-
+    Data           : size =   252, min =  0.000 m2, max = 5371581.000 m2
 
     Here's another one, created from scratch, without reading a file:
 
