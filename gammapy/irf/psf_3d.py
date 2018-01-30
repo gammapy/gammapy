@@ -69,7 +69,7 @@ class PSF3D(object):
 
         return ss
 
-    def energy_logcenter(self):
+    def _energy_logcenter(self):
         """Get logcenters of energy bins.
 
         Returns
@@ -77,12 +77,9 @@ class PSF3D(object):
         energies : `~astropy.units.Quantity`
             Logcenters of energy bins
         """
-        # TODO: should call helper function here, not re-implement this!
-        return 10 ** ((np.log10(self.energy_hi / Quantity(1, self.energy_hi.unit))
-                       + np.log10(self.energy_lo / Quantity(1, self.energy_lo.unit))) / 2) * Quantity(1,
-                                                                                                      self.energy_lo.unit)
+        return np.sqrt(self.energy_lo * self.energy_hi)
 
-    def rad_center(self):
+    def _rad_center(self):
         """Get centers of rad bins (`~astropy.coordinates.Angle` in deg).
         """
         return ((self.rad_hi + self.rad_lo) / 2).to('deg')
@@ -95,11 +92,10 @@ class PSF3D(object):
         ----------
         filename : str
             File name
+        hdu : str
+            HDU name
         """
         filename = str(make_path(filename))
-        # TODO: implement it so that HDUCLASS is used
-        # http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
-
         table = Table.read(filename, hdu=hdu)
         return cls.from_table(table)
 
@@ -189,25 +185,25 @@ class PSF3D(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
+        from scipy.interpolate import RegularGridInterpolator
         if not interp_kwargs:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 
-        from scipy.interpolate import RegularGridInterpolator
         if energy is None:
-            energy = self.energy_logcenter()
+            energy = self._energy_logcenter()
         if offset is None:
             offset = self.offset
         if rad is None:
-            rad = self.rad_center()
+            rad = self._rad_center()
 
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
         rad = Angle(rad).to('deg')
 
-        energy_bin = self.energy_logcenter()
+        energy_bin = self._energy_logcenter()
 
         offset_bin = self.offset.to('deg')
-        rad_bin = self.rad_center()
+        rad_bin = self._rad_center()
         points = (rad_bin, offset_bin, energy_bin)
         interpolator = RegularGridInterpolator(points, self.psf_value, **interp_kwargs)
         rr, off, ee = np.meshgrid(rad.value, offset.value, energy.value, indexing='ij')
@@ -216,14 +212,14 @@ class PSF3D(object):
         data_interp = interpolator(pix_coords)
         return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
-    def to_energy_dependent_table_psf(self, theta=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta='0 deg', exposure=None):
         """
         Convert PSF3D in EnergyDependentTablePSF.
 
         Parameters
         ----------
         theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
+            Offset in the field of view
         exposure : `~astropy.units.Quantity`
             Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
             Default exposure = 1.
@@ -233,17 +229,18 @@ class PSF3D(object):
         table_psf : `~gammapy.irf.EnergyDependentTablePSF`
             Energy-dependent PSF
         """
-        theta = theta or Angle(0, 'deg')
-        energies = self.energy_logcenter()
-        rad = self.rad_center()
-        psf_value = self.evaluate(offset=theta).quantity[0].T
+        theta = Angle(theta)
+        energies = self._energy_logcenter()
+        rad = self._rad_center()
+        psf_value = self.evaluate(offset=theta)
+        psf_value = psf_value[:, 0, :].transpose()
 
         return EnergyDependentTablePSF(
             energy=energies, rad=rad,
             exposure=exposure, psf_value=psf_value,
         )
 
-    def to_table_psf(self, energy, theta=None, interp_kwargs=None, **kwargs):
+    def to_table_psf(self, energy, theta='0 deg', interp_kwargs=None, **kwargs):
         """Evaluate the `EnergyOffsetArray` at one given energy.
 
         Parameters
@@ -260,14 +257,15 @@ class PSF3D(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-        theta = theta or Angle(0, 'deg')
-
+        energy = Quantity(energy)
+        theta = Angle(theta)
         psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
-        table_psf = TablePSF(self.rad_center(), psf_value, **kwargs)
+        rad = self._rad_center()
+        table_psf = TablePSF(rad, psf_value, **kwargs)
 
         return table_psf
 
-    def containment_radius(self, energy, theta=None, fraction=0.68, interp_kwargs=None):
+    def containment_radius(self, energy, theta='0 deg', fraction=0.68, interp_kwargs=None):
         """Containment radius.
 
         Parameters
@@ -284,10 +282,11 @@ class PSF3D(object):
         radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        if theta is None:
-            theta = Angle(0, 'deg')
+        energy = Quantity(energy)
         if energy.ndim == 0:
             energy = Quantity([energy.value], energy.unit)
+
+        theta = Angle(theta)
         if theta.ndim == 0:
             theta = Quantity([theta.value], theta.unit)
 
@@ -331,7 +330,7 @@ class PSF3D(object):
         ax.set_xlabel('Energy (TeV)')
         ax.set_ylabel('Containment radius (deg)')
 
-    def plot_psf_vs_rad(self, theta=Angle(0, 'deg'), energy=Quantity(1, 'TeV')):
+    def plot_psf_vs_rad(self, theta='0 deg', energy=Quantity(1, 'TeV')):
         """Plot PSF vs rad.
 
         Parameters
@@ -341,6 +340,7 @@ class PSF3D(object):
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view. Default theta = 0 deg
         """
+        theta = Angle(theta)
         table = self.to_table_psf(energy=energy, theta=theta)
         return table.plot_psf_vs_rad()
 
@@ -360,7 +360,7 @@ class PSF3D(object):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_logcenter()
+        energy = self._energy_logcenter()
         offset = self.offset
 
         # Set up and compute data
