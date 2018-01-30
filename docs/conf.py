@@ -232,5 +232,8 @@ suppress_warnings = [
     'ref.citation'
 ]
 
+# remove docs/notebooks folder
+from gammapy.utils.docs import remove_notebooks
+remove_notebooks()
 
 # nitpicky = True

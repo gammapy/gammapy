@@ -208,3 +208,9 @@ def gammapy_sphinx_notebooks(setup_cfg):
 
             modif_nb_links('notebooks', url_docs, git_commit)
             modif_nb_links('_static/notebooks', url_docs, git_commit)
+
+
+def remove_notebooks():
+    """Removes folder docs/notebooks after the building process"""
+
+    rmtree('notebooks', ignore_errors=True)
