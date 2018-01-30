@@ -57,6 +57,7 @@ MANIFEST
 *.ipynb
 *.ipynb_checkpoints
 docs/_static/notebooks
+docs/notebooks
 
 gammapy/gammapy.cfg
 

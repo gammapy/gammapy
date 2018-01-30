@@ -44,7 +44,6 @@ from astropy_helpers.sphinx.conf import *
 # Load utils docs functions
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 from gammapy.utils.docs import gammapy_sphinx_notebooks
-from gammapy.utils.docs import remove_notebooks
 
 # Get configuration information from setup.cfg
 try:
@@ -234,8 +233,5 @@ automodsumm_inherited_members = True
 suppress_warnings = [
     'ref.citation'
 ]
-
-# remove docs/notebooks folder
-remove_notebooks()
 
 # nitpicky = True

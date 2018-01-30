@@ -198,16 +198,10 @@ def gammapy_sphinx_notebooks(setup_cfg):
             ]
             log.info('*** Converting notebooks to scripts')
             copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-            copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+            copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
 
             for path in Path('_static/notebooks').glob('*.ipynb'):
                 convert_nb_to_script(path)
 
             modif_nb_links('notebooks', url_docs, git_commit)
             modif_nb_links('_static/notebooks', url_docs, git_commit)
-
-
-def remove_notebooks():
-    """Removes folder docs/notebooks after the building process"""
-
-    rmtree('notebooks', ignore_errors=True)
