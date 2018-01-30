@@ -41,6 +41,11 @@ except ImportError:
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
 
+# Load utils docs functions
+from gammapy.utils.docs import gammapy_sphinx_ext_activate
+from gammapy.utils.docs import gammapy_sphinx_notebooks
+from gammapy.utils.docs import remove_notebooks
+
 # Get configuration information from setup.cfg
 try:
     from ConfigParser import ConfigParser
@@ -174,11 +179,9 @@ htmlhelp_basename = project + 'doc'
 # Static files to copy after template files
 html_static_path = ['_static']
 
-from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
 # integration of notebooks from gamapy-extra repo
-from gammapy.utils.docs import gammapy_sphinx_notebooks
 gammapy_sphinx_notebooks(setup_cfg)
 
 html_style = 'gammapy.css'
@@ -233,7 +236,6 @@ suppress_warnings = [
 ]
 
 # remove docs/notebooks folder
-from gammapy.utils.docs import remove_notebooks
 remove_notebooks()
 
 # nitpicky = True
