@@ -10,7 +10,6 @@ import functools
 import logging
 import numpy as np
 from ..extern import six
-from astropy.tests.helper import ignore_warnings
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -424,9 +423,7 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     def __init__(self, filename='$GAMMA_CAT/output/gammacat.fits.gz'):
         filename = str(make_path(filename))
-
-        with ignore_warnings():  # ignore FITS units warnings
-            table = Table.read(filename, hdu=1)
+        table = Table.read(filename, hdu=1)
         self.filename = filename
 
         source_name_key = 'common_name'
