@@ -1,0 +1,95 @@
+.. include:: ../../references.txt
+
+.. _pig-003:
+
+********************************************
+PIG 3 - Plan for dropping Python 2.7 support
+********************************************
+
+* Author: Christoph Deil & Matthew Wood
+* Created: Feb 1, 2018
+* Status: draft
+* Discussion: `GH 1278`_
+
+Abstract
+========
+
+This PIG proposes a plan for dropping Python 2.7 support in Gammapy.
+The motivation to post it now is to inform users and developers early
+and transparently that this is coming and that they should update to
+Python 3 now. If you are stuck on Python 2.7 for some reason, or need
+help to update, please let us know. The only blocker we are aware of is
+that the Fermi Science Tools don't support Python 3 yet, so we plan
+to keep Python 2 support for now, no definite schedule for dropping
+Python 2.7 in Gammapy is in place at the moment. Comments on this PIG
+to discuss are welcome now, and then once that blocker is resolved,
+we plan to update it with a concrete proposal / timeline.
+
+Introduction
+============
+
+Python 3 was introduced 10 years ago. The transition from Python 2
+to Python 3 has been long and painful, and is still ongoing.
+In Gammapy, like most other Python packages,
+we currently support Python 2.7 as well as Python 3.
+But now things are changing at a more rapid pace, Python itself
+will drop support for the 2.7 branch (even security fixes) in 2020,
+Numpy in 2019 (see `Numpy statement`_). Astropy dropped Python 2
+support recently (see `Astropy statement`_), Jupyter already in 2017.
+The `ctapipe`_ project was Python 3 only from the start.
+
+That leaves the question what we should do in Gammapy.
+
+It is not hard to keep Python 2.7 support, but even if it's not large,
+there is a real cost. It is mostly complexity and extra testing needed,
+i.e. a burden for developers. E.g. understanding bytes / strings in Python
+2 and Python 3 is non-trivial, but here are also many small improvements
+in Python 3 (e.g. the super call when subclassing), none of which is is
+a must-have, but they add up to Python 3 as an overall simpler and better
+language. The main motivation to drop Python 2.7 support however is that
+it will become harder and harder to support over the years as everyone
+else drops support for it. So let's assume that as Gammapy developers,
+we want to drop Python 2.7 support, and to only support Python 3.5 or later.
+
+Is there any reason why someone should still use Gammapy with Python 2?
+
+Most Gammapy developers and users are already using Python 3. Anyone on
+Linux, Mac  or Windows can install and use Gammapy with Python 3.6 with
+conda. Using the system Python to install a scientific Python stack and
+Gammapy isn't a good idea anyways, the system Python is to run your
+operating system and should be left alone.
+
+The only blocker we are aware of where updating to Python 3 isn't possible
+is the Fermi ScienceTools Python. It is using Python 2.7, Python 3 isn't
+supported. It is unclear if and when Python 3 support will be added
+to the Fermi ScienceTools. A major reason that Matthew developed gammapy.maps was to
+use it in combination with the Fermi ST and in Fermipy. This isn't the case
+yet, but it is planned, and we want to support this. Keeping only gammapy.maps
+Python 2 compatible or putting a copy in ``fermipy.extern`` is possible, but
+not a nicely maintainable solution.
+
+Proposal
+========
+
+We propose to re-evaluate the timescale to drop Python 2.7 support later in 2018.
+
+As stated in the abstract, the reason to post this PIG now was to make
+the eventual goal clear (Gammapy becomes Python 3 only), and to have an
+open and transparent discussion and process to get there.
+
+Let us know what you think, especially if you are using Gammapy with Python 2.7
+and prefer to not update, or if you can't for some reason!
+
+Decision
+========
+
+As mentioned above, this PIG is not ready for a decision.
+It was just opened to have the goal defined, to explain the blocker
+and to have a place to discuss.
+
+
+.. _GH 1278: https://github.com/gammapy/gammapy/pull/1278
+.. _Numpy statement: https://github.com/numpy/numpy/blob/master/doc/neps/dropping-python2.7-proposal.rst
+.. _Astropy statement: https://github.com/astropy/astropy-APEs/blob/master/APE10.rst
+.. _Python 3 statement: http://www.python3statement.org/
+.. _ctapipe: https://github.com/cta-observatory/ctapipe
