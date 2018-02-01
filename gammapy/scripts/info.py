@@ -1,79 +1,130 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
+import platform
+import sys
+import warnings
 import logging
 import importlib
+from collections import OrderedDict
 import click
-from ..conftest import PYTEST_HEADER_MODULES
 from .. import version
 
 log = logging.getLogger(__name__)
 
+GAMMAPY_DEPENDENCIES = [
+    'numpy',
+    'scipy',
+    'matplotlib',
+    'cython',
+
+    'astropy',
+    'astropy_healpix',
+    'reproject',
+    'sherpa',
+
+    'pytest',
+    'sphinx',
+
+    'pandas',
+    'aplpy',
+    'h5py',
+    'healpy',
+    'regions',
+    'iminuit',
+    'naima',
+    'photutils',
+    'skimage',
+    'uncertainties',
+]
+
 GAMMAPY_ENV_VARIABLES = [
     'GAMMAPY_EXTRA',
-    'HGPS_DATA',
+    'GAMMA_CAT',
     'GAMMAPY_FERMI_LAT_DATA',
     'CTADATA',
-    'CALDB',
-    'GAMMA_CAT',
+    'HGPS_DATA',
 ]
 
 
 @click.command(name='info')
+@click.option('--system/--no-system', default=True, help='Show system info')
 @click.option('--version/--no-version', default=True, help='Show version info')
 @click.option('--dependencies/--no-dependencies', default=True, help='Show dependencies info')
-@click.option('--system/--no-system', default=True, help='Show system info')
-def cli_info(version, dependencies, system):
+@click.option('--envvar/--no-envvar', default=True, help='Show environment variables')
+def cli_info(system, version, dependencies, envvar):
     """Display information about Gammapy
     """
+    if system:
+        info = get_info_system()
+        print_info(info=info, title='System')
+
     if version:
         info = get_info_version()
-        print_info(info=info, title='Gammapy current install')
+        print_info(info=info, title='Gammapy package')
 
     if dependencies:
         info = get_info_dependencies()
-        print_info(info=info, title='Gammapy dependencies')
+        print_info(info=info, title='Other packages')
 
-    if system:
-        info = get_info_system()
+    if envvar:
+        info = get_info_envvar()
         print_info(info=info, title='Gammapy environment variables')
 
 
 def print_info(info, title):
     """Print Gammapy info."""
-    info_all = '\n{title}:\n\n'.format(title=title)
+    info_all = '\n{}:\n\n'.format(title)
 
-    for key in sorted(info):
-        info_all += '\t{key:22s} : {value:<10s} \n'.format(key=key, value=info[key])
+    for key, value in info.items():
+        info_all += '\t{:22s} : {:<10s} \n'.format(key, value)
 
     print(info_all)
 
 
+def get_info_system():
+    """Get info about user system"""
+    info = OrderedDict()
+    info['python_executable'] = sys.executable
+    info['python_version'] = platform.python_version()
+    info['machine'] = platform.machine()
+    info['system'] = platform.system()
+    return info
+
+
 def get_info_version():
     """Get detailed info about Gammapy version."""
-    return {
-        'version': version.version,
-        'release': str(version.release),
-        'githash': version.githash,
-    }
+    info = OrderedDict()
+    try:
+        path = sys.modules['gammapy'].__path__[0]
+    except:
+        path = 'unknown'
+    info['path'] = path
+    info['version'] = version.version
+    if not version.release:
+        info['githash'] = version.githash
+    return info
 
 
 def get_info_dependencies():
     """Get info about Gammapy dependencies."""
-    info_dependencies = {}
-    for label, name in PYTEST_HEADER_MODULES.items():
+    info = OrderedDict()
+    for name in GAMMAPY_DEPENDENCIES:
         try:
-            module = importlib.import_module(name)
-            module_version = module.__version__
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                module = importlib.import_module(name)
+
+            module_version = getattr(module, '__version__', 'no version info found')
         except ImportError:
-            module_version = 'not available'
-        info_dependencies[label] = module_version
-    return info_dependencies
+            module_version = 'not installed'
+        info[name] = module_version
+    return info
 
 
-def get_info_system():
+def get_info_envvar():
     """Get info about Gammapy environment variables."""
-    return {
-        name: os.environ.get(name, 'not set')
-        for name in GAMMAPY_ENV_VARIABLES
-    }
+    info = OrderedDict()
+    for name in GAMMAPY_ENV_VARIABLES:
+        info[name] = os.environ.get(name, 'not set')
+    return info

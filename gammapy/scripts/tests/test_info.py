@@ -12,6 +12,7 @@ def test_cli_info_help():
 def test_cli_info_no_args():
     # No arguments should print all infos
     result = run_cli(cli, ['info'])
-    assert "Gammapy current install" in result.output
-    assert "Gammapy dependencies" in result.output
+    assert "System" in result.output
+    assert "Gammapy package" in result.output
+    assert "Other packages" in result.output
     assert "Gammapy environment variables" in result.output
