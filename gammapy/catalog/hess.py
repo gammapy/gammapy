@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 from collections import OrderedDict
 import numpy as np
-from astropy.tests.helper import ignore_warnings
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -539,9 +538,7 @@ class SourceCatalogHGPS(SourceCatalog):
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
 
         filename = str(make_path(filename))
-
-        with ignore_warnings():  # ignore FITS units warnings
-            table = Table.read(filename, hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ('Identified_Object',)
         super(SourceCatalogHGPS, self).__init__(

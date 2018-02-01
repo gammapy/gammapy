@@ -2,11 +2,11 @@
 """Fermi catalog and source classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import warnings
 import numpy as np
 import astropy.units as u
 from astropy.table import Table, Column
 from astropy.time import Time
-from astropy.tests.helper import ignore_warnings
 from astropy.modeling.models import Gaussian2D, Disk2D
 from astropy.coordinates import Angle
 from ..utils.scripts import make_path
@@ -928,8 +928,10 @@ class SourceCatalog3FGL(SourceCatalog):
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
         filename = str(make_path(filename))
 
-        with ignore_warnings():  # ignore FITS units warnings
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
+
         table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
@@ -1023,8 +1025,10 @@ class SourceCatalog1FHL(SourceCatalog):
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v07.fit.gz'):
         filename = str(make_path(filename))
 
-        with ignore_warnings():  # ignore FITS units warnings
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
+
         table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
@@ -1050,8 +1054,10 @@ class SourceCatalog2FHL(SourceCatalog):
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz'):
         filename = str(make_path(filename))
 
-        with ignore_warnings():  # ignore FITS units warnings
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
             table = Table.read(filename, hdu='2FHL Source Catalog')
+
         table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
@@ -1086,8 +1092,10 @@ class SourceCatalog3FHL(SourceCatalog):
     def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'):
         filename = str(make_path(filename))
 
-        with ignore_warnings():  # ignore FITS units warnings
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
             table = Table.read(filename, hdu='LAT_Point_Source_Catalog')
+
         table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
