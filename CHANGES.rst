@@ -10,60 +10,93 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 
 .. _gammapy_0p7_release:
 
-0.7 (unreleased)
+0.7 (2018-02-02)
 ----------------
 
 Summary
 +++++++
 
-- Released on TBD (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
+- Released on Feb 2, 2018 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
 - 17 contributors (8 new)
-- TBD months of work (from April 28, 2017 to TBD)
-- TBD pull requests (not all listed below)
+- 9 months of work (from April 28, 2017 to Feb 2, 2018)
+- 154 pull requests (not all listed below)
 
 **What's new?**
 
+Installation:
 
-- New sub-package ``gammapy.maps`` that features WCS and HEALPix based maps,
-  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy, time or event type).
-  Support for multi-resolution and sparse maps is being added.
-  These new maps classes were implemented based on the experience gained from
-  the existing ``SkyImage`` and ``SkyCube`` classes as well as the Fermi science tools,
-  Fermipy and pointlike.
-- The long-term plan is to build all analysis on top of ``gammapy.maps``,
-  and to deprecate and remove ``SkyImage`` and ``SkyCube`` at some point (not now, to be
-  discussed later). ``gammapy.maps`` is still under heavy development, especially the interface
-  for coordinates isn't stable yet, and we plan to exchange the HEALPix library from ``healpy``
-  to ``astropy-healpix``, which will evolve into ``astropy.healpix``, i.e. we avoid an extra dependency,
-  and it is a simple and small package that also supports Windows (``healpy`` doesn't).
-  So ``gammapy.maps`` is not finished / complete / stable yet.
-  But if you're interested, please try it out and give feedback or ask questions how to do something!
-- The Gammapy command-line interface was changed to use a single command ``gammapy`` multiple
-  sub-commands (like ``gammapy info`` or ``gammapy image bin``). See :ref:`scripts`.
-- Many bug fixes and improvements, ranging from IRF interpolation to spectrum and lightcurve computation.
-  This is mostly driven by user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis
-  (see the list of pull requests below).
-  Please update to the new version and keep filing bug reports and feature requests!
+- Gammapy 0.7 supports legacy Python 2.7, as well as Python 3.5 and 3.6.
+  If you are still using Python 2.7 with Gammapy, please update to Python 3. Let us
+  know if you need any help with the update, or are blocked from updating for some reason,
+  by filling out the 1-minute `Gammapy installation questionnaire`_ form.
+  This will help us make a plan how to finish the Python 2 -> 3 transition and to set a timeline (`PIG 3`_).
+- The Gammapy conda packages are now distributed via the ``conda-forge`` channel,
+  i.e. to install or update Gammapy use the command ``conda install gammapy -c conda-forge``.
+  Most other packages have also moved to ``conda-forge`` in the past years, the previously used
+  ``astropy`` and ``openastronomy`` channels are no longer needed.
+
+Documentation:
+
 - A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
   notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
   in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
-- Gammapy conda package (and dependencies like Astropy regions, reproject, ...) changed
-  from the ``astropy`` and ``openastronomy`` conda channel to ``conda-forge``,
-  the main community-maintained conda build infrastructure and distribution channel.
-  See installation instructions; in short: ``conda install gammapy -c conda-forge``.
-- We dropped support for Python 3.4. Probably everything still works with Python 3.4, but we don't
-  test with Python 3.4 anymore in our continuous integration. If you're on Python 3.4, please update
-  to Python 3.6 (or Python 3.5 if that's e.g. what your package manager ships).
-- Note that many packages are dropping Python 2 support (now, 10 years after Python 3 was released):
-  Jupyter and Astropy already did (but they have the long-term support Astropy 2.0 release),
-  Python / Numpy / Scipy will drop Python 2 support soon.
-  So if you are using Gammapy and are still using Python 2, please update to Python 3.6 now!
-  Let us know if you have any questions or need help making your scripts run with Python 3!
-  In many cases it's just a matter of making some mechanical changes like putting parentheses for ``print``,
-  because it was changed from a special statement to a normal function in Python 3.
-  We will keep Python 2.7 support for now, the discussion on timescale for dropping that support
-  (and taking advantage of all the nice new Python 3 features and a simpler codebase) can start after
-  the Fermi science tools have added Python 3 support.
+- Most of the Gammapy tutorials can be executed directly in the browser via the https://mybinder.org/
+  service. There is a "launch in binder" link at the top of each tutorial in the docs,
+  see e.g. here: `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__
+- A page was created to collect the information for CTA members how to get started with Gammapy
+  and with contact / support channels: http://gammapy.org/cta.html
+- The first public FITS test data release from H.E.S.S. is in the collaboration review phase,
+  we expect it to become available in March and update many of the Gammapy tutorials to use
+  this nice example dataset (in addition to the simulated CTA first data challenge dataset
+  and the Fermi-LAT dataset matching the 3FHL catalog we are using already).
+
+Gammapy Python package:
+
+- This release contains many bug fixes and improvements to the existing code,
+  ranging from IRF interpolation to spectrum and lightcurve computation.
+- Most of the improvements (see the list of pull requests below) were driven by
+  user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis.
+  Please update to the new version and keep filing bug reports and feature requests!
+- A new sub-package `gammapy.maps` was added that features WCS and HEALPix based maps,
+  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy, time or event type).
+  Support for multi-resolution and sparse maps is work in progress.
+  These new maps classes were implemented based on the experience gained from
+  the existing ``SkyImage`` and ``SkyCube`` classes as well as the Fermi science tools, Fermipy and pointlike.
+  Work on new analysis code based on ``gammapy.maps`` within Gammapy is starting now (see `PIG 2`_).
+  Users are encouraged to start using ``gammapy.maps`` in their scripts now. The plan is to keep the
+  existing ``SkyImage`` and ``SkyCube`` and image / cube analysis code that we have now mostly unchanged
+  (only apply bugfixes), and to remove them at some future date after the transition to the use of
+  ``gammapy.maps`` within Gammapy (including all tests and documentation and tutorials) is complete and
+  users had some time to update their code. If you have any questions or need help with ``gammapy.maps``
+  or find an issue or missing feature, let us know!
+
+Command line interface:
+
+- The Gammapy command-line interface was changed to use a single command ``gammapy`` multiple
+  sub-commands (like ``gammapy info`` or ``gammapy image bin``). Discussions on developing
+  the high-level interface for Gammapy (e.g. as a set of command line tools, or a config file
+  driven analysis) are starting now. See :ref:`scripts`.
+
+
+Organisation:
+
+- A webpage at http://gammapy.org/ was set up, separate from the Gammapy documentation page http://docs.gammapy.org/ .
+- The Gammapy project and team organisation was set up with clear roles and responsibilities,
+  in a way to help the Gammapy project grow, and to support astronomers and projects like CTA using Gammapy better.
+  This is described at http://gammapy.org/team.html .
+- To improve the quality of Gammapy, we have set up a proposal-driven process for major improvements for Gammapy,
+  described in :ref:`pig-001`. We are now starting to use this to design a better low-level analysis code (`PIG 2`_)
+  and to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
+- We are planning a second Gammapy coding sprint in June or July 2018. Anyone interested to continue or join
+  Gammapy development is welcome. As you can see, a lot of activity and development is ongoing, and a lot of
+  work is still needed, with plenty of opportunities to contribute.
+  If you are interested, please fill this form with your availability:
+  `Gammapy 2018 second coding sprint options`_ and contact us.
+
+.. _PIG 2: https://github.com/gammapy/gammapy/pull/1277
+.. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
+.. _Gammapy installation questionnaire: https://goo.gl/forms/0QuYYyyPCbKnFJJI3
+.. _Gammapy 2018 second coding sprint options: https://goo.gl/forms/493orc8xrkg1QQYK2
 
 **Contributors:**
 
@@ -92,6 +125,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1266] No pytest import from non-test code (Christoph Deil)
+- [#1268] Fix PSF3D.to_energy_dependent_table_psf (Christoph Deil)
 - [#1246] Improve map read method (Matthew Wood)
 - [#1240] Finish change to Click in gammapy.scripts (Christoph Deil)
 - [#1238] Clean up catalog image code (Axel Donath)
