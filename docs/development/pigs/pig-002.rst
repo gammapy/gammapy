@@ -126,6 +126,30 @@ The various maker functions are then:
     * *returns* the map of background normalized on the observed counts with a ring filter (excluding regions with significant gamma-ray emission). The background estimator object also contains the *OFF* map and the *ON* and *OFF* exposure maps.
     * Most likely this technique is not meant to be used for too small energy bands, so that energy grouping is probably not relevant here. 
 
-The general processing can then be performed by a general class or scripts, possibly config file driven.  
+The general processing can then be performed by general classes or scripts, possibly config file driven.
+It should be sufficiently modular to allow for users to do their own scripts
   
+
+Existing code
+=============
+
+Currently, maps and cubes rely on the ``SkyImage`` and ``SkyCube`` classes. There are various scripts and classes existing
+currently in gammapy to produce maps and cubes (mostly developpedby @adonath and @ljouvin).Image  processing can be performed
+with ``SingleObsImageMaker`` and ``StackedObsImageMaker``, while cube processing can be performed with
+``SingleObsCubeMaker`` and ``StackedObsCubeMaker``. For images, one can also use the ``IACTBasicImageEstimator``.
+All this code relies on high level class which perform all the analysis sequentially (exposure, background, count maps
+etc). This approach is not modular and creates a lot of code duplication. Some cube-related analysis is required for images
+creating some cross-dependencies. 
+
+The proposed scheme should be much more modular and allow user to use gammapy as a library to compose their own scripts
+and classes if needed. It should limit code duplication. In particular, it uses the more general ``~gammapy.maps`` which
+allows to get rid of the cross dependencies of the image and cube package we have now. 
+
+ The existing code will remain in gammapy for the moment, with possibly some bugs fixed. The new code
+is largely independent so that the new developement should bot break user scripts.
+
+
+Decision
+========
+
 
