@@ -272,7 +272,7 @@ class Map(object):
 
         Parameters
         ----------
-        map_in : `~MapBase`
+        map_in : `~Map`
             Input map.
 
         """
