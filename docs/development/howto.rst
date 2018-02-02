@@ -41,7 +41,8 @@ on travis-ci or for other developers.
 * The  ``docs/_build`` folder is where ``python setup.py build_docs`` generates the HTML and other Sphinx
   documentation output files.
 * The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
-* The ``docs/notebooks`` and ``docs/_static/notebooks`` folders are where *fixed* and *live* versions of Jupyter notebooks files are stored.
+* The ``docs/notebooks`` folder is where the source Jupyter notebooks are placed before conversion into Sphinx formatted HTML documents.
+* The ``docs/_static/notebooks`` folder is where raw .ipynb files and .py scripts versions of Jupyter notebooks are placed so they may be downloaded from links in the documentation.
 
 If you use ``python setup.py build_ext --inplace``, then files are generated in the ``gammapy`` source folder.
 Usually that's not a problem, but if you want to clean up those generated files, you can use
@@ -800,12 +801,10 @@ This should work::
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
 Jupyter notebooks present in the ``gammapy-extra`` repository are by default copied
-to the ``docs/notebooks`` and ``docs/_static/notebooks`` tree-folder structure during
-the process of generating HTML docs. This triggers its conversion to *fixed-text*
-Sphinx formatted documentation files and at the same time provides access to raw
-.ipynb Jupyter notebooks for the same version of the gammapy documentation. This
-behaviour may be modified in the  `setup.cfg` configuration file changing the
-value of `clean_notebooks` boolean.
+to the ``docs/notebooks`` and ``docs/_static/notebooks`` folders during
+the process of generating HTML docs. This triggers its conversion to  Sphinx
+formatted HTML files and .py scripts. The Sphinx formatted versions of the notebooks provide access to the raw .ipynb Jupyter files and .py script versions stored in ``docs/_static/notebooks`` folder.
+
 
 Documentation guidelines
 ------------------------
@@ -933,13 +932,14 @@ that will be used to access the same version of the notebook in Gammapy Binder.
 Link to a notebook in gammapy-extra from the docs
 -------------------------------------------------
 
-Jupyter notebooks stored in ``gammpy-extra`` are copied to thew ``notebooks`` folder
+Jupyter notebooks stored in ``gammpy-extra`` are copied to the ``notebooks`` folder
 during the process of Sphinx building documentation. They are converted to HTML files
 using `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides
 a source parser for .ipynb files.
 
-From docstrings and high-level docs in Gammapy, you can link to these *fixed-text*
-formatted version of the notebooks **providing the relative path to** ``notebooks`` **folder and .html file extension**:
+From docstrings and high-level docs in Gammapy you can link to these *fixed-text*
+formatted versions of the notebooks providing its filename with .html file extension
+and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs`` folder in the process of documentation building.
 
 Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
 

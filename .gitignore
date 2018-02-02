@@ -56,11 +56,12 @@ MANIFEST
 # notebooks
 *.ipynb
 *.ipynb_checkpoints
+docs/_static/notebooks
+docs/notebooks
 
 gammapy/gammapy.cfg
 
 docs/_generated
-docs/notebooks
 docs/api
 .coverage
 

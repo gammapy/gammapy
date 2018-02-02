@@ -186,10 +186,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
     git_commit = setup_cfg['git_commit']
 
     # remove existing notebooks if rebuilding
-    if bool(setup_cfg['clean_notebooks']):
-        log.info('*** Cleaning notebooks')
-        rmtree('notebooks', ignore_errors=True)
-        rmtree('_static/notebooks', ignore_errors=True)
+    rmtree('_static/notebooks', ignore_errors=True)
 
     # copy and build notebooks if empty
     if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
@@ -201,7 +198,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
             ]
             log.info('*** Converting notebooks to scripts')
             copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-            copytree(gammapy_extra_notebooks_folder, '_static/notebooks')
+            copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
 
             for path in Path('_static/notebooks').glob('*.ipynb'):
                 convert_nb_to_script(path)

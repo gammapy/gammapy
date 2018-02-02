@@ -31,6 +31,13 @@ The ``docs`` folder contains the documentation pages in restructured text (RST)
 format. The Sphinx documentation generator is used to convert those RST files
 to the HTML documentation.
 
+Jupyter notebooks present in the ``gammapy-extra`` GitHub repository are also
+part of the documentation. They are copied to a ``docs/notebooks`` folder during
+the process of documentation building and converted to the Sphinx-formatted HTML files
+present in the :ref:`tutorials` section. Raw Jupyter notebooks files and .py scripts
+versions are placed in the ``docs/_static/notebooks`` folder generated during the
+documentation building process.
+
 In the repository you will find a bunch of other files and folders. We will explain
 some of them here, but not all. Just ignore the rest.
 
