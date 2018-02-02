@@ -185,11 +185,12 @@ def gammapy_sphinx_notebooks(setup_cfg):
     url_docs = setup_cfg['url_docs']
     git_commit = setup_cfg['git_commit']
 
-    # remove existing notebooks if rebuilding
+    # remove existing notebooks
     rmtree('_static/notebooks', ignore_errors=True)
+    rmtree('notebooks', ignore_errors=True)
 
-    # copy and build notebooks if empty
-    if os.environ.get('GAMMAPY_EXTRA') and not os.path.isdir("notebooks"):
+    # copy and build notebooks
+    if os.environ.get('GAMMAPY_EXTRA'):
         gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
         if os.path.isdir(gammapy_extra_notebooks_folder):
             ignorefiles = lambda d, files: [
