@@ -19,17 +19,48 @@ What is this?
 Set up
 ------
 
-If you want to execute the notebooks locally, to play around with the
-examples, or to try to do one of the exercises, you have to first
-install Gammapy and get the ``gammapy-extra`` repository. This is
-described in `Gammapy tutorial
-setup <notebooks/tutorial_setup.html>`__.
+The Gammapy installation instructions are here: :ref:`install`
 
-Alternatively you may execute latest version of the collection of notebooks on-line
+One quick way to get set up, that works the same on Linux, Mac and Windows is this:
+
+* Install Anaconda or Miniconda (see https://www.anaconda.com/download/ )
+* Get the following repository that contains the Gammapy tutorial notebooks::
+
+    git clone https://github.com/gammapy/gammapy-extra.git
+    export GAMMAPY_EXTRA=$PWD/gammapy-extra
+
+* Create a Python conda environment that contains all software used in the tutorials::
+
+    cd gammapy-extra
+    conda env create -f environment.yml
+
+* If you already have that environment, but want to update::
+
+    conda env update -f environment.yml
+
+* Activate the environment and start Jupyter::
+
+    source activate gammapy-tutorial
+    cd notebooks
+    jupyter notebook
+
+* Select and start the notebook you want in your webbrowser.
+
+If you have any questions, ask for help. See http://gammapy.org/contact.html
+
+Execute tutorials online
+------------------------
+
+If you want, you can execute latest version of the collection of notebooks on-line
 accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
+
+Click the "launch binder" link here, or at the top of each notebook below:
 
 .. image:: http://mybinder.org/badge.svg
     :target: http://mybinder.org/repo/gammapy/gammapy-extra
+
+Note that this is a free, temporary notebook server. You cannot upload your data or save
+your work there. For that, install Gammapy on your machine and work there.
 
 The basics
 ----------
