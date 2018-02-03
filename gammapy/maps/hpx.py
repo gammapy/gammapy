@@ -875,6 +875,18 @@ class HpxGeom(MapGeom):
         return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv, axes=axes)
 
+    def pad(self, pad_width):
+        raise NotImplementedError
+
+    def crop(self, crop_width):
+        raise NotImplementedError
+
+    def upsample(self, factor):
+        raise NotImplementedError
+
+    def downsample(self, factor):
+        raise NotImplementedError
+
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
                axes=None, conv='gadf', skydir=None, width=None):

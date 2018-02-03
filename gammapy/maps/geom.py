@@ -628,7 +628,8 @@ class MapCoords(object):
             return cls.from_lonlat(skydir.l.deg, skydir.b.deg, *args,
                                    coordsys='GAL', **kwargs)
         else:
-            raise ValueError('Unrecognized coordinate frame: {}'.format(skydir.frame.name))
+            raise ValueError(
+                'Unrecognized coordinate frame: {}'.format(skydir.frame.name))
 
     @classmethod
     def from_tuple(cls, coords, **kwargs):
@@ -970,6 +971,74 @@ class MapGeom(object):
         -------
         geom : `~MapGeom`
             Map geometry.
+        """
+        pass
+
+    @abc.abstractmethod
+    def pad(self, pad_width):
+        """
+        Pad the geometry at the edges.
+
+        Parameters
+        ----------
+        pad_width : {sequence, array_like, int}
+            Number of values padded to the edges of each axis.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Padded geometry.
+        """
+        pass
+
+    @abc.abstractmethod
+    def crop(self, crop_width):
+        """
+        Crop the geometry at the edges.
+
+        Parameters
+        ----------
+        crop_width : {sequence, array_like, int}
+            Number of values cropped from the edges of each axis.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Cropped geometry.
+        """
+        pass
+
+    @abc.abstractmethod
+    def downsample(self, factor):
+        """Downsample the spatial dimension of the geometry by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Downsampled geometry.
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def upsample(self, factor):
+        """Upsample the spatial dimension of the geometry by a given factor. 
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+
+        Returns
+        -------
+        geom : `~MapGeom`
+            Upsampled geometry.
+
         """
         pass
 
