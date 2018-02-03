@@ -355,17 +355,77 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def pad(self, pad_width):
-        raise NotImplementedError
+    def pad(self, pad_width, mode='edge', cval=0):
+
+        if np.isscalar(pad_width):
+            pad_width = (pad_width, pad_width)
+            pad_width += (0,) * (self.geom.ndim - 2)
+
+        geom = self.geom.pad(pad_width[:2])
+        if self.geom.is_regular and mode != 'interp':
+            kw = {}
+            if mode == 'constant':
+                kw['constant_values'] = cval
+
+            pad_width = [(t, t) for t in pad_width]
+            data = np.pad(self.data, pad_width[::-1], mode, **kw)
+            map_out = self.__class__(geom, data)
+        else:
+            idx_in = self.geom.get_idx(flat=True)
+            idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
+            idx_out = geom.get_idx(flat=True)[::-1]
+            map_out = self.__class__(geom)
+
+            pad_msk = np.zeros_like(map_out.data, dtype=bool)
+            pad_msk[idx_out] = True
+            pad_msk[idx_in] = False
+            map_out.coadd(self)
+            if mode == 'constant':
+                map_out.data[pad_msk] = cval
+            else:
+                raise NotImplementedError
+
+        return map_out
 
     def crop(self, crop_width):
-        raise NotImplementedError
 
-    def upsample(self, factor):
-        raise NotImplementedError
+        if np.isscalar(crop_width):
+            crop_width = (crop_width, crop_width)
+        geom = self.geom.crop(crop_width)
+        if self.geom.is_regular:
+            slices = [slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
+                      slice(crop_width[1], int(self.geom.npix[1] - crop_width[1]))]
+            for ax in self.geom.axes:
+                slices += [slice(None)]
+            data = self.data[slices[::-1]]
+            map_out = self.__class__(geom, data)
+        else:
+            # FIXME: This could be done more efficiently by
+            # constructing the appropriate slices for each image plane
+            map_out = self.__class__(geom)
+            map_out.coadd(self)
 
-    def downsample(self, factor):
-        raise NotImplementedError
+        return map_out
+
+    def upsample(self, factor, order=0, preserve_counts=True):
+        from scipy.ndimage import map_coordinates
+        geom = self.geom.upsample(factor)
+        idx = geom.get_idx()
+        pix = ((idx[0] - 0.5 * (factor - 1)) / factor,
+               (idx[1] - 0.5 * (factor - 1)) / factor,) + idx[2:]
+        data = map_coordinates(self.data.T, pix, order=order, mode='nearest')
+        if preserve_counts:
+            data /= factor**2
+        return self.__class__(geom, data)
+
+    def downsample(self, factor, preserve_counts=True):
+        from skimage.measure import block_reduce
+        geom = self.geom.downsample(factor)
+        block_size = tuple([factor, factor] + [1] * (self.geom.ndim - 2))
+        data = block_reduce(self.data, block_size[::-1], np.nansum)
+        if not preserve_counts:
+            data /= factor**2
+        return self.__class__(geom, data)
 
     def plot(self, ax=None, idx=None, **kwargs):
         """Quickplot method.

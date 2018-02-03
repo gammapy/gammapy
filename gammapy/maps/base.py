@@ -278,7 +278,7 @@ class Map(object):
         """
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
-        idx = map_in.geom.get_pixels()
+        idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coords()
         vals = map_in.get_by_idx(idx)
         self.fill_by_coords(coords, vals)
@@ -314,7 +314,7 @@ class Map(object):
             return self._reproject_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
-    def pad(self, pad_width):
+    def pad(self, pad_width, mode='edge', cval=0):
         """Pad the spatial dimension of the map by extending the edge of the
         map by the given number of pixels.
 
@@ -322,11 +322,18 @@ class Map(object):
         ----------
         pad_width : {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
+        mode : {'edge', 'constant', 'interp'}
+            Padding mode.  'edge' pads with the closest edge value.
+            'constant' pads with a constant value. 'interp' pads with
+            an extrapolated value.
+        cval : float
+            Padding value when mode='consant'.
 
         Returns
         -------
         map : `~Map`
             Padded map.
+
         """
         pass
 
@@ -348,13 +355,17 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor):
+    def downsample(self, factor, preserve_counts=True):
         """Downsample the spatial dimension of the map by a given factor. 
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity).
 
         Returns
         -------
@@ -364,18 +375,25 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor):
+    def upsample(self, factor, order=0, preserve_counts=True):
         """Upsample the spatial dimension of the map by a given factor. 
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
+        order : int
+            Order of the interpolation used for upsampling.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity).
 
         Returns
         -------
         map : `~Map`
             Upsampled map.
+
         """
         pass
 
