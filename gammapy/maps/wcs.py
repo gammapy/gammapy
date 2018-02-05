@@ -278,7 +278,7 @@ class WcsGeom(MapGeom):
         # FIXME: Need to propagate refpix
 
         header = make_header(npix[0].flat[0], npix[1].flat[0],
-                             binsz[0].flat[0], xref, yref,
+                             binsz[0].flat[0], float(xref), float(yref),
                              proj, coordsys, refpix, refpix)
         wcs = WCS(header)
         return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
