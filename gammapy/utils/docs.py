@@ -65,13 +65,13 @@ class ExtraImage(Image):
 
 def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook on gammapy-extra"""
-    if HAS_GP_EXTRA:
-        available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
-        exists = notebook in [_['name'] for _ in available_notebooks]
-    else:
-        exists = True
 
-    if not exists:
+    # check if file exists in local notebooks folder
+    nbfolder = Path('notebooks')
+    nbfilename = notebook + '.ipynb'
+    nbfile = nbfolder / nbfilename
+
+    if not nbfile.is_file():
         msg = inliner.reporter.error(
             'Unknown notebook {}'.format(notebook),
             line=lineno,
