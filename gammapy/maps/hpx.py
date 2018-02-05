@@ -861,8 +861,6 @@ class HpxGeom(MapGeom):
         geom : `~HpxGeom`
             A HEALPix geometry object.
         """
-        # FIXME: Pass ipix as argument
-
         return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
                               region=self.region, axes=self.axes, conv=self.conv)
 
@@ -879,13 +877,49 @@ class HpxGeom(MapGeom):
         raise NotImplementedError
 
     def crop(self, crop_width):
-        raise NotImplementedError
+
+        import healpy as hp
+
+        idx = self.get_idx()
+        if self.nside.size > 1:
+            nside = self.nside[idx[1:]]
+        else:
+            nside = self.nside
+
+        idx_r = ravel_hpx_index(idx, self._maxpix)
+
+        # TODO: Pre-filter indices to find those close to the edge
+        idx_nb = (hp.get_all_neighbours(nside, idx[0], nest=self.nest),)
+        idx_nb += tuple([t[None, ...] * np.ones_like(idx_nb[0])
+                         for t in idx[1:]])
+        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+
+        for i in range(crop_width):
+
+            # Mask of pixels that have at least one neighbor not
+            # contained in the geometry
+            edge_msk = np.any(np.isin(idx_nb, idx_r, invert=True), axis=0)
+            idx_r = idx_r[~edge_msk]
+            idx_nb = idx_nb[:, ~edge_msk]
+
+        idx = unravel_hpx_index(idx_r, self._maxpix)
+        return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
+                              region=idx, conv=self.conv,
+                              axes=copy.deepcopy(self.axes))
 
     def upsample(self, factor):
-        raise NotImplementedError
+
+        if not is_power2(factor):
+            raise ValueError('Upsample factor must be a power of 2.')
+
+        return self.ud_graded_hpx(self.order * factor)
 
     def downsample(self, factor):
-        raise NotImplementedError
+
+        if not is_power2(factor):
+            raise ValueError('Downsample factor must be a power of 2.')
+
+        return self.ud_graded_hpx(self.order // factor)
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
