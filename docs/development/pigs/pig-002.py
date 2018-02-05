@@ -13,12 +13,10 @@ from gammapy.data import EventList
 
 
 def make_cutout(ndmap, position, size, margin = 0.1*u.deg):
-    """
-    Create a cutout of a WcsNDMap around a given direction.
+    """Create a cutout of a WcsNDMap around a given direction.
 
     Parameters
-    __________
-
+    ----------
     ndmap : `~gammapy.maps.WcsNDMap`
             the map on which the cutout has to be extracted
     position : `~astropy.coordinates.SkyCoord`
@@ -27,10 +25,9 @@ def make_cutout(ndmap, position, size, margin = 0.1*u.deg):
             the angular sizes of the box
     margin : `~astropy.coordinates.Angle`
             additional safety margin 
- 
+
     Returns
-    _______
-    
+    -------
     cutout : `~gammapy.maps.WcsNDMap`
              the cutout map itself
     cutout_slice : 
@@ -68,21 +65,18 @@ def make_cutout(ndmap, position, size, margin = 0.1*u.deg):
 
 
 def make_separation_map(ref_geom, position):
-    """
-    Compute distance of pixels to a given position for the input reference WCSGeom.
+    """Compute distance of pixels to a given position for the input reference WCSGeom.
     Result is returned as a 2D WcsNDmap
     
     Parameters
-    __________
-
+    ----------
     ref_geom : `~gammapy.maps.WcsGeom`
             the reference nd image geometry
     position : `~astropy.coordinates.SkyCoord`
             the position considered
     
     Returns
-    _______
-    
+    -------
     valid_map: `~gammapy.maps.WcsNDMap`
             the separation 2D image
     """
@@ -115,13 +109,11 @@ def make_separation_map(ref_geom, position):
 
 
 def make_map_counts(evts, ref_geom, pointing, offset_max):
-    """
-    Build a WcsNDMap (space - energy) with events from an EventList.
+    """ Build a WcsNDMap (space - energy) with events from an EventList.
     The energy of the events is used for the non-spatial axis.
 
     Parameters
-    __________
-    
+    ----------
     evts : `~gammapy.data.EventList`
             the input event list
     ref_geom : `~gammapy.maps.WcsGeom`
@@ -133,7 +125,6 @@ def make_map_counts(evts, ref_geom, pointing, offset_max):
     -------
     cntmap : `~gammapy.maps.WcsNDMap`
         Count cube (3D) in true energy bins
-  
     """
 
     ## For the moment the treatment of units and celestial systems by MapCoords and MapAxis
@@ -166,8 +157,7 @@ def make_map_counts(evts, ref_geom, pointing, offset_max):
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max):
-    """
-    Compute exposure WcsNDMap in true energy (i.e. not convolved by Edisp).
+    """Compute exposure WcsNDMap in true energy (i.e. not convolved by Edisp).
 
     Parameters
     ----------
@@ -213,8 +203,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
 
 
 def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref_geom, offset_max):
-    """
-    Compute exposure WcsNDMap in reco energy (i.e. after convolution by Edisp and assuming a true 
+    """ Compute exposure WcsNDMap in reco energy (i.e. after convolution by Edisp and assuming a true 
     energy spectrum).
     This is useful to perform 2D imaging studies.
 
@@ -260,8 +249,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     The output cube is - obviously - in reco energy.
 
     Note:
-    _____
-    
+    -----
     bkg.evaluate should be replaced with a function returning directly an integrated bkg flux. 
 
     Parameters
@@ -313,20 +301,17 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     return WcsNDMap(ref_geom, data=data)
 
 def make_map_FoV_background(acceptance_map, counts_map, excluded_map):
-    """
-    Build Normalized background map from a given acceptance map and count map.
+    """ Build Normalized background map from a given acceptance map and count map.
     This operation is normally performed on single observation maps.
     An exclusion map is used to avoid using regions with significant gamma-ray emission.
     All maps are assumed to follow the same WcsGeom.
 
     Note
-    ____
-    
+    ----
     A model map could be used instead of an exclusion mask.
 
     Parameters
-    __________
-    
+    ----------
     acceptance_map : `~gammapy.maps.WcsNDMap`
          the observation hadron acceptance map (i.e. predicted background map)
     counts_map : `~gammapy.maps.WcsNDMap`
@@ -335,11 +320,9 @@ def make_map_FoV_background(acceptance_map, counts_map, excluded_map):
          the exclusion mask 
 
     Return
-    ______
-    
+    ------
     norm_bkg_map :: `~gammapy.maps.WcsNDMap`
          the normalized background
-
     """
 
     ## Here we should test that WcsGeom are consistent
@@ -348,8 +331,8 @@ def make_map_FoV_background(acceptance_map, counts_map, excluded_map):
     mask = np.resize(np.squeeze(excluded_map.data), acceptance_map.data.shape)
     print(mask.sum())
     ## We multiply the data with the mask to obtain normalization factors in each energy bin
-    integ_acceptance = np.sum(acceptance_map.data*mask, (1,2))
-    integ_counts =  np.sum(counts_map.data*mask, (1,2))
+    integ_acceptance = np.sum(acceptance_map.data*mask, axis=(1,2))
+    integ_counts =  np.sum(counts_map.data*mask, axis=(1,2))
     
     ## Here we need to add a function rebin energy axis to have minimal statistics for the normalization
 
@@ -362,8 +345,7 @@ def make_map_FoV_background(acceptance_map, counts_map, excluded_map):
     
 
 def make_map_ring_background(ring_estimator, acceptance_map, counts_map, excluded_map):
-    """
-    Build normalized background map from a given acceptance map and count map using
+    """ Build normalized background map from a given acceptance map and count map using
     the ring background technique.
     This operation is performed on single observation maps.
     An exclusion map is used to avoid using regions with significant gamma-ray emission.
@@ -372,8 +354,7 @@ def make_map_ring_background(ring_estimator, acceptance_map, counts_map, exclude
     Note that the RingBackgroundEstimator class has to be adapted to support WcsNDMaps.
 
     Parameters
-    __________
-    
+    ----------
     ring_estimator: `~gammapy.background.AdaptiveRingBackgroundEstimator` or `RingBackgroundEstimator`
          the ring background estimator object
     acceptance_map : `~gammapy.maps.WcsNDMap`
@@ -384,41 +365,39 @@ def make_map_ring_background(ring_estimator, acceptance_map, counts_map, exclude
          the exclusion mask 
 
     Return
-    ______
-    
+    ------
     norm_bkg_map :: `~gammapy.maps.WcsNDMap`
          the normalized background
-
     """
     raise NotImplementedError
 
 
 ## This is just a basic example of what such a class could look like
 class MakeMaps(object):
-    """
-    Make all basic maps for a single Observation.
+    """ Make all basic maps for a single Observation.
 
-    Parameters:
-    __________
-
+    Parameters
+    ----------
     ref_geom : `~gammapy.maps.WcsGeom`
             the reference image geometry
     offset_max : `~astropy.coordinates.Angle`
             maximum offset considered
-
     """
     def __init__(self, ref_geom, offset_max):
         self.offset_max = offset_max
         self.ref_geom = ref_geom
+
+        ## We instantiate the end products of the MakeMaps class
         self.count_map = WcsNDMap(self.ref_geom)
         self.exposure_map = WcsNDMap(self.ref_geom)
         self.background_map =  WcsNDMap(self.ref_geom)
+
+        ## We will need this general exclusion mask for the analysis
         self.exclusion_map = WcsNDMap(self.ref_geom)
         self.exclusion_map.data += 1
 
     def add_exclusion_regions(self,region):
-        """
-        Add exclusion regions to the excluded mask
+        """ Add exclusion regions to the excluded mask
         """
         raise NotImplementedError
         
@@ -428,34 +407,33 @@ class MakeMaps(object):
         # First make cutout of the global image
         try:
             excluded_map_cutout, cutout_slices = make_cutout(self.exclusion_map, obs.pointing_radec ,
-                                                    [2*self.offset_max, 2*self.offset_max])
-            cutout_geom = excluded_map_cutout.geom
-#            self.cutout_geom = cutout_map.geom
-#            self.cutout_slices = cutout_slices
-
-            # Make count map
-            count_obs_map = make_map_counts(obs.events, cutout_geom, obs.pointing_radec, self.offset_max)
-            
-            # Make exposure map
-            expo_obs_map = make_map_exposure_true_energy( obs.pointing_radec, obs.observation_live_time_duration,
-                                                      obs.aeff, cutout_geom, self.offset_max)
-
-            # Make hadron acceptance map
-            acceptance_obs_map = make_map_hadron_acceptance( obs.pointing_radec, obs.observation_live_time_duration,
-                                                         obs.bkg, cutout_geom, self.offset_max)
-
-            # Make normalized background map
-            background_obs_map = make_map_FoV_background(acceptance_obs_map, count_obs_map, excluded_map_cutout)
-            
-            self._add_cutouts(cutout_slices, count_obs_map, expo_obs_map, background_obs_map)
-
+                                                             [2*self.offset_max, 2*self.offset_max])
         except PartialOverlapError:
             print("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
+            return
+        
+        cutout_geom = excluded_map_cutout.geom
+
+        # Make count map
+        count_obs_map = make_map_counts(obs.events, cutout_geom, obs.pointing_radec, self.offset_max)
+        
+        # Make exposure map
+        expo_obs_map = make_map_exposure_true_energy( obs.pointing_radec, obs.observation_live_time_duration,
+                                                      obs.aeff, cutout_geom, self.offset_max)
+        
+        # Make hadron acceptance map
+        acceptance_obs_map = make_map_hadron_acceptance( obs.pointing_radec, obs.observation_live_time_duration,
+                                                         obs.bkg, cutout_geom, self.offset_max)
+        
+        # Make normalized background map
+        background_obs_map = make_map_FoV_background(acceptance_obs_map, count_obs_map, excluded_map_cutout)
+    
+        self._add_cutouts(cutout_slices, count_obs_map, expo_obs_map, background_obs_map)
+
         
 
     def _add_cutouts(self,cutout_slices, count_obs_map, expo_obs_map, acceptance_obs_map):
-        """
-        Add current cutout to global maps
+        """ Add current cutout to global maps
         """
         self.count_map.data[cutout_slices] += count_obs_map.data
         self.exposure_map.data[cutout_slices] += expo_obs_map.data
