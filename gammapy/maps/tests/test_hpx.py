@@ -7,6 +7,7 @@ from astropy.io import fits
 from ..geom import MapAxis
 from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order, lonlat_to_colat
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
+from ..hpx import get_hpxregion_dir, get_hpxregion_size
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -152,7 +153,7 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
 
     # Test slicing with explicit geometry
     geom = HpxGeom(nside, nested, coordsys, region=tuple(
-        [t[::10] for t in idx]), axes=axes)
+        [t[::3] for t in idx]), axes=axes)
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
     assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
@@ -280,16 +281,16 @@ def test_hpx_get_pix_size_from_nside():
                     np.array([32.0, 16.0, 8.0]))
 
 
-def test_hpx_get_region_size():
-    assert_allclose(HpxGeom.get_region_size('DISK(110.,75.,2.)'), 2.0)
+def test_hpx_get_hpxregion_size():
+    assert_allclose(get_hpxregion_size('DISK(110.,75.,2.)'), 2.0)
 
 
-def test_hpxgeom_get_ref_dir():
-    refdir = HpxGeom.get_ref_dir('DISK(110.,75.,2.)', 'GAL')
+def test_hpxgeom_get_hpxregion_dir():
+    refdir = get_hpxregion_dir('DISK(110.,75.,2.)', 'GAL')
     assert_allclose(refdir.l.deg, 110.)
     assert_allclose(refdir.b.deg, 75.)
 
-    refdir = HpxGeom.get_ref_dir(None, 'GAL')
+    refdir = get_hpxregion_dir(None, 'GAL')
     assert_allclose(refdir.l.deg, 0.)
     assert_allclose(refdir.b.deg, 0.)
 

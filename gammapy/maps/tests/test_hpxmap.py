@@ -17,17 +17,21 @@ pytest.importorskip('numpy', '1.12.0')
 
 axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log')]
 
-hpx_test_geoms = [
+hpx_test_allsky_geoms = [
     (8, False, 'GAL', None, None),
     (8, False, 'GAL', None, axes1),
-    ([4, 8], False, 'GAL', None, axes1),
-    ([4, 8], False, 'GAL', 'DISK(110.,75.,10.)', axes1),
+    ([4, 8], False, 'GAL', None, axes1)]
+
+hpx_test_partialsky_geoms = [
+    ([4, 8], False, 'GAL', 'DISK(110.,75.,30.)', axes1),
     (8, False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 4))]),
     (8, False, 'GAL', 'DISK(110.,75.,10.)',
      [MapAxis(np.logspace(0., 3., 4), name='axis0'),
       MapAxis(np.logspace(0., 2., 3), name='axis1')])
 ]
+
+hpx_test_geoms = hpx_test_allsky_geoms + hpx_test_partialsky_geoms
 
 hpx_test_geoms_sparse = [tuple(list(t) + [True]) for t in hpx_test_geoms]
 hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
@@ -176,6 +180,22 @@ def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     m.to_ud_graded(4)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_partialsky_geoms)
+def test_hpxmap_pad(nside, nested, coordsys, region, axes):
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    m.pad(1)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_partialsky_geoms)
+def test_hpxmap_crop(nside, nested, coordsys, region, axes):
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    m.crop(1)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
