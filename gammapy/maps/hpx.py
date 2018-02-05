@@ -330,6 +330,58 @@ def parse_hpxregion(region):
         return [m.group(1)] + re.split(',', m.group(2))
 
 
+def get_hpxregion_dir(region, coordsys):
+    """Get the reference direction for a HEALPIX region string.
+
+    Parameters
+    ----------
+    region : str
+        A string describing a HEALPIX region
+    coordsys : {'CEL', 'GAL'}
+        Coordinate system
+    """
+    frame = coordsys_to_frame(coordsys)
+    if region is None:
+        return SkyCoord(0., 0., frame=frame, unit='deg')
+
+    tokens = parse_hpxregion(region)
+    if tokens[0] in ['DISK', 'DISK_INC']:
+        lon, lat = float(tokens[1]), float(tokens[2])
+        return SkyCoord(lon, lat, frame=frame, unit='deg')
+    elif tokens[0] == 'HPX_PIXEL':
+        nside_pix = int(tokens[2])
+        ipix_pix = int(tokens[3])
+        if tokens[1] == 'NESTED':
+            nest_pix = True
+        elif tokens[1] == 'RING':
+            nest_pix = False
+        else:
+            raise ValueError(
+                'Did not recognize ordering scheme: {}'.format(tokens[1]))
+        theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
+        lat = np.degrees((np.pi / 2) - theta)
+        lon = np.degrees(phi)
+        return SkyCoord(lon, lat, frame=frame, unit='deg')
+    else:
+        raise ValueError(
+            'HPX.get_ref_dir did not recognize region type: {}'.format(tokens[0]))
+
+    return None
+
+
+def get_hpxregion_size(region):
+    """Get the approximate size of region (in degrees) from a HEALPIX region string.
+    """
+    tokens = parse_hpxregion(region)
+    if tokens[0] in ['DISK', 'DISK_INC']:
+        return float(tokens[3])
+    elif tokens[0] == 'HPX_PIXEL':
+        pix_size = get_pix_size_from_nside(int(tokens[2]))
+        return 2. * pix_size
+    else:
+        raise Exception('Did not recognize region type: {}'.format(tokens[0]))
+
+
 def is_power2(n):
     """Check if an integer is a power of 2."""
     return (n > 0) & ((n & (n - 1)) == 0)
@@ -618,8 +670,15 @@ class HpxGeom(MapGeom):
             else:
                 nside = self.nside
 
+            m = ~np.isfinite(theta)
+            theta[m] = 0.0
+            phi[m] = 0.0
             pix = hp.ang2pix(nside, theta, phi, nest=self.nest)
             pix = tuple([pix] + bins)
+            if np.any(m):
+                for p in pix:
+                    p[m] = -1
+
         else:
             pix = hp.ang2pix(self.nside, theta, phi, nest=self.nest),
 
@@ -873,25 +932,59 @@ class HpxGeom(MapGeom):
         return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
                               region=self.region, conv=self.conv, axes=axes)
 
-    def pad(self, pad_width):
-        raise NotImplementedError
-
-    def crop(self, crop_width):
+    def _get_neighbors(self, idx):
 
         import healpy as hp
 
-        idx = self.get_idx()
         if self.nside.size > 1:
             nside = self.nside[idx[1:]]
         else:
             nside = self.nside
 
-        idx_r = ravel_hpx_index(idx, self._maxpix)
-
-        # TODO: Pre-filter indices to find those close to the edge
         idx_nb = (hp.get_all_neighbours(nside, idx[0], nest=self.nest),)
         idx_nb += tuple([t[None, ...] * np.ones_like(idx_nb[0])
                          for t in idx[1:]])
+
+        return idx_nb
+
+    def pad(self, pad_width):
+
+        # FIXME: Should this return an exception?
+        if self.is_allsky:
+            return copy.deepcopy(self)
+
+        idx = self.get_idx(flat=True)
+        idx_r = ravel_hpx_index(idx, self._maxpix)
+
+        # TODO: Pre-filter indices to find those close to the edge
+        idx_nb = self._get_neighbors(idx)
+        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+
+        for i in range(pad_width):
+            # Mask of neighbors that are not contained in the geometry
+            edge_msk = np.isin(idx_nb, idx_r, invert=True)
+            edge_idx = idx_nb[edge_msk]
+            edge_idx = np.unique(edge_idx)
+            idx_r = np.sort(np.concatenate((idx_r, edge_idx)))
+            idx_nb = self._get_neighbors(
+                unravel_hpx_index(edge_idx, self._maxpix))
+            idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+
+        idx = unravel_hpx_index(idx_r, self._maxpix)
+        return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
+                              region=idx, conv=self.conv,
+                              axes=copy.deepcopy(self.axes))
+
+    def crop(self, crop_width):
+
+        if self.is_allsky:
+            raise ValueError('Cannot crop an all-sky map.')
+
+        idx = self.get_idx(flat=True)
+        idx_r = ravel_hpx_index(idx, self._maxpix)
+
+        # TODO: Pre-filter indices to find those close to the edge
+        idx_nb = self._get_neighbors(idx)
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         for i in range(crop_width):
@@ -1279,8 +1372,7 @@ class HpxGeom(MapGeom):
 
         return ilist
 
-    @staticmethod
-    def get_ref_dir(region, coordsys):
+    def get_ref_dir(self, region, coordsys):
         """Get the reference direction for a given  HEALPIX region string.
 
         Parameters
@@ -1293,48 +1385,36 @@ class HpxGeom(MapGeom):
         import healpy as hp
         frame = coordsys_to_frame(coordsys)
 
-        if region is None or isinstance(region, tuple):
-            return SkyCoord(0., 0., frame=frame, unit="deg")
-
-        tokens = parse_hpxregion(region)
-        if tokens[0] in ['DISK', 'DISK_INC']:
-            lon, lat = float(tokens[1]), float(tokens[2])
-            return SkyCoord(lon, lat, frame=frame, unit='deg')
-        elif tokens[0] == 'HPX_PIXEL':
-            nside_pix = int(tokens[2])
-            ipix_pix = int(tokens[3])
-            if tokens[1] == 'NESTED':
-                nest_pix = True
-            elif tokens[1] == 'RING':
-                nest_pix = False
+        if isinstance(region, tuple):
+            if self.nside.size > 1:
+                nside = self.nside[region[1:]]
             else:
-                raise ValueError(
-                    'Did not recognize ordering scheme: {}'.format(tokens[1]))
-            theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
-            lat = np.degrees((np.pi / 2) - theta)
-            lon = np.degrees(phi)
-            return SkyCoord(lon, lat, frame=frame, unit='deg')
-        else:
-            raise ValueError(
-                'HPX.get_ref_dir did not recognize region type: {}'.format(tokens[0]))
+                nside = self.nside
+            vec = hp.pix2vec(nside, region[0], nest=self.nest)
+            vec = np.array([np.mean(t) for t in vec])
+            lonlat = hp.vec2ang(vec, lonlat=True)
+            return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit='deg')
 
-        return None
+        return get_hpxregion_dir(region, coordsys)
 
-    @staticmethod
-    def get_region_size(region):
-        """Get the approximate size of region (in degrees) from a HEALPIX region string.
-        """
-        if region is None:
+    def _get_region_size(self):
+
+        import healpy as hp
+
+        if self.region is None:
             return 180.
-        tokens = parse_hpxregion(region)
-        if tokens[0] in ['DISK', 'DISK_INC']:
-            return float(tokens[3])
-        elif tokens[0] == 'HPX_PIXEL':
-            pix_size = get_pix_size_from_nside(int(tokens[2]))
-            return 2. * pix_size
-        else:
-            raise Exception(
-                'Did not recognize region type: {}'.format(tokens[0]))
+        if self.region == 'explicit':
+            pix = self.ipix
+            if self.nside.size > 1:
+                nside = self.nside[pix[1:]]
+            else:
+                nside = self.nside
+            ang = hp.pix2ang(nside, pix[0], nest=self.nest, lonlat=True)
+            dirs = SkyCoord(ang[0], ang[1], unit='deg',
+                            frame=coordsys_to_frame(self.coordsys))
+            return np.max(dirs.separation(self.center_skydir).deg)
+
+        return get_hpxregion_size(self.region)
 
     def make_wcs(self, proj='AIT', oversample=2, drop_axes=True):
         """Make a WCS projection appropriate for this HPX pixelization.
@@ -1356,9 +1436,9 @@ class HpxGeom(MapGeom):
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
         """
-        skydir = self.get_ref_dir(self._region, self.coordsys)
+        skydir = self.center_skydir.copy()
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
-        width = (2.0 * self.get_region_size(self._region) +
+        width = (2.0 * self._get_region_size() +
                  np.max(get_pix_size_from_nside(self.nside)))
 
         if width > 90.:
