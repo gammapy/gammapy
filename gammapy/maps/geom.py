@@ -228,6 +228,7 @@ def coord_to_idx(edges, x, clip=False):
     else:
         ibin[x > edges[-1]] = -1
 
+    ibin[~np.isfinite(x)] = -1
     return ibin
 
 
