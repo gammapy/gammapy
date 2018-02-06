@@ -265,7 +265,6 @@ def pix_to_coord(edges, pix, interp='lin'):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
-
     if interp == 'log':
         fn0 = np.log
         fn1 = np.exp

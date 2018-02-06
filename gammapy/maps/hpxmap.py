@@ -23,7 +23,7 @@ class HpxMap(Map):
         Data array.
     """
 
-    def __init__(self, geom, data):
+    def __init__(self, geom, data, meta=None):
         super(HpxMap, self).__init__(geom, data)
         self._wcs2d = None
         self._hpx2wcs = None
@@ -79,6 +79,10 @@ class HpxMap(Map):
             return HpxSparseMap(hpx, dtype=dtype)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
@@ -121,6 +125,9 @@ class HpxMap(Map):
 
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
+
+        header=hdulist[0].header
+        header.update(self.meta)
         return fits.HDUList(hdulist)
 
     @abc.abstractmethod

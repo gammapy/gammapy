@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
+from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
@@ -29,11 +30,17 @@ class Map(object):
         Geometry
     data : `~numpy.ndarray`
         Data array
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data):
+    def __init__(self, geom, data, meta=None):
         self._geom = geom
         self._data = data
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
 
     @property
     def data(self):
@@ -203,6 +210,8 @@ class Map(object):
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
+        header=hdulist[0].header
+        header.update(self.meta)
         overwrite = kwargs.get('overwrite', True)
         hdulist.writeto(filename, overwrite=overwrite)
 

@@ -25,7 +25,7 @@ class WcsMap(Map):
     @classmethod
     def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf'):
+               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -87,6 +87,10 @@ class WcsMap(Map):
             raise NotImplementedError
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
@@ -149,6 +153,8 @@ class WcsMap(Map):
         else:
             hdulist = [fits.PrimaryHDU(), hdu]
 
+        header=hdulist[0].header
+        header.update(self.meta)
         if self.geom.axes:
             hdulist += [bands_hdu]
 
