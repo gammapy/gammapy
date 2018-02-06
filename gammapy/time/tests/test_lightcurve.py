@@ -176,6 +176,8 @@ def test_lightcurve_estimator():
     )
     table = lc.table
 
+    assert type(lc.table['time_min'][0]) == type(intervals[0][0].value)
+
     assert_quantity_allclose(len(table), 2)
 
     # TODO:
