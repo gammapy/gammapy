@@ -935,20 +935,8 @@ Link to a notebook in gammapy-extra from the docs
 Jupyter notebooks stored in ``gammpy-extra`` are copied to the ``notebooks`` folder
 during the process of Sphinx building documentation. They are converted to HTML files
 using `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides
-a source parser for .ipynb files.
-
-From docstrings and high-level docs in Gammapy you can link to these *fixed-text*
-formatted versions of the notebooks providing its filename with .html file extension
-and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs`` folder in the process of documentation building.
-
-Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
-
-Sphinx directive to generate that link::
-
-    `First steps with Gammapy <../notebooks/first_steps.html>`__
-
-If you want to link to notebooks rendered on the external
-**NBViewer platform** you can use the ``gp-extra-notebook``
+a source parser for .ipynb files. From docstrings and high-level docs in Gammapy you
+can link to these *fixed-text* formatted versions using the ``gp-extra-notebook``
 Sphinx role providing **only the filename**.
 
 Example: :gp-extra-notebook:`image_analysis`
@@ -958,6 +946,15 @@ Sphinx directive to generate that link::
       :gp-extra-notebook:`image_analysis`
 
 More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
+
+Alternatively you can also link to the notebooks providing its filename with .html file extension and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs`` folder in the process of documentation building.
+
+Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
+
+Sphinx directive to generate that link::
+
+    `First steps with Gammapy <../notebooks/first_steps.html>`__
+
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------

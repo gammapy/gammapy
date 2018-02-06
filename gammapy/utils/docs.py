@@ -65,13 +65,13 @@ class ExtraImage(Image):
 
 def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook on gammapy-extra"""
-    if HAS_GP_EXTRA:
-        available_notebooks = read_yaml('$GAMMAPY_EXTRA/notebooks/notebooks.yaml')
-        exists = notebook in [_['name'] for _ in available_notebooks]
-    else:
-        exists = True
 
-    if not exists:
+    # check if file exists in local notebooks folder
+    nbfolder = Path('notebooks')
+    nbfilename = notebook + '.ipynb'
+    nbfile = nbfolder / nbfilename
+
+    if not nbfile.is_file():
         msg = inliner.reporter.error(
             'Unknown notebook {}'.format(notebook),
             line=lineno,
@@ -79,15 +79,20 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
     else:
+        refuri = inliner.document.settings._source
         app = inliner.document.settings.env.app
-        node = make_link_node(rawtext, app, notebook, options)
+        node = make_link_node(rawtext, app, refuri, notebook, options)
         return [node], []
 
 
-def make_link_node(rawtext, app, notebook, options):
+def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
-    base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
-    full_name = notebook + '.ipynb'
+    # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
+
+    relpath = refuri.split('gammapy/docs/')[1]
+    foldersplit = relpath.split('/')
+    base = '../' * (len(foldersplit) - 1) + 'notebooks/'
+    full_name = notebook + '.html'
     ref = base + full_name
     roles.set_classes(options)
     node = nodes.reference(rawtext, full_name, refuri=ref, **options)
