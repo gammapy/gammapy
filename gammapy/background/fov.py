@@ -12,7 +12,7 @@ __all__ = [
 
 
 def fill_acceptance_image(header, center, offset, acceptance,
-                          offset_max=Angle(2.5, "deg"), interp_kwargs=None):
+                          offset_max=Angle(2.5, "deg"), offset_min=Angle(0.0, "deg"), interp_kwargs=None):
     """Generate a 2D image of a radial acceptance curve.
 
     The radial acceptance curve is given as an array of values
@@ -56,6 +56,7 @@ def fill_acceptance_image(header, center, offset, acceptance,
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
     image.data[pix_off >= offset_max] = 0
+    image.data[pix_off <= offset_min] = 0
 
     # TODO: return SkyImage here and adapt callers.
     return image.to_image_hdu()
