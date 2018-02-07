@@ -253,11 +253,13 @@ class HpxNDMap(HpxMap):
         map_out.coadd(self)
         return map_out
 
-    def upsample(self, factor):
-        raise NotImplementedError
+    def upsample(self, factor, preserve_counts=True):
+        nside = self.geom.nside * factor
+        return self.to_ud_graded(nside, preserve_counts=preserve_counts)
 
-    def downsample(self, factor):
-        raise NotImplementedError
+    def downsample(self, factor, preserve_counts=True):
+        nside = self.geom.nside // factor
+        return self.to_ud_graded(nside, preserve_counts=preserve_counts)
 
     def interp_by_coords(self, coords, interp=None):
         if interp == 'linear':
@@ -420,22 +422,24 @@ class HpxNDMap(HpxMap):
         # FIXME: For partial sky maps we should ensure that a higher
         # order map fully encompasses the lower order map
 
-        # FIXME: For higher order maps we may want the option to split
-        # the pixel amplitude among all subpixels
-
         import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.ud_graded_hpx(order)
         map_out = self.__class__(new_hpx)
 
-        idx = list(self.geom.get_idx())
-        coords = self.geom.get_coords()
-        vals = self.get_by_idx(idx)
-        msk = vals > 0
-        coords = [t[msk] for t in coords]
-        vals = vals[msk]
-
-        map_out.fill_by_coords(coords, vals)
+        if np.all(order <= self.geom.order):
+            # Downsample
+            idx = self.geom.get_idx(flat=True)
+            coords = self.geom.pix_to_coord(idx)
+            vals = self.get_by_idx(idx)
+            map_out.fill_by_coords(coords, vals)
+        else:
+            # Upsample
+            idx = new_hpx.get_idx(flat=True)
+            coords = new_hpx.pix_to_coord(idx)
+            vals = self.get_by_coords(coords)
+            m = np.isfinite(vals)
+            map_out.fill_by_coords([c[m] for c in coords], vals[m])
 
         if not preserve_counts:
             fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2

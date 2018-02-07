@@ -199,6 +199,22 @@ def test_hpxmap_crop(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_partialsky_geoms)
+def test_hpxmap_upsample(nside, nested, coordsys, region, axes):
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    m.upsample(2)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_partialsky_geoms)
+def test_hpxmap_crop(nside, nested, coordsys, region, axes):
+    m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
+                         coordsys=coordsys, region=region, axes=axes))
+    m.downsample(2)
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
