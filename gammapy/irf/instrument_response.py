@@ -25,6 +25,7 @@ class InstrumentResponse(object):
     Examples
     -------
     Read and evaluate the effective area from a FITS file.
+    >>> from gammapy.irf import InstrumentResponse
     >>> irf = InstrumentResponse.from_fits(path, extension='EFFECTIVE AREA')
     >>> point = {'THETA': 3.5*u.deg, 'ENERG': 1*u.TeV}
     >>> interpolated_result = irf.evaluate(point)
