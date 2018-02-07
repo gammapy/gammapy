@@ -315,8 +315,8 @@ class LightCurveEstimator(object):
     @staticmethod
     def _make_lc_from_row_data(rows):
         table = Table()
-        table['time_min'] = Time([_['time_min'].value for _ in rows], format='mjd')
-        table['time_max'] = Time([_['time_max'].value for _ in rows], format='mjd')
+        table['time_min'] = [_['time_min'].value for _ in rows]
+        table['time_max'] = [_['time_max'].value for _ in rows]
 
         table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
         table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
