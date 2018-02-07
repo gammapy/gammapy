@@ -7,3 +7,4 @@ from .spectrum_pipe import *
 from .cta_irf import *
 from .cta_utils import *
 from .cta_sensitivity import *
+from .image_pipe import *

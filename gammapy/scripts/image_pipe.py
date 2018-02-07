@@ -91,7 +91,7 @@ class SingleObsImageMaker(object):
         bkg_image = SkyImage.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = self.obs_center.galactic
-        bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
+        bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1], self.offset_band[0])
         bkg_image.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_image.solid_angle() * self.livetime
         bkg_image.data = bkg_image.data.decompose()
         bkg_image.data = bkg_image.data.value
