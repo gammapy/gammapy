@@ -195,7 +195,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
     rmtree('notebooks', ignore_errors=True)
 
     # copy and build notebooks
-    if os.environ.get('GAMMAPY_EXTRA'):
+    if (os.environ.get('GAMMAPY_EXTRA') and eval(setup_cfg['build_notebooks'])):
         gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
         if os.path.isdir(gammapy_extra_notebooks_folder):
             ignorefiles = lambda d, files: [
