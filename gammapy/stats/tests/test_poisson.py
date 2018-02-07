@@ -49,9 +49,12 @@ def test_docstring_examples():
     assert_allclose(actual, 5.8600864348078519)
 
 
-@pytest.mark.xfail
 def test_sensitivity():
     """Test if the sensitivity function is the inverse of the significance function."""
+    # It tests looking for an excess when the significances is positive, close to 0 (>=-1e-5) and negative
+    #    Positive -> Excess that gives that significance
+    #    Close to 0 -> Excess close to 0
+    #    Negative -> Excess returned is -1000.0, which is non sense value for an Excess when looking for sensitivity
     n_ons = np.arange(0.1, 10, 0.3)
     n_offs = np.arange(0.1, 10, 0.3)
     alphas = np.array([1e-3, 1e-2, 0.1, 1, 10])
@@ -62,4 +65,12 @@ def test_sensitivity():
                     significance = significance_on_off(n_on, n_off, alpha, method=method)
                     excess = sensitivity_on_off(n_off, alpha, significance, method=method)
                     n_on2 = excess + alpha * n_off
-                    assert_allclose(n_on, n_on2, decimal=3)
+                    if n_on - alpha * n_off > -1e-5:
+                        assert_allclose(n_on, n_on2, rtol=1e-3)
+                    else:
+                        assert_allclose(n_on2, np.nan)
+
+
+def test_sensitivity_arrays():
+    excess = sensitivity_on_off(n_off=[10, 20], alpha=0.1, significance=5)
+    assert_allclose(excess, [9.82966, np.nan], atol=1e-3)

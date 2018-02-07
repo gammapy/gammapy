@@ -249,7 +249,6 @@ def _significance_simple(n_on, mu_bkg):
 
 
 def _significance_lima(n_on, mu_bkg):
-    # import IPython; IPython.embed()
     term_a = sign(n_on - mu_bkg) * sqrt(2)
     term_b = sqrt(n_on * log(n_on / mu_bkg) - n_on + mu_bkg)
     return term_a * term_b
@@ -486,6 +485,7 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
     -------
     sensitivity : `numpy.ndarray`
         Sensitivity according to the method chosen.
+        It returns N_On = -1000.0 in case a negative (<-1e-5, adhoc value) sensitivity is requested.
 
     See Also
     --------
@@ -493,19 +493,35 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
 
     Examples
     --------
-    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
-    TODO
-    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
-    2.5048971
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
+    12.038
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
+    27.034
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=0, method='lima')
+    2.307301461e-09
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=0, method='simple')
+    0.0
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=-10, method='lima')
+    nan
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=-10, method='simple')
+    nan
     """
+    if significance < -1e-5:
+        if quantity == 'n_on':
+            return np.nan
+        elif quantity == 'excess':
+            return np.nan - background(n_off, alpha)
+        else:
+            raise ValueError('Invalid quantity: {}'.format(quantity))
+
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
     if method == 'lima':
-        n_on_sensitivity = _sensitivity_lima(n_off, alpha, significance)
+        n_on_sensitivity = _sensitivity_lima_on_off(n_off, alpha, significance)
     elif method == 'simple':
-        n_on_sensitivity = _sensitivity_simple(n_off, alpha, significance)
+        n_on_sensitivity = _sensitivity_simple_on_off(n_off, alpha, significance)
     else:
         raise ValueError('Invalid method: {}'.format(method))
 
@@ -520,7 +536,25 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
 def _sensitivity_simple_on_off(n_off, alpha, significance):
     """Implements an analytical formula that can be easily obtained
     by solving the simple significance formula for n_on.
-    """
+
+    Parameters
+    ----------
+    n_off : array_like
+        Observed number of counts in the off region
+    alpha : array_like
+        On / off region exposure ratio for background events
+    significance : array_like
+        Desired significance level
+
+    Returns
+    -------
+    n_on : `numpy.ndarray`
+        Number of On events needed to get the requested Sensitivity for simple expression.
+
+    See Also
+    --------
+    _sensitivity_lima_on_off
+   """
     significance2 = significance ** 2
     determinant = significance2 + 4 * n_off * alpha * (1 + alpha)
     temp = significance2 + 2 * n_off * alpha
@@ -530,30 +564,46 @@ def _sensitivity_simple_on_off(n_off, alpha, significance):
 
 def _sensitivity_lima_on_off(n_off, alpha, significance):
     """Implements an iterative root finding method to solve the
-    significance formula for n_on.
+    significance formula for n_on looking to the square of significance
 
-    TODO: in weird cases (e.g. on=0.1, off=0.1, alpha=0.001)
-    fsolve does not find a solution.
-    values < guess are often not found using this cost function.
-    Find a way to make this function more robust and add plenty of tests.
-    Maybe a better starting point estimate can help?
+    Parameters
+    ----------
+    n_off : array_like
+        Observed number of counts in the off region
+    alpha : array_like
+        On / off region exposure ratio for background events
+    significance : array_like
+        Desired significance level
+
+    Returns
+    -------
+    n_on : `numpy.ndarray`
+        Number of On events needed to get the requested Sensitivity for Lima formule.
+
+    See Also
+    --------
+    _sensitivity_simple_on_off, _significance_lima_on_off
+
+    TODO: make it working with arrays, only tested and operative with single numbers
     """
     from scipy.optimize import fsolve
 
-    def f(n_on, args):
-        n_off, alpha, significance = args
-        if n_on >= 0:
-            return _significance_lima_on_off(n_on, n_off, alpha) - significance
+    def f(n_on, n_off_tmp, alpha_tmp, significance_tmp):
+        n_off = n_off_tmp
+        alpha = alpha_tmp
+        significance = significance_tmp
+        significance2 = significance * significance
+        if n_on - alpha * n_off >= 0 and n_on >= 0:
+            return _significance_lima_on_off(n_on, n_off, alpha) ** 2 - significance2
         else:
-            return 1e100
+            return 1000
 
     # We need to loop over the array manually and call `fsolve` for
     # each item separately.
     n_on = np.empty_like(n_off)
     guess = _sensitivity_simple_on_off(n_off, alpha, significance) + background(n_off, alpha)
     data = enumerate(zip(guess.flat, n_off.flat, alpha.flat, significance.flat))
-    for ii, guess_, n_off_, alpha_, significance_ in data:
-        # guess = 1e-3
-        n_on.flat[ii] = fsolve(f, guess_, args=(n_off_, alpha_, significance_))
+    for ii, (guess_, n_off_, alpha_, significance_) in data:
+        n_on.flat[ii] = fsolve(f, guess_, args=(n_off_, alpha_, significance_), epsfcn=0.01)
 
     return n_on
