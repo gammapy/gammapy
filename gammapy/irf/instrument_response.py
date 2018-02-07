@@ -118,6 +118,11 @@ class InstrumentResponse(object):
 
         data = table[table.colnames[-1]].quantity[0].T
 
+        # we need to check this unit specifically because ctools writes weird units into fits tables and astropy goes haywire
+        if data.unit == '1/s/MeV/sr':
+            import astropy.units as u
+            data = data.value * u.Unit('1/(s MeV sr)')
+
         if not names:
             names = [n.replace('_LO', '') for n in low_bounds]
 
