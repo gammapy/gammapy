@@ -96,7 +96,6 @@ class Map(object):
         from .wcsmap import WcsMap
 
         map_type = kwargs.setdefault('map_type', 'wcs')
-
         if 'wcs' in map_type.lower():
             return WcsMap.create(**kwargs)
         elif 'hpx' in map_type.lower():
@@ -210,8 +209,6 @@ class Map(object):
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
-        header=hdulist[0].header
-        header.update(self.meta)
         overwrite = kwargs.get('overwrite', True)
         hdulist.writeto(filename, overwrite=overwrite)
 

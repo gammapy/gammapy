@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
+from collections import OrderedDict
 from astropy.io import fits
 from .base import Map
 from .hpx import HpxGeom, HpxConv
@@ -21,17 +22,19 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
     def __init__(self, geom, data, meta=None):
-        super(HpxMap, self).__init__(geom, data)
+        super(HpxMap, self).__init__(geom, data, meta)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None, conv='gadf'):
+               region=None, axes=None, conv='gadf', meta=None):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -70,19 +73,15 @@ class HpxMap(Map):
                              nest=nest, coordsys=coordsys, region=region,
                              conv=conv, axes=axes, skydir=skydir, width=width)
         if cls.__name__ == 'HpxNDMap':
-            return HpxNDMap(hpx, dtype=dtype)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta)
         elif cls.__name__ == 'HpxSparseMap':
-            return HpxSparseMap(hpx, dtype=dtype)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
         elif map_type == 'hpx':
-            return HpxNDMap(hpx, dtype=dtype)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta)
         elif map_type == 'hpx-sparse':
-            return HpxSparseMap(hpx, dtype=dtype)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
-        if meta is None:
-            self.meta = OrderedDict()
-        else:
-            self.meta = OrderedDict(meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
@@ -126,7 +125,7 @@ class HpxMap(Map):
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
 
-        header=hdulist[0].header
+        header = hdulist[0].header
         header.update(self.meta)
         return fits.HDUList(hdulist)
 
@@ -201,7 +200,7 @@ class HpxMap(Map):
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxSparseMap)
-                            else False)
+        else False)
         header = self.geom.make_header()
 
         if self.geom.axes:

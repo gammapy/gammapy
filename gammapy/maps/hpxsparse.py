@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
+from collections import OrderedDict
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
@@ -24,16 +25,23 @@ class HpxSparseMap(HpxMap):
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32', meta=None):
         if data is None:
             shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
             data = SparseArray(shape[::-1], dtype=dtype)
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        super(HpxSparseMap, self).__init__(geom, data)
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
+
+        super(HpxSparseMap, self).__init__(geom, data, self.meta)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -52,7 +60,7 @@ class HpxSparseMap(HpxMap):
 
         # TODO: Should we support extracting slices?
 
-        map_out = cls(hpx)
+        map_out = cls(hpx, meta=hdu.header)
 
         colnames = hdu.columns.names
         cnames = []

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
+from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
@@ -28,9 +29,11 @@ class HpxNDMap(HpxMap):
     data : `~numpy.ndarray`
         HEALPIX data array.
         If none then an empty array will be allocated.
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32', meta=None):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
         if data is None:
@@ -45,8 +48,12 @@ class HpxNDMap(HpxMap):
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
 
-        super(HpxNDMap, self).__init__(geom, data)
+        super(HpxNDMap, self).__init__(geom, data, self.meta)
         self._wcs2d = None
         self._hpx2wcs = None
 
@@ -66,8 +73,7 @@ class HpxNDMap(HpxMap):
         shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
-
-        map_out = cls(hpx)
+        map_out = cls(hpx, meta=hdu.header)
 
         colnames = hdu.columns.names
         cnames = []

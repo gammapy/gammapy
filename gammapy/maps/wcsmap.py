@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
+from collections import OrderedDict
 from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu
@@ -67,6 +68,8 @@ class WcsMap(Map):
         conv : str, optional
             FITS format convention ('fgst-ccube', 'fgst-template',
             'gadf').  Default is 'gadf'.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
 
         Returns
         -------
@@ -82,15 +85,11 @@ class WcsMap(Map):
                               conv=conv)
 
         if map_type == 'wcs':
-            return WcsNDMap(geom, dtype=dtype)
+            return WcsNDMap(geom, dtype=dtype, meta=meta)
         elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
-        if meta is None:
-            self.meta = OrderedDict()
-        else:
-            self.meta = OrderedDict(meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
@@ -153,10 +152,13 @@ class WcsMap(Map):
         else:
             hdulist = [fits.PrimaryHDU(), hdu]
 
-        header=hdulist[0].header
+        header = hdulist[0].header
         header.update(self.meta)
         if self.geom.axes:
             hdulist += [bands_hdu]
+
+        header = hdulist[0].header
+        header.update(self.meta)
 
         return fits.HDUList(hdulist)
 
