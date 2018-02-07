@@ -287,8 +287,8 @@ class Map(object):
         pass
 
     def coadd(self, map_in):
-        """Fill this map with the contents of another map.  This method can be
-        used to sum maps containing integral quantities (e.g. counts)
+        """Add the contents of ``map_in`` to this map.  This method can be
+        used to combine maps containing integral quantities (e.g. counts)
         or differential quantities if the maps have the same binning.
 
         Parameters
