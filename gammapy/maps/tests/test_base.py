@@ -28,4 +28,4 @@ mapbase_args = [
                          mapbase_args)
 def test_mapbase_create(binsz, width, map_type, skydir, axes):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                       skydir=skydir, axes=axes)
+                   skydir=skydir, axes=axes)

@@ -238,10 +238,16 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def pad(self, pad_width):
-        raise NotImplementedError
+        geom = self.geom.pad(pad_width)
+        map_out = self.__class__(geom)
+        map_out.coadd(self)
+        return map_out
 
     def crop(self, crop_width):
-        raise NotImplementedError
+        geom = self.geom.crop(crop_width)
+        map_out = self.__class__(geom)
+        map_out.coadd(self)
+        return map_out
 
     def upsample(self, factor):
         raise NotImplementedError
@@ -391,23 +397,19 @@ class HpxNDMap(HpxMap):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
         map_out = self.__class__(hpx_out)
-        idx = list(self.geom.get_idx())
+        idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
-        msk = vals > 0
-        idx = [t[msk] for t in idx]
-        vals = vals[msk]
-
         if self.geom.nside.size > 1:
             nside = self.geom.nside[idx[1:]]
         else:
             nside = self.geom.nside
 
         if self.geom.nest:
-            idx_new = tuple([hp.nest2ring(nside, idx[0])] + idx[1:])
+            idx_new = tuple([hp.nest2ring(nside, idx[0])]) + idx[1:]
         else:
-            idx_new = tuple([hp.ring2nest(nside, idx[0])] + idx[1:])
+            idx_new = tuple([hp.ring2nest(nside, idx[0])]) + idx[1:]
 
-        map_out.set_by_pix(idx_new, vals)
+        map_out.set_by_idx(idx_new, vals)
         return map_out
 
     def to_ud_graded(self, nside, preserve_counts=False):

@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
+from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
 from .geom import get_shape, make_axes_cols, make_axes
 from .geom import find_and_read_bands
@@ -277,7 +278,7 @@ class WcsGeom(MapGeom):
         # FIXME: Need to propagate refpix
 
         header = make_header(npix[0].flat[0], npix[1].flat[0],
-                             binsz[0].flat[0], xref, yref,
+                             binsz[0].flat[0], float(xref), float(yref),
                              proj, coordsys, refpix, refpix)
         wcs = WCS(header)
         return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
@@ -364,8 +365,12 @@ class WcsGeom(MapGeom):
 
     def make_header(self):
         header = self.wcs.to_header()
-        header['WCSSHAPE'] = '({},{})'.format(np.max(self.npix[0]),
-                                              np.max(self.npix[1]))
+        self._fill_header_from_axes(header)
+        shape = '{},{}'.format(np.max(self.npix[0]),
+                               np.max(self.npix[1]))
+        for ax in self.axes:
+            shape += ',{}'.format(ax.nbin)
+        header['WCSSHAPE'] = '({})'.format(shape)
         return header
 
     def distance_to_edge(self, skydir):
@@ -550,6 +555,47 @@ class WcsGeom(MapGeom):
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         axes = copy.deepcopy(self.axes) + axes
         return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes)
+
+    def pad(self, pad_width):
+        if np.isscalar(pad_width):
+            pad_width = (pad_width, pad_width)
+        npix = (self.npix[0] + 2 * pad_width[0],
+                self.npix[1] + 2 * pad_width[1])
+        wcs = self._wcs.deepcopy()
+        wcs.wcs.crpix += np.array(pad_width)
+        return self.__class__(wcs, npix, cdelt=copy.deepcopy(self._cdelt),
+                              axes=copy.deepcopy(self.axes))
+
+    def crop(self, crop_width):
+        if np.isscalar(crop_width):
+            crop_width = (crop_width, crop_width)
+        npix = (self.npix[0] - 2 * crop_width[0],
+                self.npix[1] - 2 * crop_width[1])
+        wcs = self._wcs.deepcopy()
+        wcs.wcs.crpix -= np.array(crop_width)
+        return self.__class__(wcs, npix, cdelt=copy.deepcopy(self._cdelt),
+                              axes=copy.deepcopy(self.axes))
+
+    def downsample(self, factor):
+
+        if (not np.all(np.mod(self.npix[0], factor) == 0) or
+                not np.all(np.mod(self.npix[1], factor) == 0)):
+            raise ValueError('Data shape is not divisible by {} in all axes.'
+                             ' Pad image prior to downsampling to correct'
+                             ' shape.'.format(factor))
+
+        npix = (self.npix[0] / factor, self.npix[1] / factor)
+        cdelt = (self._cdelt[0] * factor, self._cdelt[1] * factor)
+        wcs = get_resampled_wcs(self.wcs, factor, True)
+        return self.__class__(wcs, npix, cdelt=cdelt,
+                              axes=copy.deepcopy(self.axes))
+
+    def upsample(self, factor):
+        npix = (self.npix[0] * factor, self.npix[1] * factor)
+        cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
+        wcs = get_resampled_wcs(self.wcs, factor, False)
+        return self.__class__(wcs, npix, cdelt=cdelt,
+                              axes=copy.deepcopy(self.axes))
 
     def to_slice(self, slices):
         raise NotImplementedError
