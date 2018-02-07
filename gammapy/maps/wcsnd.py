@@ -359,7 +359,7 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def pad(self, pad_width, mode='edge', cval=0):
+    def pad(self, pad_width, mode='edge', cval=0, order=1):
 
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
@@ -369,7 +369,7 @@ class WcsNDMap(WcsMap):
         if self.geom.is_regular and mode != 'interp':
             return self._pad_np(geom, pad_width, mode, cval)
         else:
-            return self._pad_coadd(geom, pad_width, mode, cval)
+            return self._pad_coadd(geom, pad_width, mode, cval, order)
 
         return map_out
 
@@ -387,7 +387,7 @@ class WcsNDMap(WcsMap):
         map_out = self.__class__(geom, data)
         return map_out
 
-    def _pad_coadd(self, geom, pad_width, mode, cval):
+    def _pad_coadd(self, geom, pad_width, mode, cval, order):
         """Pad a map manually by coadding the original map with the new
         map."""
         idx_in = self.geom.get_idx(flat=True)
@@ -400,8 +400,15 @@ class WcsNDMap(WcsMap):
             pad_msk[idx_out] = True
             pad_msk[idx_in] = False
             map_out.data[pad_msk] = cval
+        elif mode in ['edge', 'interp']:
+            coords = geom.pix_to_coord(idx_out[::-1])
+            m = self.geom.contains(coords)
+            coords = tuple([c[~m] for c in coords])
+            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
+                                         else order)
+            map_out.set_by_coords(coords, vals)
         else:
-            raise NotImplementedError
+            raise ValueError('Unrecognized pad mode: {}'.format(mode))
 
         return map_out
 
