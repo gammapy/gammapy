@@ -60,7 +60,7 @@ class HpxSparseMap(HpxMap):
 
         # TODO: Should we support extracting slices?
 
-        map_out = cls(hpx, meta=hdu.header)
+        map_out = cls(hpx)
 
         colnames = hdu.columns.names
         cnames = []

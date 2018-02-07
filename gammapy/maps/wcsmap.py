@@ -147,18 +147,16 @@ class WcsMap(Map):
         hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
                             sparse=sparse, conv=conv)
 
+        header = hdu.header
+        header.update(self.meta)
         if extname == 'PRIMARY':
             hdulist = [hdu]
         else:
             hdulist = [fits.PrimaryHDU(), hdu]
 
-        header = hdulist[0].header
-        header.update(self.meta)
         if self.geom.axes:
             hdulist += [bands_hdu]
 
-        header = hdulist[0].header
-        header.update(self.meta)
 
         return fits.HDUList(hdulist)
 

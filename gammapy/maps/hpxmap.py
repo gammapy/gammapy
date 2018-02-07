@@ -120,13 +120,15 @@ class HpxMap(Map):
         extname = kwargs.get('extname', 'SKYMAP')
         # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')
-        hdulist = [fits.PrimaryHDU(), self.make_hdu(**kwargs)]
+        hdu = self.make_hdu(**kwargs)
+        header = hdu.header
+        header.update(self.meta)
+        hdulist = [fits.PrimaryHDU(), hdu]
 
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
 
-        header = hdulist[0].header
-        header.update(self.meta)
+
         return fits.HDUList(hdulist)
 
     @abc.abstractmethod

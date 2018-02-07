@@ -73,7 +73,7 @@ class HpxNDMap(HpxMap):
         shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
-        map_out = cls(hpx, meta=hdu.header)
+        map_out = cls(hpx)
 
         colnames = hdu.columns.names
         cnames = []

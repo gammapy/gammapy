@@ -60,18 +60,17 @@ def test_mapbase_create(binsz, width, map_type, skydir, axes):
 
 def test_write():
     meta = OrderedDict()
-    meta["name"] = "counts"
+    meta["user"] = "test"
     m_wcs = make_test_map(map_type="wcs", meta=meta)
     m_hpx = make_test_map(map_type="hpx", meta=meta)
     m_hpx_sparse = make_test_map(map_type="hpx-sparse", meta=meta)
-    hdulist_wcs = m_wcs.to_hdulist()
-    hdulist_hpx = m_hpx.to_hdulist()
-    hdulist_hpx_sparse = m_hpx_sparse.to_hdulist()
-    header_wcs = hdulist_wcs[0].header
-    header_hpx = hdulist_hpx[0].header
-    header_hpx_sparse = hdulist_hpx_sparse[0].header
-    assert "name" in header_wcs
-    assert "name" in header_hpx
-    assert "name" in header_hpx_sparse
-    
+    hdulist_wcs = m_wcs.to_hdulist(extname='COUNTS')
+    hdulist_hpx = m_hpx.to_hdulist(extname='COUNTS')
+    hdulist_hpx_sparse = m_hpx_sparse.to_hdulist(extname='COUNTS')
+    header_wcs = hdulist_wcs['COUNTS'].header
+    header_hpx = hdulist_hpx['COUNTS'].header
+    header_hpx_sparse = hdulist_hpx_sparse['COUNTS'].header
+    assert "user" in header_wcs
+    assert "user" in header_hpx
+    assert "user" in header_hpx_sparse
 
