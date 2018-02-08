@@ -234,7 +234,10 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         coordinates = psf_image.coordinates()
         offset = coordinates.separation(psf_image.center)
         psf_image.data = psf_mean.evaluate(offset)
+
         psf_image.data /= psf_image.data.sum()
+        psf_image.unit = psf_image.data.unit
+        psf_image.data = psf_image.data.value
         return psf_image
 
     def _counts(self, observation):
