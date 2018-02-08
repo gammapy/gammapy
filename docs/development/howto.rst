@@ -971,3 +971,61 @@ instead of the usual Sphinx ``image`` directive like this:
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+Coordinate and axis names
+-------------------------
+
+In Gammapy, the following coordinate and axis names should be used
+(for IRFs, maps, also for variable names in analysis code):
+
+* ``time`` - time
+* ``energy`` - energy
+* ``ra``, ``dec`` - sky coordinates, ``icrs`` frame
+* ``glon``, ``glat`` - sky coordinates, ``galactic`` frame
+* ``az``, ``alt`` - sky coordinates, ``altaz`` frame
+
+For angular sky separation angles:
+
+* ``source_offset`` - offset wrt. source position
+* ``fov_offset`` - offset wrt. field of view (FOV) center
+
+For the general case of FOV coordinates that depend on angular orientation
+of the FOV coordinate frame:
+
+* ``fov_{frame}_lon``, ``fov_{frame}_lat`` - field of view coordinates
+* ``fov_offset``, ``fov_{frame}_phi`` - field of view polar coordinates
+
+where ``{frame}`` can be one of ``icrs``, ``galactic`` or ``altaz``,
+depending on with which frame the FOV coordinate frame is aligned.
+
+Notes:
+
+* In cases where it's unclear if the value is for true or reconstructed event
+  parameters, a postfix ``_true`` or ``_reco`` should be added.
+* In Gammapy, this mostly occurs for ``energy_true`` and ``energy_reco``,
+  e.g. the background IRF has an axis ``energy_reco``, but effective area
+  usually ``energy_true``, and energy dispersion has both axes.
+* We are not pedantic about adding ``_true`` and ``_reco`` everywhere.
+  Note that this would quickly become annoying (e.g. source models use true
+  parameters, and it's not clear why one should write ``ra_true``).
+  E.g. the property on the event list ``energy`` matches the ``ENERGY``
+  column from the event list table, which is for real data always reco energy.
+* Currently, no sky frames centered on the source, or non-radially symmetric
+  PSFs are in use, and thus the case of "source frames" that have to be with
+  a well-defined alignment, like we have for the "FOV frames" above,
+  doesn't occur and thus doesn't need to be defined yet (but it would be natural
+  to use the same naming convention as for FOV if it eventually does occur).
+* These definitions are mostly in agreement with the spec:
+    * http://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html
+    * http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/irf_axes/index.html
+    * http://gamma-astro-data-formats.readthedocs.io/en/latest/skymaps/index.html
+* We do not achieve 100% consistency everywhere in the spec and Gammapy code.
+  Achieving this seems unrealistic, because legacy formats have to be supported,
+  we are not starting from scratch and have time to make all formats consistent.
+* Our strategy is to do renames on I/O where needed, to and from the internal
+  Gammapy names defined here, to the names used in the formats.
+  Of course, where formats are not set in stone yet, we advocate and encourage
+  the use of the names chosen here.
+* Finally, we realise that eventually probably CTA will define this, and Gammapy
+  is only a prototype. So if CTA chooses something else, probably we will follow
+  suite and do one more backward-incompatible change at some point to align with CTA.
