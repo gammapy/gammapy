@@ -859,6 +859,7 @@ class SpectrumObservationStacker(object):
         self.stacked_bkscal_on = bkscal_on
         self.stacked_bkscal_off = stacked_bkscal_off
 
+    
 
         
     def setup_counts_vectors(self):
