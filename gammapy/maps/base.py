@@ -335,7 +335,7 @@ class Map(object):
             return self._reproject_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
-    def pad(self, pad_width, mode='edge', cval=0, order=1):
+    def pad(self, pad_width, mode='constant', cval=0, order=1):
         """Pad the spatial dimension of the map by extending the edge of the
         map by the given number of pixels.
 

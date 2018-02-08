@@ -359,7 +359,7 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def pad(self, pad_width, mode='edge', cval=0, order=1):
+    def pad(self, pad_width, mode='constant', cval=0, order=1):
 
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
