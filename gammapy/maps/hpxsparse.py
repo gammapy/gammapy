@@ -36,12 +36,7 @@ class HpxSparseMap(HpxMap):
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        if meta is None:
-            self.meta = OrderedDict()
-        else:
-            self.meta = OrderedDict(meta)
-
-        super(HpxSparseMap, self).__init__(geom, data, self.meta)
+        super(HpxSparseMap, self).__init__(geom, data, meta)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):

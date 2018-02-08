@@ -48,12 +48,8 @@ class HpxNDMap(HpxMap):
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
-        if meta is None:
-            self.meta = OrderedDict()
-        else:
-            self.meta = OrderedDict(meta)
 
-        super(HpxNDMap, self).__init__(geom, data, self.meta)
+        super(HpxNDMap, self).__init__(geom, data, meta)
         self._wcs2d = None
         self._hpx2wcs = None
 

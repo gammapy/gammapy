@@ -46,12 +46,8 @@ class WcsNDMap(WcsMap):
         elif data.shape != shape[::-1]:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
-        if meta is None:
-            self.meta = OrderedDict()
-        else:
-            self.meta = OrderedDict(meta)
 
-        super(WcsNDMap, self).__init__(geom, data, self.meta)
+        super(WcsNDMap, self).__init__(geom, data, meta)
 
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid
