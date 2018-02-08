@@ -58,6 +58,9 @@ class NDDataArray(object):
         ss += array_stats_str(self.data, 'Data')
         return ss
 
+    def __repr__(self):
+        return str(self)
+
     @property
     def axes(self):
         """Array holding the axes in correct order"""
@@ -364,7 +367,7 @@ class BinnedDataAxis(DataAxis):
         Upper bin edges
     name : str, optional
         Axis name, default: 'Default'
-    interpolation_mode : str {'linear', 'log'}
+    interpolation_mode : {'linear', 'log'}
         Interpolation behaviour, default: 'linear'
     """
 

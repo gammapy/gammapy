@@ -12,5 +12,4 @@ from .psf_analytical import *
 from .psf_king import *
 from .energy_dispersion import *
 from .irf_stack import *
-
-from .instrument_response import InstrumentResponse
+from .instrument_response import *
