@@ -7,6 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.wcs import WCS
 from ..utils.energy import Energy
 from .core import SkyImage
 from .lists import SkyImageList
@@ -209,10 +210,26 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             PSF kernel as sky image.
         """
         p = self.parameters
-        psf_image = self._get_empty_skyimage('psf')
-        mean_psf = observations.make_mean_psf(self.reference.center)
+
+        refskyim  = self.reference
+        refskypos = refskyim.center
+        mean_psf = observations.make_mean_psf(refskypos)
+
         erange = u.Quantity((p['emin'], p['emax']))
         psf_mean = mean_psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
+
+        radmax  = psf_mean.containment_radius(0.99)
+        pixdeg  = refskyim.wcs_pixel_scale().mean().deg
+        radnpix = int(radmax.deg / pixdeg + 0.5)
+        psfnpix = 2 * radnpix + 1
+        psfdata = np.empty((psfnpix, psfnpix))
+
+        psfhead = refskyim.wcs.to_header()
+        psfhead['CRPIX1'] = radnpix + 1.0
+        psfhead['CRPIX2'] = radnpix + 1.0
+        psfwcs = WCS(psfhead)
+
+        psf_image = SkyImage('psf', data=psfdata, wcs=psfwcs )
 
         coordinates = psf_image.coordinates()
         offset = coordinates.separation(psf_image.center)
