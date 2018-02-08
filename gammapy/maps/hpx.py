@@ -557,7 +557,7 @@ class HpxGeom(MapGeom):
         idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
         return idx_global[:1] + tuple(idx_local[1:])
 
-    def global_to_local(self, idx_global):
+    def global_to_local(self, idx_global, ravel=False):
         """Compute a global (all-sky) index from a local (partial-sky)
         index.
 
@@ -566,6 +566,9 @@ class HpxGeom(MapGeom):
         idx_global : tuple
             A tuple of pixel indices with global HEALPix pixel
             indices.
+
+        ravel : bool
+            Return a raveled index.
 
         Returns
         -------
@@ -596,7 +599,10 @@ class HpxGeom(MapGeom):
         for i, t in enumerate(idx_local):
             idx_local[i][m] = -1
 
-        return idx_local
+        if not ravel:
+            return idx_local
+        else:
+            return ravel_hpx_index(idx_local, self.npix)
 
     def __getitem__(self, idx_global):
         """This implements the global-to-local index lookup.
@@ -629,25 +635,7 @@ class HpxGeom(MapGeom):
             idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1),
                                            self._maxpix)
 
-        if self.nside.size == 1:
-            idx = np.array(idx_global[0], ndmin=1)
-        else:
-            idx = ravel_hpx_index(idx_global, self._maxpix)
-
-        if self._rmap is not None:
-            retval = np.empty((idx.size), 'i')
-            retval.fill(-1)
-            m = np.in1d(idx.flat, self._ipix)
-            retval[m] = np.searchsorted(self._ipix, idx.flat[m])
-            retval = retval.reshape(idx.shape)
-        else:
-            retval = idx
-
-        if self.nside.size == 1:
-            retval = ravel_hpx_index([retval] + list(idx_global[1:]),
-                                     self.npix)
-
-        return retval
+        return self.global_to_local(idx_global, ravel=True)
 
     def coord_to_pix(self, coords):
         import healpy as hp
