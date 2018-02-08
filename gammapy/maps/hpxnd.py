@@ -277,10 +277,10 @@ class HpxNDMap(HpxMap):
         nside = self.geom.nside // factor
         return self.to_ud_graded(nside, preserve_counts=preserve_counts)
 
-    def interp_by_coords(self, coords, interp=None):
+    def interp_by_coords(self, coords, interp=1):
 
         order = interp_to_order(interp)
-        if interp == 1:
+        if order == 1:
             return self._interp_by_coords(coords, order)
         else:
             raise ValueError('Invalid interpolation order: {}'.format(order))
@@ -303,14 +303,15 @@ class HpxNDMap(HpxMap):
         coords_ctr = list(coords[:2])
         coords_ctr += [ax.pix_to_coord(t)
                        for ax, t in zip(self.geom.axes, idxs)]
-        pix_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
-        pix_ctr = self.geom.global_to_local(pix_ctr)
-
-        if np.any(pix_ctr[0] == -1):
-            raise ValueError('HPX pixel index out of map bounds.')
+        idx_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
+        idx_ctr = self.geom.global_to_local(idx_ctr)
 
         theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
         phi = np.array(np.radians(c.lon), ndmin=1)
+
+        m = ~np.isfinite(theta)
+        theta[m] = 0.0
+        phi[m] = 0.0
 
         if self.geom.nside.size > 1:
             nside = self.geom.nside[idxs]
@@ -319,16 +320,20 @@ class HpxNDMap(HpxMap):
 
         pix, wts = hp.get_interp_weights(nside, theta,
                                          phi, nest=self.geom.nest)
+        wts[:, m] = 0.0
+        pix[:, m] = -1
 
-        if self.geom.nside.size > 1:
+        if not self.geom.is_regular:
             pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
         else:
             pix_local = [self.geom[pix]]
 
+        # If a pixel lies outside of the geometry set its index to the
+        # center pixel
         m = pix_local[0] == -1
-        pix_local[0][m] = (pix_ctr[0] * np.ones(pix.shape, dtype=int))[m]
-
-        return pix_local + list(idxs), wts
+        pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
+        return pix_local, wts
 
     def _interp_by_coords(self, coords, order):
         """Linearly interpolate map values."""
@@ -358,10 +363,12 @@ class HpxNDMap(HpxMap):
                     wt *= (1.0 - (c[2 + j] - ax.center[idx]) / w)
                     pix_i += [idx]
 
-            if self.geom.nside.size > 1:
+            if not self.geom.is_regular:
                 pix, wts = self._get_interp_weights(coords, pix_i)
 
-            val += np.sum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
+            wts[pix[0] == -1] = 0.0
+            wt[~np.isfinite(wt)] = 0.0
+            val += np.nansum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
 
         return val
 

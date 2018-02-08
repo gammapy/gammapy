@@ -119,13 +119,13 @@ def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse)
     assert_allclose(coords[0], m.get_by_coords(coords))
 
 
-@pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
+#@pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords()
+    coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[1])
     assert_allclose(m.get_by_coords(coords),
                     m.get_by_coords(coords, interp='linear'))
