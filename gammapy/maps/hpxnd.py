@@ -5,6 +5,7 @@ import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
+from .utils import interp_to_order
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
 
@@ -237,14 +238,29 @@ class HpxNDMap(HpxMap):
                           zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-            pass
+            raise NotImplementedError
 
         return map_out
 
-    def pad(self, pad_width):
+    def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
         map_out = self.__class__(geom)
         map_out.coadd(self)
+        coords = geom.get_coords(flat=True)
+        m = self.geom.contains(coords)
+        coords = tuple([c[~m] for c in coords])
+
+        if mode == 'constant':
+            map_out.set_by_coords(coords, cval)
+        elif mode in ['edge', 'interp']:
+            # FIXME: These modes don't work at present because
+            # interp_by_coords doesn't support extrapolation
+            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
+                                         else order)
+            map_out.set_by_coords(coords, vals)
+        else:
+            raise ValueError('Unrecognized pad mode: {}'.format(mode))
+
         return map_out
 
     def crop(self, crop_width):
@@ -262,10 +278,12 @@ class HpxNDMap(HpxMap):
         return self.to_ud_graded(nside, preserve_counts=preserve_counts)
 
     def interp_by_coords(self, coords, interp=None):
-        if interp == 'linear':
-            return self._interp_by_coords(coords, interp)
+
+        order = interp_to_order(interp)
+        if interp == 1:
+            return self._interp_by_coords(coords, order)
         else:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
+            raise ValueError('Invalid interpolation order: {}'.format(order))
 
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
@@ -312,7 +330,7 @@ class HpxNDMap(HpxMap):
 
         return pix_local + list(idxs), wts
 
-    def _interp_by_coords(self, coords, interp):
+    def _interp_by_coords(self, coords, order):
         """Linearly interpolate map values."""
         c = MapCoords.create(coords)
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
