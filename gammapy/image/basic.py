@@ -224,10 +224,8 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             rad_max = Angle(rad_max)
 
         psfkern = psf_mean.kernel(refskyim, rad_max)
-        print ('psfkern.sum() =', psfkern.sum())
         psfunit = psfkern.unit
         psfdata = psfkern.value
-        print ('psfdata.sum() =', psfdata.sum())
 
         psfhead = refskyim.wcs.to_header()
         radnpix = int(np.shape(psfdata)[0] / 2)
@@ -236,11 +234,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         psfwcs = WCS(psfhead)
 
         psf_image = SkyImage('psf', data=psfdata, wcs=psfwcs, unit=psfunit)
-
-        print('psf_image.data.sum() =', '%.8f' % psf_image.data.sum())
-        psf_image.data /= psf_image.data.sum()
-        print('psf_image.data.sum() =', '%.8f' % psf_image.data.sum())
-
         return psf_image
 
     def _counts(self, observation):
