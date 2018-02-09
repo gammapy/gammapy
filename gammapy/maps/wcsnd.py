@@ -101,7 +101,8 @@ class WcsNDMap(WcsMap):
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
         shape_data = shape_wcs + shape
-        map_out = cls(geom)
+        meta = cls._get_meta_from_header(hdu.header)
+        map_out = cls(geom, meta=meta)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):

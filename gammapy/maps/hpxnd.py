@@ -70,14 +70,8 @@ class HpxNDMap(HpxMap):
 
         # TODO: Should we support extracting slices?
 
-        # TODO: implement map META read support
-        # probably should introduce a method in the base class
-        # and call it via super, no?
-        if 'META' in hdu.header:
-            meta = json.load(hdu.header['META'])
-        else:
-            meta = {}
-        map_out = cls(hpx, None, meta)
+        meta = cls._get_meta_from_header(hdu.header)
+        map_out = cls(hpx, None, meta=meta)
 
         colnames = hdu.columns.names
         cnames = []

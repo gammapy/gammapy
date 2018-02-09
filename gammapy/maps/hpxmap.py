@@ -65,6 +65,13 @@ class HpxMap(Map):
         conv : str, optional
             FITS format convention ('fgst-ccube', 'fgst-template',
             'gadf').  Default is 'gadf'.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
+
+        Returns
+        -------
+        map : `~HpxMap`
+            A HPX map object.
         """
         from .hpxnd import HpxNDMap
         from .hpxsparse import HpxSparseMap
@@ -200,7 +207,7 @@ class HpxMap(Map):
         extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxSparseMap)
-        else False)
+                            else False)
         header = self.geom.make_header()
 
         if self.geom.axes:

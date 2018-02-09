@@ -54,8 +54,8 @@ class HpxSparseMap(HpxMap):
         shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
-
-        map_out = cls(hpx)
+        meta = cls._get_meta_from_header(hdu.header)
+        map_out = cls(hpx, meta=meta)
 
         colnames = hdu.columns.names
         cnames = []

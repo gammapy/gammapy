@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import json
 import numpy as np
 from collections import OrderedDict
 from ..extern import six
@@ -86,6 +87,8 @@ class Map(object):
             Data type, default is ``float32``
         unit : str or `~astropy.units.Unit`
             Data unit.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
 
         Returns
         -------
@@ -141,6 +144,15 @@ class Map(object):
         cls_out = cls._get_map_cls(map_type)
         map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
         return map_out
+
+    @staticmethod
+    def _get_meta_from_header(header):
+        """Load meta data from a FITS header."""
+        if 'META' in header:
+            meta = json.loads(header['META'], object_pairs_hook=OrderedDict)
+        else:
+            meta = {}
+        return meta
 
     @staticmethod
     def _get_map_type(hdu_list, hdu_name):
