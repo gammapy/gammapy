@@ -19,6 +19,7 @@ import os
 import re
 from shutil import copytree, rmtree
 
+from distutils.util import strtobool
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst import roles
@@ -187,7 +188,8 @@ def gammapy_sphinx_notebooks(setup_cfg):
     """
     Manages the processes for the building of sphinx formatted notebooks
     """
-    if not bool(setup_cfg['build_notebooks']):
+
+    if not strtobool(setup_cfg['build_notebooks']):
         log.info('Config build_notebooks is False; skipping notebook processing')
         return
 
@@ -198,18 +200,21 @@ def gammapy_sphinx_notebooks(setup_cfg):
     url_docs = setup_cfg['url_docs']
     git_commit = setup_cfg['git_commit']
 
-    # remove existing notebooks
-    rmtree('_static/notebooks', ignore_errors=True)
-    rmtree('notebooks', ignore_errors=True)
-
     # copy and build notebooks
     gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
     if os.path.isdir(gammapy_extra_notebooks_folder):
+
         ignorefiles = lambda d, files: [
             f for f in files
             if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png'
         ]
         log.info('*** Converting notebooks to scripts')
+
+        # remove existing notebooks
+        rmtree('_static/notebooks', ignore_errors=True)
+        rmtree('notebooks', ignore_errors=True)
+
+        # copy notebooks
         copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
         copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
 
