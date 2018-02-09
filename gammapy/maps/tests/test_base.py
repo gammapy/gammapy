@@ -8,6 +8,7 @@ from ..geom import MapAxis
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
+pytest.importorskip('numpy', '1.12.0')
 
 
 def make_test_map(map_type, meta):

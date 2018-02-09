@@ -11,7 +11,7 @@ from ..hpx import get_hpxregion_dir, get_hpxregion_size
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
-pytest.importorskip('numpy', '1.12.0')
+pytest.importorskip('numpy', '1.13.0')
 
 hpx_allsky_test_geoms = [
     # 2D All-sky
