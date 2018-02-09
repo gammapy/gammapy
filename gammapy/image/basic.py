@@ -196,7 +196,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure.data = np.nan_to_num(exposure.data.value)
         return exposure
 
-    def psf(self, observations):
+    def psf(self, observations, containment_fraction = 0.99, rad_max = None):
         """Mean point spread function kernel image.
 
         Parameters
@@ -218,26 +218,29 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         erange = u.Quantity((p['emin'], p['emax']))
         psf_mean = mean_psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
 
-        radmax  = psf_mean.containment_radius(0.99)
-        pixdeg  = refskyim.wcs_pixel_scale().mean().deg
-        radnpix = int(radmax.deg / pixdeg + 0.5)
-        psfnpix = 2 * radnpix + 1
-        psfdata = np.empty((psfnpix, psfnpix))
+        if rad_max is None:
+            rad_max = psf_mean.containment_radius(containment_fraction)
+        else:
+            rad_max = Angle(rad_max)
+
+        psfkern = psf_mean.kernel(refskyim, rad_max)
+        print ('psfkern.sum() =', psfkern.sum())
+        psfunit = psfkern.unit
+        psfdata = psfkern.value
+        print ('psfdata.sum() =', psfdata.sum())
 
         psfhead = refskyim.wcs.to_header()
+        radnpix = int(np.shape(psfdata)[0] / 2)
         psfhead['CRPIX1'] = radnpix + 1.0
         psfhead['CRPIX2'] = radnpix + 1.0
         psfwcs = WCS(psfhead)
 
-        psf_image = SkyImage('psf', data=psfdata, wcs=psfwcs )
+        psf_image = SkyImage('psf', data=psfdata, wcs=psfwcs, unit=psfunit)
 
-        coordinates = psf_image.coordinates()
-        offset = coordinates.separation(psf_image.center)
-        psf_image.data = psf_mean.evaluate(offset)
-
+        print('psf_image.data.sum() =', '%.8f' % psf_image.data.sum())
         psf_image.data /= psf_image.data.sum()
-        psf_image.unit = psf_image.data.unit
-        psf_image.data = psf_image.data.value
+        print('psf_image.data.sum() =', '%.8f' % psf_image.data.sum())
+
         return psf_image
 
     def _counts(self, observation):
