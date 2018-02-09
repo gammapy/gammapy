@@ -130,13 +130,16 @@ class Map(object):
             Map object
         """
         with fits.open(filename) as hdulist:
-            if map_type == 'auto':
-                map_type = cls._get_map_type(hdulist, hdu)
+            map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
 
-            cls_out = cls._get_map_cls(map_type)
-            map_out = cls_out.from_hdulist(hdulist, hdu=hdu,
-                                           hdu_bands=hdu_bands)
+        return map_out
 
+    @classmethod
+    def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+        if map_type == 'auto':
+            map_type = cls._get_map_type(hdulist, hdu)
+        cls_out = cls._get_map_cls(map_type)
+        map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
         return map_out
 
     @staticmethod

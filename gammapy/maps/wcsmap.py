@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import json
 import numpy as np
 from astropy.io import fits
-from collections import OrderedDict
 from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu
@@ -147,8 +147,8 @@ class WcsMap(Map):
         hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
                             sparse=sparse, conv=conv)
 
-        header = hdu.header
-        header.update(self.meta)
+        hdu.header['META'] = json.dumps(self.meta)
+
         if extname == 'PRIMARY':
             hdulist = [hdu]
         else:
@@ -156,7 +156,6 @@ class WcsMap(Map):
 
         if self.geom.axes:
             hdulist += [bands_hdu]
-
 
         return fits.HDUList(hdulist)
 

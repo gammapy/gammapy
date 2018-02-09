@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import json
 import numpy as np
 from astropy.io import fits
-from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
 from .hpxmap import HpxMap
@@ -69,7 +69,15 @@ class HpxNDMap(HpxMap):
         shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
-        map_out = cls(hpx)
+
+        # TODO: implement map META read support
+        # probably should introduce a method in the base class
+        # and call it via super, no?
+        if 'META' in hdu.header:
+            meta = json.load(hdu.header['META'])
+        else:
+            meta = {}
+        map_out = cls(hpx, None, meta)
 
         colnames = hdu.columns.names
         cnames = []

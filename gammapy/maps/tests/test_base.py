@@ -58,19 +58,18 @@ def test_mapbase_create(binsz, width, map_type, skydir, axes):
                    skydir=skydir, axes=axes)
 
 
-def test_write():
-    meta = OrderedDict()
-    meta["user"] = "test"
-    m_wcs = make_test_map(map_type="wcs", meta=meta)
-    m_hpx = make_test_map(map_type="hpx", meta=meta)
-    m_hpx_sparse = make_test_map(map_type="hpx-sparse", meta=meta)
-    hdulist_wcs = m_wcs.to_hdulist(extname='COUNTS')
-    hdulist_hpx = m_hpx.to_hdulist(extname='COUNTS')
-    hdulist_hpx_sparse = m_hpx_sparse.to_hdulist(extname='COUNTS')
-    header_wcs = hdulist_wcs['COUNTS'].header
-    header_hpx = hdulist_hpx['COUNTS'].header
-    header_hpx_sparse = hdulist_hpx_sparse['COUNTS'].header
-    assert "user" in header_wcs
-    assert "user" in header_hpx
-    assert "user" in header_hpx_sparse
+@pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
+def test_map_meta_read_write(map_type):
+    meta = OrderedDict([
+        ('user', 'test'),
+    ])
 
+    m = make_test_map(map_type=map_type, meta=meta)
+
+    hdulist = m.to_hdulist(extname='COUNTS')
+    header = hdulist['COUNTS'].header
+
+    assert header['META'] == '{"user": "test"}'
+
+    m2 = Map.from_hdu_list(hdulist)
+    assert m2.meta == meta

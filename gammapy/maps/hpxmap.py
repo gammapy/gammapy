@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import json
 import numpy as np
-from collections import OrderedDict
 from astropy.io import fits
 from .base import Map
 from .hpx import HpxGeom, HpxConv
@@ -121,13 +121,11 @@ class HpxMap(Map):
         # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')
         hdu = self.make_hdu(**kwargs)
-        header = hdu.header
-        header.update(self.meta)
+        hdu.header['META'] = json.dumps(self.meta)
         hdulist = [fits.PrimaryHDU(), hdu]
 
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
-
 
         return fits.HDUList(hdulist)
 
