@@ -9,8 +9,9 @@ import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fits import fits_table_to_table, table_to_fits_table
-
+from ..utils.energy import EnergyBounds
 import numpy as np
+
 __all__ = [
     'Background3D',
     'Background2D'
@@ -137,22 +138,24 @@ class Background3D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return table_to_fits_table(self.to_table(), name)
 
-    def evaluate(self, theta, phi, energy):
+    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, **kwargs):
         """
-
+        should return directly something in 2D in spatial?
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
         Parameters
         ----------
-        theta
-        phi
+        fov_offset
+        fov_phi
+        energy
 
         Returns
         -------
 
         """
-        detx = theta *np.cos(phi)
-        dety = theta *np.sin(phi)
-        return self.data.evaluate(detx=detx, dety=dety, energy=energy)
-
+        detx = fov_offset * np.cos(fov_phi)
+        dety = fov_offset * np.sin(fov_phi)
+        return self.data.evaluate(detx=detx, dety=dety, energy=energy_reco, **kwargs)
 
 
 class Background2D(object):
@@ -237,7 +240,6 @@ class Background2D(object):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, hdu=hdu)
 
-
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
@@ -253,18 +255,55 @@ class Background2D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return table_to_fits_table(self.to_table(), name)
 
-    def evaluate(self, theta, phi, energy):
+    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, **kwargs):
         """
+
 
         Parameters
         ----------
-        theta
-        phi
+        fov_offset
+        fov_phi
+        energy_reco
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
+
+        """
+        return self.data.evaluate(offset=fov_offset, energy=energy_reco, **kwargs)
+
+    def integrate(self, fov_offset=None, fov_phi=None, tab_energy_band, energy_bins=10, interp_kwargs=None, **kwargs):
+        """
+        Reflechir comment lui donner un array d'energy pour qu'ilintegre sur chacun des bins de cette array. Lui renvoyer juste un
+        NDarray simple.
+        Reflechir a detx, det y et theta, phi. C'est projection d'une shepre en deux D. mais regis dit que comme 'cest que des angles ça va.
+        Parameters
+        ----------
+        fov_offset=None,
+        fov_phi=None
+        tab_energy_band : `~astropy.units.Quantity`
+            Array des bins en energy, array numpy. Voir comment definir Que c est un array de quantity
+        energy_bins : int or `~astropy.units.Quantity`
+            Energy bin definition.
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
-
+        array : `~astropy.units.Quantity`
+            Background rate per steradian, axis order is the same as for the NDData array
+        data : `~numpy.ndarray`, optional
+         counts rate per steradian
         """
-        return self.data.evaluate(offset=theta, energy=energy)
-
-    def integrate(self):
+        bkg_integrated=np.ndarray(shape(fov_offset.shape, tab_energy_band.shape))
+        for i in range(tab_energy_band):
+            emin = tab_energy_band[i]
+            emax =tab_energy_band[i+1]
+            energy_edges = EnergyBounds.equal_log_spacing(emin, emax, energy_bins)
+            energy_bins = energy_edges.log_centers
+            bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy=energy_bins, **kwargs)
+            # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
+            bkg_integrated[:,i] = np.sum(bkg_evaluated * energy_edges.bands, axis=1)
+        return bkg_integrated
