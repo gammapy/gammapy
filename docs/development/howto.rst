@@ -805,6 +805,12 @@ to the ``docs/notebooks`` and ``docs/_static/notebooks`` folders during
 the process of generating HTML docs. This triggers its conversion to  Sphinx
 formatted HTML files and .py scripts. The Sphinx formatted versions of the notebooks provide access to the raw .ipynb Jupyter files and .py script versions stored in ``docs/_static/notebooks`` folder.
 
+Once the documentation built you can optimize the speed of re-building processes,
+for example in case you are modifying or creating new docs and you would like to check
+these changes are displayed nicely. For that purpose, if your modified doc file
+does not contain links to notebooks, you may set the flag ``build_notebooks`` to False
+in the ``setup.cfg`` file, so they are not re-written again by Sphinx.
+
 
 Documentation guidelines
 ------------------------

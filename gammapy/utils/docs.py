@@ -187,6 +187,14 @@ def gammapy_sphinx_notebooks(setup_cfg):
     """
     Manages the processes for the building of sphinx formatted notebooks
     """
+    if not bool(setup_cfg['build_notebooks']):
+        log.info('Config build_notebooks is False; skipping notebook processing')
+        return
+
+    if not HAS_GP_EXTRA:
+        log.info('No GAMMAPY_EXTRA found; skipping notebook processing')
+        return
+
     url_docs = setup_cfg['url_docs']
     git_commit = setup_cfg['git_commit']
 
@@ -195,19 +203,18 @@ def gammapy_sphinx_notebooks(setup_cfg):
     rmtree('notebooks', ignore_errors=True)
 
     # copy and build notebooks
-    if os.environ.get('GAMMAPY_EXTRA'):
-        gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
-        if os.path.isdir(gammapy_extra_notebooks_folder):
-            ignorefiles = lambda d, files: [
-                f for f in files
-                if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png'
-            ]
-            log.info('*** Converting notebooks to scripts')
-            copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-            copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
+    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
+    if os.path.isdir(gammapy_extra_notebooks_folder):
+        ignorefiles = lambda d, files: [
+            f for f in files
+            if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png'
+        ]
+        log.info('*** Converting notebooks to scripts')
+        copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
+        copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
 
-            for path in Path('_static/notebooks').glob('*.ipynb'):
-                convert_nb_to_script(path)
+        for path in Path('_static/notebooks').glob('*.ipynb'):
+            convert_nb_to_script(path)
 
-            modif_nb_links('notebooks', url_docs, git_commit)
-            modif_nb_links('_static/notebooks', url_docs, git_commit)
+        modif_nb_links('notebooks', url_docs, git_commit)
+        modif_nb_links('_static/notebooks', url_docs, git_commit)
