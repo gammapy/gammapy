@@ -191,9 +191,19 @@ class IACTBasicImageEstimator(BasicImageEstimator):
 
         exposure_cube.data = exposure_cube.data * weights.reshape(-1, 1, 1)
         exposure = exposure_cube.sky_image_integral(emin=p['emin'], emax=p['emax'])
+        print ('_exposure() being executed!!!')
+        print ('type(exposure) =', type(exposure))
+        print ('type(exposure.data) =', type(exposure.data))
+        print ('exposure.data.unit =', exposure.data.unit)
+        print ('exposure.unit =', exposure.unit)
 
         exposure.name = 'exposure'
+        exposure.unit = exposure.data.unit
         exposure.data = np.nan_to_num(exposure.data.value)
+        print ('\nAfter fix:')
+        print('type(exposure) =', type(exposure))
+        print('type(exposure.data) =', type(exposure.data))
+        print('exposure.unit =', exposure.unit)
         return exposure
 
     def psf(self, observations):
@@ -304,6 +314,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'exposure' in which:
                 exposure = self._exposure(observation)
                 result['exposure'].paste(exposure)
+                # TODO: fix so that exposure units are carried over to results['exposure']
 
             if 'counts' in which:
                 counts = self._counts(observation)
@@ -327,6 +338,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'flux' in which:
                 flux = self.flux(SkyImageList([counts, background, exposure]))
                 result['flux'].paste(flux)
+                # TODO: fix so that flux units are carried over to results['flux']
 
         if 'psf' in which:
             result['psf'] = self.psf(observations)
