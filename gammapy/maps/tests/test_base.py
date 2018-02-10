@@ -11,35 +11,11 @@ pytest.importorskip('healpy')
 pytest.importorskip('numpy', '1.12.0')
 
 
-def make_test_map(map_type, meta):
-    """
-    Make empty maps
-
-    Parameters
-    ----------
-    map_type: str
-        Define wcs or hpx
-    meta : `~collections.OrderedDict`
-        Dictionary to store meta data.
-
-    Returns
-    -------
-    m: `~gammapy.maps.Map`
-
-    """
-    map_axes = [
-        MapAxis.from_bounds(1.0, 10.0, 3, interp='log'),
-        MapAxis.from_bounds(0.1, 1.0, 4, interp='log'),
-    ]
-    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
-                   skydir=SkyCoord(0.0, 30.0, unit='deg'), axes=map_axes, meta=meta)
-    return m
-
-
 map_axes = [
     MapAxis.from_bounds(1.0, 10.0, 3, interp='log'),
     MapAxis.from_bounds(0.1, 1.0, 4, interp='log'),
 ]
+
 
 mapbase_args = [
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None),
@@ -65,7 +41,8 @@ def test_map_meta_read_write(map_type):
         ('user', 'test'),
     ])
 
-    m = make_test_map(map_type=map_type, meta=meta)
+    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
+                   skydir=SkyCoord(0.0, 30.0, unit='deg'), meta=meta)
 
     hdulist = m.to_hdulist(extname='COUNTS')
     header = hdulist['COUNTS'].header
