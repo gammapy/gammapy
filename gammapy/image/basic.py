@@ -203,6 +203,11 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         ----------
         observations : `~gammapy.data.ObservationList`
             List of observations
+        containment_fraction : float (0.99)
+            Minimum PSF containment fraction included in kernel image.
+        rad_max : `~astropy.coordinates.Angle` (None)
+            If specified, passed to `~gammapy.irf.TablePSF.kernel`;
+            containment_fraction is then ignored.
 
         Returns
         -------
