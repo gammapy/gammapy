@@ -7,6 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.wcs import WCS
 from ..utils.energy import Energy
 from .core import SkyImage
 from .lists import SkyImageList
@@ -195,13 +196,18 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure.data = np.nan_to_num(exposure.data.value)
         return exposure
 
-    def psf(self, observations):
+    def psf(self, observations, containment_fraction = 0.99, rad_max = None):
         """Mean point spread function kernel image.
 
         Parameters
         ----------
         observations : `~gammapy.data.ObservationList`
             List of observations
+        containment_fraction : float (0.99)
+            Minimum PSF containment fraction included in kernel image.
+        rad_max : `~astropy.coordinates.Angle` (None)
+            If specified, passed to `~gammapy.irf.TablePSF.kernel`;
+            containment_fraction is then ignored.
 
         Returns
         -------
@@ -209,15 +215,30 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             PSF kernel as sky image.
         """
         p = self.parameters
-        psf_image = self._get_empty_skyimage('psf')
-        mean_psf = observations.make_mean_psf(self.reference.center)
+
+        refskyim  = self.reference
+        refskypos = refskyim.center
+        mean_psf = observations.make_mean_psf(refskypos)
+
         erange = u.Quantity((p['emin'], p['emax']))
         psf_mean = mean_psf.table_psf_in_energy_band(erange, spectrum=self.spectral_model)
 
-        coordinates = psf_image.coordinates()
-        offset = coordinates.separation(psf_image.center)
-        psf_image.data = psf_mean.evaluate(offset)
-        psf_image.data /= psf_image.data.sum()
+        if rad_max is None:
+            rad_max = psf_mean.containment_radius(containment_fraction)
+        else:
+            rad_max = Angle(rad_max)
+
+        psfkern = psf_mean.kernel(refskyim, rad_max)
+        psfunit = psfkern.unit
+        psfdata = psfkern.value
+
+        psfhead = refskyim.wcs.to_header()
+        radnpix = int(np.shape(psfdata)[0] / 2)
+        psfhead['CRPIX1'] = radnpix + 1.0
+        psfhead['CRPIX2'] = radnpix + 1.0
+        psfwcs = WCS(psfhead)
+
+        psf_image = SkyImage('psf', data=psfdata, wcs=psfwcs, unit=psfunit)
         return psf_image
 
     def _counts(self, observation):
