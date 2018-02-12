@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import json
 import numpy as np
 from astropy.io import fits
 from .base import Map
@@ -21,17 +22,19 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data):
-        super(HpxMap, self).__init__(geom, data)
+    def __init__(self, geom, data, meta=None):
+        super(HpxMap, self).__init__(geom, data, meta)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None, conv='gadf'):
+               region=None, axes=None, conv='gadf', meta=None):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -62,6 +65,13 @@ class HpxMap(Map):
         conv : str, optional
             FITS format convention ('fgst-ccube', 'fgst-template',
             'gadf').  Default is 'gadf'.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
+
+        Returns
+        -------
+        map : `~HpxMap`
+            A HPX map object.
         """
         from .hpxnd import HpxNDMap
         from .hpxsparse import HpxSparseMap
@@ -70,13 +80,13 @@ class HpxMap(Map):
                              nest=nest, coordsys=coordsys, region=region,
                              conv=conv, axes=axes, skydir=skydir, width=width)
         if cls.__name__ == 'HpxNDMap':
-            return HpxNDMap(hpx, dtype=dtype)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta)
         elif cls.__name__ == 'HpxSparseMap':
-            return HpxSparseMap(hpx, dtype=dtype)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
         elif map_type == 'hpx':
-            return HpxNDMap(hpx, dtype=dtype)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta)
         elif map_type == 'hpx-sparse':
-            return HpxSparseMap(hpx, dtype=dtype)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
@@ -117,10 +127,13 @@ class HpxMap(Map):
         extname = kwargs.get('extname', 'SKYMAP')
         # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
         extname_bands = kwargs.get('extname_bands', 'BANDS')
-        hdulist = [fits.PrimaryHDU(), self.make_hdu(**kwargs)]
+        hdu = self.make_hdu(**kwargs)
+        hdu.header['META'] = json.dumps(self.meta)
+        hdulist = [fits.PrimaryHDU(), hdu]
 
         if self.geom.axes:
             hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
+
         return fits.HDUList(hdulist)
 
     @abc.abstractmethod

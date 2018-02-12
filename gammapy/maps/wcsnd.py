@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .utils import interp_to_order
@@ -31,9 +32,11 @@ class WcsNDMap(WcsMap):
         Data array. If none then an empty array will be allocated.
     dtype : str, optional
         Data type, default is float32
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data=None, dtype='float32'):
+    def __init__(self, geom, data=None, dtype='float32', meta=None):
         # TODO: Figure out how to mask pixels for integer data types
 
         shape = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])] +
@@ -44,7 +47,7 @@ class WcsNDMap(WcsMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape, data.shape))
 
-        super(WcsNDMap, self).__init__(geom, data)
+        super(WcsNDMap, self).__init__(geom, data, meta)
 
     def _init_data(self, geom, shape, dtype):
         # Check whether corners of each image plane are valid
@@ -98,7 +101,8 @@ class WcsNDMap(WcsMap):
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
         shape_data = shape_wcs + shape
-        map_out = cls(geom)
+        meta = cls._get_meta_from_header(hdu.header)
+        map_out = cls(geom, meta=meta)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):

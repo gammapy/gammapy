@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import json
 import numpy as np
+from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
@@ -29,11 +31,17 @@ class Map(object):
         Geometry
     data : `~numpy.ndarray`
         Data array
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data):
+    def __init__(self, geom, data, meta=None):
         self._geom = geom
         self._data = data
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
 
     @property
     def data(self):
@@ -79,6 +87,8 @@ class Map(object):
             Data type, default is ``float32``
         unit : str or `~astropy.units.Unit`
             Data unit.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
 
         Returns
         -------
@@ -89,7 +99,6 @@ class Map(object):
         from .wcsmap import WcsMap
 
         map_type = kwargs.setdefault('map_type', 'wcs')
-
         if 'wcs' in map_type.lower():
             return WcsMap.create(**kwargs)
         elif 'hpx' in map_type.lower():
@@ -124,14 +133,26 @@ class Map(object):
             Map object
         """
         with fits.open(filename) as hdulist:
-            if map_type == 'auto':
-                map_type = cls._get_map_type(hdulist, hdu)
-
-            cls_out = cls._get_map_cls(map_type)
-            map_out = cls_out.from_hdulist(hdulist, hdu=hdu,
-                                           hdu_bands=hdu_bands)
+            map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
 
         return map_out
+
+    @classmethod
+    def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+        if map_type == 'auto':
+            map_type = cls._get_map_type(hdulist, hdu)
+        cls_out = cls._get_map_cls(map_type)
+        map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+        return map_out
+
+    @staticmethod
+    def _get_meta_from_header(header):
+        """Load meta data from a FITS header."""
+        if 'META' in header:
+            meta = json.loads(header['META'], object_pairs_hook=OrderedDict)
+        else:
+            meta = {}
+        return meta
 
     @staticmethod
     def _get_map_type(hdu_list, hdu_name):

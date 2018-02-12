@@ -2,16 +2,20 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from astropy.coordinates import SkyCoord
+from collections import OrderedDict
 from ..base import Map
 from ..geom import MapAxis
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
+pytest.importorskip('numpy', '1.12.0')
+
 
 map_axes = [
     MapAxis.from_bounds(1.0, 10.0, 3, interp='log'),
     MapAxis.from_bounds(0.1, 1.0, 4, interp='log'),
 ]
+
 
 mapbase_args = [
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None),
@@ -29,3 +33,21 @@ mapbase_args = [
 def test_mapbase_create(binsz, width, map_type, skydir, axes):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
                    skydir=skydir, axes=axes)
+
+
+@pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
+def test_map_meta_read_write(map_type):
+    meta = OrderedDict([
+        ('user', 'test'),
+    ])
+
+    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
+                   skydir=SkyCoord(0.0, 30.0, unit='deg'), meta=meta)
+
+    hdulist = m.to_hdulist(extname='COUNTS')
+    header = hdulist['COUNTS'].header
+
+    assert header['META'] == '{"user": "test"}'
+
+    m2 = Map.from_hdu_list(hdulist)
+    assert m2.meta == meta

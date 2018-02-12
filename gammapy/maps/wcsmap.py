@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import json
 import numpy as np
 from astropy.io import fits
 from .base import Map
@@ -25,7 +26,7 @@ class WcsMap(Map):
     @classmethod
     def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf'):
+               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -67,6 +68,8 @@ class WcsMap(Map):
         conv : str, optional
             FITS format convention ('fgst-ccube', 'fgst-template',
             'gadf').  Default is 'gadf'.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
 
         Returns
         -------
@@ -82,7 +85,7 @@ class WcsMap(Map):
                               conv=conv)
 
         if map_type == 'wcs':
-            return WcsNDMap(geom, dtype=dtype)
+            return WcsNDMap(geom, dtype=dtype, meta=meta)
         elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:
@@ -143,6 +146,8 @@ class WcsMap(Map):
 
         hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
                             sparse=sparse, conv=conv)
+
+        hdu.header['META'] = json.dumps(self.meta)
 
         if extname == 'PRIMARY':
             hdulist = [hdu]
