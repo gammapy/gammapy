@@ -3,8 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 from astropy.table import Table
 from astropy.io import fits
-from astropy.coordinates import Angle
-from astropy.units import Quantity
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
@@ -134,28 +132,86 @@ class Background3D(object):
         table['BKG'] = self.data.data[np.newaxis]
         return table
 
-    def write(self, name='BACKGROUND'):
+    def to_hdulist(self, name='BACKGROUND'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        hdu=table_to_fits_table(self.to_table(), name)
+        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
+        return hdulist
 
-    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, **kwargs):
-        """
-        should return directly something in 2D in spatial?
-        kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+    def write(self, filename, name='BACKGROUND', **kwargs):
+        """Convert to `~astropy.io.fits.BinTable`.
         Parameters
         ----------
-        fov_offset
-        fov_phi
-        energy
+        filename : str
+            File name
+        """
+        hdulist = self.to_hdulist(name= name)
+        hdulist.writeto(filename, **kwargs)
+
+
+    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, method= None,**kwargs):
+        """
+        Evaluate the `Background3D` at a given FOV coordinate and energy.
+
+        Parameters
+        ----------
+        fov_offset : `~astropy.coordinates.Angle`
+            offset in the FOV
+        fov_phi: `~astropy.coordinates.Angle`
+            azimuth angle in the FOV.
+        energy_reco : `~astropy.units.Quantity`
+            Vector of energy (1D) on which the model is evaluated
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
-
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
         """
         detx = fov_offset * np.cos(fov_phi)
         dety = fov_offset * np.sin(fov_phi)
-        return self.data.evaluate(detx=detx, dety=dety, energy=energy_reco, **kwargs)
+        array = self.data.evaluate(detx=detx, dety=dety, energy=energy_reco, method=method, **kwargs)
+        return array
+
+
+    def integrate_on_energy_range(self, tab_energy_band=None, energy_bins=10, fov_offset=None, fov_phi=None,method= None, **kwargs):
+        """
+        Evaluate the `Background3D` at a given FOV coordinate and integrate over energy_bands. In each energy_band,
+        evaluate at different energies and then integrate in order to get the total background rate per steradian in
+        the given energy range
+
+        Parameters
+        ----------
+        tab_energy_band : `~astropy.units.Quantity`
+            Energy bin edges (vector 1D)
+        energy_bins : int
+            Number of energy bins used for the integration
+        fov_offset : `~astropy.coordinates.Angle`
+            offset in the FOV
+        fov_phi: `~astropy.coordinates.Angle`
+            azimuth angle in the FOV.
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Background rate per steradian, axis order is the same as for the NDData array
+        """
+
+        bkg_integrated = np.zeros(tab_energy_band.shape + fov_offset.shape)
+        for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
+            energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, energy_bins)
+            energy_bins = energy_edges.log_centers
+            bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, method=method, **kwargs)
+            # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
+            bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+        return bkg_integrated
 
 
 class Background2D(object):
@@ -216,7 +272,6 @@ class Background2D(object):
         # This should be corrected.
         # For now, we hard-code the unit here:
         data_unit = u.Unit('s-1 MeV-1 sr-1')
-
         return cls(
             energy_lo=table['ENERG_LO'].quantity[0],
             energy_hi=table['ENERG_HI'].quantity[0],
@@ -244,6 +299,7 @@ class Background2D(object):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
         table = Table(meta=meta)
+
         table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
         table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
         table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
@@ -251,42 +307,68 @@ class Background2D(object):
         table['BKG'] = self.data.data[np.newaxis]
         return table
 
-    def write(self, name='BACKGROUND'):
+    def to_hdulist(self, name='BACKGROUND'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        hdu=table_to_fits_table(self.to_table(), name)
+        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
+        return hdulist
 
-    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, **kwargs):
+    def write(self, filename, name='BACKGROUND', **kwargs):
+        """Convert to `~astropy.io.fits.BinTable`.
+        Parameters
+        ----------
+        filename : str
+            File name
         """
+        hdulist = self.to_hdulist(name= name)
+        hdulist.writeto(filename, **kwargs)
 
+
+
+    def evaluate(self, fov_offset=None, fov_phi=None, energy_reco=None, method= None, **kwargs):
+        """
+        Evaluate the `Background2D` at a given offset and energy.
 
         Parameters
         ----------
-        fov_offset
-        fov_phi
-        energy_reco
+        fov_offset : `~astropy.coordinates.Angle`
+            offset in the FOV
+        fov_phi: `~astropy.coordinates.Angle`
+            azimuth angle in the FOV. Not used for this class since the background model is radially symmetric
+        energy_reco : `~astropy.units.Quantity`
+            Vector of energy (1D) on which the model is evaluated
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
         kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+
         Returns
         -------
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
 
         """
-        return self.data.evaluate(offset=fov_offset, energy=energy_reco, **kwargs)
+        array = self.data.evaluate(offset=fov_offset, energy=energy_reco, method=method, **kwargs)
+        return array
 
-    def integrate(self, fov_offset=None, fov_phi=None, tab_energy_band, energy_bins=10, interp_kwargs=None, **kwargs):
+    def integrate_on_energy_range(self, tab_energy_band=None, energy_bins=10, fov_offset=None, fov_phi=None,method= None, **kwargs):
         """
-        Reflechir comment lui donner un array d'energy pour qu'ilintegre sur chacun des bins de cette array. Lui renvoyer juste un
-        NDarray simple.
-        Reflechir a detx, det y et theta, phi. C'est projection d'une shepre en deux D. mais regis dit que comme 'cest que des angles ça va.
+        Evaluate the `Background2D` at a given offset and integrate over energy_bands. In each energy_band, evaluate
+        at different energies and then integrate in order to get the total background rate per steradian in the given
+        energy range
+
         Parameters
         ----------
-        fov_offset=None,
-        fov_phi=None
         tab_energy_band : `~astropy.units.Quantity`
-            Array des bins en energy, array numpy. Voir comment definir Que c est un array de quantity
-        energy_bins : int or `~astropy.units.Quantity`
-            Energy bin definition.
+            Energy bin edges (vector 1D)
+        energy_bins : int
+            Number of energy bins used for the integration
+        fov_offset : `~astropy.coordinates.Angle`
+            offset in the FOV
+        fov_phi: `~astropy.coordinates.Angle`
+            azimuth angle in the FOV. Not used for this class since the background model is radially symmetric
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
         kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
@@ -294,16 +376,21 @@ class Background2D(object):
         -------
         array : `~astropy.units.Quantity`
             Background rate per steradian, axis order is the same as for the NDData array
-        data : `~numpy.ndarray`, optional
-         counts rate per steradian
         """
-        bkg_integrated=np.ndarray(shape(fov_offset.shape, tab_energy_band.shape))
-        for i in range(tab_energy_band):
-            emin = tab_energy_band[i]
-            emax =tab_energy_band[i+1]
-            energy_edges = EnergyBounds.equal_log_spacing(emin, emax, energy_bins)
+        dim_E=len(tab_energy_band)-1
+        if fov_offset is None:
+            shape_bkg= (dim_E,len(self.data.axes[1].nodes))
+        else:
+            shape_bkg= tuple([dim_E]) + fov_offset.shape
+        #    self.axis[].data
+        bkg_integrated = np.zeros(shape_bkg)
+        for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
+            energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, energy_bins)
             energy_bins = energy_edges.log_centers
-            bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy=energy_bins, **kwargs)
+            bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, method=method, **kwargs)
             # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
-            bkg_integrated[:,i] = np.sum(bkg_evaluated * energy_edges.bands, axis=1)
+            if len(fov_offset.shape) == 1:
+                bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+            else:
+                bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
         return bkg_integrated
