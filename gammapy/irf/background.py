@@ -171,8 +171,19 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        detx = fov_offset * np.cos(fov_phi)
-        dety = fov_offset * np.sin(fov_phi)
+        if fov_offset is None :
+            detx= self.data.axis('detx').nodes
+            dety= self.data.axis('dety').nodes
+        elif fov_phi is None:
+            detx= self.data.axis('detx').nodes
+            dety= self.data.axis('dety').nodes
+        else:
+            detx = fov_offset * np.cos(fov_phi)
+            dety = fov_offset * np.sin(fov_phi)
+        if energy_reco is None:
+            energy_reco = self.data.axis('energy').nodes
+
+
         array = self.data.evaluate(detx=detx, dety=dety, energy=energy_reco, method=method, **kwargs)
         return array
 
@@ -203,6 +214,13 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Background rate per steradian, axis order is the same as for the NDData array
         """
+        dim_E=len(tab_energy_band)-1
+        if fov_offset is None:
+            shape_bkg= (dim_E,len(self.data.axis('detx').nodes),len(self.data.axis('dety').nodes))
+        else:
+            shape_bkg= tuple([dim_E]) + fov_offset.shape + fov_offset.shape
+        #    self.axis[].data
+        bkg_integrated = u.Quantity(np.zeros(shape_bkg),"1 / (s sr)")
 
         bkg_integrated = np.zeros(tab_energy_band.shape + fov_offset.shape)
         for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
@@ -210,7 +228,7 @@ class Background3D(object):
             energy_bins = energy_edges.log_centers
             bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, method=method, **kwargs)
             # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
-            bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+            bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=2).T
         return bkg_integrated
 
 
@@ -348,6 +366,11 @@ class Background2D(object):
             Interpolated values, axis order is the same as for the NDData array
 
         """
+        if fov_offset is None:
+            fov_offset= self.data.axis('offset').nodes
+        if energy_reco is None:
+            energy_reco = self.data.axis('energy').nodes
+
         array = self.data.evaluate(offset=fov_offset, energy=energy_reco, method=method, **kwargs)
         return array
 
@@ -379,18 +402,23 @@ class Background2D(object):
         """
         dim_E=len(tab_energy_band)-1
         if fov_offset is None:
-            shape_bkg= (dim_E,len(self.data.axes[1].nodes))
+            shape_bkg= (dim_E,len(self.data.axis('offset').nodes))
         else:
             shape_bkg= tuple([dim_E]) + fov_offset.shape
         #    self.axis[].data
-        bkg_integrated = np.zeros(shape_bkg)
+        bkg_integrated = u.Quantity(np.zeros(shape_bkg),"1 / (s sr)")
+
         for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
             energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, energy_bins)
             energy_bins = energy_edges.log_centers
+
             bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, method=method, **kwargs)
             # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
-            if len(fov_offset.shape) == 1:
+            if fov_offset is None:
+                bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+            elif len(fov_offset.shape) == 1:
                 bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
             else:
-                bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+                #import IPython; IPython.embed()
+                bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=2).T
         return bkg_integrated
