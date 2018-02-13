@@ -7,7 +7,7 @@ from astropy.io import fits
 from ..geom import MapAxis
 from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order, lonlat_to_colat
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
-from ..hpx import get_hpxregion_dir, get_hpxregion_size
+from ..hpx import get_hpxregion_dir, get_hpxregion_size, get_subpixels, get_superpixels
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -66,6 +66,63 @@ def test_ravel_hpx_index():
     npix = np.array([[2, 7], [3, 1]])
     idx = (np.array([0, 1, 1]), np.array([0, 0, 1]), np.array([0, 1, 0]))
     assert_allclose(ravel_hpx_index(idx, npix), np.array([0, 3, 10]))
+
+
+def make_test_nside(nside, nside0, nside1):
+    npix = 12 * nside**2
+    nside_test = np.concatenate((nside0 * np.ones(npix // 2, dtype=int),
+                                 nside1 * np.ones(npix // 2, dtype=int)))
+    return nside_test
+
+
+@pytest.mark.parametrize(('nside_subpix', 'nside_superpix', 'nest'),
+                         [(4, 2, True), (8, 2, True), (8, make_test_nside(8, 4, 2), True),
+                          (4, 2, False), (8, 2, False), (8, make_test_nside(8, 4, 2), False), ])
+def test_get_superpixels(nside_subpix, nside_superpix, nest):
+
+    import healpy as hp
+
+    npix = 12 * nside_subpix**2
+    subpix = np.arange(npix)
+    ang_subpix = hp.pix2ang(nside_subpix, subpix, nest=nest)
+    superpix = get_superpixels(subpix, nside_subpix, nside_superpix, nest=nest)
+    pix1 = hp.ang2pix(nside_superpix, *ang_subpix, nest=nest)
+    assert_allclose(superpix, pix1)
+
+    subpix = subpix.reshape((12, -1))
+    if not np.isscalar(nside_subpix):
+        nside_subpix = nside_subpix.reshape((12, -1))
+    if not np.isscalar(nside_superpix):
+        nside_superpix = nside_superpix.reshape((12, -1))
+
+    ang_subpix = hp.pix2ang(nside_subpix, subpix, nest=nest)
+    superpix = get_superpixels(subpix, nside_subpix, nside_superpix, nest=nest)
+    pix1 = hp.ang2pix(nside_superpix, *ang_subpix, nest=nest)
+    assert_allclose(superpix, pix1)
+
+
+@pytest.mark.parametrize(('nside_superpix', 'nside_subpix', 'nest'),
+                         [(2, 4, True), (2, 8, True),
+                          (2, 4, False), (2, 8, False)])
+def test_get_subpixels(nside_superpix, nside_subpix, nest):
+
+    import healpy as hp
+
+    npix = 12 * nside_superpix**2
+    superpix = np.arange(npix)
+    subpix = get_subpixels(superpix, nside_superpix, nside_subpix, nest=nest)
+    ang1 = hp.pix2ang(nside_subpix, subpix, nest=nest)
+    pix1 = hp.ang2pix(nside_superpix, *ang1, nest=nest)
+    assert(np.all(superpix[..., None] == pix1))
+
+    superpix = superpix.reshape((12, -1))
+    subpix = get_subpixels(superpix, nside_superpix, nside_subpix, nest=nest)
+    ang1 = hp.pix2ang(nside_subpix, subpix, nest=nest)
+    pix1 = hp.ang2pix(nside_superpix, *ang1, nest=nest)
+    assert(np.all(superpix[..., None] == pix1))
+
+    pix1 = get_superpixels(subpix, nside_subpix, nside_superpix, nest=nest)
+    assert(np.all(superpix[..., None] == pix1))
 
 
 def test_hpx_global_to_local():
@@ -439,3 +496,43 @@ def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
     assert_allclose(geom0.npix, geom1.npix)
     assert_allclose(geom0.nest, geom1.nest)
     assert geom0.coordsys == geom1.coordsys
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
+
+    # NESTED
+    geom = HpxGeom(nside, True, coordsys, region=region, axes=axes)
+    geom_up = geom.upsample(2)
+    assert_allclose(2 * geom.nside, geom_up.nside)
+    assert_allclose(4 * geom.npix, geom_up.npix)
+    coords = geom_up.get_coords(flat=True)
+    assert(np.all(geom.contains(coords)))
+
+    # RING
+    geom = HpxGeom(nside, False, coordsys, region=region, axes=axes)
+    geom_up = geom.upsample(2)
+    assert_allclose(2 * geom.nside, geom_up.nside)
+    assert_allclose(4 * geom.npix, geom_up.npix)
+    coords = geom_up.get_coords(flat=True)
+    assert(np.all(geom.contains(coords)))
+
+
+@pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
+                         hpx_test_geoms)
+def test_hpxgeom_downsample(nside, nested, coordsys, region, axes):
+
+    # NESTED
+    geom = HpxGeom(nside, True, coordsys, region=region, axes=axes)
+    geom_down = geom.downsample(2)
+    assert_allclose(geom.nside, 2 * geom_down.nside)
+    coords = geom.get_coords(flat=True)
+    assert(np.all(geom_down.contains(coords)))
+
+    # RING
+    geom = HpxGeom(nside, False, coordsys, region=region, axes=axes)
+    geom_down = geom.downsample(2)
+    assert_allclose(geom.nside, 2 * geom_down.nside)
+    coords = geom.get_coords(flat=True)
+    assert(np.all(geom_down.contains(coords)))

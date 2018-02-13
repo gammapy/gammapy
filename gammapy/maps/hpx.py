@@ -411,6 +411,110 @@ def pix_to_upix(pix, nside):
     return pix + 4 * np.power(nside, 2)
 
 
+def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
+    """Compute the indices of superpixels that contain a subpixel.
+
+    Parameters
+    ----------
+    idx : `~numpy.ndarray`
+        Array of HEALPix pixel indices for subpixels of NSIDE
+        ``nside_subpix``.
+
+    nside_subpix  : int or `~numpy.ndarray`
+        NSIDE of subpixel.
+
+    nside_superpix : int or `~numpy.ndarray`
+        NSIDE of superpixel.
+
+    """
+
+    import healpy as hp
+
+    idx = np.array(idx)
+    nside_superpix = np.asarray(nside_superpix)
+    nside_subpix = np.asarray(nside_subpix)
+
+    if not nest:
+        idx = hp.ring2nest(nside_subpix, idx)
+
+    if np.any(~is_power2(nside_superpix)) or np.any(~is_power2(nside_subpix)):
+        raise ValueError('NSIDE must be a power of 2.')
+
+    ratio = np.array((nside_subpix // nside_superpix)**2, ndmin=1)
+    idx //= ratio
+
+    if not nest:
+        m = idx == -1
+        idx[m] = 0
+        idx = hp.nest2ring(nside_superpix, idx)
+        idx[m] = -1
+
+    return idx
+
+
+def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
+    """Compute the indices of subpixels contained within superpixels.
+    This function returns an output array with one additional
+    dimension of size N for subpixel indices where N is the maximum
+    number of subpixels for any pair of ``nside_superpix`` and
+    ``nside_subpix``.  If the number of subpixels is less than N the
+    remaining subpixel indices will be set to -1.
+
+    Parameters
+    ----------
+    idx : `~numpy.ndarray`
+        Array of HEALPix pixel indices for superpixels of NSIDE
+        ``nside_superpix``.
+
+    nside_superpix : int or `~numpy.ndarray`
+        NSIDE of superpixel.
+
+    nside_subpix  : int or `~numpy.ndarray`
+        NSIDE of subpixel.
+
+    nest : bool
+        If True, assume NESTED pixel ordering, otherwise, RING pixel ordering.
+
+    Returns
+    -------
+    subidx : `~numpy.ndarray`
+        Indices of HEALpix pixels of nside ``nside_subpix`` contained
+        within pixel ``pix`` of nside ``nside_superpix``.
+
+    """
+    import healpy as hp
+
+    if not nest:
+        idx = hp.ring2nest(nside_superpix, idx)
+
+    idx = np.asarray(idx)
+    nside_superpix = np.asarray(nside_superpix)
+    nside_subpix = np.asarray(nside_subpix)
+
+    if np.any(~is_power2(nside_superpix)) or np.any(~is_power2(nside_subpix)):
+        raise ValueError('NSIDE must be a power of 2.')
+
+    # number of subpixels in each superpixel
+    npix = np.array((nside_subpix // nside_superpix)**2, ndmin=1)
+    x = np.arange(np.max(npix), dtype=int)
+    idx = idx * npix
+
+    if not np.all(npix[0] == npix):
+        x = np.broadcast_to(x, idx.shape + x.shape)
+        idx = idx[..., None] + x
+        idx[x >= np.broadcast_to(npix[..., None], x.shape)] = -1
+    else:
+        idx = idx[..., None] + x
+
+    if not nest:
+        m = idx == -1
+        idx[m] = 0
+        idx = hp.nest2ring(nside_subpix[..., None], idx)
+        idx[m] = -1
+
+    return idx
+
+
 class HpxGeom(MapGeom):
     """Geometry class for HEALPIX maps.
 
@@ -484,7 +588,7 @@ class HpxGeom(MapGeom):
 
         self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
-        self._center_skydir = self.get_ref_dir(region, self.coordsys)
+        self._center_skydir = self._get_ref_dir()
         self._center_coord = tuple(list(skydir_to_lonlat(self._center_skydir)) +
                                    [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
         self._center_pix = self.coord_to_pix(self._center_coord)
@@ -509,10 +613,12 @@ class HpxGeom(MapGeom):
 
         elif isinstance(region, tuple):
 
-            # FIXME: How to determine reference direction for explicit
-            # geom?
+            m = np.any(np.stack([t >= 0 for t in region]), axis=0)
+            region = [t[m] for t in region]
 
             self._ipix = ravel_hpx_index(region, self._maxpix)
+            self._ipix = np.unique(self._ipix)
+            region = unravel_hpx_index(self._ipix, self._maxpix)
             self._region = 'explicit'
             self._indxschm = 'EXPLICIT'
             if len(region) == 1:
@@ -993,14 +1099,41 @@ class HpxGeom(MapGeom):
         if not is_power2(factor):
             raise ValueError('Upsample factor must be a power of 2.')
 
-        return self.ud_graded_hpx(self.order * factor)
+        if self.is_allsky:
+            return self.__class__(self.nside * factor, self.nest, coordsys=self.coordsys,
+                                  region=self.region, conv=self.conv,
+                                  axes=copy.deepcopy(self.axes))
+
+        idx = list(self.get_idx(flat=True))
+        nside = self._get_nside(idx)
+
+        idx_new = get_subpixels(idx[0], nside, nside * factor, nest=self.nest)
+        for i in range(1, len(idx)):
+            idx[i] = idx[i][..., None] * np.ones(idx_new.shape, dtype=int)
+
+        idx[0] = idx_new
+        return self.__class__(self.nside * factor, self.nest, coordsys=self.coordsys,
+                              region=tuple(idx), conv=self.conv,
+                              axes=copy.deepcopy(self.axes))
 
     def downsample(self, factor):
 
         if not is_power2(factor):
             raise ValueError('Downsample factor must be a power of 2.')
 
-        return self.ud_graded_hpx(self.order // factor)
+        if self.is_allsky:
+            return self.__class__(self.nside // factor, self.nest, coordsys=self.coordsys,
+                                  region=self.region, conv=self.conv,
+                                  axes=copy.deepcopy(self.axes))
+
+        idx = list(self.get_idx(flat=True))
+        nside = self._get_nside(idx)
+        idx_new = get_superpixels(
+            idx[0], nside, nside // factor, nest=self.nest)
+        idx[0] = idx_new
+        return self.__class__(self.nside // factor, self.nest, coordsys=self.coordsys,
+                              region=tuple(idx), conv=self.conv,
+                              axes=copy.deepcopy(self.axes))
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
@@ -1360,30 +1493,21 @@ class HpxGeom(MapGeom):
 
         return ilist
 
-    def get_ref_dir(self, region, coordsys):
-        """Get the reference direction for a given  HEALPIX region string.
-
-        Parameters
-        ----------
-        region : str
-            A string describing a HEALPIX region
-        coordsys : {'CEL', 'GAL'}
-            Coordinate system
+    def _get_ref_dir(self):
+        """Compute the reference direction for this geometry.
         """
         import healpy as hp
-        frame = coordsys_to_frame(coordsys)
+        frame = coordsys_to_frame(self.coordsys)
 
-        if isinstance(region, tuple):
-            if self.nside.size > 1:
-                nside = self.nside[region[1:]]
-            else:
-                nside = self.nside
-            vec = hp.pix2vec(nside, region[0], nest=self.nest)
+        if self.region == 'explicit':
+            idx = unravel_hpx_index(self._ipix, self._maxpix)
+            nside = self._get_nside(idx)
+            vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             vec = np.array([np.mean(t) for t in vec])
             lonlat = hp.vec2ang(vec, lonlat=True)
             return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit='deg')
 
-        return get_hpxregion_dir(region, coordsys)
+        return get_hpxregion_dir(self.region, self.coordsys)
 
     def _get_region_size(self):
 
@@ -1392,17 +1516,21 @@ class HpxGeom(MapGeom):
         if self.region is None:
             return 180.
         if self.region == 'explicit':
-            pix = self.ipix
-            if self.nside.size > 1:
-                nside = self.nside[pix[1:]]
-            else:
-                nside = self.nside
-            ang = hp.pix2ang(nside, pix[0], nest=self.nest, lonlat=True)
+            idx = unravel_hpx_index(self._ipix, self._maxpix)
+            nside = self._get_nside(idx)
+            ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
             dirs = SkyCoord(ang[0], ang[1], unit='deg',
                             frame=coordsys_to_frame(self.coordsys))
             return np.max(dirs.separation(self.center_skydir).deg)
 
         return get_hpxregion_size(self.region)
+
+    def _get_nside(self, idx):
+
+        if self.nside.size > 1:
+            return self.nside[idx[1:]]
+        else:
+            return self.nside
 
     def make_wcs(self, proj='AIT', oversample=2, drop_axes=True):
         """Make a WCS projection appropriate for this HPX pixelization.
