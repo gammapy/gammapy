@@ -426,6 +426,15 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     nside_superpix : int or `~numpy.ndarray`
         NSIDE of superpixel.
 
+    nest : bool
+        If True, assume NESTED pixel ordering, otherwise, RING pixel
+        ordering.
+
+    Returns
+    -------
+    idx_super : `~numpy.ndarray`
+        Indices of HEALpix pixels of nside ``nside_superpix`` that
+        contain pixel indices ``idx`` of nside ``nside_subpix``.
     """
 
     import healpy as hp
@@ -473,14 +482,14 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
         NSIDE of subpixel.
 
     nest : bool
-        If True, assume NESTED pixel ordering, otherwise, RING pixel ordering.
+        If True, assume NESTED pixel ordering, otherwise, RING pixel
+        ordering.
 
     Returns
     -------
-    subidx : `~numpy.ndarray`
+    idx_sub : `~numpy.ndarray`
         Indices of HEALpix pixels of nside ``nside_subpix`` contained
-        within pixel ``pix`` of nside ``nside_superpix``.
-
+        within pixel indices ``idx`` of nside ``nside_superpix``.
     """
     import healpy as hp
 
