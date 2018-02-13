@@ -293,7 +293,7 @@ class EnergyBounds(Energy):
         i : int
             Energy bin
         """
-        return self[[i, i + 2]]
+        return self[[i, i + 1]]
 
     def find_energy_bin(self, energy):
         """Find the bins that contain the specified energy values.
