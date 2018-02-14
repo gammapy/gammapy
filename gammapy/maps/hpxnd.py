@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import json
 import numpy as np
 from astropy.io import fits
@@ -244,7 +245,7 @@ class HpxNDMap(HpxMap):
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
-        map_out = self.__class__(geom)
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
         map_out.coadd(self)
         coords = geom.get_coords(flat=True)
         m = self.geom.contains(coords)
@@ -265,13 +266,14 @@ class HpxNDMap(HpxMap):
 
     def crop(self, crop_width):
         geom = self.geom.crop(crop_width)
-        map_out = self.__class__(geom)
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
         map_out.coadd(self)
         return map_out
 
     def upsample(self, factor, preserve_counts=True):
 
-        map_out = self.__class__(self.geom.upsample(factor))
+        map_out = self.__class__(self.geom.upsample(factor),
+                                 meta=copy.deepcopy(self.meta))
         coords = map_out.geom.get_coords(flat=True)
         vals = self.get_by_coords(coords)
         m = np.isfinite(vals)
@@ -284,7 +286,8 @@ class HpxNDMap(HpxMap):
 
     def downsample(self, factor, preserve_counts=True):
 
-        map_out = self.__class__(self.geom.downsample(factor))
+        map_out = self.__class__(self.geom.downsample(factor),
+                                 meta=copy.deepcopy(self.meta))
         idx = self.geom.get_idx(flat=True)
         coords = self.geom.pix_to_coord(idx)
         vals = self.get_by_idx(idx)
@@ -445,7 +448,7 @@ class HpxNDMap(HpxMap):
     def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
-        map_out = self.__class__(hpx_out)
+        map_out = self.__class__(hpx_out, meta=copy.deepcopy(self.meta))
         idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
         if self.geom.nside.size > 1:
@@ -468,7 +471,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.to_ud_graded(order)
-        map_out = self.__class__(new_hpx)
+        map_out = self.__class__(new_hpx, meta=copy.deepcopy(self.meta))
 
         if np.all(order <= self.geom.order):
             # Downsample
