@@ -169,7 +169,7 @@ def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     fill_poisson(m, mu=1.0, random_state=0)
-    m2 = m.to_swapped_scheme()
+    m2 = m.to_swapped()
     coords = m.geom.get_coords(flat=True)
     assert_allclose(m.get_by_coords(coords), m2.get_by_coords(coords))
 
@@ -187,7 +187,17 @@ def test_hpxmap_ud_grade(nside, nested, coordsys, region, axes):
 def test_hpxmap_pad(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    m.pad(1)
+    m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
+    cval = 2.2
+    m_pad = m.pad(1, mode='constant', cval=cval)
+    coords_pad = m_pad.geom.get_coords(flat=True)
+    msk = m.geom.contains(coords_pad)
+    coords_out = tuple([c[~msk] for c in coords_pad])
+    assert_allclose(m_pad.get_by_coords(coords_out),
+                    cval * np.ones_like(coords_out[0]))
+    coords_in = tuple([c[msk] for c in coords_pad])
+    assert_allclose(m_pad.get_by_coords(coords_in),
+                    np.ones_like(coords_in[0]))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -199,19 +209,25 @@ def test_hpxmap_crop(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_partialsky_geoms)
+                         hpx_test_geoms)
 def test_hpxmap_upsample(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    m.upsample(2)
+    m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
+    m_up = m.upsample(2, preserve_counts=True)
+    assert_allclose(np.nansum(m.data), np.nansum(m_up.data))
+    m_up = m.upsample(2, preserve_counts=False)
+    assert_allclose(4.0 * np.nansum(m.data), np.nansum(m_up.data))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
-                         hpx_test_partialsky_geoms)
+                         hpx_test_geoms)
 def test_hpxmap_downsample(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    m.downsample(2)
+    m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
+    m_down = m.downsample(2, preserve_counts=True)
+    assert_allclose(np.nansum(m.data), np.nansum(m_down.data))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),

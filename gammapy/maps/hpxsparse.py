@@ -169,7 +169,7 @@ class HpxSparseMap(HpxMap):
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
         raise NotImplementedError
 
-    def to_swapped_scheme(self):
+    def to_swapped(self):
         raise NotImplementedError
 
     def to_ud_graded(self):

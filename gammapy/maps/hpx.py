@@ -997,23 +997,23 @@ class HpxGeom(MapGeom):
         """HEALPIX pixel and band indices for every pixel in the map."""
         return self.get_idx()
 
-    def ud_graded_hpx(self, order):
+    def to_ud_graded(self, order):
         """Upgrade or downgrade the resolution of this geometry to the given
-        order.
+        order.  This method does not preserve the geometry footprint.
 
         Returns
         -------
         geom : `~HpxGeom`
             A HEALPix geometry object.
+
         """
         if np.any(self.order < 0):
             raise ValueError(
                 'Upgrade and degrade only implemented for standard maps')
 
-        # FIXME: Pass ipix as argument
-
+        axes = copy.deepcopy(self.axes)
         return self.__class__(2 ** order, self.nest, coordsys=self.coordsys,
-                              region=self.region, axes=self.axes, conv=self.conv)
+                              region=self.region, axes=axes, conv=self.conv)
 
     def to_swapped(self):
         """Make a copy of this geometry with a swapped ORDERING.  (NEST->RING
@@ -1024,8 +1024,9 @@ class HpxGeom(MapGeom):
         geom : `~HpxGeom`
             A HEALPix geometry object.
         """
+        axes = copy.deepcopy(self.axes)
         return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
-                              region=self.region, axes=self.axes, conv=self.conv)
+                              region=self.region, axes=axes, conv=self.conv)
 
     def to_image(self):
         return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
@@ -1040,11 +1041,7 @@ class HpxGeom(MapGeom):
 
         import healpy as hp
 
-        if self.nside.size > 1:
-            nside = self.nside[idx[1:]]
-        else:
-            nside = self.nside
-
+        nside = self._get_nside(idx)
         idx_nb = (hp.get_all_neighbours(nside, idx[0], nest=self.nest),)
         idx_nb += tuple([t[None, ...] * np.ones_like(idx_nb[0])
                          for t in idx[1:]])

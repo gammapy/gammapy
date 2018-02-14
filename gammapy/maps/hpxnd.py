@@ -270,12 +270,30 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def upsample(self, factor, preserve_counts=True):
-        nside = self.geom.nside * factor
-        return self.to_ud_graded(nside, preserve_counts=preserve_counts)
+
+        map_out = self.__class__(self.geom.upsample(factor))
+        coords = map_out.geom.get_coords(flat=True)
+        vals = self.get_by_coords(coords)
+        m = np.isfinite(vals)
+        map_out.fill_by_coords([c[m] for c in coords], vals[m])
+
+        if preserve_counts:
+            map_out.data /= factor**2
+
+        return map_out
 
     def downsample(self, factor, preserve_counts=True):
-        nside = self.geom.nside // factor
-        return self.to_ud_graded(nside, preserve_counts=preserve_counts)
+
+        map_out = self.__class__(self.geom.downsample(factor))
+        idx = self.geom.get_idx(flat=True)
+        coords = self.geom.pix_to_coord(idx)
+        vals = self.get_by_idx(idx)
+        map_out.fill_by_coords(coords, vals)
+
+        if not preserve_counts:
+            map_out.data /= factor**2
+
+        return map_out
 
     def interp_by_coords(self, coords, interp=1):
 
@@ -424,7 +442,7 @@ class HpxNDMap(HpxMap):
                                         array=self.data[idx].astype(float)))
         return cols
 
-    def to_swapped_scheme(self):
+    def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
         map_out = self.__class__(hpx_out)
@@ -444,12 +462,12 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def to_ud_graded(self, nside, preserve_counts=False):
-        # FIXME: For partial sky maps we should ensure that a higher
-        # order map fully encompasses the lower order map
+
+        # FIXME: Should we remove/deprecate this method?
 
         import healpy as hp
         order = nside_to_order(nside)
-        new_hpx = self.geom.ud_graded_hpx(order)
+        new_hpx = self.geom.to_ud_graded(order)
         map_out = self.__class__(new_hpx)
 
         if np.all(order <= self.geom.order):
