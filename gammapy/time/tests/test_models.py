@@ -11,18 +11,22 @@ from ..models import PhaseCurve
 def phase_curve():
     filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
     table = Table.read(str(filename))
-    return PhaseCurve(table, reference=43366.275, phase0=0.0, f0=0.5, f1=0.0, f2=0.0)
+    return PhaseCurve(table, time_0=43366.275, phase_0=0.0, f0=0.5, f1=0.0, f2=0.0)
 
 
 @requires_data('gammapy-extra')
 def test_phasecurve_phase(phase_curve):
     time = 46300.0
     phase = phase_curve.phase(time)
-    assert_allclose(phase, 0.86, rtol=0.01)
+    assert_allclose(phase, 0.8624999999992724)
 
 
 @requires_data('gammapy-extra')
-def test_phasecurve_norm(phase_curve):
+def test_phasecurve_evaluate(phase_curve):
     time = 46300.0
-    value = phase_curve.evaluate(time)
-    assert_allclose(value, 0.05, rtol=0.01)
+    value = phase_curve.evaluate_norm_at_time(time)
+    assert_allclose(value, 0.05)
+
+    phase = phase_curve.phase(time)
+    value = phase_curve.evaluate_norm_at_phase(phase)
+    assert_allclose(value, 0.05)
