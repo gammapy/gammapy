@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from ...utils.testing import requires_dependency
 from ..poisson import (
     background,
     background_error,
@@ -13,6 +14,8 @@ from ..poisson import (
     excess_matching_significance,
     excess_matching_significance_on_off,
 )
+
+pytest.importorskip('scipy')
 
 
 def test_background():
@@ -61,34 +64,29 @@ def test_significance_on_off(p):
     assert_allclose(s, p['s'], atol=1e-5)
 
 
-def make_test_cases():
-    for n_on in [0.1, 10, 0.3]:
-        for n_off in [0.1, 10, 0.3]:
-            for alpha in [1e-3, 1e-2, 0.1, 1, 10]:
-                for method in ['simple', 'lima']:
-                    yield dict(n_on=n_on, n_off=n_off, alpha=alpha, method=method)
-
-
 @pytest.mark.xfail()
 def test_excess_matching_significance():
     raise NotImplementedError
 
 
-@pytest.mark.parametrize('p', list(make_test_cases()))
-# @pytest.mark.parametrize('p', TEST_CASES)
-def test_excess_matching_significance_on_off(p):
-    # Check round-tripping
+def test_excess_matching_significance_on_off():
+    # Negative significance should work
+    excess = excess_matching_significance_on_off(n_off=10, alpha=0.1, significance=-1)
+    assert_allclose(excess, -0.83198, atol=1e-3)
+
+    # Cases that can't be achieved with n_on >= 0 should return NaN
+    excess = excess_matching_significance_on_off(n_off=10, alpha=0.1, significance=-2)
+    assert np.isnan(excess)
+
+    # Arrays should work
+    excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=0.1, significance=5)
+    assert_allclose(excess, [9.82966, 12.038423], atol=1e-3)
+
+
+@pytest.mark.parametrize('p', TEST_CASES)
+def test_excess_matching_significance_on_off_roundtrip(p):
     s = significance_on_off(p['n_on'], p['n_off'], p['alpha'], p['method'])
     excess = excess_matching_significance_on_off(p['n_off'], p['alpha'], s, p['method'])
     n_on = excess + background(p['n_off'], p['alpha'])
     s2 = significance_on_off(n_on, p['n_off'], p['alpha'], p['method'])
-    print(s, s2, n_on)
-    # p.update(s=s, s2=s2, excess=excess, n_on_reco=n_on)
-    # from pprint import pprint
-    # pprint(p)
-    # assert_allclose(s, s2, rtol=1e-3)
-
-
-def test_excess_matching_significance_on_off_arrays():
-    excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=0.1, significance=5)
-    assert_allclose(excess, [9.82966, 12.038423], atol=1e-3)
+    assert_allclose(s, s2, atol=0.0001)

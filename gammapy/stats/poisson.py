@@ -527,11 +527,16 @@ def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
 def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
     from scipy.optimize import fsolve
 
+    # Significance not well-defined for n_on < 0
+    # Return Nan if given significance can't be reached
+    s0 = _significance_lima_on_off(n_on=1e-5, n_off=n_off, alpha=alpha)
+    if s0 >= significance:
+        return np.nan
+
     def target_significance(n_on):
         if n_on >= 0:
             return _significance_lima_on_off(n_on, n_off, alpha) - significance
         else:
-            # Significance not well-defined for n_on < 0
             # This high value is to tell the optimiser to stay n_on >= 0
             return 1e10
 
