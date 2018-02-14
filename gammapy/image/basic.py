@@ -92,6 +92,7 @@ class BasicImageEstimator(object):
 
         with np.errstate(invalid='ignore', divide='ignore'):
             flux.data = (excess / images['exposure'].data)
+        flux.unit = (1 / images['exposure'].unit).unit
 
         is_zero = images['exposure'].data == 0
         flux.data[is_zero] = 0
@@ -193,6 +194,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure = exposure_cube.sky_image_integral(emin=p['emin'], emax=p['emax'])
 
         exposure.name = 'exposure'
+        exposure.unit = exposure.data.unit
         exposure.data = np.nan_to_num(exposure.data.value)
         return exposure
 
@@ -305,6 +307,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'exposure' in which:
                 exposure = self._exposure(observation)
                 result['exposure'].paste(exposure)
+                # TODO: improve SkyImage.paste() so that it enforces compatibility
+                # of units when doing the sum. The fix below can then be removed.
+                result['exposure'].unit = exposure.unit
 
             if 'counts' in which:
                 counts = self._counts(observation)
@@ -328,6 +333,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             if 'flux' in which:
                 flux = self.flux(SkyImageList([counts, background, exposure]))
                 result['flux'].paste(flux)
+                # TODO: improve SkyImage.paste() so that it enforces compatibility
+                # of units when doing the sum. The fix below can then be removed.
+                result['flux'].unit = flux.unit
 
         if 'psf' in which:
             result['psf'] = self.psf(observations)
