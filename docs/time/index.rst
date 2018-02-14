@@ -117,3 +117,7 @@ Reference/API
 .. automodapi:: gammapy.time
     :no-inheritance-diagram:
     :include-all-objects:
+
+.. automodapi:: gammapy.time.models
+    :no-inheritance-diagram:
+    :include-all-objects:
