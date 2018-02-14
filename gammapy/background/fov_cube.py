@@ -627,7 +627,7 @@ class FOVCube(object):
 
         # find energy bin containing the specified energy
         energy_bin = self.energy_edges.find_energy_bin(energy)
-        energy_bin_edges = self.energy_edges.bin(energy_bin)
+        energy_bin_edges = self.energy_edges[[energy_bin, energy_bin + 1]]
 
         # get data for the plot
         data = self.data[energy_bin]

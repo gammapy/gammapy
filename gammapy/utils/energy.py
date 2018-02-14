@@ -285,16 +285,6 @@ class EnergyBounds(Energy):
         high = hdu.data['ENERG_HI']
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
-    def bin(self, i):
-        """Return energy bin edges (zero-based numbering).
-
-        Parameters
-        ----------
-        i : int
-            Energy bin
-        """
-        return self[[i, i + 1]]
-
     def find_energy_bin(self, energy):
         """Find the bins that contain the specified energy values.
 
