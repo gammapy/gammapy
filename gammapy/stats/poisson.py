@@ -1,22 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Poisson statistics computations for these two cases.
+Poisson significance computations for these two cases.
 
-* a measured number of counts ``n_on`` and known background
-* a measured number of counts ``n_on`` in an on region
-  and a second count measurement ``n_off`` in an excess-free region.
-
-TODO: More detailed description here.
+* known background level ``mu_bkg``
+* background estimated from ``n_off`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy import sign, log, sqrt
 
-__all__ = ['background', 'background_error',
-           'excess', 'excess_error',
-           'significance', 'significance_on_off',
-           'sensitivity', 'sensitivity_on_off',
-           ]
+__all__ = [
+    'background',
+    'background_error',
+    'excess',
+    'excess_error',
+    'significance',
+    'significance_on_off',
+    'excess_matching_significance',
+    'excess_matching_significance_on_off',
+]
 
 __doctest_skip__ = ['*']
 
@@ -83,7 +84,7 @@ def background_error(n_off, alpha):
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
 
-    return alpha * sqrt(n_off)
+    return alpha * np.sqrt(n_off)
 
 
 def excess(n_on, n_off, alpha):
@@ -122,8 +123,7 @@ def excess(n_on, n_off, alpha):
 
 
 def excess_error(n_on, n_off, alpha):
-    r"""Estimate standard error on excess
-    in the on region for an on-off observation.
+    r"""Estimate error on excess for an on-off measurement.
 
     .. math::
 
@@ -157,7 +157,7 @@ def excess_error(n_on, n_off, alpha):
     alpha = np.asanyarray(alpha, dtype=np.float64)
 
     variance = n_on + (alpha ** 2) * n_off
-    return sqrt(variance)
+    return np.sqrt(variance)
 
 
 # TODO: rename this function to something more explicit.
@@ -244,15 +244,14 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
 def _significance_simple(n_on, mu_bkg):
     # TODO: check this formula against ???
     excess = n_on - mu_bkg
-    bkg_err = sqrt(mu_bkg)
+    bkg_err = np.sqrt(mu_bkg)
     return excess / bkg_err
 
 
 def _significance_lima(n_on, mu_bkg):
-    # import IPython; IPython.embed()
-    term_a = sign(n_on - mu_bkg) * sqrt(2)
-    term_b = sqrt(n_on * log(n_on / mu_bkg) - n_on + mu_bkg)
-    return term_a * term_b
+    sign = np.sign(n_on - mu_bkg)
+    val = np.sqrt(2) * np.sqrt(n_on * np.log(n_on / mu_bkg) - n_on + mu_bkg)
+    return sign * val
 
 
 def _significance_direct(n_on, mu_bkg):
@@ -269,10 +268,8 @@ def _significance_direct(n_on, mu_bkg):
 
     >>> stats.poisson._significance_direct(0, 2)
     -1.1015196284987503
-
     >>> stats.poisson._significance_direct(0, 0.1)
     1.309617799458493
-
     """
     from scipy.stats import norm, poisson
 
@@ -314,7 +311,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
 
     See Also
     --------
-    significance, sensitivity_on_off
+    significance, excess_matching_significance_on_off
 
     Examples
     --------
@@ -369,8 +366,8 @@ def _significance_simple_on_off(n_on, n_off, alpha):
     This function implements formula (5) of Li & Ma.
     Li & Ma show that it is somewhat biased,
     but it does have the advantage of being analytically invertible,
-    i.e. there is an analytical formula for sensitivity,
-    which is often used in practice.
+    i.e. there is an analytical formula for the inverse,
+    which is often used in practice as part of sensitivity computation.
     """
     excess_ = excess(n_on, n_off, alpha)
     excess_error_ = excess_error(n_on, n_off, alpha)
@@ -380,13 +377,14 @@ def _significance_simple_on_off(n_on, n_off, alpha):
 
 def _significance_lima_on_off(n_on, n_off, alpha):
     r"""Compute significance with the Li & Ma formula (17)."""
-    temp = (alpha + 1) / (n_on + n_off)
-    l = n_on * log(n_on * temp / alpha)
-    m = n_off * log(n_off * temp)
-    e = excess(n_on, n_off, alpha)
-    sign = np.where(e > 0, 1, -1)
+    sign = np.sign(excess(n_on, n_off, alpha))
 
-    return sign * sqrt(abs(2 * (l + m)))
+    tt = (alpha + 1) / (n_on + n_off)
+    ll = n_on * np.log(n_on * tt / alpha)
+    mm = n_off * np.log(n_off * tt)
+    val = np.sqrt(np.abs(2 * (ll + mm)))
+
+    return sign * val
 
 
 def _significance_direct_on_off(n_on, n_off, alpha):
@@ -416,58 +414,59 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     return significance
 
 
-def sensitivity(mu_bkg, significance, quantity='excess', method='lima'):
-    r"""Compute sensitivity.
+def excess_matching_significance(mu_bkg, significance, method='lima'):
+    r"""Compute excess matching a given significance.
 
-    TODO: document what "sensitivity" is ... excess or n_on.
-    Use `quantity` parameter or decide on one quanity and remove that option.
+    This function is the inverse of `significance`.
 
     Parameters
     ----------
     mu_bkg : array_like
         Known background level
-    quantity : {'excess', 'n_on'}
-        Select output quantity
+    significance : array_like
+        Significance
     method : {'lima', 'simple'}
         Select method
 
     Returns
     -------
-    sensitivity : ndarray
-        Sensitivity according to the method chosen.
+    excess : ndarray
+        Excess
 
     See Also
     --------
-    sensitivity_on_off
+    significance, excess_matching_significance_on_off
 
     Examples
     --------
-    >>> # sensitivity(mu_bkg=0.2, significance=5, method='lima')
+    >>> excess_matching_significance(mu_bkg=0.2, significance=5, method='lima')
     TODO
-    >>> # sensitivity(mu_bkg=0.2, significance=5, method='simple')
+    >>> excess_matching_significance(mu_bkg=0.2, significance=5, method='simple')
     TODO
     """
     mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
     if method == 'simple':
-        return _sensitivity_simple(mu_bkg, significance)
+        return _excess_matching_significance_simple(mu_bkg, significance)
     elif method == 'lima':
-        return _sensitivity_lima(mu_bkg, significance)
+        return _excess_matching_significance_lima(mu_bkg, significance)
     else:
         raise ValueError('Invalid method: {}'.format(method))
 
 
-def _sensitivity_simple(mu_bkg, significance):
+def _excess_matching_significance_simple(mu_bkg, significance):
     raise NotImplementedError
 
 
-def _sensitivity_lima(mu_bkg, significance):
+def _excess_matching_significance_lima(mu_bkg, significance):
     raise NotImplementedError
 
 
-def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='lima'):
+def excess_matching_significance_on_off(n_off, alpha, significance, method='lima'):
     r"""Compute sensitivity of an on-off observation.
+
+    This function is the inverse of `significance_on_off`.
 
     Parameters
     ----------
@@ -477,83 +476,77 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
         On / off region exposure ratio for background events
     significance : array_like
         Desired significance level
-    quantity : {'excess', 'n_on'}
-        Which output sensitivity quantity?
     method : {'lima', 'simple'}
         Which method?
 
     Returns
     -------
-    sensitivity : `numpy.ndarray`
-        Sensitivity according to the method chosen.
+    excess : `numpy.ndarray`
+        Excess
 
     See Also
     --------
-    sensitivity, significance_on_off
+    significance_on_off, excess_matching_significance
 
     Examples
     --------
-    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
-    TODO
-    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
-    2.5048971
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=5,method='lima')
+    12.038
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=5,method='simple')
+    27.034
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=0,method='lima')
+    2.307301461e-09
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=0,method='simple')
+    0.0
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=-10,method='lima')
+    nan
+    >>> excess_matching_significance_on_off(n_off=20,alpha=0.1,significance=-10,method='simple')
+    nan
     """
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
-    if method == 'lima':
-        n_on_sensitivity = _sensitivity_lima(n_off, alpha, significance)
-    elif method == 'simple':
-        n_on_sensitivity = _sensitivity_simple(n_off, alpha, significance)
+    if method == 'simple':
+        return _excess_matching_significance_on_off_simple(n_off, alpha, significance)
+    elif method == 'lima':
+        return _excess_matching_significance_on_off_lima(n_off, alpha, significance)
     else:
         raise ValueError('Invalid method: {}'.format(method))
 
-    if quantity == 'n_on':
-        return n_on_sensitivity
-    elif quantity == 'excess':
-        return n_on_sensitivity - background(n_off, alpha)
-    else:
-        raise ValueError('Invalid quantity: {}'.format(quantity))
 
-
-def _sensitivity_simple_on_off(n_off, alpha, significance):
-    """Implements an analytical formula that can be easily obtained
-    by solving the simple significance formula for n_on.
-    """
+def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
+    # TODO: can these equations be simplified?
     significance2 = significance ** 2
     determinant = significance2 + 4 * n_off * alpha * (1 + alpha)
     temp = significance2 + 2 * n_off * alpha
-    n_on = 0.5 * (temp + significance * sqrt(abs(determinant)))
-    return n_on
+    n_on = 0.5 * (temp + significance * np.sqrt(np.abs(determinant)))
+    return n_on - background(n_off, alpha)
 
 
-def _sensitivity_lima_on_off(n_off, alpha, significance):
-    """Implements an iterative root finding method to solve the
-    significance formula for n_on.
-
-    TODO: in weird cases (e.g. on=0.1, off=0.1, alpha=0.001)
-    fsolve does not find a solution.
-    values < guess are often not found using this cost function.
-    Find a way to make this function more robust and add plenty of tests.
-    Maybe a better starting point estimate can help?
-    """
+def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
     from scipy.optimize import fsolve
 
-    def f(n_on, args):
-        n_off, alpha, significance = args
+    # Significance not well-defined for n_on < 0
+    # Return Nan if given significance can't be reached
+    s0 = _significance_lima_on_off(n_on=1e-5, n_off=n_off, alpha=alpha)
+    if s0 >= significance:
+        return np.nan
+
+    def target_significance(n_on):
         if n_on >= 0:
             return _significance_lima_on_off(n_on, n_off, alpha) - significance
         else:
-            return 1e100
+            # This high value is to tell the optimiser to stay n_on >= 0
+            return 1e10
 
-    # We need to loop over the array manually and call `fsolve` for
-    # each item separately.
-    n_on = np.empty_like(n_off)
-    guess = _sensitivity_simple_on_off(n_off, alpha, significance) + background(n_off, alpha)
-    data = enumerate(zip(guess.flat, n_off.flat, alpha.flat, significance.flat))
-    for ii, guess_, n_off_, alpha_, significance_ in data:
-        # guess = 1e-3
-        n_on.flat[ii] = fsolve(f, guess_, args=(n_off_, alpha_, significance_))
+    excess_guess = _excess_matching_significance_on_off_simple(n_off, alpha, significance)
+    n_on_guess = excess_guess + background(n_off, alpha)
 
-    return n_on
+    # solver options to control robustness / accuracy / speed
+    opts = dict(factor=0.1)
+    n_on = fsolve(target_significance, n_on_guess, **opts)
+    return n_on - background(n_off, alpha)
+
+
+_excess_matching_significance_on_off_lima = np.vectorize(_excess_matching_significance_on_off_lima)
