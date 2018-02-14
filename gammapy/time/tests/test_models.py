@@ -2,25 +2,27 @@
 from astropy.table import Table
 import pytest
 from numpy.testing import assert_allclose
-from ..models import PhaseCurve
 from ...utils.scripts import make_path
+from ...utils.testing import requires_data
+from ..models import PhaseCurve
 
 
 @pytest.fixture(scope='session')
 def phase_curve():
     filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
     table = Table.read(str(filename))
-    return PhaseCurve(table, reference=43366.275, phase0=0.0, f0=0.5, f1=0.0, f2=0.0
-                      )
+    return PhaseCurve(table, reference=43366.275, phase0=0.0, f0=0.5, f1=0.0, f2=0.0)
 
 
-# To check the value of the phase
+@requires_data('gammapy-extra')
 def test_phasecurve_phase(phase_curve):
     time = 46300.0
-    assert_allclose(phase_curve.phase(time), 0.86, rtol=0.01)
+    phase = phase_curve.phase(time)
+    assert_allclose(phase, 0.86, rtol=0.01)
 
 
-# To check the value of the normalization constant
+@requires_data('gammapy-extra')
 def test_phasecurve_norm(phase_curve):
     time = 46300.0
-    assert_allclose(phase_curve.evaluate(time), 0.05, rtol=0.01)
+    value = phase_curve.evaluate(time)
+    assert_allclose(value, 0.05, rtol=0.01)
