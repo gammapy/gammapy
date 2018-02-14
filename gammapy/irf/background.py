@@ -156,9 +156,9 @@ class Background3D(object):
         Parameters
         ----------
         fov_offset : `~astropy.coordinates.Angle`
-            offset in the FOV
+            offset in the FOV. Same shape than fov_phi`
         fov_phi: `~astropy.coordinates.Angle`
-            azimuth angle in the FOV.
+            azimuth angle in the FOV. Same shape than `fov_offset`
         energy_reco : `~astropy.units.Quantity`
             Vector of energy (1D) on which the model is evaluated
         method : str {'linear', 'nearest'}, optional
@@ -201,9 +201,9 @@ class Background3D(object):
         energy_bins : int
             Number of energy bins used for the integration
         fov_offset : `~astropy.coordinates.Angle`
-            offset in the FOV
+            offset in the FOV. Same shape than `fov_phi`
         fov_phi: `~astropy.coordinates.Angle`
-            azimuth angle in the FOV.
+            azimuth angle in the FOV. Same shape than `fov_offset`
         method : str {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
@@ -217,12 +217,11 @@ class Background3D(object):
         dim_E=len(tab_energy_band)-1
         if fov_offset is None:
             shape_bkg= (dim_E,len(self.data.axis('detx').nodes),len(self.data.axis('dety').nodes))
+        elif fov_phi is None:
+            shape_bkg= (dim_E,len(self.data.axis('detx').nodes),len(self.data.axis('dety').nodes))
         else:
             shape_bkg= tuple([dim_E]) + fov_offset.shape + fov_offset.shape
-        #    self.axis[].data
         bkg_integrated = u.Quantity(np.zeros(shape_bkg),"1 / (s sr)")
-
-        bkg_integrated = np.zeros(tab_energy_band.shape + fov_offset.shape)
         for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
             energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, energy_bins)
             energy_bins = energy_edges.log_centers
@@ -405,7 +404,6 @@ class Background2D(object):
             shape_bkg= (dim_E,len(self.data.axis('offset').nodes))
         else:
             shape_bkg= tuple([dim_E]) + fov_offset.shape
-        #    self.axis[].data
         bkg_integrated = u.Quantity(np.zeros(shape_bkg),"1 / (s sr)")
 
         for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
@@ -419,6 +417,5 @@ class Background2D(object):
             elif len(fov_offset.shape) == 1:
                 bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
             else:
-                #import IPython; IPython.embed()
                 bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=2).T
         return bkg_integrated
