@@ -622,6 +622,7 @@ class HpxGeom(MapGeom):
 
         elif isinstance(region, tuple):
 
+            region = [np.asarray(t) for t in region]
             m = np.any(np.stack([t >= 0 for t in region]), axis=0)
             region = [t[m] for t in region]
 
