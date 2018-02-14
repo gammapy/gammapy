@@ -359,7 +359,7 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def pad(self, pad_width, mode='edge', cval=0):
+    def pad(self, pad_width, mode='constant', cval=0, order=1):
 
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
@@ -367,27 +367,46 @@ class WcsNDMap(WcsMap):
 
         geom = self.geom.pad(pad_width[:2])
         if self.geom.is_regular and mode != 'interp':
-            kw = {}
-            if mode == 'constant':
-                kw['constant_values'] = cval
-
-            pad_width = [(t, t) for t in pad_width]
-            data = np.pad(self.data, pad_width[::-1], mode, **kw)
-            map_out = self.__class__(geom, data)
+            return self._pad_np(geom, pad_width, mode, cval)
         else:
-            idx_in = self.geom.get_idx(flat=True)
-            idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
-            idx_out = geom.get_idx(flat=True)[::-1]
-            map_out = self.__class__(geom)
+            return self._pad_coadd(geom, pad_width, mode, cval, order)
 
+    def _pad_np(self, geom, pad_width, mode, cval):
+        """Pad a map with `~np.pad`.  This method only works for regular
+        geometries but should be more efficient when working with
+        large maps.
+        """
+        kw = {}
+        if mode == 'constant':
+            kw['constant_values'] = cval
+
+        pad_width = [(t, t) for t in pad_width]
+        data = np.pad(self.data, pad_width[::-1], mode, **kw)
+        map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta))
+        return map_out
+
+    def _pad_coadd(self, geom, pad_width, mode, cval, order):
+        """Pad a map manually by coadding the original map with the new
+        map."""
+        idx_in = self.geom.get_idx(flat=True)
+        idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
+        idx_out = geom.get_idx(flat=True)[::-1]
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
+        map_out.coadd(self)
+        if mode == 'constant':
             pad_msk = np.zeros_like(map_out.data, dtype=bool)
             pad_msk[idx_out] = True
             pad_msk[idx_in] = False
-            map_out.coadd(self)
-            if mode == 'constant':
-                map_out.data[pad_msk] = cval
-            else:
-                raise NotImplementedError
+            map_out.data[pad_msk] = cval
+        elif mode in ['edge', 'interp']:
+            coords = geom.pix_to_coord(idx_out[::-1])
+            m = self.geom.contains(coords)
+            coords = tuple([c[~m] for c in coords])
+            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
+                                         else order)
+            map_out.set_by_coords(coords, vals)
+        else:
+            raise ValueError('Unrecognized pad mode: {}'.format(mode))
 
         return map_out
 
@@ -402,11 +421,11 @@ class WcsNDMap(WcsMap):
             for ax in self.geom.axes:
                 slices += [slice(None)]
             data = self.data[slices[::-1]]
-            map_out = self.__class__(geom, data)
+            map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta))
         else:
             # FIXME: This could be done more efficiently by
             # constructing the appropriate slices for each image plane
-            map_out = self.__class__(geom)
+            map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
             map_out.coadd(self)
 
         return map_out
@@ -420,7 +439,7 @@ class WcsNDMap(WcsMap):
         data = map_coordinates(self.data.T, pix, order=order, mode='nearest')
         if preserve_counts:
             data /= factor**2
-        return self.__class__(geom, data)
+        return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
     def downsample(self, factor, preserve_counts=True):
         from skimage.measure import block_reduce
@@ -429,7 +448,7 @@ class WcsNDMap(WcsMap):
         data = block_reduce(self.data, block_size[::-1], np.nansum)
         if not preserve_counts:
             data /= factor**2
-        return self.__class__(geom, data)
+        return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
     def plot(self, ax=None, idx=None, **kwargs):
         """Quickplot method.

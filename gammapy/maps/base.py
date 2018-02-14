@@ -287,8 +287,8 @@ class Map(object):
         pass
 
     def coadd(self, map_in):
-        """Fill this map with the contents of another map.  This method can be
-        used to sum maps containing integral quantities (e.g. counts)
+        """Add the contents of ``map_in`` to this map.  This method can be
+        used to combine maps containing integral quantities (e.g. counts)
         or differential quantities if the maps have the same binning.
 
         Parameters
@@ -335,20 +335,23 @@ class Map(object):
             return self._reproject_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
-    def pad(self, pad_width, mode='edge', cval=0):
+    def pad(self, pad_width, mode='constant', cval=0, order=1):
         """Pad the spatial dimension of the map by extending the edge of the
         map by the given number of pixels.
 
         Parameters
         ----------
         pad_width : {sequence, array_like, int}
-            Number of values padded to the edges of each axis, passed to `numpy.pad`
+            Number of pixels padded to the edges of each axis.
         mode : {'edge', 'constant', 'interp'}
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value.
         cval : float
             Padding value when mode='consant'.
+        order : int
+            Order of interpolation when mode='constant' (0 =
+            nearest-neighbor, 1 = linear, 2 = quadratic, 3 = cubic).
 
         Returns
         -------
@@ -360,18 +363,20 @@ class Map(object):
 
     @abc.abstractmethod
     def crop(self, crop_width):
-        """Crop the spatial dimension of the map.
+        """Crop the spatial dimension of the map by removing a number of
+        pixels from the edge of the map.
 
         Parameters
         ----------
         crop_width : {sequence, array_like, int}
-            Number of values cropped from the edges of each axis.
+            Number of pixels cropped from the edges of each axis.
             Defined analogously to `pad_with` from `~numpy.pad`.
 
         Returns
         -------
         map : `~Map`
             Cropped map.
+
         """
         pass
 

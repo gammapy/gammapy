@@ -224,7 +224,14 @@ def test_wcsndmap_pad(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsNDMap(geom)
-    m.pad(1, mode='constant')
+    m2 = m.pad(1, mode='constant', cval=2.2)
+    if not geom.is_allsky:
+        coords = m2.geom.get_coords()
+        msk = m2.geom.contains(coords)
+        coords = tuple([c[~msk] for c in coords])
+        assert_allclose(m2.get_by_coords(coords), 2.2)
+    m.pad(1, mode='edge')
+    m.pad(1, mode='interp')
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),

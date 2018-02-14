@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import json
 import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
 from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
+from .utils import interp_to_order
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
 
@@ -237,33 +239,72 @@ class HpxNDMap(HpxMap):
                           zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-            pass
+            raise NotImplementedError
 
         return map_out
 
-    def pad(self, pad_width):
+    def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
-        map_out = self.__class__(geom)
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
         map_out.coadd(self)
+        coords = geom.get_coords(flat=True)
+        m = self.geom.contains(coords)
+        coords = tuple([c[~m] for c in coords])
+
+        if mode == 'constant':
+            map_out.set_by_coords(coords, cval)
+        elif mode in ['edge', 'interp']:
+            # FIXME: These modes don't work at present because
+            # interp_by_coords doesn't support extrapolation
+            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
+                                         else order)
+            map_out.set_by_coords(coords, vals)
+        else:
+            raise ValueError('Unrecognized pad mode: {}'.format(mode))
+
         return map_out
 
     def crop(self, crop_width):
         geom = self.geom.crop(crop_width)
-        map_out = self.__class__(geom)
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
         map_out.coadd(self)
         return map_out
 
-    def upsample(self, factor):
-        raise NotImplementedError
+    def upsample(self, factor, preserve_counts=True):
 
-    def downsample(self, factor):
-        raise NotImplementedError
+        map_out = self.__class__(self.geom.upsample(factor),
+                                 meta=copy.deepcopy(self.meta))
+        coords = map_out.geom.get_coords(flat=True)
+        vals = self.get_by_coords(coords)
+        m = np.isfinite(vals)
+        map_out.fill_by_coords([c[m] for c in coords], vals[m])
 
-    def interp_by_coords(self, coords, interp=None):
-        if interp == 'linear':
-            return self._interp_by_coords(coords, interp)
+        if preserve_counts:
+            map_out.data /= factor**2
+
+        return map_out
+
+    def downsample(self, factor, preserve_counts=True):
+
+        map_out = self.__class__(self.geom.downsample(factor),
+                                 meta=copy.deepcopy(self.meta))
+        idx = self.geom.get_idx(flat=True)
+        coords = self.geom.pix_to_coord(idx)
+        vals = self.get_by_idx(idx)
+        map_out.fill_by_coords(coords, vals)
+
+        if not preserve_counts:
+            map_out.data /= factor**2
+
+        return map_out
+
+    def interp_by_coords(self, coords, interp=1):
+
+        order = interp_to_order(interp)
+        if order == 1:
+            return self._interp_by_coords(coords, order)
         else:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
+            raise ValueError('Invalid interpolation order: {}'.format(order))
 
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
@@ -283,14 +324,15 @@ class HpxNDMap(HpxMap):
         coords_ctr = list(coords[:2])
         coords_ctr += [ax.pix_to_coord(t)
                        for ax, t in zip(self.geom.axes, idxs)]
-        pix_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
-        pix_ctr = self.geom.global_to_local(pix_ctr)
-
-        if np.any(pix_ctr[0] == -1):
-            raise ValueError('HPX pixel index out of map bounds.')
+        idx_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
+        idx_ctr = self.geom.global_to_local(idx_ctr)
 
         theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
         phi = np.array(np.radians(c.lon), ndmin=1)
+
+        m = ~np.isfinite(theta)
+        theta[m] = 0.0
+        phi[m] = 0.0
 
         if self.geom.nside.size > 1:
             nside = self.geom.nside[idxs]
@@ -299,18 +341,22 @@ class HpxNDMap(HpxMap):
 
         pix, wts = hp.get_interp_weights(nside, theta,
                                          phi, nest=self.geom.nest)
+        wts[:, m] = 0.0
+        pix[:, m] = -1
 
-        if self.geom.nside.size > 1:
+        if not self.geom.is_regular:
             pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
         else:
             pix_local = [self.geom[pix]]
 
+        # If a pixel lies outside of the geometry set its index to the
+        # center pixel
         m = pix_local[0] == -1
-        pix_local[0][m] = (pix_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+        pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
+        return pix_local, wts
 
-        return pix_local + list(idxs), wts
-
-    def _interp_by_coords(self, coords, interp):
+    def _interp_by_coords(self, coords, order):
         """Linearly interpolate map values."""
         c = MapCoords.create(coords)
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
@@ -338,10 +384,12 @@ class HpxNDMap(HpxMap):
                     wt *= (1.0 - (c[2 + j] - ax.center[idx]) / w)
                     pix_i += [idx]
 
-            if self.geom.nside.size > 1:
+            if not self.geom.is_regular:
                 pix, wts = self._get_interp_weights(coords, pix_i)
 
-            val += np.sum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
+            wts[pix[0] == -1] = 0.0
+            wt[~np.isfinite(wt)] = 0.0
+            val += np.nansum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
 
         return val
 
@@ -397,10 +445,10 @@ class HpxNDMap(HpxMap):
                                         array=self.data[idx].astype(float)))
         return cols
 
-    def to_swapped_scheme(self):
+    def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
-        map_out = self.__class__(hpx_out)
+        map_out = self.__class__(hpx_out, meta=copy.deepcopy(self.meta))
         idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
         if self.geom.nside.size > 1:
@@ -417,25 +465,27 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def to_ud_graded(self, nside, preserve_counts=False):
-        # FIXME: For partial sky maps we should ensure that a higher
-        # order map fully encompasses the lower order map
 
-        # FIXME: For higher order maps we may want the option to split
-        # the pixel amplitude among all subpixels
+        # FIXME: Should we remove/deprecate this method?
 
         import healpy as hp
         order = nside_to_order(nside)
-        new_hpx = self.geom.ud_graded_hpx(order)
-        map_out = self.__class__(new_hpx)
+        new_hpx = self.geom.to_ud_graded(order)
+        map_out = self.__class__(new_hpx, meta=copy.deepcopy(self.meta))
 
-        idx = list(self.geom.get_idx())
-        coords = self.geom.get_coords()
-        vals = self.get_by_idx(idx)
-        msk = vals > 0
-        coords = [t[msk] for t in coords]
-        vals = vals[msk]
-
-        map_out.fill_by_coords(coords, vals)
+        if np.all(order <= self.geom.order):
+            # Downsample
+            idx = self.geom.get_idx(flat=True)
+            coords = self.geom.pix_to_coord(idx)
+            vals = self.get_by_idx(idx)
+            map_out.fill_by_coords(coords, vals)
+        else:
+            # Upsample
+            idx = new_hpx.get_idx(flat=True)
+            coords = new_hpx.pix_to_coord(idx)
+            vals = self.get_by_coords(coords)
+            m = np.isfinite(vals)
+            map_out.fill_by_coords([c[m] for c in coords], vals[m])
 
         if not preserve_counts:
             fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2

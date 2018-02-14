@@ -159,8 +159,13 @@ class HpxMap(Map):
         pass
 
     @abc.abstractmethod
-    def to_swapped_scheme(self):
+    def to_swapped(self):
         """Return a new map with the opposite scheme (ring or nested).
+
+        Returns
+        -------
+        map : `~HpxMap`
+            Map object.
         """
         pass
 
@@ -176,6 +181,11 @@ class HpxMap(Map):
         preserve_counts : bool
             Choose whether to preserve counts (total amplitude) or
             intensity (amplitude per unit solid angle).
+
+        Returns
+        -------
+        map : `~HpxMap`
+            Map object.
         """
         pass
 
