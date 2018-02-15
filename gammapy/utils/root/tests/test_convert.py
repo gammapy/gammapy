@@ -72,4 +72,4 @@ def test_TH2_to_FITS():
     pprint(f.header2classic())
     filename = 'TH2_to_FITS.fits'
     print('Writing {}'.format(filename))
-    f.writetofits(filename, clobber=True)
+    f.writetofits(filename, overwrite=True)

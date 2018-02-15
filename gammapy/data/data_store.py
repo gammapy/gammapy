@@ -379,7 +379,7 @@ class DataStore(object):
 
         return file_available
 
-    def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, clobber=False):
+    def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
 
         Parameters
@@ -392,7 +392,7 @@ class DataStore(object):
             see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`
         verbose : bool
             Print copied files
-        clobber : bool
+        overwrite : bool
             Overwrite
         """
         # TODO : Does rsync give any benefits here?
@@ -417,13 +417,13 @@ class DataStore(object):
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
             cmd = ['cp', '-v'] if verbose else ['cp']
-            if not clobber:
+            if not overwrite:
                 cmd += ['-n']
             cmd += [str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
-        subhdutable.write(str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=clobber)
-        subobstable.write(str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=clobber)
+        subhdutable.write(str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=overwrite)
+        subobstable.write(str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=overwrite)
 
     def data_summary(self, obs_id=None, summed=False):
         """Create a summary `~astropy.table.Table` with HDU size information.

@@ -115,14 +115,14 @@ class IterativeSourceDetector(object):
                 for name in ['background']:
                     filename = '{}/{}.fits'.format(debug_folder, name)
                     log.info('Writing {}'.format(filename))
-                    fits.writeto(filename, self.iter_images[name], clobber=self.overwrite)
+                    fits.writeto(filename, self.iter_images[name], overwrite=self.overwrite)
 
                 # Save per iteration and scale images
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{}/{}_{}.fits'.format(debug_folder, name, scale)
                         log.info('Writing {}'.format(filename))
-                        fits.writeto(filename, self.iter_images[name][scale], clobber=self.overwrite)
+                        fits.writeto(filename, self.iter_images[name][scale], overwrite=self.overwrite)
 
             self.find_peaks()
             # TODO: debug output to JSON here and for later steps

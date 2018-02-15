@@ -14,9 +14,9 @@ class TestSkyImageList:
     @staticmethod
     def assert_read_write_roundtrips(filename, images, check_wcs=True):
         images.write(filename)
-        # Make sure clobber works as expected by writing again.
+        # Make sure overwrite works as expected by writing again.
         # Before there was a bug where this appended and duplicated HDUs
-        images.write(filename, clobber=True)
+        images.write(filename, overwrite=True)
         images2 = SkyImageList.read(filename)
         SkyImageList.assert_allclose(images, images2, check_wcs=check_wcs)
         return images2

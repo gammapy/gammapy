@@ -298,4 +298,4 @@ def stack_observations(indir, outdir, overwrite, method='default'):
             filename = 'bg_cube_model_group{}_{}.fits.gz'.format(group, format)
             filename = Path(outdir) / filename
             log.info("Writing {}".format(filename))
-            bg_cube_model.write(str(filename), format=format, clobber=overwrite)
+            bg_cube_model.write(str(filename), format=format, overwrite=overwrite)

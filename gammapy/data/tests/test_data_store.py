@@ -102,7 +102,7 @@ def test_datastore_subset(tmpdir, data_manager):
     storedir = tmpdir / 'substore'
     data_store.copy_obs(selected_obs, storedir)
     obs_id = [23523, 23592]
-    data_store.copy_obs(obs_id, storedir, clobber=True)
+    data_store.copy_obs(obs_id, storedir, overwrite=True)
 
     substore = DataStore.from_dir(storedir)
 
