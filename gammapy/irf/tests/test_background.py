@@ -10,7 +10,6 @@ from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 from ...utils.fits import table_to_fits_table
-from ...utils.energy import EnergyBounds
 
 
 @pytest.fixture(scope='session')
@@ -60,14 +59,16 @@ def make_test_array():
     # Create a dummy `Background2D`
     energy = [1, 10, 100] * u.TeV
     offset = [0, 1, 2, 3] * u.deg
-    data = np.zeros((len(energy)-1,len(offset)-1)) * u.Unit('s-1 MeV-1 sr-1')
-    data.value[1,0]=2
-    data.value[1,1]=4
+    data = np.zeros((len(energy) - 1, len(offset) - 1)) * u.Unit('s-1 MeV-1 sr-1')
+    # Data contains 2 for the bin [0,1] degrees in offset and [10,100] TeV in energy
+    data.value[1, 0] = 2
+    # Data contains 4 for the bin [1,2] degrees in offset and [10,100] TeV in energy
+    data.value[1, 1] = 4
     return Background2D(
-    energy_lo=energy[:-1], energy_hi=energy[1:],
-    offset_lo=offset[:-1], offset_hi=offset[1:],
-    data=data,
-)
+        energy_lo=energy[:-1], energy_hi=energy[1:],
+        offset_lo=offset[:-1], offset_hi=offset[1:],
+        data=data,
+    )
 
 
 def test_background2d_read_write(tmpdir):
@@ -97,15 +98,30 @@ def test_background2d_evaluate():
     bkg_2d = make_test_array()
     data_unit = u.Unit('s-1 MeV-1 sr-1')
 
-    # Interoplate at the energy and offset bin of the bgk_2d axes
-    off = bkg_2d.data.axis('offset').nodes
-    e_reco = bkg_2d.data.axis('energy').nodes
-    res = bkg_2d.evaluate(fov_offset=off, energy_reco=e_reco)
-    assert_quantity_allclose(res, bkg_2d.data.data)
+    off_tab = Angle(np.array([1, 0.5]), "deg")
+    # log_center value of the first energy bin used to define the Background2D data
+    energy_center_bin_1 = u.Quantity([3.16227766], "TeV")
+    res = bkg_2d.evaluate(fov_offset=off_tab, energy_reco=energy_center_bin_1)
+    assert_quantity_allclose(res[0], 0 * data_unit)
+    assert_quantity_allclose(res[1], 0 * data_unit)
+    # log_center value of the second energy bin used to define the Background2D data
+    energy_center_bin_2 = u.Quantity([31.6227766], "TeV")
+    res = bkg_2d.evaluate(fov_offset=off_tab, energy_reco=energy_center_bin_2)
+    assert_quantity_allclose(res[0], 3 * data_unit)
+    assert_quantity_allclose(res[1], 2 * data_unit)
+    assert res.shape == (2,)
 
-    #Test linear interpolation for offset
-    off_tab=Angle(np.array([1]),"deg")
-    e_reco_tab=bkg_2d.data.axis('energy').nodes[1]
-    res = bkg_2d.evaluate(fov_offset=off_tab, energy_reco=e_reco_tab)
-    assert_quantity_allclose(res, 3 * data_unit)
+    energy_tab = u.Quantity(np.array([energy_center_bin_1.value, energy_center_bin_2.value]), "TeV")
+    offset_2d = np.meshgrid(off_tab, energy_tab)[0]
+    res = bkg_2d.evaluate(fov_offset=offset_2d, energy_reco=energy_center_bin_2)
+    assert_quantity_allclose(res[0, 0], 3 * data_unit)
+    assert_quantity_allclose(res[1, 0], 3 * data_unit)
+    assert_quantity_allclose(res[0, 1], 2 * data_unit)
+    assert_quantity_allclose(res[1, 1], 2 * data_unit)
+    assert res.shape == (2, 2)
 
+    off = Angle(1, "deg")
+    res = bkg_2d.evaluate(fov_offset=off, energy_reco=energy_tab)
+    assert_quantity_allclose(res[0], 0 * data_unit)
+    assert_quantity_allclose(res[1], 3 * data_unit)
+    assert res.shape == (2,)
