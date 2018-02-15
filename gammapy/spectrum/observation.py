@@ -458,12 +458,12 @@ class SpectrumObservation(object):
                 # TODO: Make NDData notice change of axis
                 self.edisp.data.data = self.edisp.data.data
 
-        self.on_vector.write(outdir / phafile, clobber=overwrite)
-        self.aeff.write(outdir / arffile, clobber=overwrite)
+        self.on_vector.write(outdir / phafile, overwrite=overwrite)
+        self.aeff.write(outdir / arffile, overwrite=overwrite)
         if self.off_vector is not None:
-            self.off_vector.write(outdir / bkgfile, clobber=overwrite)
+            self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
         if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), clobber=overwrite)
+            self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
 
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""

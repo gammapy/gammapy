@@ -2,7 +2,7 @@
 
 general:
   outdir: crab
-  clobber: false
+  overwrite: false
 
 source:
   lon: 83.6332124

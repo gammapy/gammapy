@@ -83,9 +83,9 @@ def cli_image_ts(input_file, output_file, psf, model, scales, downsample, residu
             fn = Path(folder) / filename_
 
             log.info('Writing {}'.format(fn))
-            result.write(str(fn), clobber=overwrite)
+            result.write(str(fn), overwrite=overwrite)
     elif results:
         log.info('Writing {}'.format(output_file))
-        results[0].write(output_file, clobber=overwrite)
+        results[0].write(output_file, overwrite=overwrite)
     else:
         log.info("No results to write to file: all scales have failed")

@@ -1425,7 +1425,7 @@ class HpxGeom(MapGeom):
             cols, self.make_header(), name=extname)
         return hdu
 
-    def write(self, data, outfile, extname='SKYMAP', clobber=True):
+    def write(self, data, outfile, extname='SKYMAP', overwrite=True):
         """Write input data to a FITS file.
 
         Parameters
@@ -1436,7 +1436,7 @@ class HpxGeom(MapGeom):
             The name of the output file
         extname :
             The HDU extension name
-        clobber : bool
+        overwrite : bool
             True -> overwrite existing files
         """
         hdu_prim = fits.PrimaryHDU()
@@ -1452,7 +1452,7 @@ class HpxGeom(MapGeom):
             hl.append(hdu_energy)
 
         hdulist = fits.HDUList(hl)
-        hdulist.writeto(outfile, clobber=clobber)
+        hdulist.writeto(outfile, overwrite=overwrite)
 
     @staticmethod
     def get_index_list(nside, nest, region):
@@ -1756,7 +1756,7 @@ class HpxToWcsMapping(object):
         HEALPIX region"""
         return self._valid
 
-    def write(self, fitsfile, clobber=True):
+    def write(self, fitsfile, overwrite=True):
         """Write this mapping to a FITS file, to avoid having to recompute it
         """
         from .wcsnd import WcsNDMap
@@ -1775,7 +1775,7 @@ class HpxToWcsMapping(object):
         #    mult_hdu.header[key] = hpx_header[key]
 
         hdulist = index_map.to_hdulist()
-        hdulist.writeto(fitsfile, clobber=clobber)
+        hdulist.writeto(fitsfile, overwrite=overwrite)
 
     @classmethod
     def create(cls, hpx, wcs):

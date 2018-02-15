@@ -210,7 +210,7 @@ class OffDataBackgroundMaker(object):
 
         if modeltype == "3D":
             if str(ngroup) in self.models3D.keys():
-                self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
+                self.models3D[str(ngroup)].write(str(filename), format='table', overwrite=True)
             else:
                 log.info("No run in the group {}".format(ngroup))
         if modeltype == "2D":

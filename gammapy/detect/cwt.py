@@ -764,4 +764,4 @@ class CWTData(object):
         hdu_list.append(fits.ImageHDU(data=self._approx, header=header, name='approx'))
         hdu_list.append(fits.ImageHDU(data=self._transform_2d, header=header, name='transform_2d'))
         hdu_list.append(fits.ImageHDU(data=self._approx_bkg, header=header, name='approx_bkg'))
-        hdu_list.writeto(filename, clobber=overwrite)
+        hdu_list.writeto(filename, overwrite=overwrite)
