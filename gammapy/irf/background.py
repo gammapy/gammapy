@@ -228,21 +228,9 @@ class Background2D(object):
         table['BKG'] = self.data.data[np.newaxis]
         return table
 
-    def to_hdulist(self, name='BACKGROUND'):
+    def to_fits(self, name='BACKGROUND'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        hdu = table_to_fits_table(self.to_table(), name)
-        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
-        return hdulist
-
-    def write(self, filename, name='BACKGROUND', **kwargs):
-        """Convert to `~astropy.io.fits.BinTable`.
-        Parameters
-        ----------
-        filename : str
-            File name
-        """
-        hdulist = self.to_hdulist(name=name)
-        hdulist.writeto(filename, **kwargs)
+        return table_to_fits_table(self.to_table(), name)
 
     def evaluate(self, fov_offset, fov_phi=None, energy_reco=None, **kwargs):
         """

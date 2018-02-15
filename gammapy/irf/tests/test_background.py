@@ -6,6 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import Angle
+from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 from ...utils.fits import table_to_fits_table
@@ -76,10 +77,11 @@ def make_test_array():
 
 def test_background2d_read_write(tmpdir):
     bkg_2d_1 = make_test_array()
-    # hdu_list=bkg_2d_1.to_hdulist(name='BACKGROUND')
-    # bkg_2d_2=Background2D.from_hdulist(hdulist=hdu_list, hdu='BACKGROUND')
     filename = str(tmpdir / "bkg2d.fits")
-    bkg_2d_1.write(filename)
+    prim_hdu = fits.PrimaryHDU()
+    hdu_bkg = bkg_2d_1.to_fits()
+    hdulist = fits.HDUList([prim_hdu, hdu_bkg])
+    hdulist.writeto(filename)
     bkg_2d_2 = Background2D.read(filename)
 
     axis = bkg_2d_2.data.axis('energy')
@@ -95,6 +97,7 @@ def test_background2d_read_write(tmpdir):
     assert data.unit == u.Unit('s-1 MeV-1 sr-1')
 
 
+@requires_dependency('scipy')
 def test_background2d_evaluate():
     bkg_2d = make_test_array()
     data_unit = u.Unit('s-1 MeV-1 sr-1')
