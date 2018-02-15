@@ -55,11 +55,16 @@ class WcsGeom(MapGeom):
         Number of pixels in each spatial dimension
     cdelt : tuple
         Pixel size in each image plane.  If none then a constant pixel size will be used.
+    crpix : tuple
+        Reference pixel coordinate in each image plane.  
     axes : list
         Axes for non-spatial dimensions
+    conv : {'gadf', 'fgst-ccube', 'fgst-template'}    
+        Serialization format convention.  This sets the default format
+        that will be used when writing this geometry to a file.
     """
 
-    def __init__(self, wcs, npix, cdelt=None, axes=None, conv='gadf'):
+    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
         self._coordsys = get_coordsys(wcs)
         self._projection = get_projection(wcs)
@@ -79,8 +84,9 @@ class WcsGeom(MapGeom):
         self._npix = cast_to_shape(npix, wcs_shape, int)
         self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
         # By convention CRPIX is indexed from 1
-        self._crpix = (1.0 + (self._npix[0] - 1.0) / 2.,
-                       1.0 + (self._npix[1] - 1.0) / 2.)
+        if crpix is None:
+            self._crpix = (1.0 + (self._npix[0] - 1.0) / 2.,
+                           1.0 + (self._npix[1] - 1.0) / 2.)
         self._width = (self._cdelt[0] * self._npix[0],
                        self._cdelt[1] * self._npix[1])
 
