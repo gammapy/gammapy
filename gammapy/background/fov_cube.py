@@ -174,7 +174,7 @@ class FOVCube(object):
             scheme_dict['coordx_fits_name'] = 'DETX'
             scheme_dict['coordy_fits_name'] = 'DETY'
             scheme_dict['energy_fits_name'] = 'ENERG'
-            scheme_dict['data_fits_name'] = 'Bgd'
+            scheme_dict['data_fits_name'] = 'BKG'
             scheme_dict['coordx_plot_name'] = 'DET X'
             scheme_dict['coordy_plot_name'] = 'DET Y'
             scheme_dict['energy_plot_name'] = 'E'
