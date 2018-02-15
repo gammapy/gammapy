@@ -138,6 +138,46 @@ class Map(object):
         return map_out
 
     @classmethod
+    def from_geom(cls, geom, meta=None, map_type='auto'):
+        """Generate an empty map from a `~Geom` instance.
+
+        Parameters
+        ----------
+        geom : `~MapGeom`
+            Map geometry.
+
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
+
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}        
+            Map type.  Selects the class that will be used to
+            instantiate the map.  The map type should be consistent
+            with the geometry.  If map_type is 'auto' then an
+            appropriate map type will be inferred from type of
+            ``geom``.
+
+        Returns
+        -------
+        map_out : `~Map`
+            Map object
+
+        """
+        if map_type == 'auto':
+
+            from .hpx import HpxGeom
+            from .wcs import WcsGeom
+            if isinstance(geom, HpxGeom):
+                map_type = 'hpx'
+            elif isinstance(geom, WcsGeom):
+                map_type = 'wcs'
+            else:
+                raise ValueError('Unrecognized geom type.')
+
+        cls_out = cls._get_map_cls(map_type)
+        map_out = cls_out(geom, meta=meta)
+        return map_out
+
+    @classmethod
     def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
         if map_type == 'auto':
             map_type = cls._get_map_type(hdulist, hdu)
