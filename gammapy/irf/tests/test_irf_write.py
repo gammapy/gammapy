@@ -63,11 +63,11 @@ class TestIRFWrite:
 
         assert self.aeff.to_fits().header['EXTNAME'] == 'EFFECTIVE AREA'
         assert self.edisp.to_fits().header['EXTNAME'] == 'ENERGY DISPERSION'
-        assert self.bkg.to_fits().header['EXTNAME'] == 'BACKGROUND'
+        assert self.bkg.to_hdulist()[1].header['EXTNAME'] == 'BACKGROUND'
 
         assert self.aeff.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
         assert self.edisp.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
-        assert self.bkg.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
+        assert self.bkg.to_hdulist(name='TEST')[1].header['EXTNAME'] == 'TEST'
         assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE1']][0]
                      * u.Unit(self.aeff.to_fits().header['TUNIT1']),
                      self.aeff.data.axes[0].lo)
@@ -82,11 +82,11 @@ class TestIRFWrite:
                      * u.Unit(self.edisp.to_fits().header['TUNIT7']),
                      self.edisp.data.data)
 
-        assert_equal(self.bkg.to_fits().data[self.bkg.to_fits().header['TTYPE1']][0]
-                     * u.Unit(self.bkg.to_fits().header['TUNIT1']),
+        assert_equal(self.bkg.to_hdulist()[1].data[self.bkg.to_hdulist()[1].header['TTYPE1']][0]
+                     * u.Unit(self.bkg.to_hdulist()[1].header['TUNIT1']),
                      self.bkg.data.axes[1].lo)
-        assert_equal(self.bkg.to_fits().data[self.bkg.to_fits().header['TTYPE7']][0]
-                     * u.Unit(self.bkg.to_fits().header['TUNIT7']),
+        assert_equal(self.bkg.to_hdulist()[1].data[self.bkg.to_hdulist()[1].header['TTYPE7']][0]
+                     * u.Unit(self.bkg.to_hdulist()[1].header['TUNIT7']),
                      self.bkg.data.data)
 
     def test_writeread(self, tmpdir):
@@ -94,7 +94,7 @@ class TestIRFWrite:
         prim_hdu = fits.PrimaryHDU()
         hdu_aeff = self.aeff.to_fits()
         hdu_edisp = self.edisp.to_fits()
-        hdu_bkg = self.bkg.to_fits()
+        hdu_bkg = self.bkg.to_hdulist()[1]
         fits.HDUList([prim_hdu, hdu_aeff, hdu_edisp, hdu_bkg]).writeto(filename)
         read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu='EFFECTIVE AREA')
         read_edisp = EnergyDispersion2D.read(filename=filename, hdu='ENERGY DISPERSION')
