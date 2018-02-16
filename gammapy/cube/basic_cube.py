@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..maps import WcsNDMap
 
+
 def fill_map_counts(event_list, ndmap):
     """Fill a ``WcsNDMap` with events from an EventList.
 
@@ -61,7 +62,7 @@ def make_map_counts(event_list, ref_geom):
     event_list : `~gammapy.data.EventList`
             the input event list
     ref_geom : `~gammapy.maps.WcsGeom`
-
+            the reference geometry
 
     Returns
     -------
@@ -71,6 +72,6 @@ def make_map_counts(event_list, ref_geom):
     # Create map
     cntmap = WcsNDMap(ref_geom)
     # Fill it
-    fill_map_counts(event_list,cntmap)
+    fill_map_counts(event_list, cntmap)
 
     return cntmap
