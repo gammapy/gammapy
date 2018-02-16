@@ -6,7 +6,6 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import Angle
-from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 from ...utils.fits import table_to_fits_table
@@ -45,7 +44,7 @@ def test_background_3d_basics(bkg_3d):
 def test_background_3d_evaluate(bkg_3d):
     bkg_rate = bkg_3d.data.evaluate(energy='1 TeV', detx='0.2 deg', dety='0.5 deg')
     assert_allclose(bkg_rate.value, 0.00013352689711418575)
-    assert bkg_rate.unit == u.Unit('s-1 MeV-1 sr-1')
+    assert bkg_rate.unit == 's-1 MeV-1 sr-1'
 
 
 @requires_data('gammapy-extra')
@@ -55,14 +54,13 @@ def test_background_3d_write(bkg_3d):
     assert hdu.header['TUNIT1'] == bkg_3d.data.axis('detx').lo.unit
 
 
-def make_test_array():
-    # Create a dummy `Background2D`
+@pytest.fixture(scope='session')
+def bkg_2d():
+    """A simple Background2D test case"""
     energy = [1, 10, 100] * u.TeV
     offset = [0, 1, 2, 3] * u.deg
-    data = np.zeros((len(energy) - 1, len(offset) - 1)) * u.Unit('s-1 MeV-1 sr-1')
-    # Data contains 2 for the bin [0,1] degrees in offset and [10,100] TeV in energy
+    data = np.zeros((2, 3)) * u.Unit('s-1 MeV-1 sr-1')
     data.value[1, 0] = 2
-    # Data contains 4 for the bin [1,2] degrees in offset and [10,100] TeV in energy
     data.value[1, 1] = 4
     return Background2D(
         energy_lo=energy[:-1], energy_hi=energy[1:],
@@ -71,13 +69,33 @@ def make_test_array():
     )
 
 
-def test_background2d_read_write(tmpdir):
-    bkg_2d_1 = make_test_array()
+@requires_dependency('scipy')
+def test_background_2d_evaluate(bkg_2d):
+    # TODO: the test cases here can probably be improved a bit
+    # There's some redundancy, and no case exactly at a node in energy
+
+    # Evaluate at log center between nodes in energy
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=3.16227766 * u.TeV)
+    assert_allclose(res.value, 0)
+    assert res.shape == (2,)
+    assert res.unit == 's-1 MeV-1 sr-1'
+
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=31.6227766 * u.TeV)
+    assert_allclose(res.value, [3, 2])
+
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=[3.16227766, 31.6227766] * u.TeV)
+    assert_allclose(res.value, [[0, 0], [3, 2]])
+    assert res.shape == (2, 2)
+
+    res = bkg_2d.evaluate(fov_offset=1 * u.deg, energy_reco=[3.16227766, 31.6227766] * u.TeV)
+    assert_allclose(res.value, [0, 3])
+    assert res.shape == (2,)
+
+
+def test_background_2d_read_write(tmpdir, bkg_2d):
     filename = str(tmpdir / "bkg2d.fits")
-    prim_hdu = fits.PrimaryHDU()
-    hdu_bkg = bkg_2d_1.to_fits()
-    hdulist = fits.HDUList([prim_hdu, hdu_bkg])
-    hdulist.writeto(filename)
+    bkg_2d.to_fits().writeto(filename)
+
     bkg_2d_2 = Background2D.read(filename)
 
     axis = bkg_2d_2.data.axis('energy')
@@ -90,38 +108,4 @@ def test_background2d_read_write(tmpdir):
 
     data = bkg_2d_2.data.data
     assert data.shape == (2, 3)
-    assert data.unit == u.Unit('s-1 MeV-1 sr-1')
-
-
-@requires_dependency('scipy')
-def test_background2d_evaluate():
-    bkg_2d = make_test_array()
-    data_unit = u.Unit('s-1 MeV-1 sr-1')
-
-    off_tab = Angle(np.array([1, 0.5]), "deg")
-    # log_center value of the first energy bin used to define the Background2D data
-    energy_center_bin_1 = u.Quantity([3.16227766], "TeV")
-    res = bkg_2d.evaluate(fov_offset=off_tab, energy_reco=energy_center_bin_1)
-    assert_quantity_allclose(res[0], 0 * data_unit)
-    assert_quantity_allclose(res[1], 0 * data_unit)
-    # log_center value of the second energy bin used to define the Background2D data
-    energy_center_bin_2 = u.Quantity([31.6227766], "TeV")
-    res = bkg_2d.evaluate(fov_offset=off_tab, energy_reco=energy_center_bin_2)
-    assert_quantity_allclose(res[0], 3 * data_unit)
-    assert_quantity_allclose(res[1], 2 * data_unit)
-    assert res.shape == (2,)
-
-    energy_tab = u.Quantity(np.array([energy_center_bin_1.value, energy_center_bin_2.value]), "TeV")
-    offset_2d = np.meshgrid(off_tab, energy_tab)[0]
-    res = bkg_2d.evaluate(fov_offset=offset_2d, energy_reco=energy_center_bin_2)
-    assert_quantity_allclose(res[0, 0], 3 * data_unit)
-    assert_quantity_allclose(res[1, 0], 3 * data_unit)
-    assert_quantity_allclose(res[0, 1], 2 * data_unit)
-    assert_quantity_allclose(res[1, 1], 2 * data_unit)
-    assert res.shape == (2, 2)
-
-    off = Angle(1, "deg")
-    res = bkg_2d.evaluate(fov_offset=off, energy_reco=energy_tab)
-    assert_quantity_allclose(res[0], 0 * data_unit)
-    assert_quantity_allclose(res[1], 3 * data_unit)
-    assert res.shape == (2,)
+    assert data.unit == 's-1 MeV-1 sr-1'

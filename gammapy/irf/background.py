@@ -139,7 +139,7 @@ class Background3D(object):
 class Background2D(object):
     """Background 2D.
 
-    Data format specification: :ref:`gadf:bkg_3d`
+    Data format specification: :ref:`gadf:bkg_32`
 
     Parameters
     -----------
@@ -239,11 +239,12 @@ class Background2D(object):
         Parameters
         ----------
         fov_offset : `~astropy.coordinates.Angle`
-            offset in the FOV
+            Offset in the FOV
         fov_phi: `~astropy.coordinates.Angle`
-            azimuth angle in the FOV. Not used for this class since the background model is radially symmetric
+            Azimuth angle in the FOV.
+            Not used for this class since the background model is radially symmetric
         energy_reco : `~astropy.units.Quantity`
-            Vector of energy (1D) on which the model is evaluated
+            Reconstructed energy
         kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
@@ -251,7 +252,6 @@ class Background2D(object):
         -------
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
-
         """
         if energy_reco is None:
             energy_reco = self.data.axis('energy').nodes
