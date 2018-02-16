@@ -84,7 +84,7 @@ class PhaseCurve(object):
         f1 = pars['f1'].value
         f2 = pars['f2'].value
 
-        t = time - time_0
+        t = (time - time_0)*86400.0
         phase = self._evaluate_phase(t, phase_0, f0, f1, f2)
         return np.remainder(phase, 1)
 
