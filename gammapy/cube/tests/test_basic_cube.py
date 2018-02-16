@@ -44,13 +44,9 @@ def test_counts_map_maker(ds_path, run_list, geom):
 
     # Build WcsGeom
     wcsgeom = WcsGeom.create(**geom)
-    # Build mask WcsNDMap
-    mask = WcsNDMap(wcsgeom)
-    # Fill it with ones
-    mask.data += 1.
 
     # Extract count map
-    cntmap = make_map_counts(events, mask)
+    cntmap = make_map_counts(events, wcsgeom)
 
     # Number of entries in the map
     nmap = cntmap.data.sum()

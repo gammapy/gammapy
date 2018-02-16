@@ -4,27 +4,22 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..maps import WcsNDMap
 
-def make_map_counts(event_list, valid_ref_map):
-    """Build a ``WcsNDMap` with events from an EventList.
+def fill_map_counts(event_list, ndmap):
+    """Fill a ``WcsNDMap` with events from an EventList.
 
-    The energy of the events is used for a non-spatial axis homogeneous to energy.
-    The other non-spatial axis names should have an entry in the colum names of the ``EventList``
+     The energy of the events is used for a non-spatial axis homogeneous to energy.
+     The other non-spatial axis names should have an entry in the colum names of the ``EventList``
 
-    Parameters
-    ----------
-    event_list : `~gammapy.data.EventList`
-            the input event list
-    valid_ref_map : `~gammapy.maps.WcsNDMap`
-        Map containing the valid pixels
-
-    Returns
-    -------
-    cntmap : `~gammapy.maps.WcsNDMap`
-        Count cube (3D) in true energy bins
-    """
+     Parameters
+     ----------
+     event_list : `~gammapy.data.EventList`
+             the input event list
+     nd_map : `~gammapy.maps.WcsNDMap`
+         Target map
+     """
     # The list will contain the event table entries to be fed into the WcsNDMap
     tmp = list()
-    ref_geom = valid_ref_map.geom
+    ref_geom = ndmap.geom
     # Convert events coordinates
     if ref_geom.coordsys == 'GAL':
         galactic_coords = event_list.galactic
@@ -51,12 +46,31 @@ def make_map_counts(event_list, valid_ref_map):
         else:
             raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
 
+    # Fill it
+    ndmap.fill_by_coords(tmp)
+
+
+def make_map_counts(event_list, ref_geom):
+    """Build a ``WcsNDMap` with events from an EventList.
+
+    The energy of the events is used for a non-spatial axis homogeneous to energy.
+    The other non-spatial axis names should have an entry in the colum names of the ``EventList``
+
+    Parameters
+    ----------
+    event_list : `~gammapy.data.EventList`
+            the input event list
+    ref_geom : `~gammapy.maps.WcsGeom`
+
+
+    Returns
+    -------
+    cntmap : `~gammapy.maps.WcsNDMap`
+        Count cube (3D) in true energy bins
+    """
     # Create map
     cntmap = WcsNDMap(ref_geom)
     # Fill it
-    cntmap.fill_by_coords(tmp)
-
-    # Put counts outside validity region to zero
-    cntmap.data *= valid_ref_map.data
+    fill_map_counts(event_list,cntmap)
 
     return cntmap
