@@ -11,24 +11,25 @@ from ...cube.basic_cube import make_map_counts
 t0_1DC = 664504199. * u.s
 
 energy_reco = np.logspace(-1., 1.5, 10) * u.TeV
-times = np.linspace(t0_1DC.value, t0_1DC.value+1900., 10)*u.s
+times = np.linspace(t0_1DC.value, t0_1DC.value + 1900., 10) * u.s
 
 axis_energy_reco = MapAxis(energy_reco.value, interp='log', node_type='edge',
-                           name='energy_reco', unit = energy_reco.unit)
-axis_time = MapAxis(times, node_type='edge', name='time',unit = times.unit)
+                           name='energy_reco', unit=energy_reco.unit)
+axis_time = MapAxis(times, node_type='edge', name='time', unit=times.unit)
 
 cta_1dc_store = "$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/"
 cta_1dc_runs = [110380]
 
-pos_cta = SkyCoord(0.0, 0.0, frame='galactic',unit='deg')
+pos_cta = SkyCoord(0.0, 0.0, frame='galactic', unit='deg')
 
-geom_cta = {'binsz':0.02, 'coordsys':'GAL', 'width' : 15*u.deg,
-            'skydir' : pos_cta, 'axes' : [axis_energy_reco]}
-geom_cta_time = {'binsz':0.02, 'coordsys':'GAL', 'width' : 15*u.deg,
-                 'skydir' : pos_cta, 'axes' : [axis_energy_reco, axis_time]}
+geom_cta = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
+            'skydir': pos_cta, 'axes': [axis_energy_reco]}
+geom_cta_time = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
+                 'skydir': pos_cta, 'axes': [axis_energy_reco, axis_time]}
 
-@pytest.mark.parametrize("ds_path,run_list,geom",[(cta_1dc_store,cta_1dc_runs, geom_cta),
-                                                  (cta_1dc_store,cta_1dc_runs, geom_cta_time)])
+
+@pytest.mark.parametrize("ds_path,run_list,geom", [(cta_1dc_store, cta_1dc_runs, geom_cta),
+                                                   (cta_1dc_store, cta_1dc_runs, geom_cta_time)])
 def test_counts_map_maker(ds_path, run_list, geom):
     # TODO: change the test event list to something that's created from scratch,
     # using values so that it's possible to make simple assert statements on the
@@ -57,8 +58,8 @@ def test_counts_map_maker(ds_path, run_list, geom):
             valid = np.logical_and(events.energy.value >= axis.edges[0], valid)
             valid = np.logical_and(events.energy.value <= axis.edges[-1], valid)
         else:
-            valid = np.logical_and(events.table[axis.name.upper()]>=axis.edges[0],valid)
-            valid = np.logical_and(events.table[axis.name.upper()]<=axis.edges[-1],valid)
+            valid = np.logical_and(events.table[axis.name.upper()] >= axis.edges[0], valid)
+            valid = np.logical_and(events.table[axis.name.upper()] <= axis.edges[-1], valid)
 
     nevt = valid.sum()
     assert nmap == nevt
