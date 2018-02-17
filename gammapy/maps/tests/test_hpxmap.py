@@ -134,13 +134,13 @@ def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse)
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
+def test_hpxmap_interp_by_coords(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
     coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[1])
     assert_allclose(m.get_by_coords(coords),
-                    m.get_by_coords(coords, interp='linear'))
+                    m.interp_by_coords(coords, interp='linear'))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),

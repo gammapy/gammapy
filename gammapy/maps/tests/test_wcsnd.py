@@ -168,11 +168,11 @@ def test_wcsndmap_interp_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     m = WcsNDMap(geom)
     coords = m.geom.get_coords(flat=True)
     m.set_by_coords(coords, coords[1])
-    assert_allclose(coords[1], m.get_by_coords(coords, interp='nearest'))
-    assert_allclose(coords[1], m.get_by_coords(coords, interp='linear'))
-    assert_allclose(coords[1], m.get_by_coords(coords, interp=1))
+    assert_allclose(coords[1], m.interp_by_coords(coords, interp='nearest'))
+    assert_allclose(coords[1], m.interp_by_coords(coords, interp='linear'))
+    assert_allclose(coords[1], m.interp_by_coords(coords, interp=1))
     if geom.is_regular and not geom.is_allsky:
-        assert_allclose(coords[1], m.get_by_coords(coords, interp='cubic'))
+        assert_allclose(coords[1], m.interp_by_coords(coords, interp='cubic'))
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),

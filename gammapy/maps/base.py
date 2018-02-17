@@ -463,7 +463,7 @@ class Map(object):
         """
         pass
 
-    def get_by_coords(self, coords, interp=None):
+    def get_by_coords(self, coords):
         """Return map values at the given map coordinates.
 
         Parameters
@@ -474,36 +474,22 @@ class Map(object):
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
-
         Returns
         -------
         vals : `~numpy.ndarray`
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        if interp is None:
-            coords = MapCoords.create(coords, coordsys=self.geom.coordsys)
-            msk = self.geom.contains(coords)
-            vals = np.empty(coords.shape, dtype=self.data.dtype)
-            coords = coords.mask(msk)
-            idx = self.geom.coord_to_pix(coords)
-            vals[msk] = self.get_by_idx(idx)
-            vals[~msk] = np.nan
-        else:
-            vals = self.interp_by_coords(coords, interp=interp)
-
+        coords = MapCoords.create(coords, coordsys=self.geom.coordsys)
+        msk = self.geom.contains(coords)
+        vals = np.empty(coords.shape, dtype=self.data.dtype)
+        coords = coords.mask(msk)
+        idx = self.geom.coord_to_pix(coords)
+        vals[msk] = self.get_by_idx(idx)
+        vals[~msk] = np.nan
         return vals
 
-    def get_by_pix(self, pix, interp=None):
+    def get_by_pix(self, pix):
         """Return map values at the given pixel coordinates.
 
         Parameters
@@ -514,16 +500,6 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type. 
 
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
-
         Returns
         ----------
         vals : `~numpy.ndarray`
@@ -532,19 +508,14 @@ class Map(object):
         """
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
-
-        if interp is None:
-            pix = [np.array(p, copy=False, ndmin=1) for p in pix]
-            pix = np.broadcast_arrays(*pix)
-            msk = self.geom.contains_pix(pix)
-            vals = np.empty(pix[0].shape, dtype=self.data.dtype)
-            pix = tuple([p[msk] for p in pix])
-            idx = self.geom.pix_to_idx(pix)
-            vals[msk] = self.get_by_idx(idx)
-            vals[~msk] = np.nan
-        else:
-            vals = self.interp_by_pix(pix, interp=interp)
-
+        pix = [np.array(p, copy=False, ndmin=1) for p in pix]
+        pix = np.broadcast_arrays(*pix)
+        msk = self.geom.contains_pix(pix)
+        vals = np.empty(pix[0].shape, dtype=self.data.dtype)
+        pix = tuple([p[msk] for p in pix])
+        idx = self.geom.pix_to_idx(pix)
+        vals[msk] = self.get_by_idx(idx)
+        vals[~msk] = np.nan
         return vals
 
     @abc.abstractmethod
