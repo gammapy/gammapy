@@ -481,7 +481,7 @@ class WcsGeom(MapGeom):
         return coords
 
     def coord_to_pix(self, coords):
-        c = MapCoords.create(coords)
+        c = MapCoords.create(coords, coordsys=self.coordsys)
         if c.size == 0:
             return tuple([np.array([]) for i in range(c.ndim)])
 

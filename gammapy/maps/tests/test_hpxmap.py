@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
-from ..geom import MapAxis
+from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
 from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
@@ -118,8 +119,19 @@ def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse)
     m.set_by_coords(coords, coords[0])
     assert_allclose(coords[0], m.get_by_coords(coords))
 
+    # Test with SkyCoords
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    coords = m.geom.get_coords(flat=True)
+    skydir = SkyCoord(coords[0], coords[1], unit='deg',
+                      frame=coordsys_to_frame(m.geom.coordsys))
+    skydir_cel = skydir.transform_to('icrs')
+    skydir_gal = skydir.transform_to('galactic')
+    m.set_by_coords((skydir_gal,) + coords[2:], coords[0])
+    assert_allclose(coords[0], m.get_by_coords(coords))
+    assert_allclose(m.get_by_coords((skydir_cel,) + coords[2:]),
+                    m.get_by_coords((skydir_gal,) + coords[2:]))
 
-#@pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
+
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):

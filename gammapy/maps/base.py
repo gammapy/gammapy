@@ -491,10 +491,10 @@ class Map(object):
            outside of map.
         """
         if interp is None:
-            coords = MapCoords.create(coords)
+            coords = MapCoords.create(coords, coordsys=self.geom.coordsys)
             msk = self.geom.contains(coords)
             vals = np.empty(coords.shape, dtype=self.data.dtype)
-            coords = tuple([c[msk] for c in coords])
+            coords = coords.mask(msk)
             idx = self.geom.coord_to_pix(coords)
             vals[msk] = self.get_by_idx(idx)
             vals[~msk] = np.nan

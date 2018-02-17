@@ -755,7 +755,7 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
-        c = MapCoords.create(coords)
+        c = MapCoords.create(coords, coordsys=self.coordsys)
         phi = np.radians(c.lon)
         theta = np.pi / 2. - np.radians(c.lat)
 

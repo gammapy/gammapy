@@ -107,6 +107,6 @@ def test_mapcoords_create():
 
     # 2D Vector w/ SkyCoord
     lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
-    coords = MapCoords.create((SkyCoord(lon, lat, unit='deg')))
+    coords = MapCoords.create((SkyCoord(lon, lat, unit='deg'),))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)

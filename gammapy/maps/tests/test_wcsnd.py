@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
-from ..geom import MapAxis
+from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
@@ -107,6 +107,18 @@ def test_wcsndmap_set_get_by_coords(npix, binsz, coordsys, proj, skydir, axes):
         assert_allclose(
             np.nan * np.ones(coords[0].shape), m.get_by_coords(coords))
 
+    # Test with SkyCoords
+    m = WcsNDMap(geom)
+    coords = m.geom.get_coords()
+    skydir = SkyCoord(coords[0], coords[1], unit='deg',
+                      frame=coordsys_to_frame(geom.coordsys))
+    skydir_cel = skydir.transform_to('icrs')
+    skydir_gal = skydir.transform_to('galactic')
+    m.set_by_coords((skydir_gal,) + coords[2:], coords[0])
+    assert_allclose(coords[0], m.get_by_coords(coords))
+    assert_allclose(m.get_by_coords((skydir_cel,) + coords[2:]),
+                    m.get_by_coords((skydir_gal,) + coords[2:]))
+
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
@@ -115,8 +127,22 @@ def test_wcsndmap_fill_by_coords(npix, binsz, coordsys, proj, skydir, axes):
                           proj=proj, coordsys=coordsys, axes=axes)
     m = WcsNDMap(geom)
     coords = m.geom.get_coords()
-    m.fill_by_coords(tuple([np.concatenate((t, t)) for t in coords]),
-                     np.concatenate((coords[1], coords[1])))
+    fill_coords = tuple([np.concatenate((t, t)) for t in coords])
+    fill_vals = fill_coords[1]
+    m.fill_by_coords(fill_coords, fill_vals)
+    assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])
+
+    # Test with SkyCoords
+    m = WcsNDMap(geom)
+    coords = m.geom.get_coords()
+    skydir = SkyCoord(coords[0], coords[1], unit='deg',
+                      frame=coordsys_to_frame(geom.coordsys))
+    skydir_cel = skydir.transform_to('icrs')
+    skydir_gal = skydir.transform_to('galactic')
+    fill_coords_cel = (skydir_cel,) + coords[2:]
+    fill_coords_gal = (skydir_gal,) + coords[2:]
+    m.fill_by_coords(fill_coords_cel, coords[1])
+    m.fill_by_coords(fill_coords_gal, coords[1])
     assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])
 
 
