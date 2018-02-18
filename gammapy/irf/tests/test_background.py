@@ -57,7 +57,7 @@ def test_background_3d_write(bkg_3d):
 @pytest.fixture(scope='session')
 def bkg_2d():
     """A simple Background2D test case"""
-    energy = [1, 10, 100] * u.TeV
+    energy = [0.1, 10, 1000] * u.TeV
     offset = [0, 1, 2, 3] * u.deg
     data = np.zeros((2, 3)) * u.Unit('s-1 MeV-1 sr-1')
     data.value[1, 0] = 2
@@ -75,19 +75,19 @@ def test_background_2d_evaluate(bkg_2d):
     # There's some redundancy, and no case exactly at a node in energy
 
     # Evaluate at log center between nodes in energy
-    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=3.16227766 * u.TeV)
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=1 * u.TeV)
     assert_allclose(res.value, 0)
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
-    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=31.6227766 * u.TeV)
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=100 * u.TeV)
     assert_allclose(res.value, [3, 2])
 
-    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=[3.16227766, 31.6227766] * u.TeV)
+    res = bkg_2d.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
-    res = bkg_2d.evaluate(fov_offset=1 * u.deg, energy_reco=[3.16227766, 31.6227766] * u.TeV)
+    res = bkg_2d.evaluate(fov_offset=1 * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
 
