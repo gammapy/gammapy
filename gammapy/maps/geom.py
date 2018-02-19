@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import abc
 import copy
 import re
+from collections import OrderedDict
 import numpy as np
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
@@ -150,22 +151,36 @@ def coordsys_to_frame(coordsys):
         raise ValueError('Unrecognized coordinate system: {}'.format(coordsys))
 
 
-def skydir_to_lonlat(skydir, coordsys=None):
+def skycoord_to_lonlat(skycoord, coordsys=None):
+    """
+
+    Returns
+    -------
+    lon : `~numpy.ndarray`
+        Longitude in degrees.
+
+    lat : `~numpy.ndarray`
+        Latitude in degrees.
+
+    frame : str
+        Name of coordinate frame.
+    """
+
     if coordsys in ['CEL', 'C']:
-        skydir = skydir.transform_to('icrs')
+        skycoord = skycoord.transform_to('icrs')
     elif coordsys in ['GAL', 'G']:
-        skydir = skydir.transform_to('galactic')
+        skycoord = skycoord.transform_to('galactic')
 
-    if skydir.frame.name in ['icrs', 'fk5']:
-        return skydir.ra.deg, skydir.dec.deg
-    elif skydir.frame.name in ['galactic']:
-        return skydir.l.deg, skydir.b.deg
+    frame = skycoord.frame.name
+    if frame in ['icrs', 'fk5']:
+        return skycoord.ra.deg, skycoord.dec.deg, frame
+    elif frame in ['galactic']:
+        return skycoord.l.deg, skycoord.b.deg, frame
     else:
-        raise ValueError(
-            'Unrecognized SkyCoord frame: {}'.format(skydir.frame.name))
+        raise ValueError('Unrecognized SkyCoord frame: {}'.format(frame))
 
 
-def lonlat_to_skydir(lon, lat, coordsys):
+def lonlat_to_skycoord(lon, lat, coordsys):
     return SkyCoord(lon, lat, frame=coordsys_to_frame(coordsys), unit='deg')
 
 
@@ -588,18 +603,36 @@ class MapCoords(object):
     coordsys : {'CEL', 'GAL', None}    
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
+    copy : bool
+        Make copies of the input arrays.  If False then this object will store views.
+    match_by_name : bool
+        Match coordinates to axes by name.  If false coordinates will be matched by index.
     """
 
-    def __init__(self, data, coordsys=None):
-        data = tuple([np.array(c, ndmin=1, copy=False) for c in data])
-        self._data = tuple(np.broadcast_arrays(*data))
-        self._coordsys = coordsys
+    def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
 
-    def __getitem__(self, idx):
-        return self._data[idx]
+        self._data = OrderedDict([(k, np.array(v, ndmin=1, copy=copy))
+                                  for k, v in data.items()])
+        vals = np.broadcast_arrays(*self._data.values())
+        self._data = OrderedDict(zip(self._data.keys(), vals))
+        self._coordsys = coordsys
+        self._match_by_name = match_by_name
+
+    def __getitem__(self, key):
+
+        if isinstance(key, basestring):
+            return self._data[key]
+        else:
+            return self._data.values()[key]
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self._data.values())
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
 
     @property
     def ndim(self):
@@ -607,31 +640,63 @@ class MapCoords(object):
 
     @property
     def shape(self):
-        return self._data[0].shape
+        return self[0].shape
 
     @property
     def size(self):
-        return self._data[0].size
+        return self[0].size
 
     @property
     def lon(self):
-        return self._data[0]
+        return self._data['lon']
 
     @property
     def lat(self):
-        return self._data[1]
+        return self._data['lat']
 
     @property
     def coordsys(self):
         return self._coordsys
 
-    @classmethod
-    def from_lonlat(cls, coords, coordsys=None):
-        """Create from vectors of longitude and latitude in degrees."""
-        return cls(coords, coordsys=coordsys)
+    @property
+    def skycoord(self):
+        return SkyCoord(self.lon, self.lat, unit='deg',
+                        frame=coordsys_to_frame(self.coordsys))
 
     @classmethod
-    def from_skydir(cls, coords, coordsys=None):
+    def from_lonlat(cls, coords, coordsys=None, copy=False):
+        """Create from vectors of longitude and latitude in degrees.
+
+        Parameters
+        ----------
+        coords : tuple
+            Tuple of `~numpy.ndarray`.
+        """
+
+        if isinstance(coords, (list, tuple)):
+            match_by_name = False
+            coords_dict = OrderedDict([('lon', coords[0]),
+                                       ('lat', coords[1])])
+            for i, c in enumerate(coords[2:]):
+                coords_dict['axis{}'.format(i)] = c
+        elif isinstance(coords, OrderedDict):
+            match_by_name = True
+        elif isinstance(coords, dict):
+            match_by_name = True
+            coords_dict = OrderedDict([('lon', coords['lon']),
+                                       ('lat', coords['lat'])])
+            for k, v in coords.items():
+                if k in ['lon', 'lat']:
+                    continue
+                coords_dict[k] = v
+        else:
+            raise ValueError('Unrecognized input type.')
+
+        return cls(coords_dict, coordsys=coordsys, copy=copy,
+                   match_by_name=match_by_name)
+
+    @classmethod
+    def from_skycoord(cls, coords, coordsys=None, copy=False):
         """Create from vector of `~astropy.coordinates.SkyCoord`.
 
         Parameters
@@ -644,16 +709,16 @@ class MapCoords(object):
             If None the coordinate system will be set to the frame of
             the `~astropy.coordinates.SkyCoord` object.        
         """
-        skydir = coords[0]
-        if skydir.frame.name in ['icrs', 'fk5']:
-            coords = (skydir.ra.deg, skydir.dec.deg) + coords[1:]
-            coords = cls.from_lonlat(coords, coordsys='CEL')
-        elif skydir.frame.name in ['galactic']:
-            coords = (skydir.l.deg, skydir.b.deg) + coords[1:]
-            coords = cls.from_lonlat(coords, coordsys='GAL')
+        skycoord = coords[0]
+        if skycoord.frame.name in ['icrs', 'fk5']:
+            coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
+            coords = cls.from_lonlat(coords, coordsys='CEL', copy=copy)
+        elif skycoord.frame.name in ['galactic']:
+            coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
+            coords = cls.from_lonlat(coords, coordsys='GAL', copy=copy)
         else:
             raise ValueError(
-                'Unrecognized coordinate frame: {}'.format(skydir.frame.name))
+                'Unrecognized coordinate frame: {}'.format(skycoord.frame.name))
 
         if coordsys is None:
             return coords
@@ -661,19 +726,38 @@ class MapCoords(object):
             return coords.to_coordsys(coordsys)
 
     @classmethod
-    def from_tuple(cls, coords, coordsys=None):
+    def from_tuple(cls, coords, coordsys=None, copy=False):
         """Create from tuple of coordinate vectors."""
         if (isinstance(coords[0], np.ndarray) or
                 isinstance(coords[0], list) or
                 np.isscalar(coords[0])):
             return cls.from_lonlat(coords, coordsys=coordsys)
         elif isinstance(coords[0], SkyCoord):
-            return cls.from_skydir(coords, coordsys=coordsys)
+            return cls.from_skycoord(coords, coordsys=coordsys)
         else:
             raise Exception('Unsupported input type.')
 
     @classmethod
-    def create(cls, data, coordsys=None):
+    def from_dict(cls, coords, coordsys=None, copy=False):
+
+        if 'lon' in coords and 'lat' in coords:
+            return cls(coords, coordsys=coordsys, copy=copy)
+        elif 'skycoord' in coords:
+            coords_dict = OrderedDict()
+            lon, lat, frame = skycoord_to_lonlat(
+                coords['skycoord'], coordsys=coordsys)
+            coords_dict['lon'] = lon
+            coords_dict['lat'] = lat
+            for k, v in coords.items():
+                if k == 'skycoord':
+                    continue
+                coords_dict[k] = v
+            return cls(coords_dict, coordsys=coordsys, copy=copy)
+        else:
+            raise ValueError
+
+    @classmethod
+    def create(cls, data, coordsys=None, copy=False):
         """Create a new `~MapCoords` object.
 
         Parameters
@@ -681,17 +765,21 @@ class MapCoords(object):
         data : tuple
             Coordinate tuple.        
         coordsys : {'CEL', 'GAL', None}, optional
-            Set the coordinate system.  
+            Set the coordinate system for longitude and latitude.  If
+            None then longitude and latitude will be assumed to be in
+            the coordinate system native to the map.
         """
         if isinstance(data, cls):
             if data.coordsys is None or coordsys == data.coordsys:
                 return data
             else:
                 return data.to_coordsys(coordsys)
+        elif isinstance(data, dict):
+            return cls.from_dict(data, coordsys=coordsys, copy=copy)
         elif isinstance(data, tuple) or isinstance(data, list):
-            return cls.from_tuple(data, coordsys=coordsys)
+            return cls.from_tuple(data, coordsys=coordsys, copy=copy)
         elif isinstance(data, SkyCoord):
-            return cls.from_skydir(data, coordsys=coordsys)
+            return cls.from_skycoord(data, coordsys=coordsys, copy=copy)
         else:
             raise Exception('Unsupported input type.')
 
@@ -711,10 +799,12 @@ class MapCoords(object):
         if coordsys == self.coordsys:
             return copy.deepcopy(self)
         else:
-            skydir = lonlat_to_skydir(self.lon, self.lat, self.coordsys)
-            lon, lat = skydir_to_lonlat(skydir, coordsys=coordsys)
-            return self.__class__((lon, lat) + copy.deepcopy(self._data[2:]),
-                                  coordsys=coordsys)
+            skycoord = lonlat_to_skycoord(self.lon, self.lat, self.coordsys)
+            lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=coordsys)
+            data = copy.deepcopy(self._data)
+            data['lon'] = lon
+            data['lat'] = lat
+            return self.__class__(data, coordsys=coordsys)
 
     def mask(self, msk):
         """Return a masked copy of this coordinate object.
@@ -729,7 +819,7 @@ class MapCoords(object):
         coords : `~MapCoords`
             A masked coordinates object.        
         """
-        data = tuple([c[msk] for c in self._data])
+        data = OrderedDict([(k, v[msk]) for k, v in self._data.items()])
         return self.__class__(data, self.coordsys)
 
 
@@ -909,7 +999,7 @@ class MapGeom(object):
 
         Parameters
         ----------
-        coords : tuple
+        coords : tuple or `~MapCoords`
             Coordinate values in each dimension of the map.  This can
             either be a tuple of numpy arrays or a MapCoords object.
             If passed as a tuple then the ordering should be
@@ -1051,6 +1141,25 @@ class MapGeom(object):
             Map geometry.
         """
         pass
+
+    def coord_to_tuple(self, coord):
+        """Generate a coordinate tuple compatible with this geometry.
+
+        Parameters
+        ----------
+        coord : `~MapCoord`
+        """
+        if self.ndim != coord.ndim:
+            raise ValueError
+
+        if not coord._match_by_name:
+            return tuple(coord._data.values())
+
+        coord_tuple = [coord.lon, coord.lat]
+        for ax in self.axes:
+            coord_tuple += [coord[ax.name]]
+
+        return coord_tuple
 
     @abc.abstractmethod
     def pad(self, pad_width):

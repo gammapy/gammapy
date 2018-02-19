@@ -10,8 +10,8 @@ from ..geom import MapAxis
 
 pytest.importorskip('scipy')
 
-axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log')]
-axes2 = [MapAxis(np.logspace(0., 3., 3), interp='log'),
+axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log', name='energy')]
+axes2 = [MapAxis(np.logspace(0., 3., 3), interp='log', name='energy'),
          MapAxis(np.logspace(1., 3., 4), interp='lin')]
 skydir = SkyCoord(110., 75.0, unit='deg', frame='icrs')
 

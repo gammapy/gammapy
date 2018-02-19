@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
@@ -93,20 +94,111 @@ def test_mapaxis_slice(nodes, interp, node_type):
 
 
 def test_mapcoords_create():
-    # 2D Scalar
-    coords = MapCoords.create((0.0, 0.0))
+    # 2D Tuple of scalars
+    coords = MapCoords.create((0.0, 1.0))
+    assert_allclose(coords.lon, 0.0)
+    assert_allclose(coords.lat, 1.0)
+    assert_allclose(coords[0], 0.0)
+    assert_allclose(coords[1], 1.0)
+    assert(coords.coordsys == None)
+    assert(coords.ndim == 2)
 
-    # 2D Scalar w/ NaN coordinates
+    # 3D Tuple of scalars
+    coords = MapCoords.create((0.0, 1.0, 2.0))
+    assert_allclose(coords[0], 0.0)
+    assert_allclose(coords[1], 1.0)
+    assert_allclose(coords[2], 2.0)
+    assert(coords.coordsys == None)
+    assert(coords.ndim == 3)
+
+    # 2D Tuple w/ NaN coordinates
     coords = MapCoords.create((np.nan, np.nan))
 
-    # 2D Vector w/ NaN coordinates
+    # 2D Tuple w/ NaN coordinates
     lon, lat = np.array([np.nan, 1.0]), np.array([np.nan, 3.0])
     coords = MapCoords.create((lon, lat))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
 
-    # 2D Vector w/ SkyCoord
+    # 2D Tuple w/ SkyCoord
     lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
-    coords = MapCoords.create((SkyCoord(lon, lat, unit='deg'),))
+    energy = np.array([100., 1000.])
+    skycoord_cel = SkyCoord(lon, lat, unit='deg', frame='icrs')
+    skycoord_gal = SkyCoord(lon, lat, unit='deg', frame='galactic')
+    coords = MapCoords.create((skycoord_cel,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
+    assert(coords.coordsys == 'CEL')
+    assert(coords.ndim == 2)
+    coords = MapCoords.create((skycoord_gal,))
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert(coords.coordsys == 'GAL')
+    assert(coords.ndim == 2)
+
+    # 2D Dict w/ vectors
+    coords = MapCoords.create(dict(lon=lon, lat=lat))
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert(coords.ndim == 2)
+
+    # 3D Dict w/ vectors
+    coords = MapCoords.create(dict(lon=lon, lat=lat, energy=energy))
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert_allclose(coords.energy, energy)
+    assert(coords.ndim == 3)
+
+    # 3D Dict w/ SkyCoord
+    coords = MapCoords.create(dict(skycoord=skycoord_cel, energy=energy))
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert_allclose(coords.energy, energy)
+    assert(coords.ndim == 3)
+
+    # 3D OrderedDict w/ vectors
+    coords = MapCoords.create(OrderedDict([('energy', energy),
+                                           ('lat', lat), ('lon', lon)]))
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert_allclose(coords.energy, energy)
+    assert_allclose(coords[0], energy)
+    assert_allclose(coords[1], lat)
+    assert_allclose(coords[2], lon)
+    assert(coords.ndim == 3)
+
+
+def test_mapcoords_to_coordsys():
+
+    lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
+    energy = np.array([100., 1000.])
+    skycoord_cel = SkyCoord(lon, lat, unit='deg', frame='icrs')
+    skycoord_gal = SkyCoord(lon, lat, unit='deg', frame='galactic')
+
+    coords = MapCoords.create(
+        dict(lon=lon, lat=lat, energy=energy), coordsys='CEL')
+    assert(coords.coordsys == 'CEL')
+    assert_allclose(coords.skycoord.transform_to(
+        'icrs').ra.deg, skycoord_cel.ra.deg)
+    assert_allclose(coords.skycoord.transform_to(
+        'icrs').dec.deg, skycoord_cel.dec.deg)
+    coords = coords.to_coordsys('GAL')
+    assert(coords.coordsys == 'GAL')
+    assert_allclose(coords.skycoord.transform_to(
+        'galactic').l.deg, skycoord_cel.galactic.l.deg)
+    assert_allclose(coords.skycoord.transform_to(
+        'galactic').b.deg, skycoord_cel.galactic.b.deg)
+
+    coords = MapCoords.create(
+        dict(lon=lon, lat=lat, energy=energy), coordsys='GAL')
+    assert(coords.coordsys == 'GAL')
+    assert_allclose(coords.skycoord.transform_to(
+        'galactic').l.deg, skycoord_gal.l.deg)
+    assert_allclose(coords.skycoord.transform_to(
+        'galactic').b.deg, skycoord_gal.b.deg)
+    coords = coords.to_coordsys('CEL')
+    assert(coords.coordsys == 'CEL')
+    assert_allclose(coords.skycoord.transform_to(
+        'icrs').ra.deg, skycoord_gal.icrs.ra.deg)
+    assert_allclose(coords.skycoord.transform_to(
+        'icrs').dec.deg, skycoord_gal.icrs.dec.deg)

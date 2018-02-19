@@ -11,7 +11,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoords, pix_tuple_to_idx
-from .geom import coordsys_to_frame, skydir_to_lonlat, make_axes_cols
+from .geom import coordsys_to_frame, skycoord_to_lonlat, make_axes_cols
 from .geom import find_and_read_bands, make_axes
 
 # TODO: What should be part of the public API?
@@ -598,7 +598,8 @@ class HpxGeom(MapGeom):
         self._npix = self._npix * np.ones(self._shape, dtype=int)
         self._conv = conv
         self._center_skydir = self._get_ref_dir()
-        self._center_coord = tuple(list(skydir_to_lonlat(self._center_skydir)) +
+        lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
+        self._center_coord = tuple([lon, lat] +
                                    [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
         self._center_pix = self.coord_to_pix(self._center_coord)
 
@@ -755,10 +756,11 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
-        c = MapCoords.create(coords, coordsys=self.coordsys)
-        phi = np.radians(c.lon)
-        theta = np.pi / 2. - np.radians(c.lat)
+        coords = MapCoords.create(coords, coordsys=self.coordsys)
+        phi = np.radians(coords.lon)
+        theta = np.pi / 2. - np.radians(coords.lat)
 
+        c = self.coord_to_tuple(coords)
         if self.axes:
 
             bins = []
@@ -1196,17 +1198,17 @@ class HpxGeom(MapGeom):
             nside = get_nside_from_pix_size(binsz)
 
         if skydir is None:
-            lonlat = (0.0, 0.0)
+            lon, lat = (0.0, 0.0)
         elif isinstance(skydir, tuple):
-            lonlat = skydir
+            lon, lat = skydir
         elif isinstance(skydir, SkyCoord):
-            lonlat = skydir_to_lonlat(skydir, coordsys=coordsys)
+            lon, lat, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
             raise ValueError(
                 'Invalid type for skydir: {}'.format(type(skydir)))
 
         if region is None and width is not None:
-            region = 'DISK({:f},{:f},{:f})'.format(lonlat[0], lonlat[1],
+            region = 'DISK({:f},{:f},{:f})'.format(lon, lat,
                                                    width / 2.)
 
         return cls(nside, nest=nest, coordsys=coordsys, region=region,
