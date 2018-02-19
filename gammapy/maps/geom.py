@@ -620,7 +620,7 @@ class MapCoord(object):
 
     def __getitem__(self, key):
 
-        if isinstance(key, basestring):
+        if isinstance(key, six.string_types):
             return self._data[key]
         else:
             return self._data.values()[key]
