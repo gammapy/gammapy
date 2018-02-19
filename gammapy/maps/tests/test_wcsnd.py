@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
-from ..geom import MapAxis, MapCoords, coordsys_to_frame
+from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
@@ -119,14 +119,14 @@ def test_wcsndmap_set_get_by_coords(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(m.get_by_coords((skydir_cel,) + coords[2:]),
                     m.get_by_coords((skydir_gal,) + coords[2:]))
 
-    # Test with MapCoords
+    # Test with MapCoord
     m = WcsNDMap(geom)
     coords = m.geom.get_coords()
     coords_dict = dict(lon=coords[0], lat=coords[1])
     if axes:
         for i, ax in enumerate(axes):
             coords_dict[ax.name] = coords[i + 2]
-    map_coords = MapCoords.create(coords_dict, coordsys=coordsys)
+    map_coords = MapCoord.create(coords_dict, coordsys=coordsys)
     m.set_by_coords(map_coords, coords[0])
     assert_allclose(coords[0], m.get_by_coords(map_coords))
 

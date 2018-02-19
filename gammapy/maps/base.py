@@ -7,7 +7,7 @@ from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .geom import pix_tuple_to_idx, MapCoords
+from .geom import pix_tuple_to_idx, MapCoord
 
 __all__ = [
     'Map',
@@ -468,8 +468,8 @@ class Map(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -480,7 +480,7 @@ class Map(object):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoords.create(coords, coordsys=self.geom.coordsys)
+        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
         msk = self.geom.contains(coords)
         vals = np.empty(coords.shape, dtype=self.data.dtype)
         coords = coords.mask(msk)
@@ -543,8 +543,8 @@ class Map(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -573,8 +573,8 @@ class Map(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -630,8 +630,8 @@ class Map(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.

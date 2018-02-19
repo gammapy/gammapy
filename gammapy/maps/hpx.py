@@ -10,7 +10,7 @@ from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .wcs import WcsGeom
-from .geom import MapGeom, MapCoords, pix_tuple_to_idx
+from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat, make_axes_cols
 from .geom import find_and_read_bands, make_axes
 
@@ -756,7 +756,7 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
-        coords = MapCoords.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, coordsys=self.coordsys)
         phi = np.radians(coords.lon)
         theta = np.pi / 2. - np.radians(coords.lat)
 

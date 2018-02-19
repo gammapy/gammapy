@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from .utils import find_hdu, find_bands_hdu
 
 __all__ = [
-    'MapCoords',
+    'MapCoord',
     'MapGeom',
     'MapAxis',
 ]
@@ -590,7 +590,7 @@ class MapAxis(object):
                        node_type=self._node_type, unit=self._unit)
 
 
-class MapCoords(object):
+class MapCoord(object):
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary
@@ -705,7 +705,7 @@ class MapCoords(object):
             Coordinate tuple with first element of type
             `~astropy.coordinates.SkyCoord`.        
         coordsys : {'CEL', 'GAL', None}
-            Spatial coordinate system of output `~MapCoords` object.
+            Spatial coordinate system of output `~MapCoord` object.
             If None the coordinate system will be set to the frame of
             the `~astropy.coordinates.SkyCoord` object.        
         """
@@ -758,7 +758,7 @@ class MapCoords(object):
 
     @classmethod
     def create(cls, data, coordsys=None, copy=False):
-        """Create a new `~MapCoords` object.
+        """Create a new `~MapCoord` object.
 
         Parameters
         ----------
@@ -793,7 +793,7 @@ class MapCoords(object):
 
         Returns
         -------
-        coords : `~MapCoords`
+        coords : `~MapCoord`
             A coordinates object.
         """
         if coordsys == self.coordsys:
@@ -816,7 +816,7 @@ class MapCoords(object):
 
         Returns
         -------
-        coords : `~MapCoords`
+        coords : `~MapCoord`
             A masked coordinates object.        
         """
         data = OrderedDict([(k, v[msk]) for k, v in self._data.items()])
@@ -982,7 +982,7 @@ class MapGeom(object):
         ----------
         coords : tuple
             Coordinate values in each dimension of the map.  This can
-            either be a tuple of numpy arrays or a MapCoords object.
+            either be a tuple of numpy arrays or a MapCoord object.
             If passed as a tuple then the ordering should be
             (longitude, latitude, c_0, ..., c_N) where c_i is the
             coordinate vector for axis i.
@@ -999,9 +999,9 @@ class MapGeom(object):
 
         Parameters
         ----------
-        coords : tuple or `~MapCoords`
+        coords : tuple or `~MapCoord`
             Coordinate values in each dimension of the map.  This can
-            either be a tuple of numpy arrays or a MapCoords object.
+            either be a tuple of numpy arrays or a MapCoord object.
             If passed as a tuple then the ordering should be
             (longitude, latitude, c_0, ..., c_N) where c_i is the
             coordinate vector for axis i.
@@ -1063,7 +1063,7 @@ class MapGeom(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
+        coords : tuple or `~gammapy.maps.MapCoord`
             Tuple of map coordinates.
 
         Returns

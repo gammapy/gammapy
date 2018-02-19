@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
-from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skycoord_to_lonlat
+from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes_cols, make_axes
 from .geom import find_and_read_bands
 
@@ -481,7 +481,7 @@ class WcsGeom(MapGeom):
         return coords
 
     def coord_to_pix(self, coords):
-        coords = MapCoords.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, coordsys=self.coordsys)
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
 

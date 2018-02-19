@@ -5,7 +5,7 @@ import json
 import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
-from .geom import MapCoords, pix_tuple_to_idx, coord_to_idx
+from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
@@ -320,7 +320,7 @@ class HpxNDMap(HpxMap):
 
         import healpy as hp
 
-        c = MapCoords.create(coords)
+        c = MapCoord.create(coords)
         coords_ctr = list(coords[:2])
         coords_ctr += [ax.pix_to_coord(t)
                        for ax, t in zip(self.geom.axes, idxs)]
@@ -358,7 +358,7 @@ class HpxNDMap(HpxMap):
 
     def _interp_by_coords(self, coords, order):
         """Linearly interpolate map values."""
-        c = MapCoords.create(coords)
+        c = MapCoord.create(coords)
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
         pix, wts = self._get_interp_weights(coords, idx_ax)
 
