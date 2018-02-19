@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy import units as u
 from ..utils.modeling import Parameter, ParameterList
 
 __all__ = [
@@ -15,11 +16,12 @@ class PhaseCurve(object):
 
     .. math::
 
-        \phi(t) = \phi0 + f0(t−t0) + (1/2)f1(t−t0)^2 + (1/6)f2(t−t0)^3
+        \phi(t) = \phi_0 + f_0(t−t_0) + (1/2)f_1(t−t_0)^2 + (1/6)f_2(t−t_0)^3
 
     Strictly periodic sources such as gamma-ray binaries have ``f1=0`` and ``f2=0``.
     Sources like some pulsars where the period spins up or down have ``f1!=0``
-    and / or ``f2 !=0``.
+    and / or ``f2 !=0``. For a binary, ``f0`` should be calculated as 1/T,
+    where T is the period of the binary in unit of ``seconds``.
 
     The "phase curve", i.e. multiplicative flux factor for a given phase is given
     by a `~astropy.table.Table` of nodes ``(phase, norm)``, using linear interpolation
@@ -33,8 +35,10 @@ class PhaseCurve(object):
         The MJD value where phase is considered as 0.
     phase_0 : float
         Phase at the reference MJD
-    f0, f2, f2 : float
+    f0, f1, f2 : float
         Derivatives of the function phi with time of order 1, 2, 3
+        in units of ``s^-1, s^-2 & s^-3``, respectively.
+        
 
     Examples
     --------
@@ -45,15 +49,14 @@ class PhaseCurve(object):
         from gammapy.time.models import PhaseCurve
         filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
-        phase_curve = PhaseCurve(table, time_0=43366.275, phase_0=0.0, f0=0.5, f1=0.0, f2=0.0)
+        phase_curve = PhaseCurve(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
     Use it to compute a phase and evaluate the phase curve model for a given time:
 
     >>> phase_curve.phase(time=46300.0)
-    0.8624999999992724
-    >>> phase_curve.evaluate_at_phase(0.8624999999992724)
-    >>> phase_curve.evaluate_at_time(46300.0)
-    0.05
+    0.7066006737999402
+    >>> phase_curve.evaluate_norm_at_time(46300)
+    0.49059393580053845
     """
 
     def __init__(self, table, time_0, phase_0, f0, f1, f2):
@@ -84,7 +87,7 @@ class PhaseCurve(object):
         f1 = pars['f1'].value
         f2 = pars['f2'].value
 
-        t = (time - time_0)*86400.0
+        t = (time - time_0) * u.day.to(u.second)
         phase = self._evaluate_phase(t, phase_0, f0, f1, f2)
         return np.remainder(phase, 1)
 
