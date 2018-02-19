@@ -623,12 +623,14 @@ class MapCoord(object):
         if isinstance(key, six.string_types):
             return self._data[key]
         else:
-            return self._data.values()[key]
+            return list(self._data.values())[key]
 
     def __iter__(self):
         return iter(self._data.values())
 
     def __getattr__(self, key):
+        if key.startswith('_'):
+            raise AttributeError(key)
         try:
             return self[key]
         except KeyError:
