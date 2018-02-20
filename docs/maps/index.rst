@@ -132,16 +132,16 @@ representation.  Three types of accessor methods are provided:
 
 * ``get`` : Return the value of the map at the pixel containing the
   given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`,
-  `~Map.get_by_coords`).  With the ``interp`` argument,
-  `~Map.get_by_pix` and `~Map.get_by_coords` also support
+  `~Map.get_by_coord`).  With the ``interp`` argument,
+  `~Map.get_by_pix` and `~Map.get_by_coord` also support
   interpolation of map values between pixels (see `Interpolation`_).
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`,
-  `~Map.set_by_coords`).
+  `~Map.set_by_coord`).
 * ``fill`` : Increment the value of the map at the pixel containing
   the given coordinate with a unit weight or the value in the optional
   ``weights`` argument (`~Map.fill_by_idx`,
-  `~Map.fill_by_pix`, `~Map.fill_by_coords`).
+  `~Map.fill_by_pix`, `~Map.fill_by_coord`).
 
 All accessor methods accept as their first argument a
 coordinate tuple containing scalars, lists, or numpy arrays with one
@@ -174,7 +174,7 @@ systems:
 
    vals = m.get_by_idx( ([49,50],[49,50]) )
    vals = m.get_by_pix( ([49.0,50.0],[49.0,50.0]) )
-   vals = m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]) )
+   vals = m.get_by_coord( ([-0.05,-0.05],[0.05,0.05]) )
 
 Coordinate arguments obey normal numpy broadcasting rules.  The
 coordinate tuple may contain any combination of scalars, lists or
@@ -196,11 +196,11 @@ given operation across a grid of coordinate values.
    vals = m.get_by_idx( (np.array([49]),np.array([49])) )
 
    # Retrieve map values along latitude at fixed longitude=0.0
-   vals = m.get_by_coords( (0.0, coords) )
+   vals = m.get_by_coord( (0.0, coords) )
    # Retrieve map values on a 2D grid of latitude/longitude points
-   vals = m.get_by_coords( (coords[None,:], coords[:,None]) )
+   vals = m.get_by_coord( (coords[None,:], coords[:,None]) )
    # Set map values along slice at longitude=0.0 to twice their existing value
-   m.set_by_coords((0.0, coords), 2.0*m.get_by_coords((0.0, coords)))
+   m.set_by_coord((0.0, coords), 2.0*m.get_by_coord((0.0, coords)))
 
 The ``set`` and ``fill`` methods can both be used to set pixel values.
 The following demonstrates how one can set pixel values:
@@ -210,13 +210,13 @@ The following demonstrates how one can set pixel values:
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
-   m.set_by_coords( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
-   m.fill_by_coords( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
+   m.set_by_coord( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
+   m.fill_by_coord( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
 
 Interpolation
 -------------
 
-Maps support interpolation via the `~Map.get_by_coords` and
+Maps support interpolation via the `~Map.get_by_coord` and
 `~Map.get_by_pix` methods.  Currently the following interpolation
 methods are supported:
 
@@ -237,8 +237,8 @@ maps.
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
-   m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
-   m.get_by_coords( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
+   m.get_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
+   m.get_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
 
 
 Projection
@@ -285,7 +285,7 @@ one can use this method to fill a map with a 2D Gaussian:
        skydir = SkyCoord(coords[0],coords[1], unit='deg')
        sep = skydir.separation(m.geom.center_skydir).deg
        new_val = np.exp(-sep**2/2.0)
-       m.set_by_coords(coords, new_val)
+       m.set_by_coord(coords, new_val)
 
 For maps with non-spatial dimensions the `~Map.iter_by_image`
 method can be used to loop over image slices:
@@ -393,7 +393,7 @@ This example shows how to fill a counts cube from an FT1 file:
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
    m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
                        coordsys='CEL', axes=[energy_axis])
-   m.fill_by_coords((h['EVENTS'].data.field('RA'),
+   m.fill_by_coord((h['EVENTS'].data.field('RA'),
                      h['EVENTS'].data.field('DEC'),
                      h['EVENTS'].data.field('ENERGY')))
    m.write('ccube.fits', conv='fgst-ccube')

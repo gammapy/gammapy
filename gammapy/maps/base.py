@@ -340,9 +340,9 @@ class Map(object):
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
         idx = map_in.geom.get_idx()
-        coords = map_in.geom.get_coords()
+        coords = map_in.geom.get_coord()
         vals = map_in.get_by_idx(idx)
-        self.fill_by_coords(coords, vals)
+        self.fill_by_coord(coords, vals)
 
     def reproject(self, geom, order=1, mode='interp'):
         """Reproject this map to a different geometry.
@@ -463,7 +463,7 @@ class Map(object):
         """
         pass
 
-    def get_by_coords(self, coords):
+    def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
 
         Parameters
@@ -567,7 +567,7 @@ class Map(object):
         """
         pass
 
-    def fill_by_coords(self, coords, weights=None):
+    def fill_by_coord(self, coords, weights=None):
         """Fill pixels at the given map coordinates with values in `weights`
         vector.
 
@@ -624,7 +624,7 @@ class Map(object):
         """
         pass
 
-    def set_by_coords(self, coords, vals):
+    def set_by_coord(self, coords, vals):
         """Set pixels at the given map coordinates to the values in `vals`
         vector.
 

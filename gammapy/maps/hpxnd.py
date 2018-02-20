@@ -178,7 +178,7 @@ class HpxNDMap(HpxMap):
                                     buffersize=buffersize))
 
     def iter_by_coords(self, buffersize=1):
-        coords = list(self.geom.get_coords(flat=True))
+        coords = list(self.geom.get_coord(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + coords,
                                     flags=['external_loop', 'buffered'],
@@ -197,7 +197,7 @@ class HpxNDMap(HpxMap):
 
         if self.geom.nside.size > 1:
             vals = self.get_by_idx(self.geom.get_idx(flat=True))
-            map_out.fill_by_coords(self.geom.get_coords(flat=True)[:2], vals)
+            map_out.fill_by_coord(self.geom.get_coord(flat=True)[:2], vals)
         else:
             axes = np.arange(self.data.ndim - 1).tolist()
             data = np.apply_over_axes(np.sum, self.data, axes=axes)
@@ -247,18 +247,18 @@ class HpxNDMap(HpxMap):
         geom = self.geom.pad(pad_width)
         map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
         map_out.coadd(self)
-        coords = geom.get_coords(flat=True)
+        coords = geom.get_coord(flat=True)
         m = self.geom.contains(coords)
         coords = tuple([c[~m] for c in coords])
 
         if mode == 'constant':
-            map_out.set_by_coords(coords, cval)
+            map_out.set_by_coord(coords, cval)
         elif mode in ['edge', 'interp']:
             # FIXME: These modes don't work at present because
             # interp_by_coords doesn't support extrapolation
             vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
                                          else order)
-            map_out.set_by_coords(coords, vals)
+            map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))
 
@@ -274,10 +274,10 @@ class HpxNDMap(HpxMap):
 
         map_out = self.__class__(self.geom.upsample(factor),
                                  meta=copy.deepcopy(self.meta))
-        coords = map_out.geom.get_coords(flat=True)
-        vals = self.get_by_coords(coords)
+        coords = map_out.geom.get_coord(flat=True)
+        vals = self.get_by_coord(coords)
         m = np.isfinite(vals)
-        map_out.fill_by_coords([c[m] for c in coords], vals[m])
+        map_out.fill_by_coord([c[m] for c in coords], vals[m])
 
         if preserve_counts:
             map_out.data /= factor**2
@@ -291,7 +291,7 @@ class HpxNDMap(HpxMap):
         idx = self.geom.get_idx(flat=True)
         coords = self.geom.pix_to_coord(idx)
         vals = self.get_by_idx(idx)
-        map_out.fill_by_coords(coords, vals)
+        map_out.fill_by_coord(coords, vals)
 
         if not preserve_counts:
             map_out.data /= factor**2
@@ -478,14 +478,14 @@ class HpxNDMap(HpxMap):
             idx = self.geom.get_idx(flat=True)
             coords = self.geom.pix_to_coord(idx)
             vals = self.get_by_idx(idx)
-            map_out.fill_by_coords(coords, vals)
+            map_out.fill_by_coord(coords, vals)
         else:
             # Upsample
             idx = new_hpx.get_idx(flat=True)
             coords = new_hpx.pix_to_coord(idx)
-            vals = self.get_by_coords(coords)
+            vals = self.get_by_coord(coords)
             m = np.isfinite(vals)
-            map_out.fill_by_coords([c[m] for c in coords], vals[m])
+            map_out.fill_by_coord([c[m] for c in coords], vals[m])
 
         if not preserve_counts:
             fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2

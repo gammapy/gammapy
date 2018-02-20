@@ -60,7 +60,7 @@ def test_wcsgeom_get_pix(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    assert_allclose(geom.get_coords()[0],
+    assert_allclose(geom.get_coord()[0],
                     geom.pix_to_coord(geom.get_idx())[0])
 
 
@@ -70,7 +70,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
     assert_allclose(geom.get_idx()[0],
-                    geom.coord_to_idx(geom.get_coords())[0])
+                    geom.coord_to_idx(geom.get_coord())[0])
 
     if not geom.is_allsky:
         coords = geom.center_coord[:2] + \
@@ -110,7 +110,7 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)
-    coords = geom.get_coords()
+    coords = geom.get_coord()
     coords = [c[np.isfinite(c)] for c in coords]
     assert_allclose(geom.contains(coords),
                     np.ones(coords[0].shape, dtype=bool))

@@ -66,7 +66,7 @@ class WcsGeom(MapGeom):
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
-        self._coordsys = get_coordsys(wcs)
+        self._coordsys = get_coordys(wcs)
         self._projection = get_projection(wcs)
         self._conv = conv
         self._axes = make_axes(axes, conv)
@@ -473,7 +473,7 @@ class WcsGeom(MapGeom):
 #        m = np.broadcast_to(np.prod(m),shape)
 #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
-    def get_coords(self, idx=None, flat=False):
+    def get_coord(self, idx=None, flat=False):
         pix = self._get_pix_coords(idx=idx)
         coords = self.pix_to_coord(pix)
         if flat:
@@ -822,7 +822,7 @@ def get_projection(wcs):
     return wcs.wcs.ctype[0][5:]
 
 
-def get_coordsys(wcs):
+def get_coordys(wcs):
     if 'RA' in wcs.wcs.ctype[0]:
         return 'CEL'
     elif 'GLON' in wcs.wcs.ctype[0]:
@@ -884,7 +884,7 @@ def get_map_skydir(filename, maphdu=0):
 def wcs_to_skydir(wcs):
     lon = wcs.wcs.crval[0]
     lat = wcs.wcs.crval[1]
-    coordsys = get_coordsys(wcs)
+    coordsys = get_coordys(wcs)
     if coordsys == 'GAL':
         return SkyCoord(lon, lat, unit='deg', frame='galactic').transform_to('icrs')
     else:
@@ -892,7 +892,7 @@ def wcs_to_skydir(wcs):
 
 
 def is_galactic(wcs):
-    coordsys = get_coordsys(wcs)
+    coordsys = get_coordys(wcs)
     if coordsys == 'GAL':
         return True
     elif coordsys == 'CEL':

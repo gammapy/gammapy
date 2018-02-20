@@ -948,7 +948,7 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def get_coords(self, idx=None, flat=False):
+    def get_coord(self, idx=None, flat=False):
         """Get the coordinate array for this geometry.
 
         Returns a coordinate array with the same shape as the data
