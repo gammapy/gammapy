@@ -483,7 +483,7 @@ class Map(object):
         coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
         msk = self.geom.contains(coords)
         vals = np.empty(coords.shape, dtype=self.data.dtype)
-        coords = coords.mask(msk)
+        coords = coords.apply_mask(msk)
         idx = self.geom.coord_to_idx(coords)
         vals[msk] = self.get_by_idx(idx)
         vals[~msk] = np.nan

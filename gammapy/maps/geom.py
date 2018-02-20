@@ -808,7 +808,7 @@ class MapCoord(object):
             data['lat'] = lat
             return self.__class__(data, coordsys=coordsys)
 
-    def mask(self, msk):
+    def apply_mask(self, msk):
         """Return a masked copy of this coordinate object.
 
         Parameters
@@ -819,7 +819,7 @@ class MapCoord(object):
         Returns
         -------
         coords : `~MapCoord`
-            A masked coordinates object.        
+            A coordinates object.
         """
         data = OrderedDict([(k, v[msk]) for k, v in self._data.items()])
         return self.__class__(data, self.coordsys)
