@@ -264,6 +264,8 @@ However when using the named axis interface the axis name string
 method argument.  The two spatial axes must always be named ``lon``
 and ``lat``.
 
+.. _mapcoord:
+
 MapCoord
 --------
 

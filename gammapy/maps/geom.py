@@ -596,6 +596,8 @@ class MapCoord(object):
     Contains coordinates for 2 spatial dimensions and an arbitrary
     number of additional non-spatial dimensions.
 
+    For further information see :ref:`mapcoord`.
+
     Parameters
     ----------
     data : `~collections.OrderedDict` of `~numpy.ndarray`
@@ -606,10 +608,15 @@ class MapCoord(object):
     copy : bool
         Make copies of the input arrays.  If False then this object will store views.
     match_by_name : bool
-        Match coordinates to axes by name.  If false coordinates will be matched by index.
+        Match coordinates to axes by name.  If false coordinates will
+        be matched by index.
     """
 
     def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
+
+        if 'lon' not in data or 'lat' not in data:
+            raise ValueError(
+                "data dictionary must contain axes named 'lon' and 'lat'.")
 
         self._data = OrderedDict([(k, np.array(v, ndmin=1, copy=copy))
                                   for k, v in data.items()])
@@ -798,7 +805,7 @@ class MapCoord(object):
         >>> c = MapCoord.create((lon,lat,energy))
         >>> c = MapCoord.create(dict(lon=lon,lat=lat))
         >>> c = MapCoord.create(dict(lon=lon,lat=lat,energy=energy))
-
+        >>> c = MapCoord.create(dict(skycoord=skycoord,energy=energy))
         """
         if isinstance(data, cls):
             if data.coordsys is None or coordsys == data.coordsys:
