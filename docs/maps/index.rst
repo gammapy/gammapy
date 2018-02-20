@@ -128,13 +128,13 @@ Get, Set, and Fill Methods
 All map objects have a set of accessor methods provided through the
 abstract `~Map` class.  These methods can be used to access or
 update the contents of the map irrespective of its underlying
-representation.  Three types of accessor methods are provided:
+representation.  Four types of accessor methods are provided:
 
 * ``get`` : Return the value of the map at the pixel containing the
   given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`,
-  `~Map.get_by_coord`).  With the ``interp`` argument,
-  `~Map.get_by_pix` and `~Map.get_by_coord` also support
-  interpolation of map values between pixels (see `Interpolation`_).
+  `~Map.get_by_coord`).  
+* ``interp`` : Interpolate or extrapolate the value of the map at an arbitrary
+  coordinate (see also `Interpolation`_).  T  
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`,
   `~Map.set_by_coord`).
@@ -143,12 +143,15 @@ representation.  Three types of accessor methods are provided:
   ``weights`` argument (`~Map.fill_by_idx`,
   `~Map.fill_by_pix`, `~Map.fill_by_coord`).
 
-All accessor methods accept as their first argument a
-coordinate tuple containing scalars, lists, or numpy arrays with one
-tuple element for each dimension of the map.  By convention the first
-two elements in the coordinate tuple correspond to longitude and
-latitude followed by one element for each non-spatial dimension.  Map
-coordinates can be expressed in one of three coordinate systems:
+Accessor methods accept as their first argument a coordinate tuple
+containing scalars, lists, or numpy arrays with one tuple element for
+each dimension of the map.  ``coord`` methods optionally support a
+`dict` or `~MapCoord` argument.
+
+When using tuple input the first two elements in the tuple
+should be longitude and latitude followed by one element for each
+non-spatial dimension.  Map coordinates can be expressed in one of
+three coordinate systems:
 
 * ``idx`` : Pixel indices.  These are explicit (integer) pixel indices into the map.
 * ``pix`` : Coordinates in pixel space.  Pixel coordinates are continuous defined
@@ -216,8 +219,8 @@ The following demonstrates how one can set pixel values:
 Interpolation
 -------------
 
-Maps support interpolation via the `~Map.get_by_coord` and
-`~Map.get_by_pix` methods.  Currently the following interpolation
+Maps support interpolation via the `~Map.interp_by_coord` and
+`~Map.interp_by_pix` methods.  Currently the following interpolation
 methods are supported:
 
 * ``nearest`` : Return value of nearest pixel (no interpolation).
@@ -237,8 +240,8 @@ maps.
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
-   m.get_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
-   m.get_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
+   m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
+   m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
 
 
 Projection
