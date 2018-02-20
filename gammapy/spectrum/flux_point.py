@@ -806,7 +806,7 @@ class FluxPointEstimator(object):
         # compute TS value for all observations
         stat_best_fit = np.sum([res.statval for res in fit.result])
 
-        dnde, dnde_err = res.model.evaluate_error(energy_ref)
+        dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
 
         dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
