@@ -130,6 +130,9 @@ class SpectrumFit(object):
         true_range = []
         for binrange, obs in zip(self.bins_in_fit_range, self.obs_list):
             idx = np.where(binrange)[0]
+            if len(idx) == 0:
+                true_range.append(None)
+                continue
             e_min = obs.e_reco[idx[0]]
             e_max = obs.e_reco[idx[-1] + 1]
             fit_range = u.Quantity((e_min, e_max))
@@ -150,7 +153,6 @@ class SpectrumFit(object):
                 idx_lo = np.where(energy * (1 + precision) < self.fit_range[0])[0]
                 valid_range[idx_lo] = 1
 
-                
                 idx_hi = np.where(energy[:-1] * (1 - precision) > self.fit_range[1])[0]
                 if len(idx_hi) != 0:
                     idx_hi = np.insert(idx_hi, 0, idx_hi[0] - 1)
@@ -406,7 +408,6 @@ class SpectrumFit(object):
 
         model = self.model.copy()
         if self.background_model is not None:
-
             bkg_model = self.background_model.copy()
         else:
             bkg_model = None
