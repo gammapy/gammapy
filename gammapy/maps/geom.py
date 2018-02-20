@@ -802,10 +802,10 @@ class MapCoord(object):
                 return data.to_coordsys(coordsys)
         elif isinstance(data, dict):
             return cls._from_dict(data, coordsys=coordsys, copy=copy)
-        elif isinstance(data, tuple) or isinstance(data, list):
+        elif isinstance(data, (list, tuple)):
             return cls._from_tuple(data, coordsys=coordsys, copy=copy)
         elif isinstance(data, SkyCoord):
-            return cls._from_skycoord(data, coordsys=coordsys, copy=copy)
+            return cls._from_skycoord((data,), coordsys=coordsys, copy=copy)
         else:
             raise Exception('Unsupported input type.')
 

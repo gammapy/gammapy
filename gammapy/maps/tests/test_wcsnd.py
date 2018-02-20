@@ -166,7 +166,7 @@ def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
     m1 = WcsNDMap(geom.upsample(2))
     coords = m0.geom.get_coord()
     m1.fill_by_coord(tuple([np.concatenate((t, t)) for t in coords]),
-                      np.concatenate((coords[1], coords[1])))
+                     np.concatenate((coords[1], coords[1])))
     m0.coadd(m1)
     assert_allclose(np.nansum(m0.data), np.nansum(m1.data), rtol=1E-4)
 

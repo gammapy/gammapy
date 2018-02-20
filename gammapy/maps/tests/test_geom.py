@@ -94,6 +94,13 @@ def test_mapaxis_slice(nodes, interp, node_type):
 
 
 def test_mapcoords_create():
+
+    # From existing MapCoord
+    coords_cel = MapCoord.create((0.0, 1.0), coordsys='CEL')
+    coords_gal = MapCoord.create(coords_cel, coordsys='GAL')
+    assert_allclose(coords_gal.lon, coords_cel.skycoord.galactic.l.deg)
+    assert_allclose(coords_gal.lat, coords_cel.skycoord.galactic.b.deg)
+
     # 2D Tuple of scalars
     coords = MapCoord.create((0.0, 1.0))
     assert_allclose(coords.lon, 0.0)
@@ -136,6 +143,18 @@ def test_mapcoords_create():
     assert(coords.coordsys == 'GAL')
     assert(coords.ndim == 2)
 
+    # SkyCoord
+    coords = MapCoord.create(skycoord_cel)
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert(coords.coordsys == 'CEL')
+    assert(coords.ndim == 2)
+    coords = MapCoord.create(skycoord_gal)
+    assert_allclose(coords.lon, lon)
+    assert_allclose(coords.lat, lat)
+    assert(coords.coordsys == 'GAL')
+    assert(coords.ndim == 2)
+
     # 2D Dict w/ vectors
     coords = MapCoord.create(dict(lon=lon, lat=lat))
     assert_allclose(coords.lon, lon)
@@ -158,7 +177,7 @@ def test_mapcoords_create():
 
     # 3D OrderedDict w/ vectors
     coords = MapCoord.create(OrderedDict([('energy', energy),
-                                           ('lat', lat), ('lon', lon)]))
+                                          ('lat', lat), ('lon', lon)]))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords.energy, energy)
