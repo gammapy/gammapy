@@ -122,8 +122,8 @@ Fermi-LAT PSF:
    m_hpx = Map.create(binsz=binsz, map_type='hpx', skydir=position, width=10.0,
                           axes=[energy_axis])
 
-Get, Set, and Fill Methods
---------------------------
+Accessor Methods
+----------------
 
 All map objects have a set of accessor methods provided through the
 abstract `~Map` class.  These methods can be used to access or
@@ -134,7 +134,7 @@ representation.  Four types of accessor methods are provided:
   given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`,
   `~Map.get_by_coord`).  
 * ``interp`` : Interpolate or extrapolate the value of the map at an arbitrary
-  coordinate (see also `Interpolation`_).  T  
+  coordinate (see also `Interpolation`_).  
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`,
   `~Map.set_by_coord`).
@@ -160,9 +160,12 @@ three coordinate systems:
   methods that reference a discrete pixel, pixel coordinates wil be
   rounded to the nearest pixel index and passed to the corresponding
   ``idx`` method.
-* ``coord`` : Sky (spherical) coordinates.  The tuple should contain longitude and
-  latitude in degrees followed by one coordinate array for each
-  non-spatial dimension.
+* ``coord`` : The true map coordinates including angles on the sky
+  (longitude and latitude).  This coordinate system supports three
+  coordinate representations: `tuple`, `dict`, and `~MapCoord`.  The
+  tuple representation should contain longitude and latitude in
+  degrees followed by one coordinate array for each non-spatial
+  dimension.
 
 The coordinate system accepted by a given accessor method can be
 inferred from the suffix of the method name
@@ -216,6 +219,123 @@ The following demonstrates how one can set pixel values:
    m.set_by_coord( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
    m.fill_by_coord( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
 
+Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
+-------------------------------------------------------------
+
+The ``coord`` accessor methods accept `dict`, `~MapCoord`, and
+`~astropy.coordinates.SkyCoord` arguments in addition to the standard
+`tuple` of `~numpy.ndarray` argument.  When using a `tuple` argument a
+`~astropy.coordinates.SkyCoord` can be used instead of longitude and
+latitude arrays.  The coordinate frame of the
+`~astropy.coordinates.SkyCoord` will be transformed to match the
+coordinate system of the map.
+
+.. code:: python
+
+   from astropy.coordinates.SkyCoord
+   from gammapy.maps import Map, MapCoord, MapAxis
+
+   lon = np.array([0.0,1.0])
+   lat = np.array([1.0,2.0])
+   energy = np.array([100., 1000.])
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', name='energy')
+   
+   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
+   m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
+                  coordsys='GAL', axes=[energy_axis])
+
+   m.set_by_coord( (skycoord, energy), [0.5, 1.5] )
+   m.get_by_coord( (skycoord, energy) )
+
+A `~MapCoord` or `dict` argument can be used to interact with a map
+object without reference to the axis ordering of the map geometry:
+
+.. code:: python
+
+   coord = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
+   m.set_by_coord( coord, [0.5, 1.5] )
+   m.get_by_coord( coord, )
+   m.set_by_coord( dict(lon=lon, lat=lat, energy=energy), [0.5, 1.5] )
+   m.get_by_coord( dict(lon=lon, lat=lat, energy=energy) )
+   
+
+However when using the named axis interface the axis name string
+(e.g. as given by `~MapAxis.name`) must match the name given in the
+method argument.  The two spatial axes must always be named ``lon``
+and ``lat``.
+
+MapCoord
+--------
+
+`~MapCoord` is an N-dimensional coordinate object that stores both
+spatial and non-spatial coordinates and is accepted by all ``coord``
+methods.  A `~MapCoord` can be created with or without explicitly
+named axes with `~MapCoord.create`.  Axes of a `~MapCoord` can be
+accessed by index, name, or attribute.  A `~MapCoord` without explicit
+axis names can be created by calling `~MapCoord.create` with a `tuple`
+argument:
+
+.. code:: python
+
+   from astropy.coordinates.SkyCoord
+   from gammapy.maps import MapCoord
+
+   lon = np.array([0.0,1.0])
+   lat = np.array([1.0,2.0])
+   energy = np.array([100., 1000.])
+   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
+
+   # Create a MapCoord from a tuple (no explicit axis names)
+   c = MapCoord.create((lon, lat, energy))
+   print(c[0], c['lon'], c.lon)
+   print(c[1], c['lat'], c.lat)
+   print(c[2], c['axis0'], c.axis0)
+
+   # Create a MapCoord from a tuple + SkyCoord (no explicit axis names)
+   c = MapCoord.create((skycoord, energy))
+   print(c[0], c['lon'], c.lon)
+   print(c[1], c['lat'], c.lat)
+   print(c[2], c['axis0'], c.axis0)
+
+The first two elements of the tuple argument must contain longitude
+and latitude.  Non-spatial axes are assigned a default name
+``axis{I}`` where ``{I}`` is the index of the non-spatial dimension.
+`~MapCoord` objects created without named axes must have the same axis
+ordering as the map geometry.
+
+
+A `~MapCoord` with named axes can be created by calling
+`~MapCoord.create` with a `dict` or `~collections.OrderedDict`:
+
+.. code:: python
+   
+   # Create a MapCoord from a dict
+   c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
+   print(c[0], c['lon'], c.lon)
+   print(c[1], c['lat'], c.lat)
+   print(c[2], c['energy'], c.energy)
+
+   # Create a MapCoord from an OrderedDict
+   from collections import OrderedDict
+   c = MapCoord.create(OrderedDict([('energy',energy), ('lon',lon), ('lat', lat)]))
+   print(c[0], c['energy'], c.energy)
+   print(c[1], c['lon'], c.lon)
+   print(c[2], c['lat'], c.lat)
+   
+   # Create a MapCoord from a dict + SkyCoord
+   c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
+   print(c[0], c['lon'], c.lon)
+   print(c[1], c['lat'], c.lat)
+   print(c[2], c['energy'], c.energy)
+
+
+Spatial axes must be named ``lon`` and ``lat``.  `~MapCoord` objects
+created with named axes do not need to have the same axis ordering as
+the map geometry.  However the name of the axis must match the name of
+the corresponding map geometry axis.
+  
+   
+   
 Interpolation
 -------------
 

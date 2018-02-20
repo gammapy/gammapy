@@ -598,8 +598,8 @@ class MapCoord(object):
 
     Parameters
     ----------
-    data : tuple of `~numpy.ndarray`
-        Tuple of coordinate values.
+    data : `~collections.OrderedDict` of `~numpy.ndarray`
+        Dictionary of coordinate arrays.
     coordsys : {'CEL', 'GAL', None}    
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
@@ -638,10 +638,12 @@ class MapCoord(object):
 
     @property
     def ndim(self):
+        """Number of dimensions."""
         return len(self._data)
 
     @property
     def shape(self):
+        """Coordinate array shape."""
         return self[0].shape
 
     @property
@@ -650,10 +652,12 @@ class MapCoord(object):
 
     @property
     def lon(self):
+        """Longitude coordinate in degrees."""
         return self._data['lon']
 
     @property
     def lat(self):
+        """Latitude coordinate in degrees."""
         return self._data['lat']
 
     @property
@@ -667,12 +671,19 @@ class MapCoord(object):
 
     @classmethod
     def from_lonlat(cls, coords, coordsys=None, copy=False):
-        """Create from vectors of longitude and latitude in degrees.
+        """Create a `~MapCoord` from a tuple of coordinate vectors.  The first
+        two elements of the tuple should be longitude and latitude in
+        degrees.
 
         Parameters
         ----------
         coords : tuple
             Tuple of `~numpy.ndarray`.
+
+        Returns
+        -------
+        coord : `~MapCoord`
+            A coordinates object.
         """
 
         if isinstance(coords, (list, tuple)):
@@ -760,16 +771,34 @@ class MapCoord(object):
 
     @classmethod
     def create(cls, data, coordsys=None, copy=False):
-        """Create a new `~MapCoord` object.
+        """Create a new `~MapCoord` object.  This method can be used to create
+        either unnamed (with tuple input) or named (via dict input)
+        axes.
 
         Parameters
         ----------
-        data : tuple
-            Coordinate tuple.        
+        data : `tuple`, `dict`, or `~MapCoord`
+            Object containing coordinate arrays.  
         coordsys : {'CEL', 'GAL', None}, optional
             Set the coordinate system for longitude and latitude.  If
-            None then longitude and latitude will be assumed to be in
-            the coordinate system native to the map.
+            None longitude and latitude will be assumed to be in
+            the coordinate system native to a given map geometry.
+        copy : bool
+            Make copies of the input coordinate arrays.  If False this
+            object will store views.
+
+        Examples
+        --------
+        >>> from astropy.coordinates import SkyCoord
+        >>> from gammapy.maps import MapCoord
+        >>> lon, lat = np.array([1.0,2.0]), np.array([2.0,3.0])
+        >>> energy = np.array([1000.])
+        >>> c = MapCoord.create((lon,lat))
+        >>> c = MapCoord.create((SkyCoord(lon,lat,unit='deg'),))
+        >>> c = MapCoord.create((lon,lat,energy))
+        >>> c = MapCoord.create(dict(lon=lon,lat=lat))
+        >>> c = MapCoord.create(dict(lon=lon,lat=lat,energy=energy))
+
         """
         if isinstance(data, cls):
             if data.coordsys is None or coordsys == data.coordsys:
