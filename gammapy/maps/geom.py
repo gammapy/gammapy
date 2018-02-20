@@ -677,7 +677,7 @@ class MapCoord(object):
                         frame=coordsys_to_frame(self.coordsys))
 
     @classmethod
-    def from_lonlat(cls, coords, coordsys=None, copy=False):
+    def _from_lonlat(cls, coords, coordsys=None, copy=False):
         """Create a `~MapCoord` from a tuple of coordinate vectors.  The first
         two elements of the tuple should be longitude and latitude in
         degrees.
@@ -694,29 +694,18 @@ class MapCoord(object):
         """
 
         if isinstance(coords, (list, tuple)):
-            match_by_name = False
             coords_dict = OrderedDict([('lon', coords[0]),
                                        ('lat', coords[1])])
             for i, c in enumerate(coords[2:]):
                 coords_dict['axis{}'.format(i)] = c
-        elif isinstance(coords, OrderedDict):
-            match_by_name = True
-        elif isinstance(coords, dict):
-            match_by_name = True
-            coords_dict = OrderedDict([('lon', coords['lon']),
-                                       ('lat', coords['lat'])])
-            for k, v in coords.items():
-                if k in ['lon', 'lat']:
-                    continue
-                coords_dict[k] = v
         else:
             raise ValueError('Unrecognized input type.')
 
         return cls(coords_dict, coordsys=coordsys, copy=copy,
-                   match_by_name=match_by_name)
+                   match_by_name=False)
 
     @classmethod
-    def from_skycoord(cls, coords, coordsys=None, copy=False):
+    def _from_skycoord(cls, coords, coordsys=None, copy=False):
         """Create from vector of `~astropy.coordinates.SkyCoord`.
 
         Parameters
@@ -732,10 +721,10 @@ class MapCoord(object):
         skycoord = coords[0]
         if skycoord.frame.name in ['icrs', 'fk5']:
             coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
-            coords = cls.from_lonlat(coords, coordsys='CEL', copy=copy)
+            coords = cls._from_lonlat(coords, coordsys='CEL', copy=copy)
         elif skycoord.frame.name in ['galactic']:
             coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
-            coords = cls.from_lonlat(coords, coordsys='GAL', copy=copy)
+            coords = cls._from_lonlat(coords, coordsys='GAL', copy=copy)
         else:
             raise ValueError(
                 'Unrecognized coordinate frame: {}'.format(skycoord.frame.name))
@@ -746,20 +735,18 @@ class MapCoord(object):
             return coords.to_coordsys(coordsys)
 
     @classmethod
-    def from_tuple(cls, coords, coordsys=None, copy=False):
+    def _from_tuple(cls, coords, coordsys=None, copy=False):
         """Create from tuple of coordinate vectors."""
-        if (isinstance(coords[0], np.ndarray) or
-                isinstance(coords[0], list) or
-                np.isscalar(coords[0])):
-            return cls.from_lonlat(coords, coordsys=coordsys)
+        if (isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0])):
+            return cls._from_lonlat(coords, coordsys=coordsys)
         elif isinstance(coords[0], SkyCoord):
-            return cls.from_skycoord(coords, coordsys=coordsys)
+            return cls._from_skycoord(coords, coordsys=coordsys)
         else:
             raise Exception('Unsupported input type.')
 
     @classmethod
-    def from_dict(cls, coords, coordsys=None, copy=False):
-
+    def _from_dict(cls, coords, coordsys=None, copy=False):
+        """Create from a dictionary of coordinate vectors."""
         if 'lon' in coords and 'lat' in coords:
             return cls(coords, coordsys=coordsys, copy=copy)
         elif 'skycoord' in coords:
@@ -774,7 +761,8 @@ class MapCoord(object):
                 coords_dict[k] = v
             return cls(coords_dict, coordsys=coordsys, copy=copy)
         else:
-            raise ValueError
+            raise ValueError("Dictionary must contain axes named 'lon'/'lat'"
+                             "or 'skycoord'.")
 
     @classmethod
     def create(cls, data, coordsys=None, copy=False):
@@ -813,11 +801,11 @@ class MapCoord(object):
             else:
                 return data.to_coordsys(coordsys)
         elif isinstance(data, dict):
-            return cls.from_dict(data, coordsys=coordsys, copy=copy)
+            return cls._from_dict(data, coordsys=coordsys, copy=copy)
         elif isinstance(data, tuple) or isinstance(data, list):
-            return cls.from_tuple(data, coordsys=coordsys, copy=copy)
+            return cls._from_tuple(data, coordsys=coordsys, copy=copy)
         elif isinstance(data, SkyCoord):
-            return cls.from_skycoord(data, coordsys=coordsys, copy=copy)
+            return cls._from_skycoord(data, coordsys=coordsys, copy=copy)
         else:
             raise Exception('Unsupported input type.')
 
