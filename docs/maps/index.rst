@@ -220,7 +220,7 @@ The following demonstrates how one can set pixel values:
    m.fill_by_coord( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
 
 Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
--------------------------------------------------------------
+--------------------------------------------------------------
 
 The ``coord`` accessor methods accept `dict`, `~MapCoord`, and
 `~astropy.coordinates.SkyCoord` arguments in addition to the standard
@@ -232,7 +232,8 @@ coordinate system of the map.
 
 .. code:: python
 
-   from astropy.coordinates.SkyCoord
+   import numpy as np
+   from astropy.coordinates import SkyCoord
    from gammapy.maps import Map, MapCoord, MapAxis
 
    lon = np.array([0.0,1.0])
@@ -279,7 +280,8 @@ argument:
 
 .. code:: python
 
-   from astropy.coordinates.SkyCoord
+   import numpy as np
+   from astropy.coordinates import SkyCoord
    from gammapy.maps import MapCoord
 
    lon = np.array([0.0,1.0])
@@ -335,8 +337,7 @@ Spatial axes must be named ``lon`` and ``lat``.  `~MapCoord` objects
 created with named axes do not need to have the same axis ordering as
 the map geometry.  However the name of the axis must match the name of
 the corresponding map geometry axis.
-  
-   
+
    
 Interpolation
 -------------
@@ -393,7 +394,7 @@ Iterating on a Map
 ------------------
 
 Iterating over a map can be performed with the
-`~Map.iter_by_coords` and `~Map.iter_by_pix` methods.  These
+`~Map.iter_by_coord` and `~Map.iter_by_pix` methods.  These
 return an iterator that traverses the map returning (value,
 coordinate) pairs with map and pixel coordinates, respectively.  The
 optional ``buffersize`` argument can be used to split the iteration
@@ -406,11 +407,11 @@ one can use this method to fill a map with a 2D Gaussian:
    from astropy.coordinates import SkyCoord
    from gammapy.maps import Map
    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
-   for val, coords in m.iter_by_coords(buffersize=10000):
-       skydir = SkyCoord(coords[0],coords[1], unit='deg')
+   for val, coord in m.iter_by_coord(buffersize=10000):
+       skydir = SkyCoord(coord[0],coord[1], unit='deg')
        sep = skydir.separation(m.geom.center_skydir).deg
        new_val = np.exp(-sep**2/2.0)
-       m.set_by_coord(coords, new_val)
+       m.set_by_coord(coord, new_val)
 
 For maps with non-spatial dimensions the `~Map.iter_by_image`
 method can be used to loop over image slices:
@@ -422,7 +423,7 @@ method can be used to loop over image slices:
    from gammapy.maps import Map
    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
    for img, idx in m.iter_by_image():
-       img = convolve(img, Gaussian2DKernel(stddev=2.0) )
+       img = convolve(img, Gaussian2DKernel(x_stddev=2.0) )
 
 
 FITS I/O

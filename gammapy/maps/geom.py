@@ -626,7 +626,6 @@ class MapCoord(object):
         self._match_by_name = match_by_name
 
     def __getitem__(self, key):
-
         if isinstance(key, six.string_types):
             return self._data[key]
         else:
@@ -692,7 +691,6 @@ class MapCoord(object):
         coord : `~MapCoord`
             A coordinates object.
         """
-
         if isinstance(coords, (list, tuple)):
             coords_dict = OrderedDict([('lon', coords[0]),
                                        ('lat', coords[1])])
