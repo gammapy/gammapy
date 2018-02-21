@@ -562,8 +562,36 @@ class Map(object):
         Returns
         -------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map.
-           np.nan used to flag coords outside of map
+            Interpolated pixel values.
+        """
+        pass
+
+    @abc.abstractmethod
+    def interp_by_pix(self, pix, interp=None):
+        """Interpolate map values at the given pixel coordinates.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinate arrays for each dimension of the
+            map.  Tuple should be ordered as (p_lon, p_lat, p_0, ...,
+            p_n) where p_i are pixel coordinates for non-spatial
+            dimensions of the map.
+
+        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+            Method to interpolate data values.  By default no
+            interpolation is performed and the return value will be
+            the amplitude of the pixel encompassing the given
+            coordinate.  Integer values can be used in lieu of strings
+            to choose the interpolation method of the given order
+            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
+            that only 'nearest' and 'linear' methods are supported for
+            all map types.
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
         """
         pass
 

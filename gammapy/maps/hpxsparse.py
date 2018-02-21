@@ -98,6 +98,9 @@ class HpxSparseMap(HpxMap):
     def interp_by_coord(self, coords, interp=None):
         raise NotImplementedError
 
+    def interp_by_pix(self, pix, interp=None):
+        raise NotImplementedError
+
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
         if weights is None:
