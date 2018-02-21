@@ -302,7 +302,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def iter_by_coords(self, buffersize=1):
+    def iter_by_coord(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         map coordinates.
 
@@ -538,7 +538,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_coords(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters

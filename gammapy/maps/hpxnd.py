@@ -177,7 +177,7 @@ class HpxNDMap(HpxMap):
                                     flags=['external_loop', 'buffered'],
                                     buffersize=buffersize))
 
-    def iter_by_coords(self, buffersize=1):
+    def iter_by_coord(self, buffersize=1):
         coords = list(self.geom.get_coord(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + coords,
@@ -255,8 +255,8 @@ class HpxNDMap(HpxMap):
             map_out.set_by_coord(coords, cval)
         elif mode in ['edge', 'interp']:
             # FIXME: These modes don't work at present because
-            # interp_by_coords doesn't support extrapolation
-            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
+            # interp_by_coord doesn't support extrapolation
+            vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
                                          else order)
             map_out.set_by_coord(coords, vals)
         else:
@@ -298,11 +298,11 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def interp_by_coords(self, coords, interp=1):
+    def interp_by_coord(self, coords, interp=1):
 
         order = interp_to_order(interp)
         if order == 1:
-            return self._interp_by_coords(coords, order)
+            return self._interp_by_coord(coords, order)
         else:
             raise ValueError('Invalid interpolation order: {}'.format(order))
 
@@ -356,7 +356,7 @@ class HpxNDMap(HpxMap):
         pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
         return pix_local, wts
 
-    def _interp_by_coords(self, coords, order):
+    def _interp_by_coord(self, coords, order):
         """Linearly interpolate map values."""
         c = MapCoord.create(coords)
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
