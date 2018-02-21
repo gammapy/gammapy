@@ -830,7 +830,8 @@ class MapCoord(object):
             data = copy.deepcopy(self._data)
             data['lon'] = lon
             data['lat'] = lat
-            return self.__class__(data, coordsys=coordsys)
+            return self.__class__(data, coordsys=coordsys,
+                                  match_by_name=self._match_by_name)
 
     def apply_mask(self, msk):
         """Return a masked copy of this coordinate object.
