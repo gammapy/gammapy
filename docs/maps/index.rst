@@ -436,7 +436,7 @@ Maps can be written to and read from a FITS file with the
 
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
-   m.write('file.fits', extname='IMAGE')
+   m.write('file.fits', hdu='IMAGE')
    m = Map.read('file.fits', hdu='IMAGE')
 
 If ``map_type`` argument is not given when calling `~Map.read` a
@@ -452,7 +452,7 @@ scheme.
 
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
-   m.write('file.fits', extname='IMAGE', sparse=True)
+   m.write('file.fits', hdu='IMAGE', sparse=True)
    m = Map.read('file.fits', hdu='IMAGE', map_type='wcs')
 
 Sparse maps have the same ``read`` and ``write`` methods with the
@@ -462,7 +462,7 @@ exception that they will be written to a sparse format by default:
 
    from gammapy.maps import Map
    m = Map.create(binsz=0.1, map_type='hpx-sparse', width=10.0)
-   m.write('file.fits', extname='IMAGE')
+   m.write('file.fits', hdu='IMAGE')
    m = Map.read('file.fits', hdu='IMAGE', map_type='hpx-sparse')
 
 By default files will be written to the *gamma-astro-data-format*

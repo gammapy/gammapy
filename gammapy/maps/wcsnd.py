@@ -403,7 +403,7 @@ class WcsNDMap(WcsMap):
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
             vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
-                                         else order)
+                                        else order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))

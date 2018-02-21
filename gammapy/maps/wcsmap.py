@@ -122,7 +122,7 @@ class WcsMap(Map):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, extname=None, extname_bands=None, sparse=False,
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False,
                    conv=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
@@ -131,43 +131,43 @@ class WcsMap(Map):
         TODO
         """
         if sparse:
-            extname = 'SKYMAP' if extname is None else extname.upper()
+            hdu = 'SKYMAP' if hdu is None else hdu.upper()
         else:
-            extname = 'PRIMARY' if extname is None else extname.upper()
+            hdu = 'PRIMARY' if hdu is None else hdu.upper()
 
-        if sparse and extname == 'PRIMARY':
+        if sparse and hdu == 'PRIMARY':
             raise ValueError(
                 'Sparse maps cannot be written to the PRIMARY HDU.')
 
         if self.geom.axes:
-            bands_hdu = self.geom.make_bands_hdu(extname=extname_bands,
-                                                 conv=conv)
-            extname_bands = bands_hdu.name
+            hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands,
+                                                     conv=conv)
+            hdu_bands = hdu_bands_out.name
 
-        hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
-                            sparse=sparse, conv=conv)
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands,
+                                sparse=sparse, conv=conv)
 
-        hdu.header['META'] = json.dumps(self.meta)
+        hdu_out.header['META'] = json.dumps(self.meta)
 
-        if extname == 'PRIMARY':
-            hdulist = [hdu]
+        if hdu == 'PRIMARY':
+            hdulist = [hdu_out]
         else:
-            hdulist = [fits.PrimaryHDU(), hdu]
+            hdulist = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:
-            hdulist += [bands_hdu]
+            hdulist += [hdu_bands_out]
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, extname='SKYMAP', extname_bands=None, sparse=False,
+    def make_hdu(self, hdu='SKYMAP', hdu_bands=None, sparse=False,
                  conv=None):
         """Make a FITS HDU from this map.
 
         Parameters
         ----------
-        extname : str
+        hdu : str
             The HDU extension name.
-        extname_bands : str
+        hdu_bands : str
             The HDU extension name for BANDS table.
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
@@ -182,8 +182,8 @@ class WcsMap(Map):
         shape = data.shape
         header = self.geom.make_header()
 
-        if extname_bands is not None:
-            header['BANDSHDU'] = extname_bands
+        if hdu_bands is not None:
+            header['BANDSHDU'] = hdu_bands
 
         cols = []
         if sparse:
@@ -227,10 +227,10 @@ class WcsMap(Map):
                 cols.append(fits.Column('VALUE', 'E',
                                         array=data_flat.astype(float)))
 
-            hdu = fits.BinTableHDU.from_columns(cols, header=header,
-                                                name=extname)
-        elif extname == 'PRIMARY':
-            hdu = fits.PrimaryHDU(data, header=header)
+            hdu_out = fits.BinTableHDU.from_columns(cols, header=header,
+                                                    name=hdu)
+        elif hdu == 'PRIMARY':
+            hdu_out = fits.PrimaryHDU(data, header=header)
         else:
-            hdu = fits.ImageHDU(data, header=header, name=extname)
-        return hdu
+            hdu_out = fits.ImageHDU(data, header=header, name=hdu)
+        return hdu_out

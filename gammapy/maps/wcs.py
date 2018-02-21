@@ -336,7 +336,7 @@ class WcsGeom(MapGeom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
-    def make_bands_hdu(self, extname=None, conv=None):
+    def make_bands_hdu(self, hdu=None, conv=None):
         conv = self._conv if conv is None else conv
         header = fits.Header()
         self._fill_header_from_axes(header)
@@ -346,13 +346,13 @@ class WcsGeom(MapGeom):
         # dimensionality of geometry
 
         if conv == 'fgst-ccube':
-            extname = 'EBOUNDS'
+            hdu = 'EBOUNDS'
             axis_names = ['energy']
         elif conv == 'fgst-template':
-            extname = 'ENERGIES'
+            hdu = 'ENERGIES'
             axis_names = ['energy']
-        elif extname is None and conv == 'gadf':
-            extname = 'BANDS'
+        elif hdu is None and conv == 'gadf':
+            hdu = 'BANDS'
 
         cols = make_axes_cols(self.axes, axis_names)
         if not self.is_regular:
@@ -366,8 +366,8 @@ class WcsGeom(MapGeom):
                                  array=np.vstack((np.ravel(self._crpix[0]),
                                                   np.ravel(self._crpix[1]))).T), ]
 
-        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
-        return hdu
+        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
+        return hdu_out
 
     def make_header(self):
         header = self.wcs.to_header()

@@ -124,15 +124,14 @@ class HpxMap(Map):
         return cls.from_hdu(hdu, hdu_bands)
 
     def to_hdulist(self, **kwargs):
-        extname = kwargs.get('extname', 'SKYMAP')
-        # extname_bands = kwargs.get('extname_bands', self.geom.conv.bands_hdu)
-        extname_bands = kwargs.get('extname_bands', 'BANDS')
-        hdu = self.make_hdu(**kwargs)
-        hdu.header['META'] = json.dumps(self.meta)
-        hdulist = [fits.PrimaryHDU(), hdu]
+        hdu = kwargs.get('hdu', 'SKYMAP')
+        hdu_bands = kwargs.get('hdu_bands', 'BANDS')
+        hdu_out = self.make_hdu(**kwargs)
+        hdu_out.header['META'] = json.dumps(self.meta)
+        hdulist = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:
-            hdulist += [self.geom.make_bands_hdu(extname=extname_bands)]
+            hdulist += [self.geom.make_bands_hdu(hdu=hdu_bands)]
 
         return fits.HDUList(hdulist)
 
@@ -194,9 +193,9 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        extname : str
+        hdu : str
             The HDU extension name.
-        extname_bands : str
+        hdu_bands : str
             The HDU extension name for BANDS table.
         colbase : str
             The prefix for column names
@@ -204,8 +203,6 @@ class HpxMap(Map):
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
         """
-        # FIXME: Should this be a method of HpxNDMap?
-        # FIXME: Should we assign extname in this method?
 
         from .hpxsparse import HpxSparseMap
 
@@ -213,15 +210,15 @@ class HpxMap(Map):
 
         data = self.data
         shape = data.shape
-        extname = kwargs.get('extname', conv.extname)
-        extname_bands = kwargs.get('extname_bands', conv.bands_hdu)
+        hduname = kwargs.get('hdu', conv.hduname)
+        hduname_bands = kwargs.get('hdu_bands', conv.bands_hdu)
 
         sparse = kwargs.get('sparse', True if isinstance(self, HpxSparseMap)
                             else False)
         header = self.geom.make_header()
 
         if self.geom.axes:
-            header['BANDSHDU'] = extname_bands
+            header['BANDSHDU'] = hduname_bands
 
         if sparse:
             header['INDXSCHM'] = 'SPARSE'
@@ -234,5 +231,6 @@ class HpxMap(Map):
                                     array=np.arange(data.shape[-1])))
 
         cols += self._make_cols(header, conv)
-        hdu = fits.BinTableHDU.from_columns(cols, header=header, name=extname)
-        return hdu
+        hdu_out = fits.BinTableHDU.from_columns(
+            cols, header=header, name=hduname)
+        return hdu_out

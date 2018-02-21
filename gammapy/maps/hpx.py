@@ -39,7 +39,7 @@ class HpxConv(object):
         self.convname = convname
         self.colstring = kwargs.get('colstring', 'CHANNEL')
         self.firstcol = kwargs.get('firstcol', 1)
-        self.extname = kwargs.get('extname', 'SKYMAP')
+        self.hduname = kwargs.get('hduname', 'SKYMAP')
         self.bands_hdu = kwargs.get('bands_hdu', 'EBOUNDS')
         self.quantity_type = kwargs.get('quantity_type', 'integral')
         self.coordsys = kwargs.get('coordsys', 'COORDSYS')
@@ -58,20 +58,20 @@ HPX_FITS_CONVENTIONS[None] = HpxConv('gadf', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['gadf'] = HpxConv('gadf', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['fgst-ccube'] = HpxConv('fgst-ccube')
 HPX_FITS_CONVENTIONS['fgst-ltcube'] = HpxConv(
-    'fgst-ltcube', colstring='COSBINS', extname='EXPOSURE', bands_hdu='CTHETABOUNDS')
+    'fgst-ltcube', colstring='COSBINS', hduname='EXPOSURE', bands_hdu='CTHETABOUNDS')
 HPX_FITS_CONVENTIONS['fgst-bexpcube'] = HpxConv(
-    'fgst-bexpcube', colstring='ENERGY', extname='HPXEXPOSURES', bands_hdu='ENERGIES')
+    'fgst-bexpcube', colstring='ENERGY', hduname='HPXEXPOSURES', bands_hdu='ENERGIES')
 HPX_FITS_CONVENTIONS['fgst-srcmap'] = HpxConv(
-    'fgst-srcmap', extname=None, quantity_type='differential')
+    'fgst-srcmap', hduname=None, quantity_type='differential')
 HPX_FITS_CONVENTIONS['fgst-template'] = HpxConv(
     'fgst-template', colstring='ENERGY', bands_hdu='ENERGIES')
 HPX_FITS_CONVENTIONS['fgst-srcmap-sparse'] = HpxConv(
-    'fgst-srcmap-sparse', colstring=None, extname=None, quantity_type='differential')
+    'fgst-srcmap-sparse', colstring=None, hduname=None, quantity_type='differential')
 HPX_FITS_CONVENTIONS['galprop'] = HpxConv(
-    'galprop', colstring='Bin', extname='SKYMAP2',
+    'galprop', colstring='Bin', hduname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential', coordsys='COORDTYPE')
 HPX_FITS_CONVENTIONS['galprop2'] = HpxConv(
-    'galprop', colstring='Bin', extname='SKYMAP2',
+    'galprop', colstring='Bin', hduname='SKYMAP2',
     bands_hdu='ENERGIES', quantity_type='differential')
 
 
@@ -1225,10 +1225,10 @@ class HpxGeom(MapGeom):
             pass
 
         # Try based on the EXTNAME keyword
-        extname = header.get('EXTNAME', None)
-        if extname == 'HPXEXPOSURES':
+        hduname = header.get('EXTNAME', None)
+        if hduname == 'HPXEXPOSURES':
             return 'fgst-bexpcube'
-        elif extname == 'SKYMAP2':
+        elif hduname == 'SKYMAP2':
             if 'COORDTYPE' in header.keys():
                 return 'galprop'
             else:
@@ -1248,7 +1248,7 @@ class HpxGeom(MapGeom):
         elif colname == 'Bin0':
             return 'galprop'
         elif colname == 'CHANNEL1' or colname == 'CHANNEL0':
-            if extname == 'SKYMAP':
+            if hduname == 'SKYMAP':
                 return 'fgst-ccube'
             else:
                 return 'fgst-srcmap'
@@ -1383,22 +1383,22 @@ class HpxGeom(MapGeom):
 
         return header
 
-    def make_bands_hdu(self, extname='BANDS'):
+    def make_bands_hdu(self, hdu='BANDS'):
 
         header = fits.Header()
         self._fill_header_from_axes(header)
         cols = make_axes_cols(self.axes)
         if self.nside.size > 1:
             cols += [fits.Column('NSIDE', 'I', array=np.ravel(self.nside)), ]
-        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
+        hdu = fits.BinTableHDU.from_columns(cols, header, name=hdu)
         return hdu
 
-    def make_ebounds_hdu(self, extname='EBOUNDS'):
+    def make_ebounds_hdu(self, hdu='EBOUNDS'):
         """Make a FITS HDU with the energy bin boundaries.
 
         Parameters
         ----------
-        extname : str
+        hdu : str
             The HDU extension name
         """
         # TODO: Assert if the number of axes is wrong?
@@ -1409,25 +1409,25 @@ class HpxGeom(MapGeom):
         cols = [fits.Column('CHANNEL', 'I', array=np.arange(1, self._axes[0].nbin)),
                 fits.Column('E_MIN', '1E', unit='keV', array=1000 * emin),
                 fits.Column('E_MAX', '1E', unit='keV', array=1000 * emax)]
-        hdu = fits.BinTableHDU.from_columns(
-            cols, self.make_header(), name=extname)
-        return hdu
+        hdu_out = fits.BinTableHDU.from_columns(cols, self.make_header(),
+                                                name=hdu)
+        return hdu_out
 
-    def make_energies_hdu(self, extname='ENERGIES'):
+    def make_energies_hdu(self, hdu='ENERGIES'):
         """Make a FITS HDU with the energy bin centers.
 
         Parameters
         ----------
-        extname : str
+        hdu : str
             The HDU extension name
         """
         ectr = np.sqrt(self._axes[0][1:] * self._axes[0][:-1])
         cols = [fits.Column('ENERGY', '1E', unit='MeV', array=ectr)]
-        hdu = fits.BinTableHDU.from_columns(
-            cols, self.make_header(), name=extname)
-        return hdu
+        hdu_out = fits.BinTableHDU.from_columns(
+            cols, self.make_header(), name=hdu)
+        return hdu_out
 
-    def write(self, data, outfile, extname='SKYMAP', overwrite=True):
+    def write(self, data, outfile, hdu='SKYMAP', overwrite=True):
         """Write input data to a FITS file.
 
         Parameters
@@ -1436,13 +1436,13 @@ class HpxGeom(MapGeom):
             The data being stored
         outfile : str
             The name of the output file
-        extname :
+        hdu : str
             The HDU extension name
         overwrite : bool
             True -> overwrite existing files
         """
         hdu_prim = fits.PrimaryHDU()
-        hdu_hpx = self.make_hdu(data, extname=extname)
+        hdu_hpx = self.make_hdu(data, hdu=hdu)
         hl = [hdu_prim, hdu_hpx]
 
         if self.conv.bands_hdu == 'EBOUNDS':

@@ -90,7 +90,7 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
                            proj=proj, coordsys=coordsys, axes=axes)
 
     shape = (np.max(geom0.npix[0]), np.max(geom0.npix[1]))
-    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_bands = geom0.make_bands_hdu(hdu='BANDS')
     hdu_prim = fits.PrimaryHDU(np.zeros(shape).T)
     hdu_prim.header.update(geom0.make_header())
 

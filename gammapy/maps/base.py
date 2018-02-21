@@ -243,11 +243,11 @@ class Map(object):
         ----------
         filename : str
             Output file name.
-        extname : str
+        hdu : str
             Set the name of the image extension.  By default this will
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
             HDU).
-        extname_bands : str
+        hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
         conv : str        

@@ -257,7 +257,7 @@ class HpxNDMap(HpxMap):
             # FIXME: These modes don't work at present because
             # interp_by_coord doesn't support extrapolation
             vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
-                                         else order)
+                                        else order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))

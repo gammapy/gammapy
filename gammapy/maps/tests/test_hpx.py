@@ -481,7 +481,7 @@ def test_hpxgeom_from_header():
                          hpx_test_geoms)
 def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
     geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_bands = geom0.make_bands_hdu(hdu='BANDS')
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.make_header())
 
