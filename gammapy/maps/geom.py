@@ -845,7 +845,8 @@ class MapCoord(object):
             A coordinates object.
         """
         data = OrderedDict([(k, v[msk]) for k, v in self._data.items()])
-        return self.__class__(data, self.coordsys)
+        return self.__class__(data, self.coordsys,
+                              match_by_name=self._match_by_name)
 
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
