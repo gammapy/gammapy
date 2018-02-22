@@ -825,12 +825,12 @@ class MapCoord(object):
             return self.__class__(data, coordsys=coordsys,
                                   match_by_name=self._match_by_name)
 
-    def apply_mask(self, msk):
+    def apply_mask(self, mask):
         """Return a masked copy of this coordinate object.
 
         Parameters
         ----------
-        msk : `~numpy.ndarray`
+        mask : `~numpy.ndarray`
             Boolean mask.
 
         Returns
@@ -838,7 +838,7 @@ class MapCoord(object):
         coords : `~MapCoord`
             A coordinates object.
         """
-        data = OrderedDict([(k, v[msk]) for k, v in self._data.items()])
+        data = OrderedDict([(k, v[mask]) for k, v in self._data.items()])
         return self.__class__(data, self.coordsys,
                               match_by_name=self._match_by_name)
 
