@@ -84,7 +84,7 @@ def find_bands_hdu(hdulist, hdu):
 
     Returns
     -------
-    extname : str
+    hduname : str
         Extension name of the BANDS HDU.  None if no BANDS HDU was found.
     """
     if 'BANDSHDU' in hdu.header:

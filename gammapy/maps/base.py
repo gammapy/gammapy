@@ -7,7 +7,7 @@ from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from .geom import pix_tuple_to_idx, MapCoords
+from .geom import pix_tuple_to_idx, MapCoord
 
 __all__ = [
     'Map',
@@ -243,11 +243,11 @@ class Map(object):
         ----------
         filename : str
             Output file name.
-        extname : str
+        hdu : str
             Set the name of the image extension.  By default this will
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
             HDU).
-        extname_bands : str
+        hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
         conv : str        
@@ -302,7 +302,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def iter_by_coords(self, buffersize=1):
+    def iter_by_coord(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         map coordinates.
 
@@ -340,9 +340,9 @@ class Map(object):
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
         idx = map_in.geom.get_idx()
-        coords = map_in.geom.get_coords()
+        coords = map_in.geom.get_coord()
         vals = map_in.get_by_idx(idx)
-        self.fill_by_coords(coords, vals)
+        self.fill_by_coord(coords, vals)
 
     def reproject(self, geom, order=1, mode='interp'):
         """Reproject this map to a different geometry.
@@ -463,26 +463,16 @@ class Map(object):
         """
         pass
 
-    def get_by_coords(self, coords, interp=None):
+    def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
 
         Returns
         -------
@@ -490,20 +480,16 @@ class Map(object):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        if interp is None:
-            coords = MapCoords.create(coords)
-            msk = self.geom.contains(coords)
-            vals = np.empty(coords.shape, dtype=self.data.dtype)
-            coords = tuple([c[msk] for c in coords])
-            idx = self.geom.coord_to_pix(coords)
-            vals[msk] = self.get_by_idx(idx)
-            vals[~msk] = np.nan
-        else:
-            vals = self.interp_by_coords(coords, interp=interp)
-
+        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
+        msk = self.geom.contains(coords)
+        vals = np.empty(coords.shape, dtype=self.data.dtype)
+        coords = coords.apply_mask(msk)
+        idx = self.geom.coord_to_idx(coords)
+        vals[msk] = self.get_by_idx(idx)
+        vals[~msk] = np.nan
         return vals
 
-    def get_by_pix(self, pix, interp=None):
+    def get_by_pix(self, pix):
         """Return map values at the given pixel coordinates.
 
         Parameters
@@ -514,16 +500,6 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type. 
 
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
-
         Returns
         ----------
         vals : `~numpy.ndarray`
@@ -532,19 +508,14 @@ class Map(object):
         """
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
-
-        if interp is None:
-            pix = [np.array(p, copy=False, ndmin=1) for p in pix]
-            pix = np.broadcast_arrays(*pix)
-            msk = self.geom.contains_pix(pix)
-            vals = np.empty(pix[0].shape, dtype=self.data.dtype)
-            pix = tuple([p[msk] for p in pix])
-            idx = self.geom.pix_to_idx(pix)
-            vals[msk] = self.get_by_idx(idx)
-            vals[~msk] = np.nan
-        else:
-            vals = self.interp_by_pix(pix, interp=interp)
-
+        pix = [np.array(p, copy=False, ndmin=1) for p in pix]
+        pix = np.broadcast_arrays(*pix)
+        msk = self.geom.contains_pix(pix)
+        vals = np.empty(pix[0].shape, dtype=self.data.dtype)
+        pix = tuple([p[msk] for p in pix])
+        idx = self.geom.pix_to_idx(pix)
+        vals[msk] = self.get_by_idx(idx)
+        vals[~msk] = np.nan
         return vals
 
     @abc.abstractmethod
@@ -567,13 +538,13 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_coords(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -591,19 +562,47 @@ class Map(object):
         Returns
         -------
         vals : `~numpy.ndarray`
-           Values of pixels in the flattened map.
-           np.nan used to flag coords outside of map
+            Interpolated pixel values.
         """
         pass
 
-    def fill_by_coords(self, coords, weights=None):
+    @abc.abstractmethod
+    def interp_by_pix(self, pix, interp=None):
+        """Interpolate map values at the given pixel coordinates.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinate arrays for each dimension of the
+            map.  Tuple should be ordered as (p_lon, p_lat, p_0, ...,
+            p_n) where p_i are pixel coordinates for non-spatial
+            dimensions of the map.
+
+        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+            Method to interpolate data values.  By default no
+            interpolation is performed and the return value will be
+            the amplitude of the pixel encompassing the given
+            coordinate.  Integer values can be used in lieu of strings
+            to choose the interpolation method of the given order
+            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
+            that only 'nearest' and 'linear' methods are supported for
+            all map types.
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
+        """
+        pass
+
+    def fill_by_coord(self, coords, weights=None):
         """Fill pixels at the given map coordinates with values in `weights`
         vector.
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -653,14 +652,14 @@ class Map(object):
         """
         pass
 
-    def set_by_coords(self, coords, vals):
+    def set_by_coord(self, coords, vals):
         """Set pixels at the given map coordinates to the values in `vals`
         vector.
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoords`
-            `~gammapy.maps.MapCoords` object or tuple of
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of
             coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.

@@ -364,31 +364,31 @@ def test_hpxgeom_make_wcs():
     assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
 
 
-def test_hpxgeom_get_coords():
+def test_hpxgeom_get_coord():
     ax0 = np.linspace(0., 3., 4)
 
     # 2D all-sky
     hpx = HpxGeom(16, False, 'GAL')
-    c = hpx.get_coords()
+    c = hpx.get_coord()
     assert_allclose(c[0][:3], np.array([45., 135., 225.]))
     assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
 
     # 3D all-sky
     hpx = HpxGeom(16, False, 'GAL', axes=[ax0])
-    c = hpx.get_coords()
+    c = hpx.get_coord()
     assert_allclose(c[0][0, :3], np.array([45., 135., 225.]))
     assert_allclose(c[1][0, :3], np.array([87.075819, 87.075819, 87.075819]))
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)')
-    c = hpx.get_coords()
+    c = hpx.get_coord()
     assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
     assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
 
     # 3D partial-sky
     hpx = HpxGeom(64, False, 'GAL', region='DISK(110.,75.,2.)', axes=[ax0])
-    c = hpx.get_coords()
+    c = hpx.get_coord()
     assert_allclose(c[0][0, :3], np.array([107.5, 112.5, 106.57894737]))
     assert_allclose(c[1][0, :3], np.array([76.813533, 76.813533, 76.07742]))
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
@@ -396,7 +396,7 @@ def test_hpxgeom_get_coords():
     # 3D partial-sky w/ variable bin size
     hpx = HpxGeom([16, 32, 64], False, 'GAL',
                   region='DISK(110.,75.,2.)', axes=[ax0])
-    c = hpx.get_coords(flat=True)
+    c = hpx.get_coord(flat=True)
     assert_allclose(c[0][:3], np.array([117., 103.5, 112.5]))
     assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
@@ -406,7 +406,7 @@ def test_hpxgeom_get_coords():
                          hpx_test_geoms)
 def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    coords = geom.get_coords(flat=True)
+    coords = geom.get_coord(flat=True)
     assert_allclose(geom.contains(coords),
                     np.ones_like(coords[0], dtype=bool))
 
@@ -481,7 +481,7 @@ def test_hpxgeom_from_header():
                          hpx_test_geoms)
 def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
     geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    hdu_bands = geom0.make_bands_hdu(extname='BANDS')
+    hdu_bands = geom0.make_bands_hdu(hdu='BANDS')
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.make_header())
 
@@ -507,7 +507,7 @@ def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
     geom_up = geom.upsample(2)
     assert_allclose(2 * geom.nside, geom_up.nside)
     assert_allclose(4 * geom.npix, geom_up.npix)
-    coords = geom_up.get_coords(flat=True)
+    coords = geom_up.get_coord(flat=True)
     assert(np.all(geom.contains(coords)))
 
     # RING
@@ -515,7 +515,7 @@ def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
     geom_up = geom.upsample(2)
     assert_allclose(2 * geom.nside, geom_up.nside)
     assert_allclose(4 * geom.npix, geom_up.npix)
-    coords = geom_up.get_coords(flat=True)
+    coords = geom_up.get_coord(flat=True)
     assert(np.all(geom.contains(coords)))
 
 
@@ -527,12 +527,12 @@ def test_hpxgeom_downsample(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, True, coordsys, region=region, axes=axes)
     geom_down = geom.downsample(2)
     assert_allclose(geom.nside, 2 * geom_down.nside)
-    coords = geom.get_coords(flat=True)
+    coords = geom.get_coord(flat=True)
     assert(np.all(geom_down.contains(coords)))
 
     # RING
     geom = HpxGeom(nside, False, coordsys, region=region, axes=axes)
     geom_down = geom.downsample(2)
     assert_allclose(geom.nside, 2 * geom_down.nside)
-    coords = geom.get_coords(flat=True)
+    coords = geom.get_coord(flat=True)
     assert(np.all(geom_down.contains(coords)))

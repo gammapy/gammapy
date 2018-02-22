@@ -58,7 +58,7 @@ def test_map_meta_read_write(map_type):
     m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
                    skydir=SkyCoord(0.0, 30.0, unit='deg'), meta=meta)
 
-    hdulist = m.to_hdulist(extname='COUNTS')
+    hdulist = m.to_hdulist(hdu='COUNTS')
     header = hdulist['COUNTS'].header
 
     assert header['META'] == '{"user": "test"}'

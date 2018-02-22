@@ -126,13 +126,13 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self._data.T[idx]
 
-    def interp_by_coords(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None):
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
             return self.interp_by_pix(pix, interp=interp)
         else:
-            return self._interp_by_coords_griddata(coords, interp=interp)
+            return self._interp_by_coord_griddata(coords, interp=interp)
 
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
@@ -175,7 +175,7 @@ class WcsNDMap(WcsMap):
                      if not isinstance(x, np.ndarray) or x.ndim == 0 else x for x in pix])
         return map_coordinates(self.data.T, pix, order=order, mode='nearest')
 
-    def _interp_by_coords_griddata(self, coords, interp=None):
+    def _interp_by_coord_griddata(self, coords, interp=None):
         order = interp_to_order(interp)
         method_lookup = {0: 'nearest', 1: 'linear', 3: 'cubic'}
         method = method_lookup.get(order, None)
@@ -183,7 +183,7 @@ class WcsNDMap(WcsMap):
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
         from scipy.interpolate import griddata
-        grid_coords = self.geom.get_coords(flat=True)
+        grid_coords = self.geom.get_coord(flat=True)
         data = self.data[np.isfinite(self.data)]
         vals = griddata(grid_coords, data, coords, method=method)
         m = ~np.isfinite(vals)
@@ -257,8 +257,8 @@ class WcsNDMap(WcsMap):
                                     flags=['external_loop', 'buffered'],
                                     buffersize=buffersize))
 
-    def iter_by_coords(self, buffersize=1):
-        coords = list(self.geom.get_coords(flat=True))
+    def iter_by_coord(self, buffersize=1):
+        coords = list(self.geom.get_coord(flat=True))
         vals = self.data[np.isfinite(self.data)]
         return unpack_seq(np.nditer([vals] + coords,
                                     flags=['external_loop', 'buffered'],
@@ -271,7 +271,7 @@ class WcsNDMap(WcsMap):
         map_out = self.__class__(self.geom.to_image())
         if self.geom.is_regular:
             vals = self.get_by_idx(self.geom.get_idx())
-            map_out.fill_by_coords(self.geom.get_coords()[:2], vals)
+            map_out.fill_by_coord(self.geom.get_coord()[:2], vals)
         else:
             data = np.apply_over_axes(np.sum, self.data,
                                       axes=np.arange(self.data.ndim - 2))
@@ -402,9 +402,9 @@ class WcsNDMap(WcsMap):
             coords = geom.pix_to_coord(idx_out[::-1])
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
-            vals = self.interp_by_coords(coords, interp=0 if mode == 'edge'
-                                         else order)
-            map_out.set_by_coords(coords, vals)
+            vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
+                                        else order)
+            map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))
 

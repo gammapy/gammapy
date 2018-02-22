@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
-from .geom import MapGeom, MapCoords, pix_tuple_to_idx, skydir_to_lonlat
+from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes_cols, make_axes
 from .geom import find_and_read_bands
 
@@ -66,7 +66,7 @@ class WcsGeom(MapGeom):
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
-        self._coordsys = get_coordsys(wcs)
+        self._coordsys = get_coordys(wcs)
         self._projection = get_projection(wcs)
         self._conv = conv
         self._axes = make_axes(axes, conv)
@@ -262,7 +262,7 @@ class WcsGeom(MapGeom):
         elif isinstance(skydir, tuple):
             xref, yref = skydir
         elif isinstance(skydir, SkyCoord):
-            xref, yref = skydir_to_lonlat(skydir, coordsys=coordsys)
+            xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
             raise ValueError(
                 'Invalid type for skydir: {}'.format(type(skydir)))
@@ -336,7 +336,7 @@ class WcsGeom(MapGeom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
-    def make_bands_hdu(self, extname=None, conv=None):
+    def make_bands_hdu(self, hdu=None, conv=None):
         conv = self._conv if conv is None else conv
         header = fits.Header()
         self._fill_header_from_axes(header)
@@ -346,13 +346,13 @@ class WcsGeom(MapGeom):
         # dimensionality of geometry
 
         if conv == 'fgst-ccube':
-            extname = 'EBOUNDS'
+            hdu = 'EBOUNDS'
             axis_names = ['energy']
         elif conv == 'fgst-template':
-            extname = 'ENERGIES'
+            hdu = 'ENERGIES'
             axis_names = ['energy']
-        elif extname is None and conv == 'gadf':
-            extname = 'BANDS'
+        elif hdu is None and conv == 'gadf':
+            hdu = 'BANDS'
 
         cols = make_axes_cols(self.axes, axis_names)
         if not self.is_regular:
@@ -366,8 +366,8 @@ class WcsGeom(MapGeom):
                                  array=np.vstack((np.ravel(self._crpix[0]),
                                                   np.ravel(self._crpix[1]))).T), ]
 
-        hdu = fits.BinTableHDU.from_columns(cols, header, name=extname)
-        return hdu
+        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
+        return hdu_out
 
     def make_header(self):
         header = self.wcs.to_header()
@@ -473,7 +473,7 @@ class WcsGeom(MapGeom):
 #        m = np.broadcast_to(np.prod(m),shape)
 #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
-    def get_coords(self, idx=None, flat=False):
+    def get_coord(self, idx=None, flat=False):
         pix = self._get_pix_coords(idx=idx)
         coords = self.pix_to_coord(pix)
         if flat:
@@ -481,10 +481,11 @@ class WcsGeom(MapGeom):
         return coords
 
     def coord_to_pix(self, coords):
-        c = MapCoords.create(coords)
-        if c.size == 0:
-            return tuple([np.array([]) for i in range(c.ndim)])
+        coords = MapCoord.create(coords, coordsys=self.coordsys)
+        if coords.size == 0:
+            return tuple([np.array([]) for i in range(coords.ndim)])
 
+        c = self.coord_to_tuple(coords)
         # Variable Bin Size
         if self.axes and self.npix[0].size > 1:
             bins = [ax.coord_to_pix(c[i + 2])
@@ -493,11 +494,11 @@ class WcsGeom(MapGeom):
                     for i, ax in enumerate(self.axes)]
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
-            pix = world2pix(self.wcs, cdelt, crpix, (c.lon, c.lat))
+            pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
             pix = list(pix) + bins
         else:
-            pix = self._wcs.wcs_world2pix(np.array(c.lon, ndmin=1, copy=False),
-                                          np.array(c.lat, ndmin=1, copy=False), 0)
+            pix = self._wcs.wcs_world2pix(np.array(coords.lon, ndmin=1, copy=False),
+                                          np.array(coords.lat, ndmin=1, copy=False), 0)
             for i, ax in enumerate(self.axes):
                 pix += [ax.coord_to_pix(c[i + 2])]
 
@@ -821,7 +822,7 @@ def get_projection(wcs):
     return wcs.wcs.ctype[0][5:]
 
 
-def get_coordsys(wcs):
+def get_coordys(wcs):
     if 'RA' in wcs.wcs.ctype[0]:
         return 'CEL'
     elif 'GLON' in wcs.wcs.ctype[0]:
@@ -883,7 +884,7 @@ def get_map_skydir(filename, maphdu=0):
 def wcs_to_skydir(wcs):
     lon = wcs.wcs.crval[0]
     lat = wcs.wcs.crval[1]
-    coordsys = get_coordsys(wcs)
+    coordsys = get_coordys(wcs)
     if coordsys == 'GAL':
         return SkyCoord(lon, lat, unit='deg', frame='galactic').transform_to('icrs')
     else:
@@ -891,7 +892,7 @@ def wcs_to_skydir(wcs):
 
 
 def is_galactic(wcs):
-    coordsys = get_coordsys(wcs)
+    coordsys = get_coordys(wcs)
     if coordsys == 'GAL':
         return True
     elif coordsys == 'CEL':

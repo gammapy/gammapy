@@ -618,7 +618,7 @@ def reproject_exposure(exposure, ref_cube):
     """Helper function to reproject exposure to a reference cube.
 
     TODO: this is a temp solution, as long as we use HpxNDMap objects for exposure
-    and SkyCube objects otherwise. This should be changed to use WCSMapND
+    and SkyCube objects otherwise. This should be changed to use WcsNDMap
     instead of SkyCube in the future.
 
     Parameters
@@ -638,10 +638,10 @@ def reproject_exposure(exposure, ref_cube):
 
     ref_image = ref_cube.sky_image_ref
     geom = ref_image.to_wcs_nd_map().geom
-    coords = geom.get_coords()
+    coords = geom.get_coord()
     for idx, energy in enumerate(ref_cube.energies().value):
         coords_hpx = coords[0], coords[1], energy
-        vals = exposure.get_by_coords(coords_hpx, interp='linear')
+        vals = exposure.interp_by_coord(coords_hpx, interp='linear')
         exposure_cube.data[idx] = vals.reshape(ref_image.data.shape)
 
     exposure_cube.data = exposure_cube.data * u.Unit('cm2 s')

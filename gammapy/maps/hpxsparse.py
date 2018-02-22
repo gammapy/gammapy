@@ -95,7 +95,10 @@ class HpxSparseMap(HpxMap):
         idx = self.geom.global_to_local(idx)
         return self.data[idx[::-1]]
 
-    def interp_by_coords(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None):
+        raise NotImplementedError
+
+    def interp_by_pix(self, pix, interp=None):
         raise NotImplementedError
 
     def fill_by_idx(self, idx, weights=None):
@@ -148,7 +151,7 @@ class HpxSparseMap(HpxMap):
     def iter_by_pix(self):
         raise NotImplementedError
 
-    def iter_by_coords(self):
+    def iter_by_coord(self):
         raise NotImplementedError
 
     def sum_over_axes(self):

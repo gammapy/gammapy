@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
-from ..geom import MapAxis
+from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
 from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
@@ -104,7 +105,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
                          hpx_test_geoms_sparse)
 def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords(flat=True)
+    coords = m.geom.get_coord(flat=True)
     idx = m.geom.get_idx(flat=True)
     m.set_by_pix(idx, coords[0])
     assert_allclose(coords[0], m.get_by_pix(idx))
@@ -112,33 +113,44 @@ def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
-def test_hpxmap_set_get_by_coords(nside, nested, coordsys, region, axes, sparse):
+def test_hpxmap_set_get_by_coord(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords(flat=True)
-    m.set_by_coords(coords, coords[0])
-    assert_allclose(coords[0], m.get_by_coords(coords))
+    coords = m.geom.get_coord(flat=True)
+    m.set_by_coord(coords, coords[0])
+    assert_allclose(coords[0], m.get_by_coord(coords))
+
+    # Test with SkyCoords
+    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    coords = m.geom.get_coord(flat=True)
+    skydir = SkyCoord(coords[0], coords[1], unit='deg',
+                      frame=coordsys_to_frame(m.geom.coordsys))
+    skydir_cel = skydir.transform_to('icrs')
+    skydir_gal = skydir.transform_to('galactic')
+    m.set_by_coord((skydir_gal,) + coords[2:], coords[0])
+    assert_allclose(coords[0], m.get_by_coord(coords))
+    assert_allclose(m.get_by_coord((skydir_cel,) + coords[2:]),
+                    m.get_by_coord((skydir_gal,) + coords[2:]))
 
 
-#@pytest.mark.xfail(reason="Bug in healpy <= 0.10.3")
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
-def test_hpxmap_get_by_coords_interp(nside, nested, coordsys, region, axes):
+def test_hpxmap_interp_by_coord(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords(flat=True)
-    m.set_by_coords(coords, coords[1])
-    assert_allclose(m.get_by_coords(coords),
-                    m.get_by_coords(coords, interp='linear'))
+    coords = m.geom.get_coord(flat=True)
+    m.set_by_coord(coords, coords[1])
+    assert_allclose(m.get_by_coord(coords),
+                    m.interp_by_coord(coords, interp='linear'))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
-def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
+def test_hpxmap_fill_by_coord(nside, nested, coordsys, region, axes, sparse):
     m = create_map(nside, nested, coordsys, region, axes, sparse)
-    coords = m.geom.get_coords(flat=True)
-    m.fill_by_coords(coords, coords[1])
-    m.fill_by_coords(coords, coords[1])
-    assert_allclose(m.get_by_coords(coords), 2.0 * coords[1])
+    coords = m.geom.get_coord(flat=True)
+    m.fill_by_coord(coords, coords[1])
+    m.fill_by_coord(coords, coords[1])
+    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -146,12 +158,12 @@ def test_hpxmap_fill_by_coords(nside, nested, coordsys, region, axes, sparse):
 def test_hpxmap_iter(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords(flat=True)
-    m.fill_by_coords(coords, coords[0])
+    coords = m.geom.get_coord(flat=True)
+    m.fill_by_coord(coords, coords[0])
     for vals, pix in m.iter_by_pix(buffersize=100):
         assert_allclose(vals, m.get_by_pix(pix))
-    for vals, coords in m.iter_by_coords(buffersize=100):
-        assert_allclose(vals, m.get_by_coords(coords))
+    for vals, coords in m.iter_by_coord(buffersize=100):
+        assert_allclose(vals, m.get_by_coord(coords))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -170,8 +182,8 @@ def test_hpxmap_swap_scheme(nside, nested, coordsys, region, axes):
                          coordsys=coordsys, region=region, axes=axes))
     fill_poisson(m, mu=1.0, random_state=0)
     m2 = m.to_swapped()
-    coords = m.geom.get_coords(flat=True)
-    assert_allclose(m.get_by_coords(coords), m2.get_by_coords(coords))
+    coords = m.geom.get_coord(flat=True)
+    assert_allclose(m.get_by_coord(coords), m2.get_by_coord(coords))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -190,13 +202,13 @@ def test_hpxmap_pad(nside, nested, coordsys, region, axes):
     m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
     cval = 2.2
     m_pad = m.pad(1, mode='constant', cval=cval)
-    coords_pad = m_pad.geom.get_coords(flat=True)
+    coords_pad = m_pad.geom.get_coord(flat=True)
     msk = m.geom.contains(coords_pad)
     coords_out = tuple([c[~msk] for c in coords_pad])
-    assert_allclose(m_pad.get_by_coords(coords_out),
+    assert_allclose(m_pad.get_by_coord(coords_out),
                     cval * np.ones_like(coords_out[0]))
     coords_in = tuple([c[msk] for c in coords_pad])
-    assert_allclose(m_pad.get_by_coords(coords_in),
+    assert_allclose(m_pad.get_by_coord(coords_in),
                     np.ones_like(coords_in[0]))
 
 
@@ -235,6 +247,6 @@ def test_hpxmap_downsample(nside, nested, coordsys, region, axes):
 def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    coords = m.geom.get_coords(flat=True)
-    m.fill_by_coords(coords, coords[0])
+    coords = m.geom.get_coord(flat=True)
+    m.fill_by_coord(coords, coords[0])
     msum = m.sum_over_axes()
