@@ -663,6 +663,13 @@ class MapCoord(object):
         return self._coordsys
 
     @property
+    def match_by_name(self):
+        """Boolean flag indicating whether axis lookup should be performed by
+        name (True) or index (False).
+        """
+        return self._match_by_name
+
+    @property
     def skycoord(self):
         return SkyCoord(self.lon, self.lat, unit='deg',
                         frame=coordsys_to_frame(self.coordsys))
@@ -728,9 +735,9 @@ class MapCoord(object):
     def _from_tuple(cls, coords, coordsys=None, copy=False):
         """Create from tuple of coordinate vectors."""
         if (isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0])):
-            return cls._from_lonlat(coords, coordsys=coordsys)
+            return cls._from_lonlat(coords, coordsys=coordsys, copy=copy)
         elif isinstance(coords[0], SkyCoord):
-            return cls._from_skycoord(coords, coordsys=coordsys)
+            return cls._from_skycoord(coords, coordsys=coordsys, copy=copy)
         else:
             raise Exception('Unsupported input type.')
 
@@ -1172,7 +1179,7 @@ class MapGeom(object):
         if self.ndim != coord.ndim:
             raise ValueError
 
-        if not coord._match_by_name:
+        if not coord.match_by_name:
             return tuple(coord._data.values())
 
         coord_tuple = [coord.lon, coord.lat]
