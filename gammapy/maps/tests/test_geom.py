@@ -164,14 +164,14 @@ def test_mapcoords_create():
     coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert_allclose(coords.energy, energy)
+    assert_allclose(coords['energy'], energy)
     assert coords.ndim == 3
 
     # 3D Dict w/ SkyCoord
     coords = MapCoord.create(dict(skycoord=skycoord_cel, energy=energy))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert_allclose(coords.energy, energy)
+    assert_allclose(coords['energy'], energy)
     assert coords.ndim == 3
 
     # 3D OrderedDict w/ vectors
@@ -179,7 +179,7 @@ def test_mapcoords_create():
                                           ('lat', lat), ('lon', lon)]))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert_allclose(coords.energy, energy)
+    assert_allclose(coords['energy'], energy)
     assert_allclose(coords[0], energy)
     assert_allclose(coords[1], lat)
     assert_allclose(coords[2], lon)

@@ -70,6 +70,7 @@ representation of the data.
 
    from gammapy.maps import Map
    from astropy.coordinates import SkyCoord
+
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
 
    # Create a WCS Map
@@ -86,6 +87,7 @@ dimensions with the ``axes`` parameter:
 
    from gammapy.maps import Map, MapAxis
    from astropy.coordinates import SkyCoord
+
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
 
@@ -109,6 +111,7 @@ Fermi-LAT PSF:
    import numpy as np
    from gammapy.maps import Map, MapAxis
    from astropy.coordinates import SkyCoord
+
    position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
 
@@ -176,6 +179,7 @@ systems:
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
    vals = m.get_by_idx( ([49,50],[49,50]) )
@@ -193,13 +197,14 @@ given operation across a grid of coordinate values.
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
-   coords = np.linspace(-4.0,4.0,9)
+   coords = np.linspace(-4.0, 4.0, 9)
 
    # Equivalent calls for accessing value at pixel (49,49)
    vals = m.get_by_idx( (49,49) )
    vals = m.get_by_idx( ([49],[49]) )
-   vals = m.get_by_idx( (np.array([49]),np.array([49])) )
+   vals = m.get_by_idx( (np.array([49]), np.array([49])) )
 
    # Retrieve map values along latitude at fixed longitude=0.0
    vals = m.get_by_coord( (0.0, coords) )
@@ -214,6 +219,7 @@ The following demonstrates how one can set pixel values:
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
    m.set_by_coord( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
@@ -236,10 +242,10 @@ coordinate system of the map.
    from astropy.coordinates import SkyCoord
    from gammapy.maps import Map, MapCoord, MapAxis
 
-   lon = np.array([0.0,1.0])
-   lat = np.array([1.0,2.0])
-   energy = np.array([100., 1000.])
-   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', name='energy')
+   lon = [0, 1]
+   lat = [1, 2]
+   energy = [100, 1000]
+   energy_axis = MapAxis.from_bounds(100, 1E5, 12, interp='log', name='energy')
    
    skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
@@ -261,7 +267,7 @@ object without reference to the axis ordering of the map geometry:
    
 
 However when using the named axis interface the axis name string
-(e.g. as given by `~MapAxis.name`) must match the name given in the
+(e.g. as given by `MapAxis.name`) must match the name given in the
 method argument.  The two spatial axes must always be named ``lon``
 and ``lat``.
 
@@ -270,12 +276,12 @@ and ``lat``.
 MapCoord
 --------
 
-`~MapCoord` is an N-dimensional coordinate object that stores both
+`MapCoord` is an N-dimensional coordinate object that stores both
 spatial and non-spatial coordinates and is accepted by all ``coord``
 methods.  A `~MapCoord` can be created with or without explicitly
-named axes with `~MapCoord.create`.  Axes of a `~MapCoord` can be
-accessed by index, name, or attribute.  A `~MapCoord` without explicit
-axis names can be created by calling `~MapCoord.create` with a `tuple`
+named axes with `MapCoord.create`.  Axes of a `MapCoord` can be
+accessed by index, name, or attribute.  A `MapCoord` without explicit
+axis names can be created by calling `MapCoord.create` with a `tuple`
 argument:
 
 .. code:: python
@@ -284,32 +290,31 @@ argument:
    from astropy.coordinates import SkyCoord
    from gammapy.maps import MapCoord
 
-   lon = np.array([0.0,1.0])
-   lat = np.array([1.0,2.0])
-   energy = np.array([100., 1000.])
+   lon = [0.0, 1.0]
+   lat = [1.0, 2.0]
+   energy = [100, 1000]
    skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
 
    # Create a MapCoord from a tuple (no explicit axis names)
    c = MapCoord.create((lon, lat, energy))
    print(c[0], c['lon'], c.lon)
    print(c[1], c['lat'], c.lat)
-   print(c[2], c['axis0'], c.axis0)
+   print(c[2], c['axis0'])
 
    # Create a MapCoord from a tuple + SkyCoord (no explicit axis names)
    c = MapCoord.create((skycoord, energy))
    print(c[0], c['lon'], c.lon)
    print(c[1], c['lat'], c.lat)
-   print(c[2], c['axis0'], c.axis0)
+   print(c[2], c['axis0'])
 
 The first two elements of the tuple argument must contain longitude
 and latitude.  Non-spatial axes are assigned a default name
 ``axis{I}`` where ``{I}`` is the index of the non-spatial dimension.
-`~MapCoord` objects created without named axes must have the same axis
+`MapCoord` objects created without named axes must have the same axis
 ordering as the map geometry.
 
-
-A `~MapCoord` with named axes can be created by calling
-`~MapCoord.create` with a `dict` or `~collections.OrderedDict`:
+A `MapCoord` with named axes can be created by calling
+`MapCoord.create` with a `dict` or `~collections.OrderedDict`:
 
 .. code:: python
    
@@ -317,12 +322,12 @@ A `~MapCoord` with named axes can be created by calling
    c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
    print(c[0], c['lon'], c.lon)
    print(c[1], c['lat'], c.lat)
-   print(c[2], c['energy'], c.energy)
+   print(c[2], c['energy'])
 
    # Create a MapCoord from an OrderedDict
    from collections import OrderedDict
    c = MapCoord.create(OrderedDict([('energy',energy), ('lon',lon), ('lat', lat)]))
-   print(c[0], c['energy'], c.energy)
+   print(c[0], c['energy'])
    print(c[1], c['lon'], c.lon)
    print(c[2], c['lat'], c.lat)
    
@@ -330,15 +335,13 @@ A `~MapCoord` with named axes can be created by calling
    c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
    print(c[0], c['lon'], c.lon)
    print(c[1], c['lat'], c.lat)
-   print(c[2], c['energy'], c.energy)
+   print(c[2], c['energy'])
 
-
-Spatial axes must be named ``lon`` and ``lat``.  `~MapCoord` objects
+Spatial axes must be named ``lon`` and ``lat``.  `MapCoord` objects
 created with named axes do not need to have the same axis ordering as
 the map geometry.  However the name of the axis must match the name of
 the corresponding map geometry axis.
 
-   
 Interpolation
 -------------
 
@@ -361,11 +364,11 @@ maps.
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
    m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
    m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
-
 
 Projection
 ----------
@@ -380,6 +383,7 @@ over to the projected map.
 .. code:: python
 
    from gammapy.maps import WcsNDMap, HpxGeom
+
    m = WcsNDMap.read('gll_iem_v06.fits')
    geom = HpxGeom.create(nside=8, coordsys='GAL')
    # Convert LAT standard IEM to HPX (nside=8)
@@ -406,6 +410,7 @@ one can use this method to fill a map with a 2D Gaussian:
    import numpy as np
    from astropy.coordinates import SkyCoord
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
    for val, coord in m.iter_by_coord(buffersize=10000):
        skydir = SkyCoord(coord[0],coord[1], unit='deg')
@@ -421,10 +426,10 @@ method can be used to loop over image slices:
    from astropy.coordinates import SkyCoord
    from astropy.convolution import Gaussian2DKernel, convolve
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
    for img, idx in m.iter_by_image():
        img = convolve(img, Gaussian2DKernel(x_stddev=2.0) )
-
 
 FITS I/O
 --------
@@ -435,6 +440,7 @@ Maps can be written to and read from a FITS file with the
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', hdu='IMAGE')
    m = Map.read('file.fits', hdu='IMAGE')
@@ -451,6 +457,7 @@ scheme.
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
    m.write('file.fits', hdu='IMAGE', sparse=True)
    m = Map.read('file.fits', hdu='IMAGE', map_type='wcs')
@@ -461,6 +468,7 @@ exception that they will be written to a sparse format by default:
 .. code:: python
 
    from gammapy.maps import Map
+
    m = Map.create(binsz=0.1, map_type='hpx-sparse', width=10.0)
    m.write('file.fits', hdu='IMAGE')
    m = Map.read('file.fits', hdu='IMAGE', map_type='hpx-sparse')
@@ -478,6 +486,7 @@ the GADF format:
 .. code:: python
 
    from gammapy.maps import Map, MapAxis
+
    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
                       axes=[energy_axis])
@@ -496,6 +505,7 @@ objects that can be used to further tweak/customize the image.
    import matplotlib.pyplot as plt
    from gammapy.maps import Map
    from gammapy.maps.utils import fill_poisson
+
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
    fill_poisson(m, mu=1.0, random_state=0)
    fig, ax, im = m.plot(cmap='magma')
@@ -520,8 +530,8 @@ This example shows how to fill a counts cube from an FT1 file:
    m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
                        coordsys='CEL', axes=[energy_axis])
    m.fill_by_coord((h['EVENTS'].data.field('RA'),
-                     h['EVENTS'].data.field('DEC'),
-                     h['EVENTS'].data.field('ENERGY')))
+                    h['EVENTS'].data.field('DEC'),
+                    h['EVENTS'].data.field('ENERGY')))
    m.write('ccube.fits', conv='fgst-ccube')
 
 Generating a Cutout of a Model Cube
@@ -533,6 +543,7 @@ diffuse model cube using the `~Map.reproject` method:
 .. code:: python
 
    from gammapy.maps import WcsGeom, WcsNDMap
+
    m = WcsNDMap.read('gll_iem_v06.fits')
    geom = WcsGeom(binsz=0.125, skydir=(45.0,30.0), coordsys='GAL', proj='AIT')
    m_proj = m.reproject(geom)

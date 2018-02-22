@@ -634,14 +634,6 @@ class MapCoord(object):
     def __iter__(self):
         return iter(self._data.values())
 
-    def __getattr__(self, key):
-        if key.startswith('_'):
-            raise AttributeError(key)
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(key)
-
     @property
     def ndim(self):
         """Number of dimensions."""
@@ -784,6 +776,7 @@ class MapCoord(object):
         --------
         >>> from astropy.coordinates import SkyCoord
         >>> from gammapy.maps import MapCoord
+
         >>> lon, lat = [1, 2], [2, 3]
         >>> skycoord = SkyCoord(lon, lat, unit='deg')
         >>> energy = [1000]
