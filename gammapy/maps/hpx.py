@@ -340,6 +340,7 @@ def get_hpxregion_dir(region, coordsys):
     coordsys : {'CEL', 'GAL'}
         Coordinate system
     """
+    import healpy as hp
     frame = coordsys_to_frame(coordsys)
     if region is None:
         return SkyCoord(0., 0., frame=frame, unit='deg')
