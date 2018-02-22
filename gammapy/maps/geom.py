@@ -784,10 +784,11 @@ class MapCoord(object):
         --------
         >>> from astropy.coordinates import SkyCoord
         >>> from gammapy.maps import MapCoord
-        >>> lon, lat = np.array([1.0,2.0]), np.array([2.0,3.0])
-        >>> energy = np.array([1000.])
+        >>> lon, lat = [1, 2], [2, 3]
+        >>> skycoord = SkyCoord(lon, lat, unit='deg')
+        >>> energy = [1000]
         >>> c = MapCoord.create((lon,lat))
-        >>> c = MapCoord.create((SkyCoord(lon,lat,unit='deg'),))
+        >>> c = MapCoord.create((skycoord,))
         >>> c = MapCoord.create((lon,lat,energy))
         >>> c = MapCoord.create(dict(lon=lon,lat=lat))
         >>> c = MapCoord.create(dict(lon=lon,lat=lat,energy=energy))
