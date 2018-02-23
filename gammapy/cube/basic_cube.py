@@ -19,32 +19,30 @@ def fill_map_counts(event_list, ndmap):
          Target map
      """
     # The list will contain the event table entries to be fed into the WcsNDMap
-    tmp = list()
+    tmp = dict()
     ref_geom = ndmap.geom
-    # Convert events coordinates
-    if ref_geom.coordsys == 'GAL':
-        tmp.append(event_list.galactic)
-    elif ref_geom.coordsys == 'CEL':
-        tmp.append(event_list.radec)
-    else:
-        # should raise an error here. The map is not correct.
-        raise ValueError("Incorrect coordsys of input map.")
 
+    # Add sky coordinates to dictionary
+    tmp.update(skycoord=event_list.radec)
+
+    # No check the other axes and find corresponding entries in the EventList
+    # energy and time are specific types
+    # TODO: add proper extraction for time
     for i, axis in enumerate(ref_geom.axes):
-        if axis.unit.is_equivalent("eV"):
+        if axis.type == 'energy':
             # This axis is the energy
-            tmp.append(event_list.energy.to(axis.unit))
+            tmp.update({axis.name: event_list.energy.to(axis.unit)})
         elif axis.name.upper() in event_list.table.colnames:
             # Here we assume that colnames are all capital
-            tmp.append(event_list.table[axis.name.upper()].to(axis.unit))
+            tmp.update({axis.name: event_list.table[axis.name.upper()].to(axis.unit)})
         elif axis.name.lower() in event_list.table.colnames:
             # Here we assume that colnames are all lower cases
-            tmp.append(event_list.table[axis.name.lower()].to(axis.unit))
+            tmp.update({axis.name: event_list.table[axis.name.lower()].to(axis.unit)})
         else:
             raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
 
     # Fill it
-    ndmap.fill_by_coords(tmp)
+    ndmap.fill_by_coord(tmp)
 
 
 def make_map_counts(event_list, ref_geom):
