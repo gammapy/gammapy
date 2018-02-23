@@ -73,7 +73,9 @@ class ObservationStats(Stats):
 
         obs_id = obs.obs_id
         livetime = obs.observation_live_time_duration
-        alpha = a_on / a_off
+        alpha = 0
+        if a_off > 0:
+            alpha = a_on / a_off
 
         gamma_rate = n_on / livetime.to(u.min)
         bg_rate = (alpha * n_off) / livetime.to(u.min)
