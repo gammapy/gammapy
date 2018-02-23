@@ -16,7 +16,7 @@ class PhaseCurve(object):
 
     .. math::
 
-        \phi(t) = \phi_0 + f_0(t−t_0) + (1/2)f_1(t−t_0)^2 + (1/6)f_2(t−t_0)^3
+        \phi(t) = \phi_0 + f_0(t-t_0) + (1/2)f_1(t-t_0)^2 + (1/6)f_2(t-t_0)^3
 
     Strictly periodic sources such as gamma-ray binaries have ``f1=0`` and ``f2=0``.
     Sources like some pulsars where the period spins up or down have ``f1!=0``
