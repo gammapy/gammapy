@@ -23,13 +23,9 @@ def fill_map_counts(event_list, ndmap):
     ref_geom = ndmap.geom
     # Convert events coordinates
     if ref_geom.coordsys == 'GAL':
-        galactic_coords = event_list.galactic
-        tmp.append(galactic_coords.l)
-        tmp.append(galactic_coords.b)
+        tmp.append(event_list.galactic)
     elif ref_geom.coordsys == 'CEL':
-        radec_coords = event_list.radec
-        tmp.append(radec_coords.ra)
-        tmp.append(radec_coords.dec)
+        tmp.append(event_list.radec)
     else:
         # should raise an error here. The map is not correct.
         raise ValueError("Incorrect coordsys of input map.")
