@@ -245,7 +245,7 @@ class SpectrumObservation(object):
                                    (e[[idx - 1, idx]].value))
         else:
             if idx == e.size - 1:
-                energy = self.e_true[idx+1].value
+                energy = self.e_true[idx + 1].value
             else:
                 energy = np.interp(bias_value,
                                    (bias[[idx, idx + 1]].value),
@@ -827,41 +827,36 @@ class SpectrumObservationStacker(object):
             quality=stacked_quality,
         )
 
-    #modif AL : correct bug on alpha
     def stack_backscal(self):
         """Stack ``backscal`` for on and off vector."""
         nbins = self.obs_list[0].e_reco.nbins
         bkscal_on = np.ones(nbins)
         bkscal_off = np.zeros(nbins)
-        
-        alpha_sum=0.0
-        
+
+        alpha_sum = 0.0
+
         for obs in self.obs_list:
             bkscal_on_data = obs.on_vector._backscal_array.copy()
-
             bkscal_off_data = obs.off_vector._backscal_array.copy()
             bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
-
             alpha_sum += obs.alpha * obs.off_vector.counts_in_safe_range.sum()
-            
+
         stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
         alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
-       
-        
+
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
         # use 1 for backscale of on_vector and 1 / alpha_average for backscale of off_vector
         alpha_correction = 1
         idx = np.where(self.stacked_off_vector.data.data == 0)[0]
         bkscal_on[idx] = alpha_correction
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
         stacked_bkscal_off[idx] = alpha_correction / alpha_average
 
         self.stacked_bkscal_on = bkscal_on
         self.stacked_bkscal_off = stacked_bkscal_off
 
-    
-
-        
     def setup_counts_vectors(self):
         """Add correct attributes to stacked counts vectors."""
         total_livetime = self.obs_list.total_livetime
@@ -907,4 +902,3 @@ class SpectrumObservationStacker(object):
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
         )
-
