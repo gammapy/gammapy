@@ -234,9 +234,9 @@ class TestSpectrumObservationStacker:
         obs_list = make_observation_list()
         obs_stacker = SpectrumObservationStacker(obs_list)
         obs_stacker.run()
-        assert obs_stacker.stacked_obs.alpha[0] == 1.25 / 4.
-        # When the OFF stack observation counts=0, averaging the alpha on the total OFF counts for each run.
-        assert obs_stacker.stacked_obs.alpha[1] == 2.5 / 8.
+        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.)
+        # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
+        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.)
 
 
 @requires_dependency('scipy')
