@@ -139,8 +139,9 @@ class ObservationStats(Stats):
         gamma_rate = 0
         bg_rate = 0
         for stats in stats_list:
-            livetime += stats.livetime
-            n_on += stats.n_on
+            if stats.a_off > 0:
+                livetime += stats.livetime
+                n_on += stats.n_on
             n_off += stats.n_off
             a_on += stats.a_on * stats.n_off
             a_on_backup += stats.a_on * stats.livetime.value
