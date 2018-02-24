@@ -92,12 +92,12 @@ class WcsMap(Map):
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
         ----------
-        hdulist :  `~astropy.io.fits.HDUList`
+        hdu_list :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str
             Name or index of the HDU with the map data.
@@ -110,15 +110,15 @@ class WcsMap(Map):
             Map object
         """
         if hdu is None:
-            hdu = find_hdu(hdulist)
+            hdu = find_hdu(hdu_list)
         else:
-            hdu = hdulist[hdu]
+            hdu = hdu_list[hdu]
 
         if hdu_bands is None:
-            hdu_bands = find_bands_hdu(hdulist, hdu)
+            hdu_bands = find_bands_hdu(hdu_list, hdu)
 
         if hdu_bands is not None:
-            hdu_bands = hdulist[hdu_bands]
+            hdu_bands = hdu_list[hdu_bands]
 
         return cls.from_hdu(hdu, hdu_bands)
 
@@ -128,7 +128,14 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        TODO
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
         """
         if sparse:
             hdu = 'SKYMAP' if hdu is None else hdu.upper()
