@@ -79,8 +79,14 @@ def unpack_seq(seq, n=1):
         yield [e for e in row[:n]] + [row[n:]]
 
 
-def find_bands_hdu(hdulist, hdu):
+def find_bands_hdu(hdu_list, hdu):
     """Discover the extension name of the BANDS HDU.
+
+    Parameters
+    ----------
+    hdu_list : `~astropy.io.fits.HDUList`
+
+    hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
 
     Returns
     -------
@@ -97,14 +103,14 @@ def find_bands_hdu(hdulist, hdu):
         has_cube_data = True
     elif isinstance(hdu, fits.BinTableHDU):
 
-        if (hdu.header.get('INDXSCHM', '') in ['IMPLICIT', ''] and
-                len(hdu.columns) > 1):
+        if (hdu.header.get('INDXSCHM', '') in ['EXPLICIT', 'IMPLICIT', '']
+                and len(hdu.columns) > 1):
             has_cube_data = True
 
     if has_cube_data:
-        if 'EBOUNDS' in hdulist:
+        if 'EBOUNDS' in hdu_list:
             return 'EBOUNDS'
-        elif 'ENERGIES' in hdulist:
+        elif 'ENERGIES' in hdu_list:
             return 'ENERGIES'
 
     return None
