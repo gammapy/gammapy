@@ -240,7 +240,6 @@ class HpxMap(Map):
 
         data = self.data
         shape = data.shape
-        print(hduname, convname, hduname_bands)
         header = self.geom.make_header(conv=conv)
 
         if self.geom.axes:
