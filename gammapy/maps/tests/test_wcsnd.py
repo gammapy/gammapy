@@ -79,6 +79,12 @@ def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
 
+    # Specify alternate HDU name for IMAGE and BANDS table
+    m0.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m1 = WcsNDMap.read(filename)
+    m2 = Map.read(filename)
+    m3 = Map.read(filename, map_type='wcs')
+
 
 def test_wcsndmap_read_write_fgst(tmpdir):
     filename = str(tmpdir / 'skycube.fits')

@@ -101,6 +101,12 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
+    # Specify alternate HDU name for IMAGE and BANDS table
+    m.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m2 = HpxNDMap.read(filename)
+    m3 = Map.read(filename)
+    m4 = Map.read(filename, map_type='hpx')
+
 
 def test_hpxmap_read_write_fgst(tmpdir):
     filename = str(tmpdir / 'skycube.fits')

@@ -154,8 +154,11 @@ class WcsMap(Map):
 
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands,
+                                                     hdu_skymap=hdu,
                                                      conv=conv)
             hdu_bands = hdu_bands_out.name
+        else:
+            hdu_bands = None
 
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands,
                                 sparse=sparse, conv=conv)

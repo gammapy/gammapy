@@ -145,14 +145,21 @@ class HpxMap(Map):
         hdu_list : `~astropy.io.fits.HDUList`
         """
 
+        hdu_bands_out = None
+        if self.geom.axes:
+            hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands, hdu_skymap=hdu,
+                                                     conv=conv)
+            hdu_bands = hdu_bands_out.name
+        else:
+            hdu_bands = None
+
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse,
                                 conv=conv)
-        hdu_bands = hdu_out.header.get('BANDSHDU', None)
         hdu_out.header['META'] = json.dumps(self.meta)
         hdu_list = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:
-            hdu_list += [self.geom.make_bands_hdu(hdu=hdu_bands, conv=conv)]
+            hdu_list += [hdu_bands_out]
 
         return fits.HDUList(hdu_list)
 

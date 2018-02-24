@@ -935,7 +935,7 @@ class MapGeom(object):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def make_bands_hdu(self, hdu=None, conv=None):
+    def make_bands_hdu(self, hdu=None, hdu_skymap=None, conv=None):
         conv = self.conv if conv is None else conv
         header = fits.Header()
         self._fill_header_from_axes(header)
@@ -951,7 +951,10 @@ class MapGeom(object):
             hdu = 'ENERGIES'
             axis_names = ['energy']
         elif hdu is None and conv == 'gadf':
-            hdu = 'BANDS'
+            if hdu_skymap:
+                hdu = '{}_{}'.format(hdu_skymap, 'BANDS')
+            else:
+                hdu = 'BANDS'
 
         cols = make_axes_cols(self.axes, axis_names)
         cols += self._make_bands_cols()
