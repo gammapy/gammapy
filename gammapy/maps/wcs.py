@@ -152,6 +152,11 @@ class WcsGeom(MapGeom):
         return self._npix
 
     @property
+    def conv(self):
+        """Name of default FITS convention associated with this geometry."""
+        return self._conv
+
+    @property
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
@@ -336,25 +341,9 @@ class WcsGeom(MapGeom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
-    def make_bands_hdu(self, hdu=None, conv=None):
-        conv = self._conv if conv is None else conv
-        header = fits.Header()
-        self._fill_header_from_axes(header)
-        axis_names = None
+    def _make_bands_cols(self, hdu=None, conv=None):
 
-        # FIXME: Check whether convention is compatible with
-        # dimensionality of geometry
-
-        if conv == 'fgst-ccube':
-            hdu = 'EBOUNDS'
-            axis_names = ['energy']
-        elif conv == 'fgst-template':
-            hdu = 'ENERGIES'
-            axis_names = ['energy']
-        elif hdu is None and conv == 'gadf':
-            hdu = 'BANDS'
-
-        cols = make_axes_cols(self.axes, axis_names)
+        cols = []
         if not self.is_regular:
             cols += [fits.Column('NPIX', '2I', dim='(2)',
                                  array=np.vstack((np.ravel(self.npix[0]),
@@ -365,9 +354,7 @@ class WcsGeom(MapGeom):
             cols += [fits.Column('CRPIX', '2E', dim='(2)',
                                  array=np.vstack((np.ravel(self._crpix[0]),
                                                   np.ravel(self._crpix[1]))).T), ]
-
-        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
-        return hdu_out
+        return cols
 
     def make_header(self):
         header = self.wcs.to_header()

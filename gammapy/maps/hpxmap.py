@@ -152,7 +152,7 @@ class HpxMap(Map):
         hdu_list = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:
-            hdu_list += [self.geom.make_bands_hdu(hdu=hdu_bands)]
+            hdu_list += [self.geom.make_bands_hdu(hdu=hdu_bands, conv=conv)]
 
         return fits.HDUList(hdu_list)
 

@@ -935,8 +935,31 @@ class MapGeom(object):
 
         return cls.from_header(hdu.header, hdu_bands)
 
+    def make_bands_hdu(self, hdu=None, conv=None):
+        conv = self.conv if conv is None else conv
+        header = fits.Header()
+        self._fill_header_from_axes(header)
+        axis_names = None
+
+        # FIXME: Check whether convention is compatible with
+        # dimensionality of geometry
+
+        if conv == 'fgst-ccube':
+            hdu = 'EBOUNDS'
+            axis_names = ['energy']
+        elif conv == 'fgst-template':
+            hdu = 'ENERGIES'
+            axis_names = ['energy']
+        elif hdu is None and conv == 'gadf':
+            hdu = 'BANDS'
+
+        cols = make_axes_cols(self.axes, axis_names)
+        cols += self._make_bands_cols()
+        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
+        return hdu_out
+
     @abc.abstractmethod
-    def make_bands_hdu(self):
+    def _make_bands_cols(self):
         pass
 
     @abc.abstractmethod

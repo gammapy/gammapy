@@ -65,9 +65,8 @@ class WcsMap(Map):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : str, optional
-            FITS format convention ('fgst-ccube', 'fgst-template',
-            'gadf').  Default is 'gadf'.
+        conv : {'fgst-ccube','fgst-template','gadf'}, optional
+            FITS format convention.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
@@ -132,10 +131,17 @@ class WcsMap(Map):
             Name or index of the HDU with the map data.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
+        sparse : bool
+            Sparsify the map by only writing pixels with non-zero
+            amplitude.
+        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
+            FITS format convention.  If None this will be set to the
+            default convention of the map.
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
+
         """
         if sparse:
             hdu = 'SKYMAP' if hdu is None else hdu.upper()

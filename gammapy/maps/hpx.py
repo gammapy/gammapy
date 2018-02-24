@@ -1388,15 +1388,11 @@ class HpxGeom(MapGeom):
 
         return header
 
-    def make_bands_hdu(self, hdu='BANDS'):
-
-        header = fits.Header()
-        self._fill_header_from_axes(header)
-        cols = make_axes_cols(self.axes)
+    def _make_bands_cols(self):
+        cols = []
         if self.nside.size > 1:
             cols += [fits.Column('NSIDE', 'I', array=np.ravel(self.nside)), ]
-        hdu = fits.BinTableHDU.from_columns(cols, header, name=hdu)
-        return hdu
+        return cols
 
     def make_ebounds_hdu(self, hdu='EBOUNDS'):
         """Make a FITS HDU with the energy bin boundaries.
