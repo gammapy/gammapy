@@ -138,11 +138,12 @@ class HpxSparseMap(HpxMap):
 
         elif len(shape) == 1:
             cols.append(fits.Column(conv.colname(indx=conv.firstcol),
-                                    'E', array=self.data.data.astype(float)))
+                                    'E', array=self.data[...].astype(float)))
         else:
+            # FIXME: We should be filling undefined pixels here with NaN
             for i, idx in enumerate(np.ndindex(shape[:-1])):
                 cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
-                                        array=self.data[idx].astype(float)))
+                                        array=self.data[...][idx].astype(float)))
         return cols
 
     def iter_by_image(self):

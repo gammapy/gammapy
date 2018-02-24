@@ -929,7 +929,12 @@ class HpxGeom(MapGeom):
 
     @property
     def conv(self):
+        """Name of default FITS convention associated with this geometry."""
         return self._conv
+
+    @property
+    def hpx_conv(self):
+        return HPX_FITS_CONVENTIONS[self.conv]
 
     @property
     def coordsys(self):
@@ -1314,7 +1319,7 @@ class HpxGeom(MapGeom):
                 region = None
 
         return cls(nside, nest, coordsys=coordsys, region=region,
-                   axes=axes, conv=conv)
+                   axes=axes, conv=convname)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -1347,7 +1352,7 @@ class HpxGeom(MapGeom):
         """"Build and return FITS header for this HEALPIX map."""
 
         header = fits.Header()
-        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS['gadf'])
+        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS[self.conv])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
@@ -1361,10 +1366,9 @@ class HpxGeom(MapGeom):
             else:
                 indxschm = 'LOCAL'
 
-        # FIXME: Set TELESCOP and INSTRUME from convention type
-
-        header["TELESCOP"] = "GLAST"
-        header["INSTRUME"] = "LAT"
+        if 'FGST' in conv.convname.upper():
+            header["TELESCOP"] = "GLAST"
+            header["INSTRUME"] = "LAT"
         header[conv.coordsys] = self.coordsys
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
