@@ -43,10 +43,10 @@ def test_map_create(binsz, width, map_type, skydir, axes):
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
-    assert(isinstance(m, WcsNDMap))
+    assert isinstance(m, WcsNDMap)
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
-    assert(isinstance(m, HpxNDMap))
+    assert isinstance(m, HpxNDMap)
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

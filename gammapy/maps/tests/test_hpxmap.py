@@ -117,24 +117,24 @@ def test_hpxmap_read_write_fgst(tmpdir):
     m = create_map(8, False, 'GAL', None, [axis], False)
     m.write(filename, conv='fgst-ccube')
     h = fits.open(filename)
-    assert('SKYMAP' in h)
-    assert('EBOUNDS' in h)
-    assert(h['SKYMAP'].header['HPX_CONV'] == 'FGST-CCUBE')
-    assert(h['SKYMAP'].header['TTYPE1'] == 'CHANNEL1')
+    assert 'SKYMAP' in h
+    assert 'EBOUNDS' in h
+    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-CCUBE'
+    assert h['SKYMAP'].header['TTYPE1'] == 'CHANNEL1'
 
     m2 = Map.read(filename)
-    assert(m2.geom.conv == 'fgst-ccube')
+    assert m2.geom.conv == 'fgst-ccube'
 
     # Test Model Cube
     m.write(filename, conv='fgst-template')
     h = fits.open(filename)
-    assert('SKYMAP' in h)
-    assert('ENERGIES' in h)
-    assert(h['SKYMAP'].header['HPX_CONV'] == 'FGST-TEMPLATE')
-    assert(h['SKYMAP'].header['TTYPE1'] == 'ENERGY1')
+    assert 'SKYMAP' in h
+    assert 'ENERGIES' in h
+    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-TEMPLATE'
+    assert h['SKYMAP'].header['TTYPE1'] == 'ENERGY1'
 
     m2 = Map.read(filename)
-    assert(m2.geom.conv == 'fgst-template')
+    assert m2.geom.conv == 'fgst-template'
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
