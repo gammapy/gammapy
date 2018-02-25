@@ -665,7 +665,7 @@ def wcs_add_energy_axis(wcs, energies):
         Array of energies
     """
     if wcs.naxis != 2:
-        raise Exception('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
+        raise ValueError('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
 
     w = WCS(naxis=3)
     w.wcs.crpix[0] = wcs.wcs.crpix[0]

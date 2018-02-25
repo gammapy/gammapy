@@ -739,7 +739,7 @@ class MapCoord(object):
         elif isinstance(coords[0], SkyCoord):
             return cls._from_skycoord(coords, coordsys=coordsys, copy=copy)
         else:
-            raise Exception('Unsupported input type.')
+            raise TypeError('Type not supported: {}'.format(type(coords)))
 
     @classmethod
     def _from_dict(cls, coords, coordsys=None, copy=False):

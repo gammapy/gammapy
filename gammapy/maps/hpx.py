@@ -319,7 +319,7 @@ def parse_hpxregion(region):
     m = re.match(r'([A-Za-z\_]*?)\((.*?)\)', region)
 
     if m is None:
-        raise Exception('Failed to parse hpx region string.')
+        raise ValueError('Failed to parse hpx region string: {!r}'.format(region))
 
     if not m.group(1):
         return re.split(',', m.group(2))
@@ -371,13 +371,13 @@ def get_hpxregion_size(region):
     """Get the approximate size of region (in degrees) from a HEALPIX region string.
     """
     tokens = parse_hpxregion(region)
-    if tokens[0] in ['DISK', 'DISK_INC']:
+    if tokens[0] in {'DISK', 'DISK_INC'}:
         return float(tokens[3])
     elif tokens[0] == 'HPX_PIXEL':
         pix_size = get_pix_size_from_nside(int(tokens[2]))
         return 2. * pix_size
     else:
-        raise Exception('Did not recognize region type: {}'.format(tokens[0]))
+        raise ValueError('Did not recognize region type: {}'.format(tokens[0]))
 
 
 def is_power2(n):
@@ -447,7 +447,7 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     if np.any(~is_power2(nside_superpix)) or np.any(~is_power2(nside_subpix)):
         raise ValueError('NSIDE must be a power of 2.')
 
-    ratio = np.array((nside_subpix // nside_superpix)**2, ndmin=1)
+    ratio = np.array((nside_subpix // nside_superpix) ** 2, ndmin=1)
     idx //= ratio
 
     if not nest:
@@ -502,7 +502,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
         raise ValueError('NSIDE must be a power of 2.')
 
     # number of subpixels in each superpixel
-    npix = np.array((nside_subpix // nside_superpix)**2, ndmin=1)
+    npix = np.array((nside_subpix // nside_superpix) ** 2, ndmin=1)
     x = np.arange(np.max(npix), dtype=int)
     idx = idx * npix
 
@@ -574,9 +574,9 @@ class HpxGeom(MapGeom):
         self._axes = make_axes(axes, conv)
         self._shape = tuple([ax.nbin for ax in self._axes])
         if self.nside.size > 1 and self.nside.shape != self._shape:
-            raise Exception('Wrong dimensionality for nside.  nside must '
-                            'be a scalar or have a dimensionality consistent '
-                            'with the axes argument.')
+            raise ValueError('Wrong dimensionality for nside.  nside must '
+                             'be a scalar or have a dimensionality consistent '
+                             'with the axes argument.')
 
         self._order = nside_to_order(self._nside)
         self._nest = nest
@@ -857,8 +857,7 @@ class HpxGeom(MapGeom):
         axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for i,
-                                ax in enumerate(axes) if ax.nbin > 1]
+            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
@@ -1094,7 +1093,6 @@ class HpxGeom(MapGeom):
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         for i in range(crop_width):
-
             # Mask of pixels that have at least one neighbor not
             # contained in the geometry
             edge_msk = np.any(np.isin(idx_nb, idx_r, invert=True), axis=0)
@@ -1285,13 +1283,14 @@ class HpxGeom(MapGeom):
         shape = [ax.nbin for ax in axes]
 
         if header['PIXTYPE'] != 'HEALPIX':
-            raise Exception('PIXTYPE != HEALPIX')
+            raise ValueError('Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
+
         if header['ORDERING'] == 'RING':
             nest = False
         elif header['ORDERING'] == 'NESTED':
             nest = True
         else:
-            raise Exception('ORDERING != RING | NESTED')
+            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(header['ORDERING']))
 
         if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
             nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
@@ -1300,7 +1299,7 @@ class HpxGeom(MapGeom):
         elif 'ORDER' in header:
             nside = 2 ** header['ORDER']
         else:
-            raise Exception('Failed to extract NSIDE or ORDER.')
+            raise ValueError('Failed to extract NSIDE or ORDER.')
 
         try:
             coordsys = header[conv.coordsys]
@@ -1595,7 +1594,7 @@ class HpxGeom(MapGeom):
         # Non-regular all-sky
         elif self.is_allsky and not self.is_regular:
 
-            shape = (np.max(self.npix), )
+            shape = (np.max(self.npix),)
             if idx is None:
                 shape = shape + self.shape
             else:
@@ -1629,7 +1628,7 @@ class HpxGeom(MapGeom):
                 s = slice(None)
             pix_flat = unravel_hpx_index(self._ipix[s], self._maxpix)
 
-            shape = (np.max(self.npix), )
+            shape = (np.max(self.npix),)
             if idx is None:
                 shape = shape + self.shape
             else:
@@ -1766,8 +1765,8 @@ class HpxToWcsMapping(object):
 
         # TODO: Figure out where to write HPX header information
 
-        #prim_hdu = index_map.create_primary_hdu()
-        #mult_hdu = index_map.create_image_hdu()
+        # prim_hdu = index_map.create_primary_hdu()
+        # mult_hdu = index_map.create_image_hdu()
         # for key in ['COORDSYS', 'ORDERING', 'PIXTYPE',
         #            'ORDERING', 'ORDER', 'NSIDE',
         #            'FIRSTPIX', 'LASTPIX']:
@@ -1813,11 +1812,10 @@ class HpxToWcsMapping(object):
         # HPX images have (1,N) dimensionality by convention
         # hpx_data = np.squeeze(hpx_data)
 
-        if self._valid.ndim == 1:
-            shape = tuple([t.flat[0] for t in self._npix])
-        else:
-            shape = hpx_data.shape[:-1] + \
-                tuple([t.flat[0] for t in self._npix])
+        shape = tuple([t.flat[0] for t in self._npix])
+        if self._valid.ndim != 1:
+            shape = hpx_data.shape[:-1] + shape
+
         valid = np.where(self._valid.reshape(shape))
         lmap = self._lmap[self._valid]
         mult_val = self._mult_val[self._valid]
