@@ -21,7 +21,6 @@ __all__ = [
 
 def make_axes(axes_in, conv):
     """Make a sequence of `~MapAxis` objects."""
-
     if axes_in is None:
         return []
 
@@ -70,8 +69,9 @@ def make_axes_cols(axes, axis_names=None):
                             ['AXIS%i' % i,
                              'AXIS%i_MIN' % i, 'AXIS%i_MAX' % i])
         for t, v in zip(names, [axes_ctr, axes_min, axes_max]):
-            cols += [fits.Column(t, 'E', array=np.ravel(v[i]),
-                                 unit=ax.unit.to_string()), ]
+            array = np.ravel(v[i])
+            unit = ax.unit.to_string()
+            cols.append(fits.Column(t, 'E', array=array, unit=unit))
 
     return cols
 
@@ -84,7 +84,7 @@ def find_and_read_bands(hdu, header=None):
     hdu : `~astropy.io.fits.BinTableHDU`
         The BANDS table HDU.
     header : `~astropy.io.fits.Header`
-        TODO
+        Header
 
     Returns
     -------
@@ -121,14 +121,11 @@ def find_and_read_bands(hdu, header=None):
         if len(cols) == 2:
             xmin = np.unique(hdu.data.field(cols[0]))
             xmax = np.unique(hdu.data.field(cols[1]))
-            axis = MapAxis(np.append(xmin, xmax[-1]), name=name,
-                           unit=unit)
-            axes += [axis]
+            nodes = np.append(xmin, xmax[-1])
+            axes.append(MapAxis(nodes, name=name, unit=unit))
         else:
-            x = np.unique(hdu.data.field(cols[0]))
-            axis = MapAxis.from_nodes(x, name=name,
-                                      unit=unit)
-            axes += [axis]
+            nodes = np.unique(hdu.data.field(cols[0]))
+            axes.append(MapAxis.from_nodes(nodes, name=name, unit=unit))
 
     return axes
 
@@ -139,6 +136,7 @@ def get_shape(param):
 
     if not isinstance(param, tuple):
         param = [param]
+
     return max([np.array(p, ndmin=1).shape for p in param])
 
 
@@ -204,7 +202,7 @@ def pix_tuple_to_idx(pix, copy=False):
         Array of pixel indices.
     """
     idx = []
-    for i, p in enumerate(pix):
+    for p in pix:
         p = np.array(p, copy=copy, ndmin=1)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
@@ -212,6 +210,7 @@ def pix_tuple_to_idx(pix, copy=False):
             p_idx = np.rint(p).astype(int)
             p_idx[~np.isfinite(p)] = -1
             idx += [p_idx]
+
     return tuple(idx)
 
 
@@ -285,6 +284,7 @@ def pix_to_coord(edges, pix, interp='lin'):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
+
     if interp == 'log':
         fn0 = np.log
         fn1 = np.exp
@@ -615,8 +615,7 @@ class MapCoord(object):
     def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
 
         if 'lon' not in data or 'lat' not in data:
-            raise ValueError(
-                "data dictionary must contain axes named 'lon' and 'lat'.")
+            raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
         self._data = OrderedDict([(k, np.array(v, ndmin=1, copy=copy))
                                   for k, v in data.items()])
@@ -660,6 +659,7 @@ class MapCoord(object):
 
     @property
     def coordsys(self):
+        """Coordinate system (str)"""
         return self._coordsys
 
     @property
@@ -734,7 +734,7 @@ class MapCoord(object):
     @classmethod
     def _from_tuple(cls, coords, coordsys=None, copy=False):
         """Create from tuple of coordinate vectors."""
-        if (isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0])):
+        if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
             return cls._from_lonlat(coords, coordsys=coordsys, copy=copy)
         elif isinstance(coords[0], SkyCoord):
             return cls._from_skycoord(coords, coordsys=coordsys, copy=copy)
@@ -806,7 +806,7 @@ class MapCoord(object):
         elif isinstance(data, SkyCoord):
             return cls._from_skycoord((data,), coordsys=coordsys, copy=copy)
         else:
-            raise Exception('Unsupported input type.')
+            raise TypeError('Unsupported input type: {}'.format(type(data)))
 
     def to_coordsys(self, coordsys):
         """Convert to a different coordinate frame.
@@ -950,16 +950,17 @@ class MapGeom(object):
         elif conv == 'fgst-template':
             hdu = 'ENERGIES'
             axis_names = ['energy']
-        elif hdu is None and conv == 'gadf':
+        elif conv == 'gadf' and hdu is None:
             if hdu_skymap:
                 hdu = '{}_{}'.format(hdu_skymap, 'BANDS')
             else:
                 hdu = 'BANDS'
+        # else:
+        #     raise ValueError('Unknown conv: {}'.format(conv))
 
         cols = make_axes_cols(self.axes, axis_names)
         cols += self._make_bands_cols()
-        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
-        return hdu_out
+        return fits.BinTableHDU.from_columns(cols, header, name=hdu)
 
     @abc.abstractmethod
     def _make_bands_cols(self):

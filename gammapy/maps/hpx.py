@@ -11,16 +11,13 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
-from .geom import coordsys_to_frame, skycoord_to_lonlat, make_axes_cols
+from .geom import coordsys_to_frame, skycoord_to_lonlat
 from .geom import find_and_read_bands, make_axes
 
-# TODO: What should be part of the public API?
+# Not sure if we should expose this in the docs or not:
+# HPX_FITS_CONVENTIONS, HpxConv
 __all__ = [
-    # 'HpxConv',
-    # 'HPX_FITS_CONVENTIONS',
-    # 'HPX_ORDER_TO_PIXSIZE',
     'HpxGeom',
-    # 'HpxToWcsMapping',
 ]
 
 # This is an approximation of the size of HEALPIX pixels (in degrees)

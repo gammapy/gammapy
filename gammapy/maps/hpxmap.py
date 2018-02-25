@@ -125,7 +125,7 @@ class HpxMap(Map):
         return cls.from_hdu(hdu_out, hdu_bands_out)
 
     def to_hdulist(self, hdu='SKYMAP', hdu_bands=None, sparse=False, conv=None):
-        """Make a FITS `` with input data.
+        """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -144,13 +144,12 @@ class HpxMap(Map):
         -------
         hdu_list : `~astropy.io.fits.HDUList`
         """
-
-        hdu_bands_out = None
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands, hdu_skymap=hdu,
                                                      conv=conv)
             hdu_bands = hdu_bands_out.name
         else:
+            hdu_bands_out = None
             hdu_bands = None
 
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse,
@@ -237,16 +236,11 @@ class HpxMap(Map):
         hdu_out : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             Output HDU containing map data.
         """
-
-        from .hpxsparse import HpxSparseMap
-
         convname = self.geom.conv if conv is None else conv
         conv = HpxConv.create(convname)
         hduname = conv.hduname if hdu is None else hdu
         hduname_bands = conv.bands_hdu if hdu_bands is None else hdu_bands
 
-        data = self.data
-        shape = data.shape
         header = self.geom.make_header(conv=conv)
 
         if self.geom.axes:
@@ -257,12 +251,12 @@ class HpxMap(Map):
 
         cols = []
         if header['INDXSCHM'] == 'EXPLICIT':
-            cols.append(fits.Column('PIX', 'J', array=self.geom._ipix))
+            array = self.geom._ipix
+            cols.append(fits.Column('PIX', 'J', array=array))
         elif header['INDXSCHM'] == 'LOCAL':
-            cols.append(fits.Column('PIX', 'J',
-                                    array=np.arange(data.shape[-1])))
+            array = np.arange(self.data.shape[-1])
+            cols.append(fits.Column('PIX', 'J', array=array))
 
         cols += self._make_cols(header, conv)
-        hdu_out = fits.BinTableHDU.from_columns(cols, header=header,
-                                                name=hduname)
-        return hdu_out
+        return fits.BinTableHDU.from_columns(cols, header=header,
+                                             name=hduname)

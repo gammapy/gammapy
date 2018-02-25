@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
-from .geom import get_shape, make_axes_cols, make_axes
+from .geom import get_shape, make_axes
 from .geom import find_and_read_bands
 
 __all__ = [

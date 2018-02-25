@@ -10,7 +10,6 @@ from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
-from ..wcsmap import WcsMap
 from ..wcsnd import WcsNDMap
 
 pytest.importorskip('scipy')
