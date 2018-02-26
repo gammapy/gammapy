@@ -51,7 +51,7 @@ class Map(object):
     @data.setter
     def data(self, val):
         if val.shape != self.data.shape:
-            raise Exception('Wrong shape.')
+            raise ValueError('Wrong shape.')
         self._data = val
 
     @property

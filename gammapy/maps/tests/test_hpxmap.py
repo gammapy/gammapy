@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
 from ..geom import MapAxis, coordsys_to_frame
@@ -78,7 +79,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     fill_poisson(m, mu=0.5, random_state=0)
-    m.write(filename)
+    m.write(filename, sparse=sparse)
 
     m2 = HpxNDMap.read(filename)
     m3 = HpxSparseMap.read(filename)
@@ -99,6 +100,41 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m2.data[...][msk])
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
+
+    # Specify alternate HDU name for IMAGE and BANDS table
+    m.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m2 = HpxNDMap.read(filename)
+    m3 = Map.read(filename)
+    m4 = Map.read(filename, map_type='hpx')
+
+
+def test_hpxmap_read_write_fgst(tmpdir):
+    filename = str(tmpdir / 'skycube.fits')
+
+    axis = MapAxis.from_bounds(100., 1000., 4, name='energy', unit='MeV')
+
+    # Test Counts Cube
+    m = create_map(8, False, 'GAL', None, [axis], False)
+    m.write(filename, conv='fgst-ccube')
+    h = fits.open(filename)
+    assert 'SKYMAP' in h
+    assert 'EBOUNDS' in h
+    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-CCUBE'
+    assert h['SKYMAP'].header['TTYPE1'] == 'CHANNEL1'
+
+    m2 = Map.read(filename)
+    assert m2.geom.conv == 'fgst-ccube'
+
+    # Test Model Cube
+    m.write(filename, conv='fgst-template')
+    h = fits.open(filename)
+    assert 'SKYMAP' in h
+    assert 'ENERGIES' in h
+    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-TEMPLATE'
+    assert h['SKYMAP'].header['TTYPE1'] == 'ENERGY1'
+
+    m2 = Map.read(filename)
+    assert m2.geom.conv == 'fgst-template'
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),

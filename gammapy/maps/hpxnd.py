@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
-import json
 import numpy as np
 from astropy.io import fits
 from .utils import unpack_seq
@@ -90,7 +89,7 @@ class HpxNDMap(HpxMap):
             map_out.set_by_idx(idx[::-1], vals)
         else:
             for c in colnames:
-                if c.find(hpx.conv.colstring) == 0:
+                if c.find(hpx.hpx_conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
             if len(cnames) == 1:

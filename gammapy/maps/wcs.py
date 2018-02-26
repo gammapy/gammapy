@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
-from .geom import get_shape, make_axes_cols, make_axes
+from .geom import get_shape, make_axes
 from .geom import find_and_read_bands
 
 __all__ = [
@@ -150,6 +150,11 @@ class WcsGeom(MapGeom):
     def npix(self):
         """Tuple with image dimension in pixels in longitude and latitude."""
         return self._npix
+
+    @property
+    def conv(self):
+        """Name of default FITS convention associated with this geometry."""
+        return self._conv
 
     @property
     def axes(self):
@@ -336,25 +341,9 @@ class WcsGeom(MapGeom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
 
-    def make_bands_hdu(self, hdu=None, conv=None):
-        conv = self._conv if conv is None else conv
-        header = fits.Header()
-        self._fill_header_from_axes(header)
-        axis_names = None
+    def _make_bands_cols(self, hdu=None, conv=None):
 
-        # FIXME: Check whether convention is compatible with
-        # dimensionality of geometry
-
-        if conv == 'fgst-ccube':
-            hdu = 'EBOUNDS'
-            axis_names = ['energy']
-        elif conv == 'fgst-template':
-            hdu = 'ENERGIES'
-            axis_names = ['energy']
-        elif hdu is None and conv == 'gadf':
-            hdu = 'BANDS'
-
-        cols = make_axes_cols(self.axes, axis_names)
+        cols = []
         if not self.is_regular:
             cols += [fits.Column('NPIX', '2I', dim='(2)',
                                  array=np.vstack((np.ravel(self.npix[0]),
@@ -365,9 +354,7 @@ class WcsGeom(MapGeom):
             cols += [fits.Column('CRPIX', '2E', dim='(2)',
                                  array=np.vstack((np.ravel(self._crpix[0]),
                                                   np.ravel(self._crpix[1]))).T), ]
-
-        hdu_out = fits.BinTableHDU.from_columns(cols, header, name=hdu)
-        return hdu_out
+        return cols
 
     def make_header(self):
         header = self.wcs.to_header()
@@ -678,7 +665,7 @@ def wcs_add_energy_axis(wcs, energies):
         Array of energies
     """
     if wcs.naxis != 2:
-        raise Exception('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
+        raise ValueError('WCS naxis must be 2. Got: {}'.format(wcs.naxis))
 
     w = WCS(naxis=3)
     w.wcs.crpix[0] = wcs.wcs.crpix[0]

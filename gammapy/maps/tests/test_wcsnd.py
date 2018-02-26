@@ -10,7 +10,6 @@ from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
 from ..hpx import HpxGeom
-from ..wcsmap import WcsMap
 from ..wcsnd import WcsNDMap
 
 pytest.importorskip('scipy')
@@ -78,6 +77,37 @@ def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(m0.data, m1.data)
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
+
+    # Specify alternate HDU name for IMAGE and BANDS table
+    m0.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m1 = WcsNDMap.read(filename)
+    m2 = Map.read(filename)
+    m3 = Map.read(filename, map_type='wcs')
+
+
+def test_wcsndmap_read_write_fgst(tmpdir):
+    filename = str(tmpdir / 'skycube.fits')
+
+    axis = MapAxis.from_bounds(100., 1000., 4, name='energy', unit='MeV')
+    geom = WcsGeom.create(npix=10, binsz=1.0,
+                          proj='AIT', coordsys='GAL', axes=[axis])
+
+    # Test Counts Cube
+    m = WcsNDMap(geom)
+    m.write(filename, conv='fgst-ccube')
+    h = fits.open(filename)
+    assert 'EBOUNDS' in h
+
+    m2 = Map.read(filename)
+    assert m2.geom.conv == 'fgst-ccube'
+
+    # Test Model Cube
+    m.write(filename, conv='fgst-template')
+    h = fits.open(filename)
+    assert 'ENERGIES' in h
+
+    m2 = Map.read(filename)
+    assert m2.geom.conv == 'fgst-template'
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),

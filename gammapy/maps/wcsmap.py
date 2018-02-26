@@ -65,9 +65,8 @@ class WcsMap(Map):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : str, optional
-            FITS format convention ('fgst-ccube', 'fgst-template',
-            'gadf').  Default is 'gadf'.
+        conv : {'fgst-ccube','fgst-template','gadf'}, optional
+            FITS format convention.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
@@ -92,12 +91,12 @@ class WcsMap(Map):
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
         ----------
-        hdulist :  `~astropy.io.fits.HDUList`
+        hdu_list :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str
             Name or index of the HDU with the map data.
@@ -110,15 +109,15 @@ class WcsMap(Map):
             Map object
         """
         if hdu is None:
-            hdu = find_hdu(hdulist)
+            hdu = find_hdu(hdu_list)
         else:
-            hdu = hdulist[hdu]
+            hdu = hdu_list[hdu]
 
         if hdu_bands is None:
-            hdu_bands = find_bands_hdu(hdulist, hdu)
+            hdu_bands = find_bands_hdu(hdu_list, hdu)
 
         if hdu_bands is not None:
-            hdu_bands = hdulist[hdu_bands]
+            hdu_bands = hdu_list[hdu_bands]
 
         return cls.from_hdu(hdu, hdu_bands)
 
@@ -128,7 +127,21 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        TODO
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
+        sparse : bool
+            Sparsify the map by only writing pixels with non-zero
+            amplitude.
+        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
+            FITS format convention.  If None this will be set to the
+            default convention of the map.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+
         """
         if sparse:
             hdu = 'SKYMAP' if hdu is None else hdu.upper()
@@ -141,8 +154,11 @@ class WcsMap(Map):
 
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands,
+                                                     hdu_skymap=hdu,
                                                      conv=conv)
             hdu_bands = hdu_bands_out.name
+        else:
+            hdu_bands = None
 
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands,
                                 sparse=sparse, conv=conv)

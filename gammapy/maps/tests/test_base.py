@@ -4,7 +4,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 from collections import OrderedDict
 from ..base import Map
-from ..geom import MapGeom, MapAxis
+from ..geom import MapAxis
 from ..wcs import WcsGeom
 from ..wcsnd import WcsNDMap
 from ..hpx import HpxGeom
@@ -43,10 +43,11 @@ def test_map_create(binsz, width, map_type, skydir, axes):
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
-    assert(isinstance(m, WcsNDMap))
+    assert isinstance(m, WcsNDMap)
+
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
-    assert(isinstance(m, HpxNDMap))
+    assert isinstance(m, HpxNDMap)
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

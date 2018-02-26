@@ -100,7 +100,6 @@ class WcsNDMap(WcsMap):
         shape = tuple([ax.nbin for ax in geom.axes])
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
-        shape_data = shape_wcs + shape
         meta = cls._get_meta_from_header(hdu.header)
         map_out = cls(geom, meta=meta)
 
@@ -325,7 +324,7 @@ class WcsNDMap(WcsMap):
         return map_out
 
     def _reproject_hpx(self, geom, mode='interp', order=1):
-        from reproject import reproject_from_healpix, reproject_to_healpix
+        from reproject import reproject_to_healpix
         from .hpxnd import HpxNDMap
 
         map_out = HpxNDMap(geom)

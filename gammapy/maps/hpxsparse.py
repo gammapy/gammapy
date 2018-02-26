@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from collections import OrderedDict
 from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
@@ -51,7 +50,6 @@ class HpxSparseMap(HpxMap):
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
         shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
-        shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
         meta = cls._get_meta_from_header(hdu.header)
@@ -73,8 +71,9 @@ class HpxSparseMap(HpxMap):
             for c in colnames:
                 if c.find(hpx.conv.colstring) == 0:
                     cnames.append(c)
-            nbin = len(cnames)
+
             if len(cnames) == 1:
+                # Use [...] to force dense array indexing
                 map_out.data[...] = hdu.data.field(cnames[0])
             else:
                 for i, cname in enumerate(cnames):
@@ -126,23 +125,28 @@ class HpxSparseMap(HpxMap):
             pix = self.geom.local_to_global(idx[::-1])[0]
             if len(shape) == 1:
                 cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=self.data.data.astype(float)))
-
+                array = self.data.data.astype(float)
+                cols.append(fits.Column('VALUE', 'E', array=array))
             else:
                 channel = np.ravel_multi_index(idx[:-1], shape[:-1])
                 cols.append(fits.Column('PIX', 'J', array=pix))
                 cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=self.data.data.astype(float)))
+                array = self.data.data.astype(float)
+                cols.append(fits.Column('VALUE', 'E', array=array))
 
         elif len(shape) == 1:
-            cols.append(fits.Column(conv.colname(indx=conv.firstcol),
-                                    'E', array=self.data.data.astype(float)))
+            name = conv.colname(indx=conv.firstcol)
+            # Use [...] to instantiate a dense array
+            array = self.data[...].astype(float)
+            cols.append(fits.Column(name, 'E', array=array))
         else:
+            # FIXME: We should be filling undefined pixels here with NaN
             for i, idx in enumerate(np.ndindex(shape[:-1])):
-                cols.append(fits.Column(conv.colname(indx=i + conv.firstcol), 'E',
-                                        array=self.data[idx].astype(float)))
+                name = conv.colname(indx=i + conv.firstcol)
+                # Use [...] to instantiate a dense array
+                array = self.data[...][idx].astype(float)
+                cols.append(fits.Column(name, 'E', array=array))
+
         return cols
 
     def iter_by_image(self):
