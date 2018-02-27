@@ -268,7 +268,7 @@ class WcsNDMap(WcsMap):
             return copy.deepcopy(self)
 
         map_out = self.__class__(self.geom.to_image())
-        if self.geom.is_regular:
+        if not self.geom.is_regular:
             vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coord(self.geom.get_coord()[:2], vals)
         else:
@@ -459,6 +459,8 @@ class WcsNDMap(WcsMap):
         idx : tuple
             Set the image slice to plot if this map has non-spatial
             dimensions.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.   
 
         Returns
         -------
