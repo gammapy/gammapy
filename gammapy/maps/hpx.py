@@ -18,7 +18,6 @@ from .geom import find_and_read_bands, make_axes
 # HPX_FITS_CONVENTIONS, HpxConv
 __all__ = [
     'HpxGeom',
-    'HpxToWcsMapping'
 ]
 
 # This is an approximation of the size of HEALPIX pixels (in degrees)
