@@ -494,7 +494,8 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def plot(self, ax=None, idx=None, normalize=False, proj='AIT', oversample=4, method='raster'):
+    def plot(self, ax=None, idx=None, normalize=False, proj='AIT', oversample=4, method='raster',
+             **kwargs):
         """Quickplot method.
 
         This will generate a visualization of the map by converting to
@@ -517,7 +518,8 @@ class HpxNDMap(HpxMap):
         idx : tuple
             Set the image slice to plot if this map has non-spatial
             dimensions.
-
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.            
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
@@ -533,7 +535,7 @@ class HpxNDMap(HpxMap):
             m = self.to_wcs(sum_bands=True,
                             normalize=normalize,
                             proj=proj, oversample=oversample)
-            return m.plot(ax)
+            return m.plot(ax, **kwargs)
         elif method == 'poly':
             return self._plot_poly(proj=proj, ax=ax)
         else:
