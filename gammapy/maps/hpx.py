@@ -1824,7 +1824,8 @@ class HpxToWcsMapping(object):
             npix = mult_map.counts.shape
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
-    def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
+    def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True,
+                                   fill_nan=True):
         """Fill the WCS map from the hpx data using the pre-calculated mappings.
 
         Parameters
@@ -1835,6 +1836,8 @@ class HpxToWcsMapping(object):
             The data array being filled
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins
+        fill_nan : bool
+            Fill pixels outside the HPX geometry with NaN.
         """
 
         # FIXME: Do we want to flatten mapping arrays?
@@ -1861,6 +1864,8 @@ class HpxToWcsMapping(object):
         else:
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
+        if fill_nan:
+            wcs_data[~self._valid.reshape(shape).T] = np.nan
         return wcs_data
 
     def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):
