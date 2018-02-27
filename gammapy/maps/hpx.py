@@ -320,7 +320,8 @@ def parse_hpxregion(region):
     m = re.match(r'([A-Za-z\_]*?)\((.*?)\)', region)
 
     if m is None:
-        raise ValueError('Failed to parse hpx region string: {!r}'.format(region))
+        raise ValueError(
+            'Failed to parse hpx region string: {!r}'.format(region))
 
     if not m.group(1):
         return re.split(',', m.group(2))
@@ -858,7 +859,8 @@ class HpxGeom(MapGeom):
         axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
+            slice_dims = [0] + [i + 1 for
+                                i, ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
@@ -1284,14 +1286,16 @@ class HpxGeom(MapGeom):
         shape = [ax.nbin for ax in axes]
 
         if header['PIXTYPE'] != 'HEALPIX':
-            raise ValueError('Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
+            raise ValueError(
+                'Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
 
         if header['ORDERING'] == 'RING':
             nest = False
         elif header['ORDERING'] == 'NESTED':
             nest = True
         else:
-            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(header['ORDERING']))
+            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(
+                header['ORDERING']))
 
         if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
             nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
@@ -1539,7 +1543,7 @@ class HpxGeom(MapGeom):
         else:
             return self.nside
 
-    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True):
+    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
@@ -1551,19 +1555,29 @@ class HpxGeom(MapGeom):
         proj : str
             Projection type of WCS geometry.
         oversample : float
-           Oversampling factor for WCS geometry.  This will be the
-           approximate ratio of the width of a HPX pixel to a WCS
-           pixel.
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
 
         Returns
         -------
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
+
         """
         skydir = self.center_skydir.copy()
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
         width = (2.0 * self._get_region_size() +
                  np.max(get_pix_size_from_nside(self.nside)))
+
+        if width_pix is not None and int(width / binsz) > width_pix:
+            binsz = width / width_pix
 
         if width > 90.:
             width = (min(360., width), min(180.0, width))
