@@ -146,17 +146,13 @@ class HpxNDMap(HpxMap):
             hpx_data = np.squeeze(hpx_data)
             wcs_shape = tuple([t.flat[0] for t in hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.geom.make_wcs(proj=proj,
-                                     oversample=oversample,
-                                     drop_axes=True)
+            wcs = hpx2wcs.wcs.to_image()
         else:
             hpx_data = self.data
             wcs_shape = tuple([t.flat[0] for t in
                                hpx2wcs.npix]) + self.geom._shape
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.geom.make_wcs(proj=proj,
-                                     oversample=oversample,
-                                     drop_axes=False)
+            wcs = hpx2wcs.wcs.to_cube(self.geom.axes)
 
         # FIXME: Should reimplement instantiating map first and fill data array
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
