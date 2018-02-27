@@ -1549,9 +1549,10 @@ class HpxGeom(MapGeom):
             HEALPIX geometry will be copied to the WCS geometry.
         proj : str
             Projection type of WCS geometry.
-        oversample : int
-            Factor by which the WCS pixel size will be chosen to
-            oversample the HEALPIX map.
+        oversample : float
+           Oversampling factor for WCS geometry.  This will be the
+           approximate ratio of the width of a HPX pixel to a WCS
+           pixel.
 
         Returns
         -------
@@ -1778,6 +1779,21 @@ class HpxToWcsMapping(object):
 
     @classmethod
     def create(cls, hpx, wcs):
+        """Create an object that maps pixels from HEALPix geometry ``hpx`` to
+        WCS geometry ``wcs``.
+
+        Parameters
+        ----------
+        hpx : `~HpxGeom`
+            HEALPix geometry object.
+        wcs : `~gammapy.maps.WcsGeom`
+            WCS geometry object.
+
+        Returns
+        -------
+        hpx2wcs : `~HpxToWcsMapping`
+
+        """
         ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
         return cls(hpx, wcs, ipix, mult_val, npix)
 

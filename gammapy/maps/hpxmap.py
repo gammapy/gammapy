@@ -163,7 +163,8 @@ class HpxMap(Map):
         return fits.HDUList(hdu_list)
 
     @abc.abstractmethod
-    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
+    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
+               hpx2wcs=None):
         """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
@@ -174,11 +175,22 @@ class HpxMap(Map):
             HEALPix one.
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins
+        proj  : str
+           WCS-projection
+        oversample : float
+           Oversampling factor for WCS map.  This will be the
+           approximate ratio of the width of a HPX pixel to a WCS
+           pixel.
+        hpx2wcs : `~HpxToWcsMapping`
+            Set the HPX to WCS mapping object that will be used to
+            generate the WCS map.  If none then a new mapping will be
+            generated based on ``proj`` and ``oversample`` arguments.
 
         Returns
         -------
         map_out : `~gammapy.maps.WcsMap`
             WCS map object.
+
         """
         pass
 
