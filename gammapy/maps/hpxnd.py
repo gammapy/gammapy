@@ -112,23 +112,20 @@ class HpxNDMap(HpxMap):
            WCS-projection
         oversample : int
            Oversampling factor for WCS map
-        normalize : bool
-           True -> preserve integral by splitting HEALPIX values between bins
 
         Returns
         -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object
-        data : `~numpy.ndarray`
-            Reprojected data
+        hpx2wcs : `~HpxToWcsMapping`
         """
         self._wcs_proj = proj
         self._wcs_oversample = oversample
         self._wcs2d = self.geom.make_wcs(proj=proj, oversample=oversample,
                                          drop_axes=True)
         self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
+        return self._hpx2wcs 
 
-    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
+    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
+               hpx2wcs=None):
 
         from .wcsnd import WcsNDMap
 
@@ -138,7 +135,8 @@ class HpxNDMap(HpxMap):
                                   oversample=oversample)
 
         # FIXME: Check whether the old mapping is still valid and reuse it
-        self.make_wcs_mapping(oversample=oversample, proj=proj)
+        if hpx2wcs is None:
+            hpx2wcs = self.make_wcs_mapping(oversample=oversample, proj=proj)
 
         # FIXME: Need a function to extract a valid shape from npix property
 
@@ -146,7 +144,7 @@ class HpxNDMap(HpxMap):
             hpx_data = np.apply_over_axes(np.sum, self.data,
                                           axes=np.arange(self.data.ndim - 1))
             hpx_data = np.squeeze(hpx_data)
-            wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
+            wcs_shape = tuple([t.flat[0] for t in hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.geom.make_wcs(proj=proj,
                                      oversample=oversample,
@@ -154,15 +152,14 @@ class HpxNDMap(HpxMap):
         else:
             hpx_data = self.data
             wcs_shape = tuple([t.flat[0] for t in
-                               self._hpx2wcs.npix]) + self.geom._shape
+                               hpx2wcs.npix]) + self.geom._shape
             wcs_data = np.zeros(wcs_shape).T
             wcs = self.geom.make_wcs(proj=proj,
                                      oversample=oversample,
                                      drop_axes=False)
 
-        # FIXME: Should reimplement instantiating map first and fill data array
-
-        self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
+        # FIXME: Should reimplement instantiating map first and fill data array            
+        hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data)
 
     def iter_by_image(self):
