@@ -576,7 +576,7 @@ class HpxNDMap(HpxMap):
         wcs = self.geom.make_wcs(proj=proj, oversample=1)
         if ax is None:
             fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=wcs.wcs)
+            ax = fig.add_subplot(111, projection=wcs.wcs, aspect='equal')
 
         wcs_lonlat = wcs.center_coord[:2]
         idx = self.geom.get_idx()
