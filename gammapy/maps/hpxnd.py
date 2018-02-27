@@ -122,7 +122,7 @@ class HpxNDMap(HpxMap):
         self._wcs2d = self.geom.make_wcs(proj=proj, oversample=oversample,
                                          drop_axes=True)
         self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
-        return self._hpx2wcs 
+        return self._hpx2wcs
 
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
                hpx2wcs=None):
@@ -158,7 +158,7 @@ class HpxNDMap(HpxMap):
                                      oversample=oversample,
                                      drop_axes=False)
 
-        # FIXME: Should reimplement instantiating map first and fill data array            
+        # FIXME: Should reimplement instantiating map first and fill data array
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data)
 
