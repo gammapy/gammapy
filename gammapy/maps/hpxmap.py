@@ -163,7 +163,7 @@ class HpxMap(Map):
         return fits.HDUList(hdu_list)
 
     @abc.abstractmethod
-    def to_wcs(self, sum_bands=False, normalize=True):
+    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
         """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
@@ -177,10 +177,8 @@ class HpxMap(Map):
 
         Returns
         -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object
-        data : `~numpy.ndarray`
-            Reprojected data
+        map_out : `~gammapy.maps.WcsMap`
+            WCS map object.
         """
         pass
 
