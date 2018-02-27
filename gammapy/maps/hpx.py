@@ -1865,7 +1865,9 @@ class HpxToWcsMapping(object):
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            wcs_data[~self._valid.reshape(shape).T] = np.nan
+            valid = self._valid.reshape(shape).T
+            valid = valid*np.ones_like(wcs_data, dtype=bool)
+            wcs_data[~valid] = np.nan
         return wcs_data
 
     def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):
