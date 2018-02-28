@@ -240,6 +240,9 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes):
     m.fill_by_coord(coords, coords[0])
     msum = m.sum_over_axes()
 
+    if m.geom.is_regular:
+        assert_allclose(np.nansum(m.data), np.nansum(msum.data))
+
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)

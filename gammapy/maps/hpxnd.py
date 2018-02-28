@@ -101,44 +101,51 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def make_wcs_mapping(self, sum_bands=False, proj='AIT', oversample=2):
+    def make_wcs_mapping(self, sum_bands=False, proj='AIT', oversample=2, width_pix=None):
         """Make a HEALPix to WCS mapping object.
 
         Parameters
         ----------
         sum_bands : bool
-           sum over non-spatial dimensions before reprojecting
+            sum over non-spatial dimensions before reprojecting
         proj  : str
-           WCS-projection
-        oversample : int
-           Oversampling factor for WCS map
-        normalize : bool
-           True -> preserve integral by splitting HEALPIX values between bins
+            WCS-projection
+        oversample : float
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
 
         Returns
         -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object
-        data : `~numpy.ndarray`
-            Reprojected data
+        hpx2wcs : `~HpxToWcsMapping`
+
         """
-        self._wcs_proj = proj
-        self._wcs_oversample = oversample
         self._wcs2d = self.geom.make_wcs(proj=proj, oversample=oversample,
+                                         width_pix=width_pix,
                                          drop_axes=True)
         self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
+        return self._hpx2wcs
 
-    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
+    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
+               width_pix=None, hpx2wcs=None):
 
         from .wcsnd import WcsNDMap
 
         if sum_bands and self.geom.nside.size > 1:
             map_sum = self.sum_over_axes()
             return map_sum.to_wcs(sum_bands=False, normalize=normalize, proj=proj,
-                                  oversample=oversample)
+                                  oversample=oversample, width_pix=width_pix)
 
         # FIXME: Check whether the old mapping is still valid and reuse it
-        self.make_wcs_mapping(oversample=oversample, proj=proj)
+        if hpx2wcs is None:
+            hpx2wcs = self.make_wcs_mapping(oversample=oversample, proj=proj,
+                                            width_pix=width_pix)
 
         # FIXME: Need a function to extract a valid shape from npix property
 
@@ -146,23 +153,18 @@ class HpxNDMap(HpxMap):
             hpx_data = np.apply_over_axes(np.sum, self.data,
                                           axes=np.arange(self.data.ndim - 1))
             hpx_data = np.squeeze(hpx_data)
-            wcs_shape = tuple([t.flat[0] for t in self._hpx2wcs.npix])
+            wcs_shape = tuple([t.flat[0] for t in hpx2wcs.npix])
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.geom.make_wcs(proj=proj,
-                                     oversample=oversample,
-                                     drop_axes=True)
+            wcs = hpx2wcs.wcs.to_image()
         else:
             hpx_data = self.data
             wcs_shape = tuple([t.flat[0] for t in
-                               self._hpx2wcs.npix]) + self.geom._shape
+                               hpx2wcs.npix]) + self.geom._shape
             wcs_data = np.zeros(wcs_shape).T
-            wcs = self.geom.make_wcs(proj=proj,
-                                     oversample=oversample,
-                                     drop_axes=False)
+            wcs = hpx2wcs.wcs.to_cube(self.geom.axes)
 
         # FIXME: Should reimplement instantiating map first and fill data array
-
-        self._hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
+        hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data)
 
     def iter_by_image(self):
@@ -494,7 +496,8 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def plot(self, ax=None, idx=None, normalize=False, proj='AIT', oversample=4, method='raster'):
+    def plot(self, method='raster', ax=None, idx=None, normalize=False, proj='AIT', oversample=4,
+             width_pix=1000, **kwargs):
         """Quickplot method.
 
         This will generate a visualization of the map by converting to
@@ -503,21 +506,29 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        proj : string, optional
-            Any valid WCS projection type.
-        oversample : int
-            Oversampling factor to use when generating a rasterized
-            image.
-        method : str
+        method : {'raster','poly'}
             Method for mapping HEALPix pixels to a two-dimensional
             image.  Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).
             WARNING: The 'poly' method is much slower than 'raster'
             and only suitable for maps with less than ~10k pixels.
+        proj : string, optional
+            Any valid WCS projection type.
+        oversample : float
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
         idx : tuple
             Set the image slice to plot if this map has non-spatial
             dimensions.
-
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
@@ -528,12 +539,14 @@ class HpxNDMap(HpxMap):
 
         im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
             Image object.
+
         """
         if method == 'raster':
             m = self.to_wcs(sum_bands=True,
                             normalize=normalize,
-                            proj=proj, oversample=oversample)
-            return m.plot(ax)
+                            proj=proj, oversample=oversample,
+                            width_pix=width_pix)
+            return m.plot(ax, **kwargs)
         elif method == 'poly':
             return self._plot_poly(proj=proj, ax=ax)
         else:
@@ -563,7 +576,7 @@ class HpxNDMap(HpxMap):
         wcs = self.geom.make_wcs(proj=proj, oversample=1)
         if ax is None:
             fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=wcs.wcs)
+            ax = fig.add_subplot(111, projection=wcs.wcs, aspect='equal')
 
         wcs_lonlat = wcs.center_coord[:2]
         idx = self.geom.get_idx()

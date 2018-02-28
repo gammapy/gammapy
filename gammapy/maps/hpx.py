@@ -210,10 +210,10 @@ def make_hpx_to_wcs_mapping_centers(hpx, wcs):
 
     Parameters
     ----------
-    hpx : `~fermipy.hpx_utils.HPX`
-        The HEALPIX mapping
-    wcs : `~astropy.wcs.WCS`
-        The WCS mapping
+    hpx : `~gammapy.maps.HpxGeom`
+        The HEALPIX geometry.
+    wcs : `~gammapy.maps.WcsGeom`
+        The WCS geometry.
 
     Returns
     -------
@@ -319,7 +319,8 @@ def parse_hpxregion(region):
     m = re.match(r'([A-Za-z\_]*?)\((.*?)\)', region)
 
     if m is None:
-        raise ValueError('Failed to parse hpx region string: {!r}'.format(region))
+        raise ValueError(
+            'Failed to parse hpx region string: {!r}'.format(region))
 
     if not m.group(1):
         return re.split(',', m.group(2))
@@ -857,7 +858,8 @@ class HpxGeom(MapGeom):
         axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
+            slice_dims = [0] + [i + 1 for
+                                i, ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
@@ -1283,14 +1285,16 @@ class HpxGeom(MapGeom):
         shape = [ax.nbin for ax in axes]
 
         if header['PIXTYPE'] != 'HEALPIX':
-            raise ValueError('Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
+            raise ValueError(
+                'Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
 
         if header['ORDERING'] == 'RING':
             nest = False
         elif header['ORDERING'] == 'NESTED':
             nest = True
         else:
-            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(header['ORDERING']))
+            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(
+                header['ORDERING']))
 
         if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
             nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
@@ -1538,7 +1542,7 @@ class HpxGeom(MapGeom):
         else:
             return self.nside
 
-    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True):
+    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
@@ -1549,19 +1553,30 @@ class HpxGeom(MapGeom):
             HEALPIX geometry will be copied to the WCS geometry.
         proj : str
             Projection type of WCS geometry.
-        oversample : int
-            Factor by which the WCS pixel size will be chosen to
-            oversample the HEALPIX map.
+        oversample : float
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
 
         Returns
         -------
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
+
         """
         skydir = self.center_skydir.copy()
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
         width = (2.0 * self._get_region_size() +
                  np.max(get_pix_size_from_nside(self.nside)))
+
+        if width_pix is not None and int(width / binsz) > width_pix:
+            binsz = width / width_pix
 
         if width > 90.:
             width = (min(360., width), min(180.0, width))
@@ -1778,6 +1793,21 @@ class HpxToWcsMapping(object):
 
     @classmethod
     def create(cls, hpx, wcs):
+        """Create an object that maps pixels from HEALPix geometry ``hpx`` to
+        WCS geometry ``wcs``.
+
+        Parameters
+        ----------
+        hpx : `~HpxGeom`
+            HEALPix geometry object.
+        wcs : `~gammapy.maps.WcsGeom`
+            WCS geometry object.
+
+        Returns
+        -------
+        hpx2wcs : `~HpxToWcsMapping`
+
+        """
         ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
         return cls(hpx, wcs, ipix, mult_val, npix)
 
@@ -1794,7 +1824,8 @@ class HpxToWcsMapping(object):
             npix = mult_map.counts.shape
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
-    def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True):
+    def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True,
+                                   fill_nan=True):
         """Fill the WCS map from the hpx data using the pre-calculated mappings.
 
         Parameters
@@ -1805,12 +1836,11 @@ class HpxToWcsMapping(object):
             The data array being filled
         normalize : bool
             True -> preserve integral by splitting HEALPIX values between bins
+        fill_nan : bool
+            Fill pixels outside the HPX geometry with NaN.
         """
 
         # FIXME: Do we want to flatten mapping arrays?
-
-        # HPX images have (1,N) dimensionality by convention
-        # hpx_data = np.squeeze(hpx_data)
 
         shape = tuple([t.flat[0] for t in self._npix])
         if self._valid.ndim != 1:
@@ -1831,6 +1861,10 @@ class HpxToWcsMapping(object):
         else:
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
+        if fill_nan:
+            valid = np.swapaxes(self._valid.reshape(shape),-1,-2)
+            valid = valid*np.ones_like(wcs_data, dtype=bool)
+            wcs_data[~valid] = np.nan
         return wcs_data
 
     def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):

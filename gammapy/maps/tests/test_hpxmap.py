@@ -286,3 +286,6 @@ def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
     coords = m.geom.get_coord(flat=True)
     m.fill_by_coord(coords, coords[0])
     msum = m.sum_over_axes()
+
+    if m.geom.is_regular:
+        assert_allclose(np.nansum(m.data), np.nansum(msum.data))
