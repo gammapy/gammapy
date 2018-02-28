@@ -6,7 +6,7 @@ from ..maps import WcsNDMap
 
 
 def fill_map_counts(event_list, ndmap):
-    """Fill a ``WcsNDMap` with events from an EventList.
+    """Fill a ``WcsMap` with events from an EventList.
 
      The energy of the events is used for a non-spatial axis homogeneous to energy.
      The other non-spatial axis names should have an entry in the colum names of the ``EventList``
@@ -15,37 +15,36 @@ def fill_map_counts(event_list, ndmap):
      ----------
      event_list : `~gammapy.data.EventList`
              the input event list
-     nd_map : `~gammapy.maps.WcsNDMap`
+     ndmap : `~gammapy.maps.Map`
          Target map
      """
     # The list will contain the event table entries to be fed into the WcsNDMap
-    tmp = dict()
+    coord_dict = dict()
     ref_geom = ndmap.geom
 
     # Add sky coordinates to dictionary
-    tmp.update(skycoord=event_list.radec)
+    coord_dict.update(skycoord=event_list.radec)
 
-    # No check the other axes and find corresponding entries in the EventList
+    # Now check the other axes and find corresponding entries in the EventList
     # energy and time are specific types
     # TODO: add proper extraction for time
     for i, axis in enumerate(ref_geom.axes):
         if axis.type == 'energy':
-            # This axis is the energy
-            tmp.update({axis.name: event_list.energy.to(axis.unit)})
-        elif axis.name.upper() in event_list.table.colnames:
-            # Here we assume that colnames are all capital
-            tmp.update({axis.name: event_list.table[axis.name.upper()].to(axis.unit)})
-        elif axis.name.lower() in event_list.table.colnames:
-            # Here we assume that colnames are all lower cases
-            tmp.update({axis.name: event_list.table[axis.name.lower()].to(axis.unit)})
+            # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
+            coord_dict.update({axis.name: event_list.energy.to(axis.unit)})
+        # We look for other axes name in the table column names (case insensitive)
         else:
-            raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
-
+            try:
+                # Here we implicitly assume that there is only one column with the same name
+                column_name = next(_ for _ in event_list.table.colnames if _.upper() == axis.name.upper())
+                coord_dict.update({axis.name: event_list.table[column_name].to(axis.unit)})
+            except StopIteration:
+                raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
     # Fill it
-    ndmap.fill_by_coord(tmp)
+    ndmap.fill_by_coord(coord_dict)
 
 
-def make_map_counts(event_list, ref_geom):
+def make_map_counts(event_list, ref_geom, meta=None):
     """Build a ``WcsNDMap` with events from an EventList.
 
     The energy of the events is used for a non-spatial axis homogeneous to energy.
@@ -57,6 +56,8 @@ def make_map_counts(event_list, ref_geom):
             the input event list
     ref_geom : `~gammapy.maps.WcsGeom`
             the reference geometry
+    meta : `~collections.OrderedDict`
+            Dictionnary of meta information to keep with the map
 
     Returns
     -------
@@ -64,8 +65,10 @@ def make_map_counts(event_list, ref_geom):
         Count cube (3D) in true energy bins
     """
     # Create map
-    cntmap = WcsNDMap(ref_geom)
+    cntmap = WcsNDMap(ref_geom,meta=meta)
     # Fill it
     fill_map_counts(event_list, cntmap)
+    # Add MAPTYPE keyword to identify the nature of the map
+    cntmap.meta['MAPTYPE']='COUNTS_MAP'
 
     return cntmap
