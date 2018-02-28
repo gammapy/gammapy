@@ -51,7 +51,12 @@ class ObservationStats(Stats):
 
         self.obs_id = obs_id
         self.livetime = livetime
-        self.alpha_obs = alpha or a_on / a_off
+        if alpha is not None:
+            self.alpha_obs = alpha
+        elif a_off > 0:
+            self.alpha_obs = a_on / a_off
+        else:
+            self.alpha_obs = 0
         self.gamma_rate = gamma_rate or n_on / livetime
         self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
 
@@ -73,7 +78,9 @@ class ObservationStats(Stats):
 
         obs_id = obs.obs_id
         livetime = obs.observation_live_time_duration
-        alpha = a_on / a_off
+        alpha = 0
+        if a_off > 0:
+            alpha = a_on / a_off
 
         gamma_rate = n_on / livetime.to(u.min)
         bg_rate = (alpha * n_off) / livetime.to(u.min)
@@ -132,8 +139,9 @@ class ObservationStats(Stats):
         gamma_rate = 0
         bg_rate = 0
         for stats in stats_list:
-            livetime += stats.livetime
-            n_on += stats.n_on
+            if stats.a_off > 0:
+                livetime += stats.livetime
+                n_on += stats.n_on
             n_off += stats.n_off
             a_on += stats.a_on * stats.n_off
             a_on_backup += stats.a_on * stats.livetime.value
