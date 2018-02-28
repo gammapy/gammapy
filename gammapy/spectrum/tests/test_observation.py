@@ -7,7 +7,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_savefig_check
 from ...utils.scripts import make_path
 from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import (
+from .. import (
     PHACountsSpectrum,
     SpectrumObservation,
     SpectrumObservationList,
@@ -89,6 +89,45 @@ def test_spectrum_observation_3():
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
+
+
+@requires_dependency('scipy')
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def make_observation_list():
+    """obs with dummy IRF"""
+    nbin = 3
+    energy = np.logspace(-1, 1, nbin + 1) * u.TeV
+    livetime = 2 * u.h
+    data_on = np.arange(nbin)
+    dataoff_1 = np.ones(3)
+    dataoff_2 = np.ones(3) * 3
+    dataoff_1[1] = 0
+    dataoff_2[1] = 0
+    on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
+                                  energy_hi=energy[1:],
+                                  data=data_on,
+                                  backscal=1)
+    off_vector1 = PHACountsSpectrum(energy_lo=energy[:-1],
+                                    energy_hi=energy[1:],
+                                    data=dataoff_1,
+                                    backscal=2)
+    off_vector2 = PHACountsSpectrum(energy_lo=energy[:-1],
+                                    energy_hi=energy[1:],
+                                    data=dataoff_2,
+                                    backscal=4)
+    aeff = EffectiveAreaTable(energy_lo=energy[:-1],
+                              energy_hi=energy[1:],
+                              data=np.ones(nbin) * 1e5 * u.m ** 2)
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy,
+                                        sigma=0.2, bias=0)
+    on_vector.livetime = livetime
+    on_vector.obs_id = 2
+    obs1 = SpectrumObservation(on_vector=on_vector, off_vector=off_vector1, aeff=aeff, edisp=edisp)
+    obs2 = SpectrumObservation(on_vector=on_vector, off_vector=off_vector2, aeff=aeff, edisp=edisp)
+
+    obs_list = [obs1, obs2]
+    return obs_list
 
 
 class SpectrumObservationTester:
@@ -189,6 +228,15 @@ class TestSpectrumObservationStacker:
         npred_summed = npred1.data.data + npred2.data.data
 
         assert_allclose(npred_stacked.data.data, npred_summed)
+
+    def test_stack_backscal(self):
+        """Verify backscal stacking """
+        obs_list = make_observation_list()
+        obs_stacker = SpectrumObservationStacker(obs_list)
+        obs_stacker.run()
+        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.)
+        # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
+        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.)
 
 
 @requires_dependency('scipy')
