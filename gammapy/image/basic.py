@@ -281,7 +281,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         acceptance.name = 'exposure_on'
 
         offsets = observation.pointing_radec.separation(acceptance.coordinates())
-        print('acceptance map calculation')
+
         # This is a somewhat dirty approach to deal with the different background IRFs
         if isinstance(observation.bkg, Background3D):
             tmp_array = observation.bkg.data.evaluate(detx=offsets.ravel(), dety=0. * u.deg, energy=ebins)
@@ -320,9 +320,9 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         not_has_exposure = ~(exposure.data > 0)
         exposure_on.data[not_has_exposure] = 0
         input_images['exposure_on'] = exposure_on
-        print('new')
+
         input_images['exclusion'] = self._cutout_observation(self.exclusion_mask, observation)
-        print(exposure_on.data.shape)
+
         return self.background_estimator.run(input_images)
 
 
