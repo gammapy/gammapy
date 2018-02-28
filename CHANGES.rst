@@ -10,16 +10,16 @@ For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/m
 
 .. _gammapy_0p7_release:
 
-0.7 (2018-02-02)
+0.7 (2018-02-28)
 ----------------
 
 Summary
 +++++++
 
-- Released on Feb 2, 2018 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
-- 17 contributors (8 new)
-- 9 months of work (from April 28, 2017 to Feb 2, 2018)
-- 154 pull requests (not all listed below)
+- Released on Feb 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
+- 24 contributors (15 new)
+- 10 months of work (from April 28, 2017 to Feb 28, 2018)
+- 178 pull requests (not all listed below)
 
 **What's new?**
 
@@ -34,9 +34,13 @@ Installation:
   i.e. to install or update Gammapy use the command ``conda install gammapy -c conda-forge``.
   Most other packages have also moved to ``conda-forge`` in the past years, the previously used
   ``astropy`` and ``openastronomy`` channels are no longer needed.
+- We now have a conda ``environment.yml`` file that contains all packages used in the tutorials.
+  See instructions here: :ref:`tutorials`.
 
 Documentation:
 
+- We have created a separate project webpage at http://gammapy.org .
+  The http://docs.gammapy.org page is not just for the Gammapy documentation.
 - A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
   notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
   in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
@@ -54,7 +58,7 @@ Gammapy Python package:
 
 - This release contains many bug fixes and improvements to the existing code,
   ranging from IRF interpolation to spectrum and lightcurve computation.
-- Most of the improvements (see the list of pull requests below) were driven by
+  Most of the improvements (see the list of pull requests below) were driven by
   user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis.
   Please update to the new version and keep filing bug reports and feature requests!
 - A new sub-package `gammapy.maps` was added that features WCS and HEALPix based maps,
@@ -63,7 +67,7 @@ Gammapy Python package:
   These new maps classes were implemented based on the experience gained from
   the existing ``SkyImage`` and ``SkyCube`` classes as well as the Fermi science tools, Fermipy and pointlike.
   Work on new analysis code based on ``gammapy.maps`` within Gammapy is starting now (see `PIG 2`_).
-  Users are encouraged to start using ``gammapy.maps`` in their scripts now. The plan is to keep the
+  Users are encouraged to start using ``gammapy.maps`` in their scripts. The plan is to keep the
   existing ``SkyImage`` and ``SkyCube`` and image / cube analysis code that we have now mostly unchanged
   (only apply bugfixes), and to remove them at some future date after the transition to the use of
   ``gammapy.maps`` within Gammapy (including all tests and documentation and tutorials) is complete and
@@ -87,36 +91,37 @@ Organisation:
 - To improve the quality of Gammapy, we have set up a proposal-driven process for major improvements for Gammapy,
   described in :ref:`pig-001`. We are now starting to use this to design a better low-level analysis code (`PIG 2`_)
   and to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
-- We are planning a second Gammapy coding sprint in June or July 2018. Anyone interested to continue or join
-  Gammapy development is welcome. As you can see, a lot of activity and development is ongoing, and a lot of
-  work is still needed, with plenty of opportunities to contribute.
-  If you are interested, please fill this form with your availability:
-  `Gammapy 2018 second coding sprint options`_ and contact us.
 
 .. _PIG 2: https://github.com/gammapy/gammapy/pull/1277
 .. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
 .. _Gammapy installation questionnaire: https://goo.gl/forms/0QuYYyyPCbKnFJJI3
-.. _Gammapy 2018 second coding sprint options: https://goo.gl/forms/493orc8xrkg1QQYK2
 
 **Contributors:**
 
+- Anne Lemière (new)
 - Arjun Voruganti
+- Atreyee Sinha (new)
 - Axel Donath
 - Brigitta Sipocz
 - Bruno Khelifi (new)
 - Christoph Deil
 - Cosimo Nigro (new)
+- Jean-Philippe Lenain (new)
 - Johannes King
 - José Enrique Ruiz (new)
 - Julien Lefaucheur
+- Kai Brügge (new)
+- Lab Saha (new)
 - Lars Mohrmann
 - Léa Jouvin
 - Matthew Wood
 - Matthias Wegen (new)
+- Oscar Blanch (new)
 - Peter Deiml (new)
 - Roberta Zanin (new)
 - Thomas Vuillaume (new)
 - Rubén López-Coto (new)
+- Yves Gallant (new)
 
 Pull requests
 +++++++++++++
@@ -125,6 +130,16 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
+- [#1319] Fix a bug in SpectrumStacker (Anne Lemière)
+- [#1318] Improve MapCoord interface (Matthew Wood)
+- [#1316] Add flux point estimation for multiple observations (Lars Mohrmann)
+- [#1312] Add Background 2D class (Léa Jouvin)
+- [#1305] Fix exposure and flux units in IACTBasicImageEstimator (Yves Gallant)
+- [#1300] Add PhaseCurve class for periodic systems (Lab Saha)
+- [#1294] Fix IACTBasicImageEstimator psf method (Yves Gallant)
+- [#1290] Change image_pipe and fov to include a minimum offset cut (Atreyee Sinha)
+- [#1289] Fix excess for given significance computation (Oscar Blanch)
+- [#1287] Fix time in LightCurveEstimator result table (Jean-Philippe Lenain)
 - [#1266] No pytest import from non-test code (Christoph Deil)
 - [#1268] Fix PSF3D.to_energy_dependent_table_psf (Christoph Deil)
 - [#1246] Improve map read method (Matthew Wood)
@@ -187,6 +202,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1043] Make ``gammapy.spectrum.powerlaw`` private (Christoph Deil)
 - [#1040] Add combined 3D model and simple npred function (Christoph Deil)
 - [#1038] Remove ``gammapy.utils.mpl_style`` (Christoph Deil)
+- [#1136] Improve CTA sensitivity estimator (Axel Donath and Kai Brügge)
 - [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
 - [#1032] Improve table unit standardisation and flux points (Christoph Deil)
 - [#1031] Add HGPS catalog spatial models (Axel Donath)
