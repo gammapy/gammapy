@@ -210,10 +210,10 @@ def make_hpx_to_wcs_mapping_centers(hpx, wcs):
 
     Parameters
     ----------
-    hpx : `~fermipy.hpx_utils.HPX`
-        The HEALPIX mapping
-    wcs : `~astropy.wcs.WCS`
-        The WCS mapping
+    hpx : `~gammapy.maps.HpxGeom`
+        The HEALPIX geometry.
+    wcs : `~gammapy.maps.WcsGeom`
+        The WCS geometry.
 
     Returns
     -------
@@ -1842,9 +1842,6 @@ class HpxToWcsMapping(object):
 
         # FIXME: Do we want to flatten mapping arrays?
 
-        # HPX images have (1,N) dimensionality by convention
-        # hpx_data = np.squeeze(hpx_data)
-
         shape = tuple([t.flat[0] for t in self._npix])
         if self._valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape
@@ -1865,7 +1862,7 @@ class HpxToWcsMapping(object):
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            valid = self._valid.reshape(shape).T
+            valid = np.swapaxes(self._valid.reshape(shape),-1,-2)
             valid = valid*np.ones_like(wcs_data, dtype=bool)
             wcs_data[~valid] = np.nan
         return wcs_data
