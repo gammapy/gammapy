@@ -479,6 +479,7 @@ class PHACountsSpectrum(CountsSpectrum):
             energy_lo=emin,
             energy_hi=emax,
             quality=counts_table['QUALITY'].data,
+            areascal=counts_table['AREASCAL'].data,
             meta=counts_table.meta
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
