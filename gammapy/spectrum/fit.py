@@ -39,7 +39,7 @@ class SpectrumFit(object):
         observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
-    method : {'sherpa'}
+    method : {'sherpa', 'iminuit'}
         Optimization backend for the fit
     err_method : {'sherpa'}
         Optimization backend for error estimation
@@ -411,6 +411,8 @@ class SpectrumFit(object):
         """Run the fit."""
         if self.method == 'sherpa':
             self._fit_sherpa()
+        elif self.method == 'iminuit':
+            self._fit_iminuit()
         else:
             raise NotImplementedError('method: {}'.format(self.method))
 
@@ -447,6 +449,43 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
+        self._make_fit_result()
+
+    def _fit_iminuit(self):
+        """Iminuit minimization"""
+        from iminuit import Minuit, describe
+
+        log.warn('Experimental feature, do not trust!')
+
+        def _make_iminuit_helper(self):
+            d = {'self' : self, 'np' : np}
+            func_def = 'def _func('
+            func_def += ', '.join(self.model.parameters.names) 
+            func_def += '):'
+            func_def += '\n    for parname, parval in locals().items():'
+            func_def += '\n        self.model.parameters[parname].value = parval'
+            func_def += '\n    print(self.model)'
+            func_def += '\n    self.predict_counts()'
+            func_def += '\n    self.calc_statval()'
+            func_def += '\n    total_stat = np.sum([np.sum(v)'
+            func_def +=  ' for v in self.statval], dtype=np.float64)'
+            func_def += '\n    return total_stat'
+
+            exec(func_def, d)
+            return d['_func']
+
+        _iminuit_helper = _make_iminuit_helper(self)
+
+        # Starting values etc.
+        minuit_kwargs = dict()
+        for par in self.model.parameters.parameters:
+            minuit_kwargs[par.name] = par.value
+            if par.frozen:
+                minuit_kwargs['fix_{}'.format(par.name)] = True
+
+        m = Minuit(_iminuit_helper, **minuit_kwargs)
+        m.migrad()
+        log.debug(m)
         self._make_fit_result()
 
     def _make_fit_result(self):
