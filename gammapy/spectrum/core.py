@@ -478,11 +478,11 @@ class PHACountsSpectrum(CountsSpectrum):
         quality=None
         areascal=None
         backscal=None
-        if 'QUALITY' in counts_table:
+        if 'QUALITY' in counts_table.colnames:
             quality = counts_table['QUALITY'].data
-        if 'AREASCAL' in counts_table:
+        if 'AREASCAL' in counts_table.colnames:
             areascal = counts_table['AREASCAL'].data
-        if 'BACKSCAL' in counts_table:
+        if 'BACKSCAL' in counts_table.colnames:
             backscal = counts_table['BACKSCAL'].data
         kwargs = dict(
             data=counts_table['COUNTS'] * u.ct,
@@ -538,7 +538,7 @@ class PHACountsSpectrum(CountsSpectrum):
             quality=table['QUALITY'].data,
             exposure=self.livetime.to('s').value,
             backscal=backscal,
-            areascal=1.,
+            areascal=self.areascal,
             syserror=None,
             staterror=None,
             grouping=None,
