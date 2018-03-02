@@ -473,12 +473,24 @@ class PHACountsSpectrum(CountsSpectrum):
         ebounds = fits_table_to_table(hdulist[2])
         emin = ebounds['E_MIN'].quantity
         emax = ebounds['E_MAX'].quantity
+
+        # Check if column are present in the header
+        quality=None
+        areascal=None
+        backscal=None
+        if 'QUALITY' in counts_table.colnames:
+            quality = counts_table['QUALITY'].data
+        if 'AREASCAL' in counts_table.colnames:
+            areascal = counts_table['AREASCAL'].data
+        if 'BACKSCAL' in counts_table.colnames:
+            backscal = counts_table['BACKSCAL'].data
         kwargs = dict(
             data=counts_table['COUNTS'] * u.ct,
-            backscal=counts_table['BACKSCAL'].data,
+            backscal=backscal,
             energy_lo=emin,
             energy_hi=emax,
-            quality=counts_table['QUALITY'].data,
+            quality=quality,
+            areascal=areascal,
             meta=counts_table.meta
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
@@ -526,7 +538,7 @@ class PHACountsSpectrum(CountsSpectrum):
             quality=table['QUALITY'].data,
             exposure=self.livetime.to('s').value,
             backscal=backscal,
-            areascal=1.,
+            areascal=self.areascal,
             syserror=None,
             staterror=None,
             grouping=None,
