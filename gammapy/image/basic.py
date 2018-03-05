@@ -9,7 +9,6 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from ..utils.energy import Energy, EnergyBounds
-#from ..background import EnergyOffsetArray
 from .core import SkyImage
 from .lists import SkyImageList
 from ..irf.background import Background3D
@@ -283,13 +282,19 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         offsets = observation.pointing_radec.separation(acceptance.coordinates())
 
         # This is a somewhat dirty approach to deal with the different background IRFs
-        if isinstance(observation.bkg, Background3D):
-            tmp_array = observation.bkg.data.evaluate(detx=offsets.ravel(), dety=0. * u.deg, energy=ebins)
-        else:
-            tmp_array = observation.bkg.evaluate(offset=offsets.ravel(), energy=ebins)
+        try:
+            if isinstance(observation.bkg, Background3D):
+                tmp_array = observation.bkg.data.evaluate(detx=offsets.ravel(), dety=0. * u.deg, energy=ebins)
+            else:
+                tmp_array = observation.bkg.evaluate(offset=offsets.ravel(), energy=ebins)
+            # We compute the trapezoidal integral of the background over energy
+            integrated_bkg = np.sum(0.5 * np.diff(ebins) * (tmp_array[:-1, :] + tmp_array[1:, :]).T, 1)
+        # If no background is found, assume flat acceptance. This will provide very bad results for FoV background without norm.
+        except IndexError:
+            integrated_bkg = np.ones_like(offsets.data)/u.sr/u.s
 
-        acceptance.data = np.reshape(np.sum(0.5 * np.diff(ebins) * (tmp_array[:-1, :] + tmp_array[1:, :]).T, 1),
-                                     offsets.shape)
+        # Reshape the array to fit the SkyImage
+        acceptance.data = np.reshape(integrated_bkg,offsets.shape)
         acceptance.data *= acceptance.solid_angle() * observation.observation_live_time_duration
         acceptance.data = acceptance.data.to('').value
         return acceptance

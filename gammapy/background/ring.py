@@ -454,5 +454,6 @@ class FoVBackgroundEstimator(object):
             norm=1
         result = SkyImageList()
         result['background'] = SkyImage(data=norm * exposure_on.data, wcs=wcs)
+        result['background'].meta['NORM'] = norm
         return result
 
