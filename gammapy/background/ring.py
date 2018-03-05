@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 import astropy.units as u
-from ..image import SkyImageList, SkyImage
+from ..image import SkyImage, SkyImageList
 from ..image.utils import scale_cube
 
 __all__ = [
@@ -15,6 +15,7 @@ __all__ = [
     'ring_r_out',
     'ring_area_factor',
     'ring_alpha',
+    'FoVBackgroundEstimator',
 ]
 
 
@@ -409,3 +410,50 @@ def ring_alpha(theta, r_in, r_out):
         Outer ring radius
     """
     return 1. / ring_area_factor(theta, r_in, r_out)
+
+
+class FoVBackgroundEstimator(object):
+    """Basic class to perform FoV background estimation.
+
+    Parameters
+    ----------
+    norm : bool
+        flag to normalize the background from the count image outside exclusion regions
+
+    """
+    def __init__(self,norm=True):
+        self.norm=norm
+
+    def run(self, images):
+        """Run FoV background algorithm.
+
+        Required sky images: {required}
+
+        Parameters
+        ----------
+        images : `SkyImageList`
+            Input sky images.
+
+        Returns
+        -------
+        result : `SkyImageList`
+            Result sky images
+        """
+
+        required = ['counts', 'exposure_on', 'exclusion']
+        images.check_required(required)
+        counts, exposure_on, exclusion = [images[_] for _ in required]
+        wcs = counts.wcs.copy()
+
+        if self.norm:
+            counts_excluded = np.sum(counts.data * exclusion.data)
+            acceptance_excluded = np.sum(exposure_on.data * exclusion.data)
+            #print(counts_excluded, acceptance_excluded, counts_excluded / acceptance_excluded)
+            norm = counts_excluded / acceptance_excluded
+        else:
+            norm=1
+        result = SkyImageList()
+        result['background'] = SkyImage(data=norm * exposure_on.data, wcs=wcs)
+        result['background'].meta['NORM'] = norm
+        return result
+

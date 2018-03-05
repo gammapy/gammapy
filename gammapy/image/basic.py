@@ -8,9 +8,11 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from .core import SkyImage
 from .lists import SkyImageList
+from ..irf.background import Background3D
+
 
 __all__ = [
     'BasicImageEstimator',
@@ -260,25 +262,74 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         counts.fill_events(events)
         return counts
 
+    def _acceptance_map(self, observation, counts, nbins=10):
+        """Compute acceptance (normalized background map
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.DataStoreObservation`
+            Observation object
+        counts : `~gammapy.image.SkyImage`
+            count sky images
+        nbins : int
+            number of bins for the energy integration
+        """
+        p = self.parameters
+        ebins = EnergyBounds.equal_log_spacing(p['emin'], p['emax'], nbins)
+        acceptance = SkyImage.empty_like(counts)
+        acceptance.name = 'exposure_on'
+
+        offsets = observation.pointing_radec.separation(acceptance.coordinates())
+
+        # This is a somewhat dirty approach to deal with the different background IRFs
+        try:
+            if isinstance(observation.bkg, Background3D):
+                tmp_array = observation.bkg.data.evaluate(detx=offsets.ravel(), dety=0. * u.deg, energy=ebins)
+            else:
+                tmp_array = observation.bkg.evaluate(offset=offsets.ravel(), energy=ebins)
+            # We compute the trapezoidal integral of the background over energy
+            integrated_bkg = np.sum(0.5 * np.diff(ebins) * (tmp_array[:-1, :] + tmp_array[1:, :]).T, 1)
+        # If no background is found, assume flat acceptance. This will provide very bad results for FoV background without norm.
+        except IndexError:
+            integrated_bkg = np.ones_like(offsets.data)/u.sr/u.s
+
+        # Reshape the array to fit the SkyImage
+        acceptance.data = np.reshape(integrated_bkg,offsets.shape)
+        acceptance.data *= acceptance.solid_angle() * observation.observation_live_time_duration
+        acceptance.data = acceptance.data.to('').value
+        return acceptance
+
     def _background(self, counts, exposure, observation):
         """
         Estimate background image for one observation.
 
         Parameters
         ----------
-        TODO
+        counts : `~gammapy.image.SkyImage`
+            count sky image
+        exposure : `~gammapy.image.SkyImage`
+            exposure sky image
+        observation : `~gammapy.data.DataStoreObservation`
+            Observation object
+
+        Returns
+        -------
+        background : `~gammapy.image.SkyImageList`
+            the estimated background
         """
         input_images = SkyImageList()
         input_images['counts'] = counts
+        input_images['exposure'] = exposure
 
-        # TODO: instead of using a constant exposure, the acceptance model should
-        # be taken into account
-        exposure_on = exposure.copy()
-        exposure_on.name = 'exposure_on'
-        exposure_on.data = (exposure_on.data > 0).astype(float)
+        exposure_on = self._acceptance_map(observation, counts)
+        not_has_exposure = ~(exposure.data > 0)
+        exposure_on.data[not_has_exposure] = 0
         input_images['exposure_on'] = exposure_on
+
         input_images['exclusion'] = self._cutout_observation(self.exclusion_mask, observation)
+
         return self.background_estimator.run(input_images)
+
 
     def run(self, observations, which='all'):
         """
