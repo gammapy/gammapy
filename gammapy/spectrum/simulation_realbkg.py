@@ -108,12 +108,14 @@ class SimulationRealBkg(object):
         """
         self.reset()
         n_obs = len(seed)
+        #the reflected background is called only once
+        bkg_res=self.estimate_reflected(EXCLUSION_FILE ='$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits',size=Angle('6 deg'))
         log.info("Simulating {} observations".format(n_obs))
         for counter, current_seed in enumerate(seed):
             progress = ((counter + 1) / n_obs) * 100
-            if progress % 10 == 0:
+            if progress % 2 == 0:
                 log.info("Progress : {} %".format(progress))
-            self.simulate_obs(seed=current_seed, obs_id=current_seed)
+            self.simulate_obs(bkg_res, seed=current_seed, obs_id=current_seed)
             self.result.append(self.obs)
 
     def reset(self):
@@ -123,7 +125,7 @@ class SimulationRealBkg(object):
         self.on_vector = None
         self.off_vector = None
 
-    def simulate_obs(self, obs_id, seed='random-seed'):
+    def simulate_obs(self, bkg_res, obs_id, seed='random-seed'):
         """Simulate one `~gammapy.spectrum.SpectrumObservation`.
 
         The result is stored as ``obs`` attribute
@@ -141,7 +143,7 @@ class SimulationRealBkg(object):
                                   off_vector=self.off_vector,
                                   aeff=self.aeff,
                                   edisp=self.edisp)
-        self.simulate_background_counts()
+        self.simulate_background_counts(bkg_res)
         obs.off_vector=self.off_vector
         obs.obs_id = obs_id
         self.obs = obs
@@ -180,9 +182,8 @@ class SimulationRealBkg(object):
 
 
 
-    def simulate_background_counts(self):
+    def simulate_background_counts(self, bkg_res):
 
-        bkg_res=self.estimate_reflected(EXCLUSION_FILE ='$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits',size=Angle('6 deg'))
         a_off=bkg_res.a_off
         a_on = bkg_res.a_on
         nOFF= len(bkg_res.off_events.table)
