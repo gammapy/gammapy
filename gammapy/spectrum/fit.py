@@ -45,7 +45,7 @@ class SpectrumFit(object):
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
                  fit_range=None, background_model=None,
                  method='sherpa', err_method='sherpa'):
-        self.obs_list = self._convert_obs_list(obs_list)
+        self.obs_list = obs_list
         self.model = model
         self.stat = stat
         self.forward_folded = forward_folded
@@ -77,15 +77,18 @@ class SpectrumFit(object):
 
         return ss
 
-    @staticmethod
-    def _convert_obs_list(obs_list):
-        """Helper function to accept different inputs for obs_list."""
+    @property
+    def obs_list(self):
+        return self._obs_list
+
+    @obs_list.setter
+    def obs_list(self, obs_list):
         if isinstance(obs_list, SpectrumObservation):
-            obs_list = SpectrumObservationList([obs_list])
+            obs_list  = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
             raise ValueError('Invalid input {} for parameter obs_list'.format(
                 type(obs_list)))
-        return obs_list
+        self._obs_list = obs_list
 
     @property
     def bins_in_fit_range(self):
