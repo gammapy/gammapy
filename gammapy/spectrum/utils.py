@@ -174,10 +174,12 @@ class CountsPredictor(object):
     def apply_aeff(self):
         if self.aeff is not None:
             cts = self.true_flux * self.aeff.data.data
-            if cts.unit.is_equivalent('s-1'):
-                cts *= self.livetime
         else:
             cts = self.true_flux
+
+        # Multiply with livetime if not already contained in aeff or model
+        if cts.unit.is_equivalent('s-1'):
+            cts *= self.livetime
 
         self.true_counts = cts.to('')
 
