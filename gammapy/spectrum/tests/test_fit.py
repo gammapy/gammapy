@@ -40,6 +40,8 @@ class TestFit:
                                      energy_hi=binning[1:],
                                      data=source_counts,
                                      backscal=1)
+        # Currently it's necessary to specify a lifetime
+        self.src.livetime = 1 * u.s
 
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
 

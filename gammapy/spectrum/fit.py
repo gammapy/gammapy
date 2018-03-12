@@ -207,11 +207,12 @@ class SpectrumFit(object):
         """
         predictor = CountsPredictor(model=model)
         if forward_folded:
-            predictor.livetime = obs.livetime
             predictor.aeff = obs.aeff
             predictor.edisp = obs.edisp
         else:
             predictor.e_true = obs.e_reco
+
+        predictor.livetime = obs.livetime
 
         predictor.run()
         counts = predictor.npred.data.data
@@ -320,6 +321,10 @@ class SpectrumFit(object):
             raise ValueError('IRFs required for forward folded fit')
         if self.stat == 'wstat' and self.obs_list[0].off_vector is None:
             raise ValueError('Off vector required for WStat fit')
+        try:
+            test_obs.livetime
+        except KeyError:
+            raise ValueError('No observation livetime given')
 
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
