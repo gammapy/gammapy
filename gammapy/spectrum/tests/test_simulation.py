@@ -3,6 +3,7 @@ import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency
+from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import SpectrumExtraction, SpectrumSimulation
 from ..models import PowerLaw
@@ -71,3 +72,14 @@ class TestSpectrumSimulation:
         assert_allclose(np.sum(sim.npred_source.data.data.value),
                         167.467572145, rtol=0.01)
 
+    def test_without_aeff(self):
+        e_true = EnergyBounds.equal_log_spacing(1, 10, 5, u.TeV)
+        rate_model = self.source_model.copy()
+        rate_model.parameters['amplitude'].unit = u.Unit('TeV-1 s-1')
+        rate_model.parameters['amplitude'].value = 1
+        sim = SpectrumSimulation(source_model=rate_model,
+                                 livetime=4*u.h,
+                                 e_true=e_true 
+                                )
+        sim.simulate_obs(seed=23, obs_id=23)
+        assert sim.obs.on_vector.total_counts == 10509 * u.ct
