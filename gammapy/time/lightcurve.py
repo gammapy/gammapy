@@ -7,7 +7,6 @@ from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
 from ..utils.scripts import make_path
-from ..stats.poisson import significance_on_off
 
 __all__ = [
     'LightCurve',
