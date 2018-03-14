@@ -7,6 +7,7 @@ from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
 from ..utils.scripts import make_path
+from ..stats.poisson import significance_on_off
 
 __all__ = [
     'LightCurve',
@@ -274,13 +275,274 @@ class LightCurveEstimator(object):
     @staticmethod
     def _get_on_evt_list(spec_extract):
         """
-        Returns list of OFF events for each observations
+        Returns list of ON events for each observations
         """
         on_evt_list = []
         for obs in spec_extract.bkg_estimate:
             on_evt_list.append(obs.on_events)
 
         return on_evt_list
+
+    def create_fixed_time_bin_lc(self, time_step, spectral_model, energy_range, spectrum_extraction):
+        """
+        Create time intervals of fixed size and then a light curve using those intervals
+
+        :param time_step: float
+            Size of the light curve bins
+        :param spectral_model:`~gammapy.spectrum.models.SpectralModel`
+            Spectral model
+        :param energy_range:`~astropy.units.Quantity`
+            True energy range to evaluate integrated flux (true energy)
+        :param spectrum_extraction:`~gammapy.spectrum.SpectrumExtraction`
+       Contains statistics, IRF and event lists
+        :return:`~gammapy.time.LightCurve`
+            Light curve
+        """
+        intervals = []
+        time_start = Time(100000, format="mjd")
+        time_end = Time(0, format="mjd")
+
+        for obs in spectrum_extraction.obs_list:
+            if time_start > obs.events.time.min():
+                time_start = obs.events.time.min()
+            if time_end < obs.events.time.max():
+                time_end = obs.events.time.max()
+        time = time_start.value
+        while time < time_end.value:
+            time += time_step
+            intervals.append([Time(time - time_step, format="mjd"), Time(time, format="mjd")])
+
+        lc = self.light_curve(
+            time_intervals=intervals,
+            spectral_model=spectral_model,
+            energy_range=energy_range,
+        )
+        return lc
+
+    def create_fixed_significance_bin_lc(self, significance, significance_method, spectral_model
+                                         , energy_range, spectrum_extraction):
+        """
+        Create time intervals and a light curve using those intervals such that each bin reach a given significance
+        ### To Do : add dead time separator to force the start of new point? ###
+        ### To Do : check logic ###
+
+        :param significance: float
+            Target significance for each light curve point
+        :param significance_method:
+            Select the method used to compute the significance ### unused yet ###
+        :param spectral_model: `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
+        :param energy_range: `~astropy.units.Quantity`
+            True energy range to evaluate integrated flux (true energy)
+        :param spectrum_extraction: `~gammapy.spectrum.SpectrumExtraction`
+       Contains statistics, IRF and event lists
+        :return: `~gammapy.time.LightCurve`
+            Light curve
+        """
+
+        a_off = []
+        on_event = self.on_evt_list
+        on_event_times = []
+        nb_obs = 0
+        nb_obs_off = 0
+        n_events_on = []
+        for obs in on_event:
+            on_event_times.append(obs.time.value)
+            n_events_on.append(len(on_event_times[nb_obs]))
+            nb_obs += 1
+            on_event_times[nb_obs-1].sort()
+        off_event = self.off_evt_list
+        off_event_times = []
+        n_events_off = []
+        for obs in off_event:
+            off_event_times.append(obs.time.value)
+            n_events_off.append(len(off_event_times[nb_obs_off]))
+            nb_obs_off += 1
+            off_event_times[nb_obs_off-1].sort()
+        for obs in spectrum_extraction.bkg_estimate:
+            a_off.append(obs.a_off)
+
+        intervals = []
+        n = 0
+        i_on = 0
+        i_off = 0
+        non = 0
+        noff = 0
+        interval_start = min(off_event_times[0][0], on_event_times[0][0])
+        nstart = n
+        i_on_start = i_on
+        i_off_start = i_off
+
+        if i_on < n_events_on[n]:
+            if i_off < n_events_off[n]:
+                if off_event_times[n][i_off] > on_event_times[n][i_on]:
+                    non += 1
+                    i_on += 1
+                    on_start = True
+                    on_end = True
+                else:
+                    noff += 1
+                    i_off += 1
+                    on_start = False
+                    on_end = False
+            else:
+                non += 1
+                i_on += 1
+                on_start = True
+                on_end = True
+        elif i_off < n_events_off[n]:
+            noff += 1
+            i_off += 1
+            on_start = False
+            on_end = False
+        else:
+            print("error, no event in first observation\n")
+            n = nb_obs
+
+        while n < nb_obs:
+            if i_on < n_events_on[n]:
+                if i_off < n_events_off[n]:
+                    if off_event_times[n][i_off] > on_event_times[n][i_on]:
+                        non += 1
+                        i_on += 1
+                        on_end = True
+                    else:
+                        noff += 1
+                        i_off += 1
+                        on_end = False
+                else:
+                    non += 1
+                    i_on += 1
+                    on_end = True
+            elif i_off < n_events_off[n]:
+                noff += 1
+                i_off += 1
+                on_end = False
+            else:
+                n += 1
+                i_on=0
+                i_off=0
+                if n == nb_obs:
+                    continue
+
+            if nstart != n:
+                n_it = nstart + 1
+                alpha = 0
+                t_alpha = 0
+
+                if off_event_times[nstart][n_events_off[nstart] - 1] > on_event_times[nstart][n_events_on[nstart] - 1]:
+                    if on_start:
+                        alpha += a_off[nstart] * (
+                                off_event_times[nstart][n_events_off[nstart] - 1] - on_event_times[nstart][i_on_start])
+                        t_alpha += off_event_times[nstart][n_events_off[nstart] - 1] - on_event_times[nstart][
+                            i_on_start]
+                    else:
+                        alpha += a_off[nstart] * (
+                                off_event_times[nstart][n_events_off[nstart] - 1] - off_event_times[nstart][
+                                    i_off_start])
+                        t_alpha += off_event_times[nstart][n_events_off[nstart] - 1] - off_event_times[nstart][
+                            i_off_start]
+                else:
+                    if on_start:
+                        alpha += a_off[nstart] * (
+                                on_event_times[nstart][n_events_off[nstart] - 1] - on_event_times[nstart][i_on_start])
+                        t_alpha += on_event_times[nstart][n_events_on[nstart] - 1] - on_event_times[nstart][i_on_start]
+                    else:
+                        alpha += a_off[nstart] * (
+                                on_event_times[nstart][n_events_off[nstart] - 1] - off_event_times[nstart][i_off_start])
+                        t_alpha += on_event_times[nstart][n_events_on[nstart] - 1] - off_event_times[nstart][
+                            i_off_start]
+                while n_it < n:
+                    if off_event_times[n_it][n_events_off[n_it] - 1] > on_event_times[n_it][n_events_on[n_it] - 1]:
+                        if off_event_times[n_it][0] > on_event_times[n_it][0]:
+                            alpha += a_off[n_it] * (
+                                    off_event_times[n_it][n_events_off[n_it] - 1] - on_event_times[n_it][0])
+                            t_alpha += off_event_times[n_it][n_events_off[n_it] - 1] - on_event_times[n_it][0]
+                        else:
+                            alpha += a_off[n_it] * (
+                                    off_event_times[n_it][n_events_off[n_it] - 1] - off_event_times[n_it][0])
+                            t_alpha += off_event_times[n_it][n_events_off[n_it] - 1] - off_event_times[n_it][0]
+                    else:
+                        if off_event_times[n_it][0] > on_event_times[n_it][0]:
+                            alpha += a_off[n_it] * (
+                                        on_event_times[n_it][n_events_on[n_it] - 1] - on_event_times[n_it][0])
+                            t_alpha += on_event_times[n_it][n_events_on[n_it] - 1] - on_event_times[n_it][0]
+                        else:
+                            alpha += a_off[n_it] * (
+                                        on_event_times[n_it][n_events_on[n_it] - 1] - off_event_times[n_it][0])
+                            t_alpha += on_event_times[n_it][n_events_on[n_it] - 1] - off_event_times[n_it][0]
+                    n_it += 1
+                if on_end:
+                    if off_event_times[n][0] > on_event_times[n][0]:
+                        alpha += a_off[n] * (on_event_times[n][i_on - 1] - on_event_times[n][0])
+                        t_alpha += on_event_times[n][i_on - 1] - on_event_times[n][0]
+                    else:
+                        alpha += a_off[n] * (on_event_times[n][i_on - 1] - off_event_times[n][0])
+                        t_alpha += on_event_times[n][i_on - 1] - off_event_times[n][0]
+                else:
+                    if off_event_times[n][0] > on_event_times[n][0]:
+                        alpha += a_off[n] * (off_event_times[n][i_off - 1] - on_event_times[n][0])
+                        t_alpha += off_event_times[n][i_off - 1] - on_event_times[n][0]
+                    else:
+                        alpha += a_off[n] * (off_event_times[n][i_off - 1] - off_event_times[n][0])
+                        t_alpha += off_event_times[n][i_off - 1] - off_event_times[n][0]
+                alpha = t_alpha / alpha
+            else:
+                alpha = 1 / a_off[n]
+
+            if on_end:
+                interval_end = on_event_times[n][i_on - 1]
+            else:
+                interval_end = off_event_times[n][i_off - 1]
+
+            if significance_on_off(non, noff, alpha, significance_method) > significance:
+                intervals.append([Time(interval_start, format="mjd"), Time(interval_end, format="mjd")])
+
+                if i_on < n_events_on[n]:
+                    if i_off < n_events_off[n]:
+                        if off_event_times[n][i_off] > on_event_times[n][i_on]:
+                            interval_start = on_event_times[n][i_on]
+                            i_on_start = i_on
+                            non += 1
+                            i_on += 1
+                            on_start = True
+                            on_end = True
+
+                        else:
+                            interval_start = off_event_times[n][i_off]
+                            i_off_start = i_off
+                            noff += 1
+                            i_off += 1
+                            on_start = False
+                            on_end = False
+                    else:
+                        interval_start = on_event_times[n][i_on]
+                        i_on_start = i_on
+                        non += 1
+                        i_on += 1
+                        on_start = True
+                        on_end = True
+                elif i_off < n_events_off[n]:
+                    interval_start = off_event_times[n][i_off]
+                    i_off_start = i_off
+                    noff += 1
+                    i_off += 1
+                    on_start = False
+                    on_end = False
+                else:
+                    n += 1
+                    i_on=0
+                    i_off=0
+                nstart = n
+                non=0
+                noff=0
+
+        lc = self.light_curve(
+            time_intervals=intervals,
+            spectral_model=spectral_model,
+            energy_range=energy_range,
+        )
+        return lc
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
@@ -307,8 +569,9 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            row = self.compute_flux_point(time_interval, spectral_model, energy_range)
-            rows.append(row)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range)
+            if useinterval:
+                rows.append(row)
 
         return self._make_lc_from_row_data(rows)
 
@@ -355,6 +618,7 @@ class LightCurveEstimator(object):
         predicted_excess = 0
         n_on = 0
         n_off = 0
+        useinterval = False
 
         # Loop on observations
         for t_index, obs in enumerate(self.obs_list):
@@ -367,6 +631,7 @@ class LightCurveEstimator(object):
             if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
                 continue
 
+            useinterval=True
             # get ON and OFF evt list
             off_evt = self.off_evt_list[t_index]
             on_evt = self.on_evt_list[t_index]
@@ -442,23 +707,27 @@ class LightCurveEstimator(object):
             n_off += n_off_obs
 
         # Fill time interval information
-        int_flux = spectral_model.integral(energy_range[0], energy_range[1])
+        if useinterval:
+            int_flux = spectral_model.integral(energy_range[0], energy_range[1])
 
-        if n_off > 0.:
-            alpha_mean /= n_off
-        if livetime > 0.:
-            alpha_mean_backup /= livetime
-        if alpha_mean == 0.:  # use backup if necessary
-            alpha_mean = alpha_mean_backup
+            if n_off > 0.:
+                alpha_mean /= n_off
+            if livetime > 0.:
+                alpha_mean_backup /= livetime
+            if alpha_mean == 0.:  # use backup if necessary
+                alpha_mean = alpha_mean_backup
 
-        flux = measured_excess / predicted_excess.value
-        flux *= int_flux
-        flux_err = int_flux / predicted_excess.value
-        # Gaussian errors, TODO: should be improved
-        flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux = measured_excess / predicted_excess.value
+            flux *= int_flux
+            flux_err = int_flux / predicted_excess.value
+            # Gaussian errors, TODO: should be improved
+            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+        else:
+            flux=0
+            flux_err=0
 
         # Store measurements in a dict and return that
-        return OrderedDict([
+        return useinterval, OrderedDict([
             ('time_min', Time(tmin, format='mjd')),
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
