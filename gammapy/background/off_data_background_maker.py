@@ -344,10 +344,9 @@ class OffDataBackgroundMaker(object):
         """
         index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
                                                     filename_obs_group_table, smooth)
-        if modeltype=="3D":
-            index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == "bkg_3d")[0].tolist()
-        else
-            index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == "bkg_2d")[0].tolist()
+
+        hdu_class = 'bkg_3d' if modeltype == "3D" else 'bkg_2d'
+        index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == hdu_class)[0]
         data_store.hdu_table.remove_rows(index_bkg)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         return index_table_new
