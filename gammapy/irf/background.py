@@ -291,7 +291,7 @@ class Background2D(object):
         n_energy_band = len(tab_energy_band) - 1
         shape_bkg = tuple([n_energy_band]) + fov_offset.shape
         bkg_integrated = u.Quantity(np.zeros(shape_bkg), "1 / (s sr)")
-        for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[0:-1], tab_energy_band[1:])):
+        for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[:-1], tab_energy_band[1:])):
             energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, n_energy_bins)
             energy_bins = energy_edges.log_centers
             bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, **kwargs)
@@ -304,7 +304,7 @@ class Background2D(object):
                     bkg_integrated[i_e, :] = bkg_evaluated * energy_edges.bands
                 else:
                     bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
-                    
+
             else:
                 if(len(energy_bins)==1):
                     bkg_integrated[i_e, :, :] = bkg_evaluated * energy_edges.bands
