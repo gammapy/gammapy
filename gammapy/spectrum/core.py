@@ -46,7 +46,7 @@ class CountsSpectrum(object):
         import astropy.units as u
 
         ebounds = np.logspace(0,1,11) * u.TeV
-        data = np.arange(10) * u.ct
+        data = np.arange(10)
         spec = CountsSpectrum(
             energy_lo=ebounds[:-1],
             energy_hi=ebounds[1:],
@@ -60,16 +60,6 @@ class CountsSpectrum(object):
     def __init__(self, energy_lo, energy_hi, data=None, interp_kwargs=None):
         axes = [BinnedDataAxis(energy_lo, energy_hi,
                                interpolation_mode='log', name='energy')]
-        # Set data unit to counts for coherence
-        if data is not None:
-            if isinstance(data, u.Quantity):
-                if data.unit.is_equivalent('ct'):
-                    pass
-                elif data.unit.is_equivalent(u.Unit('')):
-                    data = data.value
-                else:
-                    raise ValueError('Invalid data unit {}'.format(data.unit))
-            data = u.Quantity(data, 'ct')
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
@@ -145,7 +135,7 @@ class CountsSpectrum(object):
 
         energy = events.to(self.energy.unit)
         binned_val = np.histogram(energy.value, self.energy.bins)[0]
-        self.data.data = binned_val * u.ct
+        self.data.data = binned_val
 
     @property
     def total_counts(self):
@@ -264,7 +254,7 @@ class CountsSpectrum(object):
         split_indices = np.arange(parameter, len(retval.data.data), parameter)
         counts_grp = np.split(retval.data.data, split_indices)
         counts_rebinned = np.sum(counts_grp, axis=1)
-        retval.data.data = counts_rebinned * u.ct
+        retval.data.data = counts_rebinned 
 
         return retval
 
@@ -485,7 +475,7 @@ class PHACountsSpectrum(CountsSpectrum):
         if 'BACKSCAL' in counts_table.colnames:
             backscal = counts_table['BACKSCAL'].data
         kwargs = dict(
-            data=counts_table['COUNTS'] * u.ct,
+            data=counts_table['COUNTS'],
             backscal=backscal,
             energy_lo=emin,
             energy_hi=emax,
@@ -622,7 +612,7 @@ class PHACountsSpectrumList(list):
         counts_table = fits_table_to_table(hdulist[1])
         speclist = cls()
         for row in counts_table:
-            kwargs['data'] = row['COUNTS'] * u.ct
+            kwargs['data'] = row['COUNTS']
             kwargs['backscal'] = row['BACKSCAL']
             kwargs['quality'] = row['QUALITY']
             spec = PHACountsSpectrum(meta=dict(hdulist[1].header),
