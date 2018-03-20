@@ -221,8 +221,7 @@ class SpectrumFit(object):
         counts = predictor.npred.data.data
 
         # Check count unit (~unit of model amplitude)
-        cond = counts.unit.is_equivalent('ct') or counts.unit.is_equivalent('')
-        if cond:
+        if counts.unit.is_equivalent(''):
             counts = counts.value
         else:
             raise ValueError('Predicted counts {}'.format(counts))
