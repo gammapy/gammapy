@@ -263,7 +263,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         return counts
 
     def _acceptance_map(self, observation, counts, nbins=10):
-        """Compute acceptance (normalized background map
+        """Compute acceptance (normalized background map)
 
         Parameters
         ----------
@@ -289,10 +289,11 @@ class IACTBasicImageEstimator(BasicImageEstimator):
                 tmp_array = observation.bkg.evaluate(offset=offsets.ravel(), energy=ebins)
             # We compute the trapezoidal integral of the background over energy
             integrated_bkg = np.sum(0.5 * np.diff(ebins) * (tmp_array[:-1, :] + tmp_array[1:, :]).T, 1)
-        # If no background is found, assume flat acceptance. This will provide very bad results for FoV background without norm.
+        # If no background is found, assume flat acceptance.
+        # This will provide very bad results for FoV background without norm.
         except IndexError:
-            integrated_bkg = np.ones_like(counts.data)/u.s/u.sr 
-
+            integrated_bkg = np.ones_like(counts.data)/u.s/u.sr
+            
         # Reshape the array to fit the SkyImage
         acceptance.data = np.reshape(integrated_bkg,offsets.shape)
         acceptance.data *= acceptance.solid_angle() * observation.observation_live_time_duration
