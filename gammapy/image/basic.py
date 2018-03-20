@@ -262,7 +262,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         counts.fill_events(events)
         return counts
 
-    def _acceptance_map(self, observation, counts, nbins=10):
+    def _acceptance_map(self, observation, counts, exposure, nbins=10):
         """Compute acceptance (normalized background map
 
         Parameters
@@ -280,7 +280,8 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         acceptance.name = 'exposure_on'
 
         offsets = observation.pointing_radec.separation(acceptance.coordinates())
-
+        print(offsets.shape)
+#        print(observation.bkg)
         # This is a somewhat dirty approach to deal with the different background IRFs
         try:
             if isinstance(observation.bkg, Background3D):
@@ -291,7 +292,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
             integrated_bkg = np.sum(0.5 * np.diff(ebins) * (tmp_array[:-1, :] + tmp_array[1:, :]).T, 1)
         # If no background is found, assume flat acceptance. This will provide very bad results for FoV background without norm.
         except IndexError:
-            integrated_bkg = np.ones_like(offsets.data)/u.sr/u.s
+            integrated_bkg = np.ones_like(counts.data)/u.s/u.sr 
 
         # Reshape the array to fit the SkyImage
         acceptance.data = np.reshape(integrated_bkg,offsets.shape)
@@ -321,7 +322,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         input_images['counts'] = counts
         input_images['exposure'] = exposure
 
-        exposure_on = self._acceptance_map(observation, counts)
+        exposure_on = self._acceptance_map(observation, counts, exposure)
         not_has_exposure = ~(exposure.data > 0)
         exposure_on.data[not_has_exposure] = 0
         input_images['exposure_on'] = exposure_on
