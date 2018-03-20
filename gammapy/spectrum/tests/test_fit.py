@@ -224,16 +224,6 @@ class TestSpectralFit:
         assert_quantity_allclose(pars['amplitude'].quantity,
                                  1.0243449507421302e-7 * u.Unit('m-2 s-1 TeV-1'))
 
-    def test_areascal(self):
-        areascal = np.ones(self.fit.obs_list[0].e_reco.nbins)
-        areascal *= 0.5
-        self.fit.obs_list[0].on_vector.areascal = areascal
-        self.fit.fit()
-        pars = self.fit.result[0].model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.2542312883476465)
-        assert_quantity_allclose(pars['amplitude'].quantity,
-                                 4.0165729155447114e-7 * u.Unit('m-2 s-1 TeV-1'))
-
     def test_npred(self):
         self.fit.fit()
         actual = self.fit.obs_list[0].predicted_counts(
