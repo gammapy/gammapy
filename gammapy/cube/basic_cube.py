@@ -20,20 +20,20 @@ def fill_map_counts(event_list, ndmap):
      """
     # The list will contain the event table entries to be fed into the WcsNDMap
     coord_dict = dict()
-    ref_geom = ndmap.geom
+    geom = ndmap.geom
 
     # Add sky coordinates to dictionary
     coord_dict.update(skycoord=event_list.radec)
 
     # Now check the other axes and find corresponding entries in the EventList
     # energy and time are specific types
-    # TODO: add proper extraction for time
-    for i, axis in enumerate(ref_geom.axes):
+    for i, axis in enumerate(geom.axes):
         if axis.type == 'energy':
             # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
             coord_dict.update({axis.name: event_list.energy.to(axis.unit)})
-        # We look for other axes name in the table column names (case insensitive)
+        # TODO: add proper extraction for time
         else:
+            # We look for other axes name in the table column names (case insensitive)
             try:
                 # Here we implicitly assume that there is only one column with the same name
                 column_name = next(_ for _ in event_list.table.colnames if _.upper() == axis.name.upper())
@@ -44,7 +44,7 @@ def fill_map_counts(event_list, ndmap):
     ndmap.fill_by_coord(coord_dict)
 
 
-def make_map_counts(event_list, ref_geom, meta=None):
+def make_map_counts(event_list, geom, meta=None):
     """Build a ``WcsNDMap` with events from an EventList.
 
     The energy of the events is used for a non-spatial axis homogeneous to energy.
@@ -54,7 +54,7 @@ def make_map_counts(event_list, ref_geom, meta=None):
     ----------
     event_list : `~gammapy.data.EventList`
             the input event list
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
             the reference geometry
     meta : `~collections.OrderedDict`
             Dictionnary of meta information to keep with the map
@@ -65,10 +65,10 @@ def make_map_counts(event_list, ref_geom, meta=None):
         Count cube (3D) in true energy bins
     """
     # Create map
-    cntmap = WcsNDMap(ref_geom,meta=meta)
+    cntmap = WcsNDMap(geom,meta=meta)
     # Fill it
     fill_map_counts(event_list, cntmap)
     # Add MAPTYPE keyword to identify the nature of the map
-    cntmap.meta['MAPTYPE']='COUNTS_MAP'
+    cntmap.meta['MAPTYPE']='COUNTS'
 
     return cntmap
