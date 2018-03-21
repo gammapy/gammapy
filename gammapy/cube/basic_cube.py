@@ -34,11 +34,11 @@ def fill_map_counts(event_list, ndmap):
         # TODO: add proper extraction for time
         else:
             # We look for other axes name in the table column names (case insensitive)
-            try:
-                # Here we implicitly assume that there is only one column with the same name
-                column_name = next(_ for _ in event_list.table.colnames if _.upper() == axis.name.upper())
+            colnames = [_.upper() for _ in event_list.table.colnames]
+            if axis.name.upper() in colnames:
+                column_name = event_list.table.colnames[colnames.index(axis.name.upper())]
                 coord_dict.update({axis.name: event_list.table[column_name].to(axis.unit)})
-            except StopIteration:
+            else:
                 raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
     # Fill it
     ndmap.fill_by_coord(coord_dict)
