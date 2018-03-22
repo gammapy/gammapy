@@ -420,7 +420,7 @@ class LightCurveEstimator(object):
                  e_reco <= spec.hi_threshold,  # threshold
                  e_reco >= energy_range[0],  # user
                  e_reco <= energy_range[-1])  # user
-            ))
+            ))[0]
             counts_predictor = CountsPredictor(
                 livetime=livetime_to_add,
                 aeff=spec.aeff,

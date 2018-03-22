@@ -184,13 +184,13 @@ def test_lightcurve_estimator():
     # The uncommented values are with containment correction, this does not
     # work at the moment, try to reproduce them later
     # assert_allclose(table['flux'][0], 5.70852574714e-11, rtol=1e-2)
-    assert_allclose(table['flux'][0], 2.8517243785145818e-11, rtol=1e-2)
+    assert_allclose(table['flux'][0], 3.759367126537715e-11, rtol=1e-2)
     # assert_allclose(table['flux'][-1], 6.16718031281e-11, rtol=1e-2)
-    assert_allclose(table['flux'][-1], 2.8626063613082577e-11, rtol=1e-2)
+    assert_allclose(table['flux'][-1], 3.8700838947652217e-11, rtol=1e-2)
 
-    assert_allclose(table['flux_err'][0], 2.40524569797e-12, rtol=1e-2)
+    assert_allclose(table['flux_err'][0], 3.175731544692804e-12, rtol=1e-2)
     # assert_allclose(table['flux_err'][-1], 5.91581572415e-12, rtol=1e-2)
-    assert_allclose(table['flux_err'][-1], 2.3436731834e-12, rtol=1e-2)
+    assert_allclose(table['flux_err'][-1], 3.181191593075743e-12, rtol=1e-2)
 
     # same but with threshold equal to 2 TeV
     lc = lc_estimator.light_curve(
@@ -198,9 +198,10 @@ def test_lightcurve_estimator():
         spectral_model=model,
         energy_range=[2, 100] * u.TeV,
     )
+    table = lc.table
 
     # assert_allclose(table['flux'][0], 1.02122885108e-11, rtol=1e-2)
-    assert_allclose(table['flux'][0], 2.847377780063258e-11, rtol=1e-2)
+    assert_allclose(table['flux'][0], 7.52856493381838e-12, rtol=1e-2)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities
