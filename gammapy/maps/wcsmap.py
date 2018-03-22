@@ -208,9 +208,10 @@ class WcsMap(Map):
                 data_flat = np.ravel(data)
                 data_flat[~np.isfinite(data_flat)] = 0
                 nonzero = np.where(data_flat > 0)
-                cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat[nonzero].astype(float)))
+                array = nonzero[0]
+                cols.append(fits.Column('PIX', 'J', array=array))
+                array = data_flat[nonzero].astype(float)
+                cols.append(fits.Column('VALUE', 'E', array=array))
             elif self.geom.npix[0].size == 1:
                 data_flat = np.ravel(data).reshape(
                     shape[:-2] + (shape[-1] * shape[-2],))
@@ -235,6 +236,7 @@ class WcsMap(Map):
                     pix += pix_i
                     channel += [np.ones(data_i.size, dtype=int) *
                                 np.ravel_multi_index(i[::-1], shape[:-2])]
+
                 data_flat = np.concatenate(data_flat)
                 pix = np.concatenate(pix)
                 channel = np.concatenate(channel)
@@ -249,4 +251,5 @@ class WcsMap(Map):
             hdu_out = fits.PrimaryHDU(data, header=header)
         else:
             hdu_out = fits.ImageHDU(data, header=header, name=hdu)
+
         return hdu_out

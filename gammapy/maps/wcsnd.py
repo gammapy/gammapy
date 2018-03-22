@@ -39,21 +39,23 @@ class WcsNDMap(WcsMap):
     def __init__(self, geom, data=None, dtype='float32', meta=None):
         # TODO: Figure out how to mask pixels for integer data types
 
+        # Shape in WCS or FITS order is `shape`, in Numpy axis order is `shape_np`
         shape = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])] +
                       [ax.nbin for ax in geom.axes])
+        shape_np = shape[::-1]
+
         if data is None:
-            data = self._init_data(geom, shape, dtype)
-        elif data.shape != shape[::-1]:
+            data = self._init_data(geom, shape_np, dtype)
+        elif data.shape != shape_np:
             raise ValueError('Wrong shape for input data array. Expected {} '
-                             'but got {}'.format(shape, data.shape))
+                             'but got {}'.format(shape_np, data.shape))
 
         super(WcsNDMap, self).__init__(geom, data, meta)
 
-    def _init_data(self, geom, shape, dtype):
+    def _init_data(self, geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
         coords = []
         if not geom.is_regular:
-
             for idx in np.ndindex(geom.shape):
                 pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
                        np.array([0.0, float(geom.npix[1][idx] - 1)]))
@@ -61,24 +63,22 @@ class WcsNDMap(WcsMap):
                 coords += geom.pix_to_coord(pix)
 
         else:
-
             pix = (np.array([0.0, float(geom.npix[0] - 1)]),
                    np.array([0.0, float(geom.npix[1] - 1)]))
             pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
             coords += geom.pix_to_coord(pix)
 
         if np.all(np.isfinite(np.vstack(coords))):
-
             if geom.is_regular:
-                data = np.zeros(shape, dtype=dtype).T
+                data = np.zeros(shape_np, dtype=dtype)
             else:
-                data = np.nan * np.ones(shape, dtype=dtype).T
+                data = np.nan * np.ones(shape_np, dtype=dtype)
                 for idx in np.ndindex(geom.shape):
                     data[idx,
                          slice(geom.npix[0][idx]),
                          slice(geom.npix[1][idx])] = 0.0
         else:
-            data = np.full(shape, np.nan, dtype=dtype).T
+            data = np.full(shape_np, np.nan, dtype=dtype)
             idx = geom.get_idx()
             m = np.all(np.stack([t != -1 for t in idx]), axis=0)
             data[m] = 0.0
@@ -123,7 +123,7 @@ class WcsNDMap(WcsMap):
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
-        return self._data.T[idx]
+        return self.data.T[idx]
 
     def interp_by_coord(self, coords, interp=None):
 
