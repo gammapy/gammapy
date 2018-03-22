@@ -59,7 +59,7 @@ class SpectrumFit(object):
 
         self.covar_axis = None
         self.covariance = None
-        self.result = None
+        self._result = None
 
         self._check_valid_fit()
         self._apply_fit_range()
@@ -76,6 +76,18 @@ class SpectrumFit(object):
         ss += '\nError Backend {}'.format(self.err_method)
 
         return ss
+
+    @property
+    def result(self):
+        """Fit result
+
+        The result is a list of length ``n``, where ``n`` ist the number of
+        observations that participated in the fit. The best fit model is
+        usually the same for all observations but the results differ in the
+        fitted energy range, predicted counts, final fit statistic value
+        etc.
+        """
+        return self._result
 
     @property
     def obs_list(self):
@@ -441,7 +453,7 @@ class SpectrumFit(object):
                 obs=obs
             ))
 
-        self.result = results
+        self._result = results
 
     def est_errors(self):
         """Estimate parameter errors."""
