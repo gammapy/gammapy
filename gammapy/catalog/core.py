@@ -43,13 +43,13 @@ class SourceCatalogObject(object):
 
     @property
     def name(self):
-        """Source name"""
+        """Source name (str)"""
         name = self.data[self._source_name_key]
         return name.strip()
 
     @property
     def index(self):
-        """Row index of source in catalog"""
+        """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
 
     def pprint(self, file=None):
@@ -90,9 +90,7 @@ class SourceCatalogObject(object):
 
     @property
     def position(self):
-        """
-        `~astropy.coordinates.SkyCoord`
-        """
+        """Source position (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.data)
 
 
@@ -261,9 +259,7 @@ class SourceCatalog(object):
 
     @property
     def positions(self):
-        """
-        `~astropy.coordinates.SkyCoord`
-        """
+        """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.table)
 
     def select_image_region(self, image):

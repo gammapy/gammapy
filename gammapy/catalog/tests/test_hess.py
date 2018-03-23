@@ -9,6 +9,13 @@ from ...image import SkyImage
 from ..hess import SourceCatalogHGPS
 
 
+# TODO: we should find a way to use fixtures, to avoid reading
+# the catalog tables from disk several times
+# @pytest.fixture(scope='session')
+# def hgps_cat():
+#     return SourceCatalogHGPS()
+
+
 @requires_data('hgps')
 class TestSourceCatalogHGPS:
     def setup_class(self):
@@ -18,11 +25,14 @@ class TestSourceCatalogHGPS:
         assert self.cat.name == 'hgps'
         assert len(self.cat.table) == 78
 
-    def test_component_table(self):
-        assert len(self.cat.components) == 98
+    def test_table_components(self):
+        assert len(self.cat.table_components) == 98
 
-    def test_associations_table(self):
-        assert len(self.cat.associations) == 223
+    def test_table_associations(self):
+        assert len(self.cat.table_associations) == 223
+
+    def test_table_identifications(self):
+        assert len(self.cat.table_identifications) == 31
 
     @requires_dependency('scipy')
     @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
@@ -87,9 +97,6 @@ class TestSourceCatalogObjectHGPS:
         assert source.data['Spatial_Model'] == 'Shell'
         assert 'Source name          : HESS J1713-397' in str(source)
 
-    def test_pprint(self):
-        self.source.pprint()
-
     def test_energy_range(self):
         energy_range = self.source.energy_range
         assert energy_range.unit == 'TeV'
@@ -126,11 +133,45 @@ class TestSourceCatalogObjectHGPS:
         source = self.cat['HESS J1826-148']
         model = source.spatial_model()
         assert_allclose(model.amplitude, 8.354304806121845e-13)
+        assert_allclose(model.x_0, 16.882482528686523)
+        assert_allclose(model.y_0, -1.2889292240142822)
 
     def test_spatial_model_gaussian(self):
         source = self.cat['HESS J1119-614']
         model = source.spatial_model()
         assert_allclose(model.amplitude, 1.524557226374496e-11)
+        assert_allclose(model.x_mean, -6.78719177e+01)
+        assert_allclose(model.y_mean, -5.33235371e-01)
+        assert_allclose(model.x_stddev, 9.78596658e-02)
+        assert_allclose(model.y_stddev, 9.78596658e-02)
+        assert_allclose(model.theta, 0)
+
+        bbox = model.bounding_box
+        print(bbox)
+        assert_allclose(bbox, [[-1.07146, 0.00499], [-68.41014, -67.33368]], atol=0.001)
+
+    def test_spatial_model_gaussian2(self):
+        source = self.cat['HESS J1843-033']
+        models = source.spatial_model()
+
+        model = models[0]
+        assert_allclose(model.amplitude, 1.44536430e-11)
+        assert_allclose(model.x_mean, 2.90472164e+01)
+        assert_allclose(model.y_mean, 2.43896767e-01)
+        assert_allclose(model.x_stddev, 1.24991007e-01)
+        assert_allclose(model.y_stddev, 1.24991007e-01)
+        assert_allclose(model.theta, 0)
+
+        model = models[1]
+        assert_allclose(model.amplitude, 4.91294805e-12)
+        assert_allclose(model.x_mean, 2.87703781e+01)
+        assert_allclose(model.y_mean, -7.27819949e-02)
+        assert_allclose(model.x_stddev, 2.29470655e-01)
+        assert_allclose(model.y_stddev, 2.29470655e-01)
+        assert_allclose(model.theta, 0)
+
+        bbox = model.bounding_box
+        assert_allclose(bbox, [[-1.33487, 1.18930], [27.50829, 30.03246]], atol=0.001)
 
     def test_spatial_model_gaussian3(self):
         source = self.cat['HESS J1825-137']
@@ -144,8 +185,36 @@ class TestSourceCatalogObjectHGPS:
         source = self.cat['HESS J1801-233']
         model = source.spatial_model()
         assert_allclose(model.amplitude, 2.4881435269261268e-12)
+        assert_allclose(model.x_mean, 6.65688896e+00)
+        assert_allclose(model.y_mean, -2.67688125e-01)
+        assert_allclose(model.x_stddev, 1.70000002e-01)
+        assert_allclose(model.y_stddev, 1.70000002e-01)
+        assert_allclose(model.theta, 0)
 
     def test_spatial_model_shell(self):
         source = self.cat['Vela Junior']
         model = source.spatial_model()
-        assert_allclose(model.amplitude, 2.3394972370498355e-11)
+        assert_allclose(model.amplitude, 2.33949724e-11)
+        assert_allclose(model.x_0, -9.37126160e+01)
+        assert_allclose(model.y_0, -1.24326038e+00)
+        assert_allclose(model.r_in, 9.50000000e-01)
+        assert_allclose(model.width, 5.00000000e-02)
+
+
+@requires_data('hgps')
+class TestSourceCatalogObjectHGPSComponent:
+    def setup_class(self):
+        self.cat = SourceCatalogHGPS()
+        self.source = self.cat['HESS J1843-033']
+        self.component = self.source.components[1]
+
+    def test_get_by_row_idx(self):
+        # Row index starts at 0, component numbers at 1
+        # Thus we expect `HGPSC 084` at row 83
+        c = self.cat.gaussian_component(83)
+        assert c.name == 'HGPSC 084'
+
+    def test_it(self):
+        assert self.component.name == 'HGPSC 084'
+        assert self.component.index == 83
+        assert 'SourceCatalogObjectHGPSComponent' in repr(self.component)
