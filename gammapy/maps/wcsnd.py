@@ -45,14 +45,15 @@ class WcsNDMap(WcsMap):
         shape_np = shape[::-1]
 
         if data is None:
-            data = self._init_data(geom, shape_np, dtype)
+            data = self._make_default_data(geom, shape_np, dtype)
         elif data.shape != shape_np:
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape_np, data.shape))
 
         super(WcsNDMap, self).__init__(geom, data, meta)
 
-    def _init_data(self, geom, shape_np, dtype):
+    @staticmethod
+    def _make_default_data(geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
         coords = []
         if not geom.is_regular:
@@ -72,7 +73,7 @@ class WcsNDMap(WcsMap):
             if geom.is_regular:
                 data = np.zeros(shape_np, dtype=dtype)
             else:
-                data = np.nan * np.ones(shape_np, dtype=dtype)
+                data = np.full(shape_np, np.nan, dtype=dtype)
                 for idx in np.ndindex(geom.shape):
                     data[idx,
                          slice(geom.npix[0][idx]),
