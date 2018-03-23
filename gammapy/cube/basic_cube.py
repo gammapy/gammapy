@@ -4,8 +4,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..maps import WcsNDMap
 
+__all__ = [
+    'fill_map_counts'
+]
 
-def fill_map_counts(event_list, ndmap):
+def fill_map_counts(count_map, event_list):
     """Fill a ``WcsMap` with events from an EventList.
 
      The energy of the events is used for a non-spatial axis homogeneous to energy.
@@ -13,21 +16,19 @@ def fill_map_counts(event_list, ndmap):
 
      Parameters
      ----------
+     count_map : `~gammapy.maps.Map`
+         Target map
      event_list : `~gammapy.data.EventList`
              the input event list
-     ndmap : `~gammapy.maps.Map`
-         Target map
      """
-    # The list will contain the event table entries to be fed into the WcsNDMap
-    coord_dict = dict()
-    geom = ndmap.geom
+    geom = count_map.geom
 
     # Add sky coordinates to dictionary
-    coord_dict.update(skycoord=event_list.radec)
+    coord_dict=dict(skycoord=event_list.radec)
 
     # Now check the other axes and find corresponding entries in the EventList
     # energy and time are specific types
-    for i, axis in enumerate(geom.axes):
+    for axis in geom.axes:
         if axis.type == 'energy':
             # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
             coord_dict.update({axis.name: event_list.energy.to(axis.unit)})
@@ -41,7 +42,7 @@ def fill_map_counts(event_list, ndmap):
             else:
                 raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
     # Fill it
-    ndmap.fill_by_coord(coord_dict)
+    count_map.fill_by_coord(coord_dict)
 
 
 def make_map_counts(event_list, geom, meta=None):

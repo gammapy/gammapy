@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from astropy.coordinates import SkyCoord
 import astropy.units as u
-from ...maps import MapAxis, WcsGeom, WcsNDMap
-from ...data import DataStore
-from ...cube.basic_cube import make_map_counts
+from ...maps import MapAxis, WcsGeom, HpxGeom, Map
+from ...data import DataStore, EventList
+from ...cube.basic_cube import fill_map_counts
 
 # initial time of run 110380 from cta 1DC
 t0_1DC = 664504199. * u.s
@@ -30,7 +30,7 @@ geom_cta_time = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
 
 @pytest.mark.parametrize("ds_path,run_list,geom", [(cta_1dc_store, cta_1dc_runs, geom_cta),
                                                    (cta_1dc_store, cta_1dc_runs, geom_cta_time)])
-def test_counts_map_maker(ds_path, run_list, geom):
+def test_fill_map_counts(ds_path, run_list, geom):
     # TODO: change the test event list to something that's created from scratch,
     # using values so that it's possible to make simple assert statements on the
     # map data in the tests below, i.e. have pixels that should receive 0, 1 or 2 counts
@@ -47,7 +47,8 @@ def test_counts_map_maker(ds_path, run_list, geom):
     wcsgeom = WcsGeom.create(**geom)
 
     # Extract count map
-    cntmap = make_map_counts(events, wcsgeom)
+    cntmap = Map.from_geom(wcsgeom)
+    fill_map_counts(cntmap,events)
 
     # Number of entries in the map
     nmap = cntmap.data.sum()
@@ -63,3 +64,23 @@ def test_counts_map_maker(ds_path, run_list, geom):
 
     nevt = valid.sum()
     assert nmap == nevt
+
+
+def test_fill_map_counts_fermi():
+    # This tests healpix maps fill with non standard non spatial axis
+    angles = np.array((0,45,180))*u.deg
+    axis_zen = MapAxis(angles, node_type='edge', name='zenith_angle', unit=u.deg)
+
+    evt_2fhl = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
+    hpxgeom = HpxGeom(256,coordsys='GAL',axes=[axis_zen])
+    map_2fhl = Map.from_geom(hpxgeom)
+    fill_map_counts(map_2fhl,evt_2fhl)
+
+    nmap_l = np.sum(map_2fhl.data[0])
+    nmap_h = np.sum(map_2fhl.data[1])
+
+    nevt_l = np.sum(evt_2fhl.table['ZENITH_ANGLE']<45)
+    nevt_h = np.sum(evt_2fhl.table['ZENITH_ANGLE']>45)
+
+    assert nmap_l == nevt_l
+    assert nmap_h == nevt_h
