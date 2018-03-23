@@ -114,7 +114,7 @@ def test_wcs_nd_map_data_transpose_issue(tmpdir):
     # Regression test for https://github.com/gammapy/gammapy/issues/1346
 
     # Our test case: a little map with WCS shape (3, 2), i.e. numpy array shape (2, 3)
-    data = np.array([[0, 1, 2], [3, 0, 5]])
+    data = np.array([[0, 1, 2], [np.nan, np.inf, -np.inf]])
     geom = WcsGeom.create(npix=(3, 2))
 
     # Data should be unmodified after init
@@ -138,11 +138,6 @@ def test_wcs_nd_map_data_transpose_issue(tmpdir):
     filename = str(tmpdir / 'sparse.fits.gz')
     m.write(filename)
     assert_equal(Map.read(filename).data, data)
-
-    # TODO: I wasn't able to trigger the issue without I/O yet. Remove?
-    # hdu_list = m.to_hdulist(sparse=True)
-    # m2 = Map.from_hdu_list(hdu_list)
-    # assert_equal(m2.data, data)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
