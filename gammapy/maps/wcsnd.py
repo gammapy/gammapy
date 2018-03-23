@@ -151,9 +151,10 @@ class WcsNDMap(WcsMap):
     def _interp_by_pix_linear_grid(self, pix, order=1):
         # TODO: Cache interpolator
         method_lookup = {0: 'nearest', 1: 'linear'}
-        method = method_lookup.get(order, None)
-        if method is None:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
+        try:
+            method = method_lookup[order]
+        except KeyError:
+            raise ValueError('Invalid interpolation order: {}'.format(order))
 
         from scipy.interpolate import RegularGridInterpolator
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
