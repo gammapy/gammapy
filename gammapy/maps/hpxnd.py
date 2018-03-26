@@ -37,22 +37,28 @@ class HpxNDMap(HpxMap):
     def __init__(self, geom, data=None, dtype='float32', meta=None):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
+        shape_np = shape[::-1]
+
         if data is None:
-
-            if geom.npix.size > 1:
-                data = np.nan * np.ones(shape, dtype=dtype).T
-                idx = geom.get_idx(local=True)
-                data[idx[::-1]] = 0.0
-            else:
-                data = np.zeros(shape, dtype=dtype).T
-
-        elif data.shape != shape[::-1]:
+            data = self._make_default_data(geom, shape_np, dtype)
+        elif data.shape != shape_np:
             raise ValueError('Wrong shape for input data array. Expected {} '
-                             'but got {}'.format(shape, data.shape))
+                             'but got {}'.format(shape_np, data.shape))
 
         super(HpxNDMap, self).__init__(geom, data, meta)
         self._wcs2d = None
         self._hpx2wcs = None
+
+    @staticmethod
+    def _make_default_data(geom, shape_np, dtype):
+        if geom.npix.size > 1:
+            data = np.full(shape_np, np.nan, dtype=dtype)
+            idx = geom.get_idx(local=True)
+            data[idx[::-1]] = 0.0
+        else:
+            data = np.zeros(shape_np, dtype=dtype)
+
+        return data
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -92,7 +98,7 @@ class HpxNDMap(HpxMap):
                 if c.find(hpx.hpx_conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
-            if len(cnames) == 1:
+            if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
                 for i, cname in enumerate(cnames):

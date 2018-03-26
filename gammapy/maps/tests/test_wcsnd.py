@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from ..utils import fill_poisson
@@ -108,6 +108,36 @@ def test_wcsndmap_read_write_fgst(tmpdir):
 
     m2 = Map.read(filename)
     assert m2.geom.conv == 'fgst-template'
+
+
+def test_wcs_nd_map_data_transpose_issue(tmpdir):
+    # Regression test for https://github.com/gammapy/gammapy/issues/1346
+
+    # Our test case: a little map with WCS shape (3, 2), i.e. numpy array shape (2, 3)
+    data = np.array([[0, 1, 2], [np.nan, np.inf, -np.inf]])
+    geom = WcsGeom.create(npix=(3, 2))
+
+    # Data should be unmodified after init
+    m = WcsNDMap(data=data, geom=geom)
+    assert_equal(m.data, data)
+
+    # Data should be unmodified if initialised like this
+    m = WcsNDMap(geom=geom)
+    # and then filled via an in-place Numpy array operation
+    m.data += data
+    assert_equal(m.data, data)
+    # This is done e.g. in `m.interp_image` or probably also other operations,
+    # sometimes they operate on `m.data` in-place.
+
+    # Data should be unmodified after write / read to normal image format
+    filename = str(tmpdir / 'normal.fits.gz')
+    m.write(filename)
+    assert_equal(Map.read(filename).data, data)
+
+    # Data should be unmodified after write / read to sparse image format
+    filename = str(tmpdir / 'sparse.fits.gz')
+    m.write(filename)
+    assert_equal(Map.read(filename).data, data)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
