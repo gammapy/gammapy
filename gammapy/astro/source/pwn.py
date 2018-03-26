@@ -69,10 +69,7 @@ class PWN(object):
             t = Quantity(t, 'yr')
             r_pwn = self._radius_free_expansion(t).to('cm').value
             r_shock = self.snr.radius_reverse_shock(t).to('cm').value
-            # Calling float here is an attempt to fix
-            # https://travis-ci.org/gammapy/gammapy/jobs/358305453#L3824
-            # by forcing a scalar return value in this function
-            return float(r_pwn - r_shock)
+            return r_pwn - r_shock
 
         # 4e3 years is a typical value that works for fsolve
         return Quantity(fsolve(time_coll, 4e3), 'yr')
@@ -131,6 +128,7 @@ class PWN(object):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
+
         return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) /
                        (4. / 3 * np.pi * self.radius(t) ** 3))
 
