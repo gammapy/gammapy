@@ -123,6 +123,7 @@ def test_load_lat_psf_performance():
     assert table_p7_95['energy'][0] == 31.6227766017
     assert table_p7_95['containment_angle'][0] == 38.3847234362
 
+
 @requires_data('fermi-lat')
 @requires_dependency('healpy')
 @requires_dependency('yaml')
@@ -137,7 +138,7 @@ class TestFermiLATDataset:
 
     def test_exposure(self):
         exposure = self.data_2fhl.exposure
-        assert_allclose(exposure.data.sum(), 6.072634932461568e+16)
+        assert_allclose(exposure.data.sum(), 6.072634932461568e+16, rtol=1e-5)
 
     def test_counts(self):
         counts = self.data_2fhl.counts
