@@ -282,24 +282,26 @@ class LightCurveEstimator(object):
 
         return on_evt_list
 
-    def create_fixed_time_bin_lc(self, time_step, spectral_model, energy_range, spectrum_extraction):
+    @staticmethod
+    def create_fixed_time_bin(time_step, spectrum_extraction):
         """
-        Create time intervals of fixed size and then a light curve using those intervals
+        Create time intervals of fixed size
 
-        :param time_step: float
-            Size of the light curve bins
-        :param spectral_model:`~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        :param energy_range:`~astropy.units.Quantity`
-            True energy range to evaluate integrated flux (true energy)
-        :param spectrum_extraction:`~gammapy.spectrum.SpectrumExtraction`
-       Contains statistics, IRF and event lists
-        :return:`~gammapy.time.LightCurve`
-            Light curve
+    Parameters
+    ----------
+        time_step: float
+            Size of the light curve bins in seconds
+        spectrum_extraction:`~gammapy.spectrum.SpectrumExtraction`
+            Contains statistics, IRF and event lists
+        Returns
+        -------
+        intervals: `list` of `~astropy.time.Time`
+            List of time intervals
         """
         intervals = []
         time_start = Time(100000, format="mjd")
         time_end = Time(0, format="mjd")
+        time_step = time_step/(24*3600)
 
         for obs in spectrum_extraction.obs_list:
             if time_start > obs.events.time.min():
@@ -310,13 +312,7 @@ class LightCurveEstimator(object):
         while time < time_end.value:
             time += time_step
             intervals.append([Time(time - time_step, format="mjd"), Time(time, format="mjd")])
-
-        lc = self.light_curve(
-            time_intervals=intervals,
-            spectral_model=spectral_model,
-            energy_range=energy_range,
-        )
-        return lc
+        return intervals
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
