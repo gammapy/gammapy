@@ -1,12 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog.
-
-(Not released yet.)
-
-TODO:
-- [ ] Load HGPS maps
-- [ ] Source object should contain info on components and associations
-- [ ] Links to SNRCat
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
@@ -18,6 +11,7 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian2D
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
+from ..utils.table import table_row_to_dict
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..image.models import Delta2D, Shell2D
@@ -27,6 +21,7 @@ from .core import SourceCatalog, SourceCatalogObject
 __all__ = [
     'SourceCatalogHGPS',
     'SourceCatalogObjectHGPS',
+    'SourceCatalogObjectHGPSComponent',
 ]
 
 # Flux factor, used for printing
@@ -39,14 +34,21 @@ FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
-class HGPSGaussComponent(object):
+class SourceCatalogObjectHGPSComponent(object):
     """One Gaussian component from the HGPS catalog.
+
+    See also
+    --------
+    SourceCatalogHGPS, SourceCatalogObjectHGPS
     """
-    _source_name_key = 'Source_Name'
+    _source_name_key = 'Component_ID'
     _source_index_key = 'catalog_row_index'
 
     def __init__(self, data):
         self.data = OrderedDict(data)
+
+    def __repr__(self):
+        return '{}({!r})'.format(self.__class__.__name__, self.name)
 
     def __str__(self):
         """Pretty-print source data"""
@@ -64,20 +66,18 @@ class HGPSGaussComponent(object):
 
     @property
     def name(self):
-        """Source name"""
+        """Source name (str)"""
         name = self.data[self._source_name_key]
         return name.strip()
 
     @property
     def index(self):
-        """Row index of source in catalog"""
+        """Row index of source in table (int)"""
         return self.data[self._source_index_key]
 
     @property
     def spatial_model(self):
-        """
-        Component spatial model.
-        """
+        """Component spatial model (`~astropy.modeling.models.Gaussian2D`)."""
         d = self.data
         # At the moment spatial models are normalised by deg^2
         amplitude = d['Flux_Map'].value / (2 * np.pi * d['Size'].value ** 2)
@@ -94,7 +94,14 @@ class HGPSGaussComponent(object):
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
-    """One object from the HGPS catalog."""
+    """One object from the HGPS catalog.
+
+    The catalog is represented by `SourceCatalogHGPS`.
+    Examples are given there.
+    """
+
+    def __repr__(self):
+        return '{}({!r})'.format(self.__class__.__name__, self.name)
 
     def __str__(self):
         return self.info()
@@ -104,11 +111,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations'}
+        info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations', 'id'}
             Comma separated list of options
         """
         if info == 'all':
-            info = 'basic,associations,map,spec,flux_points,components'
+            info = 'basic,associations,id,map,spec,flux_points,components'
 
         ss = ''
         ops = info.split(',')
@@ -120,10 +127,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             ss += self._info_spec()
         if 'flux_points' in ops:
             ss += self._info_flux_points()
-        if 'components' in ops:
+        if 'components' in ops and hasattr(self, 'components'):
             ss += self._info_components()
         if 'associations' in ops:
             ss += self._info_associations()
+        if 'id' in ops and hasattr(self, 'identification_info'):
+            ss += self._info_id()
         return ss
 
     def _info_basic(self):
@@ -142,9 +151,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_associations(self):
         ss = '\n*** Source associations info ***\n\n'
-        associations = ', '.join(self.associations)
-        ss += 'List of associated objects: {}\n'.format(associations)
-        return ss
+        lines = self.associations.pformat(max_width=-1, max_lines=-1)
+        ss += '\n'.join(lines)
+        return ss + '\n'
+
+    def _info_id(self):
+        ss = '\n*** Source identification info ***\n\n'
+        ss += '\n'.join('{}: {}'.format(k, v) for k, v in self.identification_info.items())
+        return ss + '\n'
 
     def _info_map(self):
         """Print info from map analysis."""
@@ -257,7 +271,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 erg cm^-2 s^-1\n'.format(
             'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
 
-        # TODO: can we just use the Gammapy model classes here instead of duplicating the code?
         ss += self._info_spec_pl()
         ss += self._info_spec_ecpl()
 
@@ -325,7 +338,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         d = self.data
         ss = '\n*** Flux points info ***\n\n'
         ss += 'Number of flux points: {}\n'.format(d['N_Flux_Points'])
-        ss += 'Flux points table: \n\n\t'
+        ss += 'Flux points table: \n\n'
 
         flux_points = self.flux_points.table.copy()
 
@@ -340,16 +353,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         for _ in flux_cols:
             flux_points[_].format = '.3e'
 
-        # convert table to string
         lines = flux_points.pformat(max_width=-1, max_lines=-1)
         ss += '\n'.join(lines)
         return ss + '\n'
 
     def _info_components(self):
         """Print info about the components."""
-        if not hasattr(self, 'components'):
-            return ''
-
         ss = '\n*** Gaussian component info ***\n\n'
         ss += 'Number of components: {}\n'.format(len(self.components))
         ss += '{:<20s} : {}\n\n'.format('Spatial components', self.data['Components'])
@@ -376,44 +385,45 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return e
 
     @property
-    def spectral_model(self):
+    def spectral_model_type(self):
+        """Spectral model type (str).
+
+        One of: 'pl', 'ecpl'
+        """
+        return self.data['Spectral_Model'].strip().lower()
+
+    def spectral_model(self, which='best'):
         """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
-        One of the following models:
+        One of the following models (given by ``Spectral_Model`` in the catalog):
 
-        - ``Spectral_Model="PL"`` : `~gammapy.spectrum.models.PowerLaw`
-        - ``Spectral_Model="ECPL"`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
-        """
-        data = self.data
-        spec_type = data['Spectral_Model'].strip()
-        return self._spectral_model(spec_type)
-
-    def _spectral_model(self, spec_type):
-        """
-        Create spectral model from source parameters.
+        - ``PL`` : `~gammapy.spectrum.models.PowerLaw`
+        - ``ECPL`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
 
         Parameters
         ----------
-        spec_type : str
-            Spectral model type either 'PL' or 'ECPL'.
-
-        Returns
-        -------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model instance.
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
         """
         data = self.data
 
+        if which == 'best':
+            spec_type = self.spectral_model_type
+        elif which in {'pl', 'ecpl'}:
+            spec_type = which
+        else:
+            raise ValueError('Invalid selection: which = {!r}'.format(which))
+
         pars, errs = {}, {}
 
-        if spec_type == 'PL':
+        if spec_type == 'pl':
             pars['index'] = data['Index_Spec_PL']
             pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_PL_Pivot']
             errs['amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
             errs['index'] = data['Index_Spec_PL_Err'] * u.dimensionless_unscaled
             model = PowerLaw(**pars)
-        elif spec_type == 'ECPL':
+        elif spec_type == 'ecpl':
             pars['index'] = data['Index_Spec_ECPL']
             pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_ECPL_Pivot']
@@ -428,19 +438,43 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-    def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
+    @property
+    def spatial_model_type(self):
+        """Spatial model type (str).
+
+        One of: 'point-like', 'shell', 'gaussian', '2-gaussian', '3-gaussian'
         """
-        Source spatial model.
+        return self.data['Spatial_Model'].strip().lower()
+
+    @property
+    def is_pointlike(self):
+        """Source is pointlike? (bool)"""
+        d = self.data
+        has_size_ul = np.isfinite(d['Size_UL'])
+        pointlike = d['Spatial_Model'] == 'Point-Like'
+        return pointlike or has_size_ul
+
+
+
+    def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
+        """Spatial model (`~gammapy.image.models.SpatialModel`).
+
+        One of the following models (given by ``Spatial_Model`` in the catalog):
+
+        - ``Point-Like`` or has a size upper limit : `~gammapy.image.models.Delta2D`
+        - ``Shell``: `~gammapy.image.models.Shell2D`
+        - ``Gaussian``: `gammapy.image.models.Gaussian2D`
+        - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
         """
         d = self.data
-        flux = self.spectral_model.integral(emin, emax)
+        flux = self.spectral_model().integral(emin, emax)
         amplitude = flux.to('cm-2 s-1').value
 
         pars = {}
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        spatial_model = d['Spatial_Model']
+        spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
             pars['amplitude'] = amplitude
@@ -448,7 +482,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['y_0'] = glat.value
             return Delta2D(**pars)
 
-        elif spatial_model == 'Shell':
+        elif spatial_type == 'shell':
             # HGPS contains no information on shell width
             # Here we assuma a 5% shell width for all shells.
             shell_width_fraction = 0.05
@@ -460,31 +494,29 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['amplitude'] = amplitude
             return Shell2D(**pars)
 
-        elif spatial_model in ['Gaussian', '2-Gaussian', '3-Gaussian']:
+        elif spatial_type in ['gaussian', '2-gaussian', '3-gaussian']:
             amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
             try:
                 models = [component.spatial_model for component in self.components]
             except AttributeError:
                 # there is one external source (HESS J1801-233) where there is no
                 # component info available, so we create it here locally
-                models = [HGPSGaussComponent(d).spatial_model]
+                models = [SourceCatalogObjectHGPSComponent(d).spatial_model]
 
             for model in models:
                 # weight total flux according to relative amplitude
                 model.amplitude = model.amplitude / amplitude_total * amplitude
 
-            if spatial_model == 'Gaussian':
+            if spatial_type == 'gaussian':
                 return models[0]
-
-            elif spatial_model == '2-Gaussian':
+            elif spatial_type == '2-gaussian':
                 model = models[0] + models[1]
 
                 # use generic bounding box of 2 deg width and height
                 model.bounding_box = ((glat.deg - 2, glat.deg + 2),
                                       (glon.deg - 2, glon.deg + 2))
                 return model
-
-            elif spatial_model == '3-Gaussian':
+            elif spatial_type == '3-gaussian':
                 model = models[0] + models[1] + models[2]
 
                 # use generic bounding box of 2 deg width and height
@@ -493,15 +525,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 return model
 
         else:
-            raise ValueError('Not a valid spatial model{}'.format(spatial_model))
-
-    @property
-    def is_pointlike(self):
-        """Source is pointlike"""
-        d = self.data
-        has_size_ul = np.isfinite(d['Size_UL'])
-        pointlike = d['Spatial_Model'] == 'Point-Like'
-        return pointlike or has_size_ul
+            raise ValueError('Not a valid spatial model: {}'.format(spatial_type))
 
     @property
     def flux_points(self):
@@ -526,11 +550,41 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 class SourceCatalogHGPS(SourceCatalog):
     """HESS Galactic plane survey (HGPS) source catalog.
 
-    Note: this catalog isn't publicly available yet.
-    H.E.S.S. members have access and can use this.
+    Reference: https://www.mpi-hd.mpg.de/hfm/HESS/hgps/
+
+    One source is represented by `SourceCatalogObjectHGPS`.
+
+    Examples
+    --------
+    Load the catalog data:
+
+    >>> from gammapy.catalog import SourceCatalogHGPS
+    >>> filename = 'hgps_catalog_v1.fits.gz'
+    >>> cat = SourceCatalogHGPS(filename)
+
+    Access a source by name:
+
+    >>> source = cat['HESS J1843-033']
+    >>> print(source)
+
+    Access source spectral data and plot it:
+
+    >>> source.spectral_model.plot(source.energy_range)
+    >>> source.spectral_model.plot_error(source.energy_range)
+    >>> source.flux_points.plot()
+
+    Gaussian component information can be accessed as well,
+    either via the source, or via the catalog:
+
+    >>> source.components
+    >>> cat.gaussian_component(83)
     """
     name = 'hgps'
+    """Source catalog name (str)."""
+
     description = 'H.E.S.S. Galactic plane survey (HGPS) source catalog'
+    """Source catalog description (str)."""
+
     source_object_class = SourceCatalogObjectHGPS
 
     def __init__(self, filename=None, hdu='HGPS_SOURCES'):
@@ -546,51 +600,70 @@ class SourceCatalogHGPS(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-        self.components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
-        self.associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
-        self.identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
-        self._large_scale_component = Table.read(filename, hdu='HGPS_LARGE_SCALE_COMPONENT')
+        self._table_components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
+        self._table_associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
+        self._table_identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
+        self._table_large_scale_component = Table.read(filename, hdu='HGPS_LARGE_SCALE_COMPONENT')
+
+    @property
+    def table_components(self):
+        """Gaussian component table (`~astropy.table.Table`)"""
+        return self._table_components
+
+    @property
+    def table_associations(self):
+        """Source association table (`~astropy.table.Table`)"""
+        return self._table_associations
+
+    @property
+    def table_identifications(self):
+        """Source identification table (`~astropy.table.Table`)"""
+        return self._table_identifications
+
+    @property
+    def table_large_scale_component(self):
+        """Large scale component table (`~astropy.table.Table`)"""
+        return self._table_large_scale_component
 
     @property
     def large_scale_component(self):
-        """Large sclae component model (`~gammapy.background.models.GaussianBand2D`).
+        """Large scale component model (`~gammapy.background.models.GaussianBand2D`).
         """
-        table = self._large_scale_component
+        table = self.table_large_scale_component
         return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0, ext=0))
 
     def _make_source_object(self, index):
-        """Make one source object.
-
-        Parameters
-        ----------
-        index : int
-            Row index
-
-        Returns
-        -------
-        source : `SourceCatalogObject`
-            Source object
-        """
+        """Make `SourceCatalogObject` for given row index"""
         source = super(SourceCatalogHGPS, self)._make_source_object(index)
-        if hasattr(self, 'components'):
-            if source.data['Components'] != '':
-                self._attach_component_info(source)
-        if hasattr(self, 'associations'):
-            self._attach_association_info(source)
-        # TODO: implement or remove:
-        # if source.data['Source_Class'] != 'Unid':
-        #    self._attach_identification_info(source)
+
+        if source.data['Components'] != '':
+            self._attach_component_info(source)
+
+        self._attach_association_info(source)
+
+        if source.data['Source_Class'] != 'Unid':
+            self._attach_identification_info(source)
+
         return source
 
     def _attach_component_info(self, source):
         source.components = []
-        lookup = SourceCatalog(self.components, source_name_key='Component_ID')
+        lookup = SourceCatalog(self.table_components, source_name_key='Component_ID')
         for name in source.data['Components'].split(', '):
-            component = HGPSGaussComponent(data=lookup[name].data)
+            component = SourceCatalogObjectHGPSComponent(data=lookup[name].data)
             source.components.append(component)
 
     def _attach_association_info(self, source):
-        source.associations = []
-        _ = source.data['Source_Name'] == self.associations['Source_Name']
+        t = self.table_associations
+        mask = source.data['Source_Name'] == t['Source_Name']
+        source.associations = t[mask]
 
-        source.associations = list(self.associations['Association_Name'][_])
+    def _attach_identification_info(self, source):
+        t = self._table_identifications
+        idx = np.nonzero(source.name == t['Source_Name'])[0][0]
+        source.identification_info = table_row_to_dict(t[idx])
+
+    def gaussian_component(self, row_idx):
+        """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
+        data = table_row_to_dict(self.table_components[row_idx])
+        return SourceCatalogObjectHGPSComponent(data=data)
