@@ -48,7 +48,7 @@ class SourceCatalogObjectHGPSComponent(object):
         self.data = OrderedDict(data)
 
     def __repr__(self):
-        return 'SourceCatalogObjectHGPSComponent({!r})'.format(self.name)
+        return '{}({!r})'.format(self.__class__.__name__, self.name)
 
     def __str__(self):
         """Pretty-print source data"""
@@ -99,6 +99,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     The catalog is represented by `SourceCatalogHGPS`.
     Examples are given there.
     """
+
+    def __repr__(self):
+        return '{}({!r})'.format(self.__class__.__name__, self.name)
 
     def __str__(self):
         return self.info()
@@ -382,27 +385,45 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return e
 
     @property
-    def spectral_model(self):
+    def spectral_model_type(self):
+        """Spectral model type (str).
+
+        One of: 'pl', 'ecpl'
+        """
+        return self.data['Spectral_Model'].strip().lower()
+
+    def spectral_model(self, which='best'):
         """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
         - ``PL`` : `~gammapy.spectrum.models.PowerLaw`
         - ``ECPL`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
         """
         data = self.data
-        spec_type = data['Spectral_Model'].strip()
+
+        if which == 'best':
+            spec_type = self.spectral_model_type
+        elif which in {'pl', 'ecpl'}:
+            spec_type = which
+        else:
+            raise ValueError('Invalid selection: which = {!r}'.format(which))
 
         pars, errs = {}, {}
 
-        if spec_type == 'PL':
+        if spec_type == 'pl':
             pars['index'] = data['Index_Spec_PL']
             pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_PL_Pivot']
             errs['amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
             errs['index'] = data['Index_Spec_PL_Err'] * u.dimensionless_unscaled
             model = PowerLaw(**pars)
-        elif spec_type == 'ECPL':
+        elif spec_type == 'ecpl':
             pars['index'] = data['Index_Spec_ECPL']
             pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_ECPL_Pivot']
@@ -417,6 +438,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
+    @property
+    def spatial_model_type(self):
+        """Spatial model type (str).
+
+        One of: 'point-like', 'shell', 'gaussian', '2-gaussian', '3-gaussian'
+        """
+        return self.data['Spatial_Model'].strip().lower()
+
+    @property
+    def is_pointlike(self):
+        """Source is pointlike? (bool)"""
+        d = self.data
+        has_size_ul = np.isfinite(d['Size_UL'])
+        pointlike = d['Spatial_Model'] == 'Point-Like'
+        return pointlike or has_size_ul
+
+
+
     def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
         """Spatial model (`~gammapy.image.models.SpatialModel`).
 
@@ -428,14 +467,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
         """
         d = self.data
-        flux = self.spectral_model.integral(emin, emax)
+        flux = self.spectral_model().integral(emin, emax)
         amplitude = flux.to('cm-2 s-1').value
 
         pars = {}
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        spatial_model = d['Spatial_Model']
+        spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
             pars['amplitude'] = amplitude
@@ -443,7 +482,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['y_0'] = glat.value
             return Delta2D(**pars)
 
-        elif spatial_model == 'Shell':
+        elif spatial_type == 'shell':
             # HGPS contains no information on shell width
             # Here we assuma a 5% shell width for all shells.
             shell_width_fraction = 0.05
@@ -455,7 +494,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['amplitude'] = amplitude
             return Shell2D(**pars)
 
-        elif spatial_model in ['Gaussian', '2-Gaussian', '3-Gaussian']:
+        elif spatial_type in ['gaussian', '2-gaussian', '3-gaussian']:
             amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
             try:
                 models = [component.spatial_model for component in self.components]
@@ -468,18 +507,16 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 # weight total flux according to relative amplitude
                 model.amplitude = model.amplitude / amplitude_total * amplitude
 
-            if spatial_model == 'Gaussian':
+            if spatial_type == 'gaussian':
                 return models[0]
-
-            elif spatial_model == '2-Gaussian':
+            elif spatial_type == '2-gaussian':
                 model = models[0] + models[1]
 
                 # use generic bounding box of 2 deg width and height
                 model.bounding_box = ((glat.deg - 2, glat.deg + 2),
                                       (glon.deg - 2, glon.deg + 2))
                 return model
-
-            elif spatial_model == '3-Gaussian':
+            elif spatial_type == '3-gaussian':
                 model = models[0] + models[1] + models[2]
 
                 # use generic bounding box of 2 deg width and height
@@ -488,15 +525,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 return model
 
         else:
-            raise ValueError('Not a valid spatial model{}'.format(spatial_model))
-
-    @property
-    def is_pointlike(self):
-        """Source is pointlike? (bool)"""
-        d = self.data
-        has_size_ul = np.isfinite(d['Size_UL'])
-        pointlike = d['Spatial_Model'] == 'Point-Like'
-        return pointlike or has_size_ul
+            raise ValueError('Not a valid spatial model: {}'.format(spatial_type))
 
     @property
     def flux_points(self):

@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import Counter
 import pytest
 from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
 from ...image import SkyImage
+from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..hess import SourceCatalogHGPS
 
 
@@ -67,6 +69,20 @@ class TestSourceCatalogObjectHGPS:
         self.cat = SourceCatalogHGPS()
         self.source = self.cat['HESS J1843-033']
 
+    @pytest.mark.slow
+    def test_all_sources(self):
+        """Check that properties and methods work for all sources,
+        i.e. don't raise an error."""
+        for source in self.cat:
+            str(source)
+            source.energy_range
+            source.spectral_model_type
+            source.spectral_model()
+            source.spatial_model_type
+            source.is_pointlike
+            source.spatial_model()
+            source.flux_points
+
     def test_name(self):
         assert self.source.name == 'HESS J1843-033'
 
@@ -76,6 +92,9 @@ class TestSourceCatalogObjectHGPS:
     def test_data(self):
         data = self.source.data
         assert data['Source_Class'] == 'Unid'
+
+    def test_repr(self):
+        assert 'SourceCatalogObjectHGPS' in repr(self.source)
 
     def test_str(self):
         ss = str(self.source)
@@ -102,32 +121,56 @@ class TestSourceCatalogObjectHGPS:
         assert energy_range.unit == 'TeV'
         assert_allclose(energy_range.value, [0.21544346, 61.89658356])
 
+    def test_spectral_model_type(self):
+        spec_types = Counter([_.spectral_model_type for _ in self.cat])
+        assert spec_types == {'pl': 66, 'ecpl': 12}
+
     def test_spectral_model_pl(self):
-        source = self.source
-        model = source.spectral_model
+        source = self.cat['HESS J1843-033']
+
+        model = source.spectral_model()
+
+        assert isinstance(model, PowerLaw)
         pars = model.parameters
         assert_allclose(pars['amplitude'].value, 9.140179932365378e-13)
         assert_allclose(pars['index'].value, 2.1513476371765137)
         assert_allclose(pars['reference'].value, 1.867810606956482)
 
-        emin, emax = u.Quantity([1, 1e5], 'TeV')
-        actual = model.integral(emin, emax).value
-        desired = source.data['Flux_Spec_Int_1TeV'].value
-        assert_allclose(actual, desired, rtol=0.01)
+        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
+        assert_allclose(val, source.data['Flux_Spec_Int_1TeV'].value, rtol=0.01)
+        assert_allclose(err, source.data['Flux_Spec_Int_1TeV_Err'].value, rtol=0.01)
 
     def test_spectral_model_ecpl(self):
         source = self.cat['HESS J0835-455']
-        model = source.spectral_model
+
+        model = source.spectral_model()
+        assert isinstance(model, ExponentialCutoffPowerLaw)
+
         pars = model.parameters
         assert_allclose(pars['amplitude'].value, 6.408420542586617e-12)
         assert_allclose(pars['index'].value, 1.3543991614920847)
         assert_allclose(pars['reference'].value, 1.696938754239)
         assert_allclose(pars['lambda_'].value, 0.081517637)
 
-        emin, emax = u.Quantity([1, 1e5], 'TeV')
-        actual = model.integral(emin, emax).value
-        desired = source.data['Flux_Spec_Int_1TeV'].value
-        assert_allclose(actual, desired, rtol=0.01)
+        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
+        assert_allclose(val, source.data['Flux_Spec_Int_1TeV'].value, rtol=0.01)
+        assert_allclose(err, source.data['Flux_Spec_Int_1TeV_Err'].value, rtol=0.01)
+
+        model = source.spectral_model('pl')
+        assert isinstance(model, PowerLaw)
+
+        pars = model.parameters
+        assert_allclose(pars['amplitude'].value, 1.833056926733856e-12)
+        assert_allclose(pars['index'].value, 1.8913707)
+        assert_allclose(pars['reference'].value, 3.0176312923431396)
+
+        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
+        assert_allclose(val, source.data['Flux_Spec_PL_Int_1TeV'].value, rtol=0.01)
+        assert_allclose(err, source.data['Flux_Spec_PL_Int_1TeV_Err'].value, rtol=0.01)
+
+    def test_spatial_model_type(self):
+        morph_types = Counter([_.spatial_model_type for _ in self.cat])
+        assert morph_types == {'gaussian': 52, '2-gaussian': 8, 'shell': 7, 'point-like': 6, '3-gaussian': 5}
 
     def test_spatial_model_point(self):
         source = self.cat['HESS J1826-148']
@@ -147,7 +190,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(model.theta, 0)
 
         bbox = model.bounding_box
-        print(bbox)
         assert_allclose(bbox, [[-1.07146, 0.00499], [-68.41014, -67.33368]], atol=0.001)
 
     def test_spatial_model_gaussian2(self):
