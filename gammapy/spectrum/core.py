@@ -291,7 +291,7 @@ class PHACountsSpectrum(CountsSpectrum):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
-        self.quality = quality
+        self._quality = quality
         if backscal is None:
             backscal = np.ones(self.energy.nbins)
         self.backscal = backscal
@@ -302,6 +302,15 @@ class PHACountsSpectrum(CountsSpectrum):
         self.meta = meta or OrderedDict()
         self.meta.setdefault('CREATOR', 'Gammapy {}'.format(version.version))
         self.meta.setdefault('OBS_ID', 0)
+
+    @property
+    def quality(self):
+        """Bins in safe energy range (1 = bad, 0 = good)"""
+        return self._quality
+
+    @quality.setter
+    def quality(self, quality):
+        self._quality = quality
 
     @property
     def phafile(self):
