@@ -43,33 +43,3 @@ def fill_map_counts(count_map, event_list):
                 raise ValueError("Cannot find MapGeom axis {} in EventList", axis.name)
     # Fill it
     count_map.fill_by_coord(coord_dict)
-
-
-def make_map_counts(event_list, geom, meta=None):
-    """Build a ``WcsNDMap` with events from an EventList.
-
-    The energy of the events is used for a non-spatial axis homogeneous to energy.
-    The other non-spatial axis names should have an entry in the colum names of the ``EventList``
-
-    Parameters
-    ----------
-    event_list : `~gammapy.data.EventList`
-            the input event list
-    geom : `~gammapy.maps.WcsGeom`
-            the reference geometry
-    meta : `~collections.OrderedDict`
-            Dictionnary of meta information to keep with the map
-
-    Returns
-    -------
-    cntmap : `~gammapy.maps.WcsNDMap`
-        Count cube (3D) in true energy bins
-    """
-    # Create map
-    cntmap = WcsNDMap(geom,meta=meta)
-    # Fill it
-    fill_map_counts(event_list, cntmap)
-    # Add MAPTYPE keyword to identify the nature of the map
-    cntmap.meta['MAPTYPE']='COUNTS'
-
-    return cntmap
