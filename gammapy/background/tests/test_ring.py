@@ -46,6 +46,10 @@ class TestRingBackgroundEstimator:
         assert_allclose(result['exposure_off'].data[in_fov].mean(), 305.1268970794541)
         assert_allclose(result['off'].data[in_fov].mean(), 610.2537941589082)
 
+        assert_allclose(result['off'].data[~in_fov], 0.)
+        assert_allclose(result['exposure_off'].data[~in_fov], 0.)
+        assert_allclose(result['alpha'].data[~in_fov], 0.)
+
 
 @requires_dependency('scipy')
 class TestAdaptiveRingBackgroundEstimator:

@@ -13,7 +13,6 @@ from .core import SkyImage
 from .lists import SkyImageList
 from ..irf.background import Background3D
 
-
 __all__ = [
     'BasicImageEstimator',
     'IACTBasicImageEstimator',
@@ -200,7 +199,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         exposure.data = np.nan_to_num(exposure.data.value)
         return exposure
 
-    def psf(self, observations, containment_fraction = 0.99, rad_max = None):
+    def psf(self, observations, containment_fraction=0.99, rad_max=None):
         """Mean point spread function kernel image.
 
         Parameters
@@ -220,7 +219,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         """
         p = self.parameters
 
-        refskyim  = self.reference
+        refskyim = self.reference
         refskypos = refskyim.center
         mean_psf = observations.make_mean_psf(refskypos)
 
@@ -280,7 +279,7 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         acceptance.name = 'exposure_on'
 
         offsets = observation.pointing_radec.separation(acceptance.coordinates())
-        
+
         # This is a somewhat dirty approach to deal with the different background IRFs
         try:
             if isinstance(observation.bkg, Background3D):
@@ -292,10 +291,10 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         # If no background is found, assume flat acceptance.
         # This will provide very bad results for FoV background without norm.
         except IndexError:
-            integrated_bkg = np.ones_like(counts.data)/u.s/u.sr
-            
+            integrated_bkg = np.ones_like(counts.data) / u.s / u.sr
+
         # Reshape the array to fit the SkyImage
-        acceptance.data = np.reshape(integrated_bkg,offsets.shape)
+        acceptance.data = np.reshape(integrated_bkg, offsets.shape)
         acceptance.data *= acceptance.solid_angle() * observation.observation_live_time_duration
         acceptance.data = acceptance.data.to('').value
         return acceptance
@@ -330,7 +329,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         input_images['exclusion'] = self._cutout_observation(self.exclusion_mask, observation)
 
         return self.background_estimator.run(input_images)
-
 
     def run(self, observations, which='all'):
         """
@@ -699,4 +697,3 @@ def reproject_exposure(exposure, ref_cube):
     exposure_cube.data = exposure_cube.data * u.Unit('cm2 s')
 
     return exposure_cube
-
