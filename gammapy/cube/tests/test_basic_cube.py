@@ -48,7 +48,7 @@ def test_fill_map_counts(ds_path, run_list, geom):
 
     # Extract count map
     cntmap = Map.from_geom(wcsgeom)
-    fill_map_counts(cntmap,events)
+    fill_map_counts(cntmap, events)
 
     # Number of entries in the map
     nmap = cntmap.data.sum()
@@ -66,21 +66,22 @@ def test_fill_map_counts(ds_path, run_list, geom):
     assert nmap == nevt
 
 
-def test_fill_map_counts_fermi():
+def test_fill_map_counts_hpx():
     # This tests healpix maps fill with non standard non spatial axis
-    angles = np.array((0,45,180))*u.deg
-    axis_zen = MapAxis(angles, node_type='edge', name='zenith_angle', unit=u.deg)
 
     evt_2fhl = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
-    hpxgeom = HpxGeom(256,coordsys='GAL',axes=[axis_zen])
+
+    axis_zen = MapAxis([0, 45, 180], node_type='edge', name='zenith_angle', unit=u.deg)
+    hpxgeom = HpxGeom(256, coordsys='GAL', axes=[axis_zen])
     map_2fhl = Map.from_geom(hpxgeom)
-    fill_map_counts(map_2fhl,evt_2fhl)
+
+    fill_map_counts(map_2fhl, evt_2fhl)
 
     nmap_l = np.sum(map_2fhl.data[0])
     nmap_h = np.sum(map_2fhl.data[1])
 
-    nevt_l = np.sum(evt_2fhl.table['ZENITH_ANGLE']<45)
-    nevt_h = np.sum(evt_2fhl.table['ZENITH_ANGLE']>45)
+    nevt_l = np.sum(evt_2fhl.table['ZENITH_ANGLE'] < 45)
+    nevt_h = np.sum(evt_2fhl.table['ZENITH_ANGLE'] > 45)
 
     assert nmap_l == nevt_l
     assert nmap_h == nevt_h
