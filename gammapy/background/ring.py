@@ -332,14 +332,16 @@ class RingBackgroundEstimator(object):
         result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='constant',
                                                                use_fft=p['use_fft_convolution'])
 
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide='ignore', invalid='ignore'):
             # set pixels, where ring is too small to NaN
             not_has_off_exposure = ~(result['exposure_off'].data > 0)
             result['exposure_off'].data[not_has_off_exposure] = np.nan
 
-            result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
-
             not_has_exposure = ~(exposure_on.data > 0)
+            result['off'].data[not_has_exposure] = 0
+            result['exposure_off'].data[not_has_exposure] = 0
+
+            result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
             result['alpha'].data[not_has_exposure] = 0
 
         result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
