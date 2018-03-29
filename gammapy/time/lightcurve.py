@@ -301,7 +301,7 @@ class LightCurveEstimator(object):
         intervals = []
         time_start = Time(100000, format="mjd")
         time_end = Time(0, format="mjd")
-        time_step = time_step/(24*3600)
+        time_step = time_step / (24 * 3600)
 
         for obs in spectrum_extraction.obs_list:
             if time_start > obs.events.time.min():
@@ -403,7 +403,7 @@ class LightCurveEstimator(object):
             if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
                 continue
 
-            useinterval=True
+            useinterval = True
             # get ON and OFF evt list
             off_evt = self.off_evt_list[t_index]
             on_evt = self.on_evt_list[t_index]
@@ -495,8 +495,8 @@ class LightCurveEstimator(object):
             # Gaussian errors, TODO: should be improved
             flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
         else:
-            flux=0
-            flux_err=0
+            flux = 0
+            flux_err = 0
 
         # Store measurements in a dict and return that
         return useinterval, OrderedDict([
