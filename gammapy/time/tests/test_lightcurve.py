@@ -211,4 +211,4 @@ def test_lightcurve_estimator():
 def test_lightcurve_interval_maker():
     spec_extract = spec_extraction()
     intervals = LightCurveEstimator.create_fixed_time_bin(500, spec_extract)
-    assert_allclose(intervals[0][1].value-intervals[0][0].value, 500/24*3600, rtol=1e-2)
+    assert_allclose(intervals[0][1].value-intervals[0][0].value, 500/(24*3600), rtol=1e-5)
