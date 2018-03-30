@@ -274,13 +274,45 @@ class LightCurveEstimator(object):
     @staticmethod
     def _get_on_evt_list(spec_extract):
         """
-        Returns list of OFF events for each observations
+        Returns list of ON events for each observations
         """
         on_evt_list = []
         for obs in spec_extract.bkg_estimate:
             on_evt_list.append(obs.on_events)
 
         return on_evt_list
+
+    @staticmethod
+    def create_fixed_time_bin(time_step, spectrum_extraction):
+        """
+        Create time intervals of fixed size
+
+    Parameters
+    ----------
+        time_step: float
+            Size of the light curve bins in seconds
+        spectrum_extraction:`~gammapy.spectrum.SpectrumExtraction`
+            Contains statistics, IRF and event lists
+        Returns
+        -------
+        intervals: `list` of `~astropy.time.Time`
+            List of time intervals
+        """
+        intervals = []
+        time_start = Time(100000, format="mjd")
+        time_end = Time(0, format="mjd")
+        time_step = time_step / (24 * 3600)
+
+        for obs in spectrum_extraction.obs_list:
+            if time_start > obs.events.time.min():
+                time_start = obs.events.time.min()
+            if time_end < obs.events.time.max():
+                time_end = obs.events.time.max()
+        time = time_start.value
+        while time < time_end.value:
+            time += time_step
+            intervals.append([Time(time - time_step, format="mjd"), Time(time, format="mjd")])
+        return intervals
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
@@ -307,8 +339,9 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            row = self.compute_flux_point(time_interval, spectral_model, energy_range)
-            rows.append(row)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range)
+            if useinterval:
+                rows.append(row)
 
         return self._make_lc_from_row_data(rows)
 
@@ -344,6 +377,8 @@ class LightCurveEstimator(object):
 
         Returns
         -------
+        useinterval : bool
+            Is True if the time_interval produce a valid flux point
         measurements : dict
             Dictionary with flux point measurement in the time interval
         """
@@ -355,6 +390,7 @@ class LightCurveEstimator(object):
         predicted_excess = 0
         n_on = 0
         n_off = 0
+        useinterval = False
 
         # Loop on observations
         for t_index, obs in enumerate(self.obs_list):
@@ -367,6 +403,7 @@ class LightCurveEstimator(object):
             if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
                 continue
 
+            useinterval = True
             # get ON and OFF evt list
             off_evt = self.off_evt_list[t_index]
             on_evt = self.on_evt_list[t_index]
@@ -442,23 +479,27 @@ class LightCurveEstimator(object):
             n_off += n_off_obs
 
         # Fill time interval information
-        int_flux = spectral_model.integral(energy_range[0], energy_range[1])
+        if useinterval:
+            int_flux = spectral_model.integral(energy_range[0], energy_range[1])
 
-        if n_off > 0.:
-            alpha_mean /= n_off
-        if livetime > 0.:
-            alpha_mean_backup /= livetime
-        if alpha_mean == 0.:  # use backup if necessary
-            alpha_mean = alpha_mean_backup
+            if n_off > 0.:
+                alpha_mean /= n_off
+            if livetime > 0.:
+                alpha_mean_backup /= livetime
+            if alpha_mean == 0.:  # use backup if necessary
+                alpha_mean = alpha_mean_backup
 
-        flux = measured_excess / predicted_excess.value
-        flux *= int_flux
-        flux_err = int_flux / predicted_excess.value
-        # Gaussian errors, TODO: should be improved
-        flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux = measured_excess / predicted_excess.value
+            flux *= int_flux
+            flux_err = int_flux / predicted_excess.value
+            # Gaussian errors, TODO: should be improved
+            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+        else:
+            flux = 0
+            flux_err = 0
 
         # Store measurements in a dict and return that
-        return OrderedDict([
+        return useinterval, OrderedDict([
             ('time_min', Time(tmin, format='mjd')),
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
