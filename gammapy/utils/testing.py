@@ -75,12 +75,10 @@ def has_data(name):
         return gammapy_extra.is_available
     elif name == 'hess':
         return has_hess_test_data()
-    elif name == 'hgps':
-        return ('HGPS_DATA' in os.environ) and ('HGPS_ANALYSIS' in os.environ)
     elif name == 'gamma-cat':
-        return ('GAMMA_CAT' in os.environ)
+        return 'GAMMA_CAT' in os.environ
     elif name == 'fermi-lat':
-        return ('GAMMAPY_FERMI_LAT_DATA' in os.environ)
+        return 'GAMMAPY_FERMI_LAT_DATA' in os.environ
     else:
         raise ValueError('Invalid name: {}'.format(name))
 
