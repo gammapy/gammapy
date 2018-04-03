@@ -200,8 +200,12 @@ def get_wstat_gof_terms(n_on, n_off):
     see :ref:`wstat`.
     """
     term = np.zeros(len(n_on))
-    term1 = - n_on * (1 - np.log(n_on))
-    term2 = - n_off * (1 - np.log(n_off))
+
+    # suppress zero division warnings, they are corrected below
+    with np.warnings.catch_warnings():
+        np.warnings.filterwarnings('ignore')
+        term1 = - n_on * (1 - np.log(n_on))
+        term2 = - n_off * (1 - np.log(n_off))
 
     term += np.where(n_on == 0, 0, term1)
     term += np.where(n_off == 0, 0, term2)
