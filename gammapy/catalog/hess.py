@@ -454,8 +454,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pointlike = d['Spatial_Model'] == 'Point-Like'
         return pointlike or has_size_ul
 
-
-
     def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
         """Spatial model (`~gammapy.image.models.SpatialModel`).
 
@@ -556,7 +554,13 @@ class SourceCatalogHGPS(SourceCatalog):
 
     Examples
     --------
-    Load the catalog data:
+    Let's assume you have downloaded the HGPS catalog FITS file, e.g. via:
+
+    .. code-block:: bash
+
+        curl -O https://www.mpi-hd.mpg.de/hfm/HESS/hgps/data/hgps_catalog_v1.fits.gz
+
+    Then you can load it up like this:
 
     >>> from gammapy.catalog import SourceCatalogHGPS
     >>> filename = 'hgps_catalog_v1.fits.gz'
@@ -569,8 +573,8 @@ class SourceCatalogHGPS(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> source.spectral_model.plot(source.energy_range)
-    >>> source.spectral_model.plot_error(source.energy_range)
+    >>> source.spectral_model().plot(source.energy_range)
+    >>> source.spectral_model().plot_error(source.energy_range)
     >>> source.flux_points.plot()
 
     Gaussian component information can be accessed as well,
