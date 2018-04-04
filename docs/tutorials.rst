@@ -145,6 +145,7 @@ through all of them, but maybe browse the list and see if there's
 something that could be interesting for your work (or contribute to
 Gammapy if something is missing!).
 
+- `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
 - `Interpolation using the NDDataArray class <notebooks/nddata_demo.html>`__ | *nddata_demo.ipynb*
