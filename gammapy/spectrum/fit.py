@@ -18,7 +18,10 @@ log = logging.getLogger(__name__)
 class SpectrumFit(object):
     """Orchestrate a 1D counts spectrum fit.
 
-    For usage examples see :ref:`spectral_fitting`
+    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` and
+    :func:`~gammapy.spectrum.SpectrumFit.est_errors` methods, the fit results
+    are available in :func:`~gammapy.spectrum.SpectrumFit.result`. For usage
+    examples see :ref:`spectral_fitting`
 
     Parameters
     ----------
@@ -33,7 +36,7 @@ class SpectrumFit(object):
     fit_range : tuple of `~astropy.units.Quantity`
         Fit range, will be convolved with observation thresholds. If you want to
         control which bins are taken into account in the fit for each
-        observations, use :func:`~gammapy.spectrum.SpectrumObservation.qualitiy`
+        observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
     method : {'sherpa'}
@@ -46,11 +49,11 @@ class SpectrumFit(object):
                  fit_range=None, background_model=None,
                  method='sherpa', err_method='sherpa'):
         self.obs_list = obs_list
-        self.model = model
+        self._model = model
         self.stat = stat
         self.forward_folded = forward_folded
         self.fit_range = fit_range
-        self.background_model = background_model
+        self._background_model = background_model
         self.method = method
         self.err_method = err_method
 
@@ -90,7 +93,36 @@ class SpectrumFit(object):
         return self._result
 
     @property
+    def model(self):
+        """Source model
+
+        The model parameters change every time the likelihood is evaluated. In
+        order to access the best-fit model parameters, use
+        :func:`gammapy.spectrum.SpectrumFit.result`
+        """
+        return self._model
+
+    @model.setter
+    def model(self, model):
+        self._model = model
+
+    @property
+    def background_model(self):
+        """Background model
+
+        The model parameters change every time the likelihood is evaluated. In
+        order to access the best-fit model parameters, use
+        :func:`gammapy.spectrum.SpectrumFit.result`
+        """
+        return self._background_model
+
+    @background_model.setter
+    def background_model(self, model):
+        self._background_model = model
+
+    @property
     def obs_list(self):
+        """Observations participating in the fit"""
         return self._obs_list
 
     @obs_list.setter
@@ -353,7 +385,7 @@ class SpectrumFit(object):
             Parameter values
         """
         likelihood = []
-        self.model = model
+        self._model = model
         for val in parvals:
             self.model.parameters[parname].value = val
             self.predict_counts()
