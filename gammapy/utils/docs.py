@@ -15,6 +15,7 @@ Here's some good resources with working examples:
 - https://github.com/sphinx-doc/sphinx/blob/master/sphinx/directives/other.py
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import re
 from shutil import copytree, rmtree
@@ -30,7 +31,6 @@ import nbformat
 from nbformat.v4 import new_markdown_cell
 from nbconvert.exporters import PythonExporter
 
-from .scripts import read_yaml
 from ..extern.pathlib import Path
 
 try:

@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
+import astropy.units as u
 from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.stats import significance_on_off
-import astropy.units as u
 from ..cta_irf import CTAPerf
 from ..cta_sensitivity import SensitivityEstimator
 

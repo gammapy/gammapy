@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.table import Table
+from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from ...utils.scripts import make_path
 from ...utils.testing import requires_data
 from ..models import PhaseCurve

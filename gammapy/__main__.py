@@ -7,6 +7,7 @@ This is what's executed when you run:
 
 See https://docs.python.org/3/library/__main__.html
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 from .scripts.main import cli
 
