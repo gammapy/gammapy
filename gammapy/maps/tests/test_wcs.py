@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+import astropy.units as u
 from ..wcs import WcsGeom
 from ..geom import MapAxis
 
@@ -121,3 +122,19 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
     if not geom.is_allsky:
         coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+def test_wcsgeom_solid_angle():
+    binsz=1.0
+    npix=100
+
+    # Test using cartesian geometry
+    geom = WcsGeom.create(skydir=(0, 0), npix=(npix, npix), binsz=binsz, coordsys='GAL',proj='CAR')
+
+    solid_array = geom.solid_angle()
+
+    # Test bin size at b=0
+    solid_lat0 = binsz*np.pi/180 * (np.sin(binsz * np.pi / 180.)) * u.sr
+    assert_allclose(solid_array[50,50],solid_lat0, rtol=1e-4)
+    # Test bin size at b=50 deg
+    solid_lat50 = binsz*np.pi / 180 * (np.sin(50*binsz * np.pi / 180.)-np.sin(49*binsz * np.pi / 180.)) * u.sr
+    assert_allclose(solid_array[99,50],solid_lat50, rtol=1e-4)

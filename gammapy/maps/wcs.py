@@ -597,18 +597,9 @@ class WcsGeom(MapGeom):
         raise NotImplementedError
 
     def solid_angle(self):
+        """ Returns solid angle array (in `sr`) as `~astropy.units.Quantity`
         """
-        Returns
-        -------
-        omega : `~astropy.units.Quantity`
-                Solid angle array (in `sr`)
-        """
-#        It could be faster to do simply
-#        nx, ny = self.npix
-#        X, Y = np.mgrid[0:nx[0]+1:1, 0:ny[0]+1:1]+0.5
-#        lon, lat = self._wcs.all_pix2world(X, Y, 1)
-#       And the resize the map
-
+        # TODO: Improve by exposing a mode 'edge' for get_coord
         # Note that edge is applied only to spatial coordinates in the following call
         pix = self._get_pix_coords(mode='edge')
         # Note also that pix_to_coord is already called in _get_pix_coords. This should be made more efficient.
