@@ -9,6 +9,7 @@ from ..extern import six
 from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.units import Quantity
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -1711,6 +1712,17 @@ class HpxGeom(MapGeom):
             lat = skydir.b.deg
 
         return self.pix_to_coord((lat, lon))
+
+    def solid_angle(self):
+        """
+        Returns
+        -------
+        omega : `~astropy.units.Quantity`
+                Solid angle (in `sr`). Here we return a simple float since all pixels have the same solid angle.
+        """
+        import healpy as hp
+        return Quantity(hp.nside2pixarea(self.nside),'sr')
+
 
 
 class HpxToWcsMapping(object):

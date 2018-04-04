@@ -5,6 +5,8 @@ import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.angle_utilities import angular_separation
+import astropy.units as u
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
@@ -400,8 +402,8 @@ class WcsGeom(MapGeom):
         npix = copy.deepcopy(self.npix)
 
         if mode == 'edge':
-            npix[0] += 1
-            npix[1] += 1
+            npix[0][0] += 1
+            npix[1][0] += 1
 
         if self.axes and not self.is_regular:
 
@@ -593,6 +595,39 @@ class WcsGeom(MapGeom):
 
     def to_slice(self, slices):
         raise NotImplementedError
+
+    def solid_angle(self):
+        """
+        Returns
+        -------
+        omega : `~astropy.units.Quantity`
+                Solid angle array (in `sr`)
+        """
+#        It could be faster to do simply
+#        nx, ny = self.npix
+#        X, Y = np.mgrid[0:nx[0]+1:1, 0:ny[0]+1:1]+0.5
+#        lon, lat = self._wcs.all_pix2world(X, Y, 1)
+#       And the resize the map
+
+        # Note that edge is applied only to spatial coordinates in the following call
+        pix = self._get_pix_coords(mode='edge')
+        # Note also that pix_to_coord is already called in _get_pix_coords. This should be made more efficient.
+        coords = self.pix_to_coord(pix)
+        lon=coords[0] * np.pi/180.
+        lat=coords[1] * np.pi/180.
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[...,:-1,:-1], lat[...,:-1, :-1]
+        ylo_xhi = lon[...,:-1, 1:], lat[...,:-1, 1:]
+        yhi_xlo = lon[...,1:, :-1], lat[...,1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        omega = u.Quantity(dx * dy, 'sr')
+
+        return omega
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',

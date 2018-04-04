@@ -1296,6 +1296,17 @@ class MapGeom(object):
         """
         pass
 
+    @abc.abstractmethod
+    def solid_angle(self):
+        """
+        Returns
+        -------
+        omega : `~astropy.units.Quantity`
+                Solid angle (in `sr`).
+        """
+        pass
+
+
     def _fill_header_from_axes(self, header):
 
         for i, ax in enumerate(self.axes):
