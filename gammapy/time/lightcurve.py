@@ -284,18 +284,18 @@ class LightCurveEstimator(object):
 
     @staticmethod
     def create_fixed_time_bin(time_step, spectrum_extraction):
-        """
-        Create time intervals of fixed size
+        """Create time intervals of fixed size.
 
-    Parameters
-    ----------
-        time_step: float
+        Parameters
+        ----------
+        time_step : float
             Size of the light curve bins in seconds
-        spectrum_extraction:`~gammapy.spectrum.SpectrumExtraction`
+        spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
             Contains statistics, IRF and event lists
+
         Returns
         -------
-        intervals: `list` of `~astropy.time.Time`
+        intervals : list of `~astropy.time.Time`
             List of time intervals
         """
         intervals = []
@@ -304,14 +304,19 @@ class LightCurveEstimator(object):
         time_step = time_step / (24 * 3600)
 
         for obs in spectrum_extraction.obs_list:
-            if time_start > obs.events.time.min():
-                time_start = obs.events.time.min()
-            if time_end < obs.events.time.max():
-                time_end = obs.events.time.max()
+            time_events = obs.events.time
+            if time_start > time_events.min():
+                time_start = time_events.min()
+            if time_end < time_events.max():
+                time_end = time_events.max()
+
         time = time_start.value
         while time < time_end.value:
             time += time_step
-            intervals.append([Time(time - time_step, format="mjd"), Time(time, format="mjd")])
+            intervals.append([
+                Time(time - time_step, format="mjd"),
+                Time(time, format="mjd"),
+            ])
         return intervals
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
