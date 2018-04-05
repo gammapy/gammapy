@@ -133,10 +133,22 @@ release = package.__version__
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+#html_theme_options = {
+#    'logotext1': 'gamma',  # white,  semi-bold
+#    'logotext2': 'py',  # orange, light
+#    'logotext3': ':docs'  # white,  light
+#}
+
 html_theme_options = {
-    'logotext1': 'gamma',  # white,  semi-bold
-    'logotext2': 'py',  # orange, light
-    'logotext3': ':docs'  # white,  light
+    'canonical_url': setup_cfg['url_docs'],
+    'analytics_id': '',
+    'logo_only': False,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    # Toc options
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 4
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -146,7 +158,7 @@ html_theme_options = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-# html_theme = None
+html_theme = 'sphinx_rtd_theme'
 
 # Custom sidebar templates, maps document names to template names.
 # html_sidebars = {}
@@ -183,7 +195,7 @@ gammapy_sphinx_ext_activate()
 # integration of notebooks from gamapy-extra repo
 gammapy_sphinx_notebooks(setup_cfg)
 
-html_style = 'gammapy.css'
+#html_style = 'gammapy.css'
 
 # -- Options for LaTeX output --------------------------------------------------
 
