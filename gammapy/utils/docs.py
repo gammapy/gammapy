@@ -127,13 +127,9 @@ def modif_nb_links(folder, url_docs, git_commit):
 <div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-Try online on Binder
-
-[![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})
-
- You can also contribute with your own notebooks in this
- [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
-
+Try online [![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})  
+You can also contribute with your own notebooks in this
+[GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).  
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{py_filename})
@@ -155,9 +151,9 @@ Try online on Binder
             with open(filepath) as f:
                 txt = f.read()
             if folder == 'notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\1rst\2', txt, flags=re.M | re.I)
-            if folder == '_static/notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\1html\2', txt, flags=re.M | re.I)
+                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/\1rst\2', txt, flags=re.M | re.I)
+            #if folder == '_static/notebooks':
+            #    txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\/\1html\2', txt, flags=re.M | re.I)
             with open(filepath, "w") as f:
                 f.write(txt)
 
