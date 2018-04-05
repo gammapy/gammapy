@@ -127,14 +127,20 @@ def test_wcsgeom_solid_angle():
     binsz=1.0
     npix=100
 
+    # create dummy axes
+    axis1 = MapAxis.from_edges(np.arange(0,4))
+    axis2 = MapAxis.from_edges(np.arange(10,20))
     # Test using cartesian geometry
-    geom = WcsGeom.create(skydir=(0, 0), npix=(npix, npix), binsz=binsz, coordsys='GAL',proj='CAR')
+    geom = WcsGeom.create(skydir=(0, 0), npix=(npix, npix), binsz=binsz, coordsys='GAL',proj='CAR',axes=[axis1,axis2])
 
     solid_array = geom.solid_angle()
 
+    # Check array size
+    assert solid_array.shape == (9,3,100,100)
+
     # Test bin size at b=0
     solid_lat0 = binsz*np.pi/180 * (np.sin(binsz * np.pi / 180.)) * u.sr
-    assert_allclose(solid_array[50,50],solid_lat0, rtol=1e-4)
+    assert_allclose(solid_array[0,0,50,50],solid_lat0, rtol=1e-4)
     # Test bin size at b=50 deg
     solid_lat50 = binsz*np.pi / 180 * (np.sin(50*binsz * np.pi / 180.)-np.sin(49*binsz * np.pi / 180.)) * u.sr
-    assert_allclose(solid_array[99,50],solid_lat50, rtol=1e-4)
+    assert_allclose(solid_array[0,0,99,50],solid_lat50, rtol=1e-4)
