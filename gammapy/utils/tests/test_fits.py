@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import pytest
 from astropy.io import fits
+import astropy.units as u
+from astropy.table import Table, Column
 from ..fits import (
-    SmartHDUList,
+    SmartHDUList, fits_table_to_table, table_to_fits_table,
 )
 
 
@@ -16,6 +18,18 @@ def make_test_hdu_list():
         fits.BinTableHDU(name='TABLE2'),
         fits.ImageHDU(name='IMAGE2', data=np.zeros(shape=(4, 5))),
     ])
+
+
+# TODO: merge this fixture with the one in `test_table.py`.
+# Need to move to conftest or can import?
+@pytest.fixture()
+def table():
+    t = Table(meta={'version': 42})
+    t['a'] = np.array([1, 2], dtype=np.int32)
+    t['b'] = Column(np.array([1, 2], dtype=np.int64), unit='m', description='Velocity')
+    t['b'].meta['ucd'] = 'spam'
+    t['c'] = Column(['x', 'yy'], 'c')
+    return t
 
 
 class TestSmartHDUList:
@@ -83,3 +97,52 @@ class TestSmartHDUList:
         self.hdus.write(filename)
         hdus2 = SmartHDUList.open(filename)
         assert self.hdus.names == hdus2.names
+
+
+def test_table_fits_io_astropy(table):
+    """Test `astropy.table.Table` FITS I/O in Astropy.
+
+    Having these tests in Gammapy is to check / ensure that the features
+    we rely on work properly for all Astropy versions we support in CI
+    (currently Astropy 1.3 and up)
+
+    This is useful, because Table FITS I/O was pretty shaky for a while
+    and incrementally improved over time.
+
+    These are the same examples that we have in the docstring
+    at the top of `gammapy/utils/fits.py`.
+    """
+    # Check Table -> BinTableHDU
+    hdu = fits.BinTableHDU(table)
+    assert hdu.header['TTYPE2'] == 'b'
+    assert hdu.header['TFORM2'] == 'K'
+    assert hdu.header['TUNIT2'] == 'm'
+
+    # Check BinTableHDU -> Table
+    table2 = Table.read(hdu)
+    assert isinstance(table2.meta, dict)
+    assert table2.meta == {'VERSION': 42}
+    assert table2['b'].unit == 'm'
+    # Note: description doesn't come back in older versions of Astropy
+    # that we still support, so we're not asserting on that here for now.
+
+
+# TODO: I'm thinking maybe we should remove that Gammapy utils function ...
+def _test_table_fits_io_gammapy(table):
+    """Test table FITS I/O helper functions in Gammapy.
+    """
+    # Check Table -> BinTableHDU
+    hdu = table_to_fits_table(table)
+    assert hdu.header['TTYPE2'] == 'b'
+    assert hdu.header['TFORM2'] == 'K'
+    assert hdu.header['TUNIT2'] == 'm'
+    print(repr(hdu.header))  # ; 1/0
+
+    # Check BinTableHDU -> Table
+    table2 = fits_table_to_table(hdu)
+    assert isinstance(table2.meta, dict)
+    print(table2.meta)
+    assert table2.meta == {'VERSION': 42, 'TUCD2': 'spam'}
+    # assert table2['b'].unit == 'm'
+    assert table2['b'].description == 'Velocity'
+    assert table2['b'].meta['ucd'] == 'spam'
