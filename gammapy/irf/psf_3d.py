@@ -302,6 +302,7 @@ class PSF3D(object):
                     # Not sure what type exactly or how to catch it.
                     radius[e, t] = np.nan
                     continue
+                psf.normalize()
                 r = psf.containment_radius(fraction)
                 radius[e, t] = r.value
                 unit = r.unit
