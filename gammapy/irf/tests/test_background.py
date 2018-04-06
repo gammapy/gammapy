@@ -9,6 +9,7 @@ from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 from ...utils.fits import table_to_fits_table
+from ...utils.energy import EnergyBounds
 
 
 @pytest.fixture(scope='session')
@@ -90,6 +91,24 @@ def test_background_2d_evaluate(bkg_2d):
     res = bkg_2d.evaluate(fov_offset=1 * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
+
+
+@requires_dependency('scipy')
+def test_background_2d_integrate(bkg_2d):
+    energy_band = EnergyBounds([10, 1000] * u.TeV)
+    res = bkg_2d.integrate_on_energy_range(tab_energy_band=energy_band, n_energy_bins=1, fov_offset=0.5 * u.deg)
+    assert_quantity_allclose(res, u.Quantity(2, "1 / (MeV s sr)") * energy_band.bands)
+
+    res = bkg_2d.integrate_on_energy_range(tab_energy_band=energy_band, n_energy_bins=1, fov_offset=[0.5, 1, 3] * u.deg)
+    assert_quantity_allclose(res, u.Quantity([2, 3, 0], "1 / (MeV s sr)") * energy_band.bands)
+
+    res = bkg_2d.integrate_on_energy_range(tab_energy_band=energy_band, n_energy_bins=1,
+                                           fov_offset=np.array(([0.5, 3], [0.5, 3])) * u.deg)
+    assert_quantity_allclose(res, u.Quantity(np.array(([2, 0], [2, 0])), "1 / (MeV s sr)") * energy_band.bands)
+
+    energy_band = EnergyBounds([0.1, 10, 1000] * u.TeV)
+    res = bkg_2d.integrate_on_energy_range(tab_energy_band=energy_band, n_energy_bins=1, fov_offset=0.5 * u.deg)
+    assert_quantity_allclose(res, u.Quantity([0, 2], "1 / (MeV s sr)") * energy_band.bands)
 
 
 def test_background_2d_read_write(tmpdir, bkg_2d):

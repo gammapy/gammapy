@@ -3,10 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 from astropy.table import Table
 from astropy.io import fits
+from astropy.coordinates import Angle
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fits import fits_table_to_table, table_to_fits_table
+from ..utils.energy import EnergyBounds
 import numpy as np
 
 __all__ = [
@@ -258,3 +260,56 @@ class Background2D(object):
 
         array = self.data.evaluate(offset=fov_offset, energy=energy_reco, **kwargs)
         return array
+
+
+    def integrate_on_energy_range(self, tab_energy_band, n_energy_bins, fov_offset, fov_phi=None, **kwargs):
+        """
+        Evaluate the `Background2D` at a given offset and integrate over energy_bands. In each energy_band, evaluate
+        at different energies and then integrate in order to get the total background rate per steradian in this given
+        energy range.
+
+        Parameters
+        ----------
+        tab_energy_band : `~astropy.units.Quantity`
+            Energy bin edges (vector 1D)
+        n_energy_bins : int
+            Number of energy bins used for the integration
+        fov_offset : `~astropy.coordinates.Angle`
+            offset in the FOV
+        fov_phi: `~astropy.coordinates.Angle`
+            azimuth angle in the FOV. Not used for this class since the background model is radially symmetric
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+
+         Returns
+         -------
+         array : `~astropy.units.Quantity`
+             Background rate per steradian, axis order is the same as for the NDData array
+         """
+
+        fov_offset = Angle(np.array(fov_offset), fov_offset.unit)
+        n_energy_band = len(tab_energy_band) - 1
+        shape_bkg = tuple([n_energy_band]) + fov_offset.shape
+        bkg_integrated = u.Quantity(np.zeros(shape_bkg), "1 / (s sr)")
+        for i_e, (e_min, e_max) in enumerate(zip(tab_energy_band[:-1], tab_energy_band[1:])):
+            energy_edges = EnergyBounds.equal_log_spacing(e_min, e_max, n_energy_bins)
+            energy_bins = energy_edges.log_centers
+            bkg_evaluated = self.evaluate(fov_offset=fov_offset, fov_phi=fov_phi, energy_reco=energy_bins, **kwargs)
+
+            if len(fov_offset.shape) == 0:
+                bkg_integrated[i_e] = np.sum(bkg_evaluated.T * energy_edges.bands).T
+
+            elif len(fov_offset.shape) == 1:
+                if(len(energy_bins)==1):
+                    bkg_integrated[i_e, :] = bkg_evaluated * energy_edges.bands
+                else:
+                    bkg_integrated[i_e, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=1).T
+
+            else:
+                if(len(energy_bins)==1):
+                    bkg_integrated[i_e, :, :] = bkg_evaluated * energy_edges.bands
+                else:
+                    bkg_integrated[i_e, :, :] = np.sum(bkg_evaluated.T * energy_edges.bands, axis=2).T
+
+
+        return bkg_integrated.squeeze()
