@@ -274,7 +274,7 @@ class WcsNDMap(WcsMap):
             vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coord(self.geom.get_coord()[:2], vals)
         else:
-            axis = tuple(np.arange(self.data.ndim - 2).tolist())
+            axis = tuple(range(self.data.ndim - 2))
             map_out.data = np.sum(self.data, axis=axis)
 
         return map_out
