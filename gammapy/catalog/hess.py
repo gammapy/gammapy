@@ -552,6 +552,8 @@ class SourceCatalogHGPS(SourceCatalog):
 
     One source is represented by `SourceCatalogObjectHGPS`.
 
+    An extensive tutorial is available here: :gp-extra-notebook:`hgps`
+
     Examples
     --------
     Let's assume you have downloaded the HGPS catalog FITS file, e.g. via:
@@ -582,6 +584,8 @@ class SourceCatalogHGPS(SourceCatalog):
 
     >>> source.components
     >>> cat.gaussian_component(83)
+
+    More examples here: :gp-extra-notebook:`hgps`
     """
     name = 'hgps'
     """Source catalog name (str)."""

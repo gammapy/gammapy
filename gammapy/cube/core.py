@@ -383,12 +383,8 @@ class SkyCube(MapBase):
 
         Parameters
         ----------
-        x : `~numpy.ndarry`
-            x coordinate array
-        y : `~numpy.ndarry`
-            y coordinate array
-        z : `~numpy.ndarry`
-            z coordinate array
+        x, y, z : `~numpy.ndarray`
+            Coordinate arrays
 
         Returns
         -------
