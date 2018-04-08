@@ -29,8 +29,6 @@ to start to learn how to use Gammapy.
   getting-started
   tutorials
   dataformats/index
-  references
-  changelog
 
 .. _gammapy_package:
 
@@ -78,3 +76,11 @@ Most development takes place on the `Gammapy GitHub page`_.
 
 .. _Gammapy project and team: http://gammapy.org/team.html
 .. _Gammapy contact and communication channels: http://gammapy.org/contact.html
+
+References and Changelog
+------------------------
+.. toctree::
+  :maxdepth: 1
+
+  references
+  changelog
