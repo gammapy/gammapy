@@ -2,9 +2,9 @@
 
 .. _data:
 
-**********************************************
-Data and observation handling (`gammapy.data`)
-**********************************************
+*****************************
+Data and observation handling
+*****************************
 
 .. currentmodule:: gammapy.data
 

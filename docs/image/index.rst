@@ -9,9 +9,9 @@
 
 .. _image:
 
-*****************************************************
-Image processing and analysis tools (`gammapy.image`)
-*****************************************************
+***********************************
+Image processing and analysis tools
+***********************************
 
 .. currentmodule:: gammapy.image
 

@@ -2,9 +2,9 @@
 
 .. _spectrum:
 
-*****************************************************
-Spectrum estimation and modeling (`gammapy.spectrum`)
-*****************************************************
+********************************
+Spectrum estimation and modeling
+********************************
 
 .. currentmodule:: gammapy.spectrum
 

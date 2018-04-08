@@ -2,9 +2,9 @@
 
 .. _maps:
 
-*****************************************************
-Data Structures for Images and Cubes (`gammapy.maps`)
-*****************************************************
+************************************
+Data Structures for Images and Cubes
+************************************
 
 .. currentmodule:: gammapy.maps
 

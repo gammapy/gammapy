@@ -1,8 +1,8 @@
 .. _astro:
 
-**************************************************************
-Astrophysical source and population models (``gammapy.astro``)
-**************************************************************
+*****************************
+Sources and population models
+*****************************
 
 .. currentmodule:: gammapy.astro
 
