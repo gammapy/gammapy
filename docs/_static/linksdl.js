@@ -3,10 +3,13 @@
  * ~~~~~~~~~~~
  *
  * javascript code to enable download links of notebooks and scripts *.py
+ * https://stackoverflow.com/questions/2304941
  *
  */
 
-$(document).ready(function() {
-  document.getElementsByClassName("last")[0].children[1].setAttribute("download", "")
-  document.getElementsByClassName("last")[0].children[2].setAttribute("download", "")
-});
+document.onreadystatechange = function () {
+    if (document.readyState == "interactive") {
+         document.getElementsByClassName("line")[2].children[1].setAttribute("download", "")
+         document.getElementsByClassName("line")[2].children[2].setAttribute("download", "")
+     }
+}
