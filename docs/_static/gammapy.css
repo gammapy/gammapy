@@ -1,11 +1,180 @@
+/*
+* Most code incorporated from bootstrap-astropy.css file in Astropy Project
+*/
 
-@import url("bootstrap-astropy.css");
+:root {
+    --gammapy-primary: rgb(224, 10, 52);
+    --gammapy-secondary: #1e254a;
+    --gammapy-lightgray: #e3e3e3;
+}
 
-div.topbar ul li a.homelink {
-  width: auto;
+/* Sidebar header (and topbar for mobile) */
+ .wy-side-nav-search, .wy-nav-top {
+   background: var(--gammapy-secondary);
+ }
+ /* Sidebar */
+ .wy-nav-side {
+   background: var(--gammapy-secondary);
+ }
+
+ body {
+     background-color: #ffffff;
+     margin: 0;
+     color: var(--gammapy-secondary);
+     font-family: 'Fira Sans', sans-serif;
+     font-size: 13px;
+     font-weight: normal;
+     line-height: 18px;
+ }
+
+ a {
+   color: var(--gammapy-primary);
+   text-decoration: none;
+   line-height: inherit;
+   font-weight: inherit;
+ }
+
+/* Typography ----------------------------------------------------------------*/
+p {
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 18px;
+  margin-top: 0px;
+  margin-bottom: 9px;
+}
+
+code, pre {
+  padding: 0 3px 2px;
+  font-family: monospace;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+tt {
+  font-family: monospace;
+}
+code {
+  padding: 1px 3px;
+}
+pre {
   display: block;
-  height: 20px;
-  padding: 20px 25px 5px 10px;
-  background: transparent url("astropy_linkout_20.png") no-repeat 10px 10px;
-  background-position: 85px 5px;
+  padding: 8.5px;
+  margin: 0 0 18px;
+  line-height: 18px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  white-space: pre;
+  word-wrap: break-word;
+}
+
+img {
+  margin: 9px 0;
+}
+
+/* format inline code with a rounded box */
+tt, code {
+    margin: 0 2px;
+    padding: 0 5px;
+    border: 1px solid #ddd;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 3px;
+}
+
+code.xref, a code {
+    margin: 0;
+    padding: 0 1px 0 1px;
+    background-color: none;
+    border: none;
+}
+
+/* all code has same box background color, even in headers */
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt,
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code,
+pre, code, tt {
+  background-color: #f8f8f8;
+}
+
+/* override box for links & other sphinx-specifc stuff */
+tt.xref, a tt, tt.descname, tt.descclassname {
+  padding: 0 1px 0 1px;
+  border: none;
+}
+
+/* override box for related bar at the top of the page */
+.related tt {
+  border: none;
+  padding: 0 1px 0 1px;
+  background-color: transparent;
+  font-weight: bold;
+}
+
+th {
+    background-color: #dddddd;
+}
+
+.viewcode-back {
+    font-family: sans-serif;
+}
+
+div.viewcode-block:target {
+    background-color: #f4debf;
+    border-top: 1px solid #ac9;
+    border-bottom: 1px solid #ac9;
+}
+
+table.docutils {
+    border-spacing: 5px;
+    border-collapse: separate;
+}
+
+/* Admonitions only */
+.admonition.note {
+   background: var(--gammapy-lightgray);
+}
+
+
+/* Figures ------------------------------------------------------------------ */
+
+.figure.align-center {
+    clear: none;
+}
+
+/* This is a div for containing multiple figures side-by-side, for use with
+ * .. container:: figures */
+div.figures {
+    border: 1px solid #CCCCCC;
+    background-color: #F8F8F8;
+    margin: 1em;
+    text-align: center;
+}
+
+div.figures .figure {
+    clear: none;
+    float: none;
+    display: inline-block;
+    border: none;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.field-list th {
+    white-space: nowrap;
+}
+table.table-condensed {
+    font-size:11px;
+}
+table.field-list {
+    border-spacing: 0px;
+    margin-left: 1px;
+    border-left: 5px solid rgb(238, 238, 238) !important;
+}
+
+table.field-list th.field-name {
+    display: inline-block;
+    padding: 1px 8px 1px 5px;
+    white-space: nowrap;
+    background-color: rgb(238, 238, 238);
+    border-radius: 0 3px 3px 0;
+    -webkit-border-radius: 0 3px 3px 0;
 }

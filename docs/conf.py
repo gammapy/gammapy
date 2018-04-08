@@ -192,10 +192,17 @@ html_static_path = ['_static']
 
 gammapy_sphinx_ext_activate()
 
-# integration of notebooks from gamapy-extra repo
+# Integration of notebooks from gamapy-extra repo
 gammapy_sphinx_notebooks(setup_cfg)
 
+# Theme style
 #html_style = 'gammapy.css'
+html_context = {
+    'css_files': [
+        '_static/gammapy.css',
+    ],
+}
+html_favicon = ''
 
 # -- Options for LaTeX output --------------------------------------------------
 
