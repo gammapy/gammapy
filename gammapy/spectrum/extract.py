@@ -157,20 +157,17 @@ class SpectrumExtraction(object):
             Background estimate
         """
         log.info('Update observation meta info')
-        # Copy over existing meta information
-        meta = OrderedDict(obs.obs_info)
+
         offset = obs.pointing_radec.separation(bkg.on_region.center)
         log.info('Offset : {}\n'.format(offset))
-        meta['OFFSET'] = offset.deg
-
-        # LIVETIME is called EXPOSURE in the OGIP standard
-        meta['EXPOSURE'] = meta.pop('LIVETIME')
 
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            meta=meta, )
+            offset=offset,
+            livetime = obs.observation_live_time_duration,
+            obs_id=obs.obs_info['OBS_ID'])
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
