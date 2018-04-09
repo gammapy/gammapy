@@ -44,4 +44,4 @@ dependencies:
     - sphinx-click
     - pydocstyle
     - black
-    - runipy
+    - testipynb
