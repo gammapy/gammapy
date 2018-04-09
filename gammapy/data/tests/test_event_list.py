@@ -36,18 +36,6 @@ class TestEventListHESS:
         stacked_list = EventList.stack(event_lists)
         assert len(stacked_list.table) == 49 * 3
 
-    def test_region(self):
-        pos = SkyCoord(81, 21, unit='deg', frame='icrs')
-        radius = Angle(1, 'deg')
-        circ = CircleSkyRegion(pos, radius)
-
-        idx = circ.contains(self.events.radec)
-        table = self.events.table[idx]
-
-        assert_allclose(table[4]['RA'], 81, rtol=1)
-        assert_allclose(table[2]['DEC'], 21, rtol=1)
-        assert len(table) == 5
-
     @requires_dependency('matplotlib')
     def test_peek(self):
         self.events.peek()
