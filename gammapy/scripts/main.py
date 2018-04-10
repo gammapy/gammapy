@@ -66,6 +66,15 @@ def add_subcommands():
     from .image_bin import cli_image_bin
     cli_image.add_command(cli_image_bin)
 
+    from .image_fit import cli_image_fit
+    cli_image.add_command(cli_image_fit)
+
+    from .image_ts import cli_image_ts
+    cli_image.add_command(cli_image_ts)
+
+    from .download_extra import cli_download_extra
+    cli.add_command(cli_download_extra)
+
 
 add_subcommands()
 
