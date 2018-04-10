@@ -81,6 +81,16 @@ def test_excess_matching_significance_on_off():
     # Arrays should work
     excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=0.1, significance=5)
     assert_allclose(excess, [9.82966, 12.038423], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=0.1, significance=5, method='simple')
+    assert_allclose(excess, [26.05544, 27.03444], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=10, alpha=[0.1,0.3], significance=5)
+    assert_allclose(excess, [9.82966, 16.664516], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=10, alpha=0.1, significance=[3,5])
+    assert_allclose(excess, [4.818497, 9.82966], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=[10,20], alpha=[0.1,0.3], significance=[3,5])
+    assert_allclose(excess, [4.818497, 20.68810], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=[[10,20],[10,20]], alpha=0.1, significance=5)
+    assert_allclose(excess, [[9.82966, 12.038423],[9.82966, 12.038423]], atol=1e-3)
 
 
 @pytest.mark.parametrize('p', TEST_CASES)
