@@ -402,8 +402,8 @@ class WcsGeom(MapGeom):
         npix = copy.deepcopy(self.npix)
 
         if mode == 'edge':
-            npix[0][0] += 1
-            npix[1][0] += 1
+            for pix_num in npix[:2]:
+                pix_num += 1
 
         if self.axes and not self.is_regular:
 
@@ -598,6 +598,9 @@ class WcsGeom(MapGeom):
 
     def solid_angle(self):
         """ Returns solid angle array (in `sr`) as `~astropy.units.Quantity`
+
+            The array has the same dimension as the WcsGeom object.
+            To return solid angles for the spatial dimensions only use: WcsGeom.to_image().solid_angle()
         """
         # TODO: Improve by exposing a mode 'edge' for get_coord
         # Note that edge is applied only to spatial coordinates in the following call

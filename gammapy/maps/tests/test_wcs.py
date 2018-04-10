@@ -124,8 +124,8 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
 
 def test_wcsgeom_solid_angle():
-    binsz=1.0
-    npix=100
+    binsz=1.0*u.deg
+    npix=10
 
     # create dummy axes
     axis1 = MapAxis.from_edges(np.arange(0,4))
@@ -136,11 +136,18 @@ def test_wcsgeom_solid_angle():
     solid_array = geom.solid_angle()
 
     # Check array size
-    assert solid_array.shape == (9,3,100,100)
+    assert solid_array.shape == (9,3,npix,npix)
+
+    # Note: test is valid for small enough bin sizes since WcsGeom.solid_angle() approximates the true solid angle value
 
     # Test bin size at b=0
-    solid_lat0 = binsz*np.pi/180 * (np.sin(binsz * np.pi / 180.)) * u.sr
-    assert_allclose(solid_array[0,0,50,50],solid_lat0, rtol=1e-4)
-    # Test bin size at b=50 deg
-    solid_lat50 = binsz*np.pi / 180 * (np.sin(50*binsz * np.pi / 180.)-np.sin(49*binsz * np.pi / 180.)) * u.sr
-    assert_allclose(solid_array[0,0,99,50],solid_lat50, rtol=1e-4)
+    solid_lat0 = binsz.to('rad').value * (np.sin(binsz)) * u.sr
+    assert_allclose(solid_array[0,0,5,5],solid_lat0, rtol=1e-3)
+
+    # Test bin size at b=5 deg
+    solid_lat5 = binsz.to('rad').value * (np.sin(5*binsz)-np.sin(4*binsz.to('rad').value)) * u.sr
+    assert_allclose(solid_array[0,0,9,5],solid_lat5, rtol=1e-3)
+
+    # Now check that pixels outside the correct range have solid angles set to NaNs
+    ait_geom = WcsGeom.create(skydir=(0, 0), npix=(100, 40), binsz=5, coordsys='GAL', proj='AIT')
+    assert np.isnan(ait_geom.solid_angle()[0,0])
