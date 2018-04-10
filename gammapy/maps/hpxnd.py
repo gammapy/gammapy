@@ -206,9 +206,8 @@ class HpxNDMap(HpxMap):
             vals = self.get_by_idx(self.geom.get_idx(flat=True))
             map_out.fill_by_coord(self.geom.get_coord(flat=True)[:2], vals)
         else:
-            axes = np.arange(self.data.ndim - 1).tolist()
-            data = np.apply_over_axes(np.sum, self.data, axes=axes)
-            map_out.data = np.squeeze(data, axis=axes)
+            axis = tuple(range(self.data.ndim - 1))
+            map_out.data = np.sum(self.data, axis=axis)
 
         return map_out
 
