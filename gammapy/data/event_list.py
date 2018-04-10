@@ -188,8 +188,8 @@ class EventListBase(object):
         The dead-time-corrected observation time.
 
         - In Fermi-LAT it is automatically provided in the header of the event list.
-        - In IACTs is computed as
-        ``t_live = t_observation * (1 - f_dead)``
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
+
         where ``f_dead`` is the dead-time fraction.
         """
         return Quantity(self.table.meta['LIVETIME'], 'second')
