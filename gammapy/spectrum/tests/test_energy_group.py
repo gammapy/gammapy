@@ -184,7 +184,7 @@ class TestSpectrumEnergyGroupMaker:
             energy_lo=pha_ebounds[:-1],
             energy_hi=pha_ebounds[1:],
             data=np.zeros(len(pha_ebounds) - 1),
-            meta=dict(EXPOSURE=99)
+            livetime=99 * u.s
         )
         return SpectrumObservation(on_vector=on_vector)
 

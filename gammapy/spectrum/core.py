@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
+import logging
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
@@ -22,6 +23,8 @@ __all__ = [
     'PHACountsSpectrum',
     'PHACountsSpectrumList',
 ]
+
+log = logging.getLogger('__name__')
 
 
 class CountsSpectrum(object):
@@ -282,12 +285,19 @@ class PHACountsSpectrum(CountsSpectrum):
         Area scaling factor
     is_bkg : bool, optional
         Background or soure spectrum, default: False
+    obs_id : int
+        Observation identifier, optional
+    livetime : `~astropy.units.Quantity`, optional
+        Observation livetime
+    offset : `~astropy.units.Quantity`, optional
+        Field of view offset
     meta : dict, optional
-        Meta information, TODO: add link where possible meta info is listed
+        Meta information
     """
 
     def __init__(self, energy_lo, energy_hi, data=None, quality=None,
-                 backscal=None, areascal=None, is_bkg=False, meta=None):
+                 backscal=None, areascal=None, is_bkg=False, obs_id=None,
+                 livetime=None, offset=None, meta=None):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
@@ -299,10 +309,11 @@ class PHACountsSpectrum(CountsSpectrum):
             areascal = np.ones(self.energy.nbins)
         self.areascal = areascal
         self.is_bkg = is_bkg
-        self.meta = meta or OrderedDict()
-        self.meta.setdefault('CREATOR', 'Gammapy {}'.format(version.version))
-        self.meta.setdefault('OBS_ID', 0)
-
+        self.obs_id = obs_id
+        self.livetime = livetime
+        self.offset = offset
+        self.meta = meta or dict()
+        
     @property
     def quality(self):
         """Bins in safe energy range (1 = bad, 0 = good)"""
@@ -331,26 +342,6 @@ class PHACountsSpectrum(CountsSpectrum):
     def bkgfile(self):
         """Background PHA files associated with the observations"""
         return self.phafile.replace('pha', 'bkg')
-
-    @property
-    def obs_id(self):
-        return self.meta['OBS_ID']
-
-    @obs_id.setter
-    def obs_id(self, val):
-        self.meta['OBS_ID'] = val
-
-    @property
-    def livetime(self):
-        return self.meta['EXPOSURE'] * u.s
-
-    @livetime.setter
-    def livetime(self, val):
-        self.meta['EXPOSURE'] = val.to('s').value
-
-    @property
-    def offset(self):
-        return self.meta['OFFSET'] * u.deg
 
     @property
     def bins_in_safe_range(self):
@@ -449,6 +440,8 @@ class PHACountsSpectrum(CountsSpectrum):
         meta['hduclas4'] = 'TYPE:1'
         meta['lo_thres'] = self.lo_threshold.to("TeV").value
         meta['hi_thres'] = self.hi_threshold.to("TeV").value
+        meta['exposure'] = self.livetime.to('s').value
+        meta['obs_id'] = self.obs_id
 
         if not self.is_bkg:
             if self.rmffile is not None:
@@ -483,6 +476,7 @@ class PHACountsSpectrum(CountsSpectrum):
             areascal = counts_table['AREASCAL'].data
         if 'BACKSCAL' in counts_table.colnames:
             backscal = counts_table['BACKSCAL'].data
+
         kwargs = dict(
             data=counts_table['COUNTS'],
             backscal=backscal,
@@ -490,7 +484,8 @@ class PHACountsSpectrum(CountsSpectrum):
             energy_hi=emax,
             quality=quality,
             areascal=areascal,
-            meta=counts_table.meta
+            livetime = counts_table.meta['EXPOSURE'] * u.s,
+            obs_id = counts_table.meta['OBS_ID']
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs['is_bkg'] = True
@@ -587,7 +582,6 @@ class PHACountsSpectrumList(list):
         meta['hduclas4'] = 'TYPE:II'
         meta['ancrfile'] = 'arf.fits'
         meta['respfile'] = 'rmf.fits'
-        meta.pop('OBS_ID')
 
         data = [spec_num, channel, counts, quality, backscal]
         names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
@@ -624,9 +618,9 @@ class PHACountsSpectrumList(list):
             kwargs['data'] = row['COUNTS']
             kwargs['backscal'] = row['BACKSCAL']
             kwargs['quality'] = row['QUALITY']
-            spec = PHACountsSpectrum(meta=dict(hdulist[1].header),
-                                     **kwargs)
-            spec.obs_id = row['SPEC_NUM']
+            kwargs['livetime'] = hdulist[1].header['EXPOSURE'] * u.s
+            kwargs['obs_id'] = row['SPEC_NUM']
+            spec = PHACountsSpectrum( **kwargs)
             speclist.append(spec)
 
         return speclist
