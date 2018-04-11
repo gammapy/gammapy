@@ -4,6 +4,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
+from ..utils.fitting import fit_minuit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
@@ -461,7 +462,6 @@ class SpectrumFit(object):
 
     def _fit_iminuit(self):
         """Iminuit minimization"""
-        from gammapy.utils.fitting import fit_minuit
         bf_parameters = fit_minuit(parameters=self.model.parameters,
                                    function=self.total_stat)
         self._make_fit_result(bf_parameters)

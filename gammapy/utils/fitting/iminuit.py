@@ -16,7 +16,7 @@ def fit_minuit(parameters, function):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modelling.ParameterList`
+    parameters : `~gammapy.utils.modeling.ParameterList`
         Parameters with starting values
     function : callable
         Likelihood function
@@ -39,7 +39,7 @@ class MinuitFunction(object):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modelling.ParameterList`
+    parameters : `~gammapy.utils.modeling.ParameterList`
         Parameters with starting values
     function : callable
         Likelihood function

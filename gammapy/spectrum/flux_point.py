@@ -731,10 +731,10 @@ class FluxPointEstimator(object):
             amplitude_min = amplitude
 
         def ts_diff(x):
-            fit.model.parameters['amplitude'].value = x * 1E-12
-            fit.predict_counts()
-            fit.calc_statval()
-            return (stat_best_fit + delta_ts) - fit.total_stat
+            pars = fit.model.parameters
+            pars['amplitude'].value = x * 1E-12
+            stat = fit.total_stat(pars)
+            return (stat_best_fit + delta_ts) - stat
 
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
@@ -767,12 +767,11 @@ class FluxPointEstimator(object):
         """
         # store best fit amplitude, set amplitude of fit model to zero
         amplitude = fit.result[0].model.parameters['amplitude'].value
-        fit.model.parameters['amplitude'].value = 0
 
         # determine TS value for amplitude zero
-        fit.predict_counts()
-        fit.calc_statval()
-        stat_null = fit.total_stat
+        pars = fit.model.parameters
+        pars['amplitude'].value = 0
+        stat_null = fit.total_stat(pars)
 
         # set amplitude of fit model to best fit amplitude
         fit.model.parameters['amplitude'].value = amplitude

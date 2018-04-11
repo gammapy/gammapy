@@ -459,6 +459,7 @@ class CompoundSpectralModel(SpectralModel):
         self.model2 = model2
         self.operator = operator
 
+    # TODO: Think about how to deal with covariance matrix
     @property
     def parameters(self):
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
