@@ -3,11 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import pytest
 from astropy.io import fits
-import astropy.units as u
 from astropy.table import Table, Column
-from ..fits import (
-    SmartHDUList, fits_table_to_table, table_to_fits_table,
-)
+from ..fits import SmartHDUList
 
 
 def make_test_hdu_list():
@@ -125,24 +122,3 @@ def test_table_fits_io_astropy(table):
     assert table2['b'].unit == 'm'
     # Note: description doesn't come back in older versions of Astropy
     # that we still support, so we're not asserting on that here for now.
-
-
-# TODO: I'm thinking maybe we should remove that Gammapy utils function ...
-def _test_table_fits_io_gammapy(table):
-    """Test table FITS I/O helper functions in Gammapy.
-    """
-    # Check Table -> BinTableHDU
-    hdu = table_to_fits_table(table)
-    assert hdu.header['TTYPE2'] == 'b'
-    assert hdu.header['TFORM2'] == 'K'
-    assert hdu.header['TUNIT2'] == 'm'
-    print(repr(hdu.header))  # ; 1/0
-
-    # Check BinTableHDU -> Table
-    table2 = fits_table_to_table(hdu)
-    assert isinstance(table2.meta, dict)
-    print(table2.meta)
-    assert table2.meta == {'VERSION': 42, 'TUCD2': 'spam'}
-    # assert table2['b'].unit == 'm'
-    assert table2['b'].description == 'Velocity'
-    assert table2['b'].meta['ucd'] == 'spam'

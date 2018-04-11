@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import Energy, EnergyBounds
@@ -82,6 +83,9 @@ class TestSkyCube(object):
     def test_read_write(self, tmpdir):
         filename = str(tmpdir / 'sky_cube.fits')
         self.sky_cube.write(filename, format='fermi-background')
+
+        hdu_list = fits.open(filename)
+        assert hdu_list[1].name == 'ENERGIES'
 
         sky_cube = SkyCube.read(filename, format='fermi-background')
         assert sky_cube.data.shape == (30, 21, 61)

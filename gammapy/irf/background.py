@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+import numpy as np
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-from ..utils.fits import fits_table_to_table, table_to_fits_table
-import numpy as np
 
 __all__ = [
     'Background3D',
@@ -107,9 +106,7 @@ class Background3D(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
         """Create from `~astropy.io.fits.HDUList`."""
-        fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
-        return cls.from_table(table)
+        return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
     def read(cls, filename, hdu='BACKGROUND'):
@@ -133,7 +130,7 @@ class Background3D(object):
 
     def to_fits(self, name='BACKGROUND'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        return fits.BinTableHDU(self.to_table(), name=name)
 
 
 class Background2D(object):
@@ -205,9 +202,7 @@ class Background2D(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
         """Create from `~astropy.io.fits.HDUList`."""
-        fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
-        return cls.from_table(table)
+        return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
     def read(cls, filename, hdu='BACKGROUND'):
@@ -230,7 +225,7 @@ class Background2D(object):
 
     def to_fits(self, name='BACKGROUND'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        return fits.BinTableHDU(self.to_table(), name=name)
 
     def evaluate(self, fov_offset, fov_phi=None, energy_reco=None, **kwargs):
         """

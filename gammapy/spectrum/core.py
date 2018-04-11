@@ -9,12 +9,7 @@ import astropy.units as u
 from .. import version
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-from ..utils.fits import (
-    energy_axis_to_ebounds,
-    fits_table_to_table,
-    ebounds_to_energy_axis,
-    table_to_fits_table,
-)
+from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis
 from ..data import EventList
 
 __all__ = [
@@ -72,7 +67,7 @@ class CountsSpectrum(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='COUNTS', hdu2='EBOUNDS'):
         """Read OGIP format hdulist"""
-        counts_table = fits_table_to_table(hdulist[hdu1])
+        counts_table = Table.read(hdulist[hdu1])
         counts = counts_table['COUNTS'].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
         return cls(data=counts, energy_lo=ebounds.lower_bounds,
@@ -100,8 +95,7 @@ class CountsSpectrum(object):
         counts = np.array(self.data.data.value, dtype=np.int32)
 
         names = ['CHANNEL', 'COUNTS']
-        meta = OrderedDict()
-        meta['name'] = 'COUNTS'
+        meta = {'name': 'COUNTS'}
         return Table([channel, counts], names=names, meta=meta)
 
     def to_hdulist(self):
@@ -110,10 +104,11 @@ class CountsSpectrum(object):
         This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by
         ``to_table``, in order to store the energy axis
         """
-        hdu = table_to_fits_table(self.to_table())
-        prim_hdu = fits.PrimaryHDU()
+        table = self.to_table()
+        name = table.meta['name']
+        hdu = fits.BinTableHDU(table, name=name)
         ebounds = energy_axis_to_ebounds(self.energy.bins)
-        return fits.HDUList([prim_hdu, hdu, ebounds])
+        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
 
     def write(self, filename, **kwargs):
         """Write to file."""
@@ -468,8 +463,8 @@ class PHACountsSpectrum(CountsSpectrum):
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='SPECTRUM', hdu2='EBOUNDS'):
         """Create from `~astropy.io.fits.HDUList`."""
-        counts_table = fits_table_to_table(hdulist[hdu1])
-        ebounds = fits_table_to_table(hdulist[2])
+        counts_table = Table.read(hdulist[hdu1])
+        ebounds = Table.read(hdulist[2])
         emin = ebounds['E_MIN'].quantity
         emax = ebounds['E_MAX'].quantity
 
@@ -559,10 +554,9 @@ class PHACountsSpectrumList(list):
 
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`"""
-        prim_hdu = fits.PrimaryHDU()
-        hdu = table_to_fits_table(self.to_table())
+        hdu = fits.BinTableHDU(self.to_table())
         ebounds = energy_axis_to_ebounds(self[0].energy.bins)
-        return fits.HDUList([prim_hdu, hdu, ebounds])
+        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
@@ -618,7 +612,7 @@ class PHACountsSpectrumList(list):
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs['is_bkg'] = True
 
-        counts_table = fits_table_to_table(hdulist[1])
+        counts_table = Table.read(hdulist[1])
         speclist = cls()
         for row in counts_table:
             kwargs['data'] = row['COUNTS']

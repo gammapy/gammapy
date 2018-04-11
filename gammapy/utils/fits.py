@@ -220,7 +220,6 @@ https://github.com/astropy/astropy/pull/7226
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-import astropy
 from astropy.io import fits
 from astropy.table import Table
 from .scripts import make_path
@@ -228,8 +227,6 @@ from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-    'table_to_fits_table',
-    'fits_table_to_table',
     'energy_axis_to_ebounds',
 ]
 
@@ -437,82 +434,7 @@ def fits_header_to_meta_dict(header):
     return meta
 
 
-def table_to_fits_table(table, name=None):
-    """Convert `~astropy.table.Table` to `astropy.io.fits.BinTableHDU`.
-
-    See `fits_table_to_table` to convert in the other direction and
-    :ref:`utils-fits-tables` for a description and examples.
-
-    The name of the table can be stored in the Table meta information
-    under the ``name`` keyword.
-
-    Additional column information ``description`` and ``ucd`` can be stored
-    in the column.meta attribute and will be stored in the fits header.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table
-
-    Returns
-    -------
-    hdu : `~astropy.io.fits.BinTableHDU`
-        Binary table HDU
-    """
-    # read name and drop it from the meta information, otherwise
-    # it would be stored as a header keyword in the BinTableHDU
-    if name is None:
-        if 'EXTNAME' in table.meta:
-            name = table.meta.pop('EXTNAME', None)
-        elif 'name' in table.meta:
-            name = table.meta.pop('name', None)
-
-    # This version check can be removed when we drop support
-    # either for Python 2 or for Astropy < 3 in Gammapy
-    if astropy.version.major >= 3:
-        table.convert_unicode_to_bytestring()
-    else:
-        table.convert_unicode_to_bytestring(python3_only=True)
-
-    data = table.as_array()
-
-    header = fits.Header()
-    header.update(table.meta)
-
-    hdu = fits.BinTableHDU(data, header, name=name)
-
-    # Fill all column meta-data explicitly
-    # This is to make sure the keywords in the FITS header
-    # appear in a good order (all keys related to one column together)
-    for idx, colname in enumerate(table.colnames):
-        idx = str(idx + 1)
-        meta = table[colname].meta
-
-        hdu.header['TTYPE' + idx] = hdu.header.pop('TTYPE' + idx)
-
-        hdu.header['TFORM' + idx] = hdu.header.pop('TFORM' + idx)
-
-        tdisp = meta.get('tdisp')
-        if tdisp:
-            hdu.header['TDISP' + idx] = tdisp
-
-        # Apparently `unit` is not always stored in `meta`
-        # So we access it like this, via a column attribute
-        if table[colname].unit is not None:
-            hdu.header['TUNIT' + idx] = table[colname].unit.to_string('fits')
-
-        description = meta.get('description')
-        if description:
-            hdu.header['TCOMM' + idx] = description
-
-        ucd = meta.get('ucd')
-        if ucd:
-            hdu.header['TUCD' + idx] = ucd
-
-    return hdu
-
-
-def fits_table_to_table(hdu):
+def _fits_table_to_table(hdu):
     """Convert `astropy.io.fits.BinTableHDU` to `astropy.table.Table`.
 
     See `table_to_fits_table` to convert in the other direction and
@@ -566,7 +488,7 @@ def energy_axis_to_ebounds(energy):
     table['E_MIN'] = energy[:-1]
     table['E_MAX'] = energy[1:]
 
-    hdu = table_to_fits_table(table)
+    hdu = fits.BinTableHDU(table)
 
     header = hdu.header
     header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
@@ -586,7 +508,7 @@ def energy_axis_to_ebounds(energy):
 def ebounds_to_energy_axis(ebounds):
     """Convert ``EBOUNDS`` extension to `~gammapy.utils.energy.EnergyBounds`
     """
-    table = fits_table_to_table(ebounds)
+    table = Table.read(ebounds)
     emin = table['E_MIN'].quantity
     emax = table['E_MAX'].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit

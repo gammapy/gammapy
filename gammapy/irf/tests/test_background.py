@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
-from astropy.coordinates import Angle
+import astropy.units as u
+from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
-from ...utils.fits import table_to_fits_table
 
 
 @pytest.fixture(scope='session')
@@ -49,7 +47,7 @@ def test_background_3d_evaluate(bkg_3d):
 
 @requires_data('gammapy-extra')
 def test_background_3d_write(bkg_3d):
-    hdu = table_to_fits_table(bkg_3d.to_table())
+    hdu = fits.BinTableHDU(bkg_3d.to_table())
     assert_equal(hdu.data['DETX_LO'][0], bkg_3d.data.axis('detx').lo.value)
     assert hdu.header['TUNIT1'] == bkg_3d.data.axis('detx').lo.unit
 
