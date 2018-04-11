@@ -699,7 +699,7 @@ class HpxGeom(MapGeom):
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
         if self._rmap is not None:
-            retval = np.full((idx.size), -1, 'i')
+            retval = np.full(idx.size, -1, 'i')
             m = np.in1d(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
             retval = retval.reshape(idx.shape)
@@ -1055,10 +1055,8 @@ class HpxGeom(MapGeom):
         return idx_nb
 
     def pad(self, pad_width):
-
-        # FIXME: Should this return an exception?
         if self.is_allsky:
-            return copy.deepcopy(self)
+            raise ValueError('Cannot pad an all-sky map.')
 
         idx = self.get_idx(flat=True)
         idx_r = ravel_hpx_index(idx, self._maxpix)
@@ -1067,14 +1065,14 @@ class HpxGeom(MapGeom):
         idx_nb = self._get_neighbors(idx)
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
-        for i in range(pad_width):
+        for _ in range(pad_width):
             # Mask of neighbors that are not contained in the geometry
-            edge_msk = np.isin(idx_nb, idx_r, invert=True)
-            edge_idx = idx_nb[edge_msk]
-            edge_idx = np.unique(edge_idx)
-            idx_r = np.sort(np.concatenate((idx_r, edge_idx)))
-            idx_nb = self._get_neighbors(
-                unravel_hpx_index(edge_idx, self._maxpix))
+            mask_edge = np.in1d(idx_nb, idx_r, invert=True).reshape(idx_nb.shape)
+            idx_edge = idx_nb[mask_edge]
+            idx_edge = np.unique(idx_edge)
+            idx_r = np.sort(np.concatenate((idx_r, idx_edge)))
+            idx_nb = unravel_hpx_index(idx_edge, self._maxpix)
+            idx_nb = self._get_neighbors(idx_nb)
             idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
@@ -1083,7 +1081,6 @@ class HpxGeom(MapGeom):
                               axes=copy.deepcopy(self.axes))
 
     def crop(self, crop_width):
-
         if self.is_allsky:
             raise ValueError('Cannot crop an all-sky map.')
 
@@ -1094,12 +1091,13 @@ class HpxGeom(MapGeom):
         idx_nb = self._get_neighbors(idx)
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
-        for i in range(crop_width):
+        for _ in range(crop_width):
             # Mask of pixels that have at least one neighbor not
             # contained in the geometry
-            edge_msk = np.any(np.isin(idx_nb, idx_r, invert=True), axis=0)
-            idx_r = idx_r[~edge_msk]
-            idx_nb = idx_nb[:, ~edge_msk]
+            mask_edge = np.in1d(idx_nb, idx_r, invert=True)
+            mask_edge = np.any(mask_edge, axis=0)
+            idx_r = idx_r[~mask_edge]
+            idx_nb = idx_nb[:, ~mask_edge]
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
         return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
