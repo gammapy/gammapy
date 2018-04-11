@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+import astropy.units as u
 from ..wcs import WcsGeom
 from ..geom import MapAxis
 
@@ -74,7 +75,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 
     if not geom.is_allsky:
         coords = geom.center_coord[:2] + \
-            tuple([ax.center[0] for ax in geom.axes])
+                 tuple([ax.center[0] for ax in geom.axes])
         coords[0][...] += 2.0 * np.max(geom.width[0])
         idx = geom.coord_to_idx(coords)
         assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
@@ -121,3 +122,37 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
     if not geom.is_allsky:
         coords = [0.0, 0.0] + [ax.center[0] for ax in geom.axes]
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
+
+
+def test_wcsgeom_solid_angle():
+    # Test using a CAR projection map with an extra axis
+    binsz = 1.0 * u.deg
+    npix = 10
+    geom = WcsGeom.create(skydir=(0, 0), npix=(npix, npix),
+                          binsz=binsz, coordsys='GAL', proj='CAR',
+                          axes=[MapAxis.from_edges([0, 2, 3])])
+
+    solid_angle = geom.solid_angle()
+
+    # Check array size
+    assert solid_angle.shape == (2, npix, npix)
+
+    # Note: test is valid for small enough bin sizes since
+    # WcsGeom.solid_angle() approximates the true solid angle value
+
+    # Test at b = 0 deg
+    solid_lat0 = binsz.to('rad').value * (np.sin(binsz)) * u.sr
+    assert_allclose(solid_angle[0, 5, 5], solid_lat0, rtol=1e-3)
+
+    # Test at b = 5 deg
+    solid_lat5 = binsz.to('rad').value * (np.sin(5 * binsz) - np.sin(4 * binsz.to('rad').value)) * u.sr
+    assert_allclose(solid_angle[0, 9, 5], solid_lat5, rtol=1e-3)
+
+
+def test_wcsgeom_solid_angle_ait():
+    # Pixels that don't correspond to locations on ths sky
+    # should have solid angles set to NaN
+    ait_geom = WcsGeom.create(skydir=(0, 0), npix=(10, 4), binsz=50,
+                              coordsys='GAL', proj='AIT')
+    solid_angle = ait_geom.solid_angle()
+    assert np.isnan(solid_angle[0, 0])

@@ -5,6 +5,8 @@ import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.angle_utilities import angular_separation
+import astropy.units as u
 from ..image.utils import make_header
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
@@ -400,8 +402,8 @@ class WcsGeom(MapGeom):
         npix = copy.deepcopy(self.npix)
 
         if mode == 'edge':
-            npix[0] += 1
-            npix[1] += 1
+            for pix_num in npix[:2]:
+                pix_num += 1
 
         if self.axes and not self.is_regular:
 
@@ -427,7 +429,7 @@ class WcsGeom(MapGeom):
                     s_img = (slice(0, npix0), slice(0, npix1),) + idx_img
                 else:
                     s_img = (slice(0, npix0), slice(0, npix1),) + \
-                        (0,) * len(self.axes)
+                            (0,) * len(self.axes)
 
                 pix2[0][s_img] = pix_img[0]
                 pix2[1][s_img] = pix_img[1]
@@ -455,10 +457,10 @@ class WcsGeom(MapGeom):
             pix[i][~m] = np.nan
         return pix
 
-#        shape = np.broadcast(*coords).shape
-#        m = [np.isfinite(c) for c in coords]
-#        m = np.broadcast_to(np.prod(m),shape)
-#        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
+    #        shape = np.broadcast(*coords).shape
+    #        m = [np.isfinite(c) for c in coords]
+    #        m = np.broadcast_to(np.prod(m),shape)
+    #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
 
     def get_coord(self, idx=None, flat=False):
         pix = self._get_pix_coords(idx=idx)
@@ -531,7 +533,7 @@ class WcsGeom(MapGeom):
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
                     np.putmask(idxs[i], (idx < 0) | (
-                        idx >= self.axes[i - 2].nbin), -1)
+                            idx >= self.axes[i - 2].nbin), -1)
 
         return idxs
 
@@ -593,6 +595,33 @@ class WcsGeom(MapGeom):
 
     def to_slice(self, slices):
         raise NotImplementedError
+
+    def solid_angle(self):
+        """Solid angle array (`~astropy.units.Quantity` in ``sr``).
+
+        The array has the same dimension as the WcsGeom object.
+        To return solid angles for the spatial dimensions only use: WcsGeom.to_image().solid_angle()
+        """
+        # TODO: Improve by exposing a mode 'edge' for get_coord
+        # Note that edge is applied only to spatial coordinates in the following call
+        # Note also that pix_to_coord is already called in _get_pix_coords.
+        # This should be made more efficient.
+        pix = self._get_pix_coords(mode='edge')
+        coord = self.pix_to_coord(pix)
+        lon = coord[0] * np.pi / 180.
+        lat = coord[1] * np.pi / 180.
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[..., :-1, :-1], lat[..., :-1, :-1]
+        ylo_xhi = lon[..., :-1, 1:], lat[..., :-1, 1:]
+        yhi_xlo = lon[..., 1:, :-1], lat[..., 1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+
+        return u.Quantity(dx * dy, 'sr')
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
