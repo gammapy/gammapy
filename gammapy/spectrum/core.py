@@ -582,7 +582,6 @@ class PHACountsSpectrumList(list):
         meta['hduclas4'] = 'TYPE:II'
         meta['ancrfile'] = 'arf.fits'
         meta['respfile'] = 'rmf.fits'
-        meta.pop('OBS_ID')
 
         data = [spec_num, channel, counts, quality, backscal]
         names = ['SPEC_NUM', 'CHANNEL', 'COUNTS', 'QUALITY', 'BACKSCAL']
@@ -619,9 +618,9 @@ class PHACountsSpectrumList(list):
             kwargs['data'] = row['COUNTS']
             kwargs['backscal'] = row['BACKSCAL']
             kwargs['quality'] = row['QUALITY']
-            spec = PHACountsSpectrum(meta=dict(hdulist[1].header),
-                                     **kwargs)
-            spec.obs_id = row['SPEC_NUM']
+            kwargs['livetime'] = hdulist[1].header['EXPOSURE'] * u.s
+            kwargs['obs_id'] = row['SPEC_NUM']
+            spec = PHACountsSpectrum( **kwargs)
             speclist.append(spec)
 
         return speclist
