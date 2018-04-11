@@ -10,7 +10,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from ..utils.scripts import make_path
 from ..utils.wcs import linear_wcs_to_arrays, linear_arrays_to_wcs
-from ..utils.fits import table_to_fits_table
 from ..utils.energy import Energy, EnergyBounds
 
 __all__ = [
@@ -428,7 +427,7 @@ class FOVCube(object):
         tbhdu : `~astropy.io.fits.BinTableHDU`
             Table containing the cube.
         """
-        return table_to_fits_table(self.to_table())
+        return fits.BinTableHDU(self.to_table())
 
     def to_fits_image(self):
         """Convert cube to image FITS format.
@@ -456,16 +455,15 @@ class FOVCube(object):
         # get energy values as a table HDU, via an astropy table
         energy_table = Table()
         energy_table['ENERGY'] = self.energy_edges
-        energy_table.meta['name'] = 'EBOUNDS'
+        energy_hdu = fits.BinTableHDU(energy_table, name='EBOUNDS')
+
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
         # https://github.com/gammapy/gammapy/pull/290
         # as suggested in:
         # https://github.com/gammapy/gammapy/pull/299#discussion_r35044977
 
-        enhdu = table_to_fits_table(energy_table)
-
-        hdu_list = fits.HDUList([imhdu, enhdu])
+        hdu_list = fits.HDUList([imhdu, energy_hdu])
 
         return hdu_list
 

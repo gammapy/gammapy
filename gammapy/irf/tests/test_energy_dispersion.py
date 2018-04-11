@@ -9,7 +9,6 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
 from ...utils.testing import mpl_savefig_check
-from ...utils.fits import table_to_fits_table
 
 
 @requires_dependency('scipy')
@@ -156,7 +155,7 @@ class TestEnergyDispersion2D:
                                    offset_lo=offset_lo, offset_hi=offset_hi,
                                    data=data)
 
-        hdu = table_to_fits_table(edisp.to_table())
+        hdu = edisp.to_fits()
         assert_equal(hdu.data['ENERG_LO'][0], edisp.data.axis('e_true').lo.value)
         assert hdu.header['TUNIT1'] == edisp.data.axis('e_true').lo.unit
 

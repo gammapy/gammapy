@@ -8,7 +8,6 @@ from astropy.table import Table
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
-from ..utils.fits import fits_table_to_table, table_to_fits_table
 
 __all__ = [
     'EffectiveAreaTable',
@@ -178,9 +177,7 @@ class EffectiveAreaTable(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='SPECRESP'):
         """Create from `~astropy.io.fits.HDUList`."""
-        fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
-        return cls.from_table(table)
+        return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
     def read(cls, filename, hdu='SPECRESP', **kwargs):
@@ -211,11 +208,12 @@ class EffectiveAreaTable(object):
         table['SPECRESP'] = self.evaluate_fill_nan()
         return table
 
-    def to_hdulist(self):
+    def to_hdulist(self, name=None):
         """Convert to `~astropy.io.fits.HDUList`."""
-        hdu = table_to_fits_table(self.to_table())
-        prim_hdu = fits.PrimaryHDU()
-        return fits.HDUList([prim_hdu, hdu])
+        return fits.HDUList([
+            fits.PrimaryHDU(),
+            fits.BinTableHDU(self.to_table(), name=name),
+        ])
 
     def write(self, filename, **kwargs):
         """Write to file."""
@@ -402,9 +400,7 @@ class EffectiveAreaTable2D(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):
         """Create from `~astropy.io.fits.HDUList`."""
-        fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
-        return cls.from_table(table)
+        return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
     def read(cls, filename, hdu='EFFECTIVE AREA'):
@@ -576,4 +572,4 @@ class EffectiveAreaTable2D(object):
 
     def to_fits(self, name='EFFECTIVE AREA'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        return fits.BinTableHDU(self.to_table(), name=name)

@@ -1,5 +1,195 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""FITS utility functions.
+"""
+.. _utils-fits:
+
+Gammapy FITS utilities
+======================
+
+.. _utils-fits-tables:
+
+FITS tables
+-----------
+
+In Gammapy we use the nice `astropy.table.Table` class a lot to represent all
+kinds of data (e.g. event lists, spectral points, light curves, source catalogs).
+The most common format to store tables is FITS. In this section we show examples
+and mention some limitations of Table FITS I/O.
+
+Also, note that if you have the choice, you might want to use a better format
+than FITS to store tables. All of these are nice and have very good support
+in Astropy: ``ECSV``, ``HDF5``, ``ASDF``.
+
+In Astropy, there is the `~astropy.table.Table` class with a nice data model
+and API. Let's make an example table object that has some metadata on the
+table and columns of different types:
+
+>>> from astropy.table import Table, Column
+>>> table = Table(meta={'version': 42})
+>>> table['a'] = [1, 2]
+>>> table['b'] = Column([1, 2], unit='m', description='Velocity')
+>>> table['c'] = ['x', 'yy']
+>>> table
+<Table length=2>
+  a     b    c
+        m
+int64 int64 str2
+----- ----- ----
+    1     1    x
+    2     2   yy
+>>> table.info()
+<Table length=2>
+name dtype unit description
+---- ----- ---- -----------
+   a int64
+   b int64    m    Velocity
+   c  str2
+
+Writing and reading the table to FITS is easy:
+
+>>> table.write('table.fits')
+>>> table2 = Table.read('table.fits')
+
+and works very nicely, column units and description round-trip:
+
+>>> table2
+<Table length=2>
+  a      b      c
+         m
+int64 float64 bytes2
+----- ------- ------
+    1     1.0      x
+    2     2.0     yy
+>>> table2.info()
+<Table length=2>
+name  dtype  unit description
+---- ------- ---- -----------
+   a   int64
+   b float64    m    Velocity
+   c  bytes2
+
+This is with Astropy 3.0. In older versions of Astropy this didn't use
+to work, namely column description was lost.
+
+Looking at the FITS header and ``table2.meta``, one can see that
+they are cheating a bit, storing table meta in ``COMMENT``:
+
+>>> fits.open('table.fits')[1].header
+XTENSION= 'BINTABLE'           / binary table extension
+BITPIX  =                    8 / array data type
+NAXIS   =                    2 / number of array dimensions
+NAXIS1  =                   18 / length of dimension 1
+NAXIS2  =                    2 / length of dimension 2
+PCOUNT  =                    0 / number of group parameters
+GCOUNT  =                    1 / number of groups
+TFIELDS =                    3 / number of table fields
+TTYPE1  = 'a       '
+TFORM1  = 'K       '
+TTYPE2  = 'b       '
+TFORM2  = 'K       '
+TUNIT2  = 'm       '
+TTYPE3  = 'c       '
+TFORM3  = '2A      '
+VERSION =                   42
+COMMENT --BEGIN-ASTROPY-SERIALIZED-COLUMNS--
+COMMENT datatype:
+COMMENT - {name: a, datatype: int64}
+COMMENT - {name: b, unit: m, datatype: int64, description: Velocity}
+COMMENT - {name: c, datatype: string}
+COMMENT meta:
+COMMENT   __serialized_columns__: {}
+COMMENT --END-ASTROPY-SERIALIZED-COLUMNS--
+>>> table2.meta
+OrderedDict([('VERSION', 42),
+             ('comments',
+              ['--BEGIN-ASTROPY-SERIALIZED-COLUMNS--',
+               'datatype:',
+               '- {name: a, datatype: int64}',
+               '- {name: b, unit: m, datatype: int64, description: Velocity}',
+               '- {name: c, datatype: string}',
+               'meta:',
+               '  __serialized_columns__: {}',
+               '--END-ASTROPY-SERIALIZED-COLUMNS--'])])
+
+
+TODO: we'll have to see how to handle this, i.e. if we want that
+behaviour or not, and how to get consistent output accross Astropy versions.
+See https://github.com/astropy/astropy/issues/7364
+
+Let's make sure for the following examples we have a clean ``table.meta``
+like we did at the start:
+
+>>> table.meta.pop('comments', None)
+
+If you want to avoid writing to disk, the way to directly convert between
+`~astropy.table.Table` and `~astropy.io.fits.BinTableHDU` is like this:
+
+>>> hdu = fits.BinTableHDU(table)
+
+This calls `astropy.io.fits.table_to_hdu` in ``BinTableHDU.__init__``,
+i.e. if you don't pass extra options, this is equivalent to
+
+>>> hdu = fits.table_to_hdu(table)
+
+However, in this case, the column metadata that is serialised is
+doesn't include the column ``description``.
+TODO: how to get consistent behaviour and FITS headers?
+
+>>> hdu.header
+XTENSION= 'BINTABLE'           / binary table extension
+BITPIX  =                    8 / array data type
+NAXIS   =                    2 / number of array dimensions
+NAXIS1  =                   18 / length of dimension 1
+NAXIS2  =                    2 / length of dimension 2
+PCOUNT  =                    0 / number of group parameters
+GCOUNT  =                    1 / number of groups
+TFIELDS =                    3 / number of table fields
+VERSION =                   42
+TTYPE1  = 'a       '
+TFORM1  = 'K       '
+TTYPE2  = 'b       '
+TFORM2  = 'K       '
+TUNIT2  = 'm       '
+TTYPE3  = 'c       '
+TFORM3  = '2A      '
+
+Somewhat surprisingly, ``Table(hdu)`` doesn't work and there is no
+``hdu_to_table`` function; instead you have to call ``Table.read``
+if you want to convert in the other direction:
+
+>>> table2 = Table.read(hdu)
+>>> table2.info()
+<Table length=2>
+name dtype unit
+---- ----- ----
+   a int64
+   b int64    m
+   c  str2
+
+
+Another trick worth knowing about is how to read and write multiple tables
+to one FITS file. There is support in the ``Table`` API to read any HDU
+from a FITS file with multiple HDUs via the ``hdu`` option to ``Table.read``;
+you can pass an integer HDU index or an HDU extension name string
+(see :ref:`astropy:table_io_fits`).
+
+For writing (or if you prefer also for reading) multiple tables, you should
+use the in-memory conversion to HDU objects and the `~astropy.io.fits.HDUList`
+like this::
+
+    hdu_list = fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.BinTableHDU(table, name='spam'),
+        fits.BinTableHDU(table, name='ham'),
+    ])
+    hdu_list.info()
+    hdu_list.writeto('tables.fits')
+
+
+For further information on Astropy, see the Astropy docs at
+:ref:`astropy:astropy-table` and :ref:`astropy:table_io_fits`.
+
+We will have to see if / what we need here in `gammapy.utils.fits`
+as a stable and nice interface on top of what Astropy provides.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
@@ -11,8 +201,6 @@ from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
-    'table_to_fits_table',
-    'fits_table_to_table',
     'energy_axis_to_ebounds',
 ]
 
@@ -220,75 +408,13 @@ def fits_header_to_meta_dict(header):
     return meta
 
 
-def table_to_fits_table(table, name=None):
-    """Convert `~astropy.table.Table` to `astropy.io.fits.BinTableHDU`.
+def _fits_table_to_table(hdu):
+    """Convert `astropy.io.fits.BinTableHDU` to `astropy.table.Table`.
 
-    The name of the table can be stored in the Table meta information
-    under the ``name`` keyword.
+    See `table_to_fits_table` to convert in the other direction and
+    :ref:`utils-fits-tables` for a description and examples.
 
-    Additional column information ``description`` and ``ucd`` can be stored
-    in the column.meta attribute and will be stored in the fits header.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table
-
-    Returns
-    -------
-    hdu : `~astropy.io.fits.BinTableHDU`
-        Binary table HDU
-    """
-    # read name and drop it from the meta information, otherwise
-    # it would be stored as a header keyword in the BinTableHDU
-    if name is None:
-        if 'EXTNAME' in table.meta:
-            name = table.meta.pop('EXTNAME', None)
-        elif 'name' in table.meta:
-            name = table.meta.pop('name', None)
-
-    table.convert_unicode_to_bytestring(python3_only=True)
-    data = table.as_array()
-
-    header = fits.Header()
-    header.update(table.meta)
-
-    hdu = fits.BinTableHDU(data, header, name=name)
-
-    # Copy over column meta-data
-    for idx, colname in enumerate(table.colnames):
-        # fix the order of the keywords
-        hdu.header['TTYPE' + str(idx + 1)] = hdu.header.pop('TTYPE' + str(idx + 1))
-        hdu.header['TFORM' + str(idx + 1)] = hdu.header.pop('TFORM' + str(idx + 1))
-
-        if table[colname].unit is not None:
-            hdu.header['TUNIT' + str(idx + 1)] = table[colname].unit.to_string('fits')
-
-        description = table[colname].meta.get('description')
-        if description:
-            hdu.header['TCOMM' + str(idx + 1)] = description
-
-        ucd = table[colname].meta.get('ucd')
-        if ucd:
-            hdu.header['TUCD' + str(idx + 1)] = ucd
-
-    # TODO: this method works fine but the order of keywords in the table
-    # header is not logical: for instance, list of keywords with column
-    # units (TUNITi) is appended after the list of column keywords
-    # (TTYPEi, TFORMi), instead of in between.
-    # As a matter of fact, the units aren't yet in the header, but
-    # only when calling the write method and opening the output file.
-    # https://github.com/gammapy/gammapy/issues/298
-
-    return hdu
-
-
-def fits_table_to_table(hdu):
-    """Convert astropy table to binary table FITS format.
-
-    This is a generic method to convert a `~astropy.io.fits.BinTableHDU`
-    to `~astropy.table.Table`.
-    The name of the table is stored in the Table meta information
+    TODO: The name of the table is stored in the Table meta information
     under the ``name`` keyword.
 
     Additional column information ``description`` and ``ucd`` can will be
@@ -304,17 +430,22 @@ def fits_table_to_table(hdu):
     table : `~astropy.table.Table`
         astropy table containing the desired columns
     """
-    data = hdu.data
-    header = hdu.header
-    table = Table(data, meta=header)
+    # Re-use Astropy BinTableHDU -> Table implementation
+    table = Table.read(hdu)
 
-    # Copy over column meta-data
+    # In addition, copy over extra column meta-data from the HDU
     for idx, colname in enumerate(hdu.columns.names):
-        table[colname].unit = hdu.columns[colname].unit
-        description = table.meta.pop('TCOMM' + str(idx + 1), None)
-        table[colname].meta['description'] = description
-        ucd = table.meta.pop('TUCD' + str(idx + 1), None)
-        table[colname].meta['ucd'] = ucd
+        idx = str(idx + 1)
+        col = table[colname]
+
+        # Unit is already handled correctly in Astropy since a long time
+        # col.unit = hdu.columns[colname].unit
+
+        description = hdu.header.pop('TCOMM' + idx, None)
+        col.meta['description'] = description
+
+        ucd = hdu.header.pop('TUCD' + idx, None)
+        col.meta['ucd'] = ucd
 
     return table
 
@@ -331,7 +462,7 @@ def energy_axis_to_ebounds(energy):
     table['E_MIN'] = energy[:-1]
     table['E_MAX'] = energy[1:]
 
-    hdu = table_to_fits_table(table)
+    hdu = fits.BinTableHDU(table)
 
     header = hdu.header
     header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
@@ -351,7 +482,7 @@ def energy_axis_to_ebounds(energy):
 def ebounds_to_energy_axis(ebounds):
     """Convert ``EBOUNDS`` extension to `~gammapy.utils.energy.EnergyBounds`
     """
-    table = fits_table_to_table(ebounds)
+    table = Table.read(ebounds)
     emin = table['E_MIN'].quantity
     emax = table['E_MAX'].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit

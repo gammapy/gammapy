@@ -6,7 +6,6 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..utils.array import array_stats_str
-from ..utils.fits import table_to_fits_table
 from ..utils.energy import Energy
 from ..utils.scripts import make_path
 from .psf_table import TablePSF, EnergyDependentTablePSF
@@ -152,7 +151,7 @@ class PSF3D(object):
             table[name_] = [data_]
             table[name_].unit = unit_
 
-        hdu = table_to_fits_table(table)
+        hdu = fits.BinTableHDU(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
         hdu.header['HI_THRES'] = self.energy_thresh_hi.value
 
