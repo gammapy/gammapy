@@ -61,5 +61,7 @@ def make_minuit_kwargs(parameters):
     kwargs = dict()
     for par in parameters.parameters:
         kwargs[par.name] = par.value
+        if par.frozen:
+            kwargs['fix_{}'.format(par.name)] = True
 
     return kwargs

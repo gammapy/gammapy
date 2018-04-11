@@ -340,12 +340,19 @@ class SpectrumFit(object):
 
         return on_stat, off_stat
 
-    @property
-    def total_stat(self):
+    def total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
 
-        This is what is used for the fit.
+        This is the likelihood function that is passed to the optimizers
+
+        Parameters
+        ----------
+        parameters : `~gammapy.utils.fitting.ParameterList`
+            Model parameters
         """
+        self.model.parameters = parameters
+        self.predict_counts()
+        self.calc_statval()
         total_stat = np.sum(self.statval, dtype=np.float64)
         return total_stat
 
@@ -375,6 +382,8 @@ class SpectrumFit(object):
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
 
+        TODO: Replace by something more generic
+
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
@@ -388,9 +397,8 @@ class SpectrumFit(object):
         self._model = model
         for val in parvals:
             self.model.parameters[parname].value = val
-            self.predict_counts()
-            self.calc_statval()
-            likelihood.append(self.total_stat)
+            stat = self.total_stat(self.model.parameters)
+            likelihood.append(stat)
         return np.array(likelihood)
 
     def plot_likelihood_1d(self, ax=None, **kwargs):
@@ -449,54 +457,29 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        self._make_fit_result()
+        self._make_fit_result(self.model.parameters)
 
     def _fit_iminuit(self):
         """Iminuit minimization"""
-        from iminuit import Minuit, describe
+        from gammapy.utils.fitting import fit_minuit
+        bf_parameters = fit_minuit(parameters=self.model.parameters,
+                                   function=self.total_stat)
+        self._make_fit_result(bf_parameters)
 
-        log.warn('Experimental feature, do not trust!')
-
-        def _make_iminuit_helper(self):
-            d = {'self' : self, 'np' : np}
-            func_def = 'def _func('
-            func_def += ', '.join(self.model.parameters.names) 
-            func_def += '):'
-            func_def += '\n    for parname, parval in locals().items():'
-            func_def += '\n        self.model.parameters[parname].value = parval'
-            func_def += '\n    print(self.model)'
-            func_def += '\n    self.predict_counts()'
-            func_def += '\n    self.calc_statval()'
-            func_def += '\n    total_stat = np.sum([np.sum(v)'
-            func_def +=  ' for v in self.statval], dtype=np.float64)'
-            func_def += '\n    return total_stat'
-
-            exec(func_def, d)
-            return d['_func']
-
-        _iminuit_helper = _make_iminuit_helper(self)
-
-        # Starting values etc.
-        minuit_kwargs = dict()
-        for par in self.model.parameters.parameters:
-            minuit_kwargs[par.name] = par.value
-            if par.frozen:
-                minuit_kwargs['fix_{}'.format(par.name)] = True
-
-        m = Minuit(_iminuit_helper, **minuit_kwargs)
-        m.migrad()
-        log.debug(m)
-        self._make_fit_result()
-
-    def _make_fit_result(self):
+    def _make_fit_result(self, parameters):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
 
-        It is important to copy best fit values, because the error estimation
-        will change the model parameters and statval again
+        Parameters
+        ----------
+        parameters : `~gammapy.utils.modeling.ParameterList`
+            Best fit parameters
         """
         from . import SpectrumFitResult
 
+        # run again with best fit parameters
+        self.total_stat(parameters)
         model = self.model.copy()
+
         if self.background_model is not None:
             bkg_model = self.background_model.copy()
         else:

@@ -464,6 +464,12 @@ class CompoundSpectralModel(SpectralModel):
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
         return ParameterList(val)
 
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = len(self.model1.parameters.parameters)
+        self.model1.parameters.parameters = parameters.parameters[:idx]
+        self.model2.parameters.parameters = parameters.parameters[idx:]
+
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n    Component 1 : {}'.format(self.model1)
