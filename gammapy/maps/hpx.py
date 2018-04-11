@@ -1718,7 +1718,7 @@ class HpxGeom(MapGeom):
         Returns
         -------
         omega : `~astropy.units.Quantity`
-                Solid angle (in `sr`). Here we return a simple float since all pixels have the same solid angle.
+                Solid angle (in `sr`). Here we return an array with same dimensionality as self.nside since all pixels have the same solid angle.
         """
         import healpy as hp
         return Quantity(hp.nside2pixarea(self.nside),'sr')
