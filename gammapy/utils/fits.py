@@ -12,22 +12,12 @@ FITS tables
 
 In Gammapy we use the nice `astropy.table.Table` class a lot to represent all
 kinds of data (e.g. event lists, spectral points, light curves, source catalogs).
-The most common format to store tables is FITS. Unfortunately, the FITS table
-format is complicated (other words that come to mind are "horrible" or "bad"),
-and on top of that the FITS serialisation support in Astropy is incomplete.
-
-Because it's such an important and common topic, in this section we first show
-examples of Table FITS I/O in Astropy, and then present the relevant helper
-functions in `gammapy.utils.fits` and `gammapy.utils.table`.
-Of course, long-term, some of these utilities should be moved from Gammapy
-to Astropy, for the cases (all?) that are not gamma-ray astronomy specific.
+The most common format to store tables is FITS. In this section we show examples
+and mention some limitations of Table FITS I/O.
 
 Also, note that if you have the choice, you might want to use a better format
 than FITS to store tables. All of these are nice and have very good support
 in Astropy: ``ECSV``, ``HDF5``, ``ASDF``.
-
-Astropy
-+++++++
 
 In Astropy, there is the `~astropy.table.Table` class with a nice data model
 and API. Let's make an example table object that has some metadata on the
@@ -120,11 +110,10 @@ OrderedDict([('VERSION', 42),
                '  __serialized_columns__: {}',
                '--END-ASTROPY-SERIALIZED-COLUMNS--'])])
 
-Side note: possible bug: calling ``table.write`` adds
-``table.meta['comments']``, i.e. modified ``table.meta``.
-I don't think this is good behaviour, write shouldn't modify the object.
-Also, it seems that calling write repeatedly appends the same info
-to ``table.meta['comments']`` multiple times.
+
+TODO: we'll have to see how to handle this, i.e. if we want that
+behaviour or not, and how to get consistent output accross Astropy versions.
+See https://github.com/astropy/astropy/issues/7364
 
 Let's make sure for the following examples we have a clean ``table.meta``
 like we did at the start:
@@ -141,14 +130,9 @@ i.e. if you don't pass extra options, this is equivalent to
 
 >>> hdu = fits.table_to_hdu(table)
 
-Somewhat surprisingly, ``Table(hdu)`` doesn't work and there is no
-``hdu_to_table`` function; instead you have to call ``Table.read``
-if you want to convert in the other direction:
-
->>> table2 = Table.read(hdu)
-
 However, in this case, the column metadata that is serialised is
-doesn't include the column ``description``:
+doesn't include the column ``description``.
+TODO: how to get consistent behaviour and FITS headers?
 
 >>> hdu.header
 XTENSION= 'BINTABLE'           / binary table extension
@@ -168,6 +152,11 @@ TUNIT2  = 'm       '
 TTYPE3  = 'c       '
 TFORM3  = '2A      '
 
+Somewhat surprisingly, ``Table(hdu)`` doesn't work and there is no
+``hdu_to_table`` function; instead you have to call ``Table.read``
+if you want to convert in the other direction:
+
+>>> table2 = Table.read(hdu)
 >>> table2.info()
 <Table length=2>
 name dtype unit
@@ -182,40 +171,25 @@ to one FITS file. There is support in the ``Table`` API to read any HDU
 from a FITS file with multiple HDUs via the ``hdu`` option to ``Table.read``;
 you can pass an integer HDU index or an HDU extension name string
 (see :ref:`astropy:table_io_fits`).
+
 For writing (or if you prefer also for reading) multiple tables, you should
 use the in-memory conversion to HDU objects and the `~astropy.io.fits.HDUList`
 like this::
 
     hdu_list = fits.HDUList([
         fits.PrimaryHDU(),
-        fits.BinTableHDU(table),
-        fits.BinTableHDU(table),
+        fits.BinTableHDU(table, name='spam'),
+        fits.BinTableHDU(table, name='ham'),
     ])
     hdu_list.info()
     hdu_list.writeto('tables.fits')
 
-TODO: give examples how to control FITS extension names.
-
-TODO: give examples of things that don't work with Astropy, such as
-having complex meta (e.g. Quantity or ...) or having extra column metadata,
-especially the ``TDISP`` and ``TUCD`` that we use.
-But really, it looks like Astropy 3.0 is pretty good already, so we can make
-a note here that this is only support oder versions of Astropy for now.
 
 For further information on Astropy, see the Astropy docs at
 :ref:`astropy:astropy-table` and :ref:`astropy:table_io_fits`.
 
-Gammapy
-+++++++
-
-In Gammapy, we have two helper functions `gammapy.utils.fits.table_to_fits_table`
-and `gammapy.utils.fits.fits_table_to_table`.
-
-tbd: explain how they are different from the Astropy versions.
-
-TODO: I just now saw that TDISP support is being added in Astropy:
-https://github.com/astropy/astropy/pull/7226
-
+We will have to see if / what we need here in `gammapy.utils.fits`
+as a stable and nice interface on top of what Astropy provides.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
