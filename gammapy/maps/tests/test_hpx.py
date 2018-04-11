@@ -69,7 +69,7 @@ def test_ravel_hpx_index():
 
 
 def make_test_nside(nside, nside0, nside1):
-    npix = 12 * nside**2
+    npix = 12 * nside ** 2
     nside_test = np.concatenate((nside0 * np.ones(npix // 2, dtype=int),
                                  nside1 * np.ones(npix // 2, dtype=int)))
     return nside_test
@@ -79,10 +79,9 @@ def make_test_nside(nside, nside0, nside1):
                          [(4, 2, True), (8, 2, True), (8, make_test_nside(8, 4, 2), True),
                           (4, 2, False), (8, 2, False), (8, make_test_nside(8, 4, 2), False), ])
 def test_get_superpixels(nside_subpix, nside_superpix, nest):
-
     import healpy as hp
 
-    npix = 12 * nside_subpix**2
+    npix = 12 * nside_subpix ** 2
     subpix = np.arange(npix)
     ang_subpix = hp.pix2ang(nside_subpix, subpix, nest=nest)
     superpix = get_superpixels(subpix, nside_subpix, nside_superpix, nest=nest)
@@ -107,7 +106,7 @@ def test_get_superpixels(nside_subpix, nside_superpix, nest):
 def test_get_subpixels(nside_superpix, nside_subpix, nest):
     import healpy as hp
 
-    npix = 12 * nside_superpix**2
+    npix = 12 * nside_superpix ** 2
     superpix = np.arange(npix)
     subpix = get_subpixels(superpix, nside_superpix, nside_subpix, nest=nest)
     ang1 = hp.pix2ang(nside_subpix, subpix, nest=nest)
@@ -532,3 +531,14 @@ def test_hpxgeom_downsample(nside, nested, coordsys, region, axes):
     assert_allclose(geom.nside, 2 * geom_down.nside)
     coords = geom.get_coord(flat=True)
     assert np.all(geom_down.contains(coords))
+
+
+def test_hpxgeom_solid_angle():
+    geom = HpxGeom.create(nside=8, coordsys='GAL',
+                          axes=[MapAxis.from_edges([0, 2, 3])])
+
+    solid_angle = geom.solid_angle()
+    print(float(solid_angle.value))
+
+    assert solid_angle.shape == (1,)
+    assert_allclose(solid_angle.value, 0.016362461737446838)

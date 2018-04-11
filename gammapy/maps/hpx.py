@@ -1714,15 +1714,13 @@ class HpxGeom(MapGeom):
         return self.pix_to_coord((lat, lon))
 
     def solid_angle(self):
-        """
-        Returns
-        -------
-        omega : `~astropy.units.Quantity`
-                Solid angle (in `sr`). Here we return an array with same dimensionality as self.nside since all pixels have the same solid angle.
+        """Solid angle array (`~astropy.units.Quantity` in ``sr``).
+
+        The array has the same dimensionality as ``map.nside``
+        since all pixels have the same solid angle.
         """
         import healpy as hp
-        return Quantity(hp.nside2pixarea(self.nside),'sr')
-
+        return Quantity(hp.nside2pixarea(self.nside), 'sr')
 
 
 class HpxToWcsMapping(object):
@@ -1874,8 +1872,8 @@ class HpxToWcsMapping(object):
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            valid = np.swapaxes(self._valid.reshape(shape),-1,-2)
-            valid = valid*np.ones_like(wcs_data, dtype=bool)
+            valid = np.swapaxes(self._valid.reshape(shape), -1, -2)
+            valid = valid * np.ones_like(wcs_data, dtype=bool)
             wcs_data[~valid] = np.nan
         return wcs_data
 
