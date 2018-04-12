@@ -18,8 +18,6 @@ and Section 7.4 "Acceptance determination and predicted background"
 in [Naurois2012]_ describe mostly the same methods as [Berge2007]_,
 except for the "2D acceptance model" described in Section 7.4.3.
 
-The background models implemented in Gammapy are documented in :ref:`bg_models`.
-
 Getting Started
 ===============
 
@@ -34,8 +32,6 @@ If you'd like to learn more about using `gammapy.background`, read the following
 .. toctree::
    :maxdepth: 1
 
-   models
-   make_models
    energy_offset_array
    reflected
 
