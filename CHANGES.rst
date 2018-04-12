@@ -29,6 +29,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
+- [#1373] Improve 3D analysis code using gammapy.maps (Christoph Deil)
+- [#1372] Add 3D analysis functions using gammapy.maps (Régis Terrier)
 - [#1367] Add first draft of LightCurve model class (Christoph Deil)
 - [#1362] Fix map sum_over_axes (Christoph Deil)
 - [#1354] Apply FOV mask to all maps in ring background estimator (Lars Mohrmann)

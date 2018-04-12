@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.coordinates import SkyCoord
-import astropy.units as u
-from astropy.units import Quantity
+# import astropy.units as u
+from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
 from ..irf import Background3D
@@ -20,7 +19,7 @@ __all__ = [
 ]
 
 
-def make_cutout(ndmap, position, size, margin=0.1 * u.deg):
+def make_cutout(ndmap, position, size, margin='0.1 deg'):
     """Create a cutout of a WcsNDMap around a given direction.
 
     Parameters
@@ -45,7 +44,7 @@ def make_cutout(ndmap, position, size, margin=0.1 * u.deg):
     # We might add a test to check this
 
     # cutout box size
-    size = Quantity(size) + margin
+    size = Angle(size) + Angle(margin)
 
     # First create a cutout 2D of the ndmap
     cutout2d = Cutout2D(
@@ -190,7 +189,12 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     # This might be more generaly dealt with a mask map
     exposure[:, offset_map.data >= offset_max] = 0
 
-    return WcsNDMap(ref_geom, data=exposure)
+    # TODO: add unit to map
+    # See https://github.com/gammapy/gammapy/issues/1206
+    # For now, we just store with fixed units
+    data = exposure.to('m2 s').value
+
+    return WcsNDMap(ref_geom, data)
 
 
 def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref_geom, offset_max, etrue_bins):
@@ -271,21 +275,20 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     # TODO: properly transform FOV to sky coordinates
     # For now we assume the background is radially symmetric
 
-    # For now on we use offset dependent evaluate function
-    # This needs to be changed
+    # TODO: add a uniform API to the two background classes
     if isinstance(bkg, Background3D):
-        data = bkg.data.evaluate(detx=offset_map.data, dety=0 * u.deg, energy=energy)
+        data = bkg.data.evaluate(detx=offset_map.data, dety='0 deg', energy=energy)
     else:
         data = bkg.data.evaluate(offset=offset_map.data, energy=energy)
 
-    data *= livetime
-    # TODO: Comment for now. We need a proper integration method
-    #    data = data.to('')
-
     data_shape = ref_geom.shape + offset_map.data.shape
-
     data = np.reshape(data, data_shape)
-    data *= ref_geom.solid_angle()
+
+    # TODO: add proper integral over energy
+    energy_axis = ref_geom.axes[0]
+    d_energy = np.diff(energy_axis.edges) * energy_axis.unit
+    d_omega = ref_geom.solid_angle()
+    data = (data * d_energy[:, np.newaxis, np.newaxis] * d_omega * livetime).to('').value
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
@@ -384,10 +387,10 @@ class MapMaker(object):
         # We instantiate the end products of the MakeMaps class
         self.count_map = WcsNDMap(self.ref_geom)
 
-        data = np.zeros_like(self.count_map.data) * u.m ** 2 * u.s
+        data = np.zeros_like(self.count_map.data)
         self.exposure_map = WcsNDMap(self.ref_geom, data)
 
-        data = np.zeros_like(self.count_map.data) * u.Unit('')
+        data = np.zeros_like(self.count_map.data)
         self.background_map = WcsNDMap(self.ref_geom, data)
 
         # We will need this general exclusion mask for the analysis
