@@ -7,6 +7,7 @@ from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
 from ..irf import Background3D
 from ..maps import WcsNDMap, WcsGeom
+from .basic_cube import fill_map_counts
 
 __all__ = [
     'make_cutout',
@@ -120,33 +121,15 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     cntmap : `~gammapy.maps.WcsNDMap`
         Count cube (3D) in true energy bins
     """
-    # For the moment the treatment of units and celestial systems by MapCoords and MapAxis
-    # does not follow astropy units and skycoord.
+    count_map = WcsNDMap(ref_geom)
+    fill_map_counts(count_map, events)
 
-    myunit = ref_geom.axes[0].unit
-
-    # Convert events coordinates and energy
-    if ref_geom.coordsys == 'GAL':
-        tmp = [events.galactic.l, events.galactic.b, events.energy.to(myunit)]
-    elif ref_geom.coordsys == 'CEL':
-        tmp = [events.radec.ra, events.radec.dec, events.energy.to(myunit)]
-    else:
-        # should raise an error here
-        raise ValueError("Incorrect coordsys.")
-
-    # Create map
-    cntmap = WcsNDMap(ref_geom)
-    # Fill it
-    cntmap.fill_by_coord(tmp)
-
-    # Compute offsets of all pixels
+    # Compute and apply FOV offset mask
     offset_map = make_separation_map(ref_geom, pointing)
+    offset_mask = offset_map.data >= offset_max
+    count_map.data[:, offset_mask] = 0
 
-    # Put counts outside offset max to zero
-    # This might be more generaly dealt with a mask map
-    cntmap.data[:, offset_map.data >= offset_max] = 0
-
-    return cntmap
+    return count_map
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max):
