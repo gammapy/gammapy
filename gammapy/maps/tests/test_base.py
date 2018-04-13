@@ -2,7 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from astropy.coordinates import SkyCoord
-from astropy.units import Unit
+from astropy.units import Unit, Quantity
+import numpy as np
 from collections import OrderedDict
 from ..base import Map
 from ..geom import MapAxis
@@ -73,6 +74,21 @@ unit_args = [
     ('wcs',Unit('sr')),
     ('hpx','m^2')
 ]
+
+@pytest.mark.parametrize(('map_type','unit'),
+                         unit_args)
+def test_map_quantity(map_type, unit):
+    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
+                   skydir=SkyCoord(0.0, 30.0, unit='deg'), unit=unit)
+
+    # This is to test if default constructor with no unit performs as expected
+    if unit is None:
+        unit = ''
+    assert m.quantity.unit == Unit(unit)
+
+    m.quantity = Quantity(np.ones_like(m.data),'m2')
+    assert m.unit == 'm2'
+
 @pytest.mark.parametrize(('map_type','unit'),
                          unit_args)
 def test_map_unit_read_write(map_type, unit):
