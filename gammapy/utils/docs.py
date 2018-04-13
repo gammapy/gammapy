@@ -16,6 +16,7 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import io
 import os
 import re
 from shutil import copytree, rmtree
@@ -148,13 +149,16 @@ You can also contribute with your own notebooks in this
                 nb.metadata['nbsphinx'] = {'orphan': bool('true')}
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
-            with open(filepath) as f:
+
+            with io.open(filepath, encoding="utf-8") as f:
                 txt = f.read()
             if folder == 'notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/\1rst\2', txt, flags=re.M | re.I)
-            #if folder == '_static/notebooks':
-            #    txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\/\1html\2', txt, flags=re.M | re.I)
-            with open(filepath, "w") as f:
+                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/\1rst\2', txt,
+                             flags=re.M | re.I)
+            if folder == '_static/notebooks':
+                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\/\1html\2', txt,
+                             flags=re.M | re.I)
+            with io.open(filepath, "w", encoding="utf-8") as f:
                 f.write(txt)
 
 
