@@ -1,6 +1,4 @@
 """Example 3D analysis using gammapy.maps.
-
-Work in progress ...
 """
 import numpy as np
 from numpy.testing import assert_allclose
