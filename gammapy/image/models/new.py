@@ -5,7 +5,10 @@ Morphological models for astrophysical gamma-ray sources - new implementation
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from ...utils.modeling import Parameter, ParameterList
+from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import Angle, Longitude, Latitude
 import numpy as np
+import astropy.units as u
 
 __all__ = [
     'SkySpatialModel',
@@ -16,10 +19,6 @@ __all__ = [
 class SkySpatialModel(object):
     """SkySpatial model base class.
     """
-
-    def __repr__(self):
-        fmt = '{}()'
-        return fmt.format(self.__class__.__name__)
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -52,32 +51,32 @@ class SkyGaussian2D(SkySpatialModel):
 
     .. math::
 
-        \phi(x, y) = \phi_0 \cdot \exp{\left(-\frac{1}{2\sigma^2}
-            \left((x-x_0)^2+(y-y_0)^2\right)\right)}
+        \phi(x, y) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
+            \frac{\theta^2}{\sigma^2}\right)}
+
+    where :math:`\theta` is the sky separation
 
     Parameters
     ----------
-    amplitude : `~astropy.units.Quantity`
-        :math:`\phi_0`
-    lon_mean : `~astropy.units.Quantity`
+    lon_mean : `~astropy.coordiantes.Longitude`
         :math:`x_0`
-    lat_mean : `~astropy.units.Quantity`
+    lat_mean : `~astropy.coordinates.Latitude`
         :math:`y_0`
-    sigma : `~astropy.units.Quantity`
+    sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
     """
 
-    def __init__(self, amplitude, lon_mean, lat_mean, sigma):
+    def __init__(self, lon_mean, lat_mean, sigma):
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude),
-            Parameter('lon_mean', lon_mean),
-            Parameter('lat_mean', lat_mean),
-            Parameter('sigma', sigma)
+            Parameter('lon_mean', Longitude(lon_mean)),
+            Parameter('lat_mean', Latitude(lat_mean)),
+            Parameter('sigma', Angle(sigma))
         ])
 
     @staticmethod
-    def evaluate(lon, lat, amplitude, lon_mean, lat_mean, sigma):
+    def evaluate(lon, lat, lon_mean, lat_mean, sigma):
         """Evaluate the model (static function)."""
-        exp_ = (lon - lon_mean) ** 2 + (lat - lat_mean) ** 2
-        val = amplitude * np.exp((- 1 / (2 * sigma ** 2)) * exp_)
+        sep = angular_separation(lon, lat, lon_mean, lat_mean)
+        fact = (sep / sigma).to('').value
+        val = np.exp(-0.5 * fact **2) / (2 * np.pi * sigma**2)
         return val
