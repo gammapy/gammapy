@@ -503,7 +503,7 @@ class PowerLaw(SpectralModel):
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
     amplitude : `~astropy.units.Quantity`
-        :math:`Phi_0`
+        :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
 
