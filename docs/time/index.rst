@@ -1,8 +1,8 @@
 .. _time:
 
-**************************
-Time handling and analysis
-**************************
+***********************************
+Time handling / analysis (``time``)
+***********************************
 
 .. currentmodule:: gammapy.time
 

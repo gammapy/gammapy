@@ -1,8 +1,8 @@
 .. _detect:
 
-**********************
-Source detection tools
-**********************
+***********************************
+Source detection tools (``detect``)
+***********************************
 
 .. currentmodule:: gammapy.detect
 

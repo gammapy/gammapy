@@ -1,8 +1,8 @@
 .. _catalog:
 
-***************************
-Source catalogs and objects
-***************************
+***************************************
+Source catalogs / objects (``catalog``)
+***************************************
 
 .. currentmodule:: gammapy.catalog
 
