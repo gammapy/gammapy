@@ -157,8 +157,7 @@ class HpxMap(Map):
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse,
                                 conv=conv)
         hdu_out.header['META'] = json.dumps(self.meta)
-        # add unit in header
-        hdu_out.header['UNIT'] = self.unit
+        hdu_out.header['UNIT'] = self._unit
 
         hdu_list = [fits.PrimaryHDU(), hdu_out]
 

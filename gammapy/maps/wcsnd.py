@@ -105,11 +105,7 @@ class WcsNDMap(WcsMap):
                            np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
 
-        # Read unit
-        if 'UNIT' in hdu.header:
-            unit = hdu.header['UNIT']
-        else:
-            unit = None
+        unit = hdu.header.get('UNIT', None)
 
         map_out = cls(geom, meta=meta, unit=unit)
 

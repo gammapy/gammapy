@@ -41,16 +41,16 @@ class Map(object):
     def __init__(self, geom, data, meta=None, unit=None):
         self._geom = geom
         if isinstance(data,Quantity):
-            self.unit = Quantity.unit.to_string()
+            self._unit = Quantity.unit.to_string()
             self._data = data.value
         else:
             self._data = data
             if unit is None:
-                self.unit = ''
+                self._unit = ''
             elif isinstance(unit,Unit):
-                self.unit = unit.to_string()
+                self._unit = unit.to_string()
             else:
-                self.unit = unit
+                self._unit = unit
 
         if meta is None:
             self.meta = OrderedDict()
@@ -65,7 +65,12 @@ class Map(object):
     @property
     def quantity(self):
         """Return data as a quantity"""
-        return self._data * Unit(self.unit)
+        return self._data * Unit(self._unit)
+
+    @property
+    def unit(self):
+        """Return map unit as `~astropy.unit.Unit`"""
+        return Unit(self._unit)
 
     @data.setter
     def data(self, val):
@@ -80,7 +85,7 @@ class Map(object):
 
         val = Quantity(val)
         self._data = val.value
-        self.unit = val.unit.to_string()
+        self._unit = val.unit.to_string()
 
     @property
     def geom(self):
