@@ -34,7 +34,7 @@ class HpxMap(Map):
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None, conv='gadf', meta=None, unit=None):
+               region=None, axes=None, conv='gadf', meta=None, unit=''):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -67,7 +67,7 @@ class HpxMap(Map):
             writing this map to a file.  Default is 'gadf'.            
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
-        unit : `~astropy.units.Unit`
+        unit : str or `~astropy.units.Unit`
             The map unit
 
         Returns

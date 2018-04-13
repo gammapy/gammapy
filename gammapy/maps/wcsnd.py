@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from astropy.units import Quantity
 from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -14,7 +15,6 @@ from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 __all__ = [
     'WcsNDMap',
 ]
-
 
 class WcsNDMap(WcsMap):
     """Representation of a N+2D map using WCS with two spatial dimensions
@@ -34,11 +34,11 @@ class WcsNDMap(WcsMap):
         Data type, default is float32
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
-    unit : `~astropy.units.Unit`
+    unit : str or `~astropy.units.Unit`
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
         # TODO: Figure out how to mask pixels for integer data types
 
         # Shape in WCS or FITS order is `shape`, in Numpy axis order is `shape_np`
@@ -240,9 +240,20 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
+
         if weights is not None:
-            weights = np.asarray(weights, dtype=self.data.dtype)
+            if isinstance(weights, Quantity):
+                if self.unit.is_equivalent(weights.unit):
+                    weights = np.asarray(weights.to(self.unit).value, dtype=self.data.dtype)
+                else:
+                    raise ValueError("fill_by_idx : Incompatible unit for weights")
+            elif self.unit.is_equivalent(''):
+                weights = np.asarray(weights, dtype=self.data.dtype)
+            else:
+                raise ValueError("fill_by_idx : Incompatible unit for weights")
+
             weights = weights[msk]
+
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
         weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)

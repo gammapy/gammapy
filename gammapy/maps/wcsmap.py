@@ -26,7 +26,7 @@ class WcsMap(Map):
     @classmethod
     def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None, unit=None):
+               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None, unit=''):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -69,7 +69,7 @@ class WcsMap(Map):
             FITS format convention.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
-        unit : `~astropy.units.Unit`
+        unit : str or `~astropy.units.Unit`
             The unit of the map
 
         Returns

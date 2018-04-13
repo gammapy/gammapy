@@ -24,13 +24,13 @@ map_axes = [
 
 
 mapbase_args = [
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, None),
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], None),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, None),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], None),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
     (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
-    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, None),
+    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
 ]
 
 
@@ -70,7 +70,7 @@ def test_map_meta_read_write(map_type):
 
 unit_args = [
     ('wcs','s'),
-    ('wcs',None),
+    ('wcs',''),
     ('wcs',Unit('sr')),
     ('hpx','m^2')
 ]
@@ -98,9 +98,6 @@ def test_map_unit_read_write(map_type, unit):
     hdulist = m.to_hdulist(hdu='COUNTS')
     header = hdulist['COUNTS'].header
 
-    # This is to test if default constructor with no unit performs as expected
-    if unit is None:
-        unit = ''
     assert Unit(header['UNIT']) == Unit(unit)
 
     m2 = Map.from_hdu_list(hdulist)

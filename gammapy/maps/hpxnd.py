@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from astropy.units import Quantity
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -32,11 +33,11 @@ class HpxNDMap(HpxMap):
         If none then an empty array will be allocated.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
-    unit : `~astropy.units.Unit`
+    unit : str or `~astropy.units.Unit`
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
         shape_np = shape[::-1]
@@ -414,6 +415,16 @@ class HpxNDMap(HpxMap):
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
+            if isinstance(weights, Quantity):
+                if self.unit.is_equivalent(weights.unit):
+                    weights = np.asarray(weights.to(self.unit).value, dtype=self.data.dtype)
+                else:
+                    raise ValueError("fill_by_idx : Incompatible unit for weights")
+            elif self.unit.is_equivalent(''):
+                weights = np.asarray(weights, dtype=self.data.dtype)
+            else:
+                raise ValueError("fill_by_idx : Incompatible unit for weights")
+
             weights = weights[msk]
 
         idx_local = np.ravel_multi_index(idx_local, self.data.T.shape)
