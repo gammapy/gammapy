@@ -18,12 +18,11 @@ from .. import SkyCube
 
 
 def make_test_spectral_model():
-    emin, emax = 1 * u.TeV, 100 * u.TeV,
     return PowerLaw2(
-        amplitude=1e-12 * u.Unit('1 / (s sr cm2)'),
+        amplitude='1e-12 cm-2 s-1 sr-1',
         index=2,
-        emin=emin,
-        emax=emax,
+        emin='1 TeV',
+        emax='100 TeV',
     )
 
 
