@@ -82,7 +82,7 @@ class HpxNDMap(HpxMap):
 
         meta = cls._get_meta_from_header(hdu.header)
 
-        unit = hdu.header.get('UNIT', None)
+        unit = hdu.header.get('UNIT', '')
         map_out = cls(hpx, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names

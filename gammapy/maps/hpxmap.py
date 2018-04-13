@@ -24,9 +24,11 @@ class HpxMap(Map):
         Data array.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data, meta=None, unit=None):
+    def __init__(self, geom, data, meta=None, unit=''):
         super(HpxMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None

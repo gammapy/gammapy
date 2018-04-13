@@ -35,20 +35,17 @@ class Map(object):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     unit : str or `~astropy.units.Unit`
-        The map unit if data is a `~numpy.ndarray`. Default is dimensionless
+        Data unit
     """
 
     def __init__(self, geom, data, meta=None, unit=''):
         self._geom = geom
-        if isinstance(data,Quantity):
-            self._unit = Quantity.unit.to_string()
+        if isinstance(data, Quantity):
             self._data = data.value
+            self._unit = data.unit.to_string()
         else:
             self._data = data
-            if isinstance(unit,Unit):
-                self._unit = unit.to_string()
-            else:
-                self._unit = unit
+            self._unit = Unit(unit).to_string()
 
         if meta is None:
             self.meta = OrderedDict()
@@ -62,12 +59,12 @@ class Map(object):
 
     @property
     def quantity(self):
-        """Return data as a quantity"""
+        """Map data times unit (`~astropy.units.Quantity`)"""
         return self._data * Unit(self._unit)
 
     @property
     def unit(self):
-        """Return map unit as `~astropy.units.Unit`"""
+        """Map unit (`~astropy.units.Unit`)"""
         return Unit(self._unit)
 
     @data.setter
@@ -368,16 +365,15 @@ class Map(object):
         ----------
         map_in : `~Map`
             Input map.
-
         """
         if not self.unit.is_equivalent(map_in.unit):
-            raise ValueError("Incompatible units, Map.coadd")
+            raise ValueError("Incompatible units")
 
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
         idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coord()
-        vals = Quantity(map_in.get_by_idx(idx),map_in.unit)
+        vals = Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
     def reproject(self, geom, order=1, mode='interp'):

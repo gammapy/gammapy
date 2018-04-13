@@ -105,7 +105,7 @@ class WcsNDMap(WcsMap):
                            np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
 
-        unit = hdu.header.get('UNIT', None)
+        unit = hdu.header.get('UNIT', '')
 
         map_out = cls(geom, meta=meta, unit=unit)
 
@@ -246,11 +246,11 @@ class WcsNDMap(WcsMap):
                 if self.unit.is_equivalent(weights.unit):
                     weights = np.asarray(weights.to(self.unit).value, dtype=self.data.dtype)
                 else:
-                    raise ValueError("fill_by_idx : Incompatible unit for weights")
+                    raise ValueError("Incompatible unit for weights")
             elif self.unit.is_equivalent(''):
                 weights = np.asarray(weights, dtype=self.data.dtype)
             else:
-                raise ValueError("fill_by_idx : Incompatible unit for weights")
+                raise ValueError("Incompatible unit for weights")
 
             weights = weights[msk]
 

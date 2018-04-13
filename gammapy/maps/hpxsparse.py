@@ -30,7 +30,7 @@ class HpxSparseMap(HpxMap):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
         if data is None:
             shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
             data = SparseArray(shape[::-1], dtype=dtype)
