@@ -14,24 +14,37 @@ __all__ = [
 def fit_minuit(parameters, function):
     """iminuit optimization
 
+    The input `~gammapy.utils.modeling.ParameterList` is copied internally
+    before the fit and will thus not be modified. The best-fit parameter values
+    are contained in the output `~gammapy.utils.modeling.ParameterList` or the
+    `~iminuit.Minuit` object.
+
     Parameters
     ----------
     parameters : `~gammapy.utils.modeling.ParameterList`
         Parameters with starting values
     function : callable
         Likelihood function
+
+    Returns
+    -------
+    parameters : `~gammapy.utils.modeling.ParameterList`
+        Parameters with best-fit values
+    minuit : `~iminuit.Minuit`
+        Minuit object
     """
     from iminuit import Minuit
 
+    parameters = parameters.copy()
     minuit_func = MinuitFunction(function, parameters)
     minuit_kwargs = make_minuit_kwargs(parameters)
 
-    m = Minuit(minuit_func.fcn,
+    minuit = Minuit(minuit_func.fcn,
                forced_parameters=parameters.names,
                **minuit_kwargs)
 
-    m.migrad()
-    return parameters
+    minuit.migrad()
+    return parameters, minuit
 
 
 class MinuitFunction(object):

@@ -204,6 +204,7 @@ class TestSpectralFit:
                                  2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'))
         assert_allclose(result.npred_src[60], 0.563822994375907)
 
+        # TODO: at the moment to_table only works if covariance matrix is set
         with pytest.raises(ValueError):
             self.fit.result[0].to_table()
 

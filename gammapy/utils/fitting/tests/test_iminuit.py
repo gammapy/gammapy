@@ -14,12 +14,20 @@ def test_iminuit():
         z = parameters['z'].value
         return (x - 2) ** 2 + (y - 3) ** 2 + (z - 4) ** 2
 
-    p_in = ParameterList(
+    pars_in = ParameterList(
         [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
     )
 
-    p_out = fit_minuit(function=f, parameters=p_in)
+    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
 
-    assert_allclose(p_out['x'].value, 2, rtol=1e-2)
-    assert_allclose(p_out['y'].value, 3, rtol=1e-2)
-    assert_allclose(p_out['z'].value, 4, rtol=1e-2)
+    assert_allclose(pars_in['x'].value, 2.1, rtol=1e-2)
+    assert_allclose(pars_in['y'].value, 3.1, rtol=1e-2)
+    assert_allclose(pars_in['z'].value, 4.1, rtol=1e-2)
+
+    assert_allclose(pars_out['x'].value, 2, rtol=1e-2)
+    assert_allclose(pars_out['y'].value, 3, rtol=1e-2)
+    assert_allclose(pars_out['z'].value, 4, rtol=1e-2)
+
+    assert_allclose(minuit.values['x'], 2, rtol=1e-2)
+    assert_allclose(minuit.values['y'], 3, rtol=1e-2)
+    assert_allclose(minuit.values['z'], 4, rtol=1e-2)
