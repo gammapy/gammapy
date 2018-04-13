@@ -169,7 +169,7 @@ class Map(object):
         return map_out
 
     @classmethod
-    def from_geom(cls, geom, meta=None, map_type='auto', unit=None):
+    def from_geom(cls, geom, meta=None, map_type='auto', unit=''):
         """Generate an empty map from a `~Geom` instance.
 
         Parameters
