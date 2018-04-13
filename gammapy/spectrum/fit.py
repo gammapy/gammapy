@@ -4,6 +4,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
+from ..utils.fitting import fit_minuit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
@@ -39,7 +40,7 @@ class SpectrumFit(object):
         observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model to be used in cash fits
-    method : {'sherpa'}
+    method : {'sherpa', 'iminuit'}
         Optimization backend for the fit
     err_method : {'sherpa'}
         Optimization backend for error estimation
@@ -340,12 +341,19 @@ class SpectrumFit(object):
 
         return on_stat, off_stat
 
-    @property
-    def total_stat(self):
+    def total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
 
-        This is what is used for the fit.
+        This is the likelihood function that is passed to the optimizers
+
+        Parameters
+        ----------
+        parameters : `~gammapy.utils.fitting.ParameterList`
+            Model parameters
         """
+        self.model.parameters = parameters
+        self.predict_counts()
+        self.calc_statval()
         total_stat = np.sum(self.statval, dtype=np.float64)
         return total_stat
 
@@ -375,6 +383,8 @@ class SpectrumFit(object):
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
 
+        TODO: Replace by something more generic
+
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
@@ -388,9 +398,8 @@ class SpectrumFit(object):
         self._model = model
         for val in parvals:
             self.model.parameters[parname].value = val
-            self.predict_counts()
-            self.calc_statval()
-            likelihood.append(self.total_stat)
+            stat = self.total_stat(self.model.parameters)
+            likelihood.append(stat)
         return np.array(likelihood)
 
     def plot_likelihood_1d(self, ax=None, **kwargs):
@@ -411,6 +420,8 @@ class SpectrumFit(object):
         """Run the fit."""
         if self.method == 'sherpa':
             self._fit_sherpa()
+        elif self.method == 'iminuit':
+            self._fit_iminuit()
         else:
             raise NotImplementedError('method: {}'.format(self.method))
 
@@ -447,17 +458,29 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        self._make_fit_result()
+        self._make_fit_result(self.model.parameters)
 
-    def _make_fit_result(self):
+    def _fit_iminuit(self):
+        """Iminuit minimization"""
+        parameters, minuit = fit_minuit(parameters=self.model.parameters,
+                                   function=self.total_stat)
+        log.debug(minuit)
+        self._make_fit_result(parameters)
+
+    def _make_fit_result(self, parameters):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
 
-        It is important to copy best fit values, because the error estimation
-        will change the model parameters and statval again
+        Parameters
+        ----------
+        parameters : `~gammapy.utils.modeling.ParameterList`
+            Best fit parameters
         """
         from . import SpectrumFitResult
 
+        # run again with best fit parameters
+        self.total_stat(parameters)
         model = self.model.copy()
+
         if self.background_model is not None:
             bkg_model = self.background_model.copy()
         else:

@@ -27,6 +27,7 @@ For XML model format definitions, see here:
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
+import copy
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table, Column, vstack
@@ -376,6 +377,10 @@ class ParameterList(object):
             if parameter.name == parname:
                 return np.sqrt(self.covariance[i, i])
         raise ValueError('Could not find parameter {}'.format(parname))
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
 
 
 class SourceLibrary(object):

@@ -171,6 +171,7 @@ class TestFit:
 
 
 @requires_dependency('sherpa')
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
@@ -202,6 +203,22 @@ class TestSpectralFit:
         assert_quantity_allclose(pars['amplitude'].quantity,
                                  2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'))
         assert_allclose(result.npred_src[60], 0.563822994375907)
+
+        # TODO: at the moment to_table only works if covariance matrix is set
+        with pytest.raises(ValueError):
+            self.fit.result[0].to_table()
+
+    def test_basic_results_iminuit(self):
+        self.fit.method = 'iminuit'
+        self.fit.fit()
+        result = self.fit.result[0]
+        assert_allclose(result.statval, 32.838716584005645, rtol=1e-4)
+        pars = result.model.parameters
+        assert_quantity_allclose(pars['index'].value, 2.2542312883476465, rtol=1e-2)
+        assert_quantity_allclose(pars['amplitude'].quantity,
+                                 2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'),
+                                 rtol=1e-2)
+        assert_allclose(result.npred_src[60], 0.5642179482961884)
 
         with pytest.raises(ValueError):
             self.fit.result[0].to_table()
