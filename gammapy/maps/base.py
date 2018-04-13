@@ -7,6 +7,7 @@ from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
+from astropy.units import Quantity, Unit
 from .geom import pix_tuple_to_idx, MapCoord
 
 __all__ = [
@@ -33,11 +34,24 @@ class Map(object):
         Data array
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : str or `~astropy.unit.Unit`
+        The map unit if data is a `~numpy.ndarray`. Default is dimensionless
     """
 
-    def __init__(self, geom, data, meta=None):
+    def __init__(self, geom, data, meta=None, unit=None):
         self._geom = geom
-        self._data = data
+        if isinstance(data,Quantity):
+            self.unit = Quantity.unit.to_string()
+            self._data = data.value
+        else:
+            self._data = data
+            if unit is None:
+                self.unit = ''
+            elif isinstance(unit,Unit):
+                self.unit = unit.to_string()
+            else:
+                self.unit = unit
+
         if meta is None:
             self.meta = OrderedDict()
         else:
@@ -48,11 +62,25 @@ class Map(object):
         """Data array (`~numpy.ndarray`)"""
         return self._data
 
+    @property
+    def quantity(self):
+        """Return data as a quantity"""
+        return self._data * Unit(self.unit)
+
     @data.setter
     def data(self, val):
         if val.shape != self.data.shape:
             raise ValueError('Wrong shape.')
         self._data = val
+
+    @quantity.setter
+    def quantity(self, val):
+        if val.shape != self.data.shape:
+            raise ValueError('Wrong shape.')
+
+        val = Quantity(val)
+        self._data = val.value
+        self.unit = val.unit.to_string()
 
     @property
     def geom(self):
@@ -138,7 +166,7 @@ class Map(object):
         return map_out
 
     @classmethod
-    def from_geom(cls, geom, meta=None, map_type='auto'):
+    def from_geom(cls, geom, meta=None, map_type='auto', unit=None):
         """Generate an empty map from a `~Geom` instance.
 
         Parameters
@@ -155,6 +183,8 @@ class Map(object):
             with the geometry.  If map_type is 'auto' then an
             appropriate map type will be inferred from type of
             ``geom``.
+        unit : str or `~astropy.units.Unit`
+            Data unit.
 
         Returns
         -------
@@ -174,7 +204,7 @@ class Map(object):
                 raise ValueError('Unrecognized geom type.')
 
         cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out(geom, meta=meta)
+        map_out = cls_out(geom, meta=meta, unit=unit)
         return map_out
 
     @classmethod

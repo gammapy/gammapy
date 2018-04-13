@@ -32,9 +32,11 @@ class HpxNDMap(HpxMap):
         If none then an empty array will be allocated.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
         shape_np = shape[::-1]
@@ -45,7 +47,7 @@ class HpxNDMap(HpxMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape_np, data.shape))
 
-        super(HpxNDMap, self).__init__(geom, data, meta)
+        super(HpxNDMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
 
@@ -78,7 +80,12 @@ class HpxNDMap(HpxMap):
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
-        map_out = cls(hpx, None, meta=meta)
+
+        if 'UNIT' in hdu.header:
+            unit = hdu.header['UNIT']
+        else:
+            unit = None
+        map_out = cls(hpx, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []

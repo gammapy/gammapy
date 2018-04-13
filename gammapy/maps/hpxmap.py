@@ -26,15 +26,15 @@ class HpxMap(Map):
         Dictionary to store meta data.
     """
 
-    def __init__(self, geom, data, meta=None):
-        super(HpxMap, self).__init__(geom, data, meta)
+    def __init__(self, geom, data, meta=None, unit=None):
+        super(HpxMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @classmethod
     def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
                data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None, conv='gadf', meta=None):
+               region=None, axes=None, conv='gadf', meta=None, unit=None):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -67,6 +67,8 @@ class HpxMap(Map):
             writing this map to a file.  Default is 'gadf'.            
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
+        unit : `~astropy.units.Unit`
+            The map unit
 
         Returns
         -------
@@ -80,13 +82,13 @@ class HpxMap(Map):
                              nest=nest, coordsys=coordsys, region=region,
                              conv=conv, axes=axes, skydir=skydir, width=width)
         if cls.__name__ == 'HpxNDMap':
-            return HpxNDMap(hpx, dtype=dtype, meta=meta)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
         elif cls.__name__ == 'HpxSparseMap':
-            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         elif map_type == 'hpx':
-            return HpxNDMap(hpx, dtype=dtype, meta=meta)
+            return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
         elif map_type == 'hpx-sparse':
-            return HpxSparseMap(hpx, dtype=dtype, meta=meta)
+            return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
@@ -155,6 +157,9 @@ class HpxMap(Map):
         hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse,
                                 conv=conv)
         hdu_out.header['META'] = json.dumps(self.meta)
+        # add unit in header
+        hdu_out.header['UNIT'] = self.unit
+
         hdu_list = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:

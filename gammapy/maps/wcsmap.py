@@ -26,7 +26,7 @@ class WcsMap(Map):
     @classmethod
     def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None):
+               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None, unit=None):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -69,6 +69,8 @@ class WcsMap(Map):
             FITS format convention.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
+        unit : `~astropy.units.Unit`
+            The unit of the map
 
         Returns
         -------
@@ -84,7 +86,7 @@ class WcsMap(Map):
                               conv=conv)
 
         if map_type == 'wcs':
-            return WcsNDMap(geom, dtype=dtype, meta=meta)
+            return WcsNDMap(geom, dtype=dtype, meta=meta, unit=unit)
         elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:
@@ -163,6 +165,9 @@ class WcsMap(Map):
                                 sparse=sparse, conv=conv)
 
         hdu_out.header['META'] = json.dumps(self.meta)
+
+        # Save unit in header
+        hdu_out.header['UNIT'] = self.unit
 
         if hdu == 'PRIMARY':
             hdulist = [hdu_out]

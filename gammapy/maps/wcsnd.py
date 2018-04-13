@@ -34,9 +34,11 @@ class WcsNDMap(WcsMap):
         Data type, default is float32
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
         # TODO: Figure out how to mask pixels for integer data types
 
         # Shape in WCS or FITS order is `shape`, in Numpy axis order is `shape_np`
@@ -50,7 +52,7 @@ class WcsNDMap(WcsMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape_np, data.shape))
 
-        super(WcsNDMap, self).__init__(geom, data, meta)
+        super(WcsNDMap, self).__init__(geom, data, meta, unit)
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
@@ -102,7 +104,14 @@ class WcsNDMap(WcsMap):
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
-        map_out = cls(geom, meta=meta)
+
+        # Read unit
+        if 'UNIT' in hdu.header:
+            unit = hdu.header['UNIT']
+        else:
+            unit = None
+
+        map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from astropy.coordinates import SkyCoord
+from astropy.units import Unit
 from collections import OrderedDict
 from ..base import Map
 from ..geom import MapAxis
@@ -9,7 +10,6 @@ from ..wcs import WcsGeom
 from ..wcsnd import WcsNDMap
 from ..hpx import HpxGeom
 from ..hpxnd import HpxNDMap
-
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -23,21 +23,21 @@ map_axes = [
 
 
 mapbase_args = [
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None),
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1]),
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1]),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes),
-    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, None),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], None),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, None),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], None),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
+    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, None),
 ]
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes'),
+@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
                          mapbase_args)
-def test_map_create(binsz, width, map_type, skydir, axes):
+def test_map_create(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes)
+                   skydir=skydir, axes=axes, unit=unit)
 
 
 def test_map_from_geom():
@@ -66,3 +66,26 @@ def test_map_meta_read_write(map_type):
 
     m2 = Map.from_hdu_list(hdulist)
     assert m2.meta == meta
+
+unit_args = [
+    ('wcs','s'),
+    ('wcs',None),
+    ('wcs',Unit('sr')),
+    ('hpx','m^2')
+]
+@pytest.mark.parametrize(('map_type','unit'),
+                         unit_args)
+def test_map_unit_read_write(map_type, unit):
+    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
+                   skydir=SkyCoord(0.0, 30.0, unit='deg'), unit=unit)
+
+    hdulist = m.to_hdulist(hdu='COUNTS')
+    header = hdulist['COUNTS'].header
+
+    # This is to test if default constructor with no unit performs as expected
+    if unit is None:
+        unit = ''
+    assert Unit(header['UNIT']) == Unit(unit)
+
+    m2 = Map.from_hdu_list(hdulist)
+    assert Unit(m2.unit) == Unit(unit)

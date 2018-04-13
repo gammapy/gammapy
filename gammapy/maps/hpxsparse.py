@@ -26,16 +26,18 @@ class HpxSparseMap(HpxMap):
         HEALPIX data array.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=None):
         if data is None:
             shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
             data = SparseArray(shape[::-1], dtype=dtype)
         elif isinstance(data, np.ndarray):
             data = SparseArray.from_array(data)
 
-        super(HpxSparseMap, self).__init__(geom, data, meta)
+        super(HpxSparseMap, self).__init__(geom, data, meta, unit)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
