@@ -167,7 +167,7 @@ class Parameter(object):
 
 
 class ParameterList(object):
-    """List of `~gammapy.spectrum.models.Parameters`
+    """List of `~gammapy.spectrum.models.Parameter`
 
     Holds covariance matrix
 
