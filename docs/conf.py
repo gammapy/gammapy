@@ -168,11 +168,6 @@ html_theme = 'sphinx_rtd_theme'
 # pixels large.
 # html_favicon = ''
 
-# The Gammapy logo doesn't look good so small (would need to make it thicker)
-# So let's use the Astropy icon for now, i.e. not set `html_favicon` here.
-# https://github.com/gammapy/gammapy-website/tree/master/logos
-# html_favicon = '_static/gammapy_logo.ico'
-
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)
 
@@ -198,11 +193,12 @@ gammapy_sphinx_notebooks(setup_cfg)
 
 # Theme style
 # html_style = ''
-# html_favicon = ''
 def setup(app):
     app.add_stylesheet('gammapy.css')
     app.add_javascript('copybutton.js')
 
+
+html_favicon = os.path.join(html_static_path[0], 'gammapy_logo.ico')
 
 # -- Options for LaTeX output --------------------------------------------------
 
