@@ -9,9 +9,9 @@
 
 .. _image:
 
-*****************************************************
-Image processing and analysis tools (`gammapy.image`)
-*****************************************************
+*****************************
+2D image analysis (``image``)
+*****************************
 
 .. currentmodule:: gammapy.image
 
@@ -74,4 +74,3 @@ Reference/API
 .. automodapi:: gammapy.image.models
     :no-inheritance-diagram:
     :include-all-objects:
-

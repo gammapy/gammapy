@@ -1,8 +1,8 @@
 .. _astro:
 
-**************************************************************
-Astrophysical source and population models (``gammapy.astro``)
-**************************************************************
+***************************************
+Sources / population models (``astro``)
+***************************************
 
 .. currentmodule:: gammapy.astro
 
@@ -33,4 +33,3 @@ Sub-packages
 
   source/index
   population/index
-

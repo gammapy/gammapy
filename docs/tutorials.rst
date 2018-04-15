@@ -2,8 +2,8 @@
 
 .. _tutorials:
 
-Gammapy tutorial notebooks
-==========================
+Tutorial notebooks
+==================
 
 What is this?
 -------------
@@ -95,6 +95,27 @@ Other useful resources:
 
 Notebooks
 ---------
+.. toctree::
+   :hidden:
+
+   notebooks/first_steps.ipynb
+   notebooks/cta_1dc_introduction.ipynb
+   notebooks/cta_data_analysis.ipynb
+   notebooks/data_iact.ipynb
+   notebooks/data_fermi_lat.ipynb
+   notebooks/image_pipe.ipynb
+   notebooks/image_analysis.ipynb
+   notebooks/detect_ts.ipynb
+   notebooks/image_fitting_with_sherpa.ipynb
+   notebooks/spectrum_models.ipynb
+   notebooks/spectrum_pipe.ipynb
+   notebooks/spectrum_analysis.ipynb
+   notebooks/cta_simulation.ipynb
+   notebooks/spectrum_fitting_with_sherpa.ipynb
+   notebooks/sed_fitting_gammacat_fermi.ipynb
+   notebooks/cube_analysis_part1.ipynb
+   notebooks/cube_analysis_part2.ipynb
+   notebooks/light_curve.ipynb
 
 For a quick introduction to Gammapy, go here:
 
@@ -136,7 +157,14 @@ Time-related analysis:
 - `Light curve estimation with Gammapy <notebooks/light_curve.html>`__ | *light_curve.ipynb*
 
 Extra topics
-++++++++++++
+------------
+.. toctree::
+   :hidden:
+
+   notebooks/background_model.ipynb
+   notebooks/cwt.ipynb
+   notebooks/nddata_demo.ipynb
+   notebooks/using_numpy.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -152,7 +180,16 @@ Gammapy if something is missing!).
 - `Rapid introduction on using numpy, scipy, matplotlib <notebooks/using_numpy.html>`__ | *using_numpy.ipynb*
 
 Work in progress
-++++++++++++++++
+----------------
+
+.. toctree::
+   :hidden:
+
+   notebooks/source_population_model.ipynb
+   notebooks/source_catalogs.ipynb
+   notebooks/fermi_vela_model.ipynb
+   notebooks/source_diffuse_estimation.ipynb
+   notebooks/time_analysis.ipynb
 
 The following notebooks are work in progress or broken.
 
@@ -160,7 +197,6 @@ Please help make these better, or write new, better ones!
 
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Source catalogs <notebooks/source_catalogs.html>`__ (working with gamma-ray source catalogs) | *source_catalogs.ipynb*
-- `Diffuse model computation <notebooks/diffuse_model_computation.html>`__ (diffuse model computation) | *diffuse_model_computation.ipynb*
 - `Fermi Vela model <notebooks/fermi_vela_model.html>`__ (Fermi Vela model) | *fermi_vela_model.ipynb*
 - `Simulating and analysing sources and diffuse emission <notebooks/source_diffuse_estimation.html>`__ | *source_diffuse_estimation.ipynb*
 - `Time analysis with Gammapy <notebooks/time_analysis.html>`__ (not written yet) | *time_analysis.ipynb*

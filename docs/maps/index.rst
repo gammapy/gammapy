@@ -2,9 +2,9 @@
 
 .. _maps:
 
-*****************************************************
-Data Structures for Images and Cubes (`gammapy.maps`)
-*****************************************************
+****************************************
+Structures for images / cubes (``maps``)
+****************************************
 
 .. currentmodule:: gammapy.maps
 
@@ -135,9 +135,9 @@ representation.  Four types of accessor methods are provided:
 
 * ``get`` : Return the value of the map at the pixel containing the
   given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`,
-  `~Map.get_by_coord`).  
+  `~Map.get_by_coord`).
 * ``interp`` : Interpolate or extrapolate the value of the map at an arbitrary
-  coordinate (see also `Interpolation`_).  
+  coordinate (see also `Interpolation`_).
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`,
   `~Map.set_by_coord`).
@@ -246,8 +246,8 @@ coordinate system of the map.
    lat = [1, 2]
    energy = [100, 1000]
    energy_axis = MapAxis.from_bounds(100, 1E5, 12, interp='log', name='energy')
-   
-   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
+
+   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')
    m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
                   coordsys='GAL', axes=[energy_axis])
 
@@ -264,7 +264,7 @@ object without reference to the axis ordering of the map geometry:
    m.get_by_coord( coord, )
    m.set_by_coord( dict(lon=lon, lat=lat, energy=energy), [0.5, 1.5] )
    m.get_by_coord( dict(lon=lon, lat=lat, energy=energy) )
-   
+
 
 However when using the named axis interface the axis name string
 (e.g. as given by `MapAxis.name`) must match the name given in the
@@ -293,7 +293,7 @@ argument:
    lon = [0.0, 1.0]
    lat = [1.0, 2.0]
    energy = [100, 1000]
-   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')   
+   skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')
 
    # Create a MapCoord from a tuple (no explicit axis names)
    c = MapCoord.create((lon, lat, energy))
@@ -317,7 +317,7 @@ A `MapCoord` with named axes can be created by calling
 `MapCoord.create` with a `dict` or `~collections.OrderedDict`:
 
 .. code:: python
-   
+
    # Create a MapCoord from a dict
    c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
    print(c[0], c['lon'], c.lon)
@@ -330,7 +330,7 @@ A `MapCoord` with named axes can be created by calling
    print(c[0], c['energy'])
    print(c[1], c['lon'], c.lon)
    print(c[2], c['lat'], c.lat)
-   
+
    # Create a MapCoord from a dict + SkyCoord
    c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
    print(c[0], c['lon'], c.lon)
@@ -448,7 +448,7 @@ Maps can be written to and read from a FITS file with the
 If ``map_type`` argument is not given when calling `~Map.read` a
 non-sparse map object will be instantiated with the pixelization of
 the input HDU.
-   
+
 Maps can be serialized to a sparse data format by calling
 `~Map.write` with ``sparse=True``.  This will write all non-zero
 pixels in the map to a data table appropriate to the pixelization
