@@ -2,8 +2,8 @@
 
 .. _tutorials:
 
-Gammapy tutorial notebooks
-==========================
+Tutorial notebooks
+==================
 
 What is this?
 -------------

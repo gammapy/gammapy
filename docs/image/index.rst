@@ -9,9 +9,9 @@
 
 .. _image:
 
-***************************************
-Image processing / analysis (``image``)
-***************************************
+*****************************
+2D image analysis (``image``)
+*****************************
 
 .. currentmodule:: gammapy.image
 

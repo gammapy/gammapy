@@ -2,9 +2,9 @@
 
 .. _spectrum:
 
-**********************************
-Spectrum estimation (``spectrum``)
-**********************************
+***********************************
+1D spectrum analysis (``spectrum``)
+***********************************
 
 .. currentmodule:: gammapy.spectrum
 

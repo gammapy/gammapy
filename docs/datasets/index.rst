@@ -2,9 +2,9 @@
 
 .. _datasets:
 
-******************************
-Access datasets (``datasets``)
-******************************
+*****************************
+Dataset access (``datasets``)
+*****************************
 
 .. currentmodule:: gammapy.datasets
 

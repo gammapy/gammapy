@@ -150,16 +150,19 @@ You can also contribute with your own notebooks in this
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
 
-            with Path(filepath) as f:
-                txt = f.read_text(encoding="utf-8")
+            txt = Path(filepath).read_text(encoding="utf-8")
+
             if folder == 'notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/\1rst\2', txt,
-                             flags=re.M | re.I)
-            if folder == '_static/notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\/\1html\2', txt,
-                             flags=re.M | re.I)
-            with Path(filepath) as f:
-                f.write_text(txt, encoding="utf-8")
+                repl = r'..\/\1rst\2'
+            elif folder == '_static/notebooks':
+                repl = r'..\/..\/\1html\2'
+
+            txt = re.sub(
+                pattern=url_docs + '(.*?)html(\)|#)',
+                repl=repl, string=txt, flags=re.M | re.I,
+            )
+
+            Path(filepath).write_text(txt, encoding="utf-8")
 
 
 def convert_nb_to_script(path):

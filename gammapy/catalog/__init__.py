@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Source catalogs and objects.
-"""
+"""Source catalogs."""
 from .core import *
 from .fermi import *
 from .hawc import *
