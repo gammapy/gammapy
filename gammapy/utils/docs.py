@@ -150,16 +150,16 @@ You can also contribute with your own notebooks in this
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
 
-            with io.open(filepath, encoding="utf-8") as f:
-                txt = f.read()
+            with Path(filepath) as f:
+                txt = f.read_text(encoding="utf-8")
             if folder == 'notebooks':
                 txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/\1rst\2', txt,
                              flags=re.M | re.I)
             if folder == '_static/notebooks':
                 txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\/\1html\2', txt,
                              flags=re.M | re.I)
-            with io.open(filepath, "w", encoding="utf-8") as f:
-                f.write(txt)
+            with Path(filepath) as f:
+                f.write_text(txt, encoding="utf-8")
 
 
 def convert_nb_to_script(path):
@@ -201,8 +201,9 @@ def gammapy_sphinx_notebooks(setup_cfg):
     git_commit = setup_cfg['git_commit']
 
     # copy and build notebooks
-    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
-    if os.path.isdir(gammapy_extra_notebooks_folder):
+    gammapy_extra_notebooks_folder = Path(os.environ['GAMMAPY_EXTRA']) / 'notebooks'
+
+    if gammapy_extra_notebooks_folder.is_dir():
 
         ignorefiles = lambda d, files: [
             f for f in files
@@ -210,15 +211,18 @@ def gammapy_sphinx_notebooks(setup_cfg):
         ]
         log.info('*** Converting notebooks to scripts')
 
+        path_nbs = Path('notebooks')
+        path_static_nbs = Path('_static') / 'notebooks'
+
         # remove existing notebooks
-        rmtree('_static/notebooks', ignore_errors=True)
+        rmtree(str(path_static_nbs), ignore_errors=True)
         rmtree('notebooks', ignore_errors=True)
 
         # copy notebooks
-        copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-        copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
+        copytree(str(gammapy_extra_notebooks_folder), str(path_nbs), ignore=ignorefiles)
+        copytree(str(gammapy_extra_notebooks_folder), str(path_static_nbs), ignore=ignorefiles)
 
-        for path in Path('_static/notebooks').glob('*.ipynb'):
+        for path in path_static_nbs.glob('*.ipynb'):
             convert_nb_to_script(path)
 
         modif_nb_links('notebooks', url_docs, git_commit)

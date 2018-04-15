@@ -197,6 +197,9 @@ def setup(app):
     app.add_stylesheet('gammapy.css')
     app.add_javascript('copybutton.js')
 
+# copybutton.js provides hide/show button for python prompts >>>
+# slightly modified to work on RTD theme from javascript file in easydev package
+# https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
 
 html_favicon = os.path.join(html_static_path[0], 'gammapy_logo.ico')
 
