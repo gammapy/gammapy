@@ -13,6 +13,7 @@ import astropy.units as u
 __all__ = [
     'SkySpatialModel',
     'SkyGaussian2D',
+    'SkyPointSource',
 ]
 
 
@@ -58,25 +59,57 @@ class SkyGaussian2D(SkySpatialModel):
 
     Parameters
     ----------
-    lon_mean : `~astropy.coordiantes.Longitude`
+    x_0 : `~astropy.coordiantes.Longitude`
         :math:`x_0`
-    lat_mean : `~astropy.coordinates.Latitude`
+    y_0 : `~astropy.coordinates.Latitude`
         :math:`y_0`
     sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
     """
 
-    def __init__(self, lon_mean, lat_mean, sigma):
+    def __init__(self, x_0, y_0, sigma):
         self.parameters = ParameterList([
-            Parameter('lon_mean', Longitude(lon_mean)),
-            Parameter('lat_mean', Latitude(lat_mean)),
+            Parameter('x_0', Longitude(x_0)),
+            Parameter('y_0', Latitude(y_0)),
             Parameter('sigma', Angle(sigma))
         ])
 
     @staticmethod
-    def evaluate(lon, lat, lon_mean, lat_mean, sigma):
+    def evaluate(lon, lat, x_0, y_0, sigma):
         """Evaluate the model (static function)."""
-        sep = angular_separation(lon, lat, lon_mean, lat_mean)
+        sep = angular_separation(lon, lat, x_0, y_0)
         fact = (sep / sigma).to('').value
-        val = np.exp(-0.5 * fact **2) / (2 * np.pi * sigma**2)
+        val = np.exp(-0.5 * fact ** 2) / (2 * np.pi * sigma**2)
+        return val
+
+
+class SkyPointSource(SkySpatialModel):
+    r"""Point Source.
+
+    .. math::
+
+        \phi(x, y) = \delta{(x - x_0, y - y_0)}
+
+    A tolerance of 1 arcsecond is accepted for numerical stability
+
+    Parameters
+    ----------
+    x_0: `~astropy.coordiantes.Longitude`
+        : math: `x_0`
+    y_0: `~astropy.coordinates.Latitude`
+        : math: `y_0`
+    """
+
+    def __init__(self, x_0, y_0):
+        self.parameters = ParameterList([
+            Parameter('x_0', Longitude(x_0)),
+            Parameter('y_0', Latitude(y_0))
+        ])
+
+    @staticmethod
+    def evaluate(lon, lat, x_0, y_0):
+        """Evaluate the model (static function)."""
+        tolerance = 1 * u.arcsec
+        sep = angular_separation(lon, lat, x_0, y_0)
+        val = 1 if sep < tolerance else 0
         return val
