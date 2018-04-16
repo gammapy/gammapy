@@ -3,14 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy import units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis
 from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance
+
+pytest.importorskip('scipy')
 
 
 @pytest.fixture(scope='session')
@@ -54,7 +55,6 @@ def test_separation_map():
     assert_allclose(m.data[0, 0], 0.7106291438079875)
 
 
-@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_make_map_exposure_true_energy(aeff, counts_cube):
     pointing = SkyCoord(83.633, 21.514, unit='deg')
@@ -70,7 +70,6 @@ def test_make_map_exposure_true_energy(aeff, counts_cube):
     assert_quantity_allclose(np.nanmax(m.data), 4.7e8, rtol=100)
 
 
-@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_make_map_fov_background(bkg_3d, counts_cube):
     pointing = SkyCoord(83.633, 21.514, unit='deg')
