@@ -7,6 +7,7 @@ from collections import OrderedDict
 from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
+from astropy.units import Quantity, Unit
 from .geom import pix_tuple_to_idx, MapCoord
 
 __all__ = [
@@ -33,11 +34,19 @@ class Map(object):
         Data array
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : str or `~astropy.units.Unit`
+        Data unit
     """
 
-    def __init__(self, geom, data, meta=None):
+    def __init__(self, geom, data, meta=None, unit=''):
         self._geom = geom
-        self._data = data
+        if isinstance(data, Quantity):
+            self._data = data.value
+            self._unit = data.unit.to_string()
+        else:
+            self._data = data
+            self._unit = Unit(unit).to_string()
+
         if meta is None:
             self.meta = OrderedDict()
         else:
@@ -48,11 +57,30 @@ class Map(object):
         """Data array (`~numpy.ndarray`)"""
         return self._data
 
+    @property
+    def quantity(self):
+        """Map data times unit (`~astropy.units.Quantity`)"""
+        return self._data * Unit(self._unit)
+
+    @property
+    def unit(self):
+        """Map unit (`~astropy.units.Unit`)"""
+        return Unit(self._unit)
+
     @data.setter
     def data(self, val):
         if val.shape != self.data.shape:
             raise ValueError('Wrong shape.')
         self._data = val
+
+    @quantity.setter
+    def quantity(self, val):
+        if val.shape != self.data.shape:
+            raise ValueError('Wrong shape.')
+
+        val = Quantity(val)
+        self._data = val.value
+        self._unit = val.unit.to_string()
 
     @property
     def geom(self):
@@ -138,7 +166,7 @@ class Map(object):
         return map_out
 
     @classmethod
-    def from_geom(cls, geom, meta=None, map_type='auto'):
+    def from_geom(cls, geom, meta=None, map_type='auto', unit=''):
         """Generate an empty map from a `~Geom` instance.
 
         Parameters
@@ -155,6 +183,8 @@ class Map(object):
             with the geometry.  If map_type is 'auto' then an
             appropriate map type will be inferred from type of
             ``geom``.
+        unit : str or `~astropy.units.Unit`
+            Data unit.
 
         Returns
         -------
@@ -174,7 +204,7 @@ class Map(object):
                 raise ValueError('Unrecognized geom type.')
 
         cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out(geom, meta=meta)
+        map_out = cls_out(geom, meta=meta, unit=unit)
         return map_out
 
     @classmethod
@@ -335,13 +365,15 @@ class Map(object):
         ----------
         map_in : `~Map`
             Input map.
-
         """
+        if not self.unit.is_equivalent(map_in.unit):
+            raise ValueError("Incompatible units")
+
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
         idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coord()
-        vals = map_in.get_by_idx(idx)
+        vals = Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
     def reproject(self, geom, order=1, mode='interp'):

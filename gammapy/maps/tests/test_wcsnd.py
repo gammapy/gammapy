@@ -366,3 +366,14 @@ def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
     m = WcsNDMap(geom)
     m2 = m.upsample(2, order=0, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
+
+def test_coadd_unit():
+    geom = WcsGeom.create(npix=(10,10), binsz=1,
+                          proj='CAR', coordsys='GAL')
+    m1 = WcsNDMap(geom, data=np.ones((10,10)), unit='m2')
+    m2 = WcsNDMap(geom, data=np.ones((10,10)), unit='cm2')
+
+    m1.coadd(m2)
+
+    assert_allclose(m1.data, 1.0001)
+

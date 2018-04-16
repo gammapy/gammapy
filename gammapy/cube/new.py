@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
 from ..irf import Background3D
-from ..maps import WcsNDMap, WcsGeom
+from ..maps import WcsNDMap, WcsGeom, Map
 from .basic_cube import fill_map_counts
 
 __all__ = [
@@ -65,41 +65,41 @@ def make_cutout(ndmap, position, size, margin='0.1 deg'):
     return ndmap_cutout, cutout_slices
 
 
-def make_separation_map(ref_geom, position):
+def make_separation_map(geom, position):
     """Compute distance of pixels to a given position for the input reference WCSGeom.
 
     Result is returned as a 2D WcsNDmap
     
     Parameters
     ----------
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference geometry
     position : `~astropy.coordinates.SkyCoord`
         Reference position
     
     Returns
     -------
-    valid_map : `~gammapy.maps.WcsNDMap`
+    separation : `~gammapy.maps.Map`
         Separation map (2D)
     """
     # We use WcsGeom.get_coords which does not provide SkyCoords for the moment
     # We convert the output to SkyCoords
-    if ref_geom.coordsys == 'GAL':
+    if geom.coordsys == 'GAL':
         frame = 'galactic'
-    elif ref_geom.coordsys == 'CEL':
+    elif geom.coordsys == 'CEL':
         frame = 'icrs'
     else:
         raise ValueError("Incorrect coordinate system.")
 
-    # This might break if the WcsNDMap does not have 3D
-    coord = ref_geom.to_image().get_coord()
-    coord = SkyCoord(coord[0], coord[1], frame=frame, unit='deg')
+    geom = geom.to_image()
 
+    coord = geom.get_coord()
+    coord = SkyCoord(coord[0], coord[1], frame=frame, unit='deg')
     separation = position.separation(coord)
 
-    geom = ref_geom.to_image()
-    data = np.squeeze(separation)
-    return WcsNDMap(geom, data)
+    m = Map.from_geom(geom)
+    m.quantity = separation
+    return m
 
 
 def make_map_counts(events, ref_geom, pointing, offset_max):
@@ -153,14 +153,14 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     expmap : `~gammapy.maps.WcsNDMap`
         Exposure cube (3D) in true energy bins
     """
-    offset_map = make_separation_map(ref_geom, pointing)
+    offset = make_separation_map(ref_geom, pointing).quantity
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
     # Or even better edges, but WcsNDmap does not really allows it.
     energy = ref_geom.axes[0].center * ref_geom.axes[0].unit
 
-    exposure = aeff.data.evaluate(offset=offset_map.data, energy=energy)
+    exposure = aeff.data.evaluate(offset=offset, energy=energy)
     exposure *= livetime
 
     # We check if exposure is a 3D array in case there is a single bin in energy
@@ -170,12 +170,9 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
-    exposure[:, offset_map.data >= offset_max] = 0
+    exposure[:, offset >= offset_max] = 0
 
-    # TODO: add unit to map
-    # See https://github.com/gammapy/gammapy/issues/1206
-    # For now, we just store with fixed units
-    data = exposure.to('m2 s').value
+    data = exposure.to('m2 s')
 
     return WcsNDMap(ref_geom, data)
 
@@ -248,7 +245,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         Background predicted counts sky cube in reco energy
     """
     # Compute offsets of all pixels
-    offset_map = make_separation_map(ref_geom, pointing)
+    offset = make_separation_map(ref_geom, pointing).quantity
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
@@ -260,11 +257,11 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     # TODO: add a uniform API to the two background classes
     if isinstance(bkg, Background3D):
-        data = bkg.data.evaluate(detx=offset_map.data, dety='0 deg', energy=energy)
+        data = bkg.data.evaluate(detx=offset, dety='0 deg', energy=energy)
     else:
-        data = bkg.data.evaluate(offset=offset_map.data, energy=energy)
+        data = bkg.data.evaluate(offset=offset, energy=energy)
 
-    data_shape = ref_geom.shape + offset_map.data.shape
+    data_shape = ref_geom.shape + offset.shape
     data = np.reshape(data, data_shape)
 
     # TODO: add proper integral over energy
@@ -275,7 +272,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
-    data[:, offset_map.data >= offset_max] = 0
+    data[:, offset >= offset_max] = 0
 
     return WcsNDMap(ref_geom, data=data)
 

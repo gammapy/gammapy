@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from astropy.units import Quantity
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -32,9 +33,11 @@ class HpxNDMap(HpxMap):
         If none then an empty array will be allocated.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : str or `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
         shape_np = shape[::-1]
@@ -45,7 +48,7 @@ class HpxNDMap(HpxMap):
             raise ValueError('Wrong shape for input data array. Expected {} '
                              'but got {}'.format(shape_np, data.shape))
 
-        super(HpxNDMap, self).__init__(geom, data, meta)
+        super(HpxNDMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
 
@@ -78,7 +81,9 @@ class HpxNDMap(HpxMap):
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
-        map_out = cls(hpx, None, meta=meta)
+
+        unit = hdu.header.get('UNIT', '')
+        map_out = cls(hpx, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []
@@ -410,6 +415,8 @@ class HpxNDMap(HpxMap):
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
+            if isinstance(weights, Quantity):
+                weights = weights.to(self.unit).value
             weights = weights[msk]
 
         idx_local = np.ravel_multi_index(idx_local, self.data.T.shape)
