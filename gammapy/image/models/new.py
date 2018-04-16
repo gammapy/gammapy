@@ -14,6 +14,7 @@ __all__ = [
     'SkySpatialModel',
     'SkyGaussian2D',
     'SkyPointSource',
+    'SkyDisk2D',
 ]
 
 
@@ -59,25 +60,25 @@ class SkyGaussian2D(SkySpatialModel):
 
     Parameters
     ----------
-    x_0 : `~astropy.coordiantes.Longitude`
-        :math:`x_0`
-    y_0 : `~astropy.coordinates.Latitude`
-        :math:`y_0`
+    lon_0 : `~astropy.coordiantes.Longitude`
+        :math:`lon_0`
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`lat_0`
     sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
     """
 
-    def __init__(self, x_0, y_0, sigma):
+    def __init__(self, lon_0, lat_0, sigma):
         self.parameters = ParameterList([
-            Parameter('x_0', Longitude(x_0)),
-            Parameter('y_0', Latitude(y_0)),
+            Parameter('lon_0', Longitude(lon_0)),
+            Parameter('lat_0', Latitude(lat_0)),
             Parameter('sigma', Angle(sigma))
         ])
 
     @staticmethod
-    def evaluate(lon, lat, x_0, y_0, sigma):
+    def evaluate(lon, lat, lon_0, lat_0, sigma):
         """Evaluate the model (static function)."""
-        sep = angular_separation(lon, lat, x_0, y_0)
+        sep = angular_separation(lon, lat, lon_0, lat_0)
         fact = (sep / sigma).to('').value
         val = np.exp(-0.5 * fact ** 2) / (2 * np.pi * sigma**2)
         return val
@@ -88,28 +89,67 @@ class SkyPointSource(SkySpatialModel):
 
     .. math::
 
-        \phi(x, y) = \delta{(x - x_0, y - y_0)}
+        \phi(x, y) = \delta{(lon - lon_0, lat - lat_0)}
 
     A tolerance of 1 arcsecond is accepted for numerical stability
 
     Parameters
     ----------
-    x_0: `~astropy.coordiantes.Longitude`
-        : math: `x_0`
-    y_0: `~astropy.coordinates.Latitude`
-        : math: `y_0`
+    lon_0: `~astropy.coordiantes.Longitude`
+        : math: `lon_0`
+    lat_0: `~astropy.coordinates.Latitude`
+        : math: `lat_0`
     """
 
-    def __init__(self, x_0, y_0):
+    def __init__(self, lon_0, lat_0):
         self.parameters = ParameterList([
-            Parameter('x_0', Longitude(x_0)),
-            Parameter('y_0', Latitude(y_0))
+            Parameter('lon_0', Longitude(lon_0)),
+            Parameter('lat_0', Latitude(lat_0))
         ])
 
     @staticmethod
-    def evaluate(lon, lat, x_0, y_0):
+    def evaluate(lon, lat, lon_0, lat_0):
         """Evaluate the model (static function)."""
         tolerance = 1 * u.arcsec
-        sep = angular_separation(lon, lat, x_0, y_0)
+        sep = angular_separation(lon, lat, lon_0, lat_0)
         val = 1 if sep < tolerance else 0
         return val
+
+
+class SkyDisk2D(SkySpatialModel):
+    r"""Constant radial disk model.
+
+    .. math::
+
+        f(r) = \frac{1}{2 \pi (1 - \cos{r}) } \cdot
+                \begin{cases}
+                    1 & \text{for} \theta \leq r_0 \\
+                    0 & \text{else}
+                \end{cases}
+
+    where :math:`\theta` is the sky separation
+
+    Parameters
+    ----------
+    lon_0: `~astropy.coordiantes.Longitude`
+        : math: `lon_0`
+    lat_0: `~astropy.coordinates.Latitude`
+        : math: `lat_0`
+    r_0: `~astropy.coordinates.Angle`
+        : math: `r_0`
+    """
+
+    def __init__(self, lon_0, lat_0, r_0):
+        self.parameters = ParameterList([
+            Parameter('lon_0', Longitude(lon_0)),
+            Parameter('lat_0', Latitude(lat_0)),
+            Parameter('r_0', Angle(r_0))
+        ])
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0):
+        """Evaluate the model (static function)."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        norm = 2 * np.pi * (1 - np.cos(r_0))
+        val = 1./norm if sep <= r_0 else 0
+        return val / u.deg ** 2
