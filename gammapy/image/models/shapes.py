@@ -13,20 +13,12 @@ from ..core import SkyImage
 
 __all__ = [
     'morph_types',
-    'SpatialModel',
     'Delta2D',
     'Gaussian2D',
     'Shell2D',
     'Sphere2D',
     'Template2D',
 ]
-
-
-class SpatialModel(object):
-    """Spatial model base class.
-
-    TODO: implement properly. At the moment this is just a placeholder
-    """
 
 
 class Gaussian2D(AstropyGaussian2D):
