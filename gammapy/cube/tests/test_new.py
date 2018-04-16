@@ -9,8 +9,8 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
-from ...maps import WcsNDMap
-from ..new import make_map_exposure_true_energy, make_map_hadron_acceptance
+from ...maps import WcsNDMap, WcsGeom, MapAxis
+from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance
 
 
 @pytest.fixture(scope='session')
@@ -35,6 +35,25 @@ def counts_cube():
     return WcsNDMap.read(filename)
 
 
+def test_separation_map():
+    geom = WcsGeom.create(skydir=(0, 0), npix=10,
+                          binsz=0.1, coordsys='GAL', proj='CAR',
+                          axes=[MapAxis.from_edges([0, 2, 3])])
+    position = SkyCoord(1, 0, unit='deg', frame='galactic').icrs
+    m = make_separation_map(geom, position)
+
+    assert m.unit == 'deg'
+    assert m.data.shape == (10, 10)
+    assert_allclose(m.data[0, 0], 0.7106291438079875)
+
+    # Make sure it also works for 2D maps as input
+    geom = m.geom.to_image()
+    m = make_separation_map(geom, position)
+    assert m.unit == 'deg'
+    assert m.data.shape == (10, 10)
+    assert_allclose(m.data[0, 0], 0.7106291438079875)
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_make_map_exposure_true_energy(aeff, counts_cube):
@@ -47,6 +66,7 @@ def test_make_map_exposure_true_energy(aeff, counts_cube):
     )
 
     assert m.data.shape == (15, 120, 200)
+    assert m.unit == 'm2 s'
     assert_quantity_allclose(np.nanmax(m.data), 4.7e8, rtol=100)
 
 
