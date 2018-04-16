@@ -3,16 +3,16 @@
 Morphological models for astrophysical gamma-ray sources - new implementation
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-from astropy.coordinates.angle_utilities import angular_separation
-from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from astropy.utils import lazyproperty
-from ...utils.modeling import Parameter, ParameterList
-from ...extern import six
-from .. import SkyImage
+import copy
 import abc
 import numpy as np
 import astropy.units as u
+from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
+from astropy.utils import lazyproperty
+from ...extern import six
+from ...utils.modeling import Parameter, ParameterList
+from ..core import SkyImage
 
 __all__ = [
     'SkySpatialModel',
@@ -73,7 +73,7 @@ class SkyGaussian2D(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordiantes.Longitude`
+    lon_0 : `~astropy.coordinates.Longitude`
         :math:`lon_0`
     lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
@@ -93,7 +93,7 @@ class SkyGaussian2D(SkySpatialModel):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         fact = (sep / sigma).to('').value
-        val = np.exp(-0.5 * fact ** 2) / (2 * np.pi * sigma**2)
+        val = np.exp(-0.5 * fact ** 2) / (2 * np.pi * sigma ** 2)
         return val
 
 
@@ -108,9 +108,9 @@ class SkyPointSource(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0: `~astropy.coordiantes.Longitude`
+    lon_0 : `~astropy.coordinates.Longitude`
         :math:`lon_0`
-    lat_0: `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
     """
 
@@ -144,11 +144,11 @@ class SkyDisk2D(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0: `~astropy.coordiantes.Longitude`
+    lon_0 : `~astropy.coordinates.Longitude`
         :math:`lon_0`
-    lat_0: `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
-    r_0: `~astropy.coordinates.Angle`
+    r_0 : `~astropy.coordinates.Angle`
         :math:`r_0`
     """
 
@@ -179,24 +179,26 @@ class SkyShell2D(SkySpatialModel):
                                  \text{for } \theta \lt r_i \\
                     \sqrt{r_o^2 - \theta^2} & 
                                  \text{for } r_i \leq \theta \lt r_o \\
-                    0 & \text{for} \theta > r_o
+                    0 & \text{for } \theta > r_o
                 \end{cases}
 
-    where :math:`\theta` is the sky separation. Note that the normalization is
-    a small angle approximation and gives correct results only up to radii of
-    30 deg.
+    where :math:`\theta` is the sky separation.
+
+    Note that the normalization is a small angle approximation,
+    although that approximation is still very good even for 10 deg radius shells.
 
     Parameters
     ----------
-    lon_0: `~astropy.coordiantes.Longitude`
+    lon_0 : `~astropy.coordinates.Longitude`
         :math:`lon_0`
-    lat_0: `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
-    r_i: `~astropy.coordinates.Angle`
+    r_i : `~astropy.coordinates.Angle`
         :math:`r_i`
-    r_o: `~astropy.coordinates.Angle`
+    r_o : `~astropy.coordinates.Angle`
         :math:`r_o`
     """
+
     def __init__(self, lon_0, lat_0, r_i, r_o):
         self.parameters = ParameterList([
             Parameter('lon_0', Longitude(lon_0)),
@@ -209,8 +211,8 @@ class SkyShell2D(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, r_i, r_o):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        term1 = np.sqrt(r_o**2-sep**2)
-        term2 = term1 - np.sqrt(r_i**2-sep**2)
+        term1 = np.sqrt(r_o ** 2 - sep ** 2)
+        term2 = term1 - np.sqrt(r_i ** 2 - sep ** 2)
         norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
 
         if sep < r_o:
@@ -221,7 +223,7 @@ class SkyShell2D(SkySpatialModel):
         else:
             val = 0
 
-        return norm * val 
+        return norm * val
 
 
 class SkyTemplate2D(SkySpatialModel):
@@ -232,6 +234,7 @@ class SkyTemplate2D(SkySpatialModel):
     image : `~gammapy.image.SkyImage`
         Template
     """
+
     def __init__(self, image):
         self.image = image
         self.parameters = ParameterList([])
