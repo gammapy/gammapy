@@ -243,15 +243,7 @@ class WcsNDMap(WcsMap):
 
         if weights is not None:
             if isinstance(weights, Quantity):
-                if self.unit.is_equivalent(weights.unit):
-                    weights = np.asarray(weights.to(self.unit).value, dtype=self.data.dtype)
-                else:
-                    raise ValueError("Incompatible unit for weights")
-            elif self.unit.is_equivalent(''):
-                weights = np.asarray(weights, dtype=self.data.dtype)
-            else:
-                raise ValueError("Incompatible unit for weights")
-
+                weights = weights.to(self.unit).value
             weights = weights[msk]
 
         idx = np.ravel_multi_index(idx, self.data.T.shape)
