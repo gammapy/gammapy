@@ -1,72 +1,128 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
-from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency
-from ...image.models import Shell2D
+from ...maps import MapAxis, WcsGeom, Map
+from ...image.models import SkyGaussian2D
 from ...spectrum.models import PowerLaw
-from ..core import SkyCube
-from ..models import CombinedModel3D
+from ..models import SkyModel, SkyModelMapEvaluator
 
 
-def make_ref_cube():
-    return SkyCube.empty(
-        mode='edges', enumbins=10, emin=0.1, emax=10, eunit='TeV',
-        nxpix=200, nypix=100, binsz=0.1, xref=0, yref=0, proj='TAN', coordsys='GAL',
+@pytest.fixture(scope='session')
+def geom():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV)
+    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys='GAL', axes=[axis])
+
+
+@pytest.fixture(scope='session')
+def exposure(geom):
+    m = Map.from_geom(geom)
+    m.quantity = np.ones((2, 4, 5)) * u.Quantity('100 m2 s')
+    return m
+
+
+@pytest.fixture(scope='session')
+def sky_model():
+    spatial_model = SkyGaussian2D(
+        lon_mean='3 deg', lat_mean='4 deg', sigma='3 deg',
     )
+    spectral_model = PowerLaw(
+        index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV',
+    )
+    return SkyModel(spatial_model, spectral_model)
 
 
-class TestCombinedModel3D:
-    def setup(self):
-        self.spatial_model = Shell2D(
-            amplitude=1, x_0=3, y_0=4, r_in=5, width=6, normed=True,
-        )
-        self.spectral_model = PowerLaw(
-            index=2, amplitude=1 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.Unit('TeV'),
-        )
-        self.model = CombinedModel3D(self.spatial_model, self.spectral_model)
+class TestSkyModel:
+    @staticmethod
+    def test_repr(sky_model):
+        assert 'SkyModel' in repr(sky_model)
 
-    def test_repr(self):
-        assert 'CombinedModel3D' in repr(self.model)
+    @staticmethod
+    def test_str(sky_model):
+        assert 'SkyModel' in str(sky_model)
 
-    def test_evaluate_scalar(self):
+    @staticmethod
+    def test_evaluate_scalar(sky_model):
         lon = 3 * u.deg
         lat = 4 * u.deg
         energy = 1 * u.TeV
 
-        actual = self.model.evaluate(lon, lat, energy)
+        q = sky_model.evaluate(lon, lat, energy)
 
-        expected = [[[7.798132206]]] * u.Unit('cm-2 s-1 TeV-1 sr-1')
-        assert_quantity_allclose(actual, expected)
+        assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
+        assert q.shape == (1, 1, 1)
+        assert_allclose(q.value, 1.76838826e-13)
 
-    def test_evaluate_array(self):
+    @staticmethod
+    def test_evaluate_array(sky_model):
         lon = 3 * u.deg * np.ones(shape=(3, 4))
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        actual = self.model.evaluate(lon, lat, energy)
+        q = sky_model.evaluate(lon, lat, energy)
 
-        expected = 7.798132206 * u.Unit('cm-2 s-1 TeV-1 sr-1')
-        assert_quantity_allclose(actual, expected)
-        assert actual.shape == (5, 3, 4)
+        assert q.shape == (5, 3, 4)
+        assert_allclose(q.value, 1.76838826e-13)
 
-    @requires_dependency('scipy')
-    def test_evaluate_cube(self):
-        ref_cube = make_ref_cube()
-        cube = self.model.evaluate_cube(ref_cube)
 
-        assert cube.data.shape == (10, 100, 200)
-        assert cube.data.unit == 'cm-2 s-1 TeV-1 sr-1'
-        assert_allclose(cube.data.value.sum(), 10262401.621666815)
+@requires_dependency('scipy')
+class TestSkyModelMapEvaluator:
 
-        actual = cube.lookup(position=SkyCoord(0.1, 0.1, frame='galactic', unit='deg'), energy=1 * u.TeV)
-        assert_quantity_allclose(actual, 17.444501 * u.Unit('cm-2 s-1 TeV-1 sr-1'))
+    def setup(self):
+        self.evaluator = SkyModelMapEvaluator(sky_model(), exposure(geom()))
 
-        # TODO: fix the bug for the following test case!
-        # Because spatial models are evaluated in cartesian x/y,
-        # the switch from lon = 0 to 360 deg leads to an incorrect result! (sources clipped at lon=0 line!)
-        actual = cube.lookup(position=SkyCoord(-0.1, -0.1, frame='galactic', unit='deg'), energy=1 * u.TeV)
-        assert_quantity_allclose(actual, 0 * u.Unit('cm-2 s-1 TeV-1 sr-1'))
+    def test_energy_center(self):
+        val = self.evaluator.energy_center
+        assert val.shape == (2,)
+        assert val.unit == 'TeV'
+
+    def test_energy_edges(self):
+        val = self.evaluator.energy_edges
+        assert val.shape == (3,)
+        assert val.unit == 'TeV'
+
+    def test_energy_bin_width(self):
+        val = self.evaluator.energy_bin_width
+        assert val.shape == (2,)
+        assert val.unit == 'TeV'
+
+    def test_lon_lat(self):
+        val = self.evaluator.lon
+        assert val.shape == (4, 5)
+        assert val.unit == 'deg'
+
+        val = self.evaluator.lat
+        assert val.shape == (4, 5)
+        assert val.unit == 'deg'
+
+    def test_solid_angle(self):
+        val = self.evaluator.solid_angle
+        assert val.shape == (2, 4, 5)
+        assert val.unit == 'sr'
+
+    def test_bin_volume(self):
+        val = self.evaluator.bin_volume
+        assert val.shape == (2, 4, 5)
+        assert val.unit == 'TeV sr'
+
+    def test_compute_dnde(self):
+        out = self.evaluator.compute_dnde()
+
+        assert out.shape == (2, 4, 5)
+        assert out.unit == 'cm-2 s-1 TeV-1 deg-2'
+        assert_allclose(out.value.mean(), 7.460919e-14)
+
+    def test_compute_flux(self):
+        out = self.evaluator.compute_flux()
+
+        assert out.shape == (2, 4, 5)
+        assert out.unit == 'cm-2 s-1'
+        assert_allclose(out.value.mean(), 1.828206748668197e-14)
+
+    def test_compute_npred(self):
+        out = self.evaluator.compute_npred()
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.sum(), 7.312826994672788e-07)
