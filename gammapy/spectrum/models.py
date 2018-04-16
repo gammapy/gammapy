@@ -15,6 +15,8 @@ from ..utils.modeling import Parameter, ParameterList
 
 __all__ = [
     'SpectralModel',
+    'ConstantModel',
+    'CompoundSpectralModel',
     'PowerLaw',
     'PowerLaw2',
     'ExponentialCutoffPowerLaw',

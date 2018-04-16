@@ -2,9 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from ..new import (
-    SkyGaussian2D, SkyPointSource, SkyDisk2D,
+    SkyGaussian2D, SkyPointSource, SkyDisk2D, SkyShell2D, SkyTemplate2D,
 )
+from ....utils.testing import requires_dependency, requires_data
 from astropy.tests.helper import assert_quantity_allclose
+from numpy.testing import assert_allclose
 import pytest
 import astropy.units as u
 
@@ -59,3 +61,25 @@ def test_skydisk2D():
     desired = 261.26395634890207 / u.deg ** 2
     assert_quantity_allclose(actual, desired)
 
+def test_skyshell2D():
+    model = SkyShell2D(
+        lon_0=359 * u.deg,
+        lat_0=88 * u.deg,
+        r_i=2 * u.deg,
+        r_o=4 * u.deg
+    )
+
+    lon = 180 * u.deg
+    lat = 88 * u.deg
+    actual = model(lon, lat)
+    desired = 0.0002976757280439522 / u.deg ** 2
+    assert_quantity_allclose(actual, desired)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_template2d():
+    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
+                '/Templates/HESSJ1841-055.fits')
+    template = SkyTemplate2D.read(filename)
+    assert_allclose(template(26.7, 0), 1.1553735159851262)
