@@ -145,11 +145,11 @@ class SkyDisk2D(SkySpatialModel):
     Parameters
     ----------
     lon_0: `~astropy.coordiantes.Longitude`
-        :math: `lon_0`
+        :math:`lon_0`
     lat_0: `~astropy.coordinates.Latitude`
-        :math: `lat_0`
+        :math:`lat_0`
     r_0: `~astropy.coordinates.Angle`
-        :math: `r_0`
+        :math:`r_0`
     """
 
     def __init__(self, lon_0, lat_0, r_0):
@@ -174,6 +174,13 @@ class SkyShell2D(SkySpatialModel):
     .. math::
 
         \phi(lon, lat) = \frac{3}{2 \pi (r_o^3 - r_i^3)} \cdot
+                \begin{cases}
+                    \sqrt{r_o^2 - \theta^2} - \sqrt{r_i^2 - \theta^2} &
+                                 \text{for } \theta \lt r_i \\
+                    \sqrt{r_o^2 - \theta^2} & 
+                                 \text{for } r_i \leq \theta \lt r_o \\
+                    0 & \text{for} \theta > r_o
+                \end{cases}
 
     where :math:`\theta` is the sky separation. Note that the normalization is
     a small angle approximation and gives correct results only up to radii of
@@ -190,14 +197,6 @@ class SkyShell2D(SkySpatialModel):
     r_o: `~astropy.coordinates.Angle`
         :math:`r_o`
     """
-    #    \phi(lon, lat) = \frac{3}{2 \pi (r_o^3 - r_i^3)} \cdot
-    #            \begin{cases}
-    #                \sqrt{r_o^^2 - \theta^2} - \sqrt{r_i^2 - \theta^2} &
-    #                             \text{for } \theta \lt r_i \\
-    #                \sqrt{r_o^2 - \theta^2} & 
-    #                             \text{for } r_i \leq \theta \lt r_o \\
-    #                0 \test{for} \theta > r_o
-    #            \end{cases}
     def __init__(self, lon_0, lat_0, r_i, r_o):
         self.parameters = ParameterList([
             Parameter('lon_0', Longitude(lon_0)),
