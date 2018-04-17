@@ -8,7 +8,6 @@ from astropy.table import Table
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from astropy.modeling.models import Gaussian1D
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
@@ -148,24 +147,18 @@ def make_test_array_oneobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
 
 
 def make_excluded_sources():
-    centers = SkyCoord([1, 0], [2, 1], unit='deg')
-    radius = Angle('0.3 deg')
-    sources = CircleSkyRegion(centers, radius)
     catalog = Table()
-    catalog["RA"] = sources.center.data.lon
-    catalog["DEC"] = sources.center.data.lat
-    catalog["Radius"] = sources.radius
+    catalog["RA"] = [1, 0] * u.deg
+    catalog["DEC"] = [2, 1] * u.deg
+    catalog["Radius"] = 0.3 * u.deg
     return catalog
 
 
 def make_source_nextCrab():
-    center = SkyCoord([84, 89], [23, 20], unit='deg', frame='icrs')
-    radius = Angle('0.3 deg')
-    sources = CircleSkyRegion(center, radius)
     catalog = Table()
-    catalog["RA"] = sources.center.data.lon
-    catalog["DEC"] = sources.center.data.lat
-    catalog["Radius"] = sources.radius
+    catalog["RA"] = [84, 89] * u.deg
+    catalog["DEC"] = [23, 20] * u.deg
+    catalog["Radius"] = 0.3 * u.deg
     return catalog
 
 
