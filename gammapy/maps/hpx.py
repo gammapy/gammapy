@@ -1068,6 +1068,9 @@ class HpxGeom(MapGeom):
 
         for _ in range(pad_width):
             # Mask of neighbors that are not contained in the geometry
+            # TODO: change this to numpy.isin when we require Numpy 1.13+
+            # Here and everywhere in Gamampy -> search for "isin"
+            # see https://github.com/gammapy/gammapy/pull/1371
             mask_edge = np.in1d(idx_nb, idx_r, invert=True).reshape(idx_nb.shape)
             idx_edge = idx_nb[mask_edge]
             idx_edge = np.unique(idx_edge)
