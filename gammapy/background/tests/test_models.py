@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from astropy.table import Table
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from regions import CircleSkyRegion
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, assert_quantity_allclose
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable, DataStore, EventList
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie

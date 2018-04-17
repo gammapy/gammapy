@@ -3,11 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_equal
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 from astropy.coordinates import Angle
 from ...data import DataStore, EventList
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, assert_quantity_allclose
 from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
 from ..fov_cube import FOVCube
@@ -116,7 +115,7 @@ def test_evaluate_at_energy():
     e_eval = energy[0]
     interpol_param = dict(method='nearest', bounds_error=False)
     table_energy = array.evaluate_at_energy(e_eval, interpol_param)
-    assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
+    assert_quantity_allclose(table_energy["offset"].quantity, array.offset_bin_center)
     # Offset bin for the first event is 23
     assert_equal(table_energy["value"][23], 1)
 
@@ -127,7 +126,7 @@ def test_evaluate_at_offset():
     off_eval = offset[0]
     interpol_param = dict(method='nearest', bounds_error=False)
     table_offset = array.evaluate_at_offset(off_eval, interpol_param)
-    assert_quantity_allclose(table_offset["energy"], array.energy.log_centers)
+    assert_quantity_allclose(table_offset["energy"].quantity, array.energy.log_centers)
     # Energy bin for the first event is 2
     assert_equal(table_offset["value"][2], 1)
 
@@ -149,7 +148,7 @@ def test_acceptance_curve_in_energy_band():
     bins = 100
     interpol_param = dict(method='nearest', bounds_error=False)
     table_energy = array.acceptance_curve_in_energy_band(energ_range, bins, interpol_param)
-    assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
+    assert_quantity_allclose(table_energy["offset"].quantity, array.offset_bin_center)
     assert_quantity_allclose(table_energy["Acceptance"][23] * table_energy["Acceptance"].unit,
                              1 * array.energy.bands[2].to('MeV'))
     assert_quantity_allclose(table_energy["Acceptance"][59] * table_energy["Acceptance"].unit,

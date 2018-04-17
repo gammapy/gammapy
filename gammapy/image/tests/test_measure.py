@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.units import Quantity
 from astropy.modeling.models import Gaussian2D
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
 from ...image import (measure_labeled_regions,
                       measure_containment_radius,

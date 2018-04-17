@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.table import Table
@@ -7,10 +8,9 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy import units as u
 from astropy.units import Quantity
-from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from astropy.wcs import WcsError
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore, EventList
 from ...datasets import load_poisson_stats_image

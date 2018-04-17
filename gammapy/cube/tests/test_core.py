@@ -3,12 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import textwrap
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
 from ...data import EventList

@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ..core import PHACountsSpectrum
 from ..observation import SpectrumObservation, SpectrumObservationList

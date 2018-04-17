@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 

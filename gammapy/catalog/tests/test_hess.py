@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import Counter
 import pytest
 from numpy.testing.utils import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...image import SkyImage
 from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw

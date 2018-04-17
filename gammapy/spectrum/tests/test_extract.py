@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 from ...background.tests.test_reflected import bkg_estimator, obs_list

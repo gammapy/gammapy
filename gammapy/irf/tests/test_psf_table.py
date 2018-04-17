@@ -2,11 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...datasets import FermiGalacticCenter
 from ...irf import TablePSF, EnergyDependentTablePSF

@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from astropy import units as u
 from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import assert_quantity_allclose
 from ..gammacat import SourceCatalogGammaCat
 from ..gammacat import GammaCatResource, GammaCatResourceIndex
 
