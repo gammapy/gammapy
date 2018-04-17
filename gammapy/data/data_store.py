@@ -607,10 +607,7 @@ class DataStoreObservation(object):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        if not isinstance(self.obs_info, Quantity):
-            log.warn("No unit given for livetime, assume 'second'")
-            self.obs_info['LIVETIME'] = Quantity(self.obs_info['LIVETIME'], 'second')
-        return self.obs_info['LIVETIME']
+        return Quantity(self.obs_info['LIVETIME'], 'second')
 
     @lazyproperty
     def observation_dead_time_fraction(self):
