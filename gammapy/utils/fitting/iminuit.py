@@ -40,8 +40,8 @@ def fit_minuit(parameters, function):
     minuit_kwargs = make_minuit_kwargs(parameters)
 
     minuit = Minuit(minuit_func.fcn,
-               forced_parameters=parameters.names,
-               **minuit_kwargs)
+                    forced_parameters=parameters.names,
+                    **minuit_kwargs)
 
     minuit.migrad()
     return parameters, minuit
@@ -76,5 +76,8 @@ def make_minuit_kwargs(parameters):
         kwargs[par.name] = par.value
         if par.frozen:
             kwargs['fix_{}'.format(par.name)] = True
+        limits = par.parmin, par.parmax
+        limits = np.where(np.isnan(limits), None, limits)
+        kwargs['limit_{}'.format(par.name)] = limits
 
     return kwargs
