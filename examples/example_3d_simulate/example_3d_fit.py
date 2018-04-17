@@ -1,130 +1,116 @@
 import numpy as np
 import yaml
-from configuration import get_model_gammapy
-from sherpa.estmethods import Covariance
-from sherpa.fit import Fit
-from sherpa.optmethods import NelderMead, LevMar
-from sherpa.stats import Cash, Chi2ConstVar
-from sherpa.models import TableModel
+from astropy import log
 
-from gammapy.cube.sherpa_ import CombinedModel3D, CombinedModel3DInt
-from gammapy.cube import SkyCube
-from gammapy.extern.pathlib import Path
+from gammapy.image.models import SkyGaussian2D
+from gammapy.spectrum.models import PowerLaw
+from gammapy.maps import WcsNDMap
+from gammapy.cube import SkyModel, SkyModelMapEvaluator
+from gammapy.stats import cash
+from gammapy.utils.fitting import fit_minuit
+from example_3d_simulate import get_sky_model
 
 
-def load_cubes(config):
-    cube_dir = Path(config['logging']['working_dir'])
-    npred_cube = SkyCube.read(cube_dir / 'npred_cube.fits.gz')
-    exposure_cube = SkyCube.read(cube_dir / 'exposure_cube.fits', format='fermi-exposure')
-    # print(exposure_cube)
-    # print('exposure sum: {}'.format(np.nansum(exposure_cube.data)))
+def load_cubes():
+    npred_cube = WcsNDMap.read('npred.fits')
+    exposure_cube = WcsNDMap.read('exposure.fits')
     i_nan = np.where(np.isnan(exposure_cube.data))
     exposure_cube.data[i_nan] = 0
-
-    # npred_cube_convolved = SkyCube.read(cube_dir / 'npred_cube_convolved.fits.gz')
-
     return dict(counts=npred_cube, exposure=exposure_cube)
 
-
-def read_config(filename):
-    with open(filename) as fh:
-        config = yaml.load(fh)
-
-    # TODO: fix the following issue in a better way (e.g. raise an error or fix somehow)
-    # apparently this gets returned as string, but we want float!?
-    # prefactor1: 2e-12
-    config['model']['prefactor1'] = float(config['model']['prefactor1'])
-
-    return config
-
+def get_fit_model():
+    spatial_model = SkyGaussian2D(
+        lon_0='0 deg',
+        lat_0='0 deg',
+        sigma='1 deg',
+    )
+    spectral_model = PowerLaw(
+        index=2,
+        amplitude='1e-10 cm-2 s-1 TeV-1',
+        reference='1 TeV',
+    )
+    return SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+    )
 
 def main():
-    config = read_config('config.yaml')
-    # ref_cube = make_ref_cube(config)
-    # target_position = SkyCoord(config['model']['ra1'], config['model']['dec1'], unit="deg").galactic
+    log.setLevel('INFO')
+    log.info('Starting ...')
 
-    cubes = load_cubes(config)
-    print('which available cubes:', cubes)
+    cubes = load_cubes()
+    log.info('Loaded cubes: {}'.format(cubes))
 
-    # converting data SkyCube to sherpa-format cube
-    counts = cubes['counts'].to_sherpa_data3d() #dstype='Data3DInt')
-    print('counts: ', counts)
-    # Define a 2D gaussian for the spatial model
-    # spatial_model = NormGauss2DInt('spatial-model')
+    model = get_fit_model()
+    log.info('Loaded model: {}'.format(model))
 
-    # Define a power law for the spectral model
-    # spectral_model = PowLaw1D('spectral-model')
+    # NOTE: Without this the fitter set the amplitude to 0
+    # This result in npred = 0 and thus cash = 0 everywhere
+    model.parameters['amplitude'].parmin = 1e-12
 
-    coord = cubes['counts'].sky_image_ref.coordinates(mode="edges")
-    energies = cubes['counts'].energies(mode='edges').to("TeV")
-    print('my energy bins: ', energies)
-    # import IPython; IPython.embed();
+    fit = CubeFit(cubes=cubes, model=model.copy())
+    log.info('Created analysis: {}'.format(fit))
 
-    # Set up exposure table model
-    exposure = TableModel('exposure')
-    exposure.load(None, cubes['exposure'].data.ravel())
-    exposure.ampl.freeze()
+    fit.fit()
+    log.info('Starting values\n{}'.format(get_fit_model().parameters))
+    log.info('Best fit values\n{}'.format(fit.model.parameters))
+    log.info('True values\n{}'.format(get_sky_model().parameters))
+    
 
-    use_psf = config['model']['use_psf']
+class CubeFit(object):
+    """Perform 3D likelihood fit
 
-    model_gammapy = get_model_gammapy(config)
+    This is my first go at such a class. It's geared to the SpectrumFit class
+    which does the 1D spectrum fit.
 
-    spectral_model_sherpa = model_gammapy.spectral_model.to_sherpa()
-    spectral_model_sherpa.ampl.thaw()
+    Parameters
+    ----------
+    cubes : dict
+        Dict containting tow WcsNDMaps: 'counts' and 'exposure'
+    model : `~gammapy.cube.SkyModel`
+        Fit model
+    """
+    def __init__(self, cubes, model):
+        self.cubes = cubes
+        self.model = model
+        self._init_evaluator()
+        
+        self.npred = None
+        self.stat = None
 
-    spatial_model_sherpa = model_gammapy.spatial_model.to_sherpa()
-    spatial_model_sherpa.xpos.freeze()
-    spatial_model_sherpa.ypos.freeze()
-    spatial_model_sherpa.r0.freeze()
-    spatial_model_sherpa.width.freeze()
+    def _init_evaluator(self):
+        """Initialize SkyModelEvaluator"""
+        self.evaluator = SkyModelMapEvaluator(self.model,
+                                              self.cubes['exposure'])
+        
+    def compute_npred(self):
+        self.npred = self.evaluator.compute_npred()
 
-    source_model = CombinedModel3D(
-        spatial_model=spatial_model_sherpa,
-        spectral_model=spectral_model_sherpa,
-    )
+    def compute_stat(self):
+        self.stat = cash(
+            n_on=self.cubes['counts'].data,
+            mu_on=self.npred
+        )
 
-    # source_model = CombinedModel3DInt(
-    #     spatial_model=spatial_model_sherpa,
-    #     spectral_model=spectral_model_sherpa,
-    #     exposure=exposure,
-    #     coord=coord,
-    #     energies=energies,
-    #     use_psf=use_psf,
-    #     psf=None,
-    # )
+    def total_stat(self, parameters):
+        log.debug('\n-----------------\n\n')
+        log.debug(parameters)
+        self.model.parameters = parameters
+        self.compute_npred()
+        self.compute_stat()
+        total_stat = np.sum(self.stat, dtype=np.float64)
+        #if(total_stat == 0):
+        #    import IPython; IPython.embed()
+        log.debug('STAT: {}'.format(total_stat))
+        return total_stat
 
-    print(source_model)
-    # source_model_cube = source_model.evaluate_cube(ref_cube)
-    # model = source_model  # + background_model
+    def fit(self):
+        """Run the fit"""
+        parameters, minuit = fit_minuit(parameters=self.model.parameters,
+                                        function=self.total_stat)
+        log.info(minuit.get_param_states())
 
-    # source_model2 = CombinedModel3DInt(
-    #     coord=coord,
-    #     energies=energies,
-    #     use_psf=False,
-    #     exposure=cubes['exposure'],
-    #     psf=None,
-    #     spatial_model=spatial_model,
-    #     spectral_model=spectral_model,
-    # )
-
-    model = 1e-9 * exposure * source_model  # 1e-9 flux factor
-
-    fit = Fit(
-        data=counts,
-        model=model,
-        stat=Chi2ConstVar(),
-        method=LevMar(),
-        # estmethod=Covariance(),
-    )
-
-
-    fit_results = fit.fit()
-    print(fit_results.format())
-
-    print('------------------------------------ end fitting')
-
-    # import IPython; IPython.embed()
-
+    
 
 if __name__ == '__main__':
     main()

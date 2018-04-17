@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import copy
 import astropy.units as u
 from astropy.utils import lazyproperty
+from ..utils.modeling import ParameterList
 
 __all__ = [
     'SkyModel',
@@ -28,6 +30,29 @@ class SkyModel(object):
     def __init__(self, spatial_model, spectral_model):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
+
+    @property
+    def n_spatial(self):
+        """Number of spatial parameters"""
+        return len(self.spatial_model.parameters.parameters)
+
+    @property
+    def n_spectral(self):
+        """Number of spectral parameters"""
+        return len(self.spectral_model.parameters.parameters)
+
+    # TODO: Think about how to deal with covariance matrix
+    @property
+    def parameters(self):
+        val = self.spatial_model.parameters.parameters + self.spectral_model.parameters.parameters
+        return ParameterList(val)
+
+    @parameters.setter
+    def parameters(self, parameters):
+        """Update parameters
+        """
+        self.spatial_model.parameters.parameters = parameters.parameters[:self.n_spatial]
+        self.spectral_model.parameters.parameters = parameters.parameters[self.n_spatial:]
 
     def __repr__(self):
         fmt = '{}(spatial_model={!r}, spectral_model={!r})'
@@ -66,6 +91,10 @@ class SkyModel(object):
         val = val_spatial * val_spectral
 
         return val.to('cm-2 s-1 TeV-1 deg-2')
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
 
 
 class SkyModelMapEvaluator(object):
