@@ -23,8 +23,8 @@ def get_irfs():
 
 def get_sky_model():
     spatial_model = SkyGaussian2D(
-        lon_mean='0.2 deg',
-        lat_mean='0.1 deg',
+        lon_0='0.2 deg',
+        lat_0='0.1 deg',
         sigma='0.2 deg',
     )
     spectral_model = PowerLaw(

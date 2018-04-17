@@ -27,7 +27,7 @@ def exposure(geom):
 @pytest.fixture(scope='session')
 def sky_model():
     spatial_model = SkyGaussian2D(
-        lon_mean='3 deg', lat_mean='4 deg', sigma='3 deg',
+        lon_0='3 deg', lat_0='4 deg', sigma='3 deg',
     )
     spectral_model = PowerLaw(
         index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV',
