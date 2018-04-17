@@ -5,8 +5,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import Angle
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, mpl_savefig_check
 from ...image import SkyImage
 from ..profile import compute_binning, ImageProfile, ImageProfileEstimator

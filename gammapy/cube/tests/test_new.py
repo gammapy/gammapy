@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis

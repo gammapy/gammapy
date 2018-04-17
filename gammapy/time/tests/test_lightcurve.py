@@ -7,11 +7,10 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
 import astropy.units as u
 from astropy.table import Table, Column
-from astropy.tests.helper import assert_quantity_allclose
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check, assert_time_allclose
+from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
+from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import EnergyBounds
-from ...utils.time import time_ref_to_dict, time_relative_to_ref
 from ...data import Target, DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw

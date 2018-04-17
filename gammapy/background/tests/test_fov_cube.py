@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, assert_quantity_allclose
 from ...datasets import make_test_bg_cube_model
 from ...data import DataStore
 from ..fov_cube import FOVCube
