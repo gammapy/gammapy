@@ -1,14 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from . import SkyModelMapEvaluator
+from .models import SkyModelMapEvaluator
 from ..stats import cash
 from ..utils.fitting import fit_minuit
 
+__all__ = [
+    'SkyModelMapFit',
+]
 
-class CubeFit(object):
-    """Perform 3D likelihood fit
+
+class SkyModelMapFit(object):
+    """Perform sky model likelihood fit on maps.
 
     This is the first go at such a class. It's geared to the
     `~gammapy.spectrum.SpectrumFit` class which does the 1D spectrum fit.
@@ -22,12 +25,13 @@ class CubeFit(object):
     model : `~gammapy.cube.SkyModel`
         Fit model
     """
+
     def __init__(self, model, counts, exposure):
         self.model = model
         self.counts = counts
         self.exposure = exposure
         self._init_evaluator()
-        
+
         self._npred = None
         self._stat = None
         self._minuit = None
@@ -51,7 +55,7 @@ class CubeFit(object):
         """Initialize SkyModelEvaluator"""
         self.evaluator = SkyModelMapEvaluator(self.model,
                                               self.exposure)
-        
+
     def compute_npred(self):
         """Compute predicted counts"""
         self._npred = self.evaluator.compute_npred()

@@ -1,13 +1,8 @@
-import numpy as np
-import yaml
 from astropy import log
-
 from gammapy.image.models import SkyGaussian2D
 from gammapy.spectrum.models import PowerLaw
 from gammapy.maps import WcsNDMap
-from gammapy.cube import SkyModel, SkyModelMapEvaluator, CubeFit
-from gammapy.stats import cash
-from gammapy.utils.fitting import fit_minuit
+from gammapy.cube import SkyModel, SkyModelMapFit
 from example_3d_simulate import get_sky_model
 
 
@@ -15,6 +10,7 @@ def load_cubes():
     npred_cube = WcsNDMap.read('npred.fits')
     exposure_cube = WcsNDMap.read('exposure.fits')
     return dict(counts=npred_cube, exposure=exposure_cube)
+
 
 def get_fit_model():
     spatial_model = SkyGaussian2D(
@@ -34,11 +30,11 @@ def get_fit_model():
 
     model.parameters.set_parameter_errors(
         {'lon_0': '0.1 deg',
-        'lat_0': '0.1 deg',
-        'sigma': '0.1 deg',
+         'lat_0': '0.1 deg',
+         'sigma': '0.1 deg',
          'index': '0.1',
          'amplitude': '1e-12 cm-2 s-1 TeV-1'
-        })
+         })
 
     model.parameters['sigma'].parmin = 0
 
@@ -55,14 +51,14 @@ def main():
     model = get_fit_model()
     log.info('Loaded model: {}'.format(model))
 
-    fit = CubeFit(model=model.copy(), **cubes)
+    fit = SkyModelMapFit(model=model.copy(), **cubes)
     log.info('Created analysis: {}'.format(fit))
 
     fit.fit()
     log.info('Starting values\n{}'.format(model.parameters))
     log.info('Best fit values\n{}'.format(fit.model.parameters))
     log.info('True values\n{}'.format(get_sky_model().parameters))
-    
+
 
 if __name__ == '__main__':
     main()
