@@ -31,3 +31,25 @@ def test_iminuit():
     assert_allclose(minuit.values['x'], 2, rtol=1e-2)
     assert_allclose(minuit.values['y'], 3, rtol=1e-2)
     assert_allclose(minuit.values['z'], 4, rtol=1e-2)
+
+    # Test freeze
+    pars_in['x'].frozen = True
+    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    assert minuit.list_of_fixed_param() == ['x']
+
+    # Test limits
+    pars_in['y'].parmin = 4
+    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    states = minuit.get_param_states()
+    assert not states[0]['has_limits']
+    assert not states[2]['has_limits']
+
+    assert states[1]['has_limits']
+    assert states[1]['lower_limit'] == 4
+    assert states[1]['upper_limit'] == 0
+
+    # Test stepsize via covariance matrix
+    pars_in.set_parameter_errors({'x': '0.2', 'y': '0.1'})
+    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+
+    assert minuit.migrad_ok()

@@ -330,7 +330,7 @@ class ParameterList(object):
         values = []
         for par in self.parameters:
             quantity = errors.get(par.name, 0 * u.Unit(par.unit))
-            values.append(quantity.to(par.unit).value)
+            values.append(u.Quantity(quantity, par.unit).value)
         self.covariance = np.diag(values) ** 2
 
     # TODO: this is a temporary solution until we have a better way
