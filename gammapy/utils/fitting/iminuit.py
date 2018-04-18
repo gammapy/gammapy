@@ -80,4 +80,10 @@ def make_minuit_kwargs(parameters):
         limits = np.where(np.isnan(limits), None, limits)
         kwargs['limit_{}'.format(par.name)] = limits
 
+        if parameters.covariance is not None:
+            err = parameters.error(par.name)
+            if err != '0':
+                kwargs['error_{}'.format(par.name)] = err
+
+
     return kwargs

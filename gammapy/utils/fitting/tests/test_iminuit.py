@@ -47,3 +47,9 @@ def test_iminuit():
     assert states[1]['has_limits']
     assert states[1]['lower_limit'] == 4
     assert states[1]['upper_limit'] == 0
+
+    # Test stepsize via covariance matrix
+    pars_in.set_parameter_errors({'x': '0.2', 'y': '0.1'})
+    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+
+    assert minuit.migrad_ok()

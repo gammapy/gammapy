@@ -15,7 +15,9 @@ __all__ = [
 class SkyModel(object):
     """Sky model component.
 
-    This model represents a factorised sky model.
+    This model represents a factorised sky model. It has a
+    `~gammapy.utils.modeling.ParameterList` combinining the spatial and spectral
+    parameters
 
     TODO: add possibility to have a temporal model component also.
 
@@ -28,41 +30,44 @@ class SkyModel(object):
     """
 
     def __init__(self, spatial_model, spectral_model):
-        self.spatial_model = spatial_model
-        self.spectral_model = spectral_model
+        self._spatial_model = spatial_model
+        self._spectral_model = spectral_model
+        self._init_parameters()
+
+    def _init_parameters(self):
+        """Create flat list of parameters"""
+        parameters = self._spatial_model.parameters.copy()
+        parameters.parameters += self._spectral_model.parameters.parameters
+        self._parameters = parameters
 
     @property
-    def n_spatial(self):
-        """Number of spatial parameters"""
-        return len(self.spatial_model.parameters.parameters)
+    def spatial_pars(self):
+        """List of spatial parameter names"""
+        return self._spatial_model.parameters.names
 
     @property
-    def n_spectral(self):
-        """Number of spectral parameters"""
-        return len(self.spectral_model.parameters.parameters)
+    def spectral_pars(self):
+        """List of spectral parameter names"""
+        return self._spectral_model.parameters.names
 
-    # TODO: Think about how to deal with covariance matrix
     @property
     def parameters(self):
-        val = self.spatial_model.parameters.parameters + self.spectral_model.parameters.parameters
-        return ParameterList(val)
+        """`~gammapy.utils.modeling.ParameterList`"""
+        return self._parameters
 
     @parameters.setter
     def parameters(self, parameters):
-        """Update parameters
-        """
-        self.spatial_model.parameters.parameters = parameters.parameters[:self.n_spatial]
-        self.spectral_model.parameters.parameters = parameters.parameters[self.n_spatial:]
+        self._parameters = parameters
 
     def __repr__(self):
         fmt = '{}(spatial_model={!r}, spectral_model={!r})'
         return fmt.format(self.__class__.__name__,
-                          self.spatial_model, self.spectral_model)
+                          self._spatial_model, self._spectral_model)
 
     def __str__(self):
         ss = '{}\n\n'.format(self.__class__.__name__)
-        ss += 'spatial_model = {}\n\n'.format(self.spatial_model)
-        ss += 'spectral_model = {}\n'.format(self.spectral_model)
+        ss += 'spatial_model = {}\n\n'.format(self._spatial_model)
+        ss += 'spectral_model = {}\n'.format(self._spectral_model)
         return ss
 
     def evaluate(self, lon, lat, energy):
@@ -83,9 +88,16 @@ class SkyModel(object):
         value : `~astropy.units.Quantity`
             Model value at the given point.
         """
-        val_spatial = self.spatial_model(lon, lat)
+        spatial_kwargs = dict()
+        spectral_kwargs = dict()
+        for par in self.parameters.parameters:
+            if par.name in self.spatial_pars:
+                spatial_kwargs[par.name] = par.quantity
+            else:
+                spectral_kwargs[par.name] = par.quantity
 
-        val_spectral = self.spectral_model(energy)
+        val_spatial = self._spatial_model.evaluate(lon, lat, **spatial_kwargs)
+        val_spectral = self._spectral_model.evaluate(energy, **spectral_kwargs)
         val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
 
         val = val_spatial * val_spectral

@@ -24,13 +24,26 @@ def get_fit_model():
     )
     spectral_model = PowerLaw(
         index=2,
-        amplitude='1e-10 cm-2 s-1 TeV-1',
+        amplitude='1e-11 cm-2 s-1 TeV-1',
         reference='1 TeV',
     )
-    return SkyModel(
+    model = SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
     )
+
+    model.parameters.set_parameter_errors(
+        {'lon_0': '0.1 deg',
+        'lat_0': '0.1 deg',
+        'sigma': '0.1 deg',
+         'index': '0.1',
+         'amplitude': '1e-12 cm-2 s-1 TeV-1'
+        })
+
+    model.parameters['sigma'].parmin = 0
+
+    return model
+
 
 def main():
     log.setLevel('INFO')
@@ -41,10 +54,6 @@ def main():
 
     model = get_fit_model()
     log.info('Loaded model: {}'.format(model))
-
-    # NOTE: Without this the fitter set the amplitude to 0
-    # This result in npred = 0 and thus cash = 0 everywhere
-    model.parameters['amplitude'].parmin = 1e-12
 
     fit = CubeFit(model=model.copy(), **cubes)
     log.info('Created analysis: {}'.format(fit))
@@ -110,14 +119,12 @@ class CubeFit(object):
         )
 
     def total_stat(self, parameters):
-        log.debug('\n-----------------\n\n')
-        log.debug(parameters)
         self.model.parameters = parameters
         self.compute_npred()
         self.compute_stat()
         total_stat = np.sum(self.stat, dtype=np.float64)
-        #if(total_stat == 0):
-        #    import IPython; IPython.embed()
+        log.debug('\n-----------------\n\n')
+        log.debug(parameters)
         log.debug('STAT: {}'.format(total_stat))
         return total_stat
 
