@@ -14,8 +14,6 @@ from example_3d_simulate import get_sky_model
 def load_cubes():
     npred_cube = WcsNDMap.read('npred.fits')
     exposure_cube = WcsNDMap.read('exposure.fits')
-    i_nan = np.where(np.isnan(exposure_cube.data))
-    exposure_cube.data[i_nan] = 0
     return dict(counts=npred_cube, exposure=exposure_cube)
 
 def get_fit_model():
@@ -48,11 +46,11 @@ def main():
     # This result in npred = 0 and thus cash = 0 everywhere
     model.parameters['amplitude'].parmin = 1e-12
 
-    fit = CubeFit(cubes=cubes, model=model.copy())
+    fit = CubeFit(model=model.copy(), **cubes)
     log.info('Created analysis: {}'.format(fit))
 
     fit.fit()
-    log.info('Starting values\n{}'.format(get_fit_model().parameters))
+    log.info('Starting values\n{}'.format(model.parameters))
     log.info('Best fit values\n{}'.format(fit.model.parameters))
     log.info('True values\n{}'.format(get_sky_model().parameters))
     
@@ -60,35 +58,54 @@ def main():
 class CubeFit(object):
     """Perform 3D likelihood fit
 
-    This is my first go at such a class. It's geared to the SpectrumFit class
-    which does the 1D spectrum fit.
+    This is my first go at such a class. It's geared to the
+    `~gammapy.spectrum.SpectrumFit` class which does the 1D spectrum fit.
 
     Parameters
     ----------
-    cubes : dict
-        Dict containting tow WcsNDMaps: 'counts' and 'exposure'
+    counts : `~gammapy.maps.WcsNDMap`
+        Counts cube
+    exposure : `~gammapy.maps.WcsNDMap`
+        Exposure cube
     model : `~gammapy.cube.SkyModel`
         Fit model
     """
-    def __init__(self, cubes, model):
-        self.cubes = cubes
+    def __init__(self, model, counts, exposure):
         self.model = model
+        self.counts = counts
+        self.exposure = exposure
         self._init_evaluator()
         
-        self.npred = None
-        self.stat = None
+        self._npred = None
+        self._stat = None
+        self._minuit = None
+
+    @property
+    def npred(self):
+        """Predicted counts cube"""
+        return self._npred
+
+    @property
+    def stat(self):
+        """Fit statistic per bin"""
+        return self._stat
+
+    @property
+    def minuit(self):
+        """`~iminuit.Minuit` object"""
+        return self._npred
 
     def _init_evaluator(self):
         """Initialize SkyModelEvaluator"""
         self.evaluator = SkyModelMapEvaluator(self.model,
-                                              self.cubes['exposure'])
+                                              self.exposure)
         
     def compute_npred(self):
-        self.npred = self.evaluator.compute_npred()
+        self._npred = self.evaluator.compute_npred()
 
     def compute_stat(self):
-        self.stat = cash(
-            n_on=self.cubes['counts'].data,
+        self._stat = cash(
+            n_on=self.counts.data,
             mu_on=self.npred
         )
 
@@ -108,7 +125,7 @@ class CubeFit(object):
         """Run the fit"""
         parameters, minuit = fit_minuit(parameters=self.model.parameters,
                                         function=self.total_stat)
-        log.info(minuit.get_param_states())
+        self._minuit = minuit
 
     
 
