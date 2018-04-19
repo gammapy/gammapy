@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.io import fits
-from ..utils.fits import fits_table_to_table
+from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
@@ -129,7 +129,7 @@ class BgRateTable(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
         fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
+        table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod
@@ -212,7 +212,7 @@ class Psf68Table(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='POINT SPREAD FUNCTION'):
         fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
+        table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod
@@ -295,7 +295,7 @@ class SensitivityTable(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='SENSITIVITY'):
         fits_table = hdulist[hdu]
-        table = fits_table_to_table(fits_table)
+        table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod

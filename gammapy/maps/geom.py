@@ -355,6 +355,14 @@ class MapAxis(object):
         self._node_type = node_type
         self._unit = u.Unit('' if unit is None else unit)
 
+        # Set axis type from its unit
+        if self._unit.is_equivalent("eV"):
+            self._type = 'energy'
+        elif self._unit.is_equivalent("s"):
+            self._type = 'time'
+        else:
+            self._type = 'any'
+
         # Set pixel coordinate of first node
         if node_type == 'edge':
             self._pix_offset = -0.5
@@ -416,6 +424,11 @@ class MapAxis(object):
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
+
+    @property
+    def type(self):
+        """Return coordinate axis type."""
+        return self._type
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
@@ -1281,6 +1294,11 @@ class MapGeom(object):
             Upsampled geometry.
 
         """
+        pass
+
+    @abc.abstractmethod
+    def solid_angle(self):
+        """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
         pass
 
     def _fill_header_from_axes(self, header):

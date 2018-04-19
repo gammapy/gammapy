@@ -327,23 +327,35 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
 def add_pwn_parameters(table):
     """Add PWN parameters to the table.
     """
-    # Read relevant columns
-    age = table['age'].quantity
-    E_SN = table['E_SN'].quantity
-    n_ISM = table['n_ISM'].quantity
-    P0_birth = table['P0_birth'].quantity
-    logB = table['logB']
+    # Some of the computations (specifically `pwn.radius`) aren't vectorised
+    # across all parameters; so here we loop over source parameters explicitly
 
-    # Compute properties
-    pulsar = Pulsar(P0_birth, logB)
-    snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
-    pwn = PWN(pulsar, snr)
-    r_out_pwn = pwn.radius(age)
-    L_PWN = pwn.luminosity_tev(age)
+    results = []
+
+    for idx in range(len(table)):
+        age = table['age'].quantity[idx]
+        E_SN = table['E_SN'].quantity[idx]
+        n_ISM = table['n_ISM'].quantity[idx]
+        P0_birth = table['P0_birth'].quantity[idx]
+        logB = table['logB'][idx]
+
+        # Compute properties
+        pulsar = Pulsar(P0_birth, logB)
+        snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
+        pwn = PWN(pulsar, snr)
+        r_out_pwn = pwn.radius(age).to('pc').value
+        L_PWN = pwn.luminosity_tev(age).to('erg').value
+        results.append(dict(r_out_pwn=r_out_pwn, L_PWN=L_PWN))
 
     # Add columns to table
-    table['r_out_PWN'] = Column(r_out_pwn, unit='pc', description='PWN outer radius')
-    table['L_PWN'] = Column(L_PWN, unit='erg', description='PWN luminosity above 1 TeV')
+    table['r_out_PWN'] = Column(
+        [_['r_out_pwn'] for _ in results],
+        unit='pc', description='PWN outer radius',
+    )
+    table['L_PWN'] = Column(
+        [_['L_PWN'] for _ in results],
+        unit='erg', description='PWN luminosity above 1 TeV',
+    )
     return table
 
 

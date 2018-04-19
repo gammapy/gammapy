@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from astropy.units import Quantity
 from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -14,7 +15,6 @@ from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 __all__ = [
     'WcsNDMap',
 ]
-
 
 class WcsNDMap(WcsMap):
     """Representation of a N+2D map using WCS with two spatial dimensions
@@ -34,26 +34,31 @@ class WcsNDMap(WcsMap):
         Data type, default is float32
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : str or `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
         # TODO: Figure out how to mask pixels for integer data types
 
+        # Shape in WCS or FITS order is `shape`, in Numpy axis order is `shape_np`
         shape = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])] +
                       [ax.nbin for ax in geom.axes])
+        shape_np = shape[::-1]
+
         if data is None:
-            data = self._init_data(geom, shape, dtype)
-        elif data.shape != shape[::-1]:
+            data = self._make_default_data(geom, shape_np, dtype)
+        elif data.shape != shape_np:
             raise ValueError('Wrong shape for input data array. Expected {} '
-                             'but got {}'.format(shape, data.shape))
+                             'but got {}'.format(shape_np, data.shape))
 
-        super(WcsNDMap, self).__init__(geom, data, meta)
+        super(WcsNDMap, self).__init__(geom, data, meta, unit)
 
-    def _init_data(self, geom, shape, dtype):
+    @staticmethod
+    def _make_default_data(geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
         coords = []
         if not geom.is_regular:
-
             for idx in np.ndindex(geom.shape):
                 pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
                        np.array([0.0, float(geom.npix[1][idx] - 1)]))
@@ -61,24 +66,22 @@ class WcsNDMap(WcsMap):
                 coords += geom.pix_to_coord(pix)
 
         else:
-
             pix = (np.array([0.0, float(geom.npix[0] - 1)]),
                    np.array([0.0, float(geom.npix[1] - 1)]))
             pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
             coords += geom.pix_to_coord(pix)
 
         if np.all(np.isfinite(np.vstack(coords))):
-
             if geom.is_regular:
-                data = np.zeros(shape, dtype=dtype).T
+                data = np.zeros(shape_np, dtype=dtype)
             else:
-                data = np.nan * np.ones(shape, dtype=dtype).T
+                data = np.full(shape_np, np.nan, dtype=dtype)
                 for idx in np.ndindex(geom.shape):
                     data[idx,
                          slice(geom.npix[0][idx]),
                          slice(geom.npix[1][idx])] = 0.0
         else:
-            data = np.full(shape, np.nan, dtype=dtype).T
+            data = np.full(shape_np, np.nan, dtype=dtype)
             idx = geom.get_idx()
             m = np.all(np.stack([t != -1 for t in idx]), axis=0)
             data[m] = 0.0
@@ -101,7 +104,10 @@ class WcsNDMap(WcsMap):
         shape_wcs = tuple([np.max(geom.npix[0]),
                            np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
-        map_out = cls(geom, meta=meta)
+
+        unit = hdu.header.get('UNIT', '')
+
+        map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):
@@ -123,7 +129,7 @@ class WcsNDMap(WcsMap):
 
     def get_by_idx(self, idx):
         idx = pix_tuple_to_idx(idx)
-        return self._data.T[idx]
+        return self.data.T[idx]
 
     def interp_by_coord(self, coords, interp=None):
 
@@ -151,9 +157,10 @@ class WcsNDMap(WcsMap):
     def _interp_by_pix_linear_grid(self, pix, order=1):
         # TODO: Cache interpolator
         method_lookup = {0: 'nearest', 1: 'linear'}
-        method = method_lookup.get(order, None)
-        if method is None:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
+        try:
+            method = method_lookup[order]
+        except KeyError:
+            raise ValueError('Invalid interpolation order: {}'.format(order))
 
         from scipy.interpolate import RegularGridInterpolator
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -233,9 +240,12 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
+
         if weights is not None:
-            weights = np.asarray(weights, dtype=self.data.dtype)
+            if isinstance(weights, Quantity):
+                weights = weights.to(self.unit).value
             weights = weights[msk]
+
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
         weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
@@ -272,7 +282,7 @@ class WcsNDMap(WcsMap):
             vals = self.get_by_idx(self.geom.get_idx())
             map_out.fill_by_coord(self.geom.get_coord()[:2], vals)
         else:
-            axis = tuple(np.arange(self.data.ndim - 2).tolist())
+            axis = tuple(range(self.data.ndim - 2))
             map_out.data = np.sum(self.data, axis=axis)
 
         return map_out

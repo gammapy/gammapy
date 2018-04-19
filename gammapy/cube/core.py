@@ -11,7 +11,7 @@ from astropy.wcs import WCS
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds, Energy
-from ..utils.fits import SmartHDUList, fits_header_to_meta_dict, table_to_fits_table
+from ..utils.fits import SmartHDUList, fits_header_to_meta_dict
 from ..image.core import SkyImage, MapBase
 from ..spectrum import LogEnergyAxis
 from ..spectrum.utils import _trapz_loglog
@@ -383,12 +383,8 @@ class SkyCube(MapBase):
 
         Parameters
         ----------
-        x : `~numpy.ndarry`
-            x coordinate array
-        y : `~numpy.ndarry`
-            y coordinate array
-        z : `~numpy.ndarry`
-            z coordinate array
+        x, y, z : `~numpy.ndarray`
+            Coordinate arrays
 
         Returns
         -------
@@ -760,23 +756,18 @@ class SkyCube(MapBase):
 
         if format == 'fermi-counts':
             energies = self.energies(mode='edges')
-            # for BinTableHDU's the data must be added via a Table object
             energy_table = Table()
             energy_table['E_MIN'] = energies[:-1]
             energy_table['E_MAX'] = energies[1:]
-            energy_table.meta['name'] = 'EBOUNDS'
-            energy_hdu = table_to_fits_table(energy_table)
+            energy_hdu = fits.BinTableHDU(energy_table, name='EBOUNDS')
         elif format in ['fermi-exposure', 'fermi-background']:
-            # for BinTableHDU's the data must be added via a Table object
             energy_table = Table()
             energy_table['Energy'] = self.energies()
-            energy_table.meta['name'] = 'ENERGIES'
-            energy_hdu = table_to_fits_table(energy_table)
+            energy_hdu = fits.BinTableHDU(energy_table, name='ENERGIES')
         else:
             raise ValueError('Not a valid cube fits format')
 
-        hdu_list = fits.HDUList([image_hdu, energy_hdu])
-        return hdu_list
+        return fits.HDUList([image_hdu, energy_hdu])
 
     def to_images(self):
         """Convert to `~gammapy.cube.SkyCubeImages`."""

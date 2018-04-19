@@ -41,9 +41,7 @@ For now this one simulated HESS observation can be used for testing in Gammapy.
 Using Gammapy
 +++++++++++++
 
-In order to test some of the tools from Gammapy, such as the
-background generation tools
-(:ref:`background_make_background_models`), real data
+In order to test some of the tools from Gammapy, real data
 from existing experiments such as H.E.S.S. can be used. Since the
 data of current experiments is not public, rudimentary tools to
 prepare a dummy dataset have been placed in Gammapy:

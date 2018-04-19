@@ -2,9 +2,9 @@
 
 .. _utils:
 
-*************************************************
-Utility functions and classes (``gammapy.utils``)
-*************************************************
+***************************************
+Utility functions / classes (``utils``)
+***************************************
 
 Introduction
 ============
@@ -220,5 +220,9 @@ Reference/API
     :include-all-objects:
 
 .. automodapi:: gammapy.utils.modeling
+    :no-inheritance-diagram:
+    :include-all-objects:
+
+.. automodapi:: gammapy.utils.fitting
     :no-inheritance-diagram:
     :include-all-objects:

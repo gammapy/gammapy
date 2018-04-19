@@ -2,9 +2,9 @@
 
 .. _spectrum:
 
-*****************************************************
-Spectrum estimation and modeling (`gammapy.spectrum`)
-*****************************************************
+***********************************
+1D spectrum analysis (``spectrum``)
+***********************************
 
 .. currentmodule:: gammapy.spectrum
 
@@ -12,7 +12,7 @@ Introduction
 ============
 
 `gammapy.spectrum` holds functions and classes related to 1D region based
-spectral analysis. This includes also simulation tools. 
+spectral analysis. This includes also simulation tools.
 
 The basic of 1D spectral analysis are explained in `this
 <https://github.com/gammapy/PyGamma15/tree/gh-pages/talks/analysis-classical>`__

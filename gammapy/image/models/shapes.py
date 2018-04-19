@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
-from astropy.modeling.models import Gaussian2D
+from astropy.modeling.models import Gaussian2D as AstropyGaussian2D
 from astropy.utils import lazyproperty
 from astropy.coordinates import SkyCoord
 from ..core import SkyImage
@@ -14,13 +14,20 @@ from ..core import SkyImage
 __all__ = [
     'morph_types',
     'Delta2D',
-    # TODO: we need our own model, so that we can add in stuff like XML I/O
-    # Copy over the Astropy version and use that throughout Gammapy
-    # 'Gaussian2D',
+    'Gaussian2D',
     'Shell2D',
     'Sphere2D',
     'Template2D',
 ]
+
+
+class Gaussian2D(AstropyGaussian2D):
+    """Two-dimensional Gaussian model.
+
+    TODO: implement properly. At the moment this is just an empty subclass of the Astropy model.
+    """
+    # TODO: we need our own model, so that we can add in stuff like XML I/O
+    # Copy over the Astropy version and use that throughout Gammapy
 
 
 class Delta2D(Fittable2DModel):

@@ -1,17 +1,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-import pytest
 import numpy as np
 import astropy.units as u
-from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
-from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
-from ...utils.fits import table_to_fits_table
-from ...irf import EnergyDispersion, EnergyDispersion2D
-from ..background import Background3D
-from ...utils.fits import table_to_fits_table
 from astropy.io import fits
-
+from numpy.testing import assert_equal
+from ..effective_area import EffectiveAreaTable2D
+from ..energy_dispersion import EnergyDispersion2D
+from ..background import Background3D
 
 
 class TestIRFWrite:
@@ -91,14 +85,18 @@ class TestIRFWrite:
 
     def test_writeread(self, tmpdir):
         filename = str(tmpdir / 'testirf.fits')
-        prim_hdu = fits.PrimaryHDU()
-        hdu_aeff = self.aeff.to_fits()
-        hdu_edisp = self.edisp.to_fits()
-        hdu_bkg = self.bkg.to_fits()
-        fits.HDUList([prim_hdu, hdu_aeff, hdu_edisp, hdu_bkg]).writeto(filename)
+        fits.HDUList([
+            fits.PrimaryHDU(),
+            self.aeff.to_fits(),
+            self.edisp.to_fits(),
+            self.bkg.to_fits(),
+        ]).writeto(filename)
+
         read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu='EFFECTIVE AREA')
-        read_edisp = EnergyDispersion2D.read(filename=filename, hdu='ENERGY DISPERSION')
-        read_bkg = Background3D.read(filename=filename, hdu='BACKGROUND')
         assert_equal(read_aeff.data.data, self.aeff_data)
+
+        read_edisp = EnergyDispersion2D.read(filename=filename, hdu='ENERGY DISPERSION')
         assert_equal(read_edisp.data.data, self.edisp_data)
+
+        read_bkg = Background3D.read(filename=filename, hdu='BACKGROUND')
         assert_equal(read_bkg.data.data, self.bkg_data)

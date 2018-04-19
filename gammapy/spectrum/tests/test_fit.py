@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
@@ -40,6 +40,8 @@ class TestFit:
                                      energy_hi=binning[1:],
                                      data=source_counts,
                                      backscal=1)
+        # Currently it's necessary to specify a lifetime
+        self.src.livetime = 1 * u.s
 
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
 
@@ -71,9 +73,9 @@ class TestFit:
         self.source_model.parameters['index'].value = 1.12
         fit.fit()
         # These values are check with sherpa fits, do not change
-        assert_allclose(fit.model.parameters['index'].value,
+        assert_allclose(fit.result[0].model.parameters['index'].value,
                         1.9955563477414806)
-        assert_allclose(fit.model.parameters['amplitude'].value,
+        assert_allclose(fit.result[0].model.parameters['amplitude'].value,
                         100250.33102108649)
 
     def test_cash_with_bkg(self):
@@ -93,7 +95,7 @@ class TestFit:
         fit.fit()
         assert_allclose(fit.result[0].model.parameters['index'].value,
                         1.996272386763962)
-        assert_allclose(fit.background_model.parameters['index'].value,
+        assert_allclose(fit.result[0].background_model.parameters['index'].value,
                         2.9926225268193418)
 
     def test_wstat(self):
@@ -107,9 +109,9 @@ class TestFit:
         fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
                           stat='wstat', forward_folded=False)
         fit.fit()
-        assert_allclose(fit.model.parameters['index'].value,
+        assert_allclose(fit.result[0].model.parameters['index'].value,
                         1.997344538577775)
-        assert_allclose(fit.model.parameters['amplitude'].value,
+        assert_allclose(fit.result[0].model.parameters['amplitude'].value,
                         100244.89943081759)
         assert_allclose(fit.result[0].statval, 30.022315611837342)
 
@@ -169,6 +171,7 @@ class TestFit:
 
 
 @requires_dependency('sherpa')
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
@@ -201,6 +204,22 @@ class TestSpectralFit:
                                  2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'))
         assert_allclose(result.npred_src[60], 0.563822994375907)
 
+        # TODO: at the moment to_table only works if covariance matrix is set
+        with pytest.raises(ValueError):
+            self.fit.result[0].to_table()
+
+    def test_basic_results_iminuit(self):
+        self.fit.method = 'iminuit'
+        self.fit.fit()
+        result = self.fit.result[0]
+        assert_allclose(result.statval, 32.838716584005645, rtol=1e-4)
+        pars = result.model.parameters
+        assert_quantity_allclose(pars['index'].value, 2.2542312883476465, rtol=1e-2)
+        assert_quantity_allclose(pars['amplitude'].quantity,
+                                 2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'),
+                                 rtol=1e-2)
+        assert_allclose(result.npred_src[60], 0.5642179482961884)
+
         with pytest.raises(ValueError):
             self.fit.result[0].to_table()
 
@@ -221,16 +240,6 @@ class TestSpectralFit:
         # amplitude should come out roughly * 0.5
         assert_quantity_allclose(pars['amplitude'].quantity,
                                  1.0243449507421302e-7 * u.Unit('m-2 s-1 TeV-1'))
-
-    def test_areascal(self):
-        areascal = np.ones(self.fit.obs_list[0].e_reco.nbins)
-        areascal *= 0.5
-        self.fit.obs_list[0].on_vector.areascal = areascal
-        self.fit.fit()
-        pars = self.fit.result[0].model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.2542312883476465)
-        assert_quantity_allclose(pars['amplitude'].quantity,
-                                 4.0165729155447114e-7 * u.Unit('m-2 s-1 TeV-1'))
 
     def test_npred(self):
         self.fit.fit()
@@ -300,10 +309,10 @@ class TestSpectralFit:
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
-        actual = fit.model.parameters['index'].quantity
+        actual = fit.result[0].model.parameters['index'].quantity
         assert_quantity_allclose(actual, 2.212325780417152)
 
-        actual = fit.model.parameters['amplitude'].quantity
+        actual = fit.result[0].model.parameters['amplitude'].quantity
         assert_quantity_allclose(actual, 2.3621921135787887e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_stacked_fit(self):
@@ -311,7 +320,7 @@ class TestSpectralFit:
         obs_list = SpectrumObservationList([stacked_obs])
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
-        pars = fit.model.parameters
+        pars = fit.result[0].model.parameters
         assert_quantity_allclose(pars['index'].value, 2.2132304579760893)
         assert_quantity_allclose(pars['amplitude'].quantity,
                                  2.3618290865168973e-11 * u.Unit('cm-2 s-1 TeV-1'))

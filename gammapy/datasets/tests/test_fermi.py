@@ -2,11 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
 from astropy import units as u
-from astropy.tests.helper import assert_quantity_allclose
-import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import (
     FermiLATDataset,
@@ -123,6 +121,7 @@ def test_load_lat_psf_performance():
     assert table_p7_95['energy'][0] == 31.6227766017
     assert table_p7_95['containment_angle'][0] == 38.3847234362
 
+
 @requires_data('fermi-lat')
 @requires_dependency('healpy')
 @requires_dependency('yaml')
@@ -137,7 +136,7 @@ class TestFermiLATDataset:
 
     def test_exposure(self):
         exposure = self.data_2fhl.exposure
-        assert_allclose(exposure.data.sum(), 6.072634932461568e+16)
+        assert_allclose(exposure.data.sum(), 6.072634932461568e+16, rtol=1e-5)
 
     def test_counts(self):
         counts = self.data_2fhl.counts

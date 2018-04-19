@@ -15,6 +15,8 @@ Here's some good resources with working examples:
 - https://github.com/sphinx-doc/sphinx/blob/master/sphinx/directives/other.py
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
+import io
 import os
 import re
 from shutil import copytree, rmtree
@@ -30,7 +32,6 @@ import nbformat
 from nbformat.v4 import new_markdown_cell
 from nbconvert.exporters import PythonExporter
 
-from .scripts import read_yaml
 from ..extern.pathlib import Path
 
 try:
@@ -127,13 +128,9 @@ def modif_nb_links(folder, url_docs, git_commit):
 <div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-Try online on Binder
-
-[![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})
-
- You can also contribute with your own notebooks in this
- [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
-
+Try online [![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})  
+You can also contribute with your own notebooks in this
+[GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).  
 **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |
 [{py_filename}](../_static/notebooks/{py_filename})
@@ -152,14 +149,20 @@ Try online on Binder
                 nb.metadata['nbsphinx'] = {'orphan': bool('true')}
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
-            with open(filepath) as f:
-                txt = f.read()
+
+            txt = Path(filepath).read_text(encoding="utf-8")
+
             if folder == 'notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\1rst\2', txt, flags=re.M | re.I)
-            if folder == '_static/notebooks':
-                txt = re.sub(url_docs + '(.*?)html(\)|#)', r'..\/..\1html\2', txt, flags=re.M | re.I)
-            with open(filepath, "w") as f:
-                f.write(txt)
+                repl = r'..\/\1rst\2'
+            elif folder == '_static/notebooks':
+                repl = r'..\/..\/\1html\2'
+
+            txt = re.sub(
+                pattern=url_docs + '(.*?)html(\)|#)',
+                repl=repl, string=txt, flags=re.M | re.I,
+            )
+
+            Path(filepath).write_text(txt, encoding="utf-8")
 
 
 def convert_nb_to_script(path):
@@ -201,8 +204,9 @@ def gammapy_sphinx_notebooks(setup_cfg):
     git_commit = setup_cfg['git_commit']
 
     # copy and build notebooks
-    gammapy_extra_notebooks_folder = os.environ['GAMMAPY_EXTRA'] + '/notebooks'
-    if os.path.isdir(gammapy_extra_notebooks_folder):
+    gammapy_extra_notebooks_folder = Path(os.environ['GAMMAPY_EXTRA']) / 'notebooks'
+
+    if gammapy_extra_notebooks_folder.is_dir():
 
         ignorefiles = lambda d, files: [
             f for f in files
@@ -210,15 +214,18 @@ def gammapy_sphinx_notebooks(setup_cfg):
         ]
         log.info('*** Converting notebooks to scripts')
 
+        path_nbs = Path('notebooks')
+        path_static_nbs = Path('_static') / 'notebooks'
+
         # remove existing notebooks
-        rmtree('_static/notebooks', ignore_errors=True)
+        rmtree(str(path_static_nbs), ignore_errors=True)
         rmtree('notebooks', ignore_errors=True)
 
         # copy notebooks
-        copytree(gammapy_extra_notebooks_folder, 'notebooks', ignore=ignorefiles)
-        copytree(gammapy_extra_notebooks_folder, '_static/notebooks', ignore=ignorefiles)
+        copytree(str(gammapy_extra_notebooks_folder), str(path_nbs), ignore=ignorefiles)
+        copytree(str(gammapy_extra_notebooks_folder), str(path_static_nbs), ignore=ignorefiles)
 
-        for path in Path('_static/notebooks').glob('*.ipynb'):
+        for path in path_static_nbs.glob('*.ipynb'):
             convert_nb_to_script(path)
 
         modif_nb_links('notebooks', url_docs, git_commit)

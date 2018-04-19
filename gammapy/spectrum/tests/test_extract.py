@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 from ...background.tests.test_reflected import bkg_estimator, obs_list
@@ -43,9 +43,9 @@ class TestSpectrumExtraction:
                                                   )),
         (dict(containment_correction=True), dict(n_on=172,
                                                  sigma=24.98,
-                                                 aeff=549861.8 * u.m ** 2,
+                                                 aeff=412731.8 * u.m ** 2,
                                                  edisp=0.2595896944765074,
-                                                 containment=0.8525390663792395,
+                                                 containment=0.7645777148101338,
                                                  ))
     ])
     def test_extract(self, pars, results, obs_list, bkg_estimate):
@@ -63,10 +63,11 @@ class TestSpectrumExtraction:
         assert_quantity_allclose(aeff_actual, results['aeff'], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results['edisp'], rtol=1e-3)
 
+        containment_actual = extraction.containment[60]
+
         # TODO: Introduce assert_stats_allclose
         n_on_actual = obs.total_stats.n_on
         sigma_actual = obs.total_stats.sigma
-        containment_actual = obs.on_vector.areascal[60]
 
         assert n_on_actual == results['n_on']
         assert_allclose(sigma_actual, results['sigma'], atol=1e-2)

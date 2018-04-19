@@ -27,22 +27,25 @@ class SpectrumSimulation(object):
         Livetime
     source_model : `~gammapy.spectrum.models.SpectralModel`
         Source model
-    aeff : `~gammapy.irf.EffectiveAreaTable`
+    aeff : `~gammapy.irf.EffectiveAreaTable`, optional
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy Dispersion
+    e_true : `~astropy.units.Quantity`, optional
+        Desired energy axis of the prediced counts vector if no IRFs are given
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model
     alpha : float, optional
         Exposure ratio between source and background
     """
 
-    def __init__(self, livetime, source_model, aeff, edisp=None,
-                 background_model=None, alpha=None):
+    def __init__(self, livetime, source_model, aeff=None, edisp=None,
+                 e_true=None, background_model=None, alpha=None):
         self.livetime = livetime
         self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
+        self.e_true = e_true
         self.background_model = background_model
         self.alpha = alpha
 
@@ -60,6 +63,7 @@ class SpectrumSimulation(object):
         predictor = CountsPredictor(livetime=self.livetime,
                                     aeff=self.aeff,
                                     edisp=self.edisp,
+                                    e_true=self.e_true,
                                     model=self.source_model)
         predictor.run()
         return predictor.npred
@@ -73,6 +77,7 @@ class SpectrumSimulation(object):
         predictor = CountsPredictor(livetime=self.livetime,
                                     aeff=self.aeff,
                                     edisp=self.edisp,
+                                    e_true=self.e_true,
                                     model=self.background_model)
         predictor.run()
         return predictor.npred
@@ -83,7 +88,10 @@ class SpectrumSimulation(object):
         if self.edisp is not None:
             temp = self.edisp.e_reco.bins
         else:
-            temp = self.aeff.energy.bins
+            if self.aeff is not None:
+                temp = self.aeff.energy.bins
+            else:
+                temp = self.e_true
         return EnergyBounds(temp)
 
     def run(self, seed):
@@ -175,7 +183,7 @@ class SpectrumSimulation(object):
         off_counts = rand.poisson(self.npred_background.data.data.value / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data.data += bkg_counts * u.ct
+        self.on_vector.data.data += bkg_counts 
 
         # Create off vector
         off_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,

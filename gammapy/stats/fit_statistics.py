@@ -52,7 +52,10 @@ def cash(n_on, mu_on):
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_on = np.asanyarray(mu_on, dtype=np.float64)
 
-    stat = 2 * (mu_on - n_on * np.log(mu_on))
+    # suppress zero division warnings, they are corrected below
+    with np.warnings.catch_warnings():
+        np.warnings.filterwarnings('ignore')
+        stat = 2 * (mu_on - n_on * np.log(mu_on))
     stat = np.where(mu_on > 0, stat, 0)
     return stat
 
@@ -158,12 +161,18 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     term1 = mu_sig + (1 + alpha) * mu_bkg
 
-    term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    # suppress zero division warnings, they are corrected below
+    with np.warnings.catch_warnings():
+        np.warnings.filterwarnings('ignore')
+        term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
     # Handle n_on == 0
     condition = (n_on == 0)
     term2 = np.where(condition, 0, term2_)
 
-    term3_ = - n_off * np.log(mu_bkg)
+    # suppress zero division warnings, they are corrected below
+    with np.warnings.catch_warnings():
+        np.warnings.filterwarnings('ignore')
+        term3_ = - n_off * np.log(mu_bkg)
     # Handle n_off == 0
     condition = (n_off == 0)
     term3 = np.where(condition, 0, term3_)
@@ -200,8 +209,12 @@ def get_wstat_gof_terms(n_on, n_off):
     see :ref:`wstat`.
     """
     term = np.zeros(len(n_on))
-    term1 = - n_on * (1 - np.log(n_on))
-    term2 = - n_off * (1 - np.log(n_off))
+
+    # suppress zero division warnings, they are corrected below
+    with np.warnings.catch_warnings():
+        np.warnings.filterwarnings('ignore')
+        term1 = - n_on * (1 - np.log(n_on))
+        term2 = - n_off * (1 - np.log(n_off))
 
     term += np.where(n_on == 0, 0, term1)
     term += np.where(n_off == 0, 0, term2)

@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import assert_quantity_allclose
 from ...datasets import FermiVelaRegion
-from .. import compute_npred_cube
+from ..utils import compute_npred_cube
 from ..core import SkyCube
 from .test_core import make_test_sky_cube
 

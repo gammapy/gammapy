@@ -9,8 +9,7 @@ from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
-from ..utils.fits import energy_axis_to_ebounds, fits_table_to_table
-from ..utils.fits import fits_table_to_table, table_to_fits_table
+from ..utils.fits import energy_axis_to_ebounds
 
 __all__ = [
     'EnergyDispersion',
@@ -217,12 +216,7 @@ class EnergyDispersion(object):
         """
         filename = make_path(filename)
         hdulist = fits.open(str(filename), **kwargs)
-        try:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-        except KeyError:
-            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
+        return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, **kwargs):
         """Convert RMF to FITS HDU list format.
@@ -687,9 +681,7 @@ class EnergyDispersion2D(object):
     @classmethod
     def from_hdulist(cls, hdulist, hdu='edisp_2d'):
         """Create from `~astropy.io.fits.HDUList`."""
-        hdu = hdulist[hdu]
-        table = fits_table_to_table(hdu)
-        return cls.from_table(table)
+        return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
     def read(cls, filename, hdu='edisp_2d'):
@@ -932,4 +924,4 @@ class EnergyDispersion2D(object):
 
     def to_fits(self, name='ENERGY DISPERSION'):
         """Convert to `~astropy.io.fits.BinTable`."""
-        return table_to_fits_table(self.to_table(), name)
+        return fits.BinTableHDU(self.to_table(), name=name)

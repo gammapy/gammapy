@@ -9,7 +9,6 @@ from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
-from ..utils.fits import table_to_fits_table
 from ..utils.scripts import make_path
 from ..irf import HESSMultiGaussPSF
 from . import EnergyDependentTablePSF
@@ -165,7 +164,7 @@ class EnergyDependentMultiGaussPSF(object):
             table[name_].unit = unit_
 
         # Create hdu and hdu list
-        hdu = table_to_fits_table(table)
+        hdu = fits.BinTableHDU(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
         hdu.header['HI_THRES'] = self.energy_thresh_hi.value
 

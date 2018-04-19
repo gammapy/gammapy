@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
-import pytest
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
 from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
@@ -13,7 +13,7 @@ from .. import CountsSpectrum, PHACountsSpectrum
 @requires_dependency('scipy')
 class TestCountsSpectrum:
     def setup(self):
-        self.counts = [0, 0, 2, 5, 17, 3] * u.ct
+        self.counts = [0, 0, 2, 5, 17, 3]
         self.bins = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
         self.spec = CountsSpectrum(data=self.counts, energy_lo=self.bins[:-1],
                                    energy_hi=self.bins[1:])
@@ -23,13 +23,13 @@ class TestCountsSpectrum:
         energy = [1, 2, 3] * u.TeV
         spec = CountsSpectrum(data=counts, energy_lo=energy[:-1],
                               energy_hi=energy[1:])
-        assert spec.data.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent('')
 
         counts = u.Quantity([2, 5])
         spec = CountsSpectrum(data=counts, energy_lo=energy[:-1],
                               energy_hi=energy[:-1])
 
-        assert spec.data.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent('')
 
     def test_wrong_init(self):
         bins = EnergyBounds.equal_log_spacing(1, 10, 7, 'TeV')
@@ -63,7 +63,7 @@ class TestCountsSpectrum:
             rebinned_spec = self.spec.rebin(4)
 
         actual = rebinned_spec.data.evaluate(energy=[2, 3, 5] * u.TeV)
-        desired = [0, 7, 20] * u.ct
+        desired = [0, 7, 20] 
         assert (actual == desired).all()
 
 
@@ -86,12 +86,12 @@ class TestPHACountsSpectrum:
         energy = [1, 2, 3] * u.TeV
         spec = PHACountsSpectrum(data=counts, energy_lo=energy[:-1],
                                  energy_hi=energy[1:])
-        assert spec.data.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent('')
 
         counts = u.Quantity([2, 5])
         spec = PHACountsSpectrum(data=counts, energy_lo=energy[:-1],
                                  energy_hi=energy[1:])
-        assert spec.data.data.unit.is_equivalent(u.ct)
+        assert spec.data.data.unit.is_equivalent('')
 
     def test_basic(self):
         assert 'PHACountsSpectrum' in str(self.spec)

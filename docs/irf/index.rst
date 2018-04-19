@@ -1,8 +1,8 @@
 .. _irf:
 
-****************************************************************
-Instrument response function (IRF) functionality (`gammapy.irf`)
-****************************************************************
+***************************************
+Instrument response functions (``irf``)
+***************************************
 
 .. currentmodule:: gammapy.irf
 

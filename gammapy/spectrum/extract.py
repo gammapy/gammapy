@@ -69,6 +69,12 @@ class SpectrumExtraction(object):
         self.use_recommended_erange = use_recommended_erange
         self.observations = SpectrumObservationList()
 
+        self.containment = None
+        self._on_vector = None
+        self._off_vector = None
+        self._aeff = None
+        self._edisp = None
+
     def run(self, outdir=None, use_sherpa=False):
         """Run all steps.
 
@@ -119,6 +125,8 @@ class SpectrumExtraction(object):
 
         if self.containment_correction:
             self.apply_containment_correction(obs, bkg)
+        else:
+            self.containment = np.ones(self._aeff.energy.nbins)
 
         spectrum_observation = SpectrumObservation(
             on_vector=self._on_vector,
@@ -149,20 +157,17 @@ class SpectrumExtraction(object):
             Background estimate
         """
         log.info('Update observation meta info')
-        # Copy over existing meta information
-        meta = OrderedDict(obs.obs_info)
+
         offset = obs.pointing_radec.separation(bkg.on_region.center)
         log.info('Offset : {}\n'.format(offset))
-        meta['OFFSET'] = offset.deg
-
-        # LIVETIME is called EXPOSURE in the OGIP standard
-        meta['EXPOSURE'] = meta.pop('LIVETIME')
 
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            meta=meta, )
+            offset=offset,
+            livetime = obs.observation_live_time_duration,
+            obs_id=obs.obs_info['OBS_ID'])
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
@@ -218,22 +223,20 @@ class SpectrumExtraction(object):
         else:
             psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
 
-        center_energies = self._on_vector.energy.nodes
-        areascal = []
+        center_energies = self._aeff.energy.nodes
+        containment = []
         for index, energy in enumerate(center_energies):
             try:
-                correction = psf.integral(energy,
-                                          0. * u.deg,
-                                          bkg.on_region.radius)
+                cont_ = psf.integral(energy, 0. * u.deg, bkg.on_region.radius)
             except:
                 msg = 'Containment correction failed for bin {}, energy {}.'
                 log.warning(msg.format(index, energy))
-                correction = 1
+                cont_ = 1
             finally:
-                areascal.append(correction)
+                containment.append(cont_)
 
-        self._on_vector.areascal = areascal
-        self._off_vector.areascal = areascal
+        self.containment = np.array(containment)
+        self._aeff.data.data *= self.containment
 
     def compute_energy_threshold(self, **kwargs):
         """Compute and set the safe energy threshold for all observations.

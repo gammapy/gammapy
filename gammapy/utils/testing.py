@@ -4,6 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 import os
 import pytest
+import numpy as np
+import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from numpy.testing import assert_allclose
@@ -13,6 +15,7 @@ from ..datasets import gammapy_extra
 __all__ = [
     'requires_dependency',
     'requires_data',
+    'assert_quantity_allclose',
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
     'assert_time_allclose',
@@ -75,12 +78,10 @@ def has_data(name):
         return gammapy_extra.is_available
     elif name == 'hess':
         return has_hess_test_data()
-    elif name == 'hgps':
-        return ('HGPS_DATA' in os.environ) and ('HGPS_ANALYSIS' in os.environ)
     elif name == 'gamma-cat':
-        return ('GAMMA_CAT' in os.environ)
+        return 'GAMMA_CAT' in os.environ
     elif name == 'fermi-lat':
-        return ('GAMMAPY_FERMI_LAT_DATA' in os.environ)
+        return 'GAMMAPY_FERMI_LAT_DATA' in os.environ
     else:
         raise ValueError('Invalid name: {}'.format(name))
 
@@ -187,3 +188,42 @@ def mpl_savefig_check():
     import matplotlib.pyplot as plt
     from io import BytesIO
     plt.savefig(BytesIO(), format='png')
+
+
+def assert_quantity_allclose(actual, desired, rtol=1.e-7, atol=None, **kwargs):
+    # TODO: change this later to explicitly check units are the same!
+    # assert actual.unit == desired.unit
+    args = _unquantify_allclose_arguments(actual, desired, rtol, atol)
+    assert_allclose(*args, **kwargs)
+
+
+def _unquantify_allclose_arguments(actual, desired, rtol, atol):
+    actual = u.Quantity(actual, subok=True, copy=False)
+
+    desired = u.Quantity(desired, subok=True, copy=False)
+    try:
+        desired = desired.to(actual.unit)
+    except u.UnitsError:
+        raise u.UnitsError("Units for 'desired' ({0}) and 'actual' ({1}) "
+                           "are not convertible"
+                           .format(desired.unit, actual.unit))
+
+    if atol is None:
+        # by default, we assume an absolute tolerance of 0
+        atol = u.Quantity(0)
+    else:
+        atol = u.Quantity(atol, subok=True, copy=False)
+        try:
+            atol = atol.to(actual.unit)
+        except u.UnitsError:
+            raise u.UnitsError("Units for 'atol' ({0}) and 'actual' ({1}) "
+                               "are not convertible"
+                               .format(atol.unit, actual.unit))
+
+    rtol = u.Quantity(rtol, subok=True, copy=False)
+    try:
+        rtol = rtol.to(u.dimensionless_unscaled)
+    except Exception:
+        raise u.UnitsError("`rtol` should be dimensionless")
+
+    return actual.value, desired.value, rtol.value, atol.value

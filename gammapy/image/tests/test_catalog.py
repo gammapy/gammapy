@@ -72,12 +72,13 @@ class TestCatalogImageEstimator(object):
         desired = selection.table['Flux1000'].sum()
         assert_allclose(actual, desired, rtol=1E-2)
 
-    @requires_data('hgps')
+    @requires_data('gammapy-extra')
     def test_flux_hgps(self):
         reference = SkyImage.empty(xref=18.0, yref=-0.6, nypix=81,
                                    nxpix=81, binsz=0.1)
 
-        catalog = SourceCatalogHGPS()
+        filename = '$GAMMAPY_EXTRA/datasets/catalogs/hgps_catalog_v1.fits.gz'
+        catalog = SourceCatalogHGPS(filename)
         estimator = CatalogImageEstimator(reference=reference,
                                           emin=1 * u.TeV,
                                           emax=1000 * u.TeV)

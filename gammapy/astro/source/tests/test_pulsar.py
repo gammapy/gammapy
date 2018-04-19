@@ -4,8 +4,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from astropy.tests.helper import assert_quantity_allclose
-from ....utils.testing import requires_dependency
+from ....utils.testing import requires_dependency, assert_quantity_allclose
 from ...source import Pulsar, SimplePulsar
 
 pulsar = Pulsar()

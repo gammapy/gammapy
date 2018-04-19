@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
@@ -10,7 +9,7 @@ import astropy.units as u
 from astropy.time import Time
 from ...data import DataStore, DataManager, ObservationList
 from ...utils.testing import data_manager, requires_data, requires_dependency
-from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
+from ...utils.testing import assert_quantity_allclose, assert_time_allclose, assert_skycoord_allclose
 from ...utils.energy import Energy
 from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds

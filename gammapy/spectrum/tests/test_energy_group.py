@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ..core import PHACountsSpectrum
 from ..observation import SpectrumObservation, SpectrumObservationList
@@ -184,7 +184,7 @@ class TestSpectrumEnergyGroupMaker:
             energy_lo=pha_ebounds[:-1],
             energy_hi=pha_ebounds[1:],
             data=np.zeros(len(pha_ebounds) - 1),
-            meta=dict(EXPOSURE=99)
+            livetime=99 * u.s
         )
         return SpectrumObservation(on_vector=on_vector)
 

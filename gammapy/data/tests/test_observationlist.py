@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
+from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds, Energy
 from ...data import DataStore, ObservationList

@@ -17,7 +17,7 @@ def source_catalogs():
 
 # 2HWC catalog is in ECSV format, which requires yaml to read the header
 @requires_dependency('yaml')
-@requires_data('hgps')
+@requires_data('gammapy-extra')
 def test_info_table(source_catalogs):
     table = source_catalogs.info_table
     assert table.colnames == ['name', 'description', 'sources']

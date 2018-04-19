@@ -8,3 +8,6 @@ from .exposure import *
 from .utils import *
 from .models import *
 from .cube_pipe import *
+from .basic_cube import *
+from .fit import *
+from .new import *

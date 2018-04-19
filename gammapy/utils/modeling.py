@@ -27,6 +27,7 @@ For XML model format definitions, see here:
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
+import copy
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table, Column, vstack
@@ -166,7 +167,7 @@ class Parameter(object):
 
 
 class ParameterList(object):
-    """List of `~gammapy.spectrum.models.Parameters`
+    """List of `~gammapy.spectrum.models.Parameter`
 
     Holds covariance matrix
 
@@ -329,7 +330,7 @@ class ParameterList(object):
         values = []
         for par in self.parameters:
             quantity = errors.get(par.name, 0 * u.Unit(par.unit))
-            values.append(quantity.to(par.unit).value)
+            values.append(u.Quantity(quantity, par.unit).value)
         self.covariance = np.diag(values) ** 2
 
     # TODO: this is a temporary solution until we have a better way
@@ -376,6 +377,10 @@ class ParameterList(object):
             if parameter.name == parname:
                 return np.sqrt(self.covariance[i, i])
         raise ValueError('Could not find parameter {}'.format(parname))
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
 
 
 class SourceLibrary(object):

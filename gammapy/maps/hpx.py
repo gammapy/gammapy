@@ -9,6 +9,7 @@ from ..extern import six
 from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.units import Quantity
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -699,7 +700,7 @@ class HpxGeom(MapGeom):
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
         if self._rmap is not None:
-            retval = np.full((idx.size), -1, 'i')
+            retval = np.full(idx.size, -1, 'i')
             m = np.in1d(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
             retval = retval.reshape(idx.shape)
@@ -1055,10 +1056,8 @@ class HpxGeom(MapGeom):
         return idx_nb
 
     def pad(self, pad_width):
-
-        # FIXME: Should this return an exception?
         if self.is_allsky:
-            return copy.deepcopy(self)
+            raise ValueError('Cannot pad an all-sky map.')
 
         idx = self.get_idx(flat=True)
         idx_r = ravel_hpx_index(idx, self._maxpix)
@@ -1067,14 +1066,17 @@ class HpxGeom(MapGeom):
         idx_nb = self._get_neighbors(idx)
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
-        for i in range(pad_width):
+        for _ in range(pad_width):
             # Mask of neighbors that are not contained in the geometry
-            edge_msk = np.isin(idx_nb, idx_r, invert=True)
-            edge_idx = idx_nb[edge_msk]
-            edge_idx = np.unique(edge_idx)
-            idx_r = np.sort(np.concatenate((idx_r, edge_idx)))
-            idx_nb = self._get_neighbors(
-                unravel_hpx_index(edge_idx, self._maxpix))
+            # TODO: change this to numpy.isin when we require Numpy 1.13+
+            # Here and everywhere in Gamampy -> search for "isin"
+            # see https://github.com/gammapy/gammapy/pull/1371
+            mask_edge = np.in1d(idx_nb, idx_r, invert=True).reshape(idx_nb.shape)
+            idx_edge = idx_nb[mask_edge]
+            idx_edge = np.unique(idx_edge)
+            idx_r = np.sort(np.concatenate((idx_r, idx_edge)))
+            idx_nb = unravel_hpx_index(idx_edge, self._maxpix)
+            idx_nb = self._get_neighbors(idx_nb)
             idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
@@ -1083,7 +1085,6 @@ class HpxGeom(MapGeom):
                               axes=copy.deepcopy(self.axes))
 
     def crop(self, crop_width):
-
         if self.is_allsky:
             raise ValueError('Cannot crop an all-sky map.')
 
@@ -1094,12 +1095,13 @@ class HpxGeom(MapGeom):
         idx_nb = self._get_neighbors(idx)
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
-        for i in range(crop_width):
+        for _ in range(crop_width):
             # Mask of pixels that have at least one neighbor not
             # contained in the geometry
-            edge_msk = np.any(np.isin(idx_nb, idx_r, invert=True), axis=0)
-            idx_r = idx_r[~edge_msk]
-            idx_nb = idx_nb[:, ~edge_msk]
+            mask_edge = np.in1d(idx_nb, idx_r, invert=True)
+            mask_edge = np.any(mask_edge, axis=0)
+            idx_r = idx_r[~mask_edge]
+            idx_nb = idx_nb[:, ~mask_edge]
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
         return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
@@ -1712,6 +1714,15 @@ class HpxGeom(MapGeom):
 
         return self.pix_to_coord((lat, lon))
 
+    def solid_angle(self):
+        """Solid angle array (`~astropy.units.Quantity` in ``sr``).
+
+        The array has the same dimensionality as ``map.nside``
+        since all pixels have the same solid angle.
+        """
+        import healpy as hp
+        return Quantity(hp.nside2pixarea(self.nside), 'sr')
+
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.
@@ -1862,8 +1873,8 @@ class HpxToWcsMapping(object):
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            valid = np.swapaxes(self._valid.reshape(shape),-1,-2)
-            valid = valid*np.ones_like(wcs_data, dtype=bool)
+            valid = np.swapaxes(self._valid.reshape(shape), -1, -2)
+            valid = valid * np.ones_like(wcs_data, dtype=bool)
             wcs_data[~valid] = np.nan
         return wcs_data
 

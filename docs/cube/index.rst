@@ -7,9 +7,9 @@
 
 .. _cube:
 
-************************************
-Cube Style Analysis (`gammapy.cube`)
-************************************
+***************************
+3D cube analysis (``cube``)
+***************************
 
 .. currentmodule:: gammapy.cube
 

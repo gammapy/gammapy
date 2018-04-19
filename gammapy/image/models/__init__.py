@@ -4,4 +4,4 @@ Morphology models.
 """
 from .gauss import *
 from .shapes import *
-from .theta import *
+from .new import *

@@ -863,8 +863,8 @@ class SpectrumObservationStacker(object):
         self.stacked_off_vector.livetime = total_livetime
         self.stacked_on_vector.backscal = self.stacked_bkscal_on
         self.stacked_off_vector.backscal = self.stacked_bkscal_off
-        self.stacked_on_vector.meta['OBS_ID'] = self.obs_list.obs_id
-        self.stacked_off_vector.meta['OBS_ID'] = self.obs_list.obs_id
+        self.stacked_on_vector.obs_id = self.obs_list.obs_id
+        self.stacked_off_vector.obs_id = self.obs_list.obs_id
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime).

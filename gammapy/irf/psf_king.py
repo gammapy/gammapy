@@ -9,7 +9,6 @@ from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
-from ..utils.fits import table_to_fits_table
 from . import EnergyDependentTablePSF
 
 __all__ = ['PSFKing']
@@ -132,7 +131,7 @@ class PSFKing(object):
             table[name_] = [data_]
             table[name_].unit = unit_
 
-        hdu = table_to_fits_table(table)
+        hdu = fits.BinTableHDU(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
         hdu.header['HI_THRES'] = self.energy_thresh_hi.value
 

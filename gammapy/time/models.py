@@ -1,11 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.utils import lazyproperty
 from astropy import units as u
+from astropy.table import Table
+from ..utils.scripts import make_path
+from ..utils.time import time_ref_from_dict
 from ..utils.modeling import Parameter, ParameterList
 
 __all__ = [
     'PhaseCurve',
+    'LightCurve',
 ]
 
 
@@ -114,3 +119,129 @@ class PhaseCurve(object):
         xp = self.table['PHASE']
         fp = self.table['NORM']
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
+
+
+class LightCurve(object):
+    """Temporal light curve model.
+
+    The lightcurve is given as a table with columns ``time`` and ``norm``.
+
+    The ``norm`` is supposed to be a unite-less multiplicative factor in the model,
+    to be multiplied with a spectral model.
+
+    The model does linear interpolation for times between the given ``(time, norm)`` values.
+
+    The implementation currently uses `scipy.interpolate.InterpolatedUnivariateSpline`,
+    using degree ``k=1`` to get linear interpolation.
+    This class also contains an ``integral`` method, making the computation of
+    mean fluxes for a given time interval a one-liner.
+
+    TODO: Improve this class!
+    This class is very preliminary / work in progress.
+    An obvious issue is that `gammapy.time.LightCurve` has the same name,
+    which has a good potential to confuse users.
+    Another poitn is the API for time, i.e. when to take floats or time objects.
+    We plan to discuss this `LightCurve` and the `PhaseCurve` model classes soon.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        A table with 'TIME' vs 'NORM'
+
+    Examples
+    --------
+    Read an example light curve object:
+
+    >>> from gammapy.time.models import LightCurve
+    >>> path = '$GAMMAPY_EXTRA/test_datasets/models/light_curve/lightcrv_PKSB1222+216.fits'
+    >>> light_curve = LightCurve.read(path)
+
+    Show basic information about the lightcurve:
+
+    >>> print(light_curve)
+    LightCurve model summary:
+    Start time: 59000.5 MJD
+    End time: 61862.5 MJD
+    Norm min: 0.01551196351647377
+    Norm max: 1.0
+
+    Compute ``norm`` at a given time:
+
+    >>> light_curve.evaluate_norm_at_time(46300)
+    0.49059393580053845
+
+    Compute mean ``norm`` in a given time interval:
+
+    >>> light_curve.mean_norm_in_time_interval(46300, 46301)
+    """
+
+    def __init__(self, table):
+        self.table = table
+
+    def __str__(self):
+        ss = 'LightCurve model summary:\n'
+        ss += 'Start time: {} MJD\n'.format(self._time[0].mjd)
+        ss += 'End time: {} MJD\n'.format(self._time[-1].mjd)
+        ss += 'Norm min: {}\n'.format(self.table['NORM'].min())
+        ss += 'Norm max: {}\n'.format(self.table['NORM'].max())
+        return ss
+
+    @classmethod
+    def read(cls, path):
+        """Read lightcurve model table from FITS file.
+
+        TODO: This doesn't read the XML part of the model yet.
+        """
+        path = make_path(path)
+        table = Table.read(str(path))
+        return cls(table)
+
+    @lazyproperty
+    def _interpolator(self):
+        from scipy.interpolate import InterpolatedUnivariateSpline
+
+        x = self.table['TIME'].data
+        y = self.table['NORM'].data
+
+        return InterpolatedUnivariateSpline(x, y, k=1)
+
+    @lazyproperty
+    def _time_ref(self):
+        return time_ref_from_dict(self.table.meta)
+
+    @lazyproperty
+    def _time(self):
+        return self._time_ref + self.table['TIME'].data * u.s
+
+    def evaluate_norm_at_time(self, time):
+        """Evaluate for a given time.
+
+        Parameters
+        ----------
+        time : array_like
+            Time since the ``reference`` time.
+
+        Returns
+        -------
+        norm : array_like
+        """
+        return self._interpolator(time)
+
+    def mean_norm_in_time_interval(self, time_min, time_max):
+        """Compute mean ``norm`` in a given time interval.
+
+        TODO: vectorise, i.e. allow arrays of time intervals in a single call.
+
+        Parameters
+        ----------
+        time_min, time_max : float
+            Time interval
+
+        Returns
+        -------
+        norm : float
+            Mean norm
+        """
+        dt = time_max - time_min
+        integral = self._interpolator.integral(time_min, time_max)
+        return integral / dt

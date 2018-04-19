@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import numpy as np
 from astropy.io import fits
+from astropy.units import Quantity
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -32,27 +33,35 @@ class HpxNDMap(HpxMap):
         If none then an empty array will be allocated.
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
+    unit : str or `~astropy.units.Unit`
+        The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None):
+    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
 
         shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
+        shape_np = shape[::-1]
+
         if data is None:
-
-            if geom.npix.size > 1:
-                data = np.nan * np.ones(shape, dtype=dtype).T
-                idx = geom.get_idx(local=True)
-                data[idx[::-1]] = 0.0
-            else:
-                data = np.zeros(shape, dtype=dtype).T
-
-        elif data.shape != shape[::-1]:
+            data = self._make_default_data(geom, shape_np, dtype)
+        elif data.shape != shape_np:
             raise ValueError('Wrong shape for input data array. Expected {} '
-                             'but got {}'.format(shape, data.shape))
+                             'but got {}'.format(shape_np, data.shape))
 
-        super(HpxNDMap, self).__init__(geom, data, meta)
+        super(HpxNDMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
+
+    @staticmethod
+    def _make_default_data(geom, shape_np, dtype):
+        if geom.npix.size > 1:
+            data = np.full(shape_np, np.nan, dtype=dtype)
+            idx = geom.get_idx(local=True)
+            data[idx[::-1]] = 0.0
+        else:
+            data = np.zeros(shape_np, dtype=dtype)
+
+        return data
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -72,7 +81,9 @@ class HpxNDMap(HpxMap):
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
-        map_out = cls(hpx, None, meta=meta)
+
+        unit = hdu.header.get('UNIT', '')
+        map_out = cls(hpx, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []
@@ -92,7 +103,7 @@ class HpxNDMap(HpxMap):
                 if c.find(hpx.hpx_conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
-            if len(cnames) == 1:
+            if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
                 for i, cname in enumerate(cnames):
@@ -200,9 +211,8 @@ class HpxNDMap(HpxMap):
             vals = self.get_by_idx(self.geom.get_idx(flat=True))
             map_out.fill_by_coord(self.geom.get_coord(flat=True)[:2], vals)
         else:
-            axes = np.arange(self.data.ndim - 1).tolist()
-            data = np.apply_over_axes(np.sum, self.data, axes=axes)
-            map_out.data = np.squeeze(data, axis=axes)
+            axis = tuple(range(self.data.ndim - 1))
+            map_out.data = np.sum(self.data, axis=axis)
 
         return map_out
 
@@ -405,6 +415,8 @@ class HpxNDMap(HpxMap):
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
+            if isinstance(weights, Quantity):
+                weights = weights.to(self.unit).value
             weights = weights[msk]
 
         idx_local = np.ravel_multi_index(idx_local, self.data.T.shape)

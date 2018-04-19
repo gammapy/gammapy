@@ -3,11 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import textwrap
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
 from ...data import EventList
@@ -17,12 +18,11 @@ from .. import SkyCube
 
 
 def make_test_spectral_model():
-    emin, emax = 1 * u.TeV, 100 * u.TeV,
     return PowerLaw2(
-        amplitude=1e-12 * u.Unit('1 / (s sr cm2)'),
+        amplitude='1e-12 cm-2 s-1 sr-1',
         index=2,
-        emin=emin,
-        emax=emax,
+        emin='1 TeV',
+        emax='100 TeV',
     )
 
 
@@ -82,6 +82,9 @@ class TestSkyCube(object):
     def test_read_write(self, tmpdir):
         filename = str(tmpdir / 'sky_cube.fits')
         self.sky_cube.write(filename, format='fermi-background')
+
+        hdu_list = fits.open(filename)
+        assert hdu_list[1].name == 'ENERGIES'
 
         sky_cube = SkyCube.read(filename, format='fermi-background')
         assert sky_cube.data.shape == (30, 21, 61)

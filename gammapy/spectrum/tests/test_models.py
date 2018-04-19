@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
-from gammapy.utils.energy import EnergyBounds
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
+import astropy.units as u
+from ...utils.energy import EnergyBounds
+from ...utils.testing import assert_quantity_allclose
+from ...utils.testing import requires_dependency, requires_data
+from ...scripts import CTAPerf
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
                       TableModel, AbsorbedSpectralModel, Absorption)
-from ...utils.testing import requires_dependency, requires_data
-from ...scripts import CTAPerf
-from gammapy.scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
-from gammapy.spectrum import SpectrumObservationList, SpectrumFit
+from ...scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
+from ...spectrum import SpectrumObservationList, SpectrumFit
 
 
 def table_model():

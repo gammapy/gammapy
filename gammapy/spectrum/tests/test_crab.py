@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
+import astropy.units as u
+from ...utils.testing import assert_quantity_allclose
 from ...spectrum import CrabSpectrum
 
 CRAB_SPECTRA = [

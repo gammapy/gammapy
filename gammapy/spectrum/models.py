@@ -15,6 +15,8 @@ from ..utils.modeling import Parameter, ParameterList
 
 __all__ = [
     'SpectralModel',
+    'ConstantModel',
+    'CompoundSpectralModel',
     'PowerLaw',
     'PowerLaw2',
     'ExponentialCutoffPowerLaw',
@@ -459,10 +461,17 @@ class CompoundSpectralModel(SpectralModel):
         self.model2 = model2
         self.operator = operator
 
+    # TODO: Think about how to deal with covariance matrix
     @property
     def parameters(self):
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
         return ParameterList(val)
+
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = len(self.model1.parameters.parameters)
+        self.model1.parameters.parameters = parameters.parameters[:idx]
+        self.model2.parameters.parameters = parameters.parameters[idx:]
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -496,7 +505,7 @@ class PowerLaw(SpectralModel):
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
     amplitude : `~astropy.units.Quantity`
-        :math:`Phi_0`
+        :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
 

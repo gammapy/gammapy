@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
-import numpy as np
-from astropy.tests.helper import assert_quantity_allclose
 import pytest
+import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
+from ...utils.testing import assert_quantity_allclose
 from ...datasets import (make_test_psf, make_test_observation_table,
                          make_test_bg_cube_model, make_test_dataset)
 from ...data import DataStore

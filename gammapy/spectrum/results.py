@@ -235,7 +235,7 @@ class SpectrumFitResult(object):
         """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
         """
         energy = self.obs.on_vector.energy
-        data = self.npred_src * u.ct
+        data = self.npred_src
         return CountsSpectrum(data=data, energy_lo=energy.lo,
                               energy_hi=energy.hi)
 
@@ -245,7 +245,7 @@ class SpectrumFitResult(object):
         """
         try:
             energy = self.obs.e_reco
-            data = self.npred_bkg * u.ct
+            data = self.npred_bkg
             return CountsSpectrum(data=data, energy_hi=energy.upper_bounds,
                                   energy_lo=energy.lower_bounds)
         except TypeError:

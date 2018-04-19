@@ -26,7 +26,7 @@ class WcsMap(Map):
     @classmethod
     def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
                proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None):
+               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None, unit=''):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -69,6 +69,8 @@ class WcsMap(Map):
             FITS format convention.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
+        unit : str or `~astropy.units.Unit`
+            The unit of the map
 
         Returns
         -------
@@ -84,7 +86,7 @@ class WcsMap(Map):
                               conv=conv)
 
         if map_type == 'wcs':
-            return WcsNDMap(geom, dtype=dtype, meta=meta)
+            return WcsNDMap(geom, dtype=dtype, meta=meta, unit=unit)
         elif map_type == 'wcs-sparse':
             raise NotImplementedError
         else:
@@ -149,8 +151,7 @@ class WcsMap(Map):
             hdu = 'PRIMARY' if hdu is None else hdu.upper()
 
         if sparse and hdu == 'PRIMARY':
-            raise ValueError(
-                'Sparse maps cannot be written to the PRIMARY HDU.')
+            raise ValueError('Sparse maps cannot be written to the PRIMARY HDU.')
 
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands,
@@ -164,6 +165,8 @@ class WcsMap(Map):
                                 sparse=sparse, conv=conv)
 
         hdu_out.header['META'] = json.dumps(self.meta)
+
+        hdu_out.header['UNIT'] = self._unit
 
         if hdu == 'PRIMARY':
             hdulist = [hdu_out]
@@ -194,59 +197,75 @@ class WcsMap(Map):
         hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
-        data = self.data
-        shape = data.shape
         header = self.geom.make_header()
 
         if hdu_bands is not None:
             header['BANDSHDU'] = hdu_bands
 
-        cols = []
         if sparse:
-
-            if len(shape) == 2:
-                data_flat = np.ravel(data)
-                data_flat[~np.isfinite(data_flat)] = 0
-                nonzero = np.where(data_flat > 0)
-                cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat[nonzero].astype(float)))
-            elif self.geom.npix[0].size == 1:
-                data_flat = np.ravel(data).reshape(
-                    shape[:-2] + (shape[-1] * shape[-2],))
-                data_flat[~np.isfinite(data_flat)] = 0
-                nonzero = np.where(data_flat > 0)
-                channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
-                cols.append(fits.Column('PIX', 'J', array=nonzero[-1]))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat[nonzero].astype(float)))
-            else:
-
-                data_flat = []
-                channel = []
-                pix = []
-                for i, _ in np.ndenumerate(self.geom.npix[0]):
-                    data_i = np.ravel(data[i[::-1]])
-                    data_i[~np.isfinite(data_i)] = 0
-                    pix_i = np.where(data_i > 0)
-                    data_i = data_i[pix_i]
-                    data_flat += [data_i]
-                    pix += pix_i
-                    channel += [np.ones(data_i.size, dtype=int) *
-                                np.ravel_multi_index(i[::-1], shape[:-2])]
-                data_flat = np.concatenate(data_flat)
-                pix = np.concatenate(pix)
-                channel = np.concatenate(channel)
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat.astype(float)))
-
-            hdu_out = fits.BinTableHDU.from_columns(cols, header=header,
-                                                    name=hdu)
+            hdu_out = self._make_hdu_sparse(self.data, self.geom.npix, hdu, header)
         elif hdu == 'PRIMARY':
-            hdu_out = fits.PrimaryHDU(data, header=header)
+            hdu_out = fits.PrimaryHDU(self.data, header=header)
         else:
-            hdu_out = fits.ImageHDU(data, header=header, name=hdu)
+            hdu_out = fits.ImageHDU(self.data, header=header, name=hdu)
+
         return hdu_out
+
+    @staticmethod
+    def _make_hdu_sparse(data, npix, hdu, header):
+        shape = data.shape
+
+        # We make a copy, because below we modify `data` to handle non-finite entries
+        # TODO: The code below could probably be simplified to use expressions
+        # that create new arrays instead of in-place modifications
+        # But first: do we want / need the non-finite entry handling at all and always cast to 64-bit float?
+        data = data.copy()
+
+        if len(shape) == 2:
+            data_flat = np.ravel(data)
+            data_flat[~np.isfinite(data_flat)] = 0
+            nonzero = np.where(data_flat > 0)
+            value = data_flat[nonzero].astype(float)
+
+            cols = [
+                fits.Column('PIX', 'J', array=nonzero[0]),
+                fits.Column('VALUE', 'E', array=value),
+            ]
+        elif npix[0].size == 1:
+            shape_flat = shape[:-2] + (shape[-1] * shape[-2],)
+            data_flat = np.ravel(data).reshape(shape_flat)
+            data_flat[~np.isfinite(data_flat)] = 0
+            nonzero = np.where(data_flat > 0)
+            channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
+            value = data_flat[nonzero].astype(float)
+
+            cols = [
+                fits.Column('PIX', 'J', array=nonzero[-1]),
+                fits.Column('CHANNEL', 'I', array=channel),
+                fits.Column('VALUE', 'E', array=value),
+            ]
+        else:
+            data_flat = []
+            channel = []
+            pix = []
+            for i, _ in np.ndenumerate(npix[0]):
+                data_i = np.ravel(data[i[::-1]])
+                data_i[~np.isfinite(data_i)] = 0
+                pix_i = np.where(data_i > 0)
+                data_i = data_i[pix_i]
+                data_flat += [data_i]
+                pix += pix_i
+                channel += [np.ones(data_i.size, dtype=int) *
+                            np.ravel_multi_index(i[::-1], shape[:-2])]
+
+            pix = np.concatenate(pix)
+            channel = np.concatenate(channel)
+            value = np.concatenate(data_flat).astype(float)
+
+            cols = [
+                fits.Column('PIX', 'J', array=pix),
+                fits.Column('CHANNEL', 'I', array=channel),
+                fits.Column('VALUE', 'E', array=value),
+            ]
+
+        return fits.BinTableHDU.from_columns(cols, header=header, name=hdu)

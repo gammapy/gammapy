@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.units import Quantity
 from ..utils import fill_poisson
 from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
@@ -289,3 +290,21 @@ def test_hpxmap_sum_over_axes(nside, nested, coordsys, region, axes):
 
     if m.geom.is_regular:
         assert_allclose(np.nansum(m.data), np.nansum(msum.data))
+
+
+def test_coadd_unit():
+    geom = HpxGeom.create(nside=128)
+    m1 = HpxNDMap(geom, unit='m2')
+    m2 = HpxNDMap(geom, unit='cm2')
+
+    idx = geom.get_idx()
+
+    weights = Quantity(np.ones_like(idx[0]), unit='cm2')
+    m1.fill_by_idx(idx, weights=weights)
+    assert_allclose(m1.data, 0.0001)
+
+    weights = Quantity(np.ones_like(idx[0]), unit='m2')
+    m1.fill_by_idx(idx, weights=weights)
+    m1.coadd(m2)
+
+    assert_allclose(m1.data, 1.0001)

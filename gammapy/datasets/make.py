@@ -7,11 +7,11 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, AltAz, Angle
+from astropy.io import fits
 from astropy.table import Table
 from ..extern.pathlib import Path
 from ..utils.random import sample_sphere, sample_powerlaw, get_random_state
 from ..utils.time import time_ref_from_dict, time_relative_to_ref
-from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'make_test_psf',
@@ -302,8 +302,6 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
     This method is useful for instance to produce true (simulated)
     background cube models to compare to the reconstructed ones
     produced with `~gammapy.background.make_bg_cube_model`.
-    For details on how to do this, please refer to
-    :ref:`background_make_background_models_datasets_for_testing`.
 
     Parameters
     ----------
@@ -523,11 +521,12 @@ def make_test_dataset(outdir, overwrite=False,
 
     # loop over observations
     for obs_id in observation_table['OBS_ID']:
-        event_list, aeff_hdu = make_test_eventlist(observation_table=observation_table,
-                                                   obs_id=obs_id,
-                                                   sigma=sigma,
-                                                   spectral_index=spectral_index,
-                                                   random_state=random_state)
+        event_list = make_test_eventlist(observation_table=observation_table,
+                                         obs_id=obs_id,
+                                         sigma=sigma,
+                                         spectral_index=spectral_index,
+                                         random_state=random_state)
+        aeff_hdu = _make_test_aeff()
 
         # save event list and effective area table to disk
         outfile = data_store.filename(obs_id, filetype='events')
@@ -653,7 +652,11 @@ def make_test_eventlist(observation_table,
     event_list.meta['LIVETIME'] = livetime.to('second').value
     event_list.meta['EUNIT'] = str(energy.unit)
 
-    # effective area table
+    return event_list
+
+
+# TODO: remove?
+def _make_test_aeff():
     aeff_table = Table()
 
     # fill threshold, for now, a default 100 GeV will be set
@@ -662,8 +665,4 @@ def make_test_eventlist(observation_table,
     aeff_table.meta['LO_THRES'] = energy_threshold.value
     aeff_table.meta['name'] = 'EFFECTIVE AREA'
 
-    # convert to BinTableHDU and add necessary comment for the units
-    aeff_hdu = table_to_fits_table(aeff_table)
-    aeff_hdu.header.comments['LO_THRES'] = '[' + str(energy_threshold.unit) + ']'
-
-    return event_list, aeff_hdu
+    return fits.BinTableHDU(aeff_table)

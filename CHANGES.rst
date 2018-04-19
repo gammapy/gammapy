@@ -8,6 +8,50 @@ Summary
 
 For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/milestones/0.8
 
+**Contributors:**
+
+- Atreyee Sinha
+- Christoph Deil
+- Cosimo Nigro
+- Gabriel Emery (new)
+- Johannes King
+- José Enrique Ruiz
+- Lars Mohrmann
+- Matthew Wood
+- Oscar Blanch
+- Régis Terrier
+
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
+
+- [#1378] Change 3D model evaluation from SkyCube to Map (Christoph Deil)
+- [#1377] Add more SkySpatialModel subclasses (Johannes King)
+- [#1376] Add new SpatialModel base class (Johannes King)
+- [#1374] Add units to gammapy.maps (Régis Terrier)
+- [#1373] Improve 3D analysis code using gammapy.maps (Christoph Deil)
+- [#1372] Add 3D analysis functions using gammapy.maps (Régis Terrier)
+- [#1367] Add first draft of LightCurve model class (Christoph Deil)
+- [#1362] Fix map sum_over_axes (Christoph Deil)
+- [#1360] Sphinx RTD responsive theme for documentation (José Enrique Ruiz)
+- [#1357] Add map geom pixel solid angle computation (Régis Terrier)
+- [#1354] Apply FOV mask to all maps in ring background estimator (Lars Mohrmann)
+- [#1347] Fix bug in LightCurveEstimator (Lars Mohrmann)
+- [#1346] Fix bug in map .fits.gz write (change map data transpose) (Christoph Deil)
+- [#1345] Improve docs for SpectrumFit (Johannes King)
+- [#1343] Apply containment correction in true energy (Johannes King)
+- [#1341] Remove u.ct from gammapy.spectrum (Johannes King)
+- [#1339] Add create fixed time interval method for light curves (Gabriel Emery)
+- [#1337] Enable rate models in SpectrumSimulation (Johannes King)
+- [#1334] Fix AREASCAL read for PHA count spectrum (Régis Terrier)
+- [#1331] Fix background image estimate (Régis Terrier)
+- [#1317] Add function to compute counts maps (Régis Terrier)
+- [#1231] Improve HESS HGPS catalog source class (Christoph Deil)
+
 .. _gammapy_0p7_release:
 
 0.7 (2018-02-28)
@@ -118,9 +162,10 @@ Organisation:
 - Matthias Wegen (new)
 - Oscar Blanch (new)
 - Peter Deiml (new)
+- Régis Terrier
 - Roberta Zanin (new)
-- Thomas Vuillaume (new)
 - Rubén López-Coto (new)
+- Thomas Vuillaume (new)
 - Yves Gallant (new)
 
 Pull requests
@@ -137,9 +182,11 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1305] Fix exposure and flux units in IACTBasicImageEstimator (Yves Gallant)
 - [#1300] Add PhaseCurve class for periodic systems (Lab Saha)
 - [#1294] Fix IACTBasicImageEstimator psf method (Yves Gallant)
+- [#1291] Add meta attribute to maps (Léa Jouvin)
 - [#1290] Change image_pipe and fov to include a minimum offset cut (Atreyee Sinha)
 - [#1289] Fix excess for given significance computation (Oscar Blanch)
 - [#1287] Fix time in LightCurveEstimator result table (Jean-Philippe Lenain)
+- [#1281] Add methods for WCS maps (Matthew Wood)
 - [#1266] No pytest import from non-test code (Christoph Deil)
 - [#1268] Fix PSF3D.to_energy_dependent_table_psf (Christoph Deil)
 - [#1246] Improve map read method (Matthew Wood)
