@@ -96,6 +96,5 @@ def test_cube_fit(sky_model, counts, exposure):
                              sky_model.parameters['lon_0'].quantity,
                              rtol=1e-2)
 
-    # TODO: this gives stat = NaN. Why?
-    # stat = np.sum(fit.compute_stat(), dtype='float64')
-    # assert_allclose(stat, 42)
+    stat = np.sum(fit.stat, dtype='float64')
+    assert_allclose(stat, 13079.031915029665)
