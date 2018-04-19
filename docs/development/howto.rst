@@ -746,7 +746,7 @@ again to ensure the passing of all Gammapy tests.
 
 
 If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to
- manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
+manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
 
 
 .. _use-nddata:

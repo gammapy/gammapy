@@ -800,8 +800,8 @@ class EventListLAT(EventListBase):
     table : `~astropy.table.Table`
         Event list table
 
-    Example
-    -------
+    Examples
+    --------
     To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
 
     >>> from gammapy.data import EventListLAT
