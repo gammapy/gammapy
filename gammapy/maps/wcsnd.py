@@ -465,9 +465,9 @@ class WcsNDMap(WcsMap):
         ----------
         norm : str
             Set the normalization scheme of the color map.
-        idx : tuple
-            Set the image slice to plot if this map has non-spatial
-            dimensions.
+        idx : int or tuple
+            Set the image slice to plot if this map has non-spatial dimensions.
+            For maps with exactly one non-spatial dimension idx can be an int
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.   
 
@@ -488,6 +488,7 @@ class WcsNDMap(WcsMap):
             ax = fig.add_subplot(111, projection=self.geom.wcs)
 
         if idx is not None:
+            idx = (idx,) if isinstance(idx, int) else idx
             slices = (slice(None), slice(None)) + idx
             data = self.data[slices[::-1]]
         else:
