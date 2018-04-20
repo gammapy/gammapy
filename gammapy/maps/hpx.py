@@ -10,6 +10,7 @@ from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
+from ..utils.scripts import make_path
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -1826,6 +1827,7 @@ class HpxToWcsMapping(object):
     def read(cls, filename):
         """Read a FITS file and use it to make a mapping."""
         from .wcsnd import WcsNDMap
+        filename = str(make_path(filename))
         index_map = WcsNDMap.read(filename)
         mult_map = WcsNDMap.read(filename, hdu=1)
         with fits.open(filename) as ff:

@@ -141,7 +141,7 @@ class Map(object):
 
         Parameters
         ----------
-        filename : str, `~gammapy.exter.pathlib.Path`
+        filename : str or `~pathlib.Path`
             Name of the FITS file.
         hdu : str
             Name or index of the HDU with the map data.

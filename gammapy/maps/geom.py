@@ -10,6 +10,7 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from ..utils.scripts import make_path
 from .utils import find_hdu, find_bands_hdu
 
 __all__ = [
@@ -897,7 +898,7 @@ class MapGeom(object):
 
         Parameters
         ----------
-        filename : str, `~gammapy.exter.pathlib.Path`
+        filename : str or `~pathlib.Path`
             Name of the FITS file.
         hdu : str
             Name or index of the HDU with the map data.
