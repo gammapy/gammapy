@@ -5,6 +5,7 @@ import json
 import numpy as np
 from collections import OrderedDict
 from ..extern import six
+from ..utils.scripts import make_path
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy.units import Quantity, Unit
@@ -140,7 +141,7 @@ class Map(object):
 
         Parameters
         ----------
-        filename : str
+        filename : str, `~gammapy.exter.pathlib.Path`
             Name of the FITS file.
         hdu : str
             Name or index of the HDU with the map data.
@@ -160,6 +161,7 @@ class Map(object):
         map_out : `~Map`
             Map object
         """
+        filename = str(make_path(filename))
         with fits.open(filename) as hdulist:
             map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
 

@@ -782,7 +782,7 @@ class MapCoord(object):
 
         Parameters
         ----------
-        data : `tuple`, `dict`, or `~MapCoord`
+        data : `tuple`, `dict`, `~MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.  
         coordsys : {'CEL', 'GAL', None}, optional
             Set the coordinate system for longitude and latitude.  If
@@ -897,7 +897,7 @@ class MapGeom(object):
 
         Parameters
         ----------
-        filename : str
+        filename : str, `~gammapy.exter.pathlib.Path`
             Name of the FITS file.
         hdu : str
             Name or index of the HDU with the map data.
@@ -911,6 +911,7 @@ class MapGeom(object):
         geom : `~MapGeom`
             Geometry object.
         """
+        filename = str(make_path(filename))
         with fits.open(filename) as hdulist:
             geom = cls.from_hdulist(hdulist, **kwargs)
         return geom

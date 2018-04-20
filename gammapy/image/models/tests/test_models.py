@@ -100,4 +100,9 @@ def test_template2d():
     filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
                 '/Templates/HESSJ1841-055.fits')
     template = SkyTemplate2D.read(filename)
-    assert_allclose(template(26.7, 0), 1.1553735159851262)
+    lon = 26.7 * u.deg
+    lat = 0 * u.deg
+    actual = template(lon, lat)[0]
+    desired = 0.00017506744188722223 / u.deg ** 2
+    #desired = 1.1553735159851262 / u.deg ** 2
+    assert_allclose(actual, desired)

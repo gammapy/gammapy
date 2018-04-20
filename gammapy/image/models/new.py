@@ -12,7 +12,7 @@ from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from astropy.utils import lazyproperty
 from ...extern import six
 from ...utils.modeling import Parameter, ParameterList
-from ..core import SkyImage
+from ...maps import Map, MapCoord
 
 __all__ = [
     'SkySpatialModel',
@@ -233,31 +233,20 @@ class SkyTemplate2D(SkySpatialModel):
     """
 
     def __init__(self, image):
-        self.image = image
+        self._image = self._norm_image(image)
         self.parameters = ParameterList([])
 
-    @lazyproperty
-    def _interpolate_data(self):
-        """Interpolate data using `~scipy.interpolate.RegularGridInterpolator`."""
-        from scipy.interpolate import RegularGridInterpolator
-        # TODO: move e.g. to SkyImage.interpolate()
+    @property
+    def image(self):
+        """Normalized template"""
+        return self._image
 
-        y = np.arange(self.image.data.shape[0])
-        x = np.arange(self.image.data.shape[1])
-
-        data_normed = self.image.data / self.image.data.sum()
-        data_normed /= self.image.solid_angle().to('deg2').value
-
-        f = RegularGridInterpolator((y, x), data_normed, fill_value=0,
-                                    bounds_error=False)
-
-        def interpolate(y, x, method='linear'):
-            shape = y.shape
-            coords = np.column_stack([y.flat, x.flat])
-            val = f(coords, method=method)
-            return val.reshape(shape)
-
-        return interpolate
+    @staticmethod
+    def _norm_image(image):
+        """Norm image"""
+        solid_angle = np.sum(image.geom.to_image().solid_angle().to('deg2'))
+        image.quantity = image.data / (image.data.sum() * solid_angle)
+        return image
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -268,12 +257,15 @@ class SkyTemplate2D(SkySpatialModel):
         filename : str
             Fits image filename.
         """
-        template = SkyImage.read(filename, **kwargs)
+        template = Map.read(filename, **kwargs)
         return cls(template)
 
     def evaluate(self, lon, lat):
-        # TODO: don't hardcode Galactic frame!
-        coord = SkyCoord(lon, lat, frame='galactic', unit='deg')
-        x_pix, y_pix = self.image.wcs_skycoord_to_pixel(coord)
-        values = self._interpolate_data(y_pix, x_pix)
-        return values
+        #TODO : Don't hardcode galactic frame
+        coord = MapCoord.create(
+            dict(lon=lon.to('deg').value,
+                 lat=lat.to('deg').value),
+            coordsys = 'GAL'
+        )
+        values = self.image.interp_by_coord(coord)
+        return values * self.image.unit
