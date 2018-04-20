@@ -164,7 +164,7 @@ class SkyDisk2D(SkySpatialModel):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         norm = 1. / (2 * np.pi * (1 - np.cos(r_0)))
-        val = norm if sep <= r_0 else 0
+        val = np.where(sep <= r_0, norm, 0)
         return val / u.deg ** 2
 
 
@@ -215,13 +215,10 @@ class SkyShell2D(SkySpatialModel):
         term2 = term1 - np.sqrt(r_i ** 2 - sep ** 2)
         norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
 
-        if sep < r_o:
-            if sep < r_i:
-                val = term2
-            else:
-                val = term1
-        else:
-            val = 0
+        val = np.where(sep < r_i,
+                       term2.to('deg').value,
+                       term1.to('deg').value) * u.deg
+        val[sep > r_o] = 0
 
         return norm * val
 

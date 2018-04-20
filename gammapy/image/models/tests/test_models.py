@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 import astropy.units as u
+import numpy as np
 from ....utils.testing import assert_quantity_allclose
 from ....utils.testing import requires_dependency, requires_data
 from ..new import (
@@ -21,6 +22,12 @@ def test_skygauss2D():
     actual = model(lon, lat)
     desired = 0.0964148382898712 / u.deg ** 2,
     assert_quantity_allclose(actual, desired)
+
+    lons = np.arange(-5, 5) * u.deg
+    lats = np.arange(0, 5) * u.deg
+    lon, lat = np.meshgrid(lons, lats)
+    actual = model(lon, lat)
+    assert actual.shape == (5, 10)
 
 
 def test_skypointsource():
@@ -59,6 +66,12 @@ def test_skydisk2D():
     desired = 261.26395634890207 / u.deg ** 2
     assert_quantity_allclose(actual, desired)
 
+    lons = np.arange(-5, 5) * u.deg
+    lats = np.arange(0, 5) * u.deg
+    lon, lat = np.meshgrid(lons, lats)
+    actual = model(lon, lat)
+    assert actual.shape == (5, 10)
+
 
 def test_skyshell2D():
     model = SkyShell2D(
@@ -73,6 +86,12 @@ def test_skyshell2D():
     actual = model(lon, lat)
     desired = 0.0002976757280439522 / u.deg ** 2
     assert_quantity_allclose(actual, desired)
+
+    lons = np.arange(-5, 5) * u.deg
+    lats = np.arange(0, 5) * u.deg
+    lon, lat = np.meshgrid(lons, lats)
+    actual = model(lon, lat)
+    assert actual.shape == (5, 10)
 
 
 @requires_dependency('scipy')
