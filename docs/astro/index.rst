@@ -33,3 +33,4 @@ Sub-packages
 
   source/index
   population/index
+  darkmatter/index
