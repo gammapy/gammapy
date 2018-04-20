@@ -9,7 +9,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D
 from ...maps import MapAxis, WcsGeom, WcsNDMap
-from ...image.models import SkyGaussian2D
+from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from .. import (
     SkyModel, SkyModelMapEvaluator, SkyModelMapFit, make_map_exposure_true_energy,
@@ -18,7 +18,7 @@ from .. import (
 
 @pytest.fixture(scope='session')
 def sky_model():
-    spatial_model = SkyGaussian2D(
+    spatial_model = SkyGaussian(
         lon_0='0.2 deg',
         lat_0='0.1 deg',
         sigma='0.2 deg',

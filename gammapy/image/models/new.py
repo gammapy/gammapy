@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Morphological models for astrophysical gamma-ray sources - new implementation
+Spatial models for astrophysical gamma-ray sources.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
@@ -8,19 +8,18 @@ import abc
 import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
-from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from astropy.utils import lazyproperty
+from astropy.coordinates import Angle, Longitude, Latitude
 from ...extern import six
 from ...utils.modeling import Parameter, ParameterList
 from ...maps import Map, MapCoord
 
 __all__ = [
     'SkySpatialModel',
-    'SkyGaussian2D',
     'SkyPointSource',
-    'SkyDisk2D',
-    'SkyShell2D',
-    'SkyTemplate2D',
+    'SkyGaussian',
+    'SkyDisk',
+    'SkyShell',
+    'SkyTemplate',
 ]
 
 
@@ -42,12 +41,6 @@ class SkySpatialModel(object):
             ss += '\n\t'.join(covar.pformat())
         return ss
 
-    @staticmethod
-    @abc.abstractmethod
-    def evaluate():
-        """Model evaluation"""
-        pass
-
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
@@ -59,42 +52,6 @@ class SkySpatialModel(object):
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
-
-
-class SkyGaussian2D(SkySpatialModel):
-    r"""Two-dimensional symmetric Gaussian model.
-
-    .. math::
-
-        \phi(lon, lat) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
-            \frac{\theta^2}{\sigma^2}\right)}
-
-    where :math:`\theta` is the sky separation
-
-    Parameters
-    ----------
-    lon_0 : `~astropy.coordinates.Longitude`
-        :math:`lon_0`
-    lat_0 : `~astropy.coordinates.Latitude`
-        :math:`lat_0`
-    sigma : `~astropy.coordinates.Angle`
-        :math:`\sigma`
-    """
-
-    def __init__(self, lon_0, lat_0, sigma):
-        self.parameters = ParameterList([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('sigma', Angle(sigma))
-        ])
-
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, sigma):
-        """Evaluate the model (static function)."""
-        sep = angular_separation(lon, lat, lon_0, lat_0)
-        fact = (sep / sigma).to('').value
-        val = np.exp(-0.5 * fact ** 2) / (2 * np.pi * sigma ** 2)
-        return val
 
 
 class SkyPointSource(SkySpatialModel):
@@ -125,11 +82,52 @@ class SkyPointSource(SkySpatialModel):
         """Evaluate the model (static function)."""
         tolerance = 1 * u.arcsec
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        val = 1 if sep < tolerance else 0
-        return val
+        val = np.where(sep < tolerance, 1, 0)
+        return val * u.Unit('sr-1')
 
 
-class SkyDisk2D(SkySpatialModel):
+class SkyGaussian(SkySpatialModel):
+    r"""Two-dimensional symmetric Gaussian model.
+
+    .. math::
+
+        \phi(lon, lat) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
+            \frac{\theta^2}{\sigma^2}\right)}
+
+    where :math:`\theta` is the sky separation
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`lon_0`
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`lat_0`
+    sigma : `~astropy.coordinates.Angle`
+        :math:`\sigma`
+    """
+
+    def __init__(self, lon_0, lat_0, sigma):
+        self.parameters = ParameterList([
+            Parameter('lon_0', Longitude(lon_0)),
+            Parameter('lat_0', Latitude(lat_0)),
+            Parameter('sigma', Angle(sigma))
+        ])
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, sigma):
+        """Evaluate the model (static function)."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        sep = sep.to('rad').value
+        sigma = sigma.to('rad').value
+
+        norm = 1 / (2 * np.pi * sigma ** 2)
+        exponent = -0.5 * (sep / sigma) ** 2
+        val = norm * np.exp(exponent)
+
+        return val * u.Unit('sr-1')
+
+
+class SkyDisk(SkySpatialModel):
     r"""Constant radial disk model.
 
     .. math::
@@ -163,12 +161,16 @@ class SkyDisk2D(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, r_0):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
+        sep = sep.to('rad').value
+        r_0 = r_0.to('rad').value
+
         norm = 1. / (2 * np.pi * (1 - np.cos(r_0)))
         val = np.where(sep <= r_0, norm, 0)
-        return val / u.deg ** 2
+
+        return val * u.Unit('sr-1')
 
 
-class SkyShell2D(SkySpatialModel):
+class SkyShell(SkySpatialModel):
     r"""Shell model
 
     .. math::
@@ -211,19 +213,21 @@ class SkyShell2D(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, r_i, r_o):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        term1 = np.sqrt(r_o ** 2 - sep ** 2)
-        term2 = term1 - np.sqrt(r_i ** 2 - sep ** 2)
+        sep = sep.to('rad').value
+        r_i = r_i.to('rad').value
+        r_o = r_o.to('rad').value
+
         norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
 
-        val = np.where(sep < r_i,
-                       term2.to('deg').value,
-                       term1.to('deg').value) * u.deg
-        val[sep > r_o] = 0
+        with np.errstate(invalid='ignore'):
+            val_out = np.sqrt(r_o ** 2 - sep ** 2)
+            val_in = val_out - np.sqrt(r_i ** 2 - sep ** 2)
+            val = np.select([sep < r_i, sep < r_o], [val_in, val_out])
 
-        return norm * val
+        return norm * val * u.Unit('sr-1')
 
 
-class SkyTemplate2D(SkySpatialModel):
+class SkyTemplate(SkySpatialModel):
     """Two dimensional table model.
 
     Parameters
@@ -261,11 +265,11 @@ class SkyTemplate2D(SkySpatialModel):
         return cls(template)
 
     def evaluate(self, lon, lat):
-        #TODO : Don't hardcode galactic frame
+        # TODO : Don't hardcode galactic frame
         coord = MapCoord.create(
             dict(lon=lon.to('deg').value,
                  lat=lat.to('deg').value),
-            coordsys = 'GAL'
+            coordsys='GAL'
         )
         values = self.image.interp_by_coord(coord)
         return values * self.image.unit

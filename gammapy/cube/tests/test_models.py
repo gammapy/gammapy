@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
-from ...image.models import SkyGaussian2D
+from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import SkyModel, SkyModelMapEvaluator
 
@@ -26,7 +26,7 @@ def exposure(geom):
 
 @pytest.fixture(scope='session')
 def sky_model():
-    spatial_model = SkyGaussian2D(
+    spatial_model = SkyGaussian(
         lon_0='3 deg', lat_0='4 deg', sigma='3 deg',
     )
     spectral_model = PowerLaw(
