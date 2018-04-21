@@ -8,7 +8,8 @@ from ..new import (
     SkyGaussian,
     SkyDisk,
     SkyShell,
-    SkyTemplate,
+    SkyDiffuseConstant,
+    SkyDiffuseMap,
 )
 
 
@@ -67,15 +68,31 @@ def test_sky_shell():
     assert_allclose(val.value, desired)
 
 
+def test_sky_diffuse_constant():
+    model = SkyDiffuseConstant(
+        value='42 sr-1'
+    )
+    lon = [1, 2] * u.deg
+    lat = 45 * u.deg
+    val = model(lon, lat)
+    assert val.unit == 'sr-1'
+    assert_allclose(val.value, 42)
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_sky_template():
+def test_sky_diffuse_map():
     filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
-                '/Templates/HESSJ1841-055.fits')
-    template = SkyTemplate.read(filename)
-    lon = 26.7 * u.deg
-    lat = 0 * u.deg
-    actual = template(lon, lat)[0]
-    desired = 0.00017506744188722223 / u.deg ** 2
-    # desired = 1.1553735159851262 / u.deg ** 2
-    assert_allclose(actual, desired)
+                '/Templates/RXJ1713_2016_250GeV.fits')
+    model = SkyDiffuseMap.read(filename)
+    lon = [258.5, 0] * u.deg
+    lat = -39.8 * u.deg
+    val = model(lon, lat)
+    assert val.unit == 'sr-1'
+    desired = [3348.0417, 460.92587]
+    assert_allclose(val.value, desired)
+
+    # TODO: add more tests:
+    # - different model `norm` parameter values / units and map units
+    # - evaluate outside the map: why do we above not get 0 or NaN?
+    # - make an input map from scratch with known values

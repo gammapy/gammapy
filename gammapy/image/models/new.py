@@ -11,7 +11,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude
 from ...extern import six
 from ...utils.modeling import Parameter, ParameterList
-from ...maps import Map, MapCoord
+from ...maps import Map
 
 __all__ = [
     'SkySpatialModel',
@@ -19,7 +19,8 @@ __all__ = [
     'SkyGaussian',
     'SkyDisk',
     'SkyShell',
-    'SkyTemplate',
+    'SkyDiffuseConstant',
+    'SkyDiffuseMap',
 ]
 
 
@@ -227,30 +228,46 @@ class SkyShell(SkySpatialModel):
         return norm * val * u.Unit('sr-1')
 
 
-class SkyTemplate(SkySpatialModel):
-    """Two dimensional table model.
+class SkyDiffuseConstant(SkySpatialModel):
+    """Spatially constant (isotropic) spatial model.
 
     Parameters
     ----------
-    image : `~gammapy.image.SkyImage`
-        Template
+    value : `~astropy.units.Quantity`
+        Value
     """
 
-    def __init__(self, image):
-        self._image = self._norm_image(image)
-        self.parameters = ParameterList([])
-
-    @property
-    def image(self):
-        """Normalized template"""
-        return self._image
+    def __init__(self, value=1):
+        self.parameters = ParameterList([
+            Parameter('value', value),
+        ])
 
     @staticmethod
-    def _norm_image(image):
-        """Norm image"""
-        solid_angle = np.sum(image.geom.to_image().solid_angle().to('deg2'))
-        image.quantity = image.data / (image.data.sum() * solid_angle)
-        return image
+    def evaluate(lon, lat, value):
+        # TODO: try fitting this -> probably the interface doesn't work?!
+        return value
+
+
+class SkyDiffuseMap(SkySpatialModel):
+    """Spatial sky map template model.
+
+    At the moment only support 2D maps.
+    TODO: support maps with an energy axis here or in a separate class?
+    TODO: should we cache some interpolator object for efficiency?
+
+    Parameters
+    ----------
+    map : `~gammapy.map.Map`
+        Map template
+    norm : `~astropy.units.Quantity`
+        Norm parameter (multiplied with map values)
+    """
+
+    def __init__(self, map, norm=1):
+        self._map = map
+        self.parameters = ParameterList([
+            Parameter('norm', norm),
+        ])
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -259,17 +276,16 @@ class SkyTemplate(SkySpatialModel):
         Parameters
         ----------
         filename : str
-            Fits image filename.
+            FITS image filename.
         """
         template = Map.read(filename, **kwargs)
         return cls(template)
 
-    def evaluate(self, lon, lat):
-        # TODO : Don't hardcode galactic frame
-        coord = MapCoord.create(
-            dict(lon=lon.to('deg').value,
-                 lat=lat.to('deg').value),
-            coordsys='GAL'
+    def evaluate(self, lon, lat, norm):
+        coord = dict(
+            lon=lon.to('deg').value,
+            lat=lat.to('deg').value,
         )
-        values = self.image.interp_by_coord(coord)
-        return values * self.image.unit
+        val = self._map.interp_by_coord(coord)
+        # TODO: use map unit? self._map.unit
+        return norm * val * u.Unit('sr-1')
