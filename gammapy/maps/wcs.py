@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
 from ..image.utils import make_header
+from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes
@@ -892,6 +893,7 @@ def wcs_to_coords(w, shape):
 
 
 def get_map_skydir(filename, maphdu=0):
+    filename = str(make_path(filename))
     with fits.open(filename) as hdulist:
         wcs = WCS(hdulist[maphdu].header)
     return wcs_to_skydir(wcs)
