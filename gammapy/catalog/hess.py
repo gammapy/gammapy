@@ -8,13 +8,13 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
-from astropy.modeling.models import Gaussian2D
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
-from ..image.models import Delta2D, Shell2D
+from ..image.models import SkyPointSource, SkyGaussian, SkyShell
+from ..cube.models import SkyModel
 from ..background.models import GaussianBand2D
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -79,17 +79,13 @@ class SourceCatalogObjectHGPSComponent(object):
     def spatial_model(self):
         """Component spatial model (`~astropy.modeling.models.Gaussian2D`)."""
         d = self.data
-        # At the moment spatial models are normalised by deg^2
-        amplitude = d['Flux_Map'].value / (2 * np.pi * d['Size'].value ** 2)
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
 
-        return Gaussian2D(
-            x_mean=glon.value,
-            y_mean=glat.value,
-            x_stddev=d['Size'].value,
-            y_stddev=d['Size'].value,
-            amplitude=amplitude,
+        return SkyGaussian(
+            lon_0=glon,
+            lat_0=glat,
+            sigma=d['Size'],
         )
 
 
@@ -454,20 +450,19 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pointlike = d['Spatial_Model'] == 'Point-Like'
         return pointlike or has_size_ul
 
-    def spatial_model(self, emin=1 * u.TeV, emax=1E5 * u.TeV):
+    def spatial_model(self):
         """Spatial model (`~gammapy.image.models.SpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
-        - ``Point-Like`` or has a size upper limit : `~gammapy.image.models.Delta2D`
-        - ``Shell``: `~gammapy.image.models.Shell2D`
-        - ``Gaussian``: `gammapy.image.models.Gaussian2D`
+        - ``Point-Like`` or has a size upper limit : `~gammapy.image.models.SkyPointSource`
+        - ``Gaussian``: `~gammapy.image.models.SkyGaussian`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
+        - ``Shell``: `~gammapy.image.models.SkyShell`
+
+        TODO: add parameter errors
         """
         d = self.data
-        flux = self.spectral_model().integral(emin, emax)
-        amplitude = flux.to('cm-2 s-1').value
-
         pars = {}
         glon = Angle(d['GLON']).wrap_at('180d')
         glat = Angle(d['GLAT']).wrap_at('180d')
@@ -475,22 +470,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            pars['amplitude'] = amplitude
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            return Delta2D(**pars)
-
-        elif spatial_type == 'shell':
-            # HGPS contains no information on shell width
-            # Here we assuma a 5% shell width for all shells.
-            shell_width_fraction = 0.05
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            r_out = d['Size'].to('deg').value
-            pars['width'] = r_out * shell_width_fraction
-            pars['r_in'] = r_out * (1 - shell_width_fraction)
-            pars['amplitude'] = amplitude
-            return Shell2D(**pars)
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            return SkyPointSource(**pars)
 
         elif spatial_type in ['gaussian', '2-gaussian', '3-gaussian']:
             amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
@@ -501,9 +483,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 # component info available, so we create it here locally
                 models = [SourceCatalogObjectHGPSComponent(d).spatial_model]
 
-            for model in models:
-                # weight total flux according to relative amplitude
-                model.amplitude = model.amplitude / amplitude_total * amplitude
+            # TODO: the multi-Gaussian case requires correct relative fluxes
+            # stored in a spectral component!
+            # for model in models:
+            #     # weight total flux according to relative amplitude
+            #     model.amplitude = model.amplitude / amplitude_total
 
             if spatial_type == 'gaussian':
                 return models[0]
@@ -522,8 +506,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                                       (glon.deg - 2, glon.deg + 2))
                 return model
 
+        elif spatial_type == 'shell':
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            # HGPS contains no information on shell width
+            # Here we assuma a 5% shell width for all shells.
+            r_out = d['Size'].to('deg')
+            pars['r_i'] = 0.95 * r_out
+            pars['r_o'] = r_out
+            return SkyShell(**pars)
+
         else:
             raise ValueError('Not a valid spatial model: {}'.format(spatial_type))
+
+    def sky_model(self):
+        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        spatial_model = self.spatial_model()
+        spectral_model = self.spectral_model
+        return SkyModel(spatial_model, spectral_model)
 
     @property
     def flux_points(self):

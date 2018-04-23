@@ -8,17 +8,18 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict, namedtuple
 import functools
 import logging
+import json
 import numpy as np
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
-from astropy.modeling.models import Gaussian2D
 from ..utils.modeling import SourceModel, SourceLibrary, UnknownModelError
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import Shell2D, Delta2D
+from ..image.models import SkyPointSource, SkyGaussian, SkyShell
+from ..cube.models import SkyModel
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -285,45 +286,52 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return model
 
-    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
-        """Source spatial model."""
+    def spatial_model(self):
+        """Source spatial model (`~gammapy.image.models.SpatialModel`).
+
+        TODO: add parameter errors!
+        """
         d = self.data
-        flux = self.spectral_model.integral(emin, emax)
         morph_type = d['morph_type']
         pars = {}
 
         glon = Angle(d['glon']).wrap_at('180d')
         glat = Angle(d['glat']).wrap_at('180d')
 
-        if morph_type == 'gauss':
-            pars['x_mean'] = glon.value
-            pars['y_mean'] = glat.value
-            pars['x_stddev'] = d['morph_sigma'].value
-            pars['y_stddev'] = d['morph_sigma'].value
-            if not np.isnan(d['morph_sigma2']):
-                pars['y_stddev'] = d['morph_sigma2'].value
-            if not np.isnan(d['morph_pa']):
-                # TODO: handle reference frame for rotation angle
-                pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            ampl = flux.to('cm-2 s-1').value
-            pars['amplitude'] = ampl * 1 / (2 * np.pi * pars['x_stddev'] * pars['y_stddev'])
-            return Gaussian2D(**pars)
+        if morph_type == 'point':
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            return SkyPointSource(**pars)
+        elif morph_type == 'gauss':
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            pars['sigma'] = d['morph_sigma']
+            # TODO: add infos back once model support elongation
+            # pars['x_stddev'] = d['morph_sigma']
+            # pars['y_stddev'] = d['morph_sigma']
+            # if not np.isnan(d['morph_sigma2']):
+            #     pars['y_stddev'] = d['morph_sigma2']
+            # if not np.isnan(d['morph_pa']):
+            #     # TODO: handle reference frame for rotation angle
+            #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
+            return SkyGaussian(**pars)
         elif morph_type == 'shell':
-            pars['amplitude'] = flux.to('cm-2 s-1').value
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            pars['r_in'] = d['morph_sigma'].value * 0.8
-            pars['width'] = 0.2 * d['morph_sigma'].value
-            return Shell2D(**pars)
-        elif morph_type == 'point':
-            pars['amplitude'] = flux.to('cm-2 s-1').value
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            return Delta2D(**pars)
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            # TODO: probably we shouldn't guess a shell width here!
+            pars['r_i'] = 0.8 * d['morph_sigma']
+            pars['r_0'] = d['morph_sigma']
+            return SkyShell(**pars)
         elif morph_type == 'none':
             raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
         else:
             raise NotImplementedError('Unknown spatial model: {!r}'.format(morph_type))
+
+    def sky_model(self):
+        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        spatial_model = self.spatial_model()
+        spectral_model = self.spectral_model
+        return SkyModel(spatial_model, spectral_model)
 
     def _add_source_meta(self, table):
         """Copy over some info to table.meta"""
@@ -472,9 +480,9 @@ class GammaCatDataCollection(object):
     @classmethod
     def from_index_file(cls, filename='$GAMMA_CAT/docs/data/gammacat-datasets.json'):
         """Create from index file."""
-        filename = str(make_path(filename))
+        path = make_path(filename)
         # TODO: make a list of `GammaCatResource`, as well as a dict by ``resource_id`` for lookup!
-        data_index = load_json(filename)
+        data_index = json.load(path.read_text())
         return cls(data_index=data_index)
 
     def info(self):

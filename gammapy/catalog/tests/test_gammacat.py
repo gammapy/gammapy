@@ -21,7 +21,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 9.590978299538194e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 24,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
     {
         'name': 'HESS J1848-018',
@@ -34,7 +34,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 1.2210315515569183e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 11,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
     {
         'name': 'HESS J1813-178',
@@ -47,7 +47,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 1.4613807070890267e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 13,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
 ]
 
