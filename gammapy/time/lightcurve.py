@@ -8,6 +8,7 @@ from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error
 from ..utils.scripts import make_path
+from ..stats.poisson import significance_on_off
 
 __all__ = [
     'LightCurve',
@@ -318,6 +319,130 @@ class LightCurveEstimator(object):
                 Time(time - time_step, format="mjd"),
                 Time(time, format="mjd"),
             ])
+        return intervals
+
+
+    def create_fixed_significance_bin_lc(self, significance, significance_method, energy_range,
+                                            spectrum_extraction, separators=[]):
+        """
+        Create time intervals such that each bin of a light curve reach a given significance
+        ### To Do : check logic ###
+        Parameters
+        ----------
+        significance: float
+            Target significance for each light curve point
+        significance_method:
+            Select the method used to compute the significance ### unused yet ###
+        energy_range:`~astropy.units.Quantity`
+            True energy range to evaluate integrated flux (true energy)
+        spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
+            Contains statistics, IRF and event lists
+        separators : `list` of float
+            Contains a list of time (in MJD) to break the current point creation
+        Returns
+        -------
+        intervals : `list` of `~astropy.time.Time`
+            List of time intervals
+
+        """
+
+        def gettime(item):
+            return item[0]
+
+        def in_list(item, L):
+            o, j = np.where(L == item)
+            for index in o:
+                # yield L.index(i)
+                yield index
+
+        time_holder = []
+        obs_properties = []
+        n_obs = 0
+
+        for time in separators:
+            time_holder.append([time, 'break'])
+
+        for obs in spectrum_extraction.obs_list:
+            time_holder.append([obs.events.time.min().value - 0.0000001, 'start'])
+            time_holder.append([obs.events.time.max().value + 0.0000001, 'end'])
+            obs_properties.append([obs.observation_dead_time_fraction, spectrum_extraction.bkg_estimate[n_obs].a_off])
+            n_obs += 1
+
+        for t_index, obs in enumerate(self.obs_list):
+            spec = self.obs_spec[t_index]
+            # get ON and OFF evt list
+            off_evt = self.off_evt_list[t_index]
+            on_evt = self.on_evt_list[t_index]
+            # prepare energy range filter
+            e_reco = spec.e_reco
+            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
+            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
+            # filter ON events
+            on = on_evt.select_energy([emin, emax])
+            on = on.select_energy(energy_range)
+            # filter OFF events
+            off = off_evt.select_energy([emin, emax])
+            off = off.select_energy(energy_range)
+
+            for time in on.time:
+                time_holder.append([time.value, 'on'])
+            for time in off.time:
+                time_holder.append([time.value, 'off'])
+
+        # sort all elements in the table by time
+        time_holder = sorted(time_holder, key=gettime)
+        time_holder = np.asarray(time_holder)
+        intervals = []
+        istart = 1
+        i = 1
+        n = 0
+        count = 0
+        while (time_holder[i][0] < time_holder[-1][0]):
+            i += 1
+            if time_holder[i][1] == 'break':
+                n += np.sum(time_holder[istart:i + 1] == 'end')
+                istart = i + 1
+                i = istart
+                continue
+            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':
+                continue
+
+            # make a function to compute alpha
+            alpha = 0
+            tmp = 0
+            time = 0
+            xm1 = istart
+            for x in in_list('end', time_holder[istart:i + 1]):
+                if tmp == 0:
+                    alpha += (1 - obs_properties[n][0]) * (float(time_holder[x][0]) - float(time_holder[istart][0])) * \
+                             obs_properties[n][1]
+                    time += (1 - obs_properties[n][0]) * (float(time_holder[x][0]) - float(time_holder[istart][0]))
+                else:
+                    alpha += (1 - obs_properties[n + tmp][0]) * (
+                                float(time_holder[x][0]) - float(time_holder[xm1][0])) * obs_properties[n][1]
+                    time += (1 - obs_properties[n + tmp][0]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                xm1 = x
+                tmp += 1
+            alpha += (1 - obs_properties[n + tmp][0]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
+                     obs_properties[n][1]
+            time += (1 - obs_properties[n + tmp][0]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
+            alpha = time / alpha
+            non = np.sum(time_holder[istart:i + 1] == 'on')
+            noff = np.sum(time_holder[istart:i + 1] == 'off')
+            ### add try catch
+            if non == 0 or noff == 0:
+                continue
+            if significance_on_off(non, noff, alpha, method=significance_method) > significance:
+                count += 1
+                n += np.sum(time_holder[istart:i + 1] == 'end')
+                intervals.append(
+                    [Time((float(time_holder[istart][0]) + float(time_holder[istart][0])) / 2, format="mjd"),
+                     Time((float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2, format="mjd")])
+                while time_holder[i + 1][1] != 'on' and time_holder[i + 1][1] != 'off':
+                    i += 1
+                istart = i + 1
+                i = istart
+
         return intervals
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
