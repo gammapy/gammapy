@@ -125,8 +125,8 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     fill_map_counts(count_map, events)
 
     # Compute and apply FOV offset mask
-    offset_map = make_separation_map(ref_geom, pointing)
-    offset_mask = offset_map.data >= offset_max
+    offset = make_separation_map(ref_geom, pointing).quantity
+    offset_mask = offset >= offset_max
     count_map.data[:, offset_mask] = 0
 
     return count_map

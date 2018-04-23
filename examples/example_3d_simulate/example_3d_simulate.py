@@ -5,9 +5,9 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D, EnergyDependentMultiGaussPSF, Background3D
-from gammapy.maps import WcsGeom, MapAxis, Map, WcsNDMap
+from gammapy.maps import WcsGeom, MapAxis, WcsNDMap
 from gammapy.spectrum.models import PowerLaw
-from gammapy.image.models import SkyGaussian2D
+from gammapy.image.models import SkyGaussian
 from gammapy.cube import make_map_exposure_true_energy
 from gammapy.cube import SkyModel, SkyModelMapEvaluator
 
@@ -22,7 +22,7 @@ def get_irfs():
 
 
 def get_sky_model():
-    spatial_model = SkyGaussian2D(
+    spatial_model = SkyGaussian(
         lon_0='0.2 deg',
         lat_0='0.1 deg',
         sigma='0.2 deg',

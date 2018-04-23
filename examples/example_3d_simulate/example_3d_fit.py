@@ -1,7 +1,7 @@
 from astropy import log
-from gammapy.image.models import SkyGaussian2D
-from gammapy.spectrum.models import PowerLaw
 from gammapy.maps import WcsNDMap
+from gammapy.spectrum.models import PowerLaw
+from gammapy.image.models import SkyGaussian
 from gammapy.cube import SkyModel, SkyModelMapFit
 from example_3d_simulate import get_sky_model
 
@@ -13,7 +13,7 @@ def load_cubes():
 
 
 def get_fit_model():
-    spatial_model = SkyGaussian2D(
+    spatial_model = SkyGaussian(
         lon_0='0 deg',
         lat_0='0 deg',
         sigma='1 deg',
