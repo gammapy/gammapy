@@ -1063,6 +1063,17 @@ class MapGeom(object):
         """
         pass
 
+    def get_mapcoord(self):
+        """Returns a MapCoord for this `~gammapy.maps.Geom` object.
+        """
+        coord_tuple = self.get_coord()
+        cdict = dict(lon=coord_tuple[0], lat=coord_tuple[1])
+        for i,axis in enumerate(self.axes):
+            cdict.update({axis.name:coord_tuple[i+2]})
+
+        return MapCoord.create(cdict, coordsys=self.coordsys)
+
+
     def coord_to_idx(self, coords, clip=False):
         """Convert map coordinates to pixel indices.
 
