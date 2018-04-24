@@ -494,8 +494,10 @@ class EnergyDependentTablePSF(object):
         filename : str
             File name
         """
-        hdu_list = fits.open(filename)
-        return cls.from_fits(hdu_list)
+        with fits.open(filename) as hdulist:
+            psf = cls.from_fits(hdulist)
+
+        return psf
 
     def write(self, *args, **kwargs):
         """Write to FITS file.
