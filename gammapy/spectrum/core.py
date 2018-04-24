@@ -80,14 +80,16 @@ class CountsSpectrum(object):
     def read(cls, filename, hdu1='COUNTS', hdu2='EBOUNDS', **kwargs):
         """Read from file."""
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        try:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-        except KeyError:
-            msg = 'File {} does not contain HDUs "{}"'.format(
-                filename, [hdu1, hdu2])
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
+        with fits.open(str(filename), **kwargs) as hdulist:
+            try:
+                spec = cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+            except KeyError:
+                msg = 'File {} does not contain HDUs "{}"'.format(
+                    filename, [hdu1, hdu2])
+                msg += '\n Available {}'.format([_.name for _ in hdulist])
+                raise ValueError(msg)
+
+        return spec
 
     def to_table(self):
         """Convert to `~astropy.table.Table`.
@@ -490,14 +492,16 @@ class PHACountsSpectrum(CountsSpectrum):
     def read(cls, filename, hdu1='SPECTRUM', hdu2='EBOUNDS', **kwargs):
         """Read from file."""
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        try:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-        except KeyError:
-            msg = 'File {} does not contain HDUs "{}"'.format(
-                filename, [hdu1, hdu2])
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
+        with fits.open(str(filename), **kwargs) as hdulist:
+            try:
+                spec = cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+            except KeyError:
+                msg = 'File {} does not contain HDUs "{}"'.format(
+                    filename, [hdu1, hdu2])
+                msg += '\n Available {}'.format([_.name for _ in hdulist])
+                raise ValueError(msg)
+
+        return spec
 
     def to_sherpa(self, name):
         """Convert to `sherpa.astro.data.DataPHA`.
@@ -591,8 +595,8 @@ class PHACountsSpectrumList(list):
     def read(cls, filename):
         """Read from file."""
         filename = make_path(filename)
-        hdulist = fits.open(str(filename))
-        speclist = cls.from_hdulist(hdulist)
+        with fits.open(str(filename)) as hdulist:
+            speclist = cls.from_hdulist(hdulist)
         return speclist
 
     @classmethod

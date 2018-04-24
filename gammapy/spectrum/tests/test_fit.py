@@ -208,6 +208,7 @@ class TestSpectralFit:
         with pytest.raises(ValueError):
             self.fit.result[0].to_table()
 
+    @requires_dependency('iminuit')
     def test_basic_results_iminuit(self):
         self.fit.method = 'iminuit'
         self.fit.fit()

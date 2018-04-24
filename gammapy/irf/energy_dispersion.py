@@ -215,8 +215,10 @@ class EnergyDispersion(object):
             HDU containing the energy axis information, default, EBOUNDS
         """
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+        with fits.open(str(filename), **kwargs) as hdulist:
+            edisp = cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+
+        return edisp
 
     def to_hdulist(self, **kwargs):
         """Convert RMF to FITS HDU list format.
@@ -693,8 +695,10 @@ class EnergyDispersion2D(object):
             File name
         """
         filename = make_path(filename)
-        hdulist = fits.open(str(filename))
-        return cls.from_hdulist(hdulist, hdu)
+        with fits.open(str(filename)) as hdulist:
+            edisp = cls.from_hdulist(hdulist, hdu)
+
+        return edisp
 
     def to_energy_dispersion(self, offset, e_true=None, e_reco=None):
         """Detector response R(Delta E_reco, Delta E_true)
