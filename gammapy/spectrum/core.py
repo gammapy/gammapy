@@ -322,22 +322,26 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def phafile(self):
-        """PHA file associated with the observations"""
-        return 'pha_obs{}.fits'.format(self.obs_id)
+        """PHA file associated with the observation"""
+        if isinstance(self.obs_id, list):
+            filename = 'pha_stacked.fits'
+        else:
+            filename = 'pha_obs{}.fits'.format(self.obs_id)
+        return filename
 
     @property
     def arffile(self):
-        """ARF associated with the observations"""
+        """ARF associated with the observation"""
         return self.phafile.replace('pha', 'arf')
 
     @property
     def rmffile(self):
-        """RMF associated with the observations"""
+        """RMF associated with the observation"""
         return self.phafile.replace('pha', 'rmf')
 
     @property
     def bkgfile(self):
-        """Background PHA files associated with the observations"""
+        """Background PHA files associated with the observation"""
         return self.phafile.replace('pha', 'bkg')
 
     @property

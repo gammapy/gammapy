@@ -196,6 +196,7 @@ class TestSpectrumObservationStacker:
 
     def test_basic(self):
         assert 'Stacker' in str(self.obs_stacker)
+        assert 'stacked' in str(self.obs_stacker.stacked_obs.on_vector.phafile)
         counts1 = self.obs_list[0].total_stats_safe_range.n_on
         counts2 = self.obs_list[1].total_stats_safe_range.n_on
         summed_counts = counts1 + counts2
