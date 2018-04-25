@@ -5,11 +5,31 @@ import copy
 import astropy.units as u
 from astropy.utils import lazyproperty
 from ..utils.modeling import ParameterList
+from ..utils.scripts import make_path
 
 __all__ = [
+    'SourceLibrary',
     'SkyModel',
     'SkyModelMapEvaluator',
 ]
+
+class SourceLibrary(object):
+    """Collection of `~gammapy.cube.models.SkyModel`
+
+    Parameters
+    ----------
+    skymodels : list of `~gammapy.cube.models.SkyModel`
+        Sky models
+    """
+    def __init__(self, skymodels):
+        self.skymodels = skymodels
+
+    @classmethod
+    def from_xml(cls, filename):
+        from ..utils.serialization import xml_to_source_library
+        path = make_path(filename)
+        xml = path.read_text()
+        return xml_to_source_library(xml)
 
 
 class SkyModel(object):
@@ -27,11 +47,14 @@ class SkyModel(object):
         Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model
+    name : str
+        Model identifier
     """
 
-    def __init__(self, spatial_model, spectral_model):
+    def __init__(self, spatial_model, spectral_model, name='SkyModel'):
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
+        self.name = name
         self._init_parameters()
 
     def _init_parameters(self):

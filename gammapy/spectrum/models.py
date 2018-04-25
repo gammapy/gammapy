@@ -1180,10 +1180,12 @@ class TableModel(SpectralModel):
 
     @classmethod
     def read_xspec_model(cls, filename, param):
-        """A Table containing absorbed values from a XSPEC model
-        as a function of energy.
-        Todo:
-        Format of the file should be described and discussed in
+        """Read XSPEC table model
+
+        The input is a table containing absorbed values from a XSPEC model as a
+        function of energy.
+
+        TODO: Format of the file should be described and discussed in
         https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
 
         Parameters
@@ -1227,6 +1229,26 @@ class TableModel(SpectralModel):
         table_spectra = Table.read(filename, hdu='SPECTRA')
         idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
         values = table_spectra[idx][1] * u.Unit('')  # no dimension
+
+        return cls(energy=energy, values=values, scale_logy=False)
+
+    @classmethod
+    def read_fermi_isotropic_model(cls, filename):
+        """Read Fermi isotropic diffuse model
+
+        see `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+
+        Parameters
+        ----------
+        filename : `str`
+            filename
+        param : float
+            Model parameter value
+        """
+        filename = str(make_path(filename))
+        vals = np.loadtxt(filename)
+        energy = vals[:,0] * u.MeV
+        values = vals[:,1] * u.Unit('MeV-1 s-1 cm-2')
 
         return cls(energy=energy, values=values, scale_logy=False)
 
