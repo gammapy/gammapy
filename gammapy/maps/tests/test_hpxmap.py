@@ -163,10 +163,10 @@ def test_hpxmap_set_get_by_coord(nside, nested, coordsys, region, axes, sparse):
                       frame=coordsys_to_frame(m.geom.coordsys))
     skydir_cel = skydir.transform_to('icrs')
     skydir_gal = skydir.transform_to('galactic')
-    m.set_by_coord((skydir_gal,) + coords[2:], coords[0])
+    m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0])
     assert_allclose(coords[0], m.get_by_coord(coords))
-    assert_allclose(m.get_by_coord((skydir_cel,) + coords[2:]),
-                    m.get_by_coord((skydir_gal,) + coords[2:]))
+    assert_allclose(m.get_by_coord((skydir_cel,) + tuple(coords[2:])),
+                    m.get_by_coord((skydir_gal,) + tuple(coords[2:])))
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
