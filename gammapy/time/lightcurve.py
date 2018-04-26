@@ -324,7 +324,9 @@ class LightCurveEstimator(object):
 
     def create_fixed_significance_bin_lc(self, significance, significance_method, energy_range,
                                             spectrum_extraction, separators=[]):
-        """Create time intervals such that each bin of a light curve reach a given significance.
+        """
+
+        Create time intervals such that each bin of a light curve reach a given significance.
 
         Parameters
         ----------
@@ -338,7 +340,7 @@ class LightCurveEstimator(object):
             Contains statistics, IRF and event lists
         separators : `list` of float
             Contains a list of time (in MJD) to break the current point creation
-            
+
         Returns
         -------
         intervals : `list` of `~astropy.time.Time`
