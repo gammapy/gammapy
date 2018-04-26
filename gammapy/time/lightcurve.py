@@ -392,6 +392,7 @@ class LightCurveEstimator(object):
         # sort all elements in the table by time
         time_holder = sorted(time_holder, key=gettime)
         time_holder = np.asarray(time_holder)
+        #print(time_holder)
 
         intervals = []
         istart = 1
@@ -522,9 +523,9 @@ class LightCurveEstimator(object):
             spec = self.obs_spec[t_index]
 
             # discard observations not matching the time interval
-            obs_start = obs.events.time[0]
-            obs_stop = obs.events.time[-1]
-            if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
+            obs_start = obs.events.time.min()
+            obs_stop = obs.events.time.max()
+            if (tmin.value < obs_start.value and tmax.value < obs_start.value) or (tmin.value > obs_stop.value):
                 continue
 
             useinterval = True
@@ -551,16 +552,16 @@ class LightCurveEstimator(object):
             n_off_obs = len(off.table)
 
             # compute effective livetime (for the interval)
-            if tmin >= obs_start and tmax <= obs_stop:
+            if tmin.value >= obs_start.value and tmax.value <= obs_stop.value:
                 # interval included in obs
                 livetime_to_add = (tmax - tmin).to('s')
-            elif tmin >= obs_start and tmax >= obs_stop:
+            elif tmin.value >= obs_start.value and tmax.value >= obs_stop.value:
                 # interval min above tstart from obs
                 livetime_to_add = (obs_stop - tmin).to('s')
-            elif tmin <= obs_start and tmax <= obs_stop:
+            elif tmin.value <= obs_start.value and tmax.value <= obs_stop.value:
                 # interval min below tstart from obs
                 livetime_to_add = (tmax - obs_start).to('s')
-            elif tmin <= obs_start and tmax >= obs_stop:
+            elif tmin.value <= obs_start.value and tmax.value >= obs_stop.value:
                 # obs included in interval
                 livetime_to_add = (obs_stop - obs_start).to('s')
             else:

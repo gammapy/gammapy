@@ -17,7 +17,7 @@ from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
 from ..lightcurve import LightCurve, LightCurveEstimator
-
+from ...stats.poisson import significance_on_off
 
 # time time_min time_max flux flux_err flux_ul
 # 48705.1757 48705.134 48705.2174 0.57 0.29 nan
@@ -216,3 +216,22 @@ def test_lightcurve_interval_maker():
     assert len(intervals) == 9
     t = intervals[0]
     assert_allclose(t[1].value - t[0].value, 500 / (24 * 3600), rtol=1e-5)
+
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+def test_lightcurve_adaptative_interval_maker():
+    spec_extract = spec_extraction()
+    lc_estimator = LightCurveEstimator(spec_extract)
+    model = PowerLaw(
+        index=2.3 * u.Unit(''),
+        amplitude=3.4e-11 * u.Unit('1 / (cm2 s TeV)'),
+        reference=1 * u.TeV,
+    )
+    intervals = lc_estimator.create_fixed_significance_bin_lc(
+        significance=3,significance_method='lima',energy_range=[0.2,100]*u.TeV,spectrum_extraction=spec_extract)
+    lic = lc_estimator.light_curve(
+        time_intervals=intervals,
+        spectral_model=model,
+        energy_range=[0.2, 100] * u.TeV
+    )
+    assert_allclose(significance_on_off(lic.table['n_on'],lic.table['n_off'],lic.table['alpha']) >= 3, True)
