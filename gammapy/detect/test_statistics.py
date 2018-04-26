@@ -14,7 +14,7 @@ from astropy.io import fits
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ..irf import multi_gauss_psf_kernel
 from ..image import measure_containment_radius, SkyImageList, SkyImage, BasicImageEstimator
-from ..image.models import Shell2D
+from ..image.models import SkyShell
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython,
                                       _x_best_leastsq)
@@ -429,7 +429,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
             if morphology == 'Gaussian2D':
                 source_kernel = Gaussian2DKernel(sigma, mode='oversample')
             elif morphology == 'Shell2D':
-                model = Shell2D(1, 0, 0, sigma, sigma * width)
+                model = SkyShell(lon_0=0, lat_0=0, r_i=sigma, r_o=(1 + width) * sigma)
                 x_size = _round_up_to_odd_integer(2 * sigma * (1 + width) + kernel.shape[0] / 2)
                 source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
             else:
