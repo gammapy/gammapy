@@ -2,10 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
+# TODO: not sure if we want to expose these as part of the public Gammapy API
+# For now keeping as-is, but hiding from the docs by uncommenting here.
+#     'Gauss2DPDF',
+#     'MultiGauss2D',
+#     'gaussian_sum_moments',
 __all__ = [
-    'Gauss2DPDF',
-    'MultiGauss2D',
-    'gaussian_sum_moments',
 ]
 
 __doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}

@@ -20,7 +20,7 @@ import numpy as np
 from ..extern import six
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
-from ..image.models import Gauss2DPDF, MultiGauss2D
+from ..image.models.gauss import Gauss2DPDF, MultiGauss2D
 
 __all__ = [
     'GaussPSF',
