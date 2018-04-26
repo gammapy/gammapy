@@ -324,25 +324,25 @@ class LightCurveEstimator(object):
 
     def create_fixed_significance_bin_lc(self, significance, significance_method, energy_range,
                                             spectrum_extraction, separators=[]):
-        """
-        Create time intervals such that each bin of a light curve reach a given significance
+        """Create time intervals such that each bin of a light curve reach a given significance.
+
         Parameters
         ----------
-        significance: float
+        significance : float
             Target significance for each light curve point
         significance_method:
             Select the method used to compute the significance ### unused yet ###
-        energy_range:`~astropy.units.Quantity`
+        energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
             Contains statistics, IRF and event lists
         separators : `list` of float
             Contains a list of time (in MJD) to break the current point creation
+            
         Returns
         -------
         intervals : `list` of `~astropy.time.Time`
             List of time intervals
-
         """
 
         def gettime(item):
