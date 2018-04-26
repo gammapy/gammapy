@@ -268,13 +268,15 @@ class Map(object):
         else:
             raise ValueError('Unrecognized map type: {!r}'.format(map_type))
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, overwrite=True, **kwargs):
         """Write to a FITS file.
 
         Parameters
         ----------
         filename : str
             Output file name.
+        overwrite : bool
+            Overwrite existing file?
         hdu : str
             Set the name of the image extension.  By default this will
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
@@ -296,7 +298,6 @@ class Map(object):
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
-        overwrite = kwargs.get('overwrite', True)
         hdulist.writeto(filename, overwrite=overwrite)
 
     @abc.abstractmethod

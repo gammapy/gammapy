@@ -1443,7 +1443,7 @@ class HpxGeom(MapGeom):
         hdu : str
             The HDU extension name
         overwrite : bool
-            True -> overwrite existing files
+            Overwrite existing file?
         """
         hdu_prim = fits.PrimaryHDU()
         hdu_hpx = self.make_hdu(data, hdu=hdu)
@@ -1782,8 +1782,17 @@ class HpxToWcsMapping(object):
         HEALPIX region"""
         return self._valid
 
-    def write(self, fitsfile, overwrite=True):
-        """Write this mapping to a FITS file, to avoid having to recompute it
+    def write(self, filename, overwrite=True):
+        """Write this mapping to a FITS file.
+
+        This can be useful to avoid having to recompute it.
+
+        Parameters
+        ----------
+        filename : str
+            FITS file name
+        overwrite : bool
+            Overwrite existing file?
         """
         from .wcsnd import WcsNDMap
         hpx_header = self._hpx.make_header()
@@ -1801,7 +1810,7 @@ class HpxToWcsMapping(object):
         #    mult_hdu.header[key] = hpx_header[key]
 
         hdulist = index_map.to_hdulist()
-        hdulist.writeto(fitsfile, overwrite=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     @classmethod
     def create(cls, hpx, wcs):
