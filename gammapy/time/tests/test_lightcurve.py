@@ -222,16 +222,9 @@ def test_lightcurve_interval_maker():
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
-    model = PowerLaw(
-        index=2.3 * u.Unit(''),
-        amplitude=3.4e-11 * u.Unit('1 / (cm2 s TeV)'),
-        reference=1 * u.TeV,
-    )
-    intervals = lc_estimator.create_fixed_significance_bin_lc(
+    table = lc_estimator.create_fixed_significance_bin_lc_table(
         significance=3,significance_method='lima',energy_range=[0.2,100]*u.TeV,spectrum_extraction=spec_extract)
-    lic = lc_estimator.light_curve(
-        time_intervals=intervals,
-        spectral_model=model,
-        energy_range=[0.2, 100] * u.TeV
-    )
-    assert_allclose(significance_on_off(lic.table['n_on'],lic.table['n_off'],lic.table['alpha']) >= 3, True)
+
+    assert_allclose(table['significance'] >= 3, True)
+    assert_allclose(table['t_start'][5].value,53343.92371392407,rtol=1e-5)
+    assert_allclose(table['alpha'][5],0.09090909,rtol=1e-5)
