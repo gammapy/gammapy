@@ -554,18 +554,18 @@ class LightCurveEstimator(object):
             # compute effective livetime (for the interval)
             if tmin.value >= obs_start.value and tmax.value <= obs_stop.value:
                 # interval included in obs
-                livetime_to_add = (tmax - tmin).to('s')
+                livetime_to_add = (tmax.value - tmin.value)*86400* u.s#.to('s')
             elif tmin.value >= obs_start.value and tmax.value >= obs_stop.value:
                 # interval min above tstart from obs
-                livetime_to_add = (obs_stop - tmin).to('s')
+                livetime_to_add = (obs_stop.value - tmin.value)*86400* u.s#.to('s')
             elif tmin.value <= obs_start.value and tmax.value <= obs_stop.value:
                 # interval min below tstart from obs
-                livetime_to_add = (tmax - obs_start).to('s')
+                livetime_to_add = (tmax.value - obs_start.value)*86400* u.s#.to('s')
             elif tmin.value <= obs_start.value and tmax.value >= obs_stop.value:
                 # obs included in interval
-                livetime_to_add = (obs_stop - obs_start).to('s')
+                livetime_to_add = (obs_stop.value - obs_start.value)*86400* u.s#.to('s')
             else:
-                livetime_to_add = 0 * u.sec
+                livetime_to_add = 0 * u.s
 
             # Take into account dead time
             livetime_to_add *= (1. - obs.observation_dead_time_fraction)
