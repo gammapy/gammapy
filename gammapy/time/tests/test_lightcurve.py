@@ -17,7 +17,6 @@ from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
 from ..lightcurve import LightCurve, LightCurveEstimator
-from ...stats.poisson import significance_on_off
 
 # time time_min time_max flux flux_err flux_ul
 # 48705.1757 48705.134 48705.2174 0.57 0.29 nan

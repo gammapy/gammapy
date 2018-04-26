@@ -333,11 +333,10 @@ class LightCurveEstimator(object):
             List of time intervals
         """
 
-        return LightCurveEstimator.extract_intervals(self.create_fixed_significance_bin_lc_table(significance,
-                                                                                                 significance_method,
-                                                                                                 energy_range,
-                                                                                                 spectrum_extraction,
-                                                                                                 separators))
+        table = self.create_fixed_significance_bin_lc_table(significance,significance_method,energy_range,
+                                                            spectrum_extraction,separators)
+        intervals = list(zip(table['t_start'], table['t_stop']))
+        return intervals
 
     def create_fixed_significance_bin_lc_table(self, significance, significance_method, energy_range,
                                                spectrum_extraction, separators=[]):
@@ -350,7 +349,7 @@ class LightCurveEstimator(object):
         significance : float
             Target significance for each light curve point
         significance_method:
-            Select the method used to compute the significance ### unused yet ###
+            Select the method used to compute the significance
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
@@ -380,8 +379,10 @@ class LightCurveEstimator(object):
             # start and end will need to be redefined once the data storage format is fixed
             time_holder.append([obs.events.time.min().value - 0.0000001, 'start'])
             time_holder.append([obs.events.time.max().value + 0.0000001, 'end'])
-            obs_properties.append([obs.observation_dead_time_fraction, spectrum_extraction.bkg_estimate[n_obs].a_off])
+            obs_properties.append(dict(deadtime=obs.observation_dead_time_fraction,
+                                       A_off=spectrum_extraction.bkg_estimate[n_obs].a_off))
             n_obs += 1
+        obs_properties = Table(rows=obs_properties)
 
         # prepare the on and off photon list as in the flux point computation -> should be updated accordingly
         for t_index, obs in enumerate(self.obs_list):
@@ -422,7 +423,7 @@ class LightCurveEstimator(object):
                 n += np.sum(time_holder[istart:i] == 'end')
                 istart = i
                 continue
-            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':
+            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':  # only on??
                 continue
 
             # compute alpha
@@ -431,15 +432,15 @@ class LightCurveEstimator(object):
             time = 0
             xm1 = istart
             # loop over observations
-            for x in in_list('end', time_holder[istart:i + 1]):
-                alpha += (1 - obs_properties[n + tmp][0]) * (float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
-                         obs_properties[n + tmp][1]
-                time += (1 - obs_properties[n + tmp][0]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+            for x in in_list('end', time_holder[istart:i+1]):
+                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
+                         obs_properties['A_off'][n + tmp]
+                time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
                 xm1 = x + 1
                 tmp += 1
-            alpha += (1 - obs_properties[n + tmp][0]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
-                     obs_properties[n + tmp][1]
-            time += (1 - obs_properties[n + tmp][0]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
+            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
+                     obs_properties['A_off'][n + tmp]
+            time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
             alpha = time / alpha
             non = np.sum(time_holder[istart:i + 1] == 'on')
             noff = np.sum(time_holder[istart:i + 1] == 'off')
@@ -447,7 +448,6 @@ class LightCurveEstimator(object):
                 continue
             signif = significance_on_off(non, noff, alpha, method=significance_method)
             if signif > significance:
-                n += np.sum(time_holder[istart:i + 1] == 'end')
                 table.append(dict(
                     t_start=Time((float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2, format="mjd"),
                     t_stop=Time((float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2, format="mjd"),
@@ -455,17 +455,10 @@ class LightCurveEstimator(object):
                 while time_holder[i + 1][0] < time_holder[-1][0] and time_holder[i + 1][1] != 'on' and \
                         time_holder[i + 1][1] != 'off':
                     i += 1
+                n += np.sum(time_holder[istart:i+1] == 'end')
                 istart = i + 1
                 i = istart
-
         return Table(rows=table)
-
-    @staticmethod
-    def extract_intervals(table):
-        intervals = []
-        for start, stop in table['t_start', 't_stop']:
-            intervals.append([start, stop])
-        return intervals
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
