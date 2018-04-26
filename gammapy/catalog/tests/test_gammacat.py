@@ -21,7 +21,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 9.590978299538194e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 24,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
     {
         'name': 'HESS J1848-018',
@@ -34,7 +34,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 1.2210315515569183e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 11,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
     {
         'name': 'HESS J1813-178',
@@ -47,7 +47,7 @@ SOURCES = [
         'eflux_1_10TeV_err': 1.4613807070890267e-12 * u.Unit('erg cm-2 s-1'),
         'n_flux_points': 13,
         'is_pointlike': False,
-        'spatial_model': 'Gaussian2D',
+        'spatial_model': 'SkyGaussian',
     },
 ]
 
@@ -163,7 +163,7 @@ class TestSourceCatalogObjectGammaCat:
     def test_spatial_model(self, gammacat, ref):
         source = gammacat[ref['name']]
 
-        spatial_model = source.spatial_model()
+        spatial_model = source.spatial_model
 
         # print(spatial_model); 1 /0
         # TODO: put better asserts on model properties
@@ -171,6 +171,13 @@ class TestSourceCatalogObjectGammaCat:
         assert spatial_model.__class__.__name__ == ref['spatial_model']
 
         assert source.is_pointlike == ref['is_pointlike']
+
+    @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
+    def test_sky_model(self, gammacat, ref):
+        source = gammacat[ref['name']]
+
+        model = source.sky_model
+        # TODO: put asserts
 
 
 class TestGammaCatResource:

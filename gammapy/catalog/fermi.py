@@ -7,13 +7,10 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table, Column
 from astropy.time import Time
-from astropy.modeling.models import Gaussian2D, Disk2D
-from astropy.coordinates import Angle
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise_units_inplace
-from ..image import SkyImage
-from ..image.models import Delta2D, Template2D
+from ..maps import Map
 from ..spectrum import FluxPoints
 from ..spectrum.models import (
     PowerLaw,
@@ -22,6 +19,8 @@ from ..spectrum.models import (
     PLSuperExpCutoff3FGL,
     LogParabola,
 )
+from ..image.models import SkyPointSource, SkyGaussian, SkyDisk, SkyDiffuseMap
+from ..cube.models import SkyModel
 from ..time import LightCurve
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -294,48 +293,54 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         model.parameters.set_parameter_errors(errs)
         return model
 
-    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
+    @property
+    def spatial_model(self):
         """
-        Source spatial model.
+        Source spatial model (`~gammapy.image.models.SpatialModel`).
         """
         d = self.data
-        flux = self.spectral_model.integral(emin, emax)
-        amplitude = flux.to('cm-2 s-1').value
 
         pars = {}
-        glon = Angle(d['GLON']).wrap_at('180d')
-        glat = Angle(d['GLAT']).wrap_at('180d')
+        glon = d['GLON']
+        glat = d['GLAT']
 
         if self.is_pointlike:
-            pars['amplitude'] = amplitude
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            return Delta2D(**pars)
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            return SkyPointSource(
+                lon_0=glon,
+                lat_0=glat,
+            )
         else:
             de = self.data_extended
             morph_type = de['Model_Form'].strip()
 
             if morph_type == 'Disk':
-                pars['x_0'] = glon.value
-                pars['y_0'] = glat.value
-                pars['R_0'] = de['Model_SemiMajor'].to('deg').value
-                pars['amplitude'] = amplitude / (np.pi * pars['R_0'] ** 2)
-                return Disk2D(**pars)
+                return SkyDisk(
+                    lon_0=glon,
+                    lat_0=glat,
+                    r_0=de['Model_SemiMajor'].to('deg'),
+                )
             elif morph_type in ['Map', 'Ring', '2D Gaussian x2']:
                 filename = de['Spatial_Filename'].strip()
-                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/'
-                template = Template2D.read(base + filename)
-                template.amplitude = amplitude
-                return template
+                path = make_path('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/')
+                return SkyDiffuseMap.read(path / filename)
             elif morph_type == '2D Gaussian':
-                pars['x_mean'] = glon.value
-                pars['y_mean'] = glat.value
-                pars['x_stddev'] = de['Model_SemiMajor'].to('deg').value
-                pars['y_stddev'] = de['Model_SemiMajor'].to('deg').value
-                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
-                return Gaussian2D(**pars)
+                # TODO: fill elongation info as soon as model supports it
+                return SkyGaussian(
+                    lon_0=glon,
+                    lat_0=glat,
+                    sigma=de['Model_SemiMajor'].to('deg'),
+                )
             else:
                 raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def sky_model(self):
+        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        spatial_model = self.spatial_model
+        spectral_model = self.spectral_model
+        return SkyModel(spatial_model, spectral_model)
 
     @property
     def is_pointlike(self):
@@ -859,48 +864,53 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         return FluxPoints(table)
 
-    def spatial_model(self, emin=1 * u.TeV, emax=10 * u.TeV):
-        """
-        Source spatial model.
+    @property
+    def spatial_model(self):
+        """Source spatial model (`~gammapy.image.models.SpatialModel`).
         """
         d = self.data
-        flux = self.spectral_model.integral(emin, emax)
-        amplitude = flux.to('cm-2 s-1').value
 
         pars = {}
-        glon = Angle(d['GLON']).wrap_at('180d')
-        glat = Angle(d['GLAT']).wrap_at('180d')
+        glon = d['GLON']
+        glat = d['GLAT']
 
         if self.is_pointlike:
-            pars['amplitude'] = amplitude
-            pars['x_0'] = glon.value
-            pars['y_0'] = glat.value
-            return Delta2D(**pars)
+            pars['lon_0'] = glon
+            pars['lat_0'] = glat
+            return SkyPointSource(
+                lon_0=glon,
+                lat_0=glat,
+            )
         else:
             de = self.data_extended
             morph_type = de['Spatial_Function'].strip()
 
             if morph_type == 'RadialDisk':
-                pars['x_0'] = glon.value
-                pars['y_0'] = glat.value
-                pars['R_0'] = de['Model_SemiMajor'].to('deg').value
-                pars['amplitude'] = amplitude / (np.pi * pars['R_0'] ** 2)
-                return Disk2D(**pars)
-            elif morph_type == 'SpatialMap':
+                return SkyDisk(
+                    lon_0=glon,
+                    lat_0=glat,
+                    r_0=de['Model_SemiMajor'].to('deg'),
+                )
+            elif morph_type in ['SpatialMap']:
                 filename = de['Spatial_Filename'].strip()
-                base = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/'
-                template = Template2D.read(base + filename)
-                template.amplitude = amplitude
-                return template
+                path = make_path('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/')
+                return SkyDiffuseMap.read(path / filename)
             elif morph_type == 'RadialGauss':
-                pars['x_mean'] = glon.value
-                pars['y_mean'] = glat.value
-                pars['x_stddev'] = de['Model_SemiMajor'].to('deg').value
-                pars['y_stddev'] = de['Model_SemiMajor'].to('deg').value
-                pars['amplitude'] = amplitude * 1 / (2 * np.pi * pars['x_stddev'] ** 2)
-                return Gaussian2D(**pars)
+                # TODO: fill elongation info as soon as model supports it
+                return SkyGaussian(
+                    lon_0=glon,
+                    lat_0=glat,
+                    sigma=de['Model_SemiMajor'].to('deg'),
+                )
             else:
                 raise ValueError('Not a valid spatial model{}'.format(morph_type))
+
+    @property
+    def sky_model(self):
+        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        spatial_model = self.spatial_model
+        spectral_model = self.spectral_model
+        return SkyModel(spatial_model, spectral_model)
 
     @property
     def is_pointlike(self):
@@ -1068,7 +1078,7 @@ class SourceCatalog2FHL(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-        self.counts_image = SkyImage.read(filename, hdu='Count Map')
+        self.counts_image = Map.read(filename, hdu='Count Map')
         self.extended_sources_table = Table.read(filename, hdu='Extended Sources')
         self.rois = Table.read(filename, hdu='ROIs')
 
