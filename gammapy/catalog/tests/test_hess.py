@@ -37,6 +37,13 @@ class TestSourceCatalogHGPS:
         assert len(cat.table_identifications) == 31
 
     @staticmethod
+    def test_gaussian_component(cat):
+        # Row index starts at 0, component numbers at 1
+        # Thus we expect `HGPSC 084` at row 83
+        c = cat.gaussian_component(83)
+        assert c.name == 'HGPSC 084'
+
+    @staticmethod
     @requires_dependency('scipy')
     @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
     def test_large_scale_component(cat, source_name):
@@ -83,7 +90,7 @@ class TestSourceCatalogObjectHGPS:
             source.spectral_model()
             source.spatial_model_type
             source.is_pointlike
-            source.spatial_model()
+            source.sky_model
             source.flux_points
 
     @staticmethod
@@ -111,6 +118,13 @@ class TestSourceCatalogObjectHGPS:
         source = cat['HESS J1713-397']
         assert source.data['Spatial_Model'] == 'Shell'
         assert 'Source name          : HESS J1713-397' in str(source)
+
+    @staticmethod
+    def test_components(source):
+        components = source.components
+        assert len(components) == 2
+        c = components[1]
+        assert c.name == 'HGPSC 084'
 
     @staticmethod
     def test_energy_range(source):
@@ -176,95 +190,117 @@ class TestSourceCatalogObjectHGPS:
         assert morph_types == {'gaussian': 52, '2-gaussian': 8, 'shell': 7, 'point-like': 6, '3-gaussian': 5}
 
     @staticmethod
-    def test_spatial_model_point(cat):
-        source = cat['HESS J1826-148']
-        model = source.spatial_model()
-        assert_allclose(model.amplitude, 8.354304806121845e-13)
-        assert_allclose(model.x_0, 16.882482528686523)
-        assert_allclose(model.y_0, -1.2889292240142822)
+    def test_sky_model_point(cat):
+        model = cat['HESS J1826-148'].sky_model
+        p = model.parameters
+        assert_allclose(p['amplitude'].value, 9.815771242691063e-13)
+        assert_allclose(p['lon_0'].value, 16.882482528686523)
+        assert_allclose(p['lat_0'].value, -1.2889292240142822)
 
     @staticmethod
-    def test_spatial_model_gaussian(cat):
-        source = cat['HESS J1119-614']
-        model = source.spatial_model()
-        assert_allclose(model.amplitude, 1.524557226374496e-11)
-        assert_allclose(model.x_mean, -6.78719177e+01)
-        assert_allclose(model.y_mean, -5.33235371e-01)
-        assert_allclose(model.x_stddev, 9.78596658e-02)
-        assert_allclose(model.y_stddev, 9.78596658e-02)
-        assert_allclose(model.theta, 0)
+    def test_sky_model_gaussian(cat):
+        model = cat['HESS J1119-614'].sky_model
+        p = model.parameters
+        assert_allclose(p['amplitude'].value, 7.959899015960725e-13)
+        assert_allclose(p['lon_0'].value, 292.1280822753906)
+        assert_allclose(p['lat_0'].value, -0.5332353711128235)
+        assert_allclose(p['sigma'].value, 0.09785966575145721)
 
-        bbox = model.bounding_box
-        assert_allclose(bbox, [[-1.07146, 0.00499], [-68.41014, -67.33368]], atol=0.001)
-
-    @staticmethod
-    def test_spatial_model_gaussian2(cat):
-        source = cat['HESS J1843-033']
-        models = source.spatial_model()
-
-        model = models[0]
-        assert_allclose(model.amplitude, 1.44536430e-11)
-        assert_allclose(model.x_mean, 2.90472164e+01)
-        assert_allclose(model.y_mean, 2.43896767e-01)
-        assert_allclose(model.x_stddev, 1.24991007e-01)
-        assert_allclose(model.y_stddev, 1.24991007e-01)
-        assert_allclose(model.theta, 0)
-
-        model = models[1]
-        assert_allclose(model.amplitude, 4.91294805e-12)
-        assert_allclose(model.x_mean, 2.87703781e+01)
-        assert_allclose(model.y_mean, -7.27819949e-02)
-        assert_allclose(model.x_stddev, 2.29470655e-01)
-        assert_allclose(model.y_stddev, 2.29470655e-01)
-        assert_allclose(model.theta, 0)
-
-        bbox = model.bounding_box
-        assert_allclose(bbox, [[-1.33487, 1.18930], [27.50829, 30.03246]], atol=0.001)
+        # TODO: bring back the bounding box in the new model classes
+        # bbox = model.bounding_box
+        # assert_allclose(bbox, [[-1.07146, 0.00499], [-68.41014, -67.33368]], atol=0.001)
 
     @staticmethod
-    def test_spatial_model_gaussian3(cat):
-        source = cat['HESS J1825-137']
-        model = source.spatial_model()
-        assert_allclose(model[0].amplitude, 3.662450902166903e-12)
-        assert_allclose(model[1].amplitude, 1.2805462035898928e-11)
-        assert_allclose(model[2].amplitude, 2.1553481912856457e-11)
+    def test_sky_model_gaussian2(cat):
+        model = cat['HESS J1843-033'].sky_model
+        p = model.parameters
+
+        p = model[0].parameters
+        assert_allclose(p['amplitude'].value, 1.343344814726255e-12)
+        assert_allclose(p['lon_0'].value, 29.047216415405273)
+        assert_allclose(p['lat_0'].value, 0.24389676749706268)
+        assert_allclose(p['sigma'].value, 0.12499100714921951)
+
+        p = model[1].parameters
+        assert_allclose(p['amplitude'].value, 1.5390372353277226e-12)
+        assert_allclose(p['lon_0'].value, 28.77037811279297)
+        assert_allclose(p['lat_0'].value, -0.0727819949388504)
+        assert_allclose(p['sigma'].value, 0.2294706553220749)
+
+        # TODO: bounding boxes need to be re-added to the new model classes
+        # bbox = model.bounding_box
+        # assert_allclose(bbox, [[-1.33487, 1.18930], [27.50829, 30.03246]], atol=0.001)
 
     @staticmethod
-    def test_spatial_model_gaussian_extern(cat):
+    def test_sky_model_gaussian3(cat):
+        model = cat['HESS J1825-137'].sky_model
+        assert_allclose(model[0].parameters['amplitude'].value, 5.022436459778401e-12)
+        assert_allclose(model[1].parameters['amplitude'].value, 1.1829840926291801e-11)
+        assert_allclose(model[2].parameters['amplitude'].value, 1.5557788347539403e-12)
+
+    @staticmethod
+    def test_sky_model_gaussian_extern(cat):
         # special test for the only extern source with a gaussian morphology
-        source = cat['HESS J1801-233']
-        model = source.spatial_model()
-        assert_allclose(model.amplitude, 2.4881435269261268e-12)
-        assert_allclose(model.x_mean, 6.65688896e+00)
-        assert_allclose(model.y_mean, -2.67688125e-01)
-        assert_allclose(model.x_stddev, 1.70000002e-01)
-        assert_allclose(model.y_stddev, 1.70000002e-01)
-        assert_allclose(model.theta, 0)
+        model = cat['HESS J1801-233'].sky_model
+        p = model.parameters
+        assert_allclose(p['amplitude'].value, 7.499999970031479e-13)
+        assert_allclose(p['lon_0'].value, 6.656888961791992)
+        assert_allclose(p['lat_0'].value, -0.267688125371933)
+        assert_allclose(p['sigma'].value, 0.17)
 
     @staticmethod
-    def test_spatial_model_shell(cat):
-        source = cat['Vela Junior']
-        model = source.spatial_model()
-        assert_allclose(model.amplitude, 2.33949724e-11)
-        assert_allclose(model.x_0, -9.37126160e+01)
-        assert_allclose(model.y_0, -1.24326038e+00)
-        assert_allclose(model.r_in, 9.50000000e-01)
-        assert_allclose(model.width, 5.00000000e-02)
+    def test_sky_model_shell(cat):
+        model = cat['Vela Junior'].sky_model
+        p = model.parameters
+        assert_allclose(p['amplitude'].value, 3.2163001428830995e-11)
+        assert_allclose(p['lon_0'].value, 266.2873840332031)
+        assert_allclose(p['lat_0'].value, -1.243260383605957)
+        assert_allclose(p['r_i'].value, 0.95)
+        assert_allclose(p['r_o'].value, 1.0)
 
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObjectHGPSComponent:
 
-    @staticmethod
-    def test_get_by_row_idx(cat):
-        # Row index starts at 0, component numbers at 1
-        # Thus we expect `HGPSC 084` at row 83
-        c = cat.gaussian_component(83)
-        assert c.name == 'HGPSC 084'
+    @pytest.fixture(scope='class')
+    def component(self, cat):
+        return cat.gaussian_component(83)
 
     @staticmethod
-    def test_it(cat):
-        c = cat['HESS J1843-033'].components[1]
-        assert c.name == 'HGPSC 084'
-        assert c.index == 83
-        assert 'SourceCatalogObjectHGPSComponent' in repr(c)
+    def test_repr(component):
+        assert 'SourceCatalogObjectHGPSComponent' in repr(component)
+
+    @staticmethod
+    def test_str(component):
+        assert 'Component HGPSC 084' in str(component)
+
+    @staticmethod
+    def test_name(component):
+        assert component.name == 'HGPSC 084'
+
+    @staticmethod
+    def test_index(component):
+        assert component.index == 83
+
+    @staticmethod
+    def test_spatial_model(component):
+        model = component.spatial_model
+        p = model.parameters
+        assert_allclose(p['lon_0'].value, 28.77037811279297)
+        assert_allclose(p.error('lon_0'), 0.058748625218868256)
+        assert_allclose(p['lat_0'].value, -0.0727819949388504)
+        assert_allclose(p.error('lat_0'), 0.06880396604537964)
+        assert_allclose(p['sigma'].value, 0.2294706553220749)
+        assert_allclose(p.error('sigma'), 0.04618723690509796)
+
+    @staticmethod
+    def test_spectral_model(component):
+        model = component.spectral_model
+        p = model.parameters
+        assert_allclose(p['amplitude'].value, 1.5390372353277226e-12)
+        assert_allclose(p.error('amplitude'), 4.721826770727466e-13)
+
+    @staticmethod
+    def test_sky_model(component):
+        model = component.sky_model
+        assert 'SkyModel' in str(model)

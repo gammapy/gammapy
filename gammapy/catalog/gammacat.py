@@ -13,7 +13,6 @@ import numpy as np
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table
-from astropy.coordinates import Angle
 from ..utils.modeling import SourceModel, SourceLibrary, UnknownModelError
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
@@ -286,6 +285,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return model
 
+    @property
     def spatial_model(self):
         """Source spatial model (`~gammapy.image.models.SpatialModel`).
 
@@ -293,19 +293,16 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """
         d = self.data
         morph_type = d['morph_type']
-        pars = {}
 
-        glon = Angle(d['glon']).wrap_at('180d')
-        glat = Angle(d['glat']).wrap_at('180d')
+        glon = d['glon']
+        glat = d['glat']
 
         if morph_type == 'point':
-            pars['lon_0'] = glon
-            pars['lat_0'] = glat
-            return SkyPointSource(**pars)
+            return SkyPointSource(
+                lon_0=glon,
+                lat_0=glat,
+            )
         elif morph_type == 'gauss':
-            pars['lon_0'] = glon
-            pars['lat_0'] = glat
-            pars['sigma'] = d['morph_sigma']
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
             # pars['y_stddev'] = d['morph_sigma']
@@ -314,22 +311,28 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return SkyGaussian(**pars)
+            return SkyGaussian(
+                lon_0=glon,
+                lat_0=glat,
+                sigma=d['morph_sigma'],
+            )
         elif morph_type == 'shell':
-            pars['lon_0'] = glon
-            pars['lat_0'] = glat
-            # TODO: probably we shouldn't guess a shell width here!
-            pars['r_i'] = 0.8 * d['morph_sigma']
-            pars['r_0'] = d['morph_sigma']
-            return SkyShell(**pars)
+            return SkyShell(
+                lon_0=glon,
+                lat_0=glat,
+                # TODO: probably we shouldn't guess a shell width here!
+                r_i=0.8 * d['morph_sigma'],
+                r_o=d['morph_sigma'],
+            )
         elif morph_type == 'none':
             raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
         else:
             raise NotImplementedError('Unknown spatial model: {!r}'.format(morph_type))
 
+    @property
     def sky_model(self):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
-        spatial_model = self.spatial_model()
+        spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model)
 

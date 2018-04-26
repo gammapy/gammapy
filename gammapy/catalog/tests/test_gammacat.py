@@ -163,7 +163,7 @@ class TestSourceCatalogObjectGammaCat:
     def test_spatial_model(self, gammacat, ref):
         source = gammacat[ref['name']]
 
-        spatial_model = source.spatial_model()
+        spatial_model = source.spatial_model
 
         # print(spatial_model); 1 /0
         # TODO: put better asserts on model properties
@@ -171,6 +171,13 @@ class TestSourceCatalogObjectGammaCat:
         assert spatial_model.__class__.__name__ == ref['spatial_model']
 
         assert source.is_pointlike == ref['is_pointlike']
+
+    @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
+    def test_sky_model(self, gammacat, ref):
+        source = gammacat[ref['name']]
+
+        model = source.sky_model
+        # TODO: put asserts
 
 
 class TestGammaCatResource:

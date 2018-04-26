@@ -12,7 +12,7 @@ from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
 from ..spectrum import FluxPoints
-from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
+from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
 from ..cube.models import SkyModel
 from ..background.models import GaussianBand2D
@@ -42,7 +42,7 @@ class SourceCatalogObjectHGPSComponent(object):
     SourceCatalogHGPS, SourceCatalogObjectHGPS
     """
     _source_name_key = 'Component_ID'
-    _source_index_key = 'catalog_row_index'
+    _source_index_key = 'row_index'
 
     def __init__(self, data):
         self.data = OrderedDict(data)
@@ -77,16 +77,39 @@ class SourceCatalogObjectHGPSComponent(object):
 
     @property
     def spatial_model(self):
-        """Component spatial model (`~astropy.modeling.models.Gaussian2D`)."""
+        """Component spatial model (`~gammapy.image.models.SkyGaussian`)."""
         d = self.data
-        glon = Angle(d['GLON']).wrap_at('180d')
-        glat = Angle(d['GLAT']).wrap_at('180d')
-
-        return SkyGaussian(
-            lon_0=glon,
-            lat_0=glat,
+        model = SkyGaussian(
+            lon_0=d['GLON'],
+            lat_0=d['GLAT'],
             sigma=d['Size'],
         )
+        model.parameters.set_parameter_errors(dict(
+            lon_0=d['GLON_Err'],
+            lat_0=d['GLAT_Err'],
+            sigma=d['Size_Err'],
+        ))
+        return model
+
+    @property
+    def spectral_model(self):
+        """Component spectral model (`gammapy.spectrum.models.PowerLaw2`)."""
+        d = self.data
+        model = PowerLaw2(
+            amplitude=d['Flux_Map'],
+            index=2.3,
+            emin='1 TeV',
+            emax='1e5 TeV',
+        )
+        model.parameters.set_parameter_errors(dict(
+            amplitude=d['Flux_Map_Err'],
+        ))
+        return model
+
+    @property
+    def sky_model(self):
+        """Component sky model (`gammapy.cube.models.SkyModel`)."""
+        return SkyModel(self.spatial_model, self.spectral_model)
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
@@ -450,6 +473,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pointlike = d['Spatial_Model'] == 'Point-Like'
         return pointlike or has_size_ul
 
+    @property
     def spatial_model(self):
         """Spatial model (`~gammapy.image.models.SpatialModel`).
 
@@ -463,67 +487,53 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         TODO: add parameter errors
         """
         d = self.data
-        pars = {}
-        glon = Angle(d['GLON']).wrap_at('180d')
-        glat = Angle(d['GLAT']).wrap_at('180d')
+        glon = d['GLON']
+        glat = d['GLAT']
 
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            pars['lon_0'] = glon
-            pars['lat_0'] = glat
-            return SkyPointSource(**pars)
-
-        elif spatial_type in ['gaussian', '2-gaussian', '3-gaussian']:
-            amplitude_total = d['Flux_Map'].to('cm-2 s-1').value
-            try:
-                models = [component.spatial_model for component in self.components]
-            except AttributeError:
-                # there is one external source (HESS J1801-233) where there is no
-                # component info available, so we create it here locally
-                models = [SourceCatalogObjectHGPSComponent(d).spatial_model]
-
-            # TODO: the multi-Gaussian case requires correct relative fluxes
-            # stored in a spectral component!
-            # for model in models:
-            #     # weight total flux according to relative amplitude
-            #     model.amplitude = model.amplitude / amplitude_total
-
-            if spatial_type == 'gaussian':
-                return models[0]
-            elif spatial_type == '2-gaussian':
-                model = models[0] + models[1]
-
-                # use generic bounding box of 2 deg width and height
-                model.bounding_box = ((glat.deg - 2, glat.deg + 2),
-                                      (glon.deg - 2, glon.deg + 2))
-                return model
-            elif spatial_type == '3-gaussian':
-                model = models[0] + models[1] + models[2]
-
-                # use generic bounding box of 2 deg width and height
-                model.bounding_box = ((glat.deg - 2, glat.deg + 2),
-                                      (glon.deg - 2, glon.deg + 2))
-                return model
-
+            model = SkyPointSource(
+                lon_0=glon,
+                lat_0=glat,
+            )
+        elif spatial_type == 'gaussian':
+            model = SkyGaussian(
+                lon_0=glon,
+                lat_0=glat,
+                sigma=d['Size'],
+            )
+        elif spatial_type in {'2-gaussian', '3-gaussian'}:
+            raise ValueError('For Gaussian or Multi-Gaussian models, use sky_model()!')
         elif spatial_type == 'shell':
-            pars['lon_0'] = glon
-            pars['lat_0'] = glat
             # HGPS contains no information on shell width
             # Here we assuma a 5% shell width for all shells.
-            r_out = d['Size'].to('deg')
-            pars['r_i'] = 0.95 * r_out
-            pars['r_o'] = r_out
-            return SkyShell(**pars)
+            r_out = d['Size']
+            model = SkyShell(
+                lon_0=glon,
+                lat_0=glat,
+                r_i=0.95 * r_out,
+                r_o=r_out,
 
+            )
         else:
             raise ValueError('Not a valid spatial model: {}'.format(spatial_type))
 
+        return model
+
+    @property
     def sky_model(self):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
-        spatial_model = self.spatial_model()
-        spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model)
+        if self.spatial_model_type in {'2-gaussian', '3-gaussian'}:
+            models = [c.sky_model for c in self.components]
+            return SkySumModel(models)
+        else:
+            spatial_model = self.spatial_model
+            # TODO: there are two spectral models
+            # Here we only expose the default
+            # Change sky_model into a method and re-expose option to select spectral model?
+            spectral_model = self.spectral_model()
+            return SkyModel(spatial_model, spectral_model)
 
     @property
     def flux_points(self):
@@ -674,4 +684,53 @@ class SourceCatalogHGPS(SourceCatalog):
     def gaussian_component(self, row_idx):
         """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
         data = table_row_to_dict(self.table_components[row_idx])
+        data['row_index'] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
+
+
+class SkySumModel(object):
+    """Additive sum of `SkyModel`.
+
+    TODO: fully implement this class or remove?
+
+    Not sure if we want this class, or only a + operator on SkyModel.
+    If we keep it, then probably SkyModel should become an ABC
+    and the current SkyModel renamed to SkyModelFactorised or something like that?
+
+    I'm only adding this for now as a hack to migrate the multi-Gauss HGPS
+    models to the new model classes.
+    See https://github.com/gammapy/gammapy/pull/1387
+
+    Parameters
+    ----------
+    models : list
+        List of SkyModel objects
+    """
+
+    def __init__(self, models):
+        self._models = models
+
+    def __len__(self):
+        return len(self._models)
+
+    def __getitem__(self, item):
+        return self._models[item]
+
+    @property
+    def parameters(self):
+        """Concatenated parameters.
+
+        Currently no way to distinguish spectral and spatial.
+        """
+        from ..utils.modeling import ParameterList
+        pars = []
+        for model in self._models:
+            for p in model.parameters:
+                pars.append(p)
+        return ParameterList(pars)
+
+    def evaluate(self, lon, lat, energy):
+        # TODO: untested; add test or remove
+        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
+
+

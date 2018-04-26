@@ -107,6 +107,16 @@ class TestFermi3FGLObject:
         assert_quantity_allclose(dnde, ref['dnde'])
         assert_quantity_allclose(dnde_err, ref['dnde_err'])
 
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    def test_spatial_model(self, ref):
+        model = self.cat[ref['idx']].spatial_model
+        # TODO: add asserts
+
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    def test_sky_model(self, ref):
+        model = self.cat[ref['idx']].sky_model
+        # TODO: add asserts
+
     def test_flux_points(self):
         flux_points = self.source.flux_points
 
@@ -253,6 +263,16 @@ class TestFermi3FHLObject:
         assert isinstance(model, ref['spec_type'])
         assert_quantity_allclose(dnde, ref['dnde'])
         assert_quantity_allclose(dnde_err, ref['dnde_err'])
+
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    def test_spatial_model(self, ref):
+        model = self.cat[ref['idx']].spatial_model
+        # TODO: add asserts
+
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    def test_sky_model(self, ref):
+        model = self.cat[ref['idx']].sky_model
+        # TODO: add asserts
 
     def test_flux_points(self):
         flux_points = self.source.flux_points

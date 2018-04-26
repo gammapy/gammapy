@@ -133,6 +133,10 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return models
 
+    # TODO: add spatial models
+
+    # TODO: add sky model property
+
 
 class SourceCatalog2HWC(SourceCatalog):
     """HAWC 2HWC catalog.
