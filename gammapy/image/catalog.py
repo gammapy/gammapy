@@ -4,10 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-from astropy.wcs import WCS
-from astropy.units import Quantity
 from astropy import units as u
-from astropy.table import Table
 from .core import SkyImage
 from .lists import SkyImageList
 
@@ -109,7 +106,9 @@ class CatalogImageEstimator(object):
 
         for source in selection:
             try:
-                spatial_model = source.spatial_model(emin=p['emin'], emax=p['emax'])
+                model = source.sky_model()
+                print(model)
+                print(dir(model))
             # TODO: remove this error handling and add selection to SourceCatalog
             # class
             except (NotImplementedError, NoDataAvailableError):
@@ -119,7 +118,7 @@ class CatalogImageEstimator(object):
                 # use 5 pixel bbox for point-like models
                 size = BBOX_DELTA2D_PIX * image.wcs_pixel_scale().to('deg')
             else:
-                height, width = np.diff(spatial_model.bounding_box)
+                height, width = np.diff(model.spatial_model.bounding_box)
                 size = (float(height) * u.deg, float(width) * u.deg)
 
             cutout = image.cutout(source.position, size=size)
@@ -132,7 +131,8 @@ class CatalogImageEstimator(object):
             # evaluate model on smaller image and paste
             c = cutout.coordinates()
             l, b = c.galactic.l.wrap_at('180d'), c.galactic.b
-            cutout.data = spatial_model(l.deg, b.deg) * solid_angle
+            flux = model.spectral_model.integral(emin=p['emin'], emax = p['emax'])
+            cutout.data = flux * model.spatial_model(l, b) * solid_angle
             image.paste(cutout)
 
         return image
