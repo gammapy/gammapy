@@ -13,7 +13,6 @@ import numpy as np
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table
-from ..utils.modeling import SourceModel, SourceLibrary, UnknownModelError
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
