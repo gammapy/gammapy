@@ -3,5 +3,4 @@
 Morphology models.
 """
 from .gauss import *
-from .shapes import *
 from .new import *

@@ -7,7 +7,6 @@ from .basic import *
 from .measure import *
 from .profile import *
 from .plotting import *
-from .catalog import *
 from .core import *
 from .lists import *
 from .radial_profile import *
