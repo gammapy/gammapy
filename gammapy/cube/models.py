@@ -59,19 +59,29 @@ class SkyModel(object):
 
     def _init_parameters(self):
         """Create flat list of parameters"""
-        parameters = self._spatial_model.parameters.copy()
-        parameters.parameters += self._spectral_model.parameters.parameters
+        parameters = self.spatial_model.parameters.copy()
+        parameters.parameters += self.spectral_model.parameters.parameters
         self._parameters = parameters
+
+    @property
+    def spatial_model(self):
+        """`~gammapy.image.models.SkySpatialModel`"""
+        return self._spatial_model
+
+    @property
+    def spectral_model(self):
+        """`~gammapy.spectrum.models.SpectralModel`"""
+        return self._spectral_model
 
     @property
     def spatial_pars(self):
         """List of spatial parameter names"""
-        return self._spatial_model.parameters.names
+        return self.spatial_model.parameters.names
 
     @property
     def spectral_pars(self):
         """List of spectral parameter names"""
-        return self._spectral_model.parameters.names
+        return self.spectral_model.parameters.names
 
     @property
     def parameters(self):
@@ -85,12 +95,12 @@ class SkyModel(object):
     def __repr__(self):
         fmt = '{}(spatial_model={!r}, spectral_model={!r})'
         return fmt.format(self.__class__.__name__,
-                          self._spatial_model, self._spectral_model)
+                          self.spatial_model, self.spectral_model)
 
     def __str__(self):
         ss = '{}\n\n'.format(self.__class__.__name__)
-        ss += 'spatial_model = {}\n\n'.format(self._spatial_model)
-        ss += 'spectral_model = {}\n'.format(self._spectral_model)
+        ss += 'spatial_model = {}\n\n'.format(self.spatial_model)
+        ss += 'spectral_model = {}\n'.format(self.spectral_model)
         return ss
 
     def evaluate(self, lon, lat, energy):
@@ -119,8 +129,8 @@ class SkyModel(object):
             else:
                 spectral_kwargs[par.name] = par.quantity
 
-        val_spatial = self._spatial_model.evaluate(lon, lat, **spatial_kwargs)
-        val_spectral = self._spectral_model.evaluate(energy, **spectral_kwargs)
+        val_spatial = self.spatial_model.evaluate(lon, lat, **spatial_kwargs)
+        val_spectral = self.spectral_model.evaluate(energy, **spectral_kwargs)
         val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
 
         val = val_spatial * val_spectral

@@ -70,6 +70,14 @@ class Parameter(object):
 
         return ss.format(**self.__dict__)
 
+    def to_dict(self):
+        return dict(name=self.name,
+                    value=float(self.value),
+                    unit=str(self.unit),
+                    frozen=self.frozen,
+                    min=float(self.parmin),
+                    max=float(self.parmax))
+
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
@@ -117,6 +125,25 @@ class ParameterList(object):
 
         raise IndexError('Parameter {} not found for : {}'.format(name, self))
 
+    def to_dict(self):
+        retval = dict(parameters=list(), covariance=None)
+        for par in self.parameters:
+            retval['parameters'].append(par.to_dict())
+        if self.covariance is not None:
+            retval['covariance'] = self.covariance.tolist()
+        return retval
+
+    def to_list_of_dict(self):
+        result = []
+        for parameter in self.parameters:
+            vals = parameter.to_dict()
+            if self.covariance is None:
+                vals['error'] = np.nan
+            else:
+                vals['error'] = self.error(parameter.name)
+            result.append(vals)
+        return result
+
     def to_table(self):
         """
         Serialize parameter list into `~astropy.table.Table`
@@ -131,6 +158,23 @@ class ParameterList(object):
         for name in formats:
             table[name].format = formats[name]
         return table
+
+    @classmethod
+    def from_dict(cls, val):
+        pars = list()
+        for par in val['parameters']:
+            pars.append(Parameter(name=par['name'],
+                                  value=float(par['value']),
+                                  unit=par['unit'],
+                                  parmin=float(par['min']),
+                                  parmax=float(par['max']),
+                                  frozen=par['frozen']))
+            try:
+                covariance = np.array(val['covariance'])
+            except KeyError:
+                covariance = None
+
+        return cls(parameters=pars, covariance=covariance)
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class

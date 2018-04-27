@@ -125,7 +125,7 @@ def xml_to_parameter_list(xml, which):
             unit = unit,
             parmin = float(par['@min']),
             parmax = float(par['@max']),
-            frozen = bool(par['@free'])
+            frozen = bool(1 - int(par['@free']))
         ))
     return ParameterList(parameters)
 
