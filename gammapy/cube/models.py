@@ -20,6 +20,18 @@ class SourceLibrary(object):
     ----------
     skymodels : list of `~gammapy.cube.models.SkyModel`
         Sky models
+
+    Examples
+    --------
+
+    Read a SourceLibrary from an XML file
+
+    .. code-block :: python
+
+        from gammapy.cube import SourceLibrary
+        filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
+        sourcelib = SourceLibrary.from_xml(filename)
+
     """
     def __init__(self, skymodels):
         self.skymodels = skymodels
