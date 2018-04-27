@@ -189,14 +189,16 @@ class WcsNDMap(WcsMap):
             raise ValueError('Invalid interpolation method: {}'.format(interp))
 
         from scipy.interpolate import griddata
-        grid_coords = self.geom.get_coord(flat=True)
+        grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
-        vals = griddata(grid_coords, data, coords, method=method)
+        vals = griddata(grid_coords, data, tuple(coords), method=method)
+
         m = ~np.isfinite(vals)
         if np.any(m):
             vals_fill = griddata(grid_coords, data, tuple([c[m] for c in coords]),
                                  method='nearest')
             vals[m] = vals_fill
+
         return vals
 
     def interp_image(self, coords, order=1):

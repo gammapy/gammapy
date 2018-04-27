@@ -620,10 +620,11 @@ class MapCoord(object):
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
     copy : bool
-        Make copies of the input arrays.  If False then this object will store views.
+        Make copies of the input arrays?
+        If False then this object will store views.
     match_by_name : bool
-        Match coordinates to axes by name.  If false coordinates will
-        be matched by index.
+        Match coordinates to axes by name?
+        If false coordinates will be matched by index.
     """
 
     def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
@@ -690,9 +691,9 @@ class MapCoord(object):
 
     @classmethod
     def _from_lonlat(cls, coords, coordsys=None, copy=False):
-        """Create a `~MapCoord` from a tuple of coordinate vectors.  The first
-        two elements of the tuple should be longitude and latitude in
-        degrees.
+        """Create a `~MapCoord` from a tuple of coordinate vectors.
+
+        The first two elements of the tuple should be longitude and latitude in degrees.
 
         Parameters
         ----------
@@ -777,9 +778,10 @@ class MapCoord(object):
 
     @classmethod
     def create(cls, data, coordsys=None, copy=False):
-        """Create a new `~MapCoord` object.  This method can be used to create
-        either unnamed (with tuple input) or named (via dict input)
-        axes.
+        """Create a new `~MapCoord` object.
+
+        This method can be used to create either unnamed (with tuple input)
+        or named (via dict input) axes.
 
         Parameters
         ----------
