@@ -147,6 +147,16 @@ class EventListBase(object):
         return self.time_ref + met
 
     @property
+    def obs_start(self):
+        """Observation start time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self.table.meta['TSTART'],'second')
+
+    @property
+    def obs_stop(self):
+        """Observation stop time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self.table.meta['TSTOP'], 'second')
+
+    @property
     def radec(self):
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
 
@@ -299,8 +309,8 @@ class EventListBase(object):
         """Select events in time interval.
         """
         time = self.time
-        mask = (time_interval[0].value <= time.value)
-        mask &= (time.value < time_interval[1].value)
+        mask = (time_interval[0] <= time)
+        mask &= (time < time_interval[1])
         return self.select_row_subset(mask)
 
     def select_sky_cone(self, center, radius):

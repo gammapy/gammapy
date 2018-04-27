@@ -18,6 +18,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
 from ..lightcurve import LightCurve, LightCurveEstimator
 
+
 # time time_min time_max flux flux_err flux_ul
 # 48705.1757 48705.134 48705.2174 0.57 0.29 nan
 # 48732.89195 48732.8503 48732.9336 0.39 0.29 nan
@@ -216,14 +217,18 @@ def test_lightcurve_interval_maker():
     t = intervals[0]
     assert_allclose(t[1].value - t[0].value, 500 / (24 * 3600), rtol=1e-5)
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
     table = lc_estimator.create_fixed_significance_bin_lc_table(
-        significance=3,significance_method='lima',energy_range=[0.2,100]*u.TeV,spectrum_extraction=spec_extract)
+        significance=3, significance_method='lima', energy_range=[0.2, 100] * u.TeV, spectrum_extraction=spec_extract)
 
     assert_allclose(table['significance'] >= 3, True)
-    assert_allclose(table['t_start'][5].value,53343.92371392407,rtol=1e-5)
-    assert_allclose(table['alpha'][5],0.09090909,rtol=1e-5)
+    assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-5)
+    assert_allclose(table['alpha'][5], 0.09090909, rtol=1e-5)
+    assert_allclose(len(table), 71)
+    assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-5)
+    assert_allclose(table['t_stop'][60].value, 53343.97240580127, rtol=1e-5)

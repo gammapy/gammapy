@@ -321,23 +321,6 @@ class LightCurveEstimator(object):
             ])
         return intervals
 
-    def create_fixed_significance_bin_lc(self, significance, significance_method, energy_range,
-                                         spectrum_extraction, separators=[]):
-        """
-
-        Create time intervals such that each bin of a light curve reach a given significance.
-
-        Returns
-        -------
-        intervals : `list` of `~astropy.time.Time`
-            List of time intervals
-        """
-
-        table = self.create_fixed_significance_bin_lc_table(significance,significance_method,energy_range,
-                                                            spectrum_extraction,separators)
-        intervals = list(zip(table['t_start'], table['t_stop']))
-        return intervals
-
     def create_fixed_significance_bin_lc_table(self, significance, significance_method, energy_range,
                                                spectrum_extraction, separators=[]):
         """
@@ -348,8 +331,8 @@ class LightCurveEstimator(object):
         ----------
         significance : float
             Target significance for each light curve point
-        significance_method:
-            Select the method used to compute the significance
+        significance_method : {‘lima’, ‘simple’}
+            Significance method (see `~gammapy.stats.significance_on_off`)
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
@@ -361,6 +344,12 @@ class LightCurveEstimator(object):
         -------
         table : `~astropy.table.Table`
             Table of time intervals  and information about their content : on/off events, alpha, significance
+
+        Examples
+        -------
+        extract intervals for light curve :
+            intervals = list(zip(table['t_start'], table['t_stop']))
+
         """
 
         def in_list(item, L):
@@ -373,12 +362,12 @@ class LightCurveEstimator(object):
         n_obs = 0
 
         for time in separators:
-            time_holder.append([time, 'break'])
+            time_holder.append([Time(time,format('mjd')), 'break'])
 
         for obs in spectrum_extraction.obs_list:
             # start and end will need to be redefined once the data storage format is fixed
-            time_holder.append([obs.events.time.min().value - 0.0000001, 'start'])
-            time_holder.append([obs.events.time.max().value + 0.0000001, 'end'])
+            time_holder.append([obs.events.obs_start, 'start'])
+            time_holder.append([obs.events.obs_stop, 'end'])
             obs_properties.append(dict(deadtime=obs.observation_dead_time_fraction,
                                        A_off=spectrum_extraction.bkg_estimate[n_obs].a_off))
             n_obs += 1
@@ -402,16 +391,16 @@ class LightCurveEstimator(object):
             off = off.select_energy(energy_range)
 
             for time in on.time:
-                time_holder.append([time.value, 'on'])
+                time_holder.append([time, 'on'])
             for time in off.time:
-                time_holder.append([time.value, 'off'])
+                time_holder.append([time, 'off'])
 
         # sort all elements in the table by time
         time_holder = sorted(time_holder, key=lambda item: item[0])
         time_holder = np.asarray(time_holder)
-        # print(time_holder)
+        #print(time_holder)
 
-        table = []
+        rows = []
         istart = 1
         i = 1
         n = 0
@@ -423,7 +412,7 @@ class LightCurveEstimator(object):
                 n += np.sum(time_holder[istart:i] == 'end')
                 istart = i
                 continue
-            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':  # only on??
+            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':
                 continue
 
             # compute alpha
@@ -432,15 +421,16 @@ class LightCurveEstimator(object):
             time = 0
             xm1 = istart
             # loop over observations
+
             for x in in_list('end', time_holder[istart:i+1]):
-                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
+                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[x][0] - time_holder[xm1][0]).value * \
                          obs_properties['A_off'][n + tmp]
-                time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                time += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[x][0] - time_holder[xm1][0]).value
                 xm1 = x + 1
                 tmp += 1
-            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
+            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[i][0] - time_holder[xm1][0]).value * \
                      obs_properties['A_off'][n + tmp]
-            time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
+            time += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[i][0] - time_holder[xm1][0]).value
             alpha = time / alpha
             non = np.sum(time_holder[istart:i + 1] == 'on')
             noff = np.sum(time_holder[istart:i + 1] == 'off')
@@ -448,9 +438,9 @@ class LightCurveEstimator(object):
                 continue
             signif = significance_on_off(non, noff, alpha, method=significance_method)
             if signif > significance:
-                table.append(dict(
-                    t_start=Time((float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2, format="mjd"),
-                    t_stop=Time((float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2, format="mjd"),
+                rows.append(dict(
+                    t_start=time_holder[istart - 1][0] + (time_holder[istart][0]-time_holder[istart - 1][0])/2,
+                    t_stop=time_holder[i][0] + (time_holder[i + 1][0]-time_holder[i][0]) / 2,
                     n_on=non, n_off=noff, alpha=alpha, significance=signif))
                 while time_holder[i + 1][0] < time_holder[-1][0] and time_holder[i + 1][1] != 'on' and \
                         time_holder[i + 1][1] != 'off':
@@ -458,7 +448,8 @@ class LightCurveEstimator(object):
                 n += np.sum(time_holder[istart:i+1] == 'end')
                 istart = i + 1
                 i = istart
-        return Table(rows=table)
+
+        return Table(rows=rows)
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
@@ -544,9 +535,9 @@ class LightCurveEstimator(object):
             spec = self.obs_spec[t_index]
 
             # discard observations not matching the time interval
-            obs_start = obs.events.time.min()
-            obs_stop = obs.events.time.max()
-            if (tmin.value < obs_start.value and tmax.value < obs_start.value) or (tmin.value > obs_stop.value):
+            obs_start = obs.events.obs_start
+            obs_stop = obs.events.obs_stop
+            if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
                 continue
 
             useinterval = True
@@ -573,18 +564,18 @@ class LightCurveEstimator(object):
             n_off_obs = len(off.table)
 
             # compute effective livetime (for the interval)
-            if tmin.value >= obs_start.value and tmax.value <= obs_stop.value:
+            if tmin >= obs_start and tmax <= obs_stop:
                 # interval included in obs
-                livetime_to_add = (tmax.value - tmin.value) * 86400 * u.s  # .to('s')
-            elif tmin.value >= obs_start.value and tmax.value >= obs_stop.value:
+                livetime_to_add = (tmax - tmin).to('s')
+            elif tmin >= obs_start and tmax >= obs_stop:
                 # interval min above tstart from obs
-                livetime_to_add = (obs_stop.value - tmin.value) * 86400 * u.s  # .to('s')
-            elif tmin.value <= obs_start.value and tmax.value <= obs_stop.value:
+                livetime_to_add = (obs_stop - tmin).to('s')
+            elif tmin <= obs_start and tmax <= obs_stop:
                 # interval min below tstart from obs
-                livetime_to_add = (tmax.value - obs_start.value) * 86400 * u.s  # .to('s')
-            elif tmin.value <= obs_start.value and tmax.value >= obs_stop.value:
+                livetime_to_add = (tmax - obs_start).to('s')
+            elif tmin <= obs_start and tmax >= obs_stop:
                 # obs included in interval
-                livetime_to_add = (obs_stop.value - obs_start.value) * 86400 * u.s  # .to('s')
+                livetime_to_add = (obs_stop - obs_start).to('s')
             else:
                 livetime_to_add = 0 * u.s
 
