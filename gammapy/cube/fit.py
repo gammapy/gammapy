@@ -49,7 +49,7 @@ class SkyModelMapFit(object):
     @property
     def minuit(self):
         """`~iminuit.Minuit` object"""
-        return self._npred
+        return self._minuit
 
     def _init_evaluator(self):
         """Initialize SkyModelEvaluator"""
