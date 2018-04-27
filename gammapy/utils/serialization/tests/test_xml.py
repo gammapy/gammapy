@@ -5,6 +5,7 @@ from ...scripts import make_path
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
 from ....image import models as spatial
+import pytest
 
 def test_xml_to_source_library():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
@@ -29,5 +30,39 @@ def test_xml_to_source_library():
     assert pars1['lon_0'].parmin == -360
     assert pars1['lon_0'].frozen == True
 
+    model3 = sourcelib.skymodels[2]
+    assert isinstance(model3.spectral_model, spectral.PowerLaw)
+    assert isinstance(model3.spatial_model, spatial.SkyDiffuseMap)
+
+    pars3 = model3.parameters
+    assert pars3['index'].value == 0
+    assert pars3['index'].unit == ''
+    assert pars3['index'].parmax == 1
+    assert pars3['index'].parmin == -1
+    assert pars3['index'].frozen == True
+
+    assert pars3['norm'].value == 1.0
+    assert pars3['norm'].unit == ''
+    assert pars3['norm'].parmax == 1e3
+    assert pars3['norm'].parmin == 1e-3
+    assert pars3['norm'].frozen == True
+
     # TODO: Test Evaluate combined model as soon as '+' works for SkyModel
+
+
+@pytest.mark.parametrize('filenames',[[
+     '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
+#     '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+]])
+def test_models(filenames, tmpdir):
+    outfile = tmpdir / 'models_out.xml'
+    for filename in filenames:
+        sourcelib = SourceLibrary.from_xml(filename)
+        sourcelib.to_xml(outfile)
+
+        sourcelib_roundtrip = SourceLibrary.from_xml(outfile)
+
+        for model, model_roundtrip in zip(sourcelib.skymodels,
+                                          sourcelib_roundtrip.skymodels):
+            assert str(model) == str(model_roundtrip)
 

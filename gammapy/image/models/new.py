@@ -261,13 +261,16 @@ class SkyDiffuseMap(SkySpatialModel):
         Map template
     norm : `~astropy.units.Quantity`
         Norm parameter (multiplied with map values)
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, map, norm=1):
+    def __init__(self, map, norm=1, meta=dict()):
         self._map = map
         self.parameters = ParameterList([
             Parameter('norm', norm),
         ])
+        self.meta = meta
 
     @classmethod
     def read(cls, filename, **kwargs):

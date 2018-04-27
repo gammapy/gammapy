@@ -19,9 +19,33 @@ import gammapy.spectrum.models as spectral
 
 __all__ = [
     'UnknownModelError',
-    'source_library_to_xml',
+    'UnknownParameterError',
     'xml_to_source_library',
+    'xml_to_skymodel',
+    'xml_to_model',
+    'xml_to_parameter_list',
+    'source_library_to_xml',
 ]
+
+
+# TODO: MapCubeFunction does not have a good equivalent yet
+model_registry = dict(spatial=dict(), spectral=dict())
+model_registry['spatial']['SkyDirFunction'] = spatial.SkyPointSource
+model_registry['spatial']['MapCubeFunction'] = spatial.SkyDiffuseMap
+model_registry['spatial']['ConstantValue'] = spatial.SkyDiffuseConstant
+model_registry['spectral']['PowerLaw'] = spectral.PowerLaw
+model_registry['spectral']['FileFunction'] = spectral.TableModel
+
+
+parname_registry = dict(spatial=dict(), spectral=dict())
+parname_registry['spatial']['RA'] = 'lon_0', 'deg'
+parname_registry['spatial']['DEC'] = 'lat_0', 'deg'
+parname_registry['spatial']['Normalization'] = 'norm', ''
+parname_registry['spatial']['Value'] = 'value', 'MeV cm-2 s-1'
+parname_registry['spectral']['Prefactor'] = 'amplitude', 'MeV cm-2 s-1'
+parname_registry['spectral']['Index'] = 'index', ''
+parname_registry['spectral']['Scale'] = 'reference', 'MeV'
+parname_registry['spectral']['Normalization'] = 'scale', ''
 
 
 class UnknownModelError(ValueError):
@@ -29,15 +53,12 @@ class UnknownModelError(ValueError):
     Error when encountering unknown model types.
     """
 
+
 class UnknownParameterError(ValueError):
     """
     Error when encountering unknown model types.
     """
 
-def source_library_to_xml(skymodels):
-    """
-    Convert `~gammapy.cube.models.SkyModelList` to XML
-    """
 
 def xml_to_source_library(xml):
     """
@@ -57,7 +78,7 @@ def xml_to_skymodel(xml):
     # TODO: type_ is not used anywhere
     type_ = xml['@type']
 
-    name = xml['@name']    
+    name = xml['@name']
     spatial = xml_to_model(xml['spatialModel'], 'spatial')
     spectral = xml_to_model(xml['spectrum'], 'spectral')
     return SkyModel(spatial_model=spatial, spectral_model=spectral, name=name)
@@ -80,10 +101,12 @@ def xml_to_model(xml, which):
     if type_ == 'MapCubeFunction':
         filename = xml['@file']
         map_ = Map.read(filename)
-        model = model(map=map_, norm=parameters['norm'].value)
+        model = model(map=map_, norm=-1, meta=dict(filename=filename))
+        model.parameters = parameters
     elif type_ == 'FileFunction':
         filename = xml['@file']
-        model = model.read_fermi_isotropic_model(filename)
+        model = model.read_fermi_isotropic_model(filename,
+                                                 meta=dict(filename=filename))
     else:
         # TODO: The new model API should support this, see issue #1398
         # >>> return model(parameters)
@@ -94,15 +117,6 @@ def xml_to_model(xml, which):
         model = model(**kwargs)
         model.parameters = parameters
     return model
-
-
-# TODO: MapCubeFunction does not have a good equivalent yet
-model_registry = dict(spatial=dict(), spectral=dict())
-model_registry['spatial']['SkyDirFunction'] = spatial.SkyPointSource
-model_registry['spatial']['MapCubeFunction'] = spatial.SkyDiffuseMap
-model_registry['spatial']['ConstantValue'] = spatial.SkyDiffuseConstant
-model_registry['spectral']['PowerLaw'] = spectral.PowerLaw
-model_registry['spectral']['FileFunction'] = spectral.TableModel
 
 
 def xml_to_parameter_list(xml, which):
@@ -120,22 +134,96 @@ def xml_to_parameter_list(xml, which):
             raise UnknownParameterError(msg.format(which, par['@name']))
 
         parameters.append(Parameter(
-            name = name,
-            value = float(par['@value']) * float(par['@scale']),
-            unit = unit,
-            parmin = float(par['@min']),
-            parmax = float(par['@max']),
-            frozen = bool(1 - int(par['@free']))
+            name=name,
+            value=float(par['@value']) * float(par['@scale']),
+            unit=unit,
+            parmin=float(par['@min']),
+            parmax=float(par['@max']),
+            frozen=bool(1 - int(par['@free']))
         ))
     return ParameterList(parameters)
 
 
-parname_registry = dict(spatial=dict(), spectral=dict())
-parname_registry['spatial']['RA'] = 'lon_0', 'deg'
-parname_registry['spatial']['DEC'] = 'lat_0', 'deg'
-parname_registry['spatial']['Normalization'] = 'norm', ''
-parname_registry['spatial']['Value'] = 'value', 'MeV cm-2 s-1'
-parname_registry['spectral']['Prefactor'] = 'amplitude', 'MeV cm-2 s-1'
-parname_registry['spectral']['Index'] = 'index', ''
-parname_registry['spectral']['Scale'] = 'reference', 'MeV'
-parname_registry['spectral']['Normalization'] = 'scale', ''
+def source_library_to_xml(sourcelib):
+    """
+    Convert `~gammapy.cube.models.SourceLibrary` to XML
+    """
+    xml = '<?xml version="1.0" encoding="utf-8"?>\n'
+    xml += '<source_library title="source library">\n'
+    for skymodel in sourcelib.skymodels:
+        xml += skymodel_to_xml(skymodel)
+    xml += '</source_library>'
+
+    return xml
+
+
+def skymodel_to_xml(skymodel):
+    """
+    Convert `~gammapy.cube.models.SkyModel` to XML
+    """
+    if 'Diffuse' in str(skymodel):
+        type_ = 'DiffuseSource'
+    else:
+        type_ = 'PointSource'
+
+    indent = 4 * ' '
+    xml = indent + '<source name="{}" type="{}">\n'.format(skymodel.name, type_)
+    xml += model_to_xml(skymodel.spectral_model, 'spectral')
+    xml += model_to_xml(skymodel.spatial_model, 'spatial')
+    xml += indent + '</source>\n'
+
+    return xml
+
+
+def model_to_xml(model, which):
+    """
+    Convert `~gammapy.image.models.SkySpatialModel` or
+    `~gammapy.spectrum.models.SpectralModel` to XML
+    """
+    tag = 'spatialModel' if which == 'spatial' else 'spectrum'
+
+    model_found = False
+    for xml_type, type_ in model_registry[which].items():
+        if isinstance(model, type_):
+            model_found = True
+            break
+
+    if not model_found:
+        msg = "{} model {} not in registry".format(which, model)
+        raise UnknownModelError(msg)
+    
+    indent = 8 * ' '
+    xml = indent + '<{} '.format(tag)
+    if xml_type in ['MapCubeFunction', 'FileFunction']:
+        xml += 'file="{}" '.format(model.meta['filename'])
+    xml += 'type="{}">\n'.format(xml_type)
+    xml += parameter_list_to_xml(model.parameters, which)
+    xml += indent + '</{}>\n'.format(tag)
+    return xml
+
+
+def parameter_list_to_xml(parameters, which):
+    """
+    Convert `~gammapy.utils.modeling.ParameterList` to XML
+    """
+    indent = 12 * ' '
+    xml = ''
+    val = '<parameter free="{}" max="{}" min="{}" name="{}" scale="1.0" value="{}">'
+    val += '</parameter>'
+    for par in parameters.parameters:
+        par_found = False
+        for xml_par, par_ in parname_registry[which].items():
+            if par.name == par_[0]:
+                par_found = True
+                break
+
+        if not par_found:
+            msg = "{} parameter {} not in registry".format(which, par.name)
+            raise UnknownParameterError(msg)
+
+        xml += indent
+        xml += val.format( int(not par.frozen), par.parmax, par.parmin, xml_par,
+            par.quantity.to(par_[1]).value)
+        xml += '\n'
+
+    return xml
