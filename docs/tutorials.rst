@@ -147,7 +147,13 @@ To learn how to work with gamma-ray data with Gammapy:
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
-3-dimensional cube analysis:
+
+3-dimensional cube analysis (new, work in progress):
+
+- `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
+- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
+
+3-dimensional cube analysis (old, do not use):
 
 - `Cube analysis with Gammapy (part 1) <notebooks/cube_analysis_part1.html>`__ (compute cubes and mean PSF / EDISP) | *cube_analysis_part1.ipynb*
 - `Cube analysis with Gammapy (part 2) <notebooks/cube_analysis_part2.html>`__ (likelihood fit) | *cube_analysis_part2.ipynb*
