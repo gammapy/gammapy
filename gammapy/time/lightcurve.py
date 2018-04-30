@@ -425,7 +425,7 @@ class LightCurveEstimator(object):
         ----------
         significance : float
             Target significance for each light curve point
-        significance_method : {‘lima’, ‘simple’}
+        significance_method : {'lima', 'simple'}
             Significance method (see `~gammapy.stats.significance_on_off`)
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
