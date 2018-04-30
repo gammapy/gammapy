@@ -147,12 +147,12 @@ class EventListBase(object):
         return self.time_ref + met
 
     @property
-    def obs_start(self):
+    def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self.table.meta['TSTART'],'second')
 
     @property
-    def obs_stop(self):
+    def observation_time_end(self):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self.table.meta['TSTOP'], 'second')
 

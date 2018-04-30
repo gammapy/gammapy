@@ -285,7 +285,7 @@ class LightCurveEstimator(object):
         return on_evt_list
 
     @staticmethod
-    def create_fixed_time_bin(time_step, spectrum_extraction):
+    def make_time_intervals_fixes(time_step, spectrum_extraction):
         """Create time intervals of fixed size.
 
         Parameters
@@ -297,10 +297,16 @@ class LightCurveEstimator(object):
 
         Returns
         -------
-        intervals : list of `~astropy.time.Time`
-            List of time intervals
+        table : `~astropy.table.Table`
+            Table of time intervals
+
+        Examples
+        --------
+        extract intervals for light curve :
+            intervals = list(zip(table['t_start'], table['t_stop']))
+
         """
-        intervals = []
+        rows = []
         time_start = Time(100000, format="mjd")
         time_end = Time(0, format="mjd")
         time_step = time_step / (24 * 3600)
@@ -315,17 +321,105 @@ class LightCurveEstimator(object):
         time = time_start.value
         while time < time_end.value:
             time += time_step
-            intervals.append([
-                Time(time - time_step, format="mjd"),
-                Time(time, format="mjd"),
-            ])
-        return intervals
+            rows.append(dict(
+                t_start=Time(time - time_step, format="mjd"),
+                t_stop=Time(time, format="mjd")))
+        return Table(rows=rows)
 
-    def create_fixed_significance_bin_lc_table(self, significance, significance_method, energy_range,
-                                               spectrum_extraction, separators=[]):
+    def _create_and_filter_onofflists(self, t_index, energy_range=None, interval=None, extra=False):
+        """Extract on and off events list from an observation and apply energy and time filters
+
+        Helper function for compute_flux_point and make_time_intervals_min_significance
+
+        Parameters
+        ----------
+        t_index : int
+            index in self of the observation to use
+        energy_range : `~astropy.units.Quantity`
+            True energy range to filter the events
+        interval : `~astropy.time.Time`
+            Time interval (2-element array)
+        extra : boolean
+            Define if we want spec and e_reco in output
+
+        Returns
+        -------
+        on : `~gammapy.data.event_list`
+            List of on events
+        off : `~gammapy.data.event_list`
+            List of on events
+
+        """
+        spec = self.obs_spec[t_index]
+        # get ON and OFF evt list
+        off = self.off_evt_list[t_index]
+        on = self.on_evt_list[t_index]
+        # introduce the e_reco binning here
+        e_reco = spec.e_reco
+        if energy_range is not None:
+            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
+            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
+            # filter the event list with energy
+            on = on.select_energy([emin, emax])
+            on = on.select_energy(energy_range)
+            off = off.select_energy([emin, emax])
+            off = off.select_energy(energy_range)
+        if interval is not None:
+            # filter the event list with time
+            tmin = interval[0]
+            tmax = interval[1]
+            on = on.select_time([tmin, tmax])
+            off = off.select_time([tmin, tmax])
+        if extra:
+            return on, off, spec, e_reco
+        return on, off
+
+    @staticmethod
+    def _alpha(time_holder, obs_properties, n, istart, i):
+        """ Helper function for make_time_intervals_min_significance
+
+        Parameters
+        ----------
+        time_holder : `list` of float and flag
+            Contains a list of a time and a flag in 2-element arrays
+        obs_properties : `list` of dictionaries
+            Contains the dead time fraction and ratio of the on/off region
+        n : int
+            First observation to use
+        istart : int
+            index of the start of the interval
+        i : int
+            index of the end of the interval
         """
 
-        Create time intervals such that each bin of a light curve reach a given significance and store information
+        def in_list(item, L):
+            o, j = np.where(L == item)
+            for index in o:
+                yield index
+
+        alpha = 0
+        tmp = 0
+        time = 0
+        xm1 = istart
+        # loop over observations
+        for x in in_list('end', time_holder[istart:i + 1]):
+            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
+                    float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
+                     obs_properties['A_off'][n + tmp]
+            time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+            xm1 = x + 1
+            tmp += 1
+        alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
+                 obs_properties['A_off'][n + tmp]
+        time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
+        alpha = time / alpha
+        return alpha
+
+    def make_time_intervals_min_significance(self, significance, significance_method, energy_range,
+                                             spectrum_extraction, separators=None):
+        """
+
+        Create time intervals such that each bin of a light curve reach a given significance
 
         Parameters
         ----------
@@ -346,28 +440,24 @@ class LightCurveEstimator(object):
             Table of time intervals  and information about their content : on/off events, alpha, significance
 
         Examples
-        -------
+        --------
         extract intervals for light curve :
             intervals = list(zip(table['t_start'], table['t_stop']))
 
         """
 
-        def in_list(item, L):
-            o, j = np.where(L == item)
-            for index in o:
-                yield index
-
         time_holder = []
         obs_properties = []
         n_obs = 0
 
-        for time in separators:
-            time_holder.append([Time(time,format('mjd')), 'break'])
+        if separators is not None:
+            for time in separators:
+                time_holder.append([Time(time, format='mjd').tt.mjd, 'break'])
 
         for obs in spectrum_extraction.obs_list:
             # start and end will need to be redefined once the data storage format is fixed
-            time_holder.append([obs.events.obs_start, 'start'])
-            time_holder.append([obs.events.obs_stop, 'end'])
+            time_holder.append([obs.events.observation_time_start.tt.mjd, 'start'])
+            time_holder.append([obs.events.observation_time_end.tt.mjd, 'end'])
             obs_properties.append(dict(deadtime=obs.observation_dead_time_fraction,
                                        A_off=spectrum_extraction.bkg_estimate[n_obs].a_off))
             n_obs += 1
@@ -375,30 +465,17 @@ class LightCurveEstimator(object):
 
         # prepare the on and off photon list as in the flux point computation -> should be updated accordingly
         for t_index, obs in enumerate(self.obs_list):
-            spec = self.obs_spec[t_index]
-            # get ON and OFF evt list
-            off_evt = self.off_evt_list[t_index]
-            on_evt = self.on_evt_list[t_index]
-            # prepare energy range filter
-            e_reco = spec.e_reco
-            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
-            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
-            # filter ON events
-            on = on_evt.select_energy([emin, emax])
-            on = on.select_energy(energy_range)
-            # filter OFF events
-            off = off_evt.select_energy([emin, emax])
-            off = off.select_energy(energy_range)
+            on, off = self._create_and_filter_onofflists(t_index=t_index, energy_range=energy_range)
 
             for time in on.time:
-                time_holder.append([time, 'on'])
+                time_holder.append([time.tt.mjd, 'on'])
             for time in off.time:
-                time_holder.append([time, 'off'])
+                time_holder.append([time.tt.mjd, 'off'])
 
         # sort all elements in the table by time
         time_holder = sorted(time_holder, key=lambda item: item[0])
         time_holder = np.asarray(time_holder)
-        #print(time_holder)
+        # print(time_holder)
 
         rows = []
         istart = 1
@@ -416,36 +493,24 @@ class LightCurveEstimator(object):
                 continue
 
             # compute alpha
-            alpha = 0
-            tmp = 0
-            time = 0
-            xm1 = istart
-            # loop over observations
+            alpha = self._alpha(time_holder, obs_properties, n, istart, i)
 
-            for x in in_list('end', time_holder[istart:i+1]):
-                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[x][0] - time_holder[xm1][0]).value * \
-                         obs_properties['A_off'][n + tmp]
-                time += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[x][0] - time_holder[xm1][0]).value
-                xm1 = x + 1
-                tmp += 1
-            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[i][0] - time_holder[xm1][0]).value * \
-                     obs_properties['A_off'][n + tmp]
-            time += (1 - obs_properties['deadtime'][n + tmp]) * (time_holder[i][0] - time_holder[xm1][0]).value
-            alpha = time / alpha
             non = np.sum(time_holder[istart:i + 1] == 'on')
             noff = np.sum(time_holder[istart:i + 1] == 'off')
-            if non == 0 or noff == 0:
-                continue
+
+            # check the significance
             signif = significance_on_off(non, noff, alpha, method=significance_method)
             if signif > significance:
                 rows.append(dict(
-                    t_start=time_holder[istart - 1][0] + (time_holder[istart][0]-time_holder[istart - 1][0])/2,
-                    t_stop=time_holder[i][0] + (time_holder[i + 1][0]-time_holder[i][0]) / 2,
+                    t_start=Time((float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2, format="mjd",
+                                 scale='tt'),
+                    t_stop=Time((float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2, format="mjd",
+                                scale='tt'),
                     n_on=non, n_off=noff, alpha=alpha, significance=signif))
                 while time_holder[i + 1][0] < time_holder[-1][0] and time_holder[i + 1][1] != 'on' and \
                         time_holder[i + 1][1] != 'off':
                     i += 1
-                n += np.sum(time_holder[istart:i+1] == 'end')
+                n += np.sum(time_holder[istart:i + 1] == 'end')
                 istart = i + 1
                 i = istart
 
@@ -532,35 +597,16 @@ class LightCurveEstimator(object):
         # Loop on observations
         for t_index, obs in enumerate(self.obs_list):
 
-            spec = self.obs_spec[t_index]
-
             # discard observations not matching the time interval
-            obs_start = obs.events.obs_start
-            obs_stop = obs.events.obs_stop
+            obs_start = obs.events.observation_time_start
+            obs_stop = obs.events.observation_time_end
             if (tmin < obs_start and tmax < obs_start) or (tmin > obs_stop):
                 continue
-
             useinterval = True
             # get ON and OFF evt list
-            off_evt = self.off_evt_list[t_index]
-            on_evt = self.on_evt_list[t_index]
-
-            # introduce the e_reco binning here, since it's also used
-            # in the calculation of predicted counts
-            e_reco = spec.e_reco
-            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
-            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
-
-            # compute ON events
-            on = on_evt.select_energy([emin, emax])
-            on = on.select_energy(energy_range)
-            on = on.select_time([tmin, tmax])
+            on, off, spec, e_reco = self._create_and_filter_onofflists(t_index=t_index, energy_range=energy_range,
+                                                                       interval=[tmin, tmax], extra=True)
             n_on_obs = len(on.table)
-
-            # compute OFF events
-            off = off_evt.select_energy([emin, emax])
-            off = off.select_energy(energy_range)
-            off = off.select_time([tmin, tmax])
             n_off_obs = len(off.table)
 
             # compute effective livetime (for the interval)

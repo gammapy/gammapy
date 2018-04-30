@@ -223,12 +223,20 @@ def test_lightcurve_interval_maker():
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
-    table = lc_estimator.create_fixed_significance_bin_lc_table(
-        significance=3, significance_method='lima', energy_range=[0.2, 100] * u.TeV, spectrum_extraction=spec_extract)
-
+    separator = [(53343.94050200008+53343.952979345195)/2]
+    table = lc_estimator.make_time_intervals_min_significance(
+        significance=3,
+        significance_method='lima',
+        energy_range=[0.2, 100] * u.TeV,
+        spectrum_extraction=spec_extract,
+        separators=separator)
     assert_allclose(table['significance'] >= 3, True)
-    assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-5)
+    assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-10)
     assert_allclose(table['alpha'][5], 0.09090909, rtol=1e-5)
     assert_allclose(len(table), 71)
-    assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-5)
-    assert_allclose(table['t_stop'][60].value, 53343.97240580127, rtol=1e-5)
+    assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-10)
+    assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)
+    assert_allclose(np.logical_and(table['t_start'] < Time(separator[0], format='mjd'),
+                                   table['t_stop'] > Time(separator[0], format='mjd')), False)
+
+
