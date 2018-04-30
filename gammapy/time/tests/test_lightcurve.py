@@ -223,7 +223,7 @@ def test_lightcurve_interval_maker():
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
-    separator = [(53343.94050200008+53343.952979345195)/2]
+    separator = [(53343.94050200008 + 53343.952979345195) / 2]
     table = lc_estimator.make_time_intervals_min_significance(
         significance=3,
         significance_method='lima',
@@ -238,5 +238,3 @@ def test_lightcurve_adaptative_interval_maker():
     assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)
     assert_allclose(np.logical_and(table['t_start'] < Time(separator[0], format='mjd'),
                                    table['t_stop'] > Time(separator[0], format='mjd')), False)
-
-

@@ -149,7 +149,7 @@ class EventListBase(object):
     @property
     def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
-        return self.time_ref + Quantity(self.table.meta['TSTART'],'second')
+        return self.time_ref + Quantity(self.table.meta['TSTART'], 'second')
 
     @property
     def observation_time_end(self):
@@ -416,8 +416,8 @@ class EventListBase(object):
             emax = np.max(self.table['ENERGY'].quantity)
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
-        spec = CountsSpectrum(energy_lo = ebounds[:-1], energy_hi = ebounds[1:])
-        spec.fill(self.energy) # leaving spec.fill(self) was triggering an issue for the LAT event list
+        spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
+        spec.fill(self.energy)  # leaving spec.fill(self) was triggering an issue for the LAT event list
         spec.plot(ax=ax, **kwargs)
         return ax
 
@@ -693,7 +693,6 @@ class EventList(EventListBase):
         mask &= (offset < offset_band[1])
         return self.select_row_subset(mask)
 
-
     def peek(self):
         """Summary plots."""
         import matplotlib.pyplot as plt
@@ -840,15 +839,16 @@ class EventListLAT(EventListBase):
         """
         from ..image import SkyImage
         binsz = Quantity(0.1, 'deg')
-        nxpix = int(size[0]/binsz)
-        nypix = int(size[1]/binsz)
+        nxpix = int(size[0] / binsz)
+        nypix = int(size[1] / binsz)
         counts_image = SkyImage.empty(
             nxpix=nxpix, nypix=nypix, binsz=binsz.value,
             xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
             coordsys='CEL', proj='TAN',
-            )
+        )
         counts_image.fill_events(self)
         counts_image.show()
+
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
