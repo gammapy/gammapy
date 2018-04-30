@@ -421,6 +421,10 @@ class LightCurveEstimator(object):
 
         Create time intervals such that each bin of a light curve reach a given significance
 
+        The function create a list of time associated with identifiers called time_holder.
+        The identifiers can be 'on' for the on events, 'off' for the off events, 'start' for the start of an
+        observation, 'end for the end of an observation and 'break' for a separator.
+
         Parameters
         ----------
         significance : float
