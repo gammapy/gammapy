@@ -322,8 +322,8 @@ class LightCurveEstimator(object):
         while time < time_end.value:
             time += time_step
             rows.append(dict(
-                t_start=Time(time - time_step, format="mjd"),
-                t_stop=Time(time, format="mjd")))
+                t_start=Time(time - time_step, format="mjd", scale='tt'),
+                t_stop=Time(time, format="mjd", scale='tt')))
         return Table(rows=rows)
 
     def _create_and_filter_onofflists(self, t_index, energy_range=None, interval=None, extra=False):
@@ -344,9 +344,9 @@ class LightCurveEstimator(object):
 
         Returns
         -------
-        on : `~gammapy.data.event_list`
+        on : `~gammapy.data.EventList`
             List of on events
-        off : `~gammapy.data.event_list`
+        off : `~gammapy.data.EventList`
             List of on events
 
         """
