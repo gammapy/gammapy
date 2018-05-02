@@ -211,7 +211,8 @@ def test_lightcurve_estimator():
 def test_lightcurve_interval_maker():
     spec_extract = spec_extraction()
 
-    intervals = LightCurveEstimator.create_fixed_time_bin(500, spec_extract)
+    table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extract)
+    intervals = list(zip(table['t_start'], table['t_stop']))
 
     assert len(intervals) == 9
     t = intervals[0]
