@@ -382,7 +382,7 @@ class LightCurveEstimator(object):
         ----------
         time_holder : `list` of float and flag
             Contains a list of a time and a flag in 2-element arrays
-        obs_properties : `list` of dictionaries
+        obs_properties : `~astropy.table.Table`
             Contains the dead time fraction and ratio of the on/off region
         n : int
             First observation to use
@@ -421,9 +421,7 @@ class LightCurveEstimator(object):
 
         Create time intervals such that each bin of a light curve reach a given significance
 
-        The function create a list of time associated with identifiers called time_holder.
-        The identifiers can be 'on' for the on events, 'off' for the off events, 'start' for the start of an
-        observation, 'end for the end of an observation and 'break' for a separator.
+        The function work event by event to create an interval containing enough statistic and then starting a new one
 
         Parameters
         ----------
@@ -435,8 +433,9 @@ class LightCurveEstimator(object):
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
             Contains statistics, IRF and event lists
-        separators : `list` of float
-            Contains a list of time (in MJD) to break the current point creation
+        separators : `list` of `~astropy.time.Time`
+            Contains a list of time to stop the current point creation (not saved) and start a new one
+            Mostly useful between observations separated by a large time gap
 
         Returns
         -------
@@ -450,16 +449,22 @@ class LightCurveEstimator(object):
 
         """
 
+        # The function create a list of time associated with identifiers called time_holder.
+        # The identifiers can be 'on' for the on events, 'off' for the off events, 'start' for the start of an
+        # observation, 'end for the end of an observation and 'break' for a separator.
+        # The function then loop other all the elements of this list
+
         time_holder = []
         obs_properties = []
         n_obs = 0
 
+        # extract the separators
         if separators is not None:
             for time in separators:
-                time_holder.append([Time(time, format='mjd').tt.mjd, 'break'])
+                time_holder.append([time.tt.mjd, 'break'])
 
+        # recovers the starting and ending time of each observations and useful properties
         for obs in spectrum_extraction.obs_list:
-            # start and end will need to be redefined once the data storage format is fixed
             time_holder.append([obs.events.observation_time_start.tt.mjd, 'start'])
             time_holder.append([obs.events.observation_time_end.tt.mjd, 'end'])
             obs_properties.append(dict(deadtime=obs.observation_dead_time_fraction,
