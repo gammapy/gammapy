@@ -387,9 +387,9 @@ class LightCurveEstimator(object):
         n : int
             First observation to use
         istart : int
-            index of the start of the interval
+            index of the first event of the interval
         i : int
-            index of the end of the interval
+            index of the last event of the interval
         """
 
         def in_list(item, L):
@@ -403,15 +403,23 @@ class LightCurveEstimator(object):
         xm1 = istart
         # loop over observations
         for x in in_list('end', time_holder[istart:i + 1]):
-            alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
-                    float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
-                     obs_properties['A_off'][n + tmp]
-            time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
-            xm1 = x + 1
-            tmp += 1
-        alpha += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0])) * \
+            if tmp == 0:
+                alpha += (1 - obs_properties['deadtime'][n]) * (
+                    float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1-1][0]))/2) * obs_properties['A_off'][n + tmp]
+                time += (1 - obs_properties['deadtime'][n]) * (
+                    float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1-1][0]))/2)
+                xm1 = x + 1
+                tmp += 1
+            else:
+                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
+                        float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
+                         obs_properties['A_off'][n + tmp]
+                time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                xm1 = x + 1
+                tmp += 1
+        alpha += (1 - obs_properties['deadtime'][n + tmp]) * ((float(time_holder[i][0])+float(time_holder[i][0]))/2 - float(time_holder[xm1][0])) * \
                  obs_properties['A_off'][n + tmp]
-        time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[i][0]) - float(time_holder[xm1][0]))
+        time += (1 - obs_properties['deadtime'][n + tmp]) * ((float(time_holder[i][0])+float(time_holder[i][0]))/2 - float(time_holder[xm1][0]))
         alpha = time / alpha
         return alpha
 
@@ -460,8 +468,8 @@ class LightCurveEstimator(object):
 
         # extract the separators
         if separators is not None:
-            for time in separators:
-                time_holder.append([time.tt.mjd, 'break'])
+            for time in separators.tt.mjd:
+                time_holder.append([time, 'break'])
 
         # recovers the starting and ending time of each observations and useful properties
         for obs in spectrum_extraction.obs_list:
@@ -476,15 +484,14 @@ class LightCurveEstimator(object):
         for t_index, obs in enumerate(self.obs_list):
             on, off = self._create_and_filter_onofflists(t_index=t_index, energy_range=energy_range)
 
-            for time in on.time:
-                time_holder.append([time.tt.mjd, 'on'])
-            for time in off.time:
-                time_holder.append([time.tt.mjd, 'off'])
+            for time in on.time.tt.mjd:
+                time_holder.append([time, 'on'])
+            for time in off.time.tt.mjd:
+                time_holder.append([time, 'off'])
 
         # sort all elements in the table by time
         time_holder = sorted(time_holder, key=lambda item: item[0])
         time_holder = np.asarray(time_holder)
-        # print(time_holder)
 
         rows = []
         istart = 1
@@ -511,19 +518,20 @@ class LightCurveEstimator(object):
             signif = significance_on_off(non, noff, alpha, method=significance_method)
             if signif > significance:
                 rows.append(dict(
-                    t_start=Time((float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2, format="mjd",
-                                 scale='tt'),
-                    t_stop=Time((float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2, format="mjd",
-                                scale='tt'),
+                    t_start=(float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2,
+                    t_stop=(float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2,
                     n_on=non, n_off=noff, alpha=alpha, significance=signif))
+                # start the next interval
                 while time_holder[i + 1][0] < time_holder[-1][0] and time_holder[i + 1][1] != 'on' and \
                         time_holder[i + 1][1] != 'off':
                     i += 1
                 n += np.sum(time_holder[istart:i + 1] == 'end')
                 istart = i + 1
                 i = istart
-
-        return Table(rows=rows)
+        table=Table(rows=rows)
+        table['t_start'] = Time(table['t_start'], format='mjd', scale='tt')
+        table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
+        return table
 
     def light_curve(self, time_intervals, spectral_model, energy_range):
         """Compute light curve.
