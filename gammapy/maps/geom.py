@@ -632,8 +632,10 @@ class MapCoord(object):
         if 'lon' not in data or 'lat' not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        self._data = OrderedDict([(k, np.array(v, ndmin=1, copy=copy))
-                                  for k, v in data.items()])
+        self._data = OrderedDict([
+            (k, np.array(v, ndmin=1, copy=copy))
+            for k, v in data.items()
+        ])
         vals = np.broadcast_arrays(*self._data.values())
         self._data = OrderedDict(zip(self._data.keys(), vals))
         self._coordsys = coordsys
@@ -1064,7 +1066,6 @@ class MapGeom(object):
             Tuple of pixel coordinates in image and band dimensions.
         """
         pass
-
 
     def coord_to_idx(self, coords, clip=False):
         """Convert map coordinates to pixel indices.

@@ -1688,12 +1688,15 @@ class HpxGeom(MapGeom):
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
-        cdict = OrderedDict(lon=coords[0], lat=coords[1])
-        for i,axis in enumerate(self.axes):
-            cdict.update({axis.name:coords[i+2]})
+        cdict = OrderedDict([
+            ('lon', coords[0]),
+            ('lat', coords[1]),
+        ])
+
+        for i, axis in enumerate(self.axes):
+            cdict[axis.name] = coords[i + 2]
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
- #       return self.pix_to_coord(pix)
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)

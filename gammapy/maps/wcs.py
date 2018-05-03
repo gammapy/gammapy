@@ -470,9 +470,12 @@ class WcsGeom(MapGeom):
         if flat:
             coords = tuple([c[np.isfinite(c)] for c in coords])
 
-        cdict = OrderedDict(lon=coords[0], lat=coords[1])
-        for i,axis in enumerate(self.axes):
-            cdict.update({axis.name:coords[i+2]})
+        cdict = OrderedDict([
+            ('lon', coords[0]),
+            ('lat', coords[1]),
+        ])
+        for i, axis in enumerate(self.axes):
+            cdict[axis.name] = coords[i + 2]
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
 

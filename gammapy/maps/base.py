@@ -223,7 +223,7 @@ class Map(object):
         if 'META' in header:
             meta = json.loads(header['META'], object_pairs_hook=OrderedDict)
         else:
-            meta = {}
+            meta = OrderedDict()
         return meta
 
     @staticmethod
