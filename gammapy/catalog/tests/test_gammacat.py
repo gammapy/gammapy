@@ -80,16 +80,13 @@ class TestSourceCatalogGammaCat:
             cat.table.sort(sort_key)
             assert cat[name].name == name
 
-    # TODO: fix this test
-    # see https://github.com/gammapy/gammapy/pull/1403#issuecomment-385892131
-    @pytest.mark.xfail
     def test_to_source_library(self, gammacat):
         sources = gammacat.to_source_library()
-        source = sources.source_list[0]
+        source = sources.skymodels[0]
 
-        assert len(sources.source_list) == 74
-        assert source.source_name == 'CTA 1'
-        assert_allclose(source.spectral_model.parameters['Index'].value, -2.2)
+        assert len(sources.skymodels) == 74
+        assert source.name == 'CTA 1'
+        assert_allclose(source.spectral_model.parameters['index'].value, 2.2)
 
 
 @requires_data('gammapy-extra')

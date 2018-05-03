@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from ...testing import requires_data
+from ...testing import requires_data, requires_dependency
 from ...scripts import make_path
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
@@ -10,6 +10,7 @@ from ...serialization import xml_to_source_library, UnknownModelError
 import pytest
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_xml_to_source_library():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
     sourcelib = SourceLibrary.from_xml(filename)
@@ -54,6 +55,7 @@ def test_xml_to_source_library():
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 @pytest.mark.parametrize('filenames',[[
      '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
      '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
