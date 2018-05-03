@@ -46,7 +46,6 @@ Allowed optional dependencies:
 * `pandas`_ CSV read / write; DataFrame
 * `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
-* `ROOT`_ and `rootpy`_ conversion helper functions (still has some Python 3 issues)
 * `uncertainties`_ for linear error propagation
 * `astroplan`_ for observation planning and scheduling
 * `iminuit`_ for fitting by optimization
