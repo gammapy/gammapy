@@ -199,7 +199,7 @@ class SkyShell(SkySpatialModel):
     radius : `~astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`
     width : `~astropy.coordinates.Angle`
-        Shell width, :math:`r_{out}`
+        Shell width
     """
 
     def __init__(self, lon_0, lat_0, radius, width):

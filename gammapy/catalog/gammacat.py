@@ -14,6 +14,7 @@ from ..extern import six
 from astropy import units as u
 from astropy.table import Table
 from ..utils.scripts import make_path
+from ..utils.serialization import UnknownModelError
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
