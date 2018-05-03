@@ -29,7 +29,7 @@ class NormGauss2DInt(ArithmeticModel):
         self.binsize = 1.0
         self.xpos = Parameter(name, 'xpos', 0)  # p[0]
         self.ypos = Parameter(name, 'ypos', 0)  # p[1]
-        self.ampl = Parameter(name, 'ampl', 1)  # p[2]
+        self.ampl = Parameter(name, 'ampl', 1, min=0)  # p[2]
         self.fwhm = Parameter(name, 'fwhm', 1, min=0)  # p[3]
         self.shape = None
         self.n_ebins = None
@@ -256,16 +256,23 @@ class CombinedModel3DInt(ArithmeticModel):
         Exposure cube
     psf: `~gammapy.cube.SkyCube`
         Psf cube
+    spatial_model: `~sherpa.models`
+        spatial sherpa model
+    cube_spatial_model: `~gammapy.cube.SkyCube`
+        spatial model stored in a SkyCube`
+    spectral_model: `~sherpa.models`
+        spectral sherpa model
     select_region: True
         If True select only the points of the region of interest for the fit
     index_selected_region: tuple
         tuple of three `~numpy.ndarray` containing the indexes of the points of the Cube to keep in the fit (Energy, x, y)
     """
 
-    def __init__(self, coord, energies, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
+    def __init__(self, coord, energies, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None, cube_spatial_model=None,
                  spectral_model=None, select_region=False, index_selected_region=None):
         from scipy import signal
         self.spatial_model = spatial_model
+        self.cube_spatial_model = cube_spatial_model
         self.spectral_model = spectral_model
         self.use_psf = use_psf
         self.exposure = exposure
@@ -282,33 +289,56 @@ class CombinedModel3DInt(ArithmeticModel):
         self.select_region = select_region
         self.index_selected_region = index_selected_region
 
-        # Fix spectral ampl parameter
-        spectral_model.ampl = 1
-        spectral_model.ampl.freeze()
+        if (not spatial_model) & (not cube_spatial_model):
+            print("You have to give a spatial model: Sherpa model or SkyCube")
+        elif spatial_model:
+            if cube_spatial_model:
+                print("You have to choose between a Sherpa model or a SkyCube for the spatial model, you gave both...")
+            else:
+                spatial_model.ampl = 1
+                spatial_model.ampl.freeze()
+                pars = []
+                for _ in spatial_model.pars + spectral_model.pars:
+                    setattr(self, _.name, _)
+                    pars.append(_)
 
-        pars = []
-        for _ in spatial_model.pars + spectral_model.pars:
-            setattr(self, _.name, _)
-            pars.append(_)
-
-        self._spatial_pars = slice(0, len(spatial_model.pars))
-        self._spectral_pars = slice(len(spatial_model.pars), len(pars))
-        ArithmeticModel.__init__(self, name, pars)
+                self._spatial_pars = slice(0, len(spatial_model.pars))
+                self._spectral_pars = slice(len(spatial_model.pars), len(pars))
+                ArithmeticModel.__init__(self, name, pars)
+        elif cube_spatial_model:
+            pars = []
+            for _ in spectral_model.pars:
+                setattr(self, _.name, _)
+                pars.append(_)
+            self._spectral_pars = slice(0, len(spectral_model.pars))
+            ArithmeticModel.__init__(self, name, pars)
 
     def calc(self, pars, elo, xlo, ylo, ehi, xhi, yhi):
 
         if self.use_psf:
             shape = (len(self.ee_lo), len(self.xx_lo[:, 0]), len(self.xx_lo[0, :]))
             result_convol = np.zeros(shape)
-            a = self.spatial_model.calc(pars[self._spatial_pars], self.xx_lo.ravel(), self.xx_hi.ravel(),
+            if self.spatial_model:
+                a = self.spatial_model.calc(pars[self._spatial_pars], self.xx_lo.ravel(), self.xx_hi.ravel(),
                                         self.yy_lo.ravel(), self.yy_hi.ravel()).reshape(self.xx_lo.shape)
             # Convolve the spatial model * exposure by the psf
-            for ind_E in range(shape[0]):
-                result_convol[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
+                for ind_E in range(shape[0]):
+                    result_convol[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
                                                                self.psf.data[ind_E, :, :] /
                                                                (self.psf.data[ind_E, :, :].sum()), mode='same')
 
-            spectral_1d = self.spectral_model.calc(pars[self._spectral_pars], self.ee_lo, self.ee_hi)
+                spectral_1d = self.spectral_model.calc(pars[self._spectral_pars], self.ee_lo, self.ee_hi)
+            elif self.cube_spatial_model:
+                a = self.cube_spatial_model.data.value
+                for ind_E in range(shape[0]):
+                    result_convol[ind_E, :, :] = self._fftconvolve(a[ind_E, :, :] * self.exposure.data[ind_E, :, :],
+                                                         self.psf.data[ind_E, :, :] /
+                                                         (self.psf.data[ind_E, :, :].sum()), mode='same')
+                spectral_1d = self.spectral_model.calc(pars[self._spectral_pars], self.ee_lo, self.ee_hi)
+            else:
+                print("You don't give any spatial model")
+
+
             if not self.select_region:
                 _spatial = result_convol.ravel()
                 _spectral = (spectral_1d.reshape(len(self.ee_lo), 1, 1) * np.ones_like(self.xx_lo)).ravel()
@@ -336,12 +366,14 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         Reconstructed energy used for the counts cube
     use_psf: bool
         if true will convolve the spatial model by the psf
-    exposure: `~gammapy.cube.SkyCube`
+    exposure: `
         Exposure Cube
     psf: `~gammapy.cube.SkyCube`
         Psf cube
     spatial_model: `~sherpa.models`
         spatial sherpa model
+    cube_spatial_model: `~gammapy.cube.SkyCube`
+        spatial model stored in a SkyCube`
     spectral_model: `~sherpa.models`
         spectral sherpa model
     edisp: `~numpy.array`
@@ -354,9 +386,10 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
     """
 
     def __init__(self, coord, energies, name='cube-model', use_psf=True, exposure=None, psf=None, spatial_model=None,
-                 spectral_model=None, edisp=None, select_region=False, index_selected_region=None):
+                 cube_spatial_model=None,spectral_model=None, edisp=None, select_region=False, index_selected_region=None):
         from scipy import signal
         self.spatial_model = spatial_model
+        self.cube_spatial_model = cube_spatial_model
         self.spectral_model = spectral_model
         xx = coord.data.lon.degree
         yy = coord.data.lat.degree
@@ -383,27 +416,41 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
         self.index_selected_region = index_selected_region
 
         # Fix spectral ampl parameter
-        spectral_model.ampl = 1
-        spectral_model.ampl.freeze()
+        if (not spatial_model) & (not cube_spatial_model):
+            print("You have to give a spatial model: Sherpa model or SkyCube")
+        elif spatial_model:
+            if cube_spatial_model:
+                print("You have to choose between a Sherpa model or a SkyCube for the spatial model, you gave both...")
+            else:
+                spatial_model.ampl = 1
+                spatial_model.ampl.freeze()
+                pars = []
+                for _ in spatial_model.pars + spectral_model.pars:
+                    setattr(self, _.name, _)
+                    pars.append(_)
 
-        pars = []
-        for _ in spatial_model.pars + spectral_model.pars:
-            setattr(self, _.name, _)
-            pars.append(_)
+                self._spatial_pars = slice(0, len(spatial_model.pars))
+                self._spectral_pars = slice(len(spatial_model.pars), len(pars))
+                ArithmeticModel.__init__(self, name, pars)
+        elif cube_spatial_model:
+            pars = []
+            for _ in spectral_model.pars:
+                setattr(self, _.name, _)
+                pars.append(_)
+            self._spectral_pars = slice(0, len(spectral_model.pars))
+            ArithmeticModel.__init__(self, name, pars)
 
-        self._spatial_pars = slice(0, len(spatial_model.pars))
-        self._spectral_pars = slice(len(spatial_model.pars), len(pars))
-        ArithmeticModel.__init__(self, name, pars)
 
     def calc(self, pars, elo, xlo, ylo, ehi, xhi, yhi):
         etrue_centers = self.true_energy.log_centers
         if self.use_psf:
             # Convolve the spatial model * exposure by the psf in etrue
             spatial = np.zeros((self.dim_Etrue, self.dim_x, self.dim_y))
-            a = self.spatial_model.calc(pars[self._spatial_pars], self.xx_lo.ravel(), self.xx_hi.ravel(),
+            if self.spatial_model:
+                a = self.spatial_model.calc(pars[self._spatial_pars], self.xx_lo.ravel(), self.xx_hi.ravel(),
                                         self.yy_lo.ravel(), self.yy_hi.ravel()).reshape(self.xx_lo.shape)
-            for ind_E in range(self.dim_Etrue):
-                spatial[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
+                for ind_E in range(self.dim_Etrue):
+                    spatial[ind_E, :, :] = self._fftconvolve(a * self.exposure.data[ind_E, :, :],
                                                          self.psf.data[ind_E, :, :] /
                                                          (self.psf.data[ind_E, :, :].sum()), mode='same')
                 # To avoid nan value for the true energy values asked by the user for which the PSF is not defined.
@@ -411,6 +458,21 @@ class CombinedModel3DIntConvolveEdisp(ArithmeticModel):
                 # number of counts in the reconstucted energy bin, you get nan whereas you just want the bin in true energy
                 # for which the PSF is not defined to not count in the sum.
                 spatial[np.isnan(spatial)] = 0
+
+            elif self.cube_spatial_model:
+                a = self.cube_spatial_model.data.value
+                for ind_E in range(self.dim_Etrue):
+                    spatial[ind_E, :, :] = self._fftconvolve(a[ind_E, :, :] * self.exposure.data[ind_E, :, :],
+                                                         self.psf.data[ind_E, :, :] /
+                                                         (self.psf.data[ind_E, :, :].sum()), mode='same')
+                # To avoid nan value for the true energy values asked by the user for which the PSF is not defined.
+                # The interpolation gives nan when you are outside the range and when you sum over all the true energy bin to calculate the expected
+                # number of counts in the reconstucted energy bin, you get nan whereas you just want the bin in true energy
+                # for which the PSF is not defined to not count in the sum.
+                spatial[np.isnan(spatial)] = 0
+
+            else:
+                print("You don't give any spatial model")
         else:
             spatial_2d = self.spatial_model.calc(pars[self._spatial_pars], self.xx_lo.ravel(), self.xx_hi.ravel(),
                                                  self.yy_lo.ravel(), self.yy_hi.ravel()).reshape(self.xx_lo.shape)
