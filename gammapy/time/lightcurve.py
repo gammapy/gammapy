@@ -468,8 +468,8 @@ class LightCurveEstimator(object):
 
         # extract the separators
         if separators is not None:
-            for time in separators.tt.mjd:
-                time_holder.append([time, 'break'])
+            for time in separators:
+                time_holder.append([time.tt.mjd, 'break'])
 
         # recovers the starting and ending time of each observations and useful properties
         for obs in spectrum_extraction.obs_list:
