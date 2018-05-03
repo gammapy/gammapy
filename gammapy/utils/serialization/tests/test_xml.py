@@ -1,12 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+from ...testing import requires_data
 from ...scripts import make_path
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
 from ....image import models as spatial
+from ...serialization import xml_to_source_library, UnknownModelError
 import pytest
 
+@requires_data('gammapy-extra')
 def test_xml_to_source_library():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
     sourcelib = SourceLibrary.from_xml(filename)
@@ -50,9 +53,10 @@ def test_xml_to_source_library():
     # TODO: Test Evaluate combined model as soon as '+' works for SkyModel
 
 
+@requires_data('gammapy-extra')
 @pytest.mark.parametrize('filenames',[[
      '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
-#     '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+     '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
 ]])
 def test_models(filenames, tmpdir):
     outfile = tmpdir / 'models_out.xml'
@@ -66,3 +70,18 @@ def test_models(filenames, tmpdir):
                                           sourcelib_roundtrip.skymodels):
             assert str(model) == str(model_roundtrip)
 
+
+def test_xml_errors():
+    xml = '<?xml version="1.0" standalone="no"?>\n'
+    xml += '<source_library title="broken source library">\n'
+    xml += '    <source name="CrabShell" type="ExtendedSource">\n'
+    xml += '        <spatialModel type="ElefantShapedSource">\n'
+    xml += '            <parameter name="RA" value="1" scale="1" min="1" max="1" free="1"/>\n'
+    xml += '        </spatialModel>\n'
+    xml += '    </source>\n'
+    xml += '</source_library>'
+
+    with pytest.raises(UnknownModelError):
+        model = xml_to_source_library(xml)
+
+    # TODO: Think about a more elaborate XML validation scheme

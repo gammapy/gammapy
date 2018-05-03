@@ -1147,7 +1147,7 @@ class TableModel(SpectralModel):
         Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, energy, values, scale=1, scale_logy=True, meta=dict()):
+    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = ParameterList([
             Parameter('scale', scale, parmin=0, unit='')
@@ -1155,7 +1155,7 @@ class TableModel(SpectralModel):
         self.energy = energy
         self.values = values
         self.scale_logy = scale_logy
-        self.meta = meta
+        self.meta = dict() if meta is None else meta
 
         self.lo_threshold = energy[0]
         self.hi_threshold = energy[-1]

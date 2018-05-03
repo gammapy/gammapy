@@ -13,9 +13,14 @@ from ...cube.models import SourceLibrary, SkyModel
 from ..modeling import Parameter, ParameterList
 from ...maps import Map
 import numpy as np
+import logging
 import astropy.units as u
 import gammapy.image.models as spatial
 import gammapy.spectrum.models as spectral
+
+
+log = logging.getLogger(__name__) 
+
 
 __all__ = [
     'UnknownModelError',
@@ -33,6 +38,8 @@ model_registry = dict(spatial=dict(), spectral=dict())
 model_registry['spatial']['SkyDirFunction'] = spatial.SkyPointSource
 model_registry['spatial']['MapCubeFunction'] = spatial.SkyDiffuseMap
 model_registry['spatial']['ConstantValue'] = spatial.SkyDiffuseConstant
+model_registry['spatial']['RadialShell'] = spatial.SkyShell
+model_registry['spatial']['Gaussian'] = spatial.SkyGaussian
 model_registry['spectral']['PowerLaw'] = spectral.PowerLaw
 model_registry['spectral']['FileFunction'] = spectral.TableModel
 
@@ -42,9 +49,13 @@ parname_registry['spatial']['RA'] = 'lon_0', 'deg'
 parname_registry['spatial']['DEC'] = 'lat_0', 'deg'
 parname_registry['spatial']['Normalization'] = 'norm', ''
 parname_registry['spatial']['Value'] = 'value', 'MeV cm-2 s-1'
+parname_registry['spatial']['Radius'] = 'radius', 'deg'
+parname_registry['spatial']['Width'] = 'width', 'deg'
+parname_registry['spatial']['Sigma'] = 'sigma', 'deg'
 parname_registry['spectral']['Prefactor'] = 'amplitude', 'MeV cm-2 s-1'
 parname_registry['spectral']['Index'] = 'index', ''
 parname_registry['spectral']['Scale'] = 'reference', 'MeV'
+parname_registry['spectral']['PivotEnergy'] = 'reference', 'MeV'
 parname_registry['spectral']['Normalization'] = 'scale', ''
 
 
@@ -66,8 +77,11 @@ def xml_to_source_library(xml):
     """
     full_dict = xmltodict.parse(xml)
     skymodels = list()
-    for xml_skymodel in full_dict['source_library']['source']:
-        skymodels.append(xml_to_skymodel(xml_skymodel))
+    source_list = np.atleast_1d(full_dict['source_library']['source'])
+    for xml_skymodel in source_list:
+        skymodel = xml_to_skymodel(xml_skymodel)
+        if skymodel is not None:
+            skymodels.append(skymodel)
     return SourceLibrary(skymodels)
 
 
@@ -75,8 +89,11 @@ def xml_to_skymodel(xml):
     """
     Convert XML to `~gammapy.cube.models.SkyModel`
     """
-    # TODO: type_ is not used anywhere
     type_ = xml['@type']
+    # TODO: Support ctools radial acceptance
+    if type_ == 'RadialAcceptance':
+        log.warn("Radial acceptance models are not supported")
+        return None
 
     name = xml['@name']
     spatial = xml_to_model(xml['spatialModel'], 'spatial')
@@ -132,7 +149,7 @@ def xml_to_parameter_list(xml, which):
         except KeyError:
             msg = "{} parameter '{}' not registered"
             raise UnknownParameterError(msg.format(which, par['@name']))
-
+        
         parameters.append(Parameter(
             name=name,
             value=float(par['@value']) * float(par['@scale']),
@@ -212,8 +229,8 @@ def parameter_list_to_xml(parameters, which):
     val += '</parameter>'
     for par in parameters.parameters:
         par_found = False
-        for xml_par, par_ in parname_registry[which].items():
-            if par.name == par_[0]:
+        for xml_par, (name, unit) in parname_registry[which].items():
+            if par.name == name:
                 par_found = True
                 break
 
@@ -222,8 +239,11 @@ def parameter_list_to_xml(parameters, which):
             raise UnknownParameterError(msg)
 
         xml += indent
-        xml += val.format( int(not par.frozen), par.parmax, par.parmin, xml_par,
-            par.quantity.to(par_[1]).value)
+        xml += val.format(int(not par.frozen),
+                          par.parmax,
+                          par.parmin,
+                          xml_par,
+                          par.quantity.to(unit).value)
         xml += '\n'
 
     return xml
