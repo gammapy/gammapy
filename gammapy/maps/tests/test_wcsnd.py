@@ -175,10 +175,11 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
                       frame=coordsys_to_frame(geom.coordsys))
     skydir_cel = skydir.transform_to('icrs')
     skydir_gal = skydir.transform_to('galactic')
-    m.set_by_coord((skydir_gal,) + coords[2:], coords[0])
+
+    m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0])
     assert_allclose(coords[0], m.get_by_coord(coords))
-    assert_allclose(m.get_by_coord((skydir_cel,) + coords[2:]),
-                    m.get_by_coord((skydir_gal,) + coords[2:]))
+    assert_allclose(m.get_by_coord((skydir_cel,) + tuple(coords[2:])),
+                    m.get_by_coord((skydir_gal,) + tuple(coords[2:])))
 
     # Test with MapCoord
     m = WcsNDMap(geom)
@@ -211,8 +212,8 @@ def test_wcsndmap_fill_by_coord(npix, binsz, coordsys, proj, skydir, axes):
                       frame=coordsys_to_frame(geom.coordsys))
     skydir_cel = skydir.transform_to('icrs')
     skydir_gal = skydir.transform_to('galactic')
-    fill_coords_cel = (skydir_cel,) + coords[2:]
-    fill_coords_gal = (skydir_gal,) + coords[2:]
+    fill_coords_cel = (skydir_cel,) + tuple(coords[2:])
+    fill_coords_gal = (skydir_gal,) + tuple(coords[2:])
     m.fill_by_coord(fill_coords_cel, coords[1])
     m.fill_by_coord(fill_coords_gal, coords[1])
     assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])

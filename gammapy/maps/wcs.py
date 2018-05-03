@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
+from collections import OrderedDict
 from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -468,7 +469,16 @@ class WcsGeom(MapGeom):
         coords = self.pix_to_coord(pix)
         if flat:
             coords = tuple([c[np.isfinite(c)] for c in coords])
-        return coords
+
+        cdict = OrderedDict([
+            ('lon', coords[0]),
+            ('lat', coords[1]),
+        ])
+        for i, axis in enumerate(self.axes):
+            cdict[axis.name] = coords[i + 2]
+
+        return MapCoord.create(cdict, coordsys=self.coordsys)
+
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
