@@ -776,14 +776,6 @@ class EventList(EventListBase):
         ax.imshow(count_image, interpolation='nearest', origin='low',
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
-    def plot_offset_hist(self, ax=None):
-        """Plot counts as a function of camera offset."""
-        raise NotImplementedError
-
-    def plot_energy_offset(self, ax=None):
-        """Plot energy dependence as a function of camera offset."""
-        raise NotImplementedError
-
 
 class EventListLAT(EventListBase):
     """Event list for Fermi-LAT dataset
