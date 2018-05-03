@@ -104,7 +104,7 @@ setup(
     # Older versions could work, but are unsupported.
     # To find out if everything works run the Gammapy tests.
     install_requires=[
-      'numpy>=1.8',
+      'numpy>=1.10',
       'astropy>=1.3',
       'regions',
       'click',
