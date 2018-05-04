@@ -405,21 +405,25 @@ class LightCurveEstimator(object):
         for x in in_list('end', time_holder[istart:i + 1]):
             if tmp == 0:
                 alpha += (1 - obs_properties['deadtime'][n]) * (
-                    float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1-1][0]))/2) * obs_properties['A_off'][n + tmp]
+                        float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2) * \
+                         obs_properties['A_off'][n + tmp]
                 time += (1 - obs_properties['deadtime'][n]) * (
-                    float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1-1][0]))/2)
+                        float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2)
                 xm1 = x + 1
                 tmp += 1
             else:
                 alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
                         float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
                          obs_properties['A_off'][n + tmp]
-                time += (1 - obs_properties['deadtime'][n + tmp]) * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                time += (1 - obs_properties['deadtime'][n + tmp]) * (
+                            float(time_holder[x][0]) - float(time_holder[xm1][0]))
                 xm1 = x + 1
                 tmp += 1
-        alpha += (1 - obs_properties['deadtime'][n + tmp]) * ((float(time_holder[i][0])+float(time_holder[i][0]))/2 - float(time_holder[xm1][0])) * \
+        alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
+                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
                  obs_properties['A_off'][n + tmp]
-        time += (1 - obs_properties['deadtime'][n + tmp]) * ((float(time_holder[i][0])+float(time_holder[i][0]))/2 - float(time_holder[xm1][0]))
+        time += (1 - obs_properties['deadtime'][n + tmp]) * (
+                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
         alpha = time / alpha
         return alpha
 
@@ -528,7 +532,7 @@ class LightCurveEstimator(object):
                 n += np.sum(time_holder[istart:i + 1] == 'end')
                 istart = i + 1
                 i = istart
-        table=Table(rows=rows)
+        table = Table(rows=rows)
         table['t_start'] = Time(table['t_start'], format='mjd', scale='tt')
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
