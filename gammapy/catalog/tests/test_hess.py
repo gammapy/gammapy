@@ -255,8 +255,8 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(p['amplitude'].value, 3.2163001428830995e-11)
         assert_allclose(p['lon_0'].value, 266.2873840332031)
         assert_allclose(p['lat_0'].value, -1.243260383605957)
-        assert_allclose(p['r_i'].value, 0.95)
-        assert_allclose(p['r_o'].value, 1.0)
+        assert_allclose(p['radius'].value, 0.95)
+        assert_allclose(p['width'].value, 0.05)
 
 
 @requires_data('gammapy-extra')

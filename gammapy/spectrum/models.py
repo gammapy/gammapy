@@ -1143,9 +1143,11 @@ class TableModel(SpectralModel):
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
     scale_logy : boolean
         interpolation can be done linearly or in logarithm
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, energy, values, scale=1, scale_logy=True):
+    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = ParameterList([
             Parameter('scale', scale, parmin=0, unit='')
@@ -1153,6 +1155,7 @@ class TableModel(SpectralModel):
         self.energy = energy
         self.values = values
         self.scale_logy = scale_logy
+        self.meta = dict() if meta is None else meta
 
         self.lo_threshold = energy[0]
         self.hi_threshold = energy[-1]
@@ -1233,7 +1236,7 @@ class TableModel(SpectralModel):
         return cls(energy=energy, values=values, scale_logy=False)
 
     @classmethod
-    def read_fermi_isotropic_model(cls, filename):
+    def read_fermi_isotropic_model(cls, filename, **kwargs):
         """Read Fermi isotropic diffuse model
 
         see `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
@@ -1250,7 +1253,7 @@ class TableModel(SpectralModel):
         energy = vals[:,0] * u.MeV
         values = vals[:,1] * u.Unit('MeV-1 s-1 cm-2')
 
-        return cls(energy=energy, values=values, scale_logy=False)
+        return cls(energy=energy, values=values, scale_logy=False, **kwargs)
 
     def evaluate(self, energy, scale):
         """Evaluate the model (static function)."""

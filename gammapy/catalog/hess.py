@@ -509,11 +509,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             # HGPS contains no information on shell width
             # Here we assuma a 5% shell width for all shells.
             r_out = d['Size']
+            radius = 0.95 * r_out
+            width = r_out - radius
             model = SkyShell(
                 lon_0=glon,
                 lat_0=glat,
-                r_i=0.95 * r_out,
-                r_o=r_out,
+                width=width,
+                radius=radius,
 
             )
         else:

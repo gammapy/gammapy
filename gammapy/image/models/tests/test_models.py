@@ -56,8 +56,8 @@ def test_sky_shell():
     model = SkyShell(
         lon_0='1 deg',
         lat_0='45 deg',
-        r_i='2 deg',
-        r_o='4 deg',
+        radius='2 deg',
+        width='2 deg',
     )
 
     lon = [1, 2, 4] * u.deg

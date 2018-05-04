@@ -38,10 +38,19 @@ class SourceLibrary(object):
 
     @classmethod
     def from_xml(cls, filename):
+        """Read SourceLibrary from XML file"""
         from ..utils.serialization import xml_to_source_library
         path = make_path(filename)
         xml = path.read_text()
         return xml_to_source_library(xml)
+
+    def to_xml(self, filename):
+        """Write SourceLibrary to XML file"""
+        from ..utils.serialization import source_library_to_xml
+        xml = source_library_to_xml(self)
+        filename = make_path(filename)
+        with filename.open('w') as output:
+            output.write(xml)
 
 
 class SkyModel(object):

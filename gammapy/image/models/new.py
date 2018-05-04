@@ -176,16 +176,16 @@ class SkyShell(SkySpatialModel):
 
     .. math::
 
-        \phi(lon, lat) = \frac{3}{2 \pi (r_o^3 - r_i^3)} \cdot
+        \phi(lon, lat) = \frac{3}{2 \pi (r_{out}^3 - r_{in}^3)} \cdot
                 \begin{cases}
-                    \sqrt{r_o^2 - \theta^2} - \sqrt{r_i^2 - \theta^2} &
-                                 \text{for } \theta \lt r_i \\
-                    \sqrt{r_o^2 - \theta^2} & 
-                                 \text{for } r_i \leq \theta \lt r_o \\
-                    0 & \text{for } \theta > r_o
+                    \sqrt{r_{out}^2 - \theta^2} - \sqrt{r_{in}^2 - \theta^2} &
+                                 \text{for } \theta \lt r_{in} \\
+                    \sqrt{r_{out}^2 - \theta^2} & 
+                                 \text{for } r_{in} \leq \theta \lt r_{out} \\
+                    0 & \text{for } \theta > r_{out}
                 \end{cases}
 
-    where :math:`\theta` is the sky separation.
+    where :math:`\theta` is the sky separation and :math:`r_out = r_in` + width
 
     Note that the normalization is a small angle approximation,
     although that approximation is still very good even for 10 deg radius shells.
@@ -196,27 +196,27 @@ class SkyShell(SkySpatialModel):
         :math:`lon_0`
     lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
-    r_i : `~astropy.coordinates.Angle`
-        :math:`r_i`
-    r_o : `~astropy.coordinates.Angle`
-        :math:`r_o`
+    radius : `~astropy.coordinates.Angle`
+        Inner radius, :math:`r_{in}`
+    width : `~astropy.coordinates.Angle`
+        Shell width
     """
 
-    def __init__(self, lon_0, lat_0, r_i, r_o):
+    def __init__(self, lon_0, lat_0, radius, width):
         self.parameters = ParameterList([
             Parameter('lon_0', Longitude(lon_0)),
             Parameter('lat_0', Latitude(lat_0)),
-            Parameter('r_i', Angle(r_i)),
-            Parameter('r_o', Angle(r_o))
+            Parameter('radius', Angle(radius)),
+            Parameter('width', Angle(width))
         ])
 
     @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_i, r_o):
+    def evaluate(lon, lat, lon_0, lat_0, radius, width):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         sep = sep.to('rad').value
-        r_i = r_i.to('rad').value
-        r_o = r_o.to('rad').value
+        r_i = radius.to('rad').value
+        r_o = (radius + width).to('rad').value
 
         norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
 
@@ -261,13 +261,16 @@ class SkyDiffuseMap(SkySpatialModel):
         Map template
     norm : `~astropy.units.Quantity`
         Norm parameter (multiplied with map values)
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, map, norm=1):
+    def __init__(self, map, norm=1, meta=None):
         self._map = map
         self.parameters = ParameterList([
             Parameter('norm', norm),
         ])
+        self.meta = dict() if meta is None else meta
 
     @classmethod
     def read(cls, filename, **kwargs):

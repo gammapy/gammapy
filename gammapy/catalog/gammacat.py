@@ -17,7 +17,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel
+from ..cube.models import SkyModel, SourceLibrary
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -320,8 +320,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 lon_0=glon,
                 lat_0=glat,
                 # TODO: probably we shouldn't guess a shell width here!
-                r_i=0.8 * d['morph_sigma'],
-                r_o=d['morph_sigma'],
+                radius=0.8 * d['morph_sigma'],
+                width=0.2 * d['morph_sigma'],
             )
         elif morph_type == 'none':
             raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
@@ -333,7 +333,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model)
+        name = self.name
+        return SkyModel(spatial_model, spectral_model, name=self.name)
 
     def _add_source_meta(self, table):
         """Copy over some info to table.meta"""
@@ -454,16 +455,12 @@ class SourceCatalogGammaCat(SourceCatalog):
         for source_idx in range(len(self.table)):
             source = self[source_idx]
             try:
-                source_model = SourceModel.from_gammacat(source)
+                source_list.append(source.sky_model)
             except NoDataAvailableError:
                 log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
                 continue
-            except UnknownModelError:
-                log.warning('Skipping source {} (model not defined in gammapy)'.format(source.name))
-                continue
-            source_list.append(source_model)
 
-        return SourceLibrary(source_list=source_list)
+        return SourceLibrary(source_list)
 
 
 class GammaCatDataCollection(object):
