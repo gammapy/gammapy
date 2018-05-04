@@ -211,8 +211,31 @@ def test_lightcurve_estimator():
 def test_lightcurve_interval_maker():
     spec_extract = spec_extraction()
 
-    intervals = LightCurveEstimator.create_fixed_time_bin(500, spec_extract)
+    table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extract)
+    intervals = list(zip(table['t_start'], table['t_stop']))
 
     assert len(intervals) == 9
     t = intervals[0]
     assert_allclose(t[1].value - t[0].value, 500 / (24 * 3600), rtol=1e-5)
+
+
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+def test_lightcurve_adaptative_interval_maker():
+    spec_extract = spec_extraction()
+    lc_estimator = LightCurveEstimator(spec_extract)
+    separator = [Time((53343.94050200008 + 53343.952979345195) / 2, scale='tt', format='mjd')]
+    table = lc_estimator.make_time_intervals_min_significance(
+        significance=3,
+        significance_method='lima',
+        energy_range=[0.2, 100] * u.TeV,
+        spectrum_extraction=spec_extract,
+        separators=separator)
+    assert_allclose(table['significance'] >= 3, True)
+    assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-10)
+    assert_allclose(table['alpha'][5], 0.09090909, rtol=1e-5)
+    assert_allclose(len(table), 71)
+    assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-10)
+    assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)
+    assert_allclose(np.logical_and(table['t_start'] < separator[0],
+                                   table['t_stop'] > separator[0]), False)
