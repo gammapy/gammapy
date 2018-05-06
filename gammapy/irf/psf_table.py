@@ -494,7 +494,7 @@ class EnergyDependentTablePSF(object):
         filename : str
             File name
         """
-        with fits.open(filename) as hdulist:
+        with fits.open(filename, memmap=False) as hdulist:
             psf = cls.from_fits(hdulist)
 
         return psf

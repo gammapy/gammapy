@@ -109,9 +109,9 @@ class TestSkyImagePoisson:
         self.image = SkyImage.read(f)
 
     def test_read_hdu(self):
-        f = load_poisson_stats_image(return_filenames=True)
-        hdulist = fits.open(f)
-        image = SkyImage.from_image_hdu(hdulist[0])
+        filename = load_poisson_stats_image(return_filenames=True)
+        with fits.open(filename, memmap=False) as hdu_list:
+            image = SkyImage.from_image_hdu(hdu_list[0])
         assert_equal(image.data, self.image.data)
 
     def test_io(self, tmpdir):

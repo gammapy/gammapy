@@ -180,10 +180,10 @@ class EffectiveAreaTable(object):
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='SPECRESP', **kwargs):
+    def read(cls, filename, hdu='SPECRESP'):
         """Read from file."""
         filename = make_path(filename)
-        with fits.open(str(filename), **kwargs) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             try:
                 aeff = cls.from_hdulist(hdulist, hdu=hdu)
             except KeyError:
@@ -408,7 +408,7 @@ class EffectiveAreaTable2D(object):
     def read(cls, filename, hdu='EFFECTIVE AREA'):
         """Read from file."""
         filename = make_path(filename)
-        with fits.open(str(filename)) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             aeff = cls.from_hdulist(hdulist, hdu=hdu)
 
         return aeff

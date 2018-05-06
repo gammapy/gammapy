@@ -31,13 +31,12 @@ class TestEnergyDependentMultiGaussPSF:
         psf.write(filename)
 
         # Verify checksum
-        hdu_list = fits.open(filename)
-
-        # TODO: replace this assert with something else.
-        # For unknown reasons this verify_checksum fails non-deterministically
-        # see e.g. https://travis-ci.org/gammapy/gammapy/jobs/31056341#L1162
-        # assert hdu_list[1].verify_checksum() == 1
-        assert len(hdu_list) == 2
+        with fits.open(filename) as hdu_list:
+            # TODO: replace this assert with something else.
+            # For unknown reasons this verify_checksum fails non-deterministically
+            # see e.g. https://travis-ci.org/gammapy/gammapy/jobs/31056341#L1162
+            # assert hdu_list[1].verify_checksum() == 1
+            assert len(hdu_list) == 2
 
     def test_to_table_psf(self, psf):
         energy = 1 * u.TeV

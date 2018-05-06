@@ -97,8 +97,8 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(filename, overwrite=True)
 
-    hdulist = fits.open(filename)
-    geom1 = WcsGeom.from_header(hdulist[0].header, hdulist['BANDS'])
+    with fits.open(filename) as hdulist:
+        geom1 = WcsGeom.from_header(hdulist[0].header, hdulist['BANDS'])
 
     assert_allclose(geom0.npix, geom1.npix)
     assert (geom0.coordsys == geom1.coordsys)

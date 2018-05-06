@@ -202,7 +202,7 @@ class EnergyDispersion(object):
                    data=pdf_matrix)
 
     @classmethod
-    def read(cls, filename, hdu1='MATRIX', hdu2='EBOUNDS', **kwargs):
+    def read(cls, filename, hdu1='MATRIX', hdu2='EBOUNDS'):
         """Read from file.
 
         Parameters
@@ -215,7 +215,7 @@ class EnergyDispersion(object):
             HDU containing the energy axis information, default, EBOUNDS
         """
         filename = make_path(filename)
-        with fits.open(str(filename), **kwargs) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             edisp = cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
         return edisp
@@ -695,7 +695,7 @@ class EnergyDispersion2D(object):
             File name
         """
         filename = make_path(filename)
-        with fits.open(str(filename)) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             edisp = cls.from_hdulist(hdulist, hdu)
 
         return edisp

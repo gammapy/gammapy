@@ -265,7 +265,8 @@ class SmartHDUList(object):
             Filename
         """
         filename = str(make_path(filename))
-        hdu_list = fits.open(filename, **kwargs)
+        memmap = kwargs.pop('memmap', False)
+        hdu_list = fits.open(filename, memmap=memmap, **kwargs)
         return cls(hdu_list)
 
     def write(self, filename, **kwargs):
@@ -360,31 +361,6 @@ class SmartHDUList(object):
         index = self.get_hdu_index(hdu=hdu, hdu_type=hdu_type)
         hdu = self.hdu_list[index]
         return hdu
-
-
-def split_filename_hduname(location):
-    """Get one HDU for a given location.
-
-    location should be either a ``file_name`` or a file
-    and HDU name in the format ``file_name[hdu_name]``.
-
-    Parameters
-    ----------
-    TODO
-
-    Returns
-    -------
-    TODO
-    """
-    # TODO: Test all cases and give good exceptions / error messages
-    if '[' in location:
-        tokens = location.split('[')
-        file_name = tokens[0]
-        hdu_name = tokens[1][:-1]  # split off ']' at the end
-        return fits.open(file_name)[hdu_name]
-    else:
-        file_name = location
-        return fits.open(file_name)[0]
 
 
 def fits_header_to_meta_dict(header):

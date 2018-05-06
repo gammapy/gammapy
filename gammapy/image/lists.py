@@ -113,13 +113,10 @@ class SkyImageList(UserList):
         return cls(images)
 
     @classmethod
-    def read(cls, filename, **kwargs):
-        """Write to FITS file.
-
-        ``kwargs`` are passed to `astropy.io.fits.open`.
-        """
+    def read(cls, filename):
+        """Read from FITS file."""
         filename = make_path(filename)
-        with fits.open(str(filename), **kwargs) as hdu_list:
+        with fits.open(str(filename), memmap=False) as hdu_list:
             images = cls.from_hdu_list(hdu_list)
         return images
 

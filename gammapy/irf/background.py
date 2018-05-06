@@ -112,7 +112,7 @@ class Background3D(object):
     def read(cls, filename, hdu='BACKGROUND'):
         """Read from file."""
         filename = make_path(filename)
-        with fits.open(str(filename)) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             bkg = cls.from_hdulist(hdulist, hdu=hdu)
 
         return bkg
@@ -210,7 +210,7 @@ class Background2D(object):
     def read(cls, filename, hdu='BACKGROUND'):
         """Read from file."""
         filename = make_path(filename)
-        with fits.open(str(filename)) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             bkg = cls.from_hdulist(hdulist, hdu=hdu)
         
         return bkg

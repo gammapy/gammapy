@@ -375,15 +375,15 @@ class FOVCube(object):
         """
         filename = make_path(filename)
         scheme_dict = cls.define_scheme(scheme)
-        hdu_list = fits.open(str(filename))
 
-        if format == 'table':
-            hdu = hdu_list[hdu]
-            return cls.from_fits_table(hdu, scheme)
-        elif format == 'image':
-            return cls.from_fits_image(hdu_list['PRIMARY'], hdu_list['EBOUNDS'], scheme)
-        else:
-            raise ValueError("Invalid format {}.".format(format))
+        with fits.open(str(filename), memmap=False) as hdu_list:
+            if format == 'table':
+                hdu = hdu_list[hdu]
+                return cls.from_fits_table(hdu, scheme)
+            elif format == 'image':
+                return cls.from_fits_image(hdu_list['PRIMARY'], hdu_list['EBOUNDS'], scheme)
+            else:
+                raise ValueError("Invalid format {}.".format(format))
 
     def to_table(self):
         """Convert cube to astropy table format.

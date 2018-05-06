@@ -917,7 +917,7 @@ class MapGeom(object):
             Geometry object.
         """
         filename = str(make_path(filename))
-        with fits.open(filename) as hdulist:
+        with fits.open(filename, memmap=False) as hdulist:
             geom = cls.from_hdulist(hdulist, **kwargs)
         return geom
 
