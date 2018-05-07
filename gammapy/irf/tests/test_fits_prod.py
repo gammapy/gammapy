@@ -3,13 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 import astropy.units as u
+from ...data import DataStore
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, data_manager
+from ...utils.testing import requires_dependency, requires_data
 
 productions = [
     dict(
         prod='hap-hd-prod2',
-        datastore='hess-crab4-hd-hap-prod2',
+        datastore='$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2',
         test_obs=23523,
         aeff_ref=267252.7018649852 * u.m ** 2,
         psf_type='psf_3gauss',
@@ -18,7 +19,7 @@ productions = [
     ),
     dict(
         prod='pa-release1',
-        datastore='hess-crab4-pa',
+        datastore='$GAMMAPY_EXTRA/datasets/hess-crab4-pa',
         test_obs=23523,
         aeff_ref=207835.97395833334 * u.m ** 2,
         psf_type='psf_king',
@@ -31,8 +32,7 @@ productions = [
 class FitsProductionTester:
     def __init__(self, prod):
         self.ref_dict = prod
-        dm = data_manager()
-        self.ds = dm[prod['datastore']]
+        self.ds = DataStore.from_dir(prod['datastore'])
         self.ref_energy = 1 * u.TeV
         self.ref_offset = 0.25 * u.deg
         self.ref_rad = np.arange(0, 2, 0.1) * u.deg
@@ -65,7 +65,6 @@ class FitsProductionTester:
 
 
 @pytest.mark.parametrize('prod', productions)
-@requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_fits_prods(prod):
     tester = FitsProductionTester(prod)

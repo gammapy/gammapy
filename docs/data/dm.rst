@@ -8,12 +8,9 @@ Data Management
 Classes
 -------
 
-Gammapy helps with data management using a multi-layered set of classes. The job of the DataManager and DataStore is to
+Gammapy helps with data management using a multi-layered set of classes. The job of the DataStore is to
 make it easy and fast to locate files and select subsets of observations.
 
-* The `~gammapy.data.DataManager` represents a configuration (usually read
-  from a YAML file) of directories and index files specifying where
-  data is available locally and remotely and in which formats.
 * The `~gammapy.data.DataStore` represents data files in a given directory
   and usually consists of two things: a `~astropy.table.Table`
   that contains the location, content, size, checksum of all files
@@ -71,41 +68,6 @@ actually load the data and IRFs and return objects of the appropriate class
     >>> obs.target_radec
     <SkyCoord (FK5: equinox=J2000.000): (ra, dec) in deg
 	(83.63333333, 22.01444444)>
-
-
-Data Manager
-++++++++++++
-
-The data access is even more convenient with a DataManager.It is based one a data registry config file (YAML format)
-that specifies where data and index files are located on the user's machine. In other words, the data registry is
-a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files called
-``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml``
-in order to proceed with the example.
-
-
-Now the data access work like this
-
-.. code-block:: python
-
-    >>> from gammapy.data import DataManager
-    >>> data_manager = DataManager.from_yaml(DataManager.DEFAULT_CONFIG_FILE)
-    >>> data_manager.store_names
-    ['crab_example']
-    >>> data_store = data_manager.stores[0]
-
-or just
-
-.. code-block:: python
-
-    >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_name('crab_example')
-
-
-Command line tools
-------------------
-
-* ``gammapy-data-manage`` -- Manage data locally and on servers
-* ``gammapy-data-browse`` -- A web app to browse local data (stats and quick look plots)
 
 
 .. _dm_formats:

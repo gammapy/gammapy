@@ -4,12 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 import os
 import pytest
-import numpy as np
 import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from numpy.testing import assert_allclose
-from ..data import DataManager
 from ..datasets import gammapy_extra
 
 __all__ = [
@@ -55,29 +53,12 @@ def requires_dependency(name):
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
-def has_hess_test_data():
-    """Check if the user has HESS data for testing.
-
-    """
-    if not DataManager.DEFAULT_CONFIG_FILE.is_file():
-        return False
-
-    try:
-        dm = DataManager()
-        # TODO: add checks on availability of datasets used in the tests ...
-        return True
-    except:
-        return False
-
-
 def has_data(name):
     """Is a certain set of data available?
     """
     if name == 'gammapy-extra':
         from ..datasets import gammapy_extra
         return gammapy_extra.is_available
-    elif name == 'hess':
-        return has_hess_test_data()
     elif name == 'gamma-cat':
         return 'GAMMA_CAT' in os.environ
     elif name == 'fermi-lat':
@@ -137,14 +118,6 @@ def run_cli(cli, args, exit_code=0):
         sys.stderr.write(result.output)
 
     return result
-
-
-# https://pytest.org/latest/tmpdir.html#the-tmpdir-factory-fixture
-@pytest.fixture
-def data_manager():
-    test_register = gammapy_extra.filename('datasets/data-register.yaml')
-    dm = DataManager.from_yaml(test_register)
-    return dm
 
 
 def assert_wcs_allclose(wcs1, wcs2):
