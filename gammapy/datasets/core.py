@@ -109,10 +109,6 @@ class Datasets(object):
     in gammapy-extra, e.g. large files from the web that we don't
     want to stick in gammapy-extra.
 
-    This class has overlap with the `gammapy.data.DataManager` class ...
-    maybe it should be merged or maybe it's better to keep that one
-    focused on HESS (and Fermi?) data management?
-
     Parameters
     ----------
     config : `~collections.OrderedDict`
@@ -140,7 +136,7 @@ class Datasets(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        """Create a `DataManager` from a YAML config file.
+        """Create from a YAML config file.
 
         Parameters
         ----------

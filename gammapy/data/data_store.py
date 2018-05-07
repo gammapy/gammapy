@@ -148,40 +148,6 @@ class DataStore(object):
 
         return filename
 
-    @classmethod
-    def from_name(cls, name):
-        """Convenience method to look up DataStore from DataManager."""
-        # This import needs to be delayed to avoid a circular import
-        # It can't be moved to the top of the file
-        from .data_manager import DataManager
-        dm = DataManager()
-        return dm[name]
-
-    @classmethod
-    def from_all(cls, val):
-        """Try different DataStore constructors.
-
-        Currently tried (in this order)
-        - :func:`~gammapy.data.DataStore.from_dir`
-        - :func:`~gammapy.data.DataStore.from_name`
-
-        Parameters
-        ----------
-        val : str
-            Key to construct DataStore from
-        """
-        try:
-            store = cls.from_dir(val)
-        except OSError as e1:
-            try:
-                store = cls.from_name(val)
-            except KeyError as e2:
-                raise ValueError('Not able to contruct DataStore using key:'
-                                 ' {}.\nErrors\nfrom_dir: {}\nfrom_name: {}'
-                                 .format(val, e1, e2))
-
-        return store
-
     def info(self, file=None):
         """Print some info."""
         if not file:

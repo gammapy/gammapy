@@ -41,10 +41,6 @@ def pytest_configure(config):
     has_it = 'yes' if has_data('gammapy-extra') else 'no'
     print('gammapy-extra ... {}'.format(has_it))
 
-    has_it = 'yes' if has_data('hess') else 'no'
-    print('hess ............ {}'.format(has_it))
-    print('')
-
     print('Gammapy environment variables:')
 
     var = os.environ.get('GAMMAPY_EXTRA', 'not set')
