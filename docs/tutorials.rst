@@ -103,7 +103,6 @@ Notebooks
    notebooks/cta_data_analysis.ipynb
    notebooks/data_iact.ipynb
    notebooks/data_fermi_lat.ipynb
-   notebooks/image_pipe.ipynb
    notebooks/image_analysis.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
@@ -113,8 +112,6 @@ Notebooks
    notebooks/cta_simulation.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
-   notebooks/cube_analysis_part1.ipynb
-   notebooks/cube_analysis_part2.ipynb
    notebooks/light_curve.ipynb
 
 For a quick introduction to Gammapy, go here:
@@ -126,14 +123,13 @@ Interested to do a first analysis of simulated CTA data?
 - `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 
-To learn how to work with gamma-ray data with Gammapy:
+3-dimensional cube analysis:
 
-- `IACT DL3 data with Gammapy <notebooks/data_iact.html>`__ (H.E.S.S data example) | *data_iact.ipynb*
-- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ (Fermi-LAT data example) | *data_fermi_lat.ipynb*
+- `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
+- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 
 2-dimensional sky image analysis:
 
-- `Image analysis with Gammapy (run pipeline) <notebooks/image_pipe.html>`__ (H.E.S.S. data example) | *image_pipe.ipynb*
 - `Image analysis with Gammapy (individual steps) <notebooks/image_analysis.html>`__ (H.E.S.S. data example) | *image_analysis.ipynb*
 - `Source detection with Gammapy <notebooks/detect_ts.html>`__ (Fermi-LAT data example) | *detect_ts.ipynb*
 - `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
@@ -147,20 +143,14 @@ To learn how to work with gamma-ray data with Gammapy:
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
-
-3-dimensional cube analysis (new, work in progress):
-
-- `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
-- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
-
-3-dimensional cube analysis (old, do not use):
-
-- `Cube analysis with Gammapy (part 1) <notebooks/cube_analysis_part1.html>`__ (compute cubes and mean PSF / EDISP) | *cube_analysis_part1.ipynb*
-- `Cube analysis with Gammapy (part 2) <notebooks/cube_analysis_part2.html>`__ (likelihood fit) | *cube_analysis_part2.ipynb*
-
 Time-related analysis:
 
 - `Light curve estimation with Gammapy <notebooks/light_curve.html>`__ | *light_curve.ipynb*
+
+To learn how to work with gamma-ray data with Gammapy:
+
+- `IACT DL3 data with Gammapy <notebooks/data_iact.html>`__ (H.E.S.S data example) | *data_iact.ipynb*
+- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ (Fermi-LAT data example) | *data_fermi_lat.ipynb*
 
 Extra topics
 ------------

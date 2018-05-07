@@ -54,9 +54,9 @@ Using `gammapy.cube`
 
 Gammapy tutorial notebooks that show examples using ``gammapy.cube``:
 
+* :gp-extra-notebook:`analysis_3d`
+* :gp-extra-notebook:`simulate_3d`
 * :gp-extra-notebook:`data_fermi_lat`
-* :gp-extra-notebook:`cube_analysis_part1`
-* :gp-extra-notebook:`cube_analysis_part2`
 
 Reference/API
 =============
