@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion
 from ..image import SkyImage
 from .background_estimate import BackgroundEstimate
-import logging
 
 __all__ = [
     'ReflectedRegionsFinder',
@@ -95,14 +95,15 @@ class ReflectedRegionsFinder(object):
         min_size = region.center.separation(center)
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
-        exclusion_mask = SkyImage.empty(name='empty exclusion mask',
-                                        xref=center.galactic.l.value,
-                                        yref=center.galactic.b.value,
-                                        binsz=binsz,
-                                        nxpix=npix,
-                                        nypix=npix,
-                                        fill=1)
-        return exclusion_mask
+        return SkyImage.empty(
+            name='empty exclusion mask',
+            xref=center.galactic.l.value,
+            yref=center.galactic.b.value,
+            binsz=binsz,
+            nxpix=npix,
+            nypix=npix,
+            fill=1,
+        )
 
     def setup(self):
         """Compute parameters for reflected regions algorithm."""
@@ -145,7 +146,7 @@ class ReflectedRegionsFinder(object):
             else:
                 curr_angle = curr_angle + self.angle_increment
 
-        log.info('Found {} reflected regions'.format(len(reflected_regions)))
+        log.debug('Found {} reflected regions'.format(len(reflected_regions)))
         self.reflected_regions = reflected_regions
 
     def plot(self, fig=None, ax=None):
@@ -236,7 +237,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     def run(self):
         """Run all steps."""
-        log.info('Running {}'.format(self))
+        log.debug('Computing reflected regions')
         result = []
         for obs in self.obs_list:
             temp = self.process(obs=obs)
@@ -246,7 +247,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     def process(self, obs):
         """Estimate background for one observation."""
-        log.info('Processing observation {}'.format(obs))
+        log.debug('Processing observation {}'.format(obs))
         self.finder.center = obs.pointing_radec
         self.finder.run()
         off_region = self.finder.reflected_regions
