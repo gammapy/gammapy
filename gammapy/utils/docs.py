@@ -128,7 +128,8 @@ def modif_nb_links(folder, url_docs, git_commit):
 <div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-- Try online [![Binder](https://mybinder.org/badge.svg)](https://beta.mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?filepath={nb_filename})
+- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab)
+ and then double-click on **{nb_filename}** file.
 - You can also contribute with your own notebooks in this 
 [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 - **Source files:**
