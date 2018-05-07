@@ -2,6 +2,5 @@
 """
 Dark matter spatial and spectral models.
 """
-from .profiles import *
 from .utils import *
 from .spectra import *

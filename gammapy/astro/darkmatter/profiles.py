@@ -19,10 +19,10 @@ __all__ = [
 class DMProfile(object):
     """DMProfile model base class.
     """
-    LOCAL_DENSITY = 0.39 * u.GeV / (u.cm ** 3)
-    """Local dark matter density"""
-    DISTANCE_GC = 8.5 * u.kpc
-    """Distance to the Galactic Center"""
+    LOCAL_DENSITY = 0.3 * u.GeV / (u.cm ** 3)
+    """Local dark matter density as given in refenrece 2"""
+    DISTANCE_GC = 8.33 * u.kpc
+    """Distance to the Galactic Center as given in reference 2"""
 
     def __call__(self, radius):
         """Call evaluate method of derived classes"""
@@ -66,9 +66,7 @@ class NFWProfile(DMProfile):
 
     .. math::
 
-        \rho(r) = \rho_s \left[
-            \frac{r}{r_s}\left(1 + \frac{r}{r_s}\right)^2
-            \right]^{-1}
+        \rho(r) = \rho_s \frac{r_s}{r}\left(1 + \frac{r}{r_s}\right)^{-2}
 
     Parameters
     ----------
@@ -80,9 +78,9 @@ class NFWProfile(DMProfile):
     References
     ----------
     * `arXiv:astro-ph/9611107 <https://arxiv.org/abs/astro-ph/9611107>`_
-    * `arXiv:0908.0195 <https://arxiv.org/abs/0908.0195>`_
+    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
     """
-    DEFAULT_SCALE_RADIUS = 21 * u.kpc
+    DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
 
     def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
@@ -119,9 +117,9 @@ class EinastoProfile(DMProfile):
     References
     ----------
     * `1965TrAlm...5...87E <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `arXiv:0908.0195 <https://arxiv.org/abs/0908.0195>`_
+    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
     """
-    DEFAULT_SCALE_RADIUS = 21 * u.kpc
+    DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
     """Default scale radius as given in reference 2"""
     DEFAULT_ALPHA = 0.17 
     """Default scale radius as given in reference 2"""
@@ -141,3 +139,107 @@ class EinastoProfile(DMProfile):
         rr = radius / r_s
         exponent = (2 / alpha) * (rr ** alpha - 1)
         return rho_s * np.exp(-1 * exponent)
+
+
+class IsothermalProfile(DMProfile):
+    r"""Isothermal Profile.
+
+    .. math::
+
+        \rho(r) = \frac{\rho_s}{1 + (r/r_s)^2}
+
+    Parameters
+    ----------
+    r_s : `~astropy.units.Quantity`
+        Scale radius, :math:`r_s`
+
+    References
+    ----------
+    * `1991MNRAS.249..523B <http://adsabs.harvard.edu/full/1991MNRAS.249..523>`_
+    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    """
+    DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
+    """Default scale radius as given in reference 2"""
+
+    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+
+        self.parameters = ParameterList([
+            Parameter('r_s', u.Quantity(r_s)),
+            Parameter('rho_s', u.Quantity(rho_s))
+        ])
+
+    @staticmethod
+    def evaluate(radius, r_s, rho_s):
+        rr = radius / r_s
+        return rho_s / (1 + rr ** 2) 
+
+
+class BurkertProfile(DMProfile):
+    r"""Burkert Profile.
+
+    .. math::
+
+        \rho(r) = \frac{\rho_s}{(1 + r/r_s)(1 + (r/r_s)^2)}
+
+    Parameters
+    ----------
+    r_s : `~astropy.units.Quantity`
+        Scale radius, :math:`r_s`
+
+    References
+    ----------
+    * `arXiv:astro-ph/950404 <https://arxiv.org/abs/astro-ph/950404>`_
+    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    """
+    DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
+    """Default scale radius as given in reference 2"""
+
+    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+
+        self.parameters = ParameterList([
+            Parameter('r_s', u.Quantity(r_s)),
+            Parameter('rho_s', u.Quantity(rho_s))
+        ])
+
+    @staticmethod
+    def evaluate(radius, r_s, rho_s):
+        rr = radius / r_s
+        return rho_s / ((1 + rr) * (1 + rr ** 2))
+
+
+class MooreProfile(DMProfile):
+    r"""Moore Profile.
+
+    .. math::
+
+        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^{1.16}
+        \left(1 + \frac{r}{r_s} \right)^{-1.84}
+
+    Parameters
+    ----------
+    r_s : `~astropy.units.Quantity`
+        Scale radius, :math:`r_s`
+
+    References
+    ----------
+    * `arXiv:astro-ph/040226 <https://arxiv.org/abs/astro-ph/040226>`_
+    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    """
+    DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
+    """Default scale radius as given in reference 2"""
+
+    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+
+        self.parameters = ParameterList([
+            Parameter('r_s', u.Quantity(r_s)),
+            Parameter('rho_s', u.Quantity(rho_s))
+        ])
+
+    @staticmethod
+    def evaluate(radius, r_s, rho_s):
+        rr = radius / r_s
+        rr_ = r_s / radius
+        return rho_s * rr_ ** 1.16 * (1 + rr) ** (-1.84)

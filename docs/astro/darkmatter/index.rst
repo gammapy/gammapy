@@ -23,3 +23,7 @@ Reference/API
 .. automodapi:: gammapy.astro.darkmatter
     :no-inheritance-diagram:
     :include-all-objects:
+
+.. automodapi:: gammapy.astro.darkmatter.profiles
+    :no-inheritance-diagram:
+    :include-all-objects:
