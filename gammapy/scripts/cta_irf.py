@@ -81,7 +81,6 @@ class CTAIrf(object):
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
-        table = fits.open(filename)['SENSITIVITY']
         sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
 
         return cls(
@@ -133,15 +132,10 @@ class BgRateTable(object):
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='BACKGROUND', **kwargs):
+    def read(cls, filename, hdu='BACKGROUND'):
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        try:
+        with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
-        except KeyError:
-            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot background rate.
@@ -216,15 +210,10 @@ class Psf68Table(object):
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='POINT SPREAD FUNCTION', **kwargs):
+    def read(cls, filename, hdu='POINT SPREAD FUNCTION'):
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        try:
+        with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
-        except KeyError:
-            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot point spread function.
@@ -299,15 +288,10 @@ class SensitivityTable(object):
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='SENSITVITY', **kwargs):
+    def read(cls, filename, hdu='SENSITVITY'):
         filename = make_path(filename)
-        hdulist = fits.open(str(filename), **kwargs)
-        try:
+        with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
-        except KeyError:
-            msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-            msg += '\n Available {}'.format([_.name for _ in hdulist])
-            raise ValueError(msg)
 
     def plot(self, ax=None, energy=None, **kwargs):
         """Plot sensitivity.
@@ -395,12 +379,12 @@ class CTAPerf(object):
         """
         filename = str(make_path(filename))
 
-        hdulist = fits.open(filename)
-        aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
-        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-        bkg = BgRateTable.from_hdulist(hdulist=hdulist)
-        psf = Psf68Table.from_hdulist(hdulist=hdulist)
-        sens = SensitivityTable.from_hdulist(hdulist=hdulist)
+        with fits.open(filename, memmap=False) as hdulist:
+            aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
+            edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+            bkg = BgRateTable.from_hdulist(hdulist=hdulist)
+            psf = Psf68Table.from_hdulist(hdulist=hdulist)
+            sens = SensitivityTable.from_hdulist(hdulist=hdulist)
 
         # Create rmf with appropriate dimensions (e_reco->bkg, e_true->area)
         e_reco_min = bkg.energy.lo[0]

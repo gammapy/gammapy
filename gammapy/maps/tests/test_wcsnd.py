@@ -96,16 +96,16 @@ def test_wcsndmap_read_write_fgst(tmpdir):
     # Test Counts Cube
     m = WcsNDMap(geom)
     m.write(filename, conv='fgst-ccube')
-    h = fits.open(filename)
-    assert 'EBOUNDS' in h
+    with fits.open(filename) as h:
+        assert 'EBOUNDS' in h
 
     m2 = Map.read(filename)
     assert m2.geom.conv == 'fgst-ccube'
 
     # Test Model Cube
     m.write(filename, conv='fgst-template')
-    h = fits.open(filename)
-    assert 'ENERGIES' in h
+    with fits.open(filename) as h:
+        assert 'ENERGIES' in h
 
     m2 = Map.read(filename)
     assert m2.geom.conv == 'fgst-template'

@@ -99,7 +99,7 @@ class EnergyDependentMultiGaussPSF(object):
             File name
         """
         filename = make_path(filename)
-        with fits.open(str(filename)) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             psf = cls.from_fits(hdulist[hdu])
 
         return psf

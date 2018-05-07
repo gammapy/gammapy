@@ -63,7 +63,8 @@ class HDULocation(object):
 
     def get_hdu(self):
         """Get HDU."""
-        hdu_list = fits.open(str(self.path(abs_path=True)))
+        filename = str(self.path(abs_path=True))
+        hdu_list = fits.open(filename, memmap=False)
         return hdu_list[self.hdu_name]
 
     def load(self):

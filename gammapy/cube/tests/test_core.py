@@ -83,8 +83,8 @@ class TestSkyCube(object):
         filename = str(tmpdir / 'sky_cube.fits')
         self.sky_cube.write(filename, format='fermi-background')
 
-        hdu_list = fits.open(filename)
-        assert hdu_list[1].name == 'ENERGIES'
+        with fits.open(filename, memmap=False) as hdu_list:
+            assert hdu_list[1].name == 'ENERGIES'
 
         sky_cube = SkyCube.read(filename, format='fermi-background')
         assert sky_cube.data.shape == (30, 21, 61)

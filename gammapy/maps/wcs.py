@@ -904,8 +904,8 @@ def wcs_to_coords(w, shape):
 
 def get_map_skydir(filename, maphdu=0):
     filename = str(make_path(filename))
-    with fits.open(filename) as hdulist:
-        wcs = WCS(hdulist[maphdu].header)
+    with fits.open(filename, memmap=False) as hdu_list:
+        wcs = WCS(hdu_list[maphdu].header)
     return wcs_to_skydir(wcs)
 
 

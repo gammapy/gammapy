@@ -161,12 +161,12 @@ class HpxMap(Map):
         hdu_out.header['META'] = json.dumps(self.meta)
         hdu_out.header['UNIT'] = self._unit
 
-        hdu_list = [fits.PrimaryHDU(), hdu_out]
+        hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_out])
 
         if self.geom.axes:
-            hdu_list += [hdu_bands_out]
+            hdu_list.append(hdu_bands_out)
 
-        return fits.HDUList(hdu_list)
+        return hdu_list
 
     @abc.abstractmethod
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,

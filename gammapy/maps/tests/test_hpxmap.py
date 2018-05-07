@@ -117,22 +117,22 @@ def test_hpxmap_read_write_fgst(tmpdir):
     # Test Counts Cube
     m = create_map(8, False, 'GAL', None, [axis], False)
     m.write(filename, conv='fgst-ccube')
-    h = fits.open(filename)
-    assert 'SKYMAP' in h
-    assert 'EBOUNDS' in h
-    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-CCUBE'
-    assert h['SKYMAP'].header['TTYPE1'] == 'CHANNEL1'
+    with fits.open(filename) as h:
+        assert 'SKYMAP' in h
+        assert 'EBOUNDS' in h
+        assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-CCUBE'
+        assert h['SKYMAP'].header['TTYPE1'] == 'CHANNEL1'
 
     m2 = Map.read(filename)
     assert m2.geom.conv == 'fgst-ccube'
 
     # Test Model Cube
     m.write(filename, conv='fgst-template')
-    h = fits.open(filename)
-    assert 'SKYMAP' in h
-    assert 'ENERGIES' in h
-    assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-TEMPLATE'
-    assert h['SKYMAP'].header['TTYPE1'] == 'ENERGY1'
+    with fits.open(filename) as h:
+        assert 'SKYMAP' in h
+        assert 'ENERGIES' in h
+        assert h['SKYMAP'].header['HPX_CONV'] == 'FGST-TEMPLATE'
+        assert h['SKYMAP'].header['TTYPE1'] == 'ENERGY1'
 
     m2 = Map.read(filename)
     assert m2.geom.conv == 'fgst-template'

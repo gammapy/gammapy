@@ -162,7 +162,7 @@ class Map(object):
             Map object
         """
         filename = str(make_path(filename))
-        with fits.open(filename) as hdulist:
+        with fits.open(filename, memmap=False) as hdulist:
             map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
 
         return map_out

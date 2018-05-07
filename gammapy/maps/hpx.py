@@ -1445,9 +1445,8 @@ class HpxGeom(MapGeom):
         overwrite : bool
             Overwrite existing file?
         """
-        hdu_prim = fits.PrimaryHDU()
         hdu_hpx = self.make_hdu(data, hdu=hdu)
-        hl = [hdu_prim, hdu_hpx]
+        hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_hpx])
 
         if self.conv.bands_hdu == 'EBOUNDS':
             hdu_energy = self.make_ebounds_hdu()
@@ -1455,10 +1454,9 @@ class HpxGeom(MapGeom):
             hdu_energy = self.make_energies_hdu()
 
         if hdu_energy is not None:
-            hl.append(hdu_energy)
+            hdu_list.append(hdu_energy)
 
-        hdulist = fits.HDUList(hl)
-        hdulist.writeto(outfile, overwrite=overwrite)
+        hdu_list.writeto(outfile, overwrite=overwrite)
 
     @staticmethod
     def get_index_list(nside, nest, region):
@@ -1848,8 +1846,8 @@ class HpxToWcsMapping(object):
         filename = str(make_path(filename))
         index_map = WcsNDMap.read(filename)
         mult_map = WcsNDMap.read(filename, hdu=1)
-        with fits.open(filename) as ff:
-            hpx = HpxGeom.from_header(ff[0])
+        with fits.open(filename, memmap=False) as hdu_list:
+            hpx = HpxGeom.from_header(hdu_list[0])
             ipix = index_map.data
             mult_val = mult_map.data
             npix = mult_map.counts.shape
