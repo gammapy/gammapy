@@ -28,7 +28,6 @@ to start to learn how to use Gammapy.
   install/index
   getting-started
   tutorials
-  dataformats/index
 
 .. _gammapy_package:
 
