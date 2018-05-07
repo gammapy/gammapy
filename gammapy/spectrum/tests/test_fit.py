@@ -115,6 +115,18 @@ class TestFit:
                         100244.89943081759)
         assert_allclose(fit.result[0].statval, 30.022315611837342)
 
+
+    def test_joint(self):
+        """Test joint fit for obs with different energy binning"""
+        obs1 = SpectrumObservation(on_vector=self.src)
+        src_rebinned = self.src.rebin(2)
+        obs2 = SpectrumObservation(on_vector=src_rebinned)
+        fit = SpectrumFit(obs_list=[obs1, obs2], stat='cash',
+                          model=self.source_model, forward_folded=False)
+        fit.fit()
+        assert_allclose(fit.result[0].model.parameters['index'].value,
+                        1.9964768894266016)
+
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
         obs = SpectrumObservation(on_vector=self.src)
