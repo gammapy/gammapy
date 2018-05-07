@@ -130,10 +130,8 @@ class SpectrumFit(object):
     def obs_list(self, obs_list):
         if isinstance(obs_list, SpectrumObservation):
             obs_list  = SpectrumObservationList([obs_list])
-        if not isinstance(obs_list, SpectrumObservationList):
-            raise ValueError('Invalid input {} for parameter obs_list'.format(
-                type(obs_list)))
-        self._obs_list = obs_list
+
+        self._obs_list = SpectrumObservationList(obs_list)
 
     @property
     def bins_in_fit_range(self):
@@ -354,7 +352,7 @@ class SpectrumFit(object):
         self.model.parameters = parameters
         self.predict_counts()
         self.calc_statval()
-        total_stat = np.sum(self.statval, dtype=np.float64)
+        total_stat = np.sum([np.sum(v) for v in self.statval], dtype=np.float64)
         return total_stat
 
     def _restrict_statval(self):

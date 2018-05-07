@@ -401,6 +401,10 @@ class PHACountsSpectrum(CountsSpectrum):
             else:
                 retval.meta.backscal = retval.backscal[0] * np.ones(retval.energy.nbins)
 
+        # average areascal
+        areascal_grp = np.split(retval.areascal, split_indices) 
+        retval.areascal = np.mean(areascal_grp, axis=1)
+
         return retval
 
     @property
