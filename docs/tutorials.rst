@@ -159,8 +159,6 @@ Extra topics
 
    notebooks/background_model.ipynb
    notebooks/cwt.ipynb
-   notebooks/nddata_demo.ipynb
-   notebooks/using_numpy.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -172,8 +170,6 @@ Gammapy if something is missing!).
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
-- `Interpolation using the NDDataArray class <notebooks/nddata_demo.html>`__ | *nddata_demo.ipynb*
-- `Rapid introduction on using numpy, scipy, matplotlib <notebooks/using_numpy.html>`__ | *using_numpy.ipynb*
 
 Work in progress
 ----------------
