@@ -66,6 +66,7 @@ class FitsProductionTester:
 
 @pytest.mark.parametrize('prod', productions)
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_fits_prods(prod):
     tester = FitsProductionTester(prod)
     tester.test_all()
