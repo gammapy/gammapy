@@ -12,8 +12,6 @@ Introduction
 `gammapy.catalog` provides utilities to work with source catalogs in general,
 and catalogs relevant for gamma-ray astronomy specifically.
 
-A tutorial introduction is available here: :gp-extra-notebook:`source_catalogs`.
-
 If you just want to browse catalog information, you can visit http://gamma-sky.net .
 
 Available catalogs
@@ -102,8 +100,16 @@ The ``source`` object contains all of the information in the ``data`` attribute:
 TODO: continue here describing how to access spectra, finder charts, ...
 once that's implemented.
 
-Content
-=======
+Using `gammapy.catalog`
+=======================
+
+For more advanced use cases please go to the tutorial notebooks:
+
+* :gp-extra-notebook:`hgps`
+* :gp-extra-notebook:`first_steps`
+* :gp-extra-notebook:`sed_fitting_gammacat_fermi`
+
+The following pages describe ``gammapy.catalog`` in more detail:
 
 .. toctree::
    :maxdepth: 1
