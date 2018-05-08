@@ -101,8 +101,8 @@ Notebooks
    notebooks/first_steps.ipynb
    notebooks/cta_1dc_introduction.ipynb
    notebooks/cta_data_analysis.ipynb
-   notebooks/data_iact.ipynb
-   notebooks/data_fermi_lat.ipynb
+   notebooks/analysis_3d.ipynb
+   notebooks/simulate_3d.ipynb
    notebooks/image_analysis.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
@@ -113,6 +113,8 @@ Notebooks
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/light_curve.ipynb
+   notebooks/data_iact.ipynb
+   notebooks/data_fermi_lat.ipynb
 
 For a quick introduction to Gammapy, go here:
 
@@ -157,32 +159,14 @@ Extra topics
 .. toctree::
    :hidden:
 
+   notebooks/hgps.ipynb
+   notebooks/source_population_model.ipynb
    notebooks/background_model.ipynb
    notebooks/cwt.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
-Most users will not need them. It doesn't make much sense that you read
-through all of them, but maybe browse the list and see if there's
-something that could be interesting for your work (or contribute to
-Gammapy if something is missing!).
-
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
+- `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
-
-Work in progress
-----------------
-
-.. toctree::
-   :hidden:
-
-   notebooks/source_population_model.ipynb
-   notebooks/source_catalogs.ipynb
-
-The following notebooks are work in progress or broken.
-
-Please help make these better, or write new, better ones!
-
-- `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
-- `Source catalogs <notebooks/source_catalogs.html>`__ (working with gamma-ray source catalogs) | *source_catalogs.ipynb*
