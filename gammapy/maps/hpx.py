@@ -1431,7 +1431,7 @@ class HpxGeom(MapGeom):
             cols, self.make_header(), name=hdu)
         return hdu_out
 
-    def write(self, data, outfile, hdu='SKYMAP', overwrite=True):
+    def write(self, data, outfile, hdu='SKYMAP', overwrite=False):
         """Write input data to a FITS file.
 
         Parameters
@@ -1789,7 +1789,7 @@ class HpxToWcsMapping(object):
         HEALPIX region"""
         return self._valid
 
-    def write(self, filename, overwrite=True):
+    def write(self, filename, overwrite=False):
         """Write this mapping to a FITS file.
 
         This can be useful to avoid having to recompute it.

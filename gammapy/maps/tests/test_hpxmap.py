@@ -76,11 +76,11 @@ def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse):
-    filename = str(tmpdir / 'skycube.fits')
+    filename = str(tmpdir / 'map.fits')
 
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     fill_poisson(m, mu=0.5, random_state=0)
-    m.write(filename, sparse=sparse)
+    m.write(filename, sparse=sparse, overwrite=True)
 
     m2 = HpxNDMap.read(filename)
     m3 = HpxSparseMap.read(filename)
@@ -94,7 +94,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
-    m.write(filename, sparse=True)
+    m.write(filename, sparse=True, overwrite=True)
     m2 = HpxNDMap.read(filename)
     m3 = HpxMap.read(filename, map_type='hpx')
     m4 = Map.read(filename, map_type='hpx')
@@ -103,20 +103,20 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
     # Specify alternate HDU name for IMAGE and BANDS table
-    m.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m.write(filename, hdu='IMAGE', hdu_bands='TEST', overwrite=True)
     m2 = HpxNDMap.read(filename)
     m3 = Map.read(filename)
     m4 = Map.read(filename, map_type='hpx')
 
 
 def test_hpxmap_read_write_fgst(tmpdir):
-    filename = str(tmpdir / 'skycube.fits')
+    filename = str(tmpdir / 'map.fits')
 
     axis = MapAxis.from_bounds(100., 1000., 4, name='energy', unit='MeV')
 
     # Test Counts Cube
     m = create_map(8, False, 'GAL', None, [axis], False)
-    m.write(filename, conv='fgst-ccube')
+    m.write(filename, conv='fgst-ccube', overwrite=True)
     with fits.open(filename) as h:
         assert 'SKYMAP' in h
         assert 'EBOUNDS' in h
@@ -127,7 +127,7 @@ def test_hpxmap_read_write_fgst(tmpdir):
     assert m2.geom.conv == 'fgst-ccube'
 
     # Test Model Cube
-    m.write(filename, conv='fgst-template')
+    m.write(filename, conv='fgst-template', overwrite=True)
     with fits.open(filename) as h:
         assert 'SKYMAP' in h
         assert 'ENERGIES' in h
