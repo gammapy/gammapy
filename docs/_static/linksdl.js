@@ -9,6 +9,7 @@
 
 document.onreadystatechange = function () {
     if (document.readyState == "interactive") {
+         document.getElementsByClassName("last")[0].children[0].children[0].setAttribute("target", "_blank")
          document.getElementsByClassName("last")[0].children[2].children[1].setAttribute("download", "")
          document.getElementsByClassName("last")[0].children[2].children[2].setAttribute("download", "")
      }
