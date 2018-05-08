@@ -602,7 +602,7 @@ Note that pathlib was added to the Python standard library in 3.4
 but since we support Python 2.7 and the Python devs keep improving the
 version in the standard library (by adding new methods and new options
 for existing methods), we decided to bundle the latest version
-(from `here <https://pypi.python.org/pypi/pathlib2/>`__) in
+(from `here <https://pypi.org/project/pathlib2/>`__) in
 ``gammapy/extern/pathlib.py`` and that should always be used.
 
 Bundled gammapy.extern code

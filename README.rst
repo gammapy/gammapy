@@ -33,10 +33,6 @@ Status shields
     :target: https://landscape.io/github/gammapy/gammapy/master
     :alt: Code Health
 
-* .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
-    :target: http://docs.gammapy.org/en/latest/
-    :alt: Documentation Status
-
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
-    :target: https://pypi.python.org/pypi/gammapy/
+    :target: https://pypi.org/project/gammapy/
     :alt: Latest release

@@ -14,7 +14,7 @@ Installation
 * Linux and Mac OS are fully supported.
 * Windows is fully supported by Gammapy, but not by Sherpa (which is used as a backend for
   modeling and fitting in Gammapy), so on Windows only part of the Gammapy functionality is available.
-* You can always check what the latest stable release of Gammapy is here: https://pypi.python.org/pypi/gammapy
+* You can always check what the latest stable release of Gammapy is here: https://pypi.org/project/gammapy
 
 Quick install guide
 ===================

@@ -60,7 +60,7 @@ See the complete `Gammapy 0.8 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on Feb 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.python.org/pypi/gammapy/0.7>`__)
+- Released on Feb 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.org/project/gammapy/0.7>`__)
 - 24 contributors (15 new)
 - 10 months of work (from April 28, 2017 to Feb 28, 2018)
 - 178 pull requests (not all listed below)
@@ -271,7 +271,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on April 28, 2017 (`Gammapy 0.6 on PyPI <https://pypi.python.org/pypi/gammapy/0.6>`__)
+- Released on April 28, 2017 (`Gammapy 0.6 on PyPI <https://pypi.org/project/gammapy/0.6>`__)
 - 14 contributors (5 new)
 - 5 months of work (from November 22, 2016 to April 28, 2017)
 - 147 pull requests (not all listed below)
@@ -419,7 +419,7 @@ See the complete `Gammapy 0.6 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on November 22, 2016 (`Gammapy 0.5 on PyPI <https://pypi.python.org/pypi/gammapy/0.5>`__)
+- Released on November 22, 2016 (`Gammapy 0.5 on PyPI <https://pypi.org/project/gammapy/0.5>`__)
 - 12 contributors (5 new)
 - 7 months of work (from April 20, 2016 to November 22, 2016)
 - 184 pull requests (not all listed below)
@@ -534,7 +534,7 @@ See the complete `Gammapy 0.5 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on April 20, 2016 (`Gammapy 0.4 on PyPI <https://pypi.python.org/pypi/gammapy/0.4>`__)
+- Released on April 20, 2016 (`Gammapy 0.4 on PyPI <https://pypi.org/project/gammapy/0.4>`__)
 - 10 contributors (5 new)
 - 8 months of work (from August 13, 2015 to April 20, 2016)
 - 108 pull requests (not all listed below)
@@ -637,7 +637,7 @@ See the complete `Gammapy 0.4 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
+- Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.org/project/gammapy/0.3>`__)
 - 9 contributors (5 new)
 - 4 months of work (from April 13, 2014 to August 13, 2015)
 - 24 pull requests
@@ -695,7 +695,7 @@ Pull requests
 Summary
 +++++++
 
-- Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.python.org/pypi/gammapy/0.2>`__)
+- Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.org/project/gammapy/0.2>`__)
 - 4 contributors (1 new)
 - 8 months of work (from August 25, 2014 to April 13, 2015)
 - 40 pull requests
@@ -747,7 +747,7 @@ Pull requests
 Summary
 +++++++
 
-- Released on August 25, 2014 (`Gammapy 0.1 on PyPI <https://pypi.python.org/pypi/gammapy/0.1>`__)
+- Released on August 25, 2014 (`Gammapy 0.1 on PyPI <https://pypi.org/project/gammapy/0.1>`__)
 - 5 contributors
 - 15 months of work (from May 15, 2013 to August 25, 2014)
 - 82 pull requests

@@ -253,7 +253,7 @@ with the building of the conda binary packages being the slowest step, something
 announcing a new release to users (because many use conda and will try to update as soon as they get
 the announcement email).
 
-* Source distribution releases: https://pypi.python.org/pypi/gammapy/
+* Source distribution releases: https://pypi.org/project/gammapy/
 * Binary conda packages for Linux, Mac and Windows: https://github.com/conda-forge/gammapy-feedstock
 
 Data formats

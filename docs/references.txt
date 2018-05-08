@@ -32,7 +32,7 @@
 .. _conda: http://conda.pydata.org/
 .. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.io/en/latest/
-.. _PyYAML: https://pypi.python.org/pypi/PyYAML/
+.. _PyYAML: https://pypi.org/project/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
@@ -43,7 +43,6 @@
 .. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
 .. _PINT: https://github.com/nanograv/PINT
 .. _Gamera: https://github.com/JoachimHahn/GAMERA
-.. _Gappa: https://pypi.python.org/pypi/gappa
 .. _gammatools: https://github.com/woodmd/gammatools
 .. _FLaapLUC: https://github.com/jlenain/flaapluc
 .. _pointlike: https://github.com/tburnett/Fermi-LAT
@@ -87,12 +86,12 @@
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: http://docs.gammapy.org/
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
-.. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy
+.. _Gammapy page on PyPI: https://pypi.org/project/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
 .. _Gammapy on Slack: https://gammapy.slack.com
 
 .. _Slack: https://slack.com
-.. _PyPI: https://pypi.python.org
+.. _PyPI: https://pypi.org
 
 .. _scientific Python stack: https://www.scipy.org/about.html
 
