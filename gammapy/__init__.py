@@ -40,8 +40,16 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 # ----------------------------------------------------------------------------
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
+import webbrowser
 
 # For egg_info test builds to pass, put package imports here.
 if not _ASTROPY_SETUP_:  # pylint: disable=undefined-variable
     # put top-level package imports here
     pass
+
+
+def song():
+    """
+    Listen to the Gammapy song.
+    """
+    webbrowser.open('http://gammapy.org/gammapy_song.mp3')
