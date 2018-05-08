@@ -84,7 +84,8 @@ class TestSpectrumExtraction:
 
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
-        extraction.run(outdir=tmpdir)
+        extraction.run()
+        extraction.write(outdir=tmpdir, overwrite=True)
         testobs = SpectrumObservation.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
         assert_quantity_allclose(testobs.aeff.data.data,
                                  extraction.observations[0].aeff.data.data)
@@ -98,7 +99,8 @@ class TestSpectrumExtraction:
         """Same as above for files to be used with sherpa"""
         import sherpa.astro.ui as sau
 
-        extraction.run(outdir=tmpdir, use_sherpa=True)
+        extraction.run()
+        extraction.write(outdir=tmpdir, use_sherpa=True, overwrite=True)
         sau.load_pha(str(tmpdir / 'ogip_data' / 'pha_obs23523.fits'))
         arf = sau.get_arf()
 

@@ -411,7 +411,7 @@ class SpectrumObservation(object):
                    off_vector=off_vector,
                    edisp=energy_dispersion)
 
-    def write(self, outdir=None, use_sherpa=False, overwrite=True):
+    def write(self, outdir=None, use_sherpa=False, overwrite=False):
         """Write OGIP files.
 
         If you want to use the written files with Sherpa you have to set the
@@ -424,8 +424,8 @@ class SpectrumObservation(object):
             output directory, default: pwd
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
-        overwrite : bool, optional
-            Overwrite, default: True
+        overwrite : bool
+            Overwrite existing files?
         """
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
