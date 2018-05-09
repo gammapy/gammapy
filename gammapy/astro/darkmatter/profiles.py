@@ -6,14 +6,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from ...utils.modeling import Parameter, ParameterList
 from ...spectrum.utils import integrate_spectrum
 import astropy.units as u
-import six, abc
+import six
+import abc
 import numpy as np
 
 __all__ = [
     'DMProfile',
     'NFWProfile',
     'EinastoProfile',
+    'IsothermalProfile',
+    'BurkertProfile',
+    'MooreProfile',
 ]
+
 
 @six.add_metaclass(abc.ABCMeta)
 class DMProfile(object):
@@ -83,7 +88,7 @@ class NFWProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
@@ -121,10 +126,10 @@ class EinastoProfile(DMProfile):
     """
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
     """Default scale radius as given in reference 2"""
-    DEFAULT_ALPHA = 0.17 
+    DEFAULT_ALPHA = 0.17
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, alpha=None, rho_s=1*u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, alpha=None, rho_s=1 * u.Unit('GeV / cm3')):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
 
@@ -161,7 +166,7 @@ class IsothermalProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
 
         self.parameters = ParameterList([
@@ -172,7 +177,7 @@ class IsothermalProfile(DMProfile):
     @staticmethod
     def evaluate(radius, r_s, rho_s):
         rr = radius / r_s
-        return rho_s / (1 + rr ** 2) 
+        return rho_s / (1 + rr ** 2)
 
 
 class BurkertProfile(DMProfile):
@@ -195,7 +200,7 @@ class BurkertProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
 
         self.parameters = ParameterList([
@@ -230,7 +235,7 @@ class MooreProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1*u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
 
         self.parameters = ParameterList([

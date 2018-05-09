@@ -18,9 +18,9 @@ __all__ = [
 
 class PrimaryFlux(object):
     """DM-annihilation gamma-ray spectra
-    
+
     Based on the precompute models by `Cirelli et al.
-    <http://http://www.marcocirelli.net/PPPC4DMID.html>`_. All available
+    <http://www.marcocirelli.net/PPPC4DMID.html>`_. All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
     `~gammapy.spectrum.models.TableModel` for a chosen dark matter mass and
@@ -28,8 +28,9 @@ class PrimaryFlux(object):
 
     References
     ----------
-    * `arXiv:1012.4515 [hep-ph] <https://arxiv.org/abs/1012.451>`_
+    * `arXiv:1012.4515 [hep-ph] <https://arxiv.org/abs/1012.4515>`_
     """
+
     def __init__(self, mDM, channel):
         self._table = None
         self.mDM = mDM
@@ -60,7 +61,7 @@ class PrimaryFlux(object):
     @property
     def allowed_channels(self):
         """Allowed annihilation channels
-        
+
         TODO: Introduce a dict with simpler channel names
         TODO: Make allowed_channels a class property        
         """

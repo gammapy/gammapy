@@ -5,7 +5,7 @@ Utilities to compute J-factor maps
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ...cube import make_separation_map
 from ...maps import WcsNDMap
-import astropy.units as u 
+import astropy.units as u
 import numpy as np
 import copy
 
@@ -15,23 +15,25 @@ __all__ = [
     'DMFluxMapMaker',
 ]
 
+
 class JFactory(object):
-    """Helper class to compute J-Factor maps
+    """Compute J-Factor maps
 
     All J-Factors are computed for annihilation. The assumend dark matter
     profiles will be centered on the center of the map
-    
+
     Parameters
     ----------
     map_ : `~gammapy.maps.WcsMap`
         Sky map
-    profile : `~gammapy.astro.darkmatter.DMProfile`
+    profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map
     """
+
     def __init__(self, map_, distance, profile):
-        self.profile=profile
+        self.profile = profile
         self.map_ = map_
         self.distance = distance
 
@@ -51,7 +53,7 @@ class JFactory(object):
         .. math ::
             \frac{\mathrm d J}{\mathrm d \Omega} = 
            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
-           
+
 
         TODO: Needs to be implemented more efficiently
         """
@@ -82,7 +84,6 @@ class JFactory(object):
                               geom=self.map_.geom)
 
 
-
 class DMFluxMapMaker(object):
     r"""Create dark matter flux maps
 
@@ -109,6 +110,7 @@ class DMFluxMapMaker(object):
     ----------
     * `arXiv:1012.4515 [hep-ph] <https://arxiv.org/abs/1012.451>`_
     """
+
     def __init__(self, jfact_map, prim_flux, x_section, energy_range):
         self.jfact_map = jfact_map
         self.prim_flux = prim_flux
@@ -118,7 +120,7 @@ class DMFluxMapMaker(object):
 
     def run(self):
         """Make the map
-        
+
         The result is stored in the
         :func:`~gammapy.astro.darkmatter.DMFluxMapMaker.flux_map` attribute
         """
@@ -129,7 +131,7 @@ class DMFluxMapMaker(object):
         )
         data = self.jfact_map.quantity.copy()
         data *= prefactor
-        data *= int_flux 
+        data *= int_flux
         data = data.to('cm-2 s-1')
 
         self._fluxmap = WcsNDMap(data=data, geom=self.jfact_map.geom)
