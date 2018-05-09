@@ -12,6 +12,7 @@ import copy
 
 __all__ = [
     'JFactory',
+    'DMFluxMapMaker',
 ]
 
 class JFactory(object):
@@ -79,3 +80,61 @@ class JFactory(object):
 
         self.jfact = WcsNDMap(data=jfact,
                               geom=self.map_.geom)
+
+
+
+class DMFluxMapMaker(object):
+    r"""Create dark matter flux maps
+
+    The gamma-ray flux is computed as follows
+
+    .. math::
+
+        \frac{\mathrm d \phi}{\mathrm d E \mathrm d\Omega} =
+        \frac{\langle \sigma\nu \rangle}{8\pi m^2_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+
+    Parameters
+    ----------
+    jfact_map : `~gammapy.maps.WcsNDMap`
+        J-Factor map as computed by `~gammapy.astro.darkmatter.JFactory`
+    prim_flux : `~gammapy.astro.darkmatter.PrimaryFlux`
+        Primary gamma-ray flux
+    x_section : `~astropy.units.Quantity`
+        Velocity averaged annihilation cross section, $\langle \sigma\nu\rangle$
+    energy_range : tuple of `~astropy.units.Quantity`
+        Energy range for the map
+
+    References
+    ----------
+    * `arXiv:1012.4515 [hep-ph] <https://arxiv.org/abs/1012.451>`_
+    """
+    def __init__(self, jfact_map, prim_flux, x_section, energy_range):
+        self.jfact_map = jfact_map
+        self.prim_flux = prim_flux
+        self.x_section = x_section
+        self.energy_range = energy_range
+        self._flux_map = None
+
+    def run(self):
+        """Make the map
+        
+        The result is stored in the
+        :func:`~gammapy.astro.darkmatter.DMFluxMapMaker.flux_map` attribute
+        """
+        prefactor = (self.x_section / (8 * np.pi * self.prim_flux.mDM ** 2))
+        int_flux = self.prim_flux.table_model.integral(
+            emin=self.energy_range[0],
+            emax=self.energy_range[1],
+        )
+        data = self.jfact_map.quantity.copy()
+        data *= prefactor
+        data *= int_flux 
+        data = data.to('cm-2 s-1')
+
+        self._fluxmap = WcsNDMap(data=data, geom=self.jfact_map.geom)
+
+    @property
+    def flux_map(self):
+        """Flux map"""
+        return self._fluxmap
