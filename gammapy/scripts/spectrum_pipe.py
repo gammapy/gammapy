@@ -65,14 +65,14 @@ class SpectrumAnalysisIACT(object):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
             obs_list=self.observations,
-            **self.config['background'],
+            **self.config['background']
         )
         self.background_estimator.run()
 
         self.extraction = SpectrumExtraction(
             obs_list=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **self.config['extraction'],
+            **self.config['extraction']
         )
 
         self.extraction.run()
@@ -81,7 +81,7 @@ class SpectrumAnalysisIACT(object):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations,
-            **self.config['fit'],
+            **self.config['fit']
         )
         self.fit.run(outdir=self.config['outdir'])
 
