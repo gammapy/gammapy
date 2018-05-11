@@ -112,23 +112,42 @@ Get set up
     Also, we shouldn't duplicate content from http://astropy.readthedocs.io/en/latest/#developer-documentation
     but link there instead.
 
-Commands to set up an environment for Gammapy development:
+The first steps are basically identical to https://cta-observatory.github.io/ctapipe/getting_started/index.html (until step 4, excluding 5)
+and http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html (up to *Create your own private workspace*).
+The following is a quick summary of commands to set up an environment for Gammapy development:
 
 .. code-block:: bash
 
+    # Fork the gammapy repository on GitHub, https://github.com/gammapy/gammapy
     cd code  # Go somewhere on your machine where you want to code
-    git clone https://github.com/gammapy/gammapy.git
+    git clone https://github.com/[your-github-username]/gammapy.git
     cd gammapy
     conda env create -f environment-dev.yml
     source activate gammapy-dev
+    # for conda versions >=4.4.0 you may have to execute
+    #'conda activate gammapy-dev' instead
+    git remote add gammapy git@github.com:gammapy/gammapy.git
+    git branch my-gammapy
+    git checkout my-gammapy
 
 
-For tests
+To *activate* your development version of Gammapy in your environment:
 
 .. code-block:: bash
 
+    python setup.py build_ext --inplace
+    pip install -e .
+
+If you want to revert the build see :ref:`make_clean`.
+
+For the development it is also convenient to fork and set up the :ref:`dev_gammapy-extra`.
+
+.. code-block:: bash
+
+    # Fork the gammapy-extra repository on GitHub, https://github.com/gammapy/gammapy-extra
     cd code
-    git clone https://github.com/gammapy/gammapy-extra.git
+    git clone https://github.com/[your-github-username]/gammapy-extra.git
+    export GAMMAPY_EXTRA=$PWD/gammapy-extra
 
 
 * install dependencies

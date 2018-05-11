@@ -41,6 +41,8 @@ documentation building process.
 In the repository you will find a bunch of other files and folders. We will explain
 some of them here, but not all. Just ignore the rest.
 
+.. _dev_build:
+
 Build
 -----
 
@@ -117,6 +119,8 @@ Finally, there are some folders that are generated and filled by various build s
   This is what makes it possible to execute tests e.g. with the ``--lf`` option and just run
   the tests that "last failed".
 * ``dist`` contains the Gammapy distribution if you run ``python setup.py sdist``
+
+.. _dev_gammapy-extra:
 
 gammapy-extra repository
 ========================
