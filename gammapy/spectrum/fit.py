@@ -129,7 +129,7 @@ class SpectrumFit(object):
     @obs_list.setter
     def obs_list(self, obs_list):
         if isinstance(obs_list, SpectrumObservation):
-            obs_list  = SpectrumObservationList([obs_list])
+            obs_list = SpectrumObservationList([obs_list])
 
         self._obs_list = SpectrumObservationList(obs_list)
 
@@ -461,7 +461,7 @@ class SpectrumFit(object):
     def _fit_iminuit(self):
         """Iminuit minimization"""
         parameters, minuit = fit_minuit(parameters=self.model.parameters,
-                                   function=self.total_stat)
+                                        function=self.total_stat)
         log.debug(minuit)
         self._make_fit_result(parameters)
 

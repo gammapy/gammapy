@@ -65,21 +65,24 @@ class SpectrumAnalysisIACT(object):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
             obs_list=self.observations,
-            **self.config['background'])
+            **self.config['background'],
+        )
         self.background_estimator.run()
 
         self.extraction = SpectrumExtraction(
             obs_list=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **self.config['extraction'])
+            **self.config['extraction'],
+        )
 
-        self.extraction.run(outdir=self.config['outdir'])
+        self.extraction.run()
 
     def run_fit(self):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations,
-            **self.config['fit'])
+            **self.config['fit'],
+        )
         self.fit.run(outdir=self.config['outdir'])
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
@@ -90,7 +93,8 @@ class SpectrumAnalysisIACT(object):
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.observations)
+            obs=self.extraction.observations,
+        )
         self.flux_point_estimator.compute_points()
 
     @property

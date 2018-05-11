@@ -75,23 +75,14 @@ class SpectrumExtraction(object):
         self._aeff = None
         self._edisp = None
 
-    def run(self, outdir=None, use_sherpa=False):
+    def run(self):
         """Run all steps.
-
-        Parameters
-        ----------
-        outdir : Path, str
-            directory to write results files to (if given)
-        use_sherpa : bool, optional
-            Write Sherpa compliant files, default: False
         """
         log.info('Running {}'.format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
                 continue
             self.observations.append(self.process(obs, bkg))
-        if outdir is not None:
-            self.write(outdir, use_sherpa=use_sherpa)
 
     def _alpha_ok(self, obs, bkg):
         """Check if observation fulfills alpha criterion"""
@@ -248,7 +239,7 @@ class SpectrumExtraction(object):
         for obs in self.observations:
             obs.compute_energy_threshold(**kwargs)
 
-    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
+    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False, overwrite=False):
         """Write results to disk.
 
         Parameters
@@ -258,11 +249,13 @@ class SpectrumExtraction(object):
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'
         use_sherpa : bool, optional
-            Write Sherpa compliant files, default: False
+            Write Sherpa compliant files?
+        overwrite : bool
+            Overwrite existing files?
         """
         outdir = make_path(outdir)
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
+        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite)
 
         # TODO : add more debug plots etc. here
