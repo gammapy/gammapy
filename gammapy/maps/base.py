@@ -268,7 +268,7 @@ class Map(object):
         else:
             raise ValueError('Unrecognized map type: {!r}'.format(map_type))
 
-    def write(self, filename, overwrite=True, **kwargs):
+    def write(self, filename, overwrite=False, **kwargs):
         """Write to a FITS file.
 
         Parameters

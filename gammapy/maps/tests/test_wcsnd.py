@@ -59,11 +59,11 @@ def test_wcsndmap_init(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    filename = str(tmpdir / 'skycube.fits')
-    filename_sparse = str(tmpdir / 'skycube_sparse.fits')
+    filename = str(tmpdir / 'map.fits')
+
     m0 = WcsNDMap(geom)
     fill_poisson(m0, mu=0.5)
-    m0.write(filename)
+    m0.write(filename, overwrite=True)
     m1 = WcsNDMap.read(filename)
     m2 = Map.read(filename)
     m3 = Map.read(filename, map_type='wcs')
@@ -71,8 +71,8 @@ def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
 
-    m0.write(filename_sparse, sparse=True)
-    m1 = WcsNDMap.read(filename_sparse)
+    m0.write(filename, sparse=True, overwrite=True)
+    m1 = WcsNDMap.read(filename)
     m2 = Map.read(filename)
     m3 = Map.read(filename, map_type='wcs')
     assert_allclose(m0.data, m1.data)
@@ -80,14 +80,14 @@ def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(m0.data, m3.data)
 
     # Specify alternate HDU name for IMAGE and BANDS table
-    m0.write(filename, hdu='IMAGE', hdu_bands='TEST')
+    m0.write(filename, hdu='IMAGE', hdu_bands='TEST', overwrite=True)
     m1 = WcsNDMap.read(filename)
     m2 = Map.read(filename)
     m3 = Map.read(filename, map_type='wcs')
 
 
 def test_wcsndmap_read_write_fgst(tmpdir):
-    filename = str(tmpdir / 'skycube.fits')
+    filename = str(tmpdir / 'map.fits')
 
     axis = MapAxis.from_bounds(100., 1000., 4, name='energy', unit='MeV')
     geom = WcsGeom.create(npix=10, binsz=1.0,
@@ -95,7 +95,7 @@ def test_wcsndmap_read_write_fgst(tmpdir):
 
     # Test Counts Cube
     m = WcsNDMap(geom)
-    m.write(filename, conv='fgst-ccube')
+    m.write(filename, conv='fgst-ccube', overwrite=True)
     with fits.open(filename) as h:
         assert 'EBOUNDS' in h
 
@@ -103,7 +103,7 @@ def test_wcsndmap_read_write_fgst(tmpdir):
     assert m2.geom.conv == 'fgst-ccube'
 
     # Test Model Cube
-    m.write(filename, conv='fgst-template')
+    m.write(filename, conv='fgst-template', overwrite=True)
     with fits.open(filename) as h:
         assert 'ENERGIES' in h
 
