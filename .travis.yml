@@ -143,14 +143,10 @@ matrix:
     # You can move builds that temporarily fail because of some non-Gammapy here.
     # Please add a link to a GH issue that tracks the upstream issue.
     # copy the part from the `include` section above here.
-    allow_failures:
-        - os: linux
-          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
-
-        - os: linux
-          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
+#    allow_failures:
+#        - os: linux
+#          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
 
 install:
