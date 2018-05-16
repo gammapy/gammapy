@@ -113,7 +113,6 @@ Notebooks
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/light_curve.ipynb
-   notebooks/data_iact.ipynb
    notebooks/data_fermi_lat.ipynb
 
 For a quick introduction to Gammapy, go here:
