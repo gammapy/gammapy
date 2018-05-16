@@ -127,20 +127,31 @@ The following is a quick summary of commands to set up an environment for Gammap
     # for conda versions >=4.4.0 you may have to execute
     #'conda activate gammapy-dev' instead
     git remote add gammapy git@github.com:gammapy/gammapy.git
-    git branch my-gammapy
-    git checkout my-gammapy
+    git remote rename origin [your-user-name]
 
+It is also common to stick with the name ``origin`` for your repository and to
+use ``upstream`` for the respository you forked from.
+In any case, you can use ``$ git remote -v`` to list all your configured
+remotes.
 
-To *activate* your development version of Gammapy in your environment:
+When developing gammapy you never want to work on the ``master`` branch, but 
+always on a dedicated feature branch.
+To create and switch the branch you are working on (see also :ref:`dev_working_example`):
 
 .. code-block:: bash
 
-    python setup.py build_ext --inplace
+    git branch [branch-name]
+    git checkout [branch-name]
+
+To *activate* your development version (branch) of Gammapy in your environment:
+
+.. code-block:: bash
+
     pip install -e .
 
 If you want to revert the build see :ref:`make_clean`.
 
-For the development it is also convenient to fork and set up the :ref:`dev_gammapy-extra`.
+For the development it is also convenient to fork and set up the :ref:`dev_gammapy-extra`:
 
 .. code-block:: bash
 
@@ -155,6 +166,8 @@ For the development it is also convenient to fork and set up the :ref:`dev_gamma
 * run tests
 * build docs
 * explain make and setup.py
+
+.. _dev_working_example:
 
 Make a working example
 ======================
