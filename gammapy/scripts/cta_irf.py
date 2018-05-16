@@ -69,19 +69,23 @@ class CTAIrf(object):
             File containing the IRFs
         """
         filename = str(make_path(filename))
+        hdu_list = fits.open(filename)
 
         aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
         # TODO: fix `FOVCube.read`, then use it directly here.
-        table = fits.open(filename)['BACKGROUND']
-        table.columns.change_name(str('BGD'), str('Bgd'))
+        table = hdu_list['BACKGROUND']
+        table.columns.change_name(str('BGD'), str('BKG'))
         table.header['TUNIT7'] = '1 / (MeV s sr)'
         bkg = FOVCube.from_fits_table(table, scheme='bg_cube')
 
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
-        sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        if 'SENSITIVITY' in hdu_list:
+            sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        else:
+            sensi = None
 
         return cls(
             aeff=aeff,
