@@ -151,7 +151,7 @@ Time-related analysis:
 
 To learn how to work with gamma-ray data with Gammapy:
 
-- `IACT DL3 data with Gammapy <notebooks/data_iact.html>`__ (H.E.S.S data example) | *data_iact.ipynb*
+- For IACT data, see the ``cta_1dc_introduction`` notebook mentioned above.
 - `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ (Fermi-LAT data example) | *data_fermi_lat.ipynb*
 
 Extra topics
