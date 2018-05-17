@@ -84,18 +84,10 @@ def make_separation_map(geom, position):
     """
     # We use WcsGeom.get_coords which does not provide SkyCoords for the moment
     # We convert the output to SkyCoords
-    if geom.coordsys == 'GAL':
-        frame = 'galactic'
-    elif geom.coordsys == 'CEL':
-        frame = 'icrs'
-    else:
-        raise ValueError("Incorrect coordinate system.")
-
     geom = geom.to_image()
 
     coord = geom.get_coord()
-    coord = SkyCoord(coord[0], coord[1], frame=frame, unit='deg')
-    separation = position.separation(coord)
+    separation = position.separation(coord.skycoord)
 
     m = Map.from_geom(geom)
     m.quantity = separation
