@@ -199,12 +199,12 @@ class CountsPredictor(object):
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     """
-    Integrate 1d function using the log-log trapezoidal rule.
-    
-    If scalar values for xmin and xmax are passed an oversampled grid is
-    generated using the ``ndecade`` keyword argument. If xmin and xmax arrays
-    are passed, no oversampling is performed and the integral is computed in
-    the provided grid.
+    Integrate 1d function using the log-log trapezoidal rule. If scalar values
+
+    for xmin and xmax are passed an oversampled grid is generated using the
+    ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
+    oversampling is performed and the integral is computed in the provided
+    grid.
 
     Parameters
     ----------
