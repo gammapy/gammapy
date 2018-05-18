@@ -42,6 +42,7 @@ def lc():
         Column([1e-11, 3e-11], 'flux', unit='cm-2 s-1'),
         Column([0.1e-11, 0.3e-11], 'flux_err', unit='cm-2 s-1'),
         Column([np.nan, 3.6e-11], 'flux_ul', unit='cm-2 s-1'),
+        Column([False, True], 'is_ul'),
     ])
 
     return LightCurve(table=table)
