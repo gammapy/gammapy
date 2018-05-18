@@ -309,14 +309,3 @@ def test_coadd_unit():
     m1.coadd(m2)
 
     assert_allclose(m1.data, 1.0001)
-
-def test_make_region_mask():
-    from regions import CircleSkyRegion
-    geom = HpxGeom.create(nside=16)
-    m = HpxNDMap(geom)
-    pos = SkyCoord(0., 0, unit='deg', frame='fk5')
-    region = CircleSkyRegion(pos, 2.5*u.deg)
-    maskmap = m.make_region_mask(region)
-    assert maskmap.get_by_coord(pos) == True
-    maskmap = m.make_region_mask(region, inside=False)
-    assert maskmap.get_by_coord(pos) == False

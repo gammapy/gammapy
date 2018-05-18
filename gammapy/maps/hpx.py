@@ -1732,23 +1732,6 @@ class HpxGeom(MapGeom):
         import healpy as hp
         return Quantity(hp.nside2pixarea(self.nside), 'sr')
 
-    def get_region_idx(self, region):
-        """Return idx of pixels inside region
-
-        TODO: implement list of region for each axis
-
-        Parameters
-        ----------
-        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
-            A region on the sky could be defined in pixel or sky coordinates.
-        """
-        if not isinstance(region, SkyRegion):
-            raise NotImplementedError
-
-        coords=self.get_coord()
-        return region.contains(coords.skycoord)
-
-
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.
