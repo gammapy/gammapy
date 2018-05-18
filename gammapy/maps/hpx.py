@@ -10,6 +10,7 @@ from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
+from regions import SkyRegion
 from ..utils.scripts import make_path
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
@@ -1730,6 +1731,29 @@ class HpxGeom(MapGeom):
         """
         import healpy as hp
         return Quantity(hp.nside2pixarea(self.nside), 'sr')
+
+    def get_region_idx(self, region):
+        """Return idx of pixels inside region
+
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+        """
+
+        from regions import PixCoord
+        # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
+        # if isinstance(region, SkyRegion):
+        #    region = region.to_pixel(self.wcs)
+
+        if not isinstance(region, SkyRegion):
+            raise NotImplementedError
+
+        coords=self.get_coord()
+        return region.contains(coords.skycoord)
+
 
 
 class HpxToWcsMapping(object):

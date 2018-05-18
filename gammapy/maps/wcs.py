@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
+from regions import SkyRegion
 from ..image.utils import make_header
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
@@ -633,6 +634,30 @@ class WcsGeom(MapGeom):
         dy = angular_separation(*(ylo_xlo + yhi_xlo))
 
         return u.Quantity(dx * dy, 'sr')
+
+    def get_region_idx(self, region):
+        """Return idx of pixels inside region
+
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+        """
+
+        from regions import PixCoord
+        # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
+        # if isinstance(region, SkyRegion):
+        #    region = region.to_pixel(self.wcs)
+
+        if isinstance(region, SkyRegion):
+            coords=self.get_coord()
+            return region.contains(coords.skycoord)
+        else:
+            res = self.get_idx()
+            pcoords = PixCoord(res[0], res[1])
+            return region.contains(pcoords)
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
