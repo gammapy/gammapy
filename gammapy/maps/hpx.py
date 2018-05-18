@@ -1742,12 +1742,6 @@ class HpxGeom(MapGeom):
         region : `~regions.PixelRegion` or `~regions.SkyRegion` object
             A region on the sky could be defined in pixel or sky coordinates.
         """
-
-        from regions import PixCoord
-        # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
-        # if isinstance(region, SkyRegion):
-        #    region = region.to_pixel(self.wcs)
-
         if not isinstance(region, SkyRegion):
             raise NotImplementedError
 

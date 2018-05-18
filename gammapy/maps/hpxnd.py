@@ -4,6 +4,7 @@ import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from regions import SkyRegion
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -648,3 +649,28 @@ class HpxNDMap(HpxMap):
         ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
 
         return fig, ax, p
+
+    def make_region_mask(self, region, inside=True):
+        """Create a mask of a given region
+
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region :  `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+            Note that `~regions.PixelRegion` does not work for healpix maps.
+        inside : bool
+            Output map is True inside the input region if inside is set to True and False outside and conversely.
+
+        Return
+        ------
+        mask_map : `~gammapy.maps.HpxNDMap`
+            the mask map
+        """
+        mask = self.geom.get_region_idx(region)
+        if inside is False:
+            np.logical_not(mask,out=mask)
+
+        # TODO : update meta table to include something about the region used for mask creation?
+        return HpxNDMap(geom=self.geom, data=mask, meta=self.meta)

@@ -740,3 +740,27 @@ class Map(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
+
+    @abc.abstractmethod
+    def make_region_mask(self, region, inside=True):
+        """Create a mask of a given region
+
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+            `~regions.PixelRegion` does not work for healpix maps.
+        inside : bool
+            Output map is True inside the input region if inside is set to True and False outside and conversely.
+
+        Return
+        ------
+        mask_map : `~gammapy.maps.Map`
+            the mask map
+        """
+        pass
+        mask = self.geom.get_region_idx(region)
+        # TODO : update meta table to include something about the region used for mask creation?
+        return Map(geom=self.geom, data=mask, meta=self.meta)
