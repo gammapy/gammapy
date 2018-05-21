@@ -196,7 +196,7 @@ class LightCurve(object):
         ax : `~matplotlib.axes.Axes`, optional.
             The `~matplotlib.axes.Axes` object to be drawn on.
             If None, uses the current `~matplotlib.axes.Axes`.
-        time_format : str, ['mjd', 'iso'], optional
+        time_format : {'mjd', 'iso'}, optional
             If 'iso', the x axis will contain Matplotlib dates.
             For formatting these dates see: https://matplotlib.org/gallery/ticks_and_spines/date_demo_rrule.html
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -210,63 +210,22 @@ class LightCurve(object):
             Axis object
         """
         import matplotlib.pyplot as plt
-        from matplotlib.dates import (num2timedelta, DateFormatter)
+        from matplotlib.dates import DateFormatter
 
         if ax is None:
             ax = plt.gca()
 
-        # get fluxes + errors
-        y_unit = u.Unit(flux_unit)
-        y = self.table['flux'].quantity.to(y_unit).value
+        y, yerr = self._get_fluxes_and_errors(flux_unit)
+        is_ul, yul = self._get_flux_uls(flux_unit)
+        x, xerr = self._get_times_and_errors(time_format)
 
-        if all(k in self.table.colnames for k in ['flux_errp', 'flux_errn']):
-            yp = self.table['flux_errp'].quantity.to(y_unit)
-            yn = self.table['flux_errn'].quantity.to(y_unit)
-            yerr = yn.value, yp.value
-        elif 'flux_err' in self.table.colnames:
-            yerr = self.table['flux_err'].quantity.to(y_unit).value
-        else:
-            yerr = np.zeros_like(y)
+        # length of the ul arrow
+        ul_arr = (np.nanmax(np.concatenate((y[~is_ul], yul[is_ul]))) -
+                  np.nanmin(np.concatenate((y[~is_ul], yul[is_ul])))) * 0.1
 
-        # get times + errors
-        try:
-            x = self.time
-        except KeyError:
-            x = self.time_mid
-
-        try:
-            xerr = x - self.time_min, self.time_max - x
-        except KeyError:
-            xerr = np.zeros_like(x)
-
-        # convert to datetime if iso
-        if time_format == 'iso':
-            x = x.datetime
-            if xerr is not None:
-                # num2timedelta takes _number of days_ as input
-                xerr = num2timedelta(xerr[0].to('d').value), \
-                    num2timedelta(xerr[1].to('d').value)
-        elif time_format == 'mjd':
-            x = x.mjd
-            xerr = xerr[0].to('d').value, xerr[1].to('d').value
-        else:
-            raise ValueError(
-                "The time format '{}' is not supported.".format(time_format))
-
-        # get upper limits
-        try:
-            is_ul = self.table['is_ul'].data.astype('bool')
-        except KeyError:
-            is_ul = np.zeros_like(y)
-
-        if is_ul.any():
-            y_ul = self.table['flux_ul'].quantity.to(y_unit).value
-            # length of the ul arrow
-            yerr_ul = (np.nanmax(np.concatenate((y, y_ul))) -
-                       np.nanmin(np.concatenate((y, y_ul)))) * 0.05
-
-            y[is_ul] = y_ul[is_ul]
-            yerr[is_ul] = yerr_ul
+        # join fluxes and upper limits for the plot
+        y[is_ul] = yul[is_ul]
+        yerr[0][is_ul] = ul_arr
 
         # set plotting defaults and plot
         kwargs.setdefault('marker', '+')
@@ -274,13 +233,122 @@ class LightCurve(object):
 
         ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
         ax.set_xlabel('Time ({})'.format(time_format.upper()))
-        ax.set_ylabel('Flux ({0:FITS})'.format(y_unit))
+        ax.set_ylabel('Flux ({0:FITS})'.format(u.Unit(flux_unit)))
         if time_format == 'iso':
             ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
             plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right",
                      rotation_mode="anchor")
 
         return ax
+
+    def _get_fluxes_and_errors(self, unit='cm-2 s-1'):
+        """Extract fluxes and corresponding errors
+
+        Helper function for the plot method.
+
+        Parameters
+        ----------
+        unit : str, `~astropy.units.Unit`, optional
+            Unit of the returned flux and errors values
+
+        Returns
+        -------
+        y : `~numpy.ndarray` of `float`
+            Flux values
+        (yn, yp) : (`~numpy.ndarray` of `float`, `~numpy.ndarray` of `float`)
+            Tuple of flux error values
+        """
+        y = self.table['flux'].quantity.to(unit)
+
+        if all(k in self.table.colnames for k in ['flux_errp', 'flux_errn']):
+            yp = self.table['flux_errp'].quantity.to(unit)
+            yn = self.table['flux_errn'].quantity.to(unit)
+        elif 'flux_err' in self.table.colnames:
+            yp = self.table['flux_err'].quantity.to(unit)
+            yn = self.table['flux_err'].quantity.to(unit)
+        else:
+            yp, yn = np.zeros_like(y), np.zeros_like(y)
+
+        return y.value, (yn.value, yp.value)
+
+    def _get_flux_uls(self, unit='cm-2 s-1'):
+        """Extract flux upper limits
+
+        Helper function for the plot method.
+
+        Parameters
+        ----------
+        unit : str, `~astropy.units.Unit`, optional
+            Unit of the returned flux upper limit values
+
+        Returns
+        -------
+        is_ul : `~numpy.ndarray` of `bool`
+            True if the corresponding flux point is an upper limit
+        yul : `~numpy.ndarray` of `float`
+            Flux upper limit values
+        """
+        try:
+            is_ul = self.table['is_ul'].data.astype('bool')
+        except KeyError:
+            is_ul = np.zeros_like(self.table['flux']).data.astype('bool')
+
+        if is_ul.any():
+            yul = self.table['flux_ul'].quantity.to(unit)
+        else:
+            yul = np.zeros_like(self.table['flux']).quantity
+            yul[:] = np.nan
+
+        return is_ul, yul.value
+
+    def _get_times_and_errors(self, time_format='mjd'):
+        """Extract times and corresponding errors
+
+        Helper function for the plot method.
+
+        Parameters
+        ----------
+        time_format : {'mjd', 'iso'}, optional
+            Time format of the times. If 'iso', times and errors will be
+            returned as `~datetime.datetime` and `~datetime.timedelta` objects
+
+        Returns
+        -------
+        x : `~numpy.ndarray` of `float` or of `~datetime.datetime`
+            Time values or `~datetime.datetime` instances if 'iso' is chosen
+            as time format
+        (xn, xp) : (`~numpy.ndarray` of `float` or of `~datetime.timedelta`,
+                    `~numpy.ndarray` of `float` or of `~datetime.timedelta`)
+            Tuple of time error values or `~datetime.timedelta` instances if
+            'iso' is chosen as time format
+        """
+        from matplotlib.dates import num2timedelta
+
+        try:
+            x = self.time
+        except KeyError:
+            x = self.time_mid
+
+        try:
+            xn, xp = x - self.time_min, self.time_max - x
+        except KeyError:
+            xn, xp = x - x, x - x
+
+        # convert to given time format
+        if time_format == 'iso':
+            x = x.datetime
+            # TODO: In astropy version >3.1 the TimeDelta.to_datetime() method
+            # should start working, for now i will use num2timedelta.
+            xn, xp = np.asarray(num2timedelta(xn.to('d').value)), \
+                np.asarray(num2timedelta(xp.to('d').value))
+        elif time_format == 'mjd':
+            x = x.mjd
+            xn, xp = xn.to('d').value, xp.to('d').value
+        else:
+            raise ValueError(
+                "The time format '{}' is not supported.".format(time_format))
+
+        return x, (xn, xp)
 
 
 class LightCurveEstimator(object):
@@ -475,6 +543,9 @@ class LightCurveEstimator(object):
         Parameters
         ----------
         significance : float
+            Target significance for each light curve point
+        significance_method : {'lima', 'simple'}
+            Significance method (see `~gammapy.stats.significance_on_off`)
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
