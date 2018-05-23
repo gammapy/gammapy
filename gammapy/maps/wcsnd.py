@@ -527,7 +527,7 @@ class WcsNDMap(WcsMap):
         mask_map : `~gammapy.maps.WcsNDMap`
             the mask map
         """
-        mask = self.geom.get_region_idx(region)
+        mask = self.geom.get_region_mask_array(region)
         if inside is False:
             np.logical_not(mask,out=mask)
         # TODO : update meta table to include something about the region used for mask creation?

@@ -635,8 +635,8 @@ class WcsGeom(MapGeom):
 
         return u.Quantity(dx * dy, 'sr')
 
-    def get_region_idx(self, region):
-        """Return idx of pixels inside region
+    def get_region_mask_array(self, region):
+        """Return mask of pixels inside region in the the form of boolean array
 
         TODO: implement list of region for each axis
 
@@ -644,6 +644,11 @@ class WcsGeom(MapGeom):
         ----------
         region : `~regions.PixelRegion` or `~regions.SkyRegion` object
             A region on the sky could be defined in pixel or sky coordinates.
+
+        Return
+        ------
+        mask_array : `~numpy.ndarray` of booleans
+            the array of
         """
 
         from regions import PixCoord
@@ -653,7 +658,12 @@ class WcsGeom(MapGeom):
 
         if isinstance(region, SkyRegion):
             coords=self.get_coord()
-            return region.contains(coords.skycoord)
+            # Test to adapt to various call for region.contains
+            try:
+                res = region.contains(coords.skycoord, self.wcs)
+            except TypeError:
+                res = region.contains(coords.skycoord)
+            return res
         else:
             res = self.get_idx()
             pcoords = PixCoord(res[0], res[1])

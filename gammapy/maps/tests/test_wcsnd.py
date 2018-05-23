@@ -381,13 +381,13 @@ def test_coadd_unit():
 
 def test_make_region_mask():
     from regions import CircleSkyRegion
-    geom = WcsGeom.create(npix=(11,11), binsz=2,
+    geom = WcsGeom.create(npix=(3,3), binsz=2,
                           proj='CAR', coordsys='GAL')
     m = WcsNDMap(geom)
     region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'), 1.0*u.deg)
     maskmap = m.make_region_mask(region)
     assert np.sum(maskmap.data) == 1
     maskmap = m.make_region_mask(region, inside=False)
-    assert np.sum(maskmap.data) == 120
+    assert np.sum(maskmap.data) == 8
 
 
