@@ -867,6 +867,29 @@ class MapCoord(object):
         return self.__class__(data, self.coordsys,
                               match_by_name=self._match_by_name)
 
+    def apply_region_mask(self, region, inside=True):
+        """Return a copy of this coordinate object after applying a region selection mask.
+
+        Warning: Selection is performed on spatial coordinates only, i.e. the same region is used
+        for all non-spatial axes.
+
+        Parameters
+        ----------
+        region : `~region.SkyRegion`
+            Region defining the mask
+        inside : boolean
+            If True keep only coordinates inside, if False only coordinates outside
+
+        Returns
+        -------
+        coords : `~MapCoord`
+            A coordinates object.
+        """
+        mask = region.contains(self.skycoord)
+        if inside is False:
+            np.logical_not(mask, out=mask)
+        return self.apply_mask(mask)
+
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
     pass
