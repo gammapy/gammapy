@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from datetime import datetime, timedelta
 from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
 import astropy.units as u
@@ -42,6 +43,7 @@ def lc():
         Column([1e-11, 3e-11], 'flux', unit='cm-2 s-1'),
         Column([0.1e-11, 0.3e-11], 'flux_err', unit='cm-2 s-1'),
         Column([np.nan, 3.6e-11], 'flux_ul', unit='cm-2 s-1'),
+        Column([False, True], 'is_ul'),
     ])
 
     return LightCurve(table=table)
@@ -114,6 +116,35 @@ def test_lightcurve_chisq(lc):
 def test_lightcurve_plot(lc):
     lc.plot()
     mpl_savefig_check()
+
+
+@pytest.mark.parametrize('flux_unit', ['cm-2 s-1'])
+def test_lightcurve_plot_flux(lc, flux_unit):
+    f, ferr = lc._get_fluxes_and_errors(flux_unit)
+    assert_allclose(f, [1e-11, 3e-11])
+    assert_allclose(ferr, ([0.1e-11, 0.3e-11], [0.1e-11, 0.3e-11]))
+
+
+@pytest.mark.parametrize('flux_unit', ['cm-2 s-1'])
+def test_lightcurve_plot_flux_ul(lc, flux_unit):
+    is_ul, ful = lc._get_flux_uls(flux_unit)
+    assert_allclose(is_ul, [False, True])
+    assert_allclose(ful, [np.nan, 3.6e-11])
+
+
+@pytest.mark.parametrize('time_format, output', [
+    ('mjd', (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
+    ('iso', (np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
+             (np.array([timedelta(1), timedelta(2)]),
+              np.array([timedelta(1), timedelta(5)])))),
+    ('unsupported', ValueError)])
+def test_lightcurve_plot_time(lc, time_format, output):
+    try:
+        t, terr = lc._get_times_and_errors(time_format)
+    except output:
+        return
+    assert np.array_equal(t, output[0])
+    assert np.array_equal(terr, output[1])
 
 
 # TODO: Reuse fixtures from spectrum tests
