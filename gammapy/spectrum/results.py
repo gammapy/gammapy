@@ -445,10 +445,11 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', '.')
 
+        is_ul = self.points.table['is_ul']
         y, y_err = self.flux_point_residuals
         x = self.points.e_ref
         x = x.to(energy_unit).value
-        ax.errorbar(x, y, yerr=y_err, **kwargs)
+        ax.errorbar(x[~is_ul], y[~is_ul], yerr=y_err[~is_ul], **kwargs)
 
         ax.axhline(0, color='black')
 
