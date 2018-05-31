@@ -583,13 +583,19 @@ class FluxPointEstimator(object):
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    detection_sigma_th: double
+        Threshold of significant detection, in sigma
+    ul_confidence_level: double
+        Confidence level used for the Upper Limits computation, in sigma
     """
 
-    def __init__(self, obs, groups, model):
+    def __init__(self, obs, groups, model,detection_sigma_th=1.5, ul_condidence_level=3):
         self.obs = obs
         self.groups = groups
         self.model = model
         self.flux_points = None
+        self.detection_sigma_th = detection_sigma_th
+        self.ul_condidence_level = ul_condidence_level
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -780,8 +786,15 @@ class FluxPointEstimator(object):
         ts = np.abs(stat_null - stat_best_fit)
         return np.sign(amplitude) * np.sqrt(ts)
 
-    def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
+    def fit_point(self, model, energy_group, energy_ref):
         from .fit import SpectrumFit
+        from scipy.stats import chi2, norm
+
+        dthp = 1 - 2 * norm.sf(self.detection_sigma_th)  # using two sided p-value
+        delta_ts_detection_th = chi2.isf(1 - dthp, df=1)
+
+        ulp = 1 - 2 * norm.sf(self.ul_condidence_level)  # using two sided p-value
+        delta_ts_ul = chi2.isf(1 - ulp, df=1)
 
         energy_min = energy_group.energy_min
         energy_max = energy_group.energy_max
@@ -808,7 +821,7 @@ class FluxPointEstimator(object):
         dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
+        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=delta_ts_ul)
         dnde_errp = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
         dnde_errn = dnde - self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
 
@@ -819,7 +832,7 @@ class FluxPointEstimator(object):
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
-            ('is_ul', sqrt_ts < sqrt_ts_threshold),
+            ('is_ul', np.logical_or(sqrt_ts < np.sqrt(delta_ts_detection_th),dnde<=0)),
             ('sqrt_ts', sqrt_ts),
             ('dnde_errp', dnde_errp),
             ('dnde_errn', dnde_errn)
