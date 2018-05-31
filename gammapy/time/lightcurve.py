@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
-from ..stats.poisson import excess_error
+from ..stats.poisson import excess_error, significance_on_off
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -152,8 +152,12 @@ class LightCurve(object):
            curves from active galaxies", Vaughan et al. (2003)
            http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
+
         flux = self.table['flux'].data.astype('float64')
         flux_err = self.table['flux_err'].data.astype('float64')
+        mask=np.where(self.table['is_ul']==False)
+        flux=flux[mask]
+        flux_err=flux_err[mask]
 
         flux_mean = np.mean(flux)
         n_points = len(flux)
@@ -182,6 +186,8 @@ class LightCurve(object):
         """
         import scipy.stats as stats
         flux = self.table['flux']
+        mask=np.where(self.table['is_ul']==False)
+        flux=flux[mask]
         yexp = np.mean(flux)
         yobs = flux.data
         chi2, pval = stats.chisquare(yobs, yexp)
@@ -206,6 +212,7 @@ class LightCurve(object):
         ax = plt.gca() if ax is None else ax
 
         # TODO: Should we plot with normal time axis labels (ISO, not MJD)?
+        # TODO: Add the upper limits
 
         x, xerr = self._get_plot_x()
         y, yerr = self._get_plot_y()
@@ -367,7 +374,60 @@ class LightCurveEstimator(object):
         table['measured_excess'] = [_['measured_excess'] for _ in rows]
         table['expected_excess'] = [_['expected_excess'].value for _ in rows]
 
+        table['is_ul'] = [_['is_ul'] for _ in rows]
+        table['flux_ul'] = [_['flux_ul'].value for _ in rows] * u.Unit('1 / (s cm2)')
+
         return LightCurve(table)
+
+    def compute_Helene_ULs(self, excess, error, conf_level=95):
+        """Compute Gaussian approximation for upper limit.
+            Requires Non >> 1!
+            Basic stats but see - Helene NIM 212 (1983) 319
+
+        ToDo: to be moved in the stats module!!! Very temporary location and implementation (ROOT copy/paste)
+
+        Parameters
+        ----------
+        excess : double
+            Signal excess
+        error : double
+            Gaussian Signal error
+        conf_level: double
+            Confidence level in pourcentage (1sigma=68.27, 2sigma=95.45, 3sigma=99.73, 5sigma=99.999943)
+
+        Returns
+        -------
+         double
+            Upper limit for the excess
+        """
+
+        from scipy.stats import chi2, norm
+
+        if error <= 0.:
+            return -1.0
+
+        alpha = 1. - conf_level/100. #alpha = I1/I2
+
+        #Guess ul - find I1 and iterate to give correct alpha
+        ul = excess #Only valid for alpha < 0.5
+        if alpha > 0.5:
+            ul = excess-error*3.0
+
+        sigma = excess / error
+        sigma_ul = (ul - excess) / error #Start at zero
+        I1 = 1.0 - norm.cdf(sigma_ul)
+        I2 = 1.0 - norm.cdf(-sigma)
+        alpha_guess = I1 / I2
+
+        while alpha_guess > alpha:
+            step = 0.03
+            if alpha_guess-alpha < 0.05:
+                step = 0.0003
+            sigma_ul += step
+            I1 = 1.0 - norm.cdf(sigma_ul)
+            alpha_guess = I1 / I2
+
+        return sigma_ul*error + excess
 
     def compute_flux_point(self, time_interval, spectral_model, energy_range):
         """Compute one flux point for one time interval.
@@ -499,7 +559,15 @@ class LightCurveEstimator(object):
             flux *= int_flux
             flux_err = int_flux / predicted_excess.value
             # Gaussian errors, TODO: should be improved
-            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err *= delta_excess
+
+            flux_ul = -1*u.Unit('1 / (s cm2)')
+            sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
+            if sigma <= 3.:
+                flux_ul = self.compute_Helene_ULs(n_on-alpha_mean*n_off,delta_excess,99.73)
+                flux_ul *= int_flux / predicted_excess.value
+
         else:
             flux = 0
             flux_err = 0
@@ -510,11 +578,12 @@ class LightCurveEstimator(object):
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),
             ('n_off', n_off),
             ('measured_excess', measured_excess),
             ('expected_excess', predicted_excess),
+            ('is_ul',sigma <= 3.),
+            ('flux_ul', flux_ul * u.Unit('1 / (s cm2)'))
         ])
