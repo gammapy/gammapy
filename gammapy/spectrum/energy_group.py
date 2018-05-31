@@ -218,15 +218,16 @@ class SpectrumEnergyGroups(UserList):
 
     def find_list_idx(self, energy):
         """Find the list index corresponding to a given energy."""
+        global idx
         for idx, group in enumerate(self):
             if group.contains_energy(energy):
                 return idx
 
-            # TODO: do we need / want this behaviour?
-            # If yes, could add via a kwarg `last_bin_right_edge_inclusive=False`
-            # For last energy group
-            # if idx == len(self) - 1 and energy == group.energy_max:
-            #     return idx
+        # TODO: do we need / want this behaviour?
+        # If yes, could add via a kwarg `last_bin_right_edge_inclusive=False`
+        #For last energy group
+        if idx == len(self) - 1 and energy == group.energy_max:
+            return idx
 
         raise IndexError('No group found with energy: {}'.format(energy))
 
@@ -240,6 +241,8 @@ class SpectrumEnergyGroups(UserList):
         """
         idx_min = self.find_list_idx(energy=energy_min)
         idx_max = self.find_list_idx(energy=energy_max) - 1
+        if idx_max<0:
+            idx_max=0
         return idx_min, idx_max
 
     def make_and_replace_merged_group(self, list_idx_min, list_idx_max, bin_type):
@@ -287,19 +290,27 @@ class SpectrumEnergyGroups(UserList):
 
     def apply_energy_min(self, energy):
         t = self.to_group_table()
-        idx_max = np.where(t['energy_min'].quantity < energy)[0][-1]
+        #BKH Modif... frequently, the user put as emin the minimum of the Ereco bins and she/he wants this bin!
+        # idx_max = np.where(t['energy_min'].quantity < energy)[0][-1]
+        idx_max = np.where(t['energy_min'].quantity <= energy)[0][-1]
         self.make_and_replace_merged_group(0, idx_max, 'underflow')
 
     def apply_energy_max_old(self, energy):
         """Modify list in-place to apply a max energy cut."""
         idx_min = self.find_list_idx(energy)
         idx_max = len(self) - 1
-        self.make_and_replace_merged_group(idx_min, idx_max, 'overflow')
+        #BKH: this prevents to remove the first bin when it is wished
+        if idx_min < idx_max:
+            self.make_and_replace_merged_group(idx_min, idx_max, 'overflow')
 
     def apply_energy_max(self, energy):
         t = self.to_group_table()
-        idx_min = np.where(t['energy_max'].quantity > energy)[0][0]
-        self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
+        #BKH Modif... frequently, the user put as emax the maximum of the Ereco bins and she/he wants this bin!!
+        # idx_min = np.where(t['energy_max'].quantity > energy)[0][0]
+        idx_min = np.where(t['energy_max'].quantity >= energy)[0][0]
+        #BKH: this prevents to remove the first bin when it is wished
+        if idx_min < len(self) - 1:
+            self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
 
     def clip_to_valid_range(self, list_idx):
         """TODO: document"""
@@ -410,15 +421,19 @@ class SpectrumEnergyGroupMaker(object):
         underflow = bins[0] - 1
 
         # If no low threshold is set no underflow bin is needed
+        #BKH modif
         if underflow >= 0:
-            self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
+        # if underflow > 0:
+                self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
 
         # The group binning has changed
         overflow = bins[-1] - underflow
         max_bin = self.groups[-1].energy_group_idx
 
         # If no high threshold is set no overflow bin is needed
+        #BKH Modif
         if overflow <= max_bin:
+        # if overflow < max_bin:
             self.groups.make_and_replace_merged_group(overflow, max_bin, 'overflow')
 
     def compute_groups_fixed(self, ebounds):
