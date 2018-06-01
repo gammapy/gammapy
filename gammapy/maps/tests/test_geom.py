@@ -221,18 +221,3 @@ def test_mapcoords_to_coordsys():
     assert_allclose(coords.skycoord.transform_to(
         'icrs').dec.deg, skycoord_gal.icrs.dec.deg)
 
-def test_mapcoord_region_filter():
-    lon, lat = np.array([0.0, 10.0]), np.array([0.0, 10.0])
-    energy = np.array([100., 1000.])
-
-    coords = MapCoord.create(
-        dict(lon=lon, lat=lat, energy=energy), coordsys='GAL')
-
-    region = CircleSkyRegion(SkyCoord(0.,0.,frame='galactic',unit='deg'), Angle(1.,unit='deg'))
-
-    in_coords = coords.apply_region_mask(region)
-    out_coords = coords.apply_region_mask(region,inside=False)
-
-    assert in_coords.shape[0] == 1
-    assert in_coords.lon[0] == 0.
-    assert out_coords.lon[0] == 10.

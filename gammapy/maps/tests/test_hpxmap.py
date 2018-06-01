@@ -6,7 +6,6 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-import astropy.units as u
 from ..utils import fill_poisson
 from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map

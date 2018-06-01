@@ -10,7 +10,6 @@ from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-from regions import SkyRegion
 from ..utils.scripts import make_path
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx

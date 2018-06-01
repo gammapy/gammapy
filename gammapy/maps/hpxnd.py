@@ -4,7 +4,6 @@ import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from regions import SkyRegion
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order

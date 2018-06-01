@@ -386,7 +386,10 @@ def test_make_region_mask():
     m = WcsNDMap(geom)
     region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'), 1.0*u.deg)
     maskmap = m.make_region_mask(region)
+
+    assert maskmap.data.dtype == bool
     assert np.sum(maskmap.data) == 1
+
     maskmap = m.make_region_mask(region, inside=False)
     assert np.sum(maskmap.data) == 8
 
