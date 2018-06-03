@@ -740,3 +740,4 @@ class Map(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
+

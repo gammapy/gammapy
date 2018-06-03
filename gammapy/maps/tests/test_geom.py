@@ -4,7 +4,8 @@ import pytest
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
+from regions import CircleSkyRegion
 from ..geom import MapAxis, MapCoord
 
 pytest.importorskip('scipy')
@@ -219,3 +220,4 @@ def test_mapcoords_to_coordsys():
         'icrs').ra.deg, skycoord_gal.icrs.ra.deg)
     assert_allclose(coords.skycoord.transform_to(
         'icrs').dec.deg, skycoord_gal.icrs.dec.deg)
+
