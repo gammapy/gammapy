@@ -300,22 +300,26 @@ class SpectrumFitResult(object):
                                 fmt='.',
                                 energy_unit='TeV')
 
+        ax.axvline(self.fit_range.to('TeV').value[0],
+                   color='black',
+                   linestyle='dashed',
+                   label='fit range')
+
+        ax.axvline(self.fit_range.to('TeV').value[1],
+                   color='black',
+                   linestyle='dashed')
+
         ax.legend(numpoints=1)
         ax.set_title('')
 
     def plot_residuals(self, ax):
         """Plot residuals."""
         self.residuals.plot(ax=ax, ecolor='black', fmt='none')
-        xx = ax.get_xlim()
-        yy = [0, 0]
-        ax.plot(xx, yy, color='black')
+        ax.axhline(color='black')
 
         ymax = 1.4 * max(self.residuals.data.data.value)
         ax.set_ylim(-ymax, ymax)
 
-        xmin = self.fit_range.to('TeV').value[0] * 0.8
-        xmax = self.fit_range.to('TeV').value[1] * 1.2
-        ax.set_xlim(xmin, xmax)
         ax.set_xlabel('Energy [{}]'.format('TeV'))
         ax.set_ylabel('ON (Predicted - Detected)')
 
