@@ -14,7 +14,9 @@ __all__ = [
 
 
 class SpectrumFitResult(object):
-    """Class representing the result of a spectral fit
+    """Result of a `~gammapy.spectrum.SpectrumFit`
+
+    All fit results should be accessed via this class
 
     TODO: This only supports WStat fits at the moment. Find a solution to
     display also Cash fits (flag, subclass).
