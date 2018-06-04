@@ -98,6 +98,11 @@ class SpectrumObservation(object):
             self.off_vector.obs_id = obs_id
 
     @property
+    def meta(self):
+        """Meta information"""
+        return self.on_vector.meta
+
+    @property
     def livetime(self):
         """Dead-time corrected observation time"""
         return self.on_vector.livetime
