@@ -28,7 +28,7 @@ class PrimaryFlux(object):
 
     References
     ----------
-    * `arXiv:1012.4515 [hep-ph] <https://arxiv.org/abs/1012.4515>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     def __init__(self, mDM, channel):

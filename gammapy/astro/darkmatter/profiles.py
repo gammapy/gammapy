@@ -82,8 +82,8 @@ class NFWProfile(DMProfile):
 
     References
     ----------
-    * `arXiv:astro-ph/9611107 <https://arxiv.org/abs/astro-ph/9611107>`_
-    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    * `1997ApJ...490..493 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
@@ -122,7 +122,7 @@ class EinastoProfile(DMProfile):
     References
     ----------
     * `1965TrAlm...5...87E <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
     """Default scale radius as given in reference 2"""
@@ -161,7 +161,7 @@ class IsothermalProfile(DMProfile):
     References
     ----------
     * `1991MNRAS.249..523B <http://adsabs.harvard.edu/full/1991MNRAS.249..523>`_
-    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
     """Default scale radius as given in reference 2"""
@@ -194,8 +194,8 @@ class BurkertProfile(DMProfile):
 
     References
     ----------
-    * `arXiv:astro-ph/950404 <https://arxiv.org/abs/astro-ph/950404>`_
-    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    * `1995ApJ...447L..25B <http://adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
     """Default scale radius as given in reference 2"""
@@ -229,8 +229,8 @@ class MooreProfile(DMProfile):
 
     References
     ----------
-    * `arXiv:astro-ph/040226 <https://arxiv.org/abs/astro-ph/040226>`_
-    * `arXiv:1012.4515 <https://arxiv.org/abs/1012.451>`_
+    * `http://adsabs.harvard.edu/abs/2004astro.ph..2267D <http://adsabs.harvard.edu/abs/2004astro.ph..2267D>`_
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
     """Default scale radius as given in reference 2"""
