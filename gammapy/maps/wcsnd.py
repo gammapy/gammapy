@@ -460,35 +460,69 @@ class WcsNDMap(WcsMap):
             data /= factor**2
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
-    def plot(self, ax=None, idx=None, **kwargs):
-        """Quickplot method.
+
+
+    
+    def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
+        """
+        Plot image on matplotlib WCS axes
 
         Parameters
         ----------
-        norm : str
-            Set the normalization scheme of the color map.
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
         idx : int or tuple
             Set the image slice to plot if this map has non-spatial dimensions.
             For maps with exactly one non-spatial dimension idx can be an int
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.   
+        TODO: let idx work with slicing
+
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
+        stretch : str, optional
+            Scaling for image ('linear', 'sqrt', 'log').
+            Similar to normalize and stretch functions in ds9.
+            See http://docs.astropy.org/en/stable/visualization/normalization.html
+
+        smooth: ~string : either 'gauss' or 'disk' 
+            kernel shape for smoothing the image.  
+
+            radius:  `~astropy.units.Quantity` or float
+            
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+            Default smoothing is of 1 pixel (no smooth)
+
+        
+            The definition of the smoothing parameter radius is equivalent to the
+            one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
+        
+        kwargs: for parameters to pass into imshow
 
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
-            Figure object.
+            Figure
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage`
-            Image object.
+        cbar : `~matplotlib.colorbar.Colorbar`
+            Colorbar object (if ``add_cbar=True`` was set, else ``None``)
+
         """
+        
         import matplotlib.pyplot as plt
-        import matplotlib.colors as colors
-
-        if ax is None:
+        from astropy.visualization import simple_norm
+        from scipy.ndimage import gaussian_filter
+        from scipy.signal import convolve
+        from scipy.stats import gmean
+        from astropy.convolution import Tophat2DKernel
+        from astropy.coordinates import Angle
+        
+        if fig is None:
             fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=self.geom.wcs)
-
+        if ax is None:
+            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+        
         if idx is not None:
             idx = (idx,) if isinstance(idx, int) else idx
             slices = (slice(None), slice(None)) + idx
@@ -496,15 +530,80 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data
 
-        kwargs.setdefault('interpolation', 'nearest')
+        if smooth is not None:
+            if isinstance(radius, Quantity):
+                val=Angle(np.abs(self.geom.wcs.wcs.cdelt),unit="deg")
+                radius=gmean(radius/val).value
+            if smooth == 'gauss':
+                width = radius / 2.
+                data = gaussian_filter(data, width, **kwargs)
+            if smooth == 'disk':
+                width = 2 * radius + 1
+                disk = Tophat2DKernel(width)
+                disk.normalize('integral')
+                data = convolve(data, disk.array, method='auto')
+
+        caxes = ax.imshow(data, **kwargs)
+
+        kwargs.setdefault('interpolation', 'None')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('norm', None)
+        kwargs.setdefault('cmap', 'afmhot')
+        norm = simple_norm(data[np.isfinite(data)], stretch)
+        kwargs.setdefault('norm', norm)
 
-        if kwargs['norm'] == 'log':
-            kwargs['norm'] = colors.LogNorm()
-        elif kwargs['norm'] == 'pow2':
-            kwargs['norm'] = colors.PowerNorm(gamma=0.5)
 
-        im = ax.imshow(data, **kwargs)
-        ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
-        return fig, ax, im
+        if add_cbar:
+            unit = self.geom.wcs.wcs.cunit or 'None'
+            label = self.geom.wcs.wcs.cname or None
+            #cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label, unit))
+            cbar = fig.colorbar(caxes, ax=ax)
+        else:
+            cbar = None
+
+        try:
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
+        except KeyError:
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
+
+
+    def peek_at_pos(pos,axis,idx=None):
+        """
+        Gives a basic plot of the axis at that position.
+        This is a basic plotter to investigate the behaviour at that energy
+
+        eg: peek_at_pos(pos=pos, axis="energy") will plot the number of counts in each energy bin at the position pos
+
+        Parameters
+        ----------
+
+        pos : The given position in SkyCoords you want to see
+        axis : The axis you want to plot. Can be either a name or the appropriate index
+        idx : The slice of the other axes. Can be int (if 2+2D map, or tuple, if more dim).
+              idx is None for 1+2D maps
+
+        Returns:
+        --------
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
+        im : `~matplotlib.image.AxesImage`
+             Image object.
+        """
+        
+        pass
+
+
+
+
+        
+
