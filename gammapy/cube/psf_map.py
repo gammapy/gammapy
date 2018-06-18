@@ -143,3 +143,18 @@ class PSFMap():
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=self.energies,rad=self.rad,psf_value=psf_values.T)
+
+    def containment_radius_map(self, fraction = 0.68):
+        """Returns the containement radius map.
+
+        Parameters
+        ----------
+        fraction : float
+            the containment fraction (a positive number <=1). Default 0.68.
+        Returns
+        -------
+        containment_radius_map : `~gammapy.maps.Map`
+            a 3D map giving the containment radius at each energy and each position of the initial psf_map
+        """
+
+        raise NotImplementedError
