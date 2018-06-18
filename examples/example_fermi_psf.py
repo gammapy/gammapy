@@ -19,6 +19,7 @@ fermi_psf = EnergyDependentTablePSF.read(filename)
 # psf = fermi_psf.table_psf_at_energy(energy=energy)
 psf = fermi_psf.table_psf_in_energy_band(energy_band=energy_band, spectral_index=2.5)
 psf.normalize()
+import IPython; IPython.embed()
 kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
 kernel_image = kernel.value
 
