@@ -144,6 +144,30 @@ class PSFMap():
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=self.energies,rad=self.rad,psf_value=psf_values.T)
 
+    def get_psf_kernel(self, position, npix, pixel_size, normalize=True, factor=5):
+        """Returns a PSF kernel at the given position.
+        The PSF is returned in the form a WcsNDMap defined by the input MapGeom.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            the target position. Should be a single coordinate
+        npix : int
+            number of pixels
+        pixel_size: float or `~astropy.coordinates.Angle`
+            angular size of a pixel. Default unit in degree.
+        normalize : bool
+            normalize PSF per energy bin.
+        factor : int
+            oversampling factor to compute the PSF
+        Returns
+        -------
+        kernel : `~gammapy.cube.WcsNDMapPSFKernel`
+            the resulting kernel
+        """
+        table_psf = self.get_energy_dependent_table_psf(position)
+        return table_psf_to_kernel_array(table_psf, npix, pixel_size, normalize, factor)
+
     def containment_radius_map(self, fraction = 0.68):
         """Returns the containement radius map.
 
