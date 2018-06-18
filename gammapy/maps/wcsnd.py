@@ -2,8 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.convolution import Tophat2DKernel
+from astropy.coordinates import Angle
 from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -11,6 +14,7 @@ from .utils import interp_to_order
 from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
+
 
 __all__ = [
     'WcsNDMap',
@@ -532,3 +536,110 @@ class WcsNDMap(WcsMap):
             np.logical_not(mask,out=mask)
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+
+        def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
+        """
+        Plot image on matplotlib WCS axes
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        idx : int or tuple
+            Set the image slice to plot if this map has non-spatial dimensions.
+            For maps with exactly one non-spatial dimension idx can be an int
+        TODO: let idx work with slicing
+
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
+        stretch : str, optional
+            Scaling for image {'linear', 'sqrt', 'log'}.
+            Similar to normalize and stretch functions in ds9.
+            See http://docs.astropy.org/en/stable/visualization/normalization.html
+
+        smooth: str, optional
+                kernel shape for smoothing the image {'gauss', 'disk'}
+        radius:  `~astropy.units.Quantity` or float. 
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+            Default smoothing is of 1 pixel (no smooth)
+
+        
+            The definition of the smoothing parameter radius is equivalent to the
+            one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
+        
+        kwargs: for parameters to pass into imshow
+
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
+        cbar : `~matplotlib.colorbar.Colorbar`
+            Colorbar object (if ``add_cbar=True`` was set, else ``None``)
+
+        """
+        
+        from astropy.visualization import simple_norm
+        from scipy.ndimage import gaussian_filter
+        from scipy.signal import convolve
+        from scipy.stats import gmean
+        
+        
+        if fig is None:
+            fig = plt.gcf()
+        if ax is None:
+            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+        
+        if idx is not None:
+            idx = (idx,) if isinstance(idx, int) else idx
+            slices = (slice(None), slice(None)) + idx
+            data = self.data[slices[::-1]]
+        else:
+            data = self.data
+
+        if smooth is not None:
+            if isinstance(radius, Quantity):
+                val=Angle(np.abs(self.geom.wcs.wcs.cdelt),unit="deg")
+                radius=gmean(radius/val).value
+            if smooth == 'gauss':
+                width = radius / 2.
+                data = gaussian_filter(data, width, **kwargs)
+            if smooth == 'disk':
+                width = 2 * radius + 1
+                disk = Tophat2DKernel(width)
+                disk.normalize('integral')
+                data = convolve(data, disk.array, method='auto')
+
+        caxes = ax.imshow(data, **kwargs)
+
+        kwargs.setdefault('interpolation', 'None')
+        kwargs.setdefault('origin', 'lower')
+        kwargs.setdefault('norm', None)
+        kwargs.setdefault('cmap', 'afmhot')
+        norm = simple_norm(data[np.isfinite(data)], stretch)
+        kwargs.setdefault('norm', norm)
+
+
+        if add_cbar:
+            unit = self.geom.wcs.wcs.cunit or 'None'
+            label = self.geom.wcs.wcs.cname or None
+            #cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label, unit))
+            cbar = fig.colorbar(caxes, ax=ax)
+        else:
+            cbar = None
+
+        try:
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
+        except KeyError:
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
