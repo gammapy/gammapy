@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.convolution import Tophat2DKernel
@@ -533,6 +532,7 @@ class WcsNDMap(WcsMap):
 
         """
         
+        import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
         from scipy.ndimage import gaussian_filter
         from scipy.signal import convolve
