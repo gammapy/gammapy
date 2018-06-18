@@ -162,6 +162,7 @@ Extra topics
    notebooks/source_population_model.ipynb
    notebooks/background_model.ipynb
    notebooks/cwt.ipynb
+   notebooks/astro_dark_matter.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -169,3 +170,27 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
+- `Dark matter spatial and spectral models <notebooks/astro_dark_matter.ipynb>`__ | *astro_dark_matter.ipynb*
+
+Work in progress
+----------------
+
+.. toctree::
+   :hidden:
+
+   notebooks/source_population_model.ipynb
+   notebooks/source_catalogs.ipynb
+   notebooks/fermi_vela_model.ipynb
+   notebooks/source_diffuse_estimation.ipynb
+   notebooks/time_analysis.ipynb
+
+The following notebooks are work in progress or broken.
+
+Please help make these better, or write new, better ones!
+
+- `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
+- `Source catalogs <notebooks/source_catalogs.html>`__ (working with gamma-ray source catalogs) | *source_catalogs.ipynb*
+- `Fermi Vela model <notebooks/fermi_vela_model.html>`__ (Fermi Vela model) | *fermi_vela_model.ipynb*
+- `Simulating and analysing sources and diffuse emission <notebooks/source_diffuse_estimation.html>`__ | *source_diffuse_estimation.ipynb*
+- `Time analysis with Gammapy <notebooks/time_analysis.html>`__ (not written yet) | *time_analysis.ipynb*
+>>>>>>> add link to example notebook
