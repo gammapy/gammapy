@@ -600,7 +600,7 @@ class WcsNDMap(WcsMap):
              Image object.
         """
         
-        pass
+        
 
 
 
