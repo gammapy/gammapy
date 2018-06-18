@@ -462,31 +462,7 @@ class WcsNDMap(WcsMap):
         if not preserve_counts:
             data /= factor**2
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
-
-
-    def make_region_mask(self, region, inside=True):
-        """Create a mask of a given region
-
-        TODO: implement list of region for each axis
-
-        Parameters
-        ----------
-        region :  `~regions.PixelRegion` or `~regions.SkyRegion` object
-            A region on the sky could be defined in pixel or sky coordinates.
-        inside : bool
-          Output map is True inside the input region if inside is set to True and False outside and conversely.
-
-        Return
-        ------
-        mask_map : `~gammapy.maps.WcsNDMap`
-            the mask map
-        """
-        mask = self.geom.get_region_mask_array(region)
-        if inside is False:
-            np.logical_not(mask,out=mask)
-        # TODO : update meta table to include something about the region used for mask creation?
-        return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
-
+    
     def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
         """
         Plot image on matplotlib WCS axes
@@ -593,3 +569,28 @@ class WcsNDMap(WcsMap):
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
         return fig, ax, cbar
+
+
+    def make_region_mask(self, region, inside=True):
+        """Create a mask of a given region
+
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region :  `~regions.PixelRegion` or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+        inside : bool
+          Output map is True inside the input region if inside is set to True and False outside and conversely.
+
+        Return
+        ------
+        mask_map : `~gammapy.maps.WcsNDMap`
+            the mask map
+        """
+        mask = self.geom.get_region_mask_array(region)
+        if inside is False:
+            np.logical_not(mask,out=mask)
+        # TODO : update meta table to include something about the region used for mask creation?
+        return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+
