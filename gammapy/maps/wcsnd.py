@@ -464,55 +464,6 @@ class WcsNDMap(WcsMap):
             data /= factor**2
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
-    def plot(self, ax=None, idx=None, **kwargs):
-        """Quickplot method.
-
-        Parameters
-        ----------
-        norm : str
-            Set the normalization scheme of the color map.
-        idx : int or tuple
-            Set the image slice to plot if this map has non-spatial dimensions.
-            For maps with exactly one non-spatial dimension idx can be an int
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.   
-
-        Returns
-        -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            WCS axis object
-        im : `~matplotlib.image.AxesImage`
-            Image object.
-        """
-        import matplotlib.pyplot as plt
-        import matplotlib.colors as colors
-
-        if ax is None:
-            fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=self.geom.wcs)
-
-        if idx is not None:
-            idx = (idx,) if isinstance(idx, int) else idx
-            slices = (slice(None), slice(None)) + idx
-            data = self.data[slices[::-1]]
-        else:
-            data = self.data
-
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('norm', None)
-
-        if kwargs['norm'] == 'log':
-            kwargs['norm'] = colors.LogNorm()
-        elif kwargs['norm'] == 'pow2':
-            kwargs['norm'] = colors.PowerNorm(gamma=0.5)
-
-        im = ax.imshow(data, **kwargs)
-        ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
-        return fig, ax, im
-
 
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
@@ -537,7 +488,7 @@ class WcsNDMap(WcsMap):
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
 
-        def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
+    def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
         """
         Plot image on matplotlib WCS axes
 
@@ -625,9 +576,8 @@ class WcsNDMap(WcsMap):
 
         if add_cbar:
             unit = self.geom.wcs.wcs.cunit or 'None'
-            label = self.geom.wcs.wcs.cname or None
-            #cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label, unit))
-            cbar = fig.colorbar(caxes, ax=ax)
+            label="slice"+str(idx)
+            cbar = fig.colorbar(caxes, ax=ax, label='{} ({})'.format(label, unit))
         else:
             cbar = None
 
