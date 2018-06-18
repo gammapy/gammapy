@@ -1,8 +1,13 @@
 import numpy as np
-from astropy.coordinates import SkyCoord
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF, PSF3D
 from gammapy.maps import WcsGeom, WcsNDMap, MapAxis, Map
+
+__all__ = [
+    'make_psf3d',
+    'make_psf_map',
+    'PSFMap'
+]
 
 def make_psf3d(psf_analytical, rad):
     """ Creates a PSF3D from an analytical PSF.
@@ -94,10 +99,10 @@ class PSFMap():
             raise(ValueError,"Incorrect rad axis position in input Map")
 
         self._psfmap = psf_map
-        self.geom = psf_map.geom
+        self._geom = psf_map.geom
 
-        self.energies = self.geom.axes[1].center * self.geom.axes[1].unit
-        self.rad = self.geom.axes[0].center * self.geom.axes[0].unit
+        self.energies = self._geom.axes[1].center * self._geom.axes[1].unit
+        self.rad = self._geom.axes[0].center * self._geom.axes[0].unit
 
 
     @property
@@ -129,17 +134,17 @@ class PSFMap():
             raise ValueError("EnergyDependentTablePSF can be extracted at one single position only.")
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.geom.axes[1].nbin)
-        pix_rad = np.arange(self.geom.axes[0].nbin)
+        pix_ener = np.arange(self._geom.axes[1].nbin)
+        pix_rad = np.arange(self._geom.axes[0].nbin)
 
         # Convert position to pixels
-        pix_lon, pix_lat = self.geom.to_image().coord_to_pix(position)
+        pix_lon, pix_lat = self._geom.to_image().coord_to_pix(position)
 
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat,pix_rad,pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(self.interp_by_pix(pix)*u.Unit(self._psf_map.unit))
+        psf_values = np.squeeze(self._psfmap.interp_by_pix(pix)*u.Unit(self._psfmap.unit))
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=self.energies,rad=self.rad,psf_value=psf_values.T)
