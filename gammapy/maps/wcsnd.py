@@ -2,8 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.convolution import Tophat2DKernel
+from astropy.coordinates import Angle
 from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -11,6 +14,8 @@ from .utils import interp_to_order
 from .wcsmap import WcsGeom
 from .wcsmap import WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
+
+
 
 __all__ = [
     'WcsNDMap',
@@ -461,8 +466,30 @@ class WcsNDMap(WcsMap):
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
 
+    def make_region_mask(self, region, inside=True):
+        """Create a mask of a given region
 
-    
+        TODO: implement list of region for each axis
+
+        Parameters
+        ----------
+        region :  `~regions.PixelRegion` or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+        inside : bool
+          Output map is True inside the input region if inside is set to True and False outside and conversely.
+
+        Return
+        ------
+        mask_map : `~gammapy.maps.WcsNDMap`
+            the mask map
+        """
+        mask = self.geom.get_region_mask_array(region)
+        if inside is False:
+            np.logical_not(mask,out=mask)
+        # TODO : update meta table to include something about the region used for mask creation?
+        return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+
+
     def plot(self, ax=None, idx=None, fig=None, add_cbar=False, stretch='linear', smooth=None, radius=1, **kwargs):
         """
         Plot image on matplotlib WCS axes
@@ -479,15 +506,13 @@ class WcsNDMap(WcsMap):
         fig : `~matplotlib.figure.Figure`, optional
             Figure
         stretch : str, optional
-            Scaling for image ('linear', 'sqrt', 'log').
+            Scaling for image {'linear', 'sqrt', 'log'}.
             Similar to normalize and stretch functions in ds9.
             See http://docs.astropy.org/en/stable/visualization/normalization.html
 
-        smooth: ~string : either 'gauss' or 'disk' 
-            kernel shape for smoothing the image.  
-
-            radius:  `~astropy.units.Quantity` or float
-            
+        smooth: str, optional
+                kernel shape for smoothing the image {'gauss', 'disk'}
+        radius:  `~astropy.units.Quantity` or float. 
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using `geom.wcs.wcs.cdelt`.
@@ -510,13 +535,11 @@ class WcsNDMap(WcsMap):
 
         """
         
-        import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
         from scipy.ndimage import gaussian_filter
         from scipy.signal import convolve
         from scipy.stats import gmean
-        from astropy.convolution import Tophat2DKernel
-        from astropy.coordinates import Angle
+        
         
         if fig is None:
             fig = plt.gcf()
@@ -573,37 +596,3 @@ class WcsNDMap(WcsMap):
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
         return fig, ax, cbar
-
-
-    def peek_at_pos(pos,axis,idx=None):
-        """
-        Gives a basic plot of the axis at that position.
-        This is a basic plotter to investigate the behaviour at that energy
-
-        eg: peek_at_pos(pos=pos, axis="energy") will plot the number of counts in each energy bin at the position pos
-
-        Parameters
-        ----------
-
-        pos : The given position in SkyCoords you want to see
-        axis : The axis you want to plot. Can be either a name or the appropriate index
-        idx : The slice of the other axes. Can be int (if 2+2D map, or tuple, if more dim).
-              idx is None for 1+2D maps
-
-        Returns:
-        --------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            WCS axis object
-        im : `~matplotlib.image.AxesImage`
-             Image object.
-        """
-        
-        
-
-
-
-
-        
-
