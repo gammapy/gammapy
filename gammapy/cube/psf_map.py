@@ -44,7 +44,10 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     valid = np.where(separations < max_offset)
 
     # Compute PSF values
-    psf_values = np.transpose(psf.evaluate(offset=separations[valid], energy=energy, rad=rad), axes=(2, 0, 1))
+    psf_values = psf.evaluate(offset=separations[valid], energy=energy, rad=rad)
+    # Re-order axes to be consistent with expected geometry
+    psf_values = np.transpose(psf_values, axes=(2, 0, 1))
+    # Create Map and fill relevant entries
     psfmap = Map.from_geom(ref_geom, unit='sr-1')
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
     return psfmap
@@ -73,7 +76,6 @@ class PSFMap():
 
         self.energies = self._geom.axes[1].center * self._geom.axes[1].unit
         self.rad = self._geom.axes[0].center * self._geom.axes[0].unit
-
 
     @property
     def psfmap(self):
@@ -157,3 +159,4 @@ class PSFMap():
         """
 
         raise NotImplementedError
+    
