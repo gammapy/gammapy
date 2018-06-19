@@ -17,7 +17,7 @@ from ..wcsnd import WcsNDMap
 pytest.importorskip('scipy')
 pytest.importorskip('reproject')
 
-axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log')]
+axes1 = [MapAxis(np.logspace(0., 3., 3), interp='log', name='spam')]
 axes2 = [MapAxis(np.logspace(0., 3., 3), interp='log'),
          MapAxis(np.logspace(1., 3., 4), interp='lin')]
 skydir = SkyCoord(110., 75.0, unit='deg', frame='icrs')
