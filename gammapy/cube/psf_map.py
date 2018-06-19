@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF, PSF3D
@@ -127,7 +129,7 @@ class PSFMap():
             the target position. Should be a single coordinate
         npix : int
             number of pixels
-        pixel_size: float or `~astropy.coordinates.Angle`
+        pixel_size : float or `~astropy.coordinates.Angle`
             angular size of a pixel. Default unit in degree.
         normalize : bool
             normalize PSF per energy bin.

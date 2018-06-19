@@ -419,11 +419,11 @@ class EnergyDependentMultiGaussPSF(object):
 
         Parameters
         ----------
-        rad : `~astropy.unit.Quantity` or `~astropy.coordinates.Angle`
+        rad : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
             the array of position errors (rad) on which the PSF3D will be defined
 
-        Return
-        ------
+        Returns
+        -------
         psf3d : `~gammapy.irf.PSF3D`
             the PSF3D. It will be defined on the same energy and offset values than the input psf.
         """
