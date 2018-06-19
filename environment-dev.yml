@@ -1,4 +1,10 @@
 # Conda environment for Gammapy development
+#
+# Install:    conda env create -f environment.yml
+# Update:     conda env update -f environment.yml
+# Activate:   conda activate gammapy-dev
+# Deactivate: conda deactivate
+
 name: gammapy-dev
 
 channels:
@@ -7,8 +13,13 @@ channels:
 
 dependencies:
   - python==3.6
+  - ipython
+  - jupyter
+  - jupyterlab
+  - jupyterlab_launcher
   - cython
   - numpy
+  - pandas
   - astropy
   - regions
   - click
@@ -20,12 +31,15 @@ dependencies:
   - healpy
   - reproject
   - sherpa
+  - iminuit
   - pytest
   - sphinx
   - aplpy
-  - ipython
   - pandoc
+  - pylint
+  - flake8
   - pip:
     - sphinx-rtd-theme==0.3
     - nbsphinx==0.2.17
     - sphinx-click
+    - pydocstyle
