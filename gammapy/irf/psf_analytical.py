@@ -4,13 +4,13 @@ import numpy as np
 import logging
 from astropy.io import fits
 from astropy.table import Table
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
 from ..utils.scripts import make_path
-from ..irf import HESSMultiGaussPSF
+from ..irf import HESSMultiGaussPSF,PSF3D
 from . import EnergyDependentTablePSF
 
 __all__ = ['EnergyDependentMultiGaussPSF']
@@ -414,7 +414,7 @@ class EnergyDependentMultiGaussPSF(object):
         return EnergyDependentTablePSF(energy=energies, rad=rad,
                                        exposure=exposure, psf_value=psf_value)
 
-    def to_psf3D(self, rad):
+    def to_psf3d(self, rad):
         """ Creates a PSF3D from an analytical PSF.
 
         Parameters
@@ -434,7 +434,7 @@ class EnergyDependentMultiGaussPSF(object):
         rad_lo = rad[:-1]
         rad_hi = rad[1:]
 
-        psf_values = np.zeros((rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])) * u.Unit('sr-1')
+        psf_values = np.zeros((rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])) * Unit('sr-1')
 
         for i, offset in enumerate(offsets):
             psftable = self.to_energy_dependent_table_psf(offset)

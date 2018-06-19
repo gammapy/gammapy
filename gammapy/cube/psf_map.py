@@ -4,7 +4,6 @@ from gammapy.irf import EnergyDependentTablePSF, PSF3D
 from gammapy.maps import WcsGeom, WcsNDMap, MapAxis, Map
 
 __all__ = [
-    'make_psf3d',
     'make_psf_map',
     'PSFMap'
 ]
