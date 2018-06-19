@@ -413,3 +413,32 @@ class EnergyDependentMultiGaussPSF(object):
 
         return EnergyDependentTablePSF(energy=energies, rad=rad,
                                        exposure=exposure, psf_value=psf_value)
+
+    def to_psf3D(self):
+        """ Creates a PSF3D from an analytical PSF.
+
+        Parameters
+        ----------
+        rad : `~astropy.unit.Quantity` or `~astropy.coordinates.Angle`
+            the array of position errors (rad) on which the PSF3D will be defined
+
+        Return
+        ------
+        psf3d : `~gammapy.irf.PSF3D`
+            the PSF3D. It will be defined on the same energy and offset values than the input psf.
+        """
+        offsets = self.theta
+        energy = self.energy
+        energy_lo = self.energy_lo
+        energy_hi = self.energy_hi
+        rad_lo = rad[:-1]
+        rad_hi = rad[1:]
+
+        psf_values = np.zeros((rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])) * u.Unit('sr-1')
+
+        for i, offset in enumerate(offsets):
+            psftable = self.to_energy_dependent_table_psf(offset)
+            psf_values[:, i, :] = psftable.evaluate(energy, 0.5 * (rad_lo + rad_hi)).T
+
+        return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values,
+                     self.energy_thresh_lo, self.energy_thresh_hi)

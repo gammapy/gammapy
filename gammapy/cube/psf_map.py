@@ -9,37 +9,6 @@ __all__ = [
     'PSFMap'
 ]
 
-def make_psf3d(psf_analytical, rad):
-    """ Creates a PSF3D from an analytical PSF.
-
-    Parameters
-    ----------
-    psf_analytical : `~gammapy.irf.EnergyDependentMultiGaussPSF`
-        the analytical PSF to be transformed to PSF3D
-    rad : `~astropy.unit.Quantity` or `~astropy.coordinates.Angle`
-        the array of position errors (rad) on which the PSF3D will be defined
-
-    Return
-    ------
-    psf3d : `~gammapy.irf.PSF3D`
-        the PSF3D. It will be defined on the same energy and offset values than the input psf.
-    """
-    offsets = psf_analytical.theta
-    energy = psf_analytical.energy
-    energy_lo = psf_analytical.energy_lo
-    energy_hi = psf_analytical.energy_hi
-    rad_lo = rad[:-1]
-    rad_hi = rad[1:]
-
-    psf_values = np.zeros((rad_lo.shape[0],offsets.shape[0],energy_lo.shape[0]))*u.Unit('sr-1')
-
-    for i,offset in enumerate(offsets):
-        psftable = psf_analytical.to_energy_dependent_table_psf(offset)
-        psf_values[:,i,:] = psftable.evaluate(energy,0.5*(rad_lo+rad_hi)).T
-
-    return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values,
-                 psf_analytical.energy_thresh_lo, psf_analytical.energy_thresh_hi)
-
 
 def make_psf_map(psf, pointing, ref_geom, max_offset):
     """Make a psf map for a single observation
