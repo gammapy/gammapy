@@ -414,7 +414,7 @@ class EnergyDependentMultiGaussPSF(object):
         return EnergyDependentTablePSF(energy=energies, rad=rad,
                                        exposure=exposure, psf_value=psf_value)
 
-    def to_psf3D(self):
+    def to_psf3D(self, rad):
         """ Creates a PSF3D from an analytical PSF.
 
         Parameters
