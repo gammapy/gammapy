@@ -4,7 +4,6 @@ import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from collections import OrderedDict
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .utils import interp_to_order
@@ -15,6 +14,7 @@ from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 __all__ = [
     'WcsNDMap',
 ]
+
 
 class WcsNDMap(WcsMap):
     """Representation of a N+2D map using WCS with two spatial dimensions
@@ -471,7 +471,7 @@ class WcsNDMap(WcsMap):
             Set the image slice to plot if this map has non-spatial dimensions.
             For maps with exactly one non-spatial dimension idx can be an int
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.   
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
         Returns
         -------
@@ -509,7 +509,6 @@ class WcsNDMap(WcsMap):
         ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
         return fig, ax, im
 
-
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
 
@@ -529,6 +528,6 @@ class WcsNDMap(WcsMap):
         """
         mask = self.geom.get_region_mask_array(region)
         if inside is False:
-            np.logical_not(mask,out=mask)
+            np.logical_not(mask, out=mask)
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)

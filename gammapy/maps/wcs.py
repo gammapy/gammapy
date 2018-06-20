@@ -659,8 +659,24 @@ class WcsGeom(MapGeom):
         if not self.is_regular:
             raise NotImplementedError("Region mask is not working yet with multiresolution maps")
         idx = self.get_idx()
-        pixcoord = PixCoord(idx[0],idx[1])
+        pixcoord = PixCoord(idx[0], idx[1])
         return region.contains(pixcoord)
+
+    def __repr__(self):
+        """String representation of the MapAxis object"""
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\tnpix      : {npix[0][0]} x {npix[1][0]} pix\n".format(npix=self.npix)
+        str_ += "\tcoordsys  : {}\n".format(self.coordsys)
+        str_ += "\tprojection: {}\n".format(self.projection)
+        lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
+        str_ += "\tcenter    : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
+        str_ += ("\twidth     : {width[0][0]:.1f} x {width[1][0]:.1f} "
+                 "deg\n".format(width=self.width))
+        str_ += "\tndim      : {}\n".format(self.ndim)
+        axes = [_.name for _ in self.axes]
+        str_ += "\taxes      : {}\n".format(", ".join(axes))
+        return str_
 
 
 def create_wcs(skydir, coordsys='CEL', projection='AIT',
