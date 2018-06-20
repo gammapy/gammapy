@@ -534,8 +534,9 @@ class Map(object):
         map_out : '~Map'
             Map with spatial dimensions only.
         """
+        pix = (np.nan, np.nan) + pix
         idx = self.geom.pix_to_idx(pix)
-        return self.get_image_by_idx(idx)
+        return self.get_image_by_idx(idx[2:])
 
     def get_image_by_idx(self, idx):
         """Return spatial map at the given axis pixel indices.
