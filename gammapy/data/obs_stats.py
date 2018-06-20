@@ -52,12 +52,14 @@ class ObservationStats(Stats):
         self.obs_id = obs_id
         self.livetime = livetime
         if alpha is not None:
+            self.a_on = alpha
+            self.a_off = 1
             self.alpha_obs = alpha
         elif a_off > 0:
             self.alpha_obs = a_on / a_off
         else:
             self.alpha_obs = 0
-        self.gamma_rate = gamma_rate or n_on / livetime
+        self.gamma_rate = gamma_rate or self.excess / livetime
         self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
 
     @classmethod

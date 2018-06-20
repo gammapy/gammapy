@@ -30,8 +30,8 @@ class SpectrumStats(ObservationStats):
     """
 
     def __init__(self, **kwargs):
-        self.energy_min = kwargs.pop('energy_min', None)
-        self.energy_max = kwargs.pop('energy_max', None)
+        self.energy_min = kwargs.pop('energy_min', Quantity(0, 'TeV'))
+        self.energy_max = kwargs.pop('energy_max', Quantity(0, 'TeV'))
         super(SpectrumStats, self).__init__(**kwargs)
 
     def __str__(self):
@@ -313,6 +313,7 @@ class SpectrumObservation(object):
         stats_list = [self.stats(ii) for ii in idx]
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
+        stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
         stacked_stats.obs_id = self.obs_id
         stacked_stats.energy_min = self.e_reco[bin_min]
         stacked_stats.energy_max = self.e_reco[bin_max + 1]
