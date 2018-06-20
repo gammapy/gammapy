@@ -542,3 +542,9 @@ def test_hpxgeom_solid_angle():
 
     assert solid_angle.shape == (1,)
     assert_allclose(solid_angle.value, 0.016362461737446838)
+
+
+def test_geom_repr():
+    geom = HpxGeom(nside=12)
+    assert geom.__class__.__name__ in repr(geom)
+    assert 'nside' in repr(geom)

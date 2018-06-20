@@ -221,3 +221,8 @@ def test_mapcoords_to_coordsys():
     assert_allclose(coords.skycoord.transform_to(
         'icrs').dec.deg, skycoord_gal.icrs.dec.deg)
 
+
+def test_mapaxis_repr():
+    axis = MapAxis([1, 2, 3], name='test')
+    assert axis.__class__.__name__ in repr(axis)
+    assert 'test' in repr(axis)

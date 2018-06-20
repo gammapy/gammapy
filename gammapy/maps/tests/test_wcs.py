@@ -156,3 +156,10 @@ def test_wcsgeom_solid_angle_ait():
                               coordsys='GAL', proj='AIT')
     solid_angle = ait_geom.solid_angle()
     assert np.isnan(solid_angle[0, 0])
+
+
+def test_geom_repr():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(10, 4), binsz=50,
+                          coordsys='GAL', proj='AIT')
+    assert geom.__class__.__name__ in repr(geom)
+    assert 'npix' in repr(geom)

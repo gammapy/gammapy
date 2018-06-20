@@ -37,6 +37,7 @@ mapbase_args = [
 def test_map_create(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
                    skydir=skydir, axes=axes, unit=unit)
+    assert m.unit == unit
 
 
 def test_map_from_geom():
@@ -99,3 +100,10 @@ def test_map_unit_read_write(map_type, unit):
 
     m2 = Map.from_hdu_list(hdu_list)
     assert m2.unit == unit
+
+
+@pytest.mark.parametrize(('map_type', 'unit'), unit_args)
+def test_map_repr(map_type, unit):
+    m = Map.create(binsz=0.1, width=10.0, map_type=map_type, unit=unit)
+    assert unit in repr(m)
+    assert m.__class__.__name__ in repr(m)
