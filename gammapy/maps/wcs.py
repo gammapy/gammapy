@@ -541,11 +541,13 @@ class WcsGeom(MapGeom):
                 else:
                     np.clip(idxs[i], 0, self.axes[i - 2].nbin - 1, out=idxs[i])
             else:
+                # TODO: indices out of range are set to -1 here. Maybe the behaviour
+                # should be changed to raise an IndexError instead?
                 if i < 2:
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
                     np.putmask(idxs[i], (idx < 0) | (
-                            idx >= self.axes[i - 2].nbin), -1)
+                               idx >= self.axes[i - 2].nbin), -1)
 
         return idxs
 

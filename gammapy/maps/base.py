@@ -457,7 +457,7 @@ class Map(object):
 
     @abc.abstractmethod
     def downsample(self, factor, preserve_counts=True):
-        """Downsample the spatial dimension of the map by a given factor. 
+        """Downsample the spatial dimension of the map by a given factor.
 
         Parameters
         ----------
@@ -477,7 +477,7 @@ class Map(object):
 
     @abc.abstractmethod
     def upsample(self, factor, order=0, preserve_counts=True):
-        """Upsample the spatial dimension of the map by a given factor. 
+        """Upsample the spatial dimension of the map by a given factor.
 
         Parameters
         ----------
@@ -497,6 +497,69 @@ class Map(object):
 
         """
         pass
+
+    def get_image_by_coord(self, coords):
+        """Return spatial map at the given axis coordinates.
+
+        Parameters
+        ----------
+        coords : tuple or `~gammapy.maps.MapCoord`
+            `~gammapy.maps.MapCoord` object or tuple of coordinate arrays for
+            each non-spatial dimension of the map. Tuple should be ordered as
+            (x_0, ..., x_n) where x_i are coordinates for non-spatial dimensions
+            of the map.
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        if isinstance(coords, tuple):
+            coords = (np.nan, np.nan) + coords
+        idx = self.geom.coord_to_idx(coords)
+        return self.get_image_by_idx(idx[2:])
+
+    def get_image_by_pix(self, pix):
+        """Return spatial map at the given axis pixel coordinates
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel index arrays for each non-spatial dimension of the map.
+            Tuple should be ordered as (I_0, ..., I_n). Pixel indices can be
+            either float or integer type.
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        idx = self.geom.pix_to_idx(pix)
+        return self.get_image_by_idx(idx)
+
+    def get_image_by_idx(self, idx):
+        """Return spatial map at the given axis pixel indices.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of index arrays for each non spatial dimension of the map.
+            Tuple should be ordered as (I_0, ..., I_n).
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        if len(idx) != len(self.geom.axes):
+            raise ValueError("Tuple length must be equal to number of"
+                             " non spatial dimensions")
+        geom = self.geom.to_image()
+        map_out = self.__class__(geom=geom)
+        idx += (None, None)
+        data_out = self.data[idx].copy()
+        map_out.data = np.squeeze(data_out)
+        return map_out
 
     def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
