@@ -225,4 +225,3 @@ def test_mapcoords_to_coordsys():
 def test_mapaxis_repr():
     axis = MapAxis([1, 2, 3], name='test')
     assert axis.__class__.__name__ in repr(axis)
-    assert 'test' in repr(axis)

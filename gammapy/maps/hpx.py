@@ -1734,7 +1734,7 @@ class HpxGeom(MapGeom):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\tnpix      : {npix[0][0]} pix\n".format(npix=self.npix)
+        str_ += "\tnpix      : {npix[0]} pix\n".format(npix=self.npix)
         str_ += "\tnside     : {nside[0]}\n".format(nside=self.nside)
         str_ += "\tnested    : {}\n".format(self.nest)
         str_ += "\tcoordsys  : {}\n".format(self.coordsys)

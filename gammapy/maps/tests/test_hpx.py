@@ -545,6 +545,6 @@ def test_hpxgeom_solid_angle():
 
 
 def test_geom_repr():
-    geom = HpxGeom(nside=12)
+    geom = HpxGeom(nside=8)
     assert geom.__class__.__name__ in repr(geom)
     assert 'nside' in repr(geom)

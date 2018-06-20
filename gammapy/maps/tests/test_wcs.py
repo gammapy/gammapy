@@ -162,4 +162,3 @@ def test_geom_repr():
     geom = WcsGeom.create(skydir=(0, 0), npix=(10, 4), binsz=50,
                           coordsys='GAL', proj='AIT')
     assert geom.__class__.__name__ in repr(geom)
-    assert 'npix' in repr(geom)
