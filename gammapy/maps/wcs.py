@@ -663,7 +663,6 @@ class WcsGeom(MapGeom):
         return region.contains(pixcoord)
 
     def __repr__(self):
-        """String representation of the MapAxis object"""
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tnpix      : {npix[0][0]} x {npix[1][0]} pix\n".format(npix=self.npix)

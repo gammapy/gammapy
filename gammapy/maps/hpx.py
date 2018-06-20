@@ -1732,7 +1732,6 @@ class HpxGeom(MapGeom):
         return Quantity(hp.nside2pixarea(self.nside), 'sr')
 
     def __repr__(self):
-        """String representation of the MapAxis object"""
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tnpix      : {npix[0][0]} pix\n".format(npix=self.npix)

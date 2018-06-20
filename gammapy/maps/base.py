@@ -742,7 +742,6 @@ class Map(object):
         pass
 
     def __repr__(self):
-        """String representation of the Map object"""
         str_ = self.__class__.__name__
         str_ += "\n\n"
         geom = self.geom.__class__.__name__[:3]

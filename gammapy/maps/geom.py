@@ -609,8 +609,7 @@ class MapAxis(object):
         return MapAxis(nodes, interp=self._interp, name=self._name,
                        node_type=self._node_type, unit=self._unit)
 
-    def __str__(self):
-        """String representation of the MapAxis object"""
+    def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tname     : {}\n".format(self.name)
@@ -620,6 +619,7 @@ class MapAxis(object):
         str_ += "\tnode type: {}\n".format(self.node_type)
         str_ += "\tedge min : {:.1e} {}\n".format(self.edges.min(), self.unit)
         str_ += "\tedge max : {:.1e} {}\n".format(self.edges.max(), self.unit)
+        str_ += "\tinterp   : {}\n".format(self._interp)
         return str_
 
 
