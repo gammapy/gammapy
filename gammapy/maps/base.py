@@ -105,8 +105,13 @@ class Map(object):
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
             Map type.  Selects the class that will be used to
             instantiate the map.
-        binsz : float or `~numpy.ndarray`
-            Pixel size in degrees.
+        binsz : float or tuple `~astropy.units.Unit`
+            Pixel size.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.
+            If no astropy.units are given, assuming degrees.
+        width : float or tuple `~astropy.units.Unit`
+            Width of the map.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.
         skydir : `~astropy.coordinates.SkyCoord`
             Coordinate of map center.
         axes : list
