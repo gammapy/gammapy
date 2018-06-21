@@ -236,33 +236,6 @@ def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
-def test_wcsndmap_get_image_by_coord(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
-                          proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsNDMap(geom)
-    coords = (1.234,) * len(m.geom.axes)
-    m_im_tuple = m.get_image_by_coord(coords)
-
-    coords_dict = {}
-    for value, axes in zip(coords, m.geom.axes):
-        coords_dict[axes.name] = value * u.Unit(axes.unit)
-
-    m_im_dict = m.get_image_by_coord(coords_dict)
-    assert_allclose(m_im_tuple.data, m_im_dict.data)
-
-
-@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
-                         wcs_test_geoms)
-def test_wcsndmap_get_image_by_pix(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
-                          proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsNDMap(geom)
-    pix = (0.1234,) * len(m.geom.axes)
-    m_im = m.get_image_by_pix(pix)
-
-
-@pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
-                         wcs_test_geoms)
 def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
                           proj=proj, coordsys=coordsys, axes=axes)

@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from collections import OrderedDict
 import numpy as np
+from numpy.testing import assert_equal
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit, Quantity
 from ..base import Map
@@ -31,6 +32,8 @@ mapbase_args = [
     (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
 ]
 
+mapbase_args_with_axes = [_ for _ in mapbase_args if _[4] is not None]
+
 
 @pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
                          mapbase_args)
@@ -48,6 +51,31 @@ def test_map_from_geom():
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
     assert isinstance(m, HpxNDMap)
+
+
+@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
+                         mapbase_args_with_axes)
+def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
+    m = Map.create(binsz=binsz, width=width, map_type=map_type,
+                   skydir=skydir, axes=axes, unit=unit)
+    coords = (1.234,) * len(m.geom.axes)
+    m_im_tuple = m.get_image_by_coord(coords)
+
+    coords_dict = {}
+    for value, axes in zip(coords, m.geom.axes):
+        coords_dict[axes.name] = value * Unit(axes.unit)
+
+    m_im_dict = m.get_image_by_coord(coords_dict)
+    assert_equal(m_im_tuple.data, m_im_dict.data)
+
+
+@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
+                         mapbase_args_with_axes)
+def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
+    m = Map.create(binsz=binsz, width=width, map_type=map_type,
+                   skydir=skydir, axes=axes, unit=unit)
+    pix = (0.1234,) * len(m.geom.axes)
+    m_im = m.get_image_by_pix(pix)
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

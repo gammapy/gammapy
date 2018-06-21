@@ -499,7 +499,7 @@ class Map(object):
         """
         pass
 
-    def get_image_by_coord(self, coords):
+    def get_image_by_coord(self, coords, copy=True):
         """Return spatial map at the given axis coordinates.
 
         Parameters
@@ -565,9 +565,10 @@ class Map(object):
 
         coords = MapCoord(coords_)
         idx = self.geom.coord_to_idx(coords)
-        return self.get_image_by_idx(idx[2:])
+        idx = idx[-len(self.geom.axes):]
+        return self.get_image_by_idx(idx, copy=copy)
 
-    def get_image_by_pix(self, pix):
+    def get_image_by_pix(self, pix, copy=True):
         """Return spatial map at the given axis pixel coordinates
 
         Parameters
@@ -582,11 +583,12 @@ class Map(object):
         map_out : '~Map'
             Map with spatial dimensions only.
         """
-        pix = (np.nan, np.nan) + pix
+        pix = (np.nan, ) * (self.data.ndim - len(self.geom.axes)) + pix
         idx = self.geom.pix_to_idx(pix)
-        return self.get_image_by_idx(idx[2:])
+        idx = idx[-len(self.geom.axes):]
+        return self.get_image_by_idx(idx, copy=copy)
 
-    def get_image_by_idx(self, idx):
+    def get_image_by_idx(self, idx, copy=True):
         """Return spatial map at the given axis pixel indices.
 
         Parameters
@@ -605,8 +607,8 @@ class Map(object):
                              " non spatial dimensions")
         geom = self.geom.to_image()
         map_out = self.__class__(geom=geom)
-        idx += (None, None)
-        data_out = self.data[idx].copy()
+        idx = (slice(None), ) * (self.data.ndim - len(self.geom.axes)) + idx
+        data_out = self.data.T[idx].copy() if copy else self.data.T[idx]
         map_out.data = np.squeeze(data_out)
         return map_out
 
@@ -645,7 +647,7 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-            Pixel indices can be either float or integer type. 
+            Pixel indices can be either float or integer type.
 
         Returns
         ----------
