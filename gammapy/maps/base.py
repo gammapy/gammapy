@@ -6,6 +6,7 @@ import numpy as np
 from collections import OrderedDict
 from ..extern import six
 from ..utils.scripts import make_path
+from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy.units import Quantity, Unit
@@ -503,11 +504,49 @@ class Map(object):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of coordinate arrays for
-            each non-spatial dimension of the map. Tuple should be ordered as
-            (x_0, ..., x_n) where x_i are coordinates for non-spatial dimensions
-            of the map.
+        coords : tuple or dict
+            Tuple should be ordered as (x_0, ..., x_n) where x_i are coordinates
+            for non-spatial dimensions of the map. Dict should specify the axis
+            names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from gammapy.maps import Map, MapAxis
+        >>> from astropy.coordinates import SkyCoord
+        >>> from astropy import units as u
+
+        >>> # Define map axes
+        >>> energy_axis = MapAxis.from_edges(
+        >>>     np.logspace(-1., 1., 4), unit='TeV', name='energy',
+        >>> )
+
+        >>> time_axis = MapAxis.from_edges(
+        >>>     np.linspace(0., 10, 20), unit='h', name='time',
+        >>> )
+
+        >>> # Define map center
+        >>> skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+
+        >>> # Create map
+        >>> m_wcs = Map.create(
+        >>>     coordsys='GAL',
+        >>>     map_type='wcs',
+        >>>     binsz=0.02,
+        >>>     skydir=skydir,
+        >>>     width=10.0,
+        >>>     axes=[energy_axis, time_axis],
+        >>>     unit='ct'
+        >>> )
+
+        >>> # Get image by coord tuple
+        >>> image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
+
+        >>> # Get image by coord dict with strings
+        >>> image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+
+        >>> # Get image by coord dict with quantities
+        >>> image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
 
         Returns
         -------
@@ -515,7 +554,16 @@ class Map(object):
             Map with spatial dimensions only.
         """
         if isinstance(coords, tuple):
-            coords = (np.nan, np.nan) + coords
+            axes_names = [_.name for _ in self.geom.axes]
+            coords = OrderedDict(zip(axes_names, coords))
+
+        coords_ = {'lon': np.nan, 'lat': np.nan}
+        coords_.update(coords)
+
+        for axis, value in zip(self.geom.axes, coords.values()):
+            coords_[axis.name] = u.Quantity(value).to(axis.unit).value
+
+        coords = MapCoord(coords_)
         idx = self.geom.coord_to_idx(coords)
         return self.get_image_by_idx(idx[2:])
 

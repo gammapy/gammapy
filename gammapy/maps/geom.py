@@ -635,7 +635,7 @@ class MapCoord(object):
     ----------
     data : `~collections.OrderedDict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    coordsys : {'CEL', 'GAL', None}    
+    coordsys : {'CEL', 'GAL', None}
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
     copy : bool
