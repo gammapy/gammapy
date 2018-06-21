@@ -5,6 +5,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit, Quantity
+from astropy import units as u
 from ..base import Map
 from ..geom import MapAxis
 from ..wcs import WcsGeom
@@ -22,13 +23,13 @@ map_axes = [
 ]
 
 mapbase_args = [
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
-    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
-    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
+    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
+    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
+    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
+    (0.1*u.deg, 10.0*u.deg, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
 ]
 
 
@@ -39,6 +40,12 @@ def test_map_create(binsz, width, map_type, skydir, axes, unit):
                    skydir=skydir, axes=axes, unit=unit)
     assert m.unit == unit
 
+def test_map_create_size():
+    m = Map.create(binsz=6*u.arcmin, width=600*u.arcmin, map_type='wcs')
+    assert(m.data.shape == (100,100))
+
+    m = Map.create(binsz=0.1*u.deg, width=10*u.deg, map_type='wcs')
+    assert(m.data.shape == (100,100))
 
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)

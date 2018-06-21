@@ -127,6 +127,11 @@ class Map(object):
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
 
+        if 'binsz' in kwargs:
+            kwargs['binsz'] = kwargs['binsz'].to('deg').value
+        if 'width' in kwargs:
+            kwargs['width'] = kwargs['width'].to('deg').value
+
         map_type = kwargs.setdefault('map_type', 'wcs')
         if 'wcs' in map_type.lower():
             return WcsMap.create(**kwargs)
