@@ -23,6 +23,7 @@ map_axes = [
 ]
 
 mapbase_args = [
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
     (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
     (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
     (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),

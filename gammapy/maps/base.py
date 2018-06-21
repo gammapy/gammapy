@@ -128,9 +128,9 @@ class Map(object):
         from .wcsmap import WcsMap
 
         if 'binsz' in kwargs:
-            kwargs['binsz'] = kwargs['binsz'].to('deg').value
+            kwargs['binsz'] = Quantity(kwargs['binsz'],'deg').value
         if 'width' in kwargs:
-            kwargs['width'] = kwargs['width'].to('deg').value
+            kwargs['width'] = Quantity(kwargs['width'],'deg').value
 
         map_type = kwargs.setdefault('map_type', 'wcs')
         if 'wcs' in map_type.lower():
