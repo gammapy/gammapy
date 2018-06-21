@@ -609,6 +609,19 @@ class MapAxis(object):
         return MapAxis(nodes, interp=self._interp, name=self._name,
                        node_type=self._node_type, unit=self._unit)
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\tname     : {}\n".format(self.name)
+        str_ += "\ttype     : {}\n".format(self.type)
+        str_ += "\tunit     : {}\n".format(self.unit)
+        str_ += "\tnbins    : {}\n".format(self.nbin)
+        str_ += "\tnode type: {}\n".format(self.node_type)
+        str_ += "\tedge min : {:.1e} {}\n".format(self.edges.min(), self.unit)
+        str_ += "\tedge max : {:.1e} {}\n".format(self.edges.max(), self.unit)
+        str_ += "\tinterp   : {}\n".format(self._interp)
+        return str_
+
 
 class MapCoord(object):
     """Represents a sequence of n-dimensional map coordinates.

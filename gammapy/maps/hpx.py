@@ -1731,6 +1731,22 @@ class HpxGeom(MapGeom):
         import healpy as hp
         return Quantity(hp.nside2pixarea(self.nside), 'sr')
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\tnpix      : {npix[0]} pix\n".format(npix=self.npix)
+        str_ += "\tnside     : {nside[0]}\n".format(nside=self.nside)
+        str_ += "\tnested    : {}\n".format(self.nest)
+        str_ += "\tcoordsys  : {}\n".format(self.coordsys)
+        str_ += "\tprojection: {}\n".format(self.projection)
+        lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
+        str_ += "\tcenter    : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
+        str_ += "\tndim      : {}\n".format(self.ndim)
+        axes = [_.name for _ in self.axes]
+        str_ += "\taxes      : {}\n".format(", ".join(axes))
+        return str_
+
+
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.

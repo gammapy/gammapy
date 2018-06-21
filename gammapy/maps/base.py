@@ -741,3 +741,14 @@ class Map(object):
         """
         pass
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        geom = self.geom.__class__.__name__[:3]
+        str_ += "\tgeom      : {} \n ".format(geom)
+        str_ += "\tunit      : {} \n".format(self.unit)
+        str_ += "\tdata shape: {}\n".format(self.data.shape)
+        str_ += "\tdata mean : {:.1e} {}\n".format(np.nanmean(self.data), self.unit)
+        str_ += "\tdata min  : {:.1e} {}\n".format(np.nanmin(self.data), self.unit)
+        str_ += "\tdata max  : {:.1e} {}\n".format(np.nanmax(self.data), self.unit)
+        return str_
