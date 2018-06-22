@@ -508,36 +508,37 @@ class Map(object):
             Tuple should be ordered as (x_0, ..., x_n) where x_i are coordinates
             for non-spatial dimensions of the map. Dict should specify the axis
             names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
+        copy : bool
+            Whether to make a copy of the data.
 
         Examples
         --------
-        >>> import numpy as np
-        >>> from gammapy.maps import Map, MapAxis
-        >>> from astropy.coordinates import SkyCoord
-        >>> from astropy import units as u
 
-        >>> # Define map axes
-        >>> energy_axis = MapAxis.from_edges(
-        >>>     np.logspace(-1., 1., 4), unit='TeV', name='energy',
-        >>> )
+            import numpy as np
+            from gammapy.maps import Map, MapAxis
+            from astropy.coordinates import SkyCoord
+            from astropy import units as u
 
-        >>> time_axis = MapAxis.from_edges(
-        >>>     np.linspace(0., 10, 20), unit='h', name='time',
-        >>> )
+            # Define map axes
+            energy_axis = MapAxis.from_edges(
+                np.logspace(-1., 1., 4), unit='TeV', name='energy',
+            )
 
-        >>> # Define map center
-        >>> skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+            time_axis = MapAxis.from_edges(
+                np.linspace(0., 10, 20), unit='h', name='time',
+            )
 
-        >>> # Create map
-        >>> m_wcs = Map.create(
-        >>>     coordsys='GAL',
-        >>>     map_type='wcs',
-        >>>     binsz=0.02,
-        >>>     skydir=skydir,
-        >>>     width=10.0,
-        >>>     axes=[energy_axis, time_axis],
-        >>>     unit='ct'
-        >>> )
+            # Define map center
+            skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+
+            # Create map
+            m_wcs = Map.create(
+                map_type='wcs',
+                binsz=0.02,
+                skydir=skydir,
+                width=10.0,
+                axes=[energy_axis, time_axis],
+            )
 
         >>> # Get image by coord tuple
         >>> image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
@@ -557,15 +558,11 @@ class Map(object):
             axes_names = [_.name for _ in self.geom.axes]
             coords = OrderedDict(zip(axes_names, coords))
 
-        coords_ = {'lon': np.nan, 'lat': np.nan}
-        coords_.update(coords)
-
+        idx = []
         for axis, value in zip(self.geom.axes, coords.values()):
-            coords_[axis.name] = u.Quantity(value).to(axis.unit).value
+            value = u.Quantity(value).to(axis.unit).value
+            idx.append(axis.coord_to_idx(value))
 
-        coords = MapCoord(coords_)
-        idx = self.geom.coord_to_idx(coords)
-        idx = idx[-len(self.geom.axes):]
         return self.get_image_by_idx(idx, copy=copy)
 
     def get_image_by_pix(self, pix, copy=True):
@@ -574,18 +571,18 @@ class Map(object):
         Parameters
         ----------
         pix : tuple
-            Tuple of pixel index arrays for each non-spatial dimension of the map.
-            Tuple should be ordered as (I_0, ..., I_n). Pixel indices can be
-            either float or integer type.
+            Tuple of scalar pixel coordinates for each non-spatial dimension of
+            the map. Tuple should be ordered as (I_0, ..., I_n). Pixel coordinates
+            can be either float or integer type.
+        copy : bool
+            Whether to make a copy of the data.
 
         Returns
         -------
         map_out : '~Map'
             Map with spatial dimensions only.
         """
-        pix = (np.nan, ) * (self.data.ndim - len(self.geom.axes)) + pix
         idx = self.geom.pix_to_idx(pix)
-        idx = idx[-len(self.geom.axes):]
         return self.get_image_by_idx(idx, copy=copy)
 
     def get_image_by_idx(self, idx, copy=True):
@@ -594,8 +591,10 @@ class Map(object):
         Parameters
         ----------
         idx : tuple
-            Tuple of index arrays for each non spatial dimension of the map.
+            Tuple of scalar indices for each non spatial dimension of the map.
             Tuple should be ordered as (I_0, ..., I_n).
+        copy : bool
+            Whether to make a copy of the data.
 
         Returns
         -------
@@ -603,14 +602,17 @@ class Map(object):
             Map with spatial dimensions only.
         """
         if len(idx) != len(self.geom.axes):
-            raise ValueError("Tuple length must be equal to number of"
-                             " non spatial dimensions")
+            raise ValueError("tuple length must be equal to the number of"
+                             " non spatial dimensions.")
+
+        # Only support scalar indices per axis
+        idx = tuple([int(_) for _ in idx])
+
         geom = self.geom.to_image()
-        map_out = self.__class__(geom=geom)
-        idx = (slice(None), ) * (self.data.ndim - len(self.geom.axes)) + idx
-        data_out = self.data.T[idx].copy() if copy else self.data.T[idx]
-        map_out.data = np.squeeze(data_out)
-        return map_out
+        data = self.data[idx[::-1]]
+        if copy:
+            data = data.copy()
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
@@ -629,8 +631,9 @@ class Map(object):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
+        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)       
         msk = self.geom.contains(coords)
+        print(msk)
         vals = np.empty(coords.shape, dtype=self.data.dtype)
         coords = coords.apply_mask(msk)
         idx = self.geom.coord_to_idx(coords)
