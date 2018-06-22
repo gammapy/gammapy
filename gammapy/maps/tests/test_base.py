@@ -54,10 +54,21 @@ def test_map_from_geom():
     m = Map.from_geom(geom)
     assert isinstance(m, WcsNDMap)
 
+    geom = WcsGeom.create(binsz=1.0)
+    m = Map.from_geom(geom)
+    assert isinstance(m, WcsNDMap)
+
+    geom = WcsGeom.create(binsz=6*u.arcmin, width=600*u.arcmin)
+    m = Map.from_geom(geom)
+    assert(m.data.shape == (100,100))
+
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
     assert isinstance(m, HpxNDMap)
 
+    geom = HpxGeom.create(binsz=1.0*u.deg, width=10.0*u.deg)
+    m = Map.from_geom(geom)
+    assert isinstance(m, HpxNDMap)
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
 def test_map_meta_read_write(map_type):
