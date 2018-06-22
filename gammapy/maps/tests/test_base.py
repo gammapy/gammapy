@@ -58,15 +58,15 @@ def test_map_from_geom():
 def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
                    skydir=skydir, axes=axes, unit=unit)
-    coords = (1.234,) * len(m.geom.axes)
-    m_im_tuple = m.get_image_by_coord(coords)
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
-    coords_dict = {}
-    for value, axes in zip(coords, m.geom.axes):
-        coords_dict[axes.name] = value * Unit(axes.unit)
+    coords = (3.456, 0.1234)[:len(m.geom.axes)]
+    m_image = m.get_image_by_coord(coords)
 
-    m_im_dict = m.get_image_by_coord(coords_dict)
-    assert_equal(m_im_tuple.data, m_im_dict.data)
+    im_geom = m.geom.to_image()
+    skycoord = im_geom.get_coord().skycoord
+    m_vals = m.get_by_coord((skycoord,) + coords)
+    assert_equal(m_image.data, m_vals.data)
 
 
 @pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
@@ -74,8 +74,13 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
 def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
                    skydir=skydir, axes=axes, unit=unit)
-    pix = (0.1234,) * len(m.geom.axes)
-    m_im = m.get_image_by_pix(pix)
+    pix = (1.2345, 0.1234)[:len(m.geom.axes)]
+    m_image = m.get_image_by_pix(pix)
+
+    im_geom = m.geom.to_image()
+    idx = im_geom.get_idx()
+    m_vals = m.get_by_pix(idx + pix)
+    assert_equal(m_image.data, m_vals.data)
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
