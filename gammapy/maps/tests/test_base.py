@@ -23,14 +23,15 @@ map_axes = [
 ]
 
 mapbase_args = [
-    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
     (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
-    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
-    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
     (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
-    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
-    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
-    (0.1*u.deg, 10.0*u.deg, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
+    (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
+    (0.1, 10.0, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 's^2'),
+    (0.1, 10.0, 'hpx-sparse', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
 ]
 
 
