@@ -47,10 +47,12 @@ def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
     assert isinstance(m, WcsNDMap)
+    assert m.geom.is_image
 
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
     assert isinstance(m, HpxNDMap)
+    assert m.geom.is_image
 
 
 @pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
@@ -66,7 +68,7 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     im_geom = m.geom.to_image()
     skycoord = im_geom.get_coord().skycoord
     m_vals = m.get_by_coord((skycoord,) + coords)
-    assert_equal(m_image.data, m_vals.data)
+    assert_equal(m_image.data, m_vals)
 
 
 @pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
@@ -80,7 +82,7 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     im_geom = m.geom.to_image()
     idx = im_geom.get_idx()
     m_vals = m.get_by_pix(idx + pix)
-    assert_equal(m_image.data, m_vals.data)
+    assert_equal(m_image.data, m_vals)
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

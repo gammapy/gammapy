@@ -180,7 +180,7 @@ class Map(object):
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}        
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
             with the geometry.  If map_type is 'auto' then an
@@ -285,7 +285,7 @@ class Map(object):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str        
+        conv : str
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
@@ -293,8 +293,8 @@ class Map(object):
             Fermi Science Tools).  Supported conventions are 'gadf',
             'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
             'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.            
-        sparse : bool        
+            'galprop', and 'galprop2'.
+        sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
         """
@@ -514,40 +514,46 @@ class Map(object):
         Examples
         --------
 
-            import numpy as np
-            from gammapy.maps import Map, MapAxis
-            from astropy.coordinates import SkyCoord
-            from astropy import units as u
+        .. code:: python
 
-            # Define map axes
-            energy_axis = MapAxis.from_edges(
-                np.logspace(-1., 1., 4), unit='TeV', name='energy',
-            )
+                import numpy as np
+                from gammapy.maps import Map, MapAxis
+                from astropy.coordinates import SkyCoord
+                from astropy import units as u
 
-            time_axis = MapAxis.from_edges(
-                np.linspace(0., 10, 20), unit='h', name='time',
-            )
+                # Define map axes
+                energy_axis = MapAxis.from_edges(
+                    np.logspace(-1., 1., 4), unit='TeV', name='energy',
+                )
 
-            # Define map center
-            skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+                time_axis = MapAxis.from_edges(
+                    np.linspace(0., 10, 20), unit='h', name='time',
+                )
 
-            # Create map
-            m_wcs = Map.create(
-                map_type='wcs',
-                binsz=0.02,
-                skydir=skydir,
-                width=10.0,
-                axes=[energy_axis, time_axis],
-            )
+                # Define map center
+                skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
 
-        >>> # Get image by coord tuple
-        >>> image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
+                # Create map
+                m_wcs = Map.create(
+                    map_type='wcs',
+                    binsz=0.02,
+                    skydir=skydir,
+                    width=10.0,
+                    axes=[energy_axis, time_axis],
+                )
 
-        >>> # Get image by coord dict with strings
-        >>> image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+            # Get image by coord tuple
+            image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
 
-        >>> # Get image by coord dict with quantities
-        >>> image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
+            # Get image by coord dict with strings
+            image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+
+            # Get image by coord dict with quantities
+            image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
+
+        See Also
+        --------
+        get_image_by_idx, get_image_by_pix
 
         Returns
         -------
@@ -577,6 +583,10 @@ class Map(object):
         copy : bool
             Whether to make a copy of the data.
 
+        See Also
+        --------
+        get_image_by_coord, get_image_by_idx
+
         Returns
         -------
         map_out : '~Map'
@@ -595,6 +605,10 @@ class Map(object):
             Tuple should be ordered as (I_0, ..., I_n).
         copy : bool
             Whether to make a copy of the data.
+
+        See Also
+        --------
+        get_image_by_coord, get_image_by_pix
 
         Returns
         -------
@@ -631,9 +645,8 @@ class Map(object):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)       
+        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
         msk = self.geom.contains(coords)
-        print(msk)
         vals = np.empty(coords.shape, dtype=self.data.dtype)
         coords = coords.apply_mask(msk)
         idx = self.geom.coord_to_idx(coords)

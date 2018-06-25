@@ -61,10 +61,10 @@ class WcsGeom(MapGeom):
     cdelt : tuple
         Pixel size in each image plane.  If none then a constant pixel size will be used.
     crpix : tuple
-        Reference pixel coordinate in each image plane.  
+        Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
-    conv : {'gadf', 'fgst-ccube', 'fgst-template'}    
+    conv : {'gadf', 'fgst-ccube', 'fgst-template'}
         Serialization format convention.  This sets the default format
         that will be used when writing this geometry to a file.
     """
@@ -541,8 +541,6 @@ class WcsGeom(MapGeom):
                 else:
                     np.clip(idxs[i], 0, self.axes[i - 2].nbin - 1, out=idxs[i])
             else:
-                # TODO: indices out of range are set to -1 here. Maybe the behaviour
-                # should be changed to raise an IndexError instead?
                 if i < 2:
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
