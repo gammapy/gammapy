@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
+from astropy.units import Quantity, Unit
 from regions import SkyRegion
 from ..image.utils import make_header
 from ..utils.scripts import make_path
@@ -225,16 +226,16 @@ class WcsGeom(MapGeom):
             non-spatial dimensions, list input can be used to define a
             different map width in each image plane.  This option
             supersedes width.
-        width : float or tuple or list
-            Width of the map in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
-            with non-spatial dimensions, list input can be used to
+        width : float or tuple or list `~astropy.units.Unit`
+            Width of the map. If no astropy.units are given, assuming degrees.
+            A tuple will be interpreted as parameters for longitude and latitude axes.
+            For maps with non-spatial dimensions, list input can be used to
             define a different map width in each image plane.
-        binsz : float or tuple or list
-            Map pixel size in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
-            with non-spatial dimensions, list input can be used to
-            define a different bin size in each image plane.
+        binsz : float or tuple or list `~astropy.units.Unit`
+            Map pixel size.  If no astropy.units are given, assuming degrees.
+            A tuple will be interpreted as parameters for longitude and latitude axes.
+            For maps with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.
         skydir : tuple or `~astropy.coordinates.SkyCoord`
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
@@ -276,6 +277,11 @@ class WcsGeom(MapGeom):
         else:
             raise ValueError(
                 'Invalid type for skydir: {}'.format(type(skydir)))
+
+
+        if width is not None:
+            width = Quantity(width,'deg').value
+        binsz = Quantity(binsz,'deg').value
 
         shape = max([get_shape(t) for t in [npix, binsz, width]])
         binsz = cast_to_shape(binsz, shape, float)

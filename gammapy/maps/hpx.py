@@ -1160,9 +1160,9 @@ class HpxGeom(MapGeom):
         nside : int or `~numpy.ndarray`
             HEALPix NSIDE parameter.  This parameter sets the size of
             the spatial pixels in the map.
-        binsz : float or `~numpy.ndarray`
-            Approximate pixel size in degrees.  An NSIDE will be
-            chosen that correponds to a pixel size closest to this
+        binsz : float or `~numpy.ndarray` or `~astropy.units.Unit`
+            Approximate pixel size. If no astropy.units are given, assuming degrees.
+            An NSIDE will be chosen that correponds to a pixel size closest to this
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme
@@ -1174,10 +1174,10 @@ class HpxGeom(MapGeom):
             coordinate system of the map.
         region  : str
             HPX region string.  Allows for partial-sky maps.
-        width : float
-            Diameter of the map in degrees.  If set the map will
-            encompass all pixels within a circular region centered on
-            ``skydir``.
+        width : float or `~astropy.units.Unit`
+            Diameter of the map. If no astropy.units are given, assuming degrees.
+            If set the map will encompass all pixels within a circular region
+            centered on ``skydir``.
         axes : list
             List of axes for non-spatial dimensions.
         conv : str
@@ -1199,6 +1199,11 @@ class HpxGeom(MapGeom):
         """
         if nside is None and binsz is None:
             raise ValueError('Either nside or binsz must be defined.')
+
+        if width is not None:
+            width = Quantity(width,'deg').value
+        if binsz is not None:
+            binsz = Quantity(binsz,'deg').value
 
         if nside is None and binsz is not None:
             nside = get_nside_from_pix_size(binsz)
