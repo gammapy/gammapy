@@ -1202,7 +1202,12 @@ class MapGeom(object):
         """
         axes = []
         for ax, ax_slice in zip(self.axes, slices):
-            axes.append(ax.slice(ax_slice))
+            ax_sliced = ax.slice(ax_slice)
+            if ax_sliced.nbin == 1 and drop_axes:
+                continue
+            else:
+                axes.append(ax_sliced)
+
         kwargs = self._copy_init_kwargs
         kwargs['axes'] = axes
         return self.__class__(**kwargs)

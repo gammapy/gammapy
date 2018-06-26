@@ -499,7 +499,7 @@ class Map(object):
         """
         pass
 
-    def slice(self, slices, drop_axis=False, copy=True):
+    def slice_by_idx(self, slices, drop_axes=False, copy=True):
         """Slice sub map from map object.
 
         Parameters
@@ -521,10 +521,10 @@ class Map(object):
         if len(slices) != len(self.geom.axes):
             raise ValueError("tuple length must be equal to the number of"
                              " non spatial dimensions.")
-        geom = self.geom.slice(slices, drop_axis=drop_axis)
+        geom = self.geom.slice_by_idx(slices, drop_axes=drop_axes)
         data = self.data[slices[::-1]]
 
-        if drop_axis:
+        if drop_axes:
             data = np.squeeze(data)
 
         if copy:
