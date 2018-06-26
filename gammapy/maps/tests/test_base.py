@@ -85,6 +85,28 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     assert_equal(m_image.data, m_vals)
 
 
+@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
+                         mapbase_args_with_axes)
+def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
+    m = Map.create(binsz=binsz, width=width, map_type=map_type,
+                   skydir=skydir, axes=axes, unit=unit)
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
+
+    slices = (slice(None, None), slice(None, None))[:len(m.geom.axes)]
+    sliced = m.slice_by_idx(slices)
+    assert_equal(m.geom.shape, sliced.geom.shape)
+
+    slices = (slice(0, 1), slice(0, 2))[:len(m.geom.axes)]
+    sliced = m.slice_by_idx(slices)
+    assert not sliced.geom.is_image
+    assert_equal(m.data[slices[::-1]], sliced.data)
+
+    slices = (0, 1)[:len(m.geom.axes)]
+    sliced = m.slice_by_idx(slices, drop_axes=True)
+    assert sliced.geom.is_image
+    assert_equal(m.data[slices[::-1]], sliced.data)
+
+
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
 def test_map_meta_read_write(map_type):
     meta = OrderedDict([
