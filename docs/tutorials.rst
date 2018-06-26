@@ -179,17 +179,9 @@ Work in progress
    :hidden:
 
    notebooks/source_population_model.ipynb
-   notebooks/source_catalogs.ipynb
-   notebooks/fermi_vela_model.ipynb
-   notebooks/source_diffuse_estimation.ipynb
-   notebooks/time_analysis.ipynb
 
 The following notebooks are work in progress or broken.
 
 Please help make these better, or write new, better ones!
 
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
-- `Source catalogs <notebooks/source_catalogs.html>`__ (working with gamma-ray source catalogs) | *source_catalogs.ipynb*
-- `Fermi Vela model <notebooks/fermi_vela_model.html>`__ (Fermi Vela model) | *fermi_vela_model.ipynb*
-- `Simulating and analysing sources and diffuse emission <notebooks/source_diffuse_estimation.html>`__ | *source_diffuse_estimation.ipynb*
-- `Time analysis with Gammapy <notebooks/time_analysis.html>`__ (not written yet) | *time_analysis.ipynb*

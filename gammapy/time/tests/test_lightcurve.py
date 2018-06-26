@@ -132,6 +132,7 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
     assert_allclose(ful, [np.nan, 3.6e-11])
 
 
+@requires_dependency('matplotlib')
 @pytest.mark.parametrize('time_format, output', [
     ('mjd', (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
     ('iso', (np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
