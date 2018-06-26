@@ -1,0 +1,182 @@
+.. include:: ../../references.txt
+
+.. _pig-xxx:
+
+**************************************************
+PIG X - PIG Improvement for Computing Light Curves
+**************************************************
+
+* Author: David Fidalgo, ...
+* Created: July 02, 2018
+* Accepted:
+* Status: draft
+* Discussion:
+
+Abstract
+========
+
+In this PIG we want to discuss a restructuring of the way light curves are
+computed in Gammapy.
+In general we propose to perform a spectral analysis in each of the time bins
+of the light curve to obtain the integral flux.
+For this purpose the new :class:`LightCurveEstimator` class should essentially
+be a wrapper around the *standard* spectrum analysis of Gammapy using pipeline
+classes (e.g. `gammapy.scripts.SpectrumAnalysisIACT`).
+A further input should of course be the time intervals of the light curve,
+whose computation will be done outside of the new `LightCurve` classes.
+
+It is still under discussion if the LightCurve code should prepare new
+`gammapy.data.ObservationList` s for each light curve bin or modify a
+`~gammapy.data.GTI` table, which the background/spectrum classes would
+respect.
+
+
+Detailed Description
+====================
+
+Background / What we have now
+-----------------------------
+
+The current :class:`gammapy.time.LightCurveEstimator` class takes as input a
+:class:`gammapy.spectrum.SpectrumExtraction` instance for which a list of
+:class:`gammapy.background.BackgroundEstimate` is required.
+Apart from the time intervals, the user also has to provide a
+`gammapy.spectrum.SpectralModel` that is used to compute the expected counts in
+a time bin and to scale the integral flux with respect to the excess events
+found in that time bin.
+The parameters of the spectral model are generally obtained via a spectral fit
+to the whole data sample.
+A tutorial notebook of this approach can be found `here
+<http://docs.gammapy.org/dev/notebooks/light_curve.html>`_.
+
+Drawbacks of this approach are:
+ * the user has to estimate the spectral parameters beforehand, that is before
+   computing a light curve;
+ * changes in the spectral shape between the time bins are not supported.
+
+The current `~gammapy.time.LightCurveEstimator` does not support a 3D cube
+analysis so far.
+
+
+Outline of the new implementation in 1D
+---------------------------------------
+
+In the new approach we want to overcome the two drawbacks mentioned above and
+provide a maximum degree of flexibility to the user when computing the light
+curve.
+
+First, the user should provide a list/table of time intervals for which she/he
+wants to compute the integral flux.
+The computation of this list/table will be done outside of the `LightCurve`
+class, e.g. we could think about extending the `gammapy.data.gti` class to
+provide some utilities for this.
+
+With this list/table the new `LightCurveEstimator` should then prepare/create a
+new `~gammapy.data.ObservatioList` for each time bin, in which the events have
+already been filtered properly and the
+`DataStoreObservation.observation_live_time_duration` were updated accordingly.
+These new `~gammapy.data.ObservationList` can then be passed on to the
+*standard* spectrum analysis with the `gammapy.background` and
+`gammapy.spectrum` modules.
+
+This analysis pipeline should be done outside of the LightCurve class, for
+example by `gammapy.scripts.SpectrumAnalysisIACT`.
+The arguments for this pipeline should be provided in form of a *config dict*
+or possibly a txt file.
+One could think about providing a list of *config dict* or txt files to
+have more flexibility when performing the pipeline in each of the time bins.
+
+Instead of performing a spectral fit in each time bin, the user should also
+have the option to provide a fixed spectral shape, omit the fit and compute the
+integral flux the way it is done now, by scaling the expected counts with
+respect to the excess events, which should be much faster.
+
+
+Preparing the ObservationList for each time bin
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The general idea is to write a new `~gammapy.data.ObservationList` for each
+time bin to disk, so that they can be easily read-in by the DataStore class
+with, for example, its `.from_dir()` method.
+This would avoid memory issues for large data sets and the user also gets the
+possibility to easily repeat a spectral analysis in one of the light curve
+bins.
+For this procedure `~gammapy.data.ObservationList` should get a method like 
+`.write_to_disk(outdir)`, or the `~gammapy.data.DataStore` object should get a
+method `.write_list_to_disk(obslist, outdir)` (invocation vs inspection).
+
+Depending on the modifications planned for the `gammapy.data.data_store`
+module, one could also think about providing the user with the option to do
+everything in-memory, which could especially be useful for playing 
+around/testing.
+
+The preparation of the new `~gammapy.data.ObservationList` for each time bin
+would then basically consist of 3 steps:
+ * The `LightCurveEstimator` class figures out which observation belongs to
+   which light curve bin and creates a new `~gammapy.data.ObservationList` with
+   these observations for each time bin;
+ * The new `~gammapy.data.ObservationList` are written to disk in a new folder
+   structure specified by the user;
+ * The LightCurve class modifies the event lists of the first and last (in 
+   time) observation in the respective `~gammapy.data.ObservationList` and
+   updates their `observation_live_time_duration` (what about the `GTI` s?).
+
+
+Calling the spectral pipeline for each time bin
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After preparing the observations and writing them to disk, a loop over the
+light curve bins should create a `~gammapy.data.DataStore` object -> 
+`~gammapy.data.ObservationList` and pass it on to the spectral pipeline (e.g.
+`gammapy.scripts.SpectrumAnalysisIACT`).
+Maybe the option to omit the spectral fit and scale a fixed spectrum to the
+excess counts, should be built in the pipeline classes.
+The resulting spectrum of the time bin is then integrated in an energy range
+specified by the user.
+
+
+Storing the results
+^^^^^^^^^^^^^^^^^^^
+
+Te results are returned as a `gammapy.time.LightCurve` instance (the current
+container class for light curves) that essentially holds the integrated
+flux + errors and the time_min/time_max of each time bin.
+Other useful quantities which are not stored right now, could be
+energy_min/energy_max of the integral flux.
+This container class already provides some methods to study variability.
+
+
+Outline of the implementation in 3D
+-----------------------------------
+
+We still have not looked into this implementation. Maybe we should first
+workout the 1D case and adopt the hopefully well-oiled solution to the 3D case.
+
+
+Discussion / Alternatives
+=========================
+
+The outline described above would require changes in the
+`gammapy.data.data_store`, `gammapy.time.lightcurve` and 
+`gammapy.scripts.SpectrumAnalysisIACT` modules.
+The `gammapy.background` and `gammapy.spectrum` modules would remain unchanged.
+
+Instead of preparing new `~gammapy.data.ObservationList` for each time bin,
+which leaves the filtering/selection of the events and IRFs to the
+`LightCurveEstimator` class, we could also do the filtering/selection in the
+`~gammapy.background` and `~gammapy.spectrum` modules by means of the GTI table
+(`good time interval`_) already present in the
+`gammapy.data.DataStoreObservation` object.
+At the moment this table is not used at all. 
+A drawback of this approach would be the necessity of changes in the
+`~gammapy.background` and `~gammapy.spectrum` modules.
+Even though i have not worked out any specifics of this approach yet, i think
+this would be a less elegant way. 
+
+
+Decision
+========
+
+
+.. _good time interval: http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/rates/ogip_93_003/ogip_93_003.html#tth_sEc6.3
+
