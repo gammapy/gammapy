@@ -429,7 +429,7 @@ def test_image_fill_events():
 
     EPS = 0.1
     data = [
-        (5, 5, 1),  # in image[0, 0]
+        (5, 5 - EPS, 1),  # in image[0, 0]
         (0, 0 + EPS, 2),  # in image[1, 0]
         (5, -5 + EPS, 3),  # in image[0, 0]
         (5, 5 + EPS, 99),  # outside image
