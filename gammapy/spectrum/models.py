@@ -700,8 +700,8 @@ class PowerLaw2(SpectralModel):
 
     .. math::
 
-        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{\Gamma + 1}
-         - E_{0, min}^{\Gamma + 1}} \cdot E^{-\Gamma}
+        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
+         - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
 
     Parameters
     ----------
@@ -741,8 +741,10 @@ class PowerLaw2(SpectralModel):
     def evaluate(energy, amplitude, index, emin, emax):
         """Evaluate the model (static function)."""
         top = -index + 1
-        bottom = emax ** (-index + 1) - emin ** (-index + 1)
-        return amplitude * (top / bottom) * np.power(energy, -index)
+
+        # to get the energies dimensionless we use a modified formula
+        bottom = emax - emin * (emin / emax) ** (-index)
+        return amplitude * (top / bottom) * np.power(energy / emax, -index)
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
