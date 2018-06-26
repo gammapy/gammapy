@@ -807,7 +807,7 @@ class MapCoord(object):
         Parameters
         ----------
         data : `tuple`, `dict`, `~MapCoord` or `~astropy.coordinates.SkyCoord`
-            Object containing coordinate arrays.  
+            Object containing coordinate arrays.
         coordsys : {'CEL', 'GAL', None}, optional
             Set the coordinate system for longitude and latitude.  If
             None longitude and latitude will be assumed to be in
@@ -1181,8 +1181,7 @@ class MapGeom(object):
         idx = self.pix_to_idx(pix)
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
-    @abc.abstractmethod
-    def to_slice(self, slices, drop_axes=True):
+    def slice_by_idx(self, slices, drop_axes=True):
         """Create a new geometry by cutting in the non-spatial dimensions of
         this geometry.
 
@@ -1201,7 +1200,12 @@ class MapGeom(object):
         geom : `~MapGeom`
             Sliced geometry.
         """
-        pass
+        axes = []
+        for ax, ax_slice in zip(self.axes, slices):
+            axes.append(ax.slice(ax_slice))
+        kwargs = self._copy_init_kwargs
+        kwargs['axes'] = axes
+        return self.__class__(**kwargs)
 
     @abc.abstractmethod
     def to_image(self):

@@ -499,6 +499,38 @@ class Map(object):
         """
         pass
 
+    def slice(self, slices, drop_axis=False, copy=True):
+        """Slice sub map from map object.
+
+        Parameters
+        ----------
+        slices : tuple
+            Tuple of integers or `slice` objects. Contains one
+            element for each non-spatial dimension.
+        drop_axes : bool
+            Drop axes for which the slice reduces the size of that
+            dimension to one.
+        copy : bool
+            Whether to make a copy of the data.
+
+        Returns
+        -------
+        map_out : '~Map'
+            Sliced map object.
+        """
+        if len(slices) != len(self.geom.axes):
+            raise ValueError("tuple length must be equal to the number of"
+                             " non spatial dimensions.")
+        geom = self.geom.slice(slices, drop_axis=drop_axis)
+        data = self.data[slices[::-1]]
+
+        if drop_axis:
+            data = np.squeeze(data)
+
+        if copy:
+            data = data.copy()
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
+
     def get_image_by_coord(self, coords, copy=True):
         """Return spatial map at the given axis coordinates.
 
