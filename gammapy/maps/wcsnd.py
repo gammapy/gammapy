@@ -531,3 +531,63 @@ class WcsNDMap(WcsMap):
             np.logical_not(mask, out=mask)
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+
+
+    def smooth(self, kernel='gauss', radius=1.0, **kwargs):
+        """
+        Smooth the image (works on a 2D image and returns a copy).
+
+        The definition of the smoothing parameter radius is equivalent to the
+        one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
+
+        Parameters
+        ----------
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        radius : `~astropy.units.Quantity` or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+        kwargs : dict
+            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
+            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
+            `~scipy.ndimage.convolve` ('disk').
+
+        Returns
+        -------
+        image : 2D image slice
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        from scipy.ndimage import gaussian_filter, uniform_filter
+        from scipy.ndimage import convolve
+        from scipy.stats import gmean
+
+        if self.geom.ndim>2:
+            raise ValueError('Only supported on 2D maps')
+
+        image = self.copy()
+
+        if isinstance(radius, Quantity):
+            # use geometric mean if x an y pixel scale differ
+            val=Angle(np.abs(self.geom.wcs.wcs.cdelt),unit="deg")
+            radius=gmean(radius/val).value
+
+        if kernel == 'gauss':
+            width = radius / 2.
+            image.data = gaussian_filter(self.data, width, **kwargs)
+        elif kernel == 'disk':
+            width = 2 * radius + 1
+            disk = Tophat2DKernel(width)
+            disk.normalize('integral')
+            image.data = convolve(self.data, disk.array, **kwargs)
+        elif kernel == 'box':
+            width = 2 * radius + 1
+            image.data = uniform_filter(self.data, width, **kwargs)
+        else:
+            raise ValueError('Invalid option kernel = {}'.format(kernel))
+
+        return image
+
+        
+
+
