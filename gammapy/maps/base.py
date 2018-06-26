@@ -6,6 +6,7 @@ import numpy as np
 from collections import OrderedDict
 from ..extern import six
 from ..utils.scripts import make_path
+from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy.units import Quantity, Unit
@@ -189,7 +190,7 @@ class Map(object):
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}        
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
             with the geometry.  If map_type is 'auto' then an
@@ -294,7 +295,7 @@ class Map(object):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str        
+        conv : str
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
@@ -302,8 +303,8 @@ class Map(object):
             Fermi Science Tools).  Supported conventions are 'gadf',
             'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
             'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.            
-        sparse : bool        
+            'galprop', and 'galprop2'.
+        sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
         """
@@ -467,7 +468,7 @@ class Map(object):
 
     @abc.abstractmethod
     def downsample(self, factor, preserve_counts=True):
-        """Downsample the spatial dimension of the map by a given factor. 
+        """Downsample the spatial dimension of the map by a given factor.
 
         Parameters
         ----------
@@ -487,7 +488,7 @@ class Map(object):
 
     @abc.abstractmethod
     def upsample(self, factor, order=0, preserve_counts=True):
-        """Upsample the spatial dimension of the map by a given factor. 
+        """Upsample the spatial dimension of the map by a given factor.
 
         Parameters
         ----------
@@ -507,6 +508,135 @@ class Map(object):
 
         """
         pass
+
+    def get_image_by_coord(self, coords, copy=True):
+        """Return spatial map at the given axis coordinates.
+
+        Parameters
+        ----------
+        coords : tuple or dict
+            Tuple should be ordered as (x_0, ..., x_n) where x_i are coordinates
+            for non-spatial dimensions of the map. Dict should specify the axis
+            names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
+        copy : bool
+            Whether to make a copy of the data.
+
+        Examples
+        --------
+
+        .. code:: python
+
+                import numpy as np
+                from gammapy.maps import Map, MapAxis
+                from astropy.coordinates import SkyCoord
+                from astropy import units as u
+
+                # Define map axes
+                energy_axis = MapAxis.from_edges(
+                    np.logspace(-1., 1., 4), unit='TeV', name='energy',
+                )
+
+                time_axis = MapAxis.from_edges(
+                    np.linspace(0., 10, 20), unit='h', name='time',
+                )
+
+                # Define map center
+                skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+
+                # Create map
+                m_wcs = Map.create(
+                    map_type='wcs',
+                    binsz=0.02,
+                    skydir=skydir,
+                    width=10.0,
+                    axes=[energy_axis, time_axis],
+                )
+
+            # Get image by coord tuple
+            image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
+
+            # Get image by coord dict with strings
+            image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+
+            # Get image by coord dict with quantities
+            image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
+
+        See Also
+        --------
+        get_image_by_idx, get_image_by_pix
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        if isinstance(coords, tuple):
+            axes_names = [_.name for _ in self.geom.axes]
+            coords = OrderedDict(zip(axes_names, coords))
+
+        idx = []
+        for axis, value in zip(self.geom.axes, coords.values()):
+            value = u.Quantity(value).to(axis.unit).value
+            idx.append(axis.coord_to_idx(value))
+
+        return self.get_image_by_idx(idx, copy=copy)
+
+    def get_image_by_pix(self, pix, copy=True):
+        """Return spatial map at the given axis pixel coordinates
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of scalar pixel coordinates for each non-spatial dimension of
+            the map. Tuple should be ordered as (I_0, ..., I_n). Pixel coordinates
+            can be either float or integer type.
+        copy : bool
+            Whether to make a copy of the data.
+
+        See Also
+        --------
+        get_image_by_coord, get_image_by_idx
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        idx = self.geom.pix_to_idx(pix)
+        return self.get_image_by_idx(idx, copy=copy)
+
+    def get_image_by_idx(self, idx, copy=True):
+        """Return spatial map at the given axis pixel indices.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of scalar indices for each non spatial dimension of the map.
+            Tuple should be ordered as (I_0, ..., I_n).
+        copy : bool
+            Whether to make a copy of the data.
+
+        See Also
+        --------
+        get_image_by_coord, get_image_by_pix
+
+        Returns
+        -------
+        map_out : '~Map'
+            Map with spatial dimensions only.
+        """
+        if len(idx) != len(self.geom.axes):
+            raise ValueError("tuple length must be equal to the number of"
+                             " non spatial dimensions.")
+
+        # Only support scalar indices per axis
+        idx = tuple([int(_) for _ in idx])
+
+        geom = self.geom.to_image()
+        data = self.data[idx[::-1]]
+        if copy:
+            data = data.copy()
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
@@ -543,7 +673,7 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-            Pixel indices can be either float or integer type. 
+            Pixel indices can be either float or integer type.
 
         Returns
         ----------

@@ -62,10 +62,10 @@ class WcsGeom(MapGeom):
     cdelt : tuple
         Pixel size in each image plane.  If none then a constant pixel size will be used.
     crpix : tuple
-        Reference pixel coordinate in each image plane.  
+        Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
-    conv : {'gadf', 'fgst-ccube', 'fgst-template'}    
+    conv : {'gadf', 'fgst-ccube', 'fgst-template'}
         Serialization format convention.  This sets the default format
         that will be used when writing this geometry to a file.
     """
@@ -551,7 +551,7 @@ class WcsGeom(MapGeom):
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
                     np.putmask(idxs[i], (idx < 0) | (
-                            idx >= self.axes[i - 2].nbin), -1)
+                               idx >= self.axes[i - 2].nbin), -1)
 
         return idxs
 

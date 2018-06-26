@@ -193,4 +193,3 @@ Please help make these better, or write new, better ones!
 - `Fermi Vela model <notebooks/fermi_vela_model.html>`__ (Fermi Vela model) | *fermi_vela_model.ipynb*
 - `Simulating and analysing sources and diffuse emission <notebooks/source_diffuse_estimation.html>`__ | *source_diffuse_estimation.ipynb*
 - `Time analysis with Gammapy <notebooks/time_analysis.html>`__ (not written yet) | *time_analysis.ipynb*
->>>>>>> add link to example notebook
