@@ -6,7 +6,6 @@ import numpy as np
 from numpy.testing import assert_equal
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit, Quantity
-from astropy import units as u
 from ..base import Map
 from ..geom import MapAxis
 from ..wcs import WcsGeom
@@ -24,8 +23,6 @@ map_axes = [
 ]
 
 mapbase_args = [
-    (0.1*u.deg, 10.0*u.deg, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
-    (0.1*u.deg, 10.0*u.deg, 'hpx', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), None, ''),
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes[:1], ''),
     (0.1, 10.0, 'wcs', SkyCoord(0.0, 30.0, unit='deg'), map_axes, 'm^2'),
@@ -45,26 +42,12 @@ def test_map_create(binsz, width, map_type, skydir, axes, unit):
                    skydir=skydir, axes=axes, unit=unit)
     assert m.unit == unit
 
-def test_map_create_size():
-    m = Map.create(binsz=6*u.arcmin, width=600*u.arcmin, map_type='wcs')
-    assert(m.data.shape == (100,100))
-
-    m = Map.create(binsz=0.1*u.deg, width=10*u.deg, map_type='wcs')
-    assert(m.data.shape == (100,100))
 
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
     assert isinstance(m, WcsNDMap)
     assert m.geom.is_image
-
-    geom = WcsGeom.create(binsz=1.0)
-    m = Map.from_geom(geom)
-    assert isinstance(m, WcsNDMap)
-
-    geom = WcsGeom.create(binsz=6*u.arcmin, width=600*u.arcmin)
-    m = Map.from_geom(geom)
-    assert(m.data.shape == (100,100))
 
     geom = HpxGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
@@ -101,9 +84,6 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     m_vals = m.get_by_pix(idx + pix)
     assert_equal(m_image.data, m_vals)
 
-    geom = HpxGeom.create(binsz=1.0*u.deg, width=10.0*u.deg)
-    m = Map.from_geom(geom)
-    assert isinstance(m, HpxNDMap)
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
 def test_map_meta_read_write(map_type):
