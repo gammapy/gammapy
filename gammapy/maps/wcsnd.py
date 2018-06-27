@@ -543,7 +543,7 @@ class WcsNDMap(WcsMap):
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
 
 
-    def smooth(self, kernel='gauss', radius=1.0, **kwargs):
+    def smooth(self, kernel='gauss', radius, **kwargs):
         """
         Smooth the image (works on a 2D image and returns a copy).
 
