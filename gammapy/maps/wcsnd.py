@@ -4,6 +4,8 @@ import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import Angle
+from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .utils import interp_to_order
@@ -460,16 +462,15 @@ class WcsNDMap(WcsMap):
             data /= factor**2
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
-    def plot(self, ax=None, idx=None, **kwargs):
-        """Quickplot method.
+    def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
+        """
+
+        Plot image on matplotlib WCS axes
 
         Parameters
         ----------
-        norm : str
-            Set the normalization scheme of the color map.
-        idx : int or tuple
-            Set the image slice to plot if this map has non-spatial dimensions.
-            For maps with exactly one non-spatial dimension idx can be an int
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
@@ -483,31 +484,41 @@ class WcsNDMap(WcsMap):
             Image object.
         """
         import matplotlib.pyplot as plt
-        import matplotlib.colors as colors
+        from astropy.visualization import simple_norm
 
+        if fig is None:
+            fig=plt.gcf()
         if ax is None:
-            fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=self.geom.wcs)
+            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-        if idx is not None:
-            idx = (idx,) if isinstance(idx, int) else idx
-            slices = (slice(None), slice(None)) + idx
-            data = self.data[slices[::-1]]
-        else:
-            data = self.data
+        data = self.data
 
-        kwargs.setdefault('interpolation', 'nearest')
+        kwargs.setdefault('interpolation', 'None')
         kwargs.setdefault('origin', 'lower')
+        kwargs.setdefault('cmap', 'afmhot')
+        norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault('norm', None)
+       
+        caxes = ax.imshow(data, **kwargs)
 
-        if kwargs['norm'] == 'log':
-            kwargs['norm'] = colors.LogNorm()
-        elif kwargs['norm'] == 'pow2':
-            kwargs['norm'] = colors.PowerNorm(gamma=0.5)
+        if add_cbar:
+            cbar = fig.colorbar(caxes, ax=ax)
+        else: 
+            cbar=None
+        try:
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
+        except KeyError:
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
 
-        im = ax.imshow(data, **kwargs)
-        ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
-        return fig, ax, im
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
+
+
 
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
@@ -565,7 +576,7 @@ class WcsNDMap(WcsMap):
         if self.geom.ndim>2:
             raise ValueError('Only supported on 2D maps')
 
-        image = self.copy()
+        image = copy.copy(self)
 
         if isinstance(radius, Quantity):
             # use geometric mean if x an y pixel scale differ

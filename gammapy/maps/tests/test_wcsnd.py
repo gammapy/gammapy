@@ -393,4 +393,17 @@ def test_make_region_mask():
     maskmap = m.make_region_mask(region, inside=False)
     assert np.sum(maskmap.data) == 8
 
+@requires_dependency('scipy')
+@pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])
+def test_smooth(kernel):
+    geom = WcsGeom.create(npix=(10,10), binsz=1,
+                          proj='CAR', coordsys='GAL')
+    m1 = WcsNDMap(geom, data=np.ones((10,10)), unit='m2')
+
+    desired = m1.data.sum()
+    smoothed = m1.smooth(kernel, 0.2 * u.deg)
+    actual = smoothed.data.sum()
+    assert_allclose(actual, desired)
+
+
 
