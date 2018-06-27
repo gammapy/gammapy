@@ -512,13 +512,6 @@ class Map(object):
         copy : bool
             Whether to make a copy of the data.
 
-        Examples
-        --------
-
-        .. code::
-
-            from gammapy.maps import Map
-
         Returns
         -------
         map_out : '~Map'

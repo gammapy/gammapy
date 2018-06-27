@@ -127,13 +127,13 @@ Fermi-LAT PSF:
 
 Indexing and Slicing
 --------------------
-All map objects feature a `slice_by_idx()` method, which can be used to slice and
+All map objects feature a `~Map.slice_by_idx()` method, which can be used to slice and
 index non-spatial axes of the map to create arbitrary sub-maps. The method accepts
-a `dict` specifying the axes name and correspoding integer index or regular `slice`
-object. When indexing an axis with an integer the corresponding axes is dropped
+a `dict` specifying the axes name and correspoding integer index or `slice`
+objects. When indexing an axis with an integer the corresponding axes is dropped
 from the returned sub-map. To keep the axes (with length 1) in the returned sub-map
 use a slice object of length one. This behaviour is equivalent to regular numpy
-array indexing. The follwing example demonstrates the use of `slice_by_idx()`
+array indexing. The follwing example demonstrates the use of `~Map.slice_by_idx()`
 on a map with a time and energy axes:
 
 .. code:: python
@@ -159,7 +159,8 @@ on a map with a time and energy axes:
    # slice first three images of the energy axis at a fixed time
    m_wcs.slice_by_idx({'energy': slice(0, 3), 'time': 0})
 
-
+   # slice first three images of the energy axis as well as time axis
+   m_wcs.slice_by_idx({'energy': slice(0, 3), 'time': slice(0, 3)})
 
 Accessor Methods
 ----------------
