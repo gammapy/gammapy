@@ -7,6 +7,8 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import Angle
+import astropy.wcs.utils
 import astropy.units as u
 from astropy.units import Quantity, Unit
 from regions import SkyRegion
@@ -205,6 +207,17 @@ class WcsGeom(MapGeom):
         pix : `~astropy.coordinates.SkyCoord`
         """
         return self._center_skydir
+
+    @property
+    def pixel_scales(self):
+        """
+        pixel scales along each axis of the image pixel
+
+        Returns
+        ------
+        angle: an array of astropy.coordinates.Angle
+        """
+        return Angle(astropy.wcs.utils.proj_plane_pixel_scales(self.wcs), 'deg')
 
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,

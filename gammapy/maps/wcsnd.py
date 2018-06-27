@@ -4,7 +4,6 @@ import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -486,6 +485,9 @@ class WcsNDMap(WcsMap):
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
 
+        if not self.geom.is_image:
+            raise ValueError('Only supported on 2D maps')
+
         if fig is None:
             fig=plt.gcf()
         if ax is None:
@@ -493,7 +495,7 @@ class WcsNDMap(WcsMap):
 
         data = self.data
 
-        kwargs.setdefault('interpolation', 'None')
+        kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
         norm = simple_norm(data[np.isfinite(data)], stretch)
@@ -501,10 +503,7 @@ class WcsNDMap(WcsMap):
        
         caxes = ax.imshow(data, **kwargs)
 
-        if add_cbar:
-            cbar = fig.colorbar(caxes, ax=ax)
-        else: 
-            cbar=None
+        cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -571,32 +570,29 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter
         from scipy.ndimage import convolve
-        from scipy.stats import gmean
 
-        if self.geom.ndim>2:
+        if not self.geom.is_image:
             raise ValueError('Only supported on 2D maps')
 
-        image = copy.copy(self)
-
         if isinstance(radius, Quantity):
-            # use geometric mean if x an y pixel scale differ
-            val=Angle(np.abs(self.geom.wcs.wcs.cdelt),unit="deg")
-            radius=gmean(radius/val).value
+            radius=(radius.to('deg')/self.geom.pixel_scales.mean()).value
 
         if kernel == 'gauss':
             width = radius / 2.
-            image.data = gaussian_filter(self.data, width, **kwargs)
+            data = gaussian_filter(self.data, width, **kwargs)
         elif kernel == 'disk':
             width = 2 * radius + 1
             disk = Tophat2DKernel(width)
             disk.normalize('integral')
-            image.data = convolve(self.data, disk.array, **kwargs)
+            data = convolve(self.data, disk.array, **kwargs)
         elif kernel == 'box':
             width = 2 * radius + 1
-            image.data = uniform_filter(self.data, width, **kwargs)
+            data = uniform_filter(self.data, width, **kwargs)
         else:
             raise ValueError('Invalid option kernel = {}'.format(kernel))
 
+        image = copy.copy(self)
+        image.data=data
         return image
 
         
