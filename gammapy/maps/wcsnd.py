@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
+import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
@@ -15,6 +16,8 @@ from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 __all__ = [
     'WcsNDMap',
 ]
+
+log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
@@ -463,13 +466,18 @@ class WcsNDMap(WcsMap):
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
-
-        Plot image on matplotlib WCS axes
+        Plot image on matplotlib WCS axes.
 
         Parameters
         ----------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        add_cbar : bool
+            Add color bar?
+        stretch : str
+            Passed to `astropy.visualization.simple_norm`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
@@ -489,7 +497,8 @@ class WcsNDMap(WcsMap):
             raise ValueError('Only supported on 2D maps')
 
         if fig is None:
-            fig=plt.gcf()
+            fig = plt.gcf()
+
         if ax is None:
             ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
@@ -499,7 +508,7 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
         norm = simple_norm(data[np.isfinite(data)], stretch)
-        kwargs.setdefault('norm', None)
+        kwargs.setdefault('norm', norm)
        
         caxes = ax.imshow(data, **kwargs)
 
@@ -516,8 +525,6 @@ class WcsNDMap(WcsMap):
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
         return fig, ax, cbar
-
-
 
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
@@ -542,8 +549,7 @@ class WcsNDMap(WcsMap):
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
 
-
-    def smooth(self, kernel='gauss', radius, **kwargs):
+    def smooth(self, radius, kernel='gauss', **kwargs):
         """
         Smooth the image (works on a 2D image and returns a copy).
 
@@ -552,12 +558,12 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        kernel : {'gauss', 'disk', 'box'}
-            Kernel shape
         radius : `~astropy.units.Quantity` or float
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
         kwargs : dict
             Keyword arguments passed to `~scipy.ndimage.uniform_filter`
             ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
@@ -565,17 +571,16 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        image : 2D image slice
+        image : `WcsNDMap`
             Smoothed image (a copy, the original object is unchanged).
         """
-        from scipy.ndimage import gaussian_filter, uniform_filter
-        from scipy.ndimage import convolve
+        from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
         if not self.geom.is_image:
             raise ValueError('Only supported on 2D maps')
 
         if isinstance(radius, Quantity):
-            radius=(radius.to('deg')/self.geom.pixel_scales.mean()).value
+            radius = (radius.to('deg')/self.geom.pixel_scales.mean()).value
 
         if kernel == 'gauss':
             width = radius / 2.
@@ -592,9 +597,5 @@ class WcsNDMap(WcsMap):
             raise ValueError('Invalid option kernel = {}'.format(kernel))
 
         image = copy.copy(self)
-        image.data=data
+        image.data = data
         return image
-
-        
-
-
