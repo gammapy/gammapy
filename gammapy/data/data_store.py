@@ -506,32 +506,32 @@ class DataStoreObservation(object):
 
     @property
     def events(self):
-        """Load `gammapy.data.EventList` object (lazy property)."""
+        """Load `gammapy.data.EventList` object."""
         return self.load(hdu_type='events')
 
     @property
     def gti(self):
-        """Load `gammapy.data.GTI` object (lazy property)."""
+        """Load `gammapy.data.GTI` object."""
         return self.load(hdu_type='gti')
 
     @property
     def aeff(self):
-        """Load effective area object (lazy property)."""
+        """Load effective area object."""
         return self.load(hdu_type='aeff')
 
     @property
     def edisp(self):
-        """Load energy dispersion object (lazy property)."""
+        """Load energy dispersion object."""
         return self.load(hdu_type='edisp')
 
     @property
     def psf(self):
-        """Load point spread function object (lazy property)."""
+        """Load point spread function object."""
         return self.load(hdu_type='psf')
 
     @property
     def bkg(self):
-        """Load background object (lazy property)."""
+        """Load background object."""
         return self.load(hdu_type='bkg')
 
     @lazyproperty
