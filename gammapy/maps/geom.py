@@ -1181,19 +1181,17 @@ class MapGeom(object):
         idx = self.pix_to_idx(pix)
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
-    def slice_by_idx(self, slices, drop_axes=True):
+    def slice_by_idx(self, slices):
         """Create a new geometry by cutting in the non-spatial dimensions of
         this geometry.
 
         Parameters
         ----------
-        slices : tuple
-            Tuple of integers or `slice` objects.  Contains one
-            element for each non-spatial dimension.
-
-        drop_axes : bool
-            Drop axes for which the slice reduces the size of that
-            dimension to one.
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            correspoding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
 
         Returns
         -------
@@ -1201,12 +1199,12 @@ class MapGeom(object):
             Sliced geometry.
         """
         axes = []
-        for ax, ax_slice in zip(self.axes, slices):
-            ax_sliced = ax.slice(ax_slice)
-            if ax_sliced.nbin == 1 and drop_axes:
-                continue
-            else:
+        for ax in self.axes:
+            ax_slice = slices.get(ax.name, slice(None))
+            if isinstance(ax_slice, slice):
+                ax_sliced = ax.slice(ax_slice)
                 axes.append(ax_sliced)
+            # in the case where isinstance(ax_slice, int) the axes is dropped
 
         kwargs = self._copy_init_kwargs
         kwargs['axes'] = axes

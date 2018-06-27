@@ -499,33 +499,34 @@ class Map(object):
         """
         pass
 
-    def slice_by_idx(self, slices, drop_axes=False, copy=True):
+    def slice_by_idx(self, slices, copy=False):
         """Slice sub map from map object.
 
         Parameters
         ----------
-        slices : tuple
-            Tuple of integers or `slice` objects. Contains one
-            element for each non-spatial dimension.
-        drop_axes : bool
-            Drop axes for which the slice reduces the size of that
-            dimension to one.
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            correspoding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
         copy : bool
             Whether to make a copy of the data.
+
+        Examples
+        --------
+
+        .. code::
+
+            from gammapy.maps import Map
 
         Returns
         -------
         map_out : '~Map'
             Sliced map object.
         """
-        if len(slices) != len(self.geom.axes):
-            raise ValueError("tuple length must be equal to the number of"
-                             " non spatial dimensions.")
-        geom = self.geom.slice_by_idx(slices, drop_axes=drop_axes)
+        geom = self.geom.slice_by_idx(slices)
+        slices = tuple([slices.get(ax.name, slice(None)) for ax in self.geom.axes])
         data = self.data[slices[::-1]]
-
-        if drop_axes:
-            data = np.squeeze(data)
 
         if copy:
             data = data.copy()

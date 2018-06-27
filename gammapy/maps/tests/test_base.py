@@ -18,8 +18,8 @@ pytest.importorskip('healpy')
 pytest.importorskip('numpy', '1.12.0')
 
 map_axes = [
-    MapAxis.from_bounds(1.0, 10.0, 3, interp='log'),
-    MapAxis.from_bounds(0.1, 1.0, 4, interp='log'),
+    MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy'),
+    MapAxis.from_bounds(0.1, 1.0, 4, interp='log', name='time'),
 ]
 
 mapbase_args = [
@@ -92,19 +92,24 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
                    skydir=skydir, axes=axes, unit=unit)
     m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
-    slices = (slice(None, None), slice(None, None))[:len(m.geom.axes)]
-    sliced = m.slice_by_idx(slices)
+    sliced = m.slice_by_idx({})
     assert_equal(m.geom.shape, sliced.geom.shape)
 
-    slices = (slice(0, 1), slice(0, 2))[:len(m.geom.axes)]
+    slices = {'energy': slice(0, 1),
+              'time': slice(0, 2)}
     sliced = m.slice_by_idx(slices)
     assert not sliced.geom.is_image
+    slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
+    # assert sliced.data.base is m.data
 
-    slices = (0, 1)[:len(m.geom.axes)]
-    sliced = m.slice_by_idx(slices, drop_axes=True)
+    slices = {'energy': 0,
+              'time': 1}
+    sliced = m.slice_by_idx(slices)
     assert sliced.geom.is_image
+    slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
+    # assert sliced.data.base is m.data
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
