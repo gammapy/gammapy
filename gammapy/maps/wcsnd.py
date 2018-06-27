@@ -487,14 +487,14 @@ class WcsNDMap(WcsMap):
             Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage`
-            Image object.
+        cbar : `~matplotlib.colorbar.Colorbar` or None
+            Colorbar object.
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
 
         if not self.geom.is_image:
-            raise ValueError('Only supported on 2D maps')
+            raise TypeError('Only supported on 2D maps')
 
         if fig is None:
             fig = plt.gcf()
@@ -509,7 +509,7 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault('cmap', 'afmhot')
         norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault('norm', norm)
-       
+
         caxes = ax.imshow(data, **kwargs)
 
         cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
@@ -580,7 +580,7 @@ class WcsNDMap(WcsMap):
             raise ValueError('Only supported on 2D maps')
 
         if isinstance(radius, Quantity):
-            radius = (radius.to('deg')/self.geom.pixel_scales.mean()).value
+            radius = (radius.to('deg') / self.geom.pixel_scales.mean()).value
 
         if kernel == 'gauss':
             width = radius / 2.

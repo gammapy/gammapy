@@ -211,11 +211,14 @@ class WcsGeom(MapGeom):
     @property
     def pixel_scales(self):
         """
-        pixel scales along each axis of the image pixel
+        Pixel scale.
+
+        Returns angles along each axis of the image at the CRPIX location once
+        it is projected onto the plane of intermediate world coordinates.
 
         Returns
         ------
-        angle: an array of astropy.coordinates.Angle
+        angle: `~astropy.coordinates.Angle`
         """
         return Angle(astropy.wcs.utils.proj_plane_pixel_scales(self.wcs), 'deg')
 
