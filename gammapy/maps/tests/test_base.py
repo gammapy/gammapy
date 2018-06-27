@@ -90,8 +90,10 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
 def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(binsz=binsz, width=width, map_type=map_type,
                    skydir=skydir, axes=axes, unit=unit)
-    m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
+    data = np.arange(m.data.size, dtype=float)
+    m.data = data.reshape(m.data.shape)
 
+    # Test none slicing
     sliced = m.slice_by_idx({})
     assert_equal(m.geom.shape, sliced.geom.shape)
 
@@ -101,15 +103,15 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
     assert not sliced.geom.is_image
     slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
-    # assert sliced.data.base is m.data
+    assert sliced.data.base is data
 
     slices = {'energy': 0,
               'time': 1}
-    sliced = m.slice_by_idx(slices)
+    sliced = m.slice_by_idx(slices, copy=True)
     assert sliced.geom.is_image
     slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
-    # assert sliced.data.base is m.data
+    assert sliced.data.base is not data
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

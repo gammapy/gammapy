@@ -1204,7 +1204,7 @@ class MapGeom(object):
             if isinstance(ax_slice, slice):
                 ax_sliced = ax.slice(ax_slice)
                 axes.append(ax_sliced)
-            # in the case where isinstance(ax_slice, int) the axes is dropped
+                # in the case where isinstance(ax_slice, int) the axes is dropped
 
         kwargs = self._copy_init_kwargs
         kwargs['axes'] = axes
