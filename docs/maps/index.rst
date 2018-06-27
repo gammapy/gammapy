@@ -125,6 +125,42 @@ Fermi-LAT PSF:
    m_hpx = Map.create(binsz=binsz, map_type='hpx', skydir=position, width=10.0,
                           axes=[energy_axis])
 
+Indexing and Slicing
+--------------------
+All map objects feature a `slice_by_idx()` method, which can be used to slice and
+index non-spatial axes of the map to create arbitrary sub-maps. The method accepts
+a `dict` specifying the axes name and correspoding integer index or regular `slice`
+object. When indexing an axis with an integer the corresponding axes is dropped
+from the returned sub-map. To keep the axes (with length 1) in the returned sub-map
+use a slice object of length one. This behaviour is equivalent to regular numpy
+array indexing. The follwing example demonstrates the use of `slice_by_idx()`
+on a map with a time and energy axes:
+
+.. code:: python
+
+   import numpy as np
+   from gammapy.maps import Map, MapAxis
+   from astropy.coordinates import SkyCoord
+
+   position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
+   energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', unit='GeV')
+   time_axis = MapAxis.from_bounds(0., 12, 12, interp='lin', unit='h')
+
+   # Create a WCS Map
+   m_wcs = Map.create(binsz=0.02, map_type='wcs', skydir=position, width=10.0,
+                          axes=[energy_axis, time_axis])
+
+   # index first image plane of the energy axes and third from the time axis
+   m_wcs.slice_by_idx({'energy': 0, 'time': 2})
+
+   # index first image plane of the energy axes and keep time axis unchanged
+   m_wcs.slice_by_idx({'energy': 0})
+
+   # slice first three images of the energy axis at a fixed time
+   m_wcs.slice_by_idx({'energy': slice(0, 3), 'time': 0})
+
+
+
 Accessor Methods
 ----------------
 
