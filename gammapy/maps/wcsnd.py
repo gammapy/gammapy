@@ -602,7 +602,7 @@ class WcsNDMap(WcsMap):
         image.data = data
         return image
 
-    def make_cutout(self, position, radius, margin=None, mode="strict"):
+    def make_cutout(self, position, width, margin=None, mode="strict"):
         """
         Create a cutout of a WcsNDMap around a given direction.
 
@@ -611,12 +611,14 @@ class WcsNDMap(WcsMap):
 
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout box
-        radius : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the box
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the box in (lon,lat)
+            If only one value is passed, a square region is extracted
         margin : `~astropy.coordinates.Angle`, optional
             Additional safety margin. If specified must be same length as radius
         mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D,  see `~astropy.nddata.utils.Cutout2D`
+            Mode option for Cutout2D, `~astropy.nddata.utils.Cutout2D`
+            for details, see http://docs.astropy.org/en/stable/api/astropy.nddata.Cutout2D.html
 
         Returns
         -------
@@ -624,20 +626,17 @@ class WcsNDMap(WcsMap):
             The cutout map itself
         """
 
-        size = radius+margin if margin else radius
+
         idx = (0,)*(self.data.ndim - 2)
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
-                position=position, size=size, mode=mode)
+                position=position, size=width, mode=mode)
 
         # Create the slices with the non-spatial axis
-        cs = []
-        for i in range(self.data.ndim-2):
-            cs.append(slice(0,self.data.shape[i]))
-        cutout_slices = tuple(cs)+cutout2d.slices_original
 
+        cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
         geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
 
-        return WcsNDMap(geom, data)
+        return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)
     
