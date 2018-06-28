@@ -602,7 +602,7 @@ class WcsNDMap(WcsMap):
         image.data = data
         return image
 
-    def make_cutout(self, position, width, margin=None, mode="strict"):
+    def make_cutout(self, position, width, mode="strict"):
         """
         Create a cutout of a WcsNDMap around a given direction.
 
