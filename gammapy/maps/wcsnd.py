@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
+import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .utils import interp_to_order
@@ -14,6 +16,8 @@ from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 __all__ = [
     'WcsNDMap',
 ]
+
+log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
@@ -460,16 +464,20 @@ class WcsNDMap(WcsMap):
             data /= factor**2
         return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
 
-    def plot(self, ax=None, idx=None, **kwargs):
-        """Quickplot method.
+    def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
+        """
+        Plot image on matplotlib WCS axes.
 
         Parameters
         ----------
-        norm : str
-            Set the normalization scheme of the color map.
-        idx : int or tuple
-            Set the image slice to plot if this map has non-spatial dimensions.
-            For maps with exactly one non-spatial dimension idx can be an int
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        add_cbar : bool
+            Add color bar?
+        stretch : str
+            Passed to `astropy.visualization.simple_norm`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
@@ -479,35 +487,44 @@ class WcsNDMap(WcsMap):
             Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage`
-            Image object.
+        cbar : `~matplotlib.colorbar.Colorbar` or None
+            Colorbar object.
         """
         import matplotlib.pyplot as plt
-        import matplotlib.colors as colors
+        from astropy.visualization import simple_norm
+
+        if not self.geom.is_image:
+            raise TypeError('Only supported on 2D maps')
+
+        if fig is None:
+            fig = plt.gcf()
 
         if ax is None:
-            fig = plt.gcf()
-            ax = fig.add_subplot(111, projection=self.geom.wcs)
+            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-        if idx is not None:
-            idx = (idx,) if isinstance(idx, int) else idx
-            slices = (slice(None), slice(None)) + idx
-            data = self.data[slices[::-1]]
-        else:
-            data = self.data
+        data = self.data
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('norm', None)
+        kwargs.setdefault('cmap', 'afmhot')
+        norm = simple_norm(data[np.isfinite(data)], stretch)
+        kwargs.setdefault('norm', norm)
 
-        if kwargs['norm'] == 'log':
-            kwargs['norm'] = colors.LogNorm()
-        elif kwargs['norm'] == 'pow2':
-            kwargs['norm'] = colors.PowerNorm(gamma=0.5)
+        caxes = ax.imshow(data, **kwargs)
 
-        im = ax.imshow(data, **kwargs)
-        ax.coords.grid(color='w', linestyle=':', linewidth=0.5)
-        return fig, ax, im
+        cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
+        try:
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
+        except KeyError:
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
 
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
@@ -531,3 +548,54 @@ class WcsNDMap(WcsMap):
             np.logical_not(mask, out=mask)
         # TODO : update meta table to include something about the region used for mask creation?
         return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+
+    def smooth(self, radius, kernel='gauss', **kwargs):
+        """
+        Smooth the image (works on a 2D image and returns a copy).
+
+        The definition of the smoothing parameter radius is equivalent to the
+        one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity` or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        kwargs : dict
+            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
+            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
+            `~scipy.ndimage.convolve` ('disk').
+
+        Returns
+        -------
+        image : `WcsNDMap`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        from scipy.ndimage import gaussian_filter, uniform_filter, convolve
+
+        if not self.geom.is_image:
+            raise ValueError('Only supported on 2D maps')
+
+        if isinstance(radius, Quantity):
+            radius = (radius.to('deg') / self.geom.pixel_scales.mean()).value
+
+        if kernel == 'gauss':
+            width = radius / 2.
+            data = gaussian_filter(self.data, width, **kwargs)
+        elif kernel == 'disk':
+            width = 2 * radius + 1
+            disk = Tophat2DKernel(width)
+            disk.normalize('integral')
+            data = convolve(self.data, disk.array, **kwargs)
+        elif kernel == 'box':
+            width = 2 * radius + 1
+            data = uniform_filter(self.data, width, **kwargs)
+        else:
+            raise ValueError('Invalid option kernel = {}'.format(kernel))
+
+        image = copy.copy(self)
+        image.data = data
+        return image
