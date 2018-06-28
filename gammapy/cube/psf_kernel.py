@@ -51,9 +51,6 @@ def table_psf_to_kernel_map(table_psf, geom, normalize=True, factor=4):
 
     vals = table_psf.evaluate(rad=rads).reshape(solid_angles.shape) * solid_angles
 
-    if normalize:
-        vals /= np.sum(vals)
-
     # Create map
     kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes),
                                unit='')
@@ -64,6 +61,12 @@ def table_psf_to_kernel_map(table_psf, geom, normalize=True, factor=4):
 
     # downsample the psf kernel map. Take the average
     kernel_map = kernel_map.downsample(factor, preserve_counts=False)
+
+    if normalize:
+        # normalize each image in map
+        for img, idx in kernel_map.iter_by_image():
+            norm = np.sum(img)
+            img /= norm
 
     return kernel_map
 
@@ -259,8 +262,6 @@ class PSFKernel(object):
             the kernel Map with reduced geometry according to the max_radius
         """
         sigma = Angle(sigma, 'deg')
-        if len(sigma) > 1:
-            raise ValueError("Array values for sigma are not supported yet.")
 
         if max_radius is None:
             max_radius = Gauss2DPDF(sigma.to('deg').value).containment_radius(
