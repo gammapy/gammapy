@@ -11,3 +11,4 @@ from .cube_pipe import *
 from .basic_cube import *
 from .fit import *
 from .new import *
+from .psf_kernel import *
