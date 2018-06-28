@@ -224,7 +224,7 @@ class WcsGeom(MapGeom):
         it is projected onto the plane of intermediate world coordinates.
 
         Returns
-        ------
+        -------
         angle: `~astropy.coordinates.Angle`
         """
         return Angle(astropy.wcs.utils.proj_plane_pixel_scales(self.wcs), 'deg')

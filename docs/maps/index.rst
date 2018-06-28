@@ -125,15 +125,19 @@ Fermi-LAT PSF:
    m_hpx = Map.create(binsz=binsz, map_type='hpx', skydir=position, width=10.0,
                           axes=[energy_axis])
 
+
+.. _mapslicing:
+
 Indexing and Slicing
 --------------------
-All map objects feature a `~Map.slice_by_idx()` method, which can be used to slice and
-index non-spatial axes of the map to create arbitrary sub-maps. The method accepts
-a `dict` specifying the axes name and correspoding integer index or `slice`
+
+All map objects feature a `~Map.slice_by_idx()` method, which can be used to slice
+and index non-spatial axes of the map to create arbitrary sub-maps. The method
+accepts a `dict` specifying the axes name and correspoding integer index or `slice`
 objects. When indexing an axis with an integer the corresponding axes is dropped
 from the returned sub-map. To keep the axes (with length 1) in the returned sub-map
-use a slice object of length one. This behaviour is equivalent to regular numpy
-array indexing. The follwing example demonstrates the use of `~Map.slice_by_idx()`
+use a `slice` object of length one. This behaviour is equivalent to regular numpy
+array indexing. The following example demonstrates the use of `~Map.slice_by_idx()`
 on a map with a time and energy axes:
 
 .. code:: python
@@ -426,10 +430,6 @@ over to the projected map.
    # Convert LAT standard IEM to HPX (nside=8)
    m_proj = m.project(geom)
    m_proj.write('gll_iem_v06_hpx_nside8.fits')
-
-
-Slicing Methods
----------------
 
 Iterating on a Map
 ------------------

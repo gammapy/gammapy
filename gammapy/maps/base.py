@@ -502,6 +502,8 @@ class Map(object):
     def slice_by_idx(self, slices, copy=False):
         """Slice sub map from map object.
 
+        For usage examples, see :ref:`mapslicing`.
+
         Parameters
         ----------
         slices : dict
