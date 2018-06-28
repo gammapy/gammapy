@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -599,3 +600,50 @@ class WcsNDMap(WcsMap):
         image = copy.copy(self)
         image.data = data
         return image
+
+    def make_cutout(self, position, radius, margin=None, mode="strict"):
+        """
+        Create a cutout of a WcsNDMap around a given direction.
+
+        Parameters
+        ----------
+
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout box
+        radius : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the box
+        margin : `~astropy.coordinates.Angle`, optional
+            Additional safety margin. If specified must be same length as radius
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D,  see http://docs.astropy.org/en/stable/api/astropy.nddata.utils.Cutout2D.html 
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            The cutout map itself
+        cutout_slices : tuple
+            Tuple of 1-dim slice objects
+
+        """
+
+        from astropy.nddata import Cutout2D
+        
+        size=radius+margin if margin else radius
+        idx=(0,)*(self.data.ndim - 2)
+
+        cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
+                position=position, size=size, mode=mode)
+
+        # Create the slices with the non-spatial axis
+        cs=()
+        for i in range(self.data.ndim-2):
+            cs=cs+tuple([slice(0,self.data.shape[i])]) 
+        cutout_slices=tuple(cs)+cutout2d.slices_original
+
+        geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
+        data = self.data[cutout_slices]
+
+        ndmap_cutout = WcsNDMap(geom, data)
+
+        return ndmap_cutout
+    

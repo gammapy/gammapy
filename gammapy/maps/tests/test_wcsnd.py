@@ -405,3 +405,13 @@ def test_smooth(kernel):
     smoothed = m.smooth(0.2 * u.deg, kernel)
     actual = smoothed.data.sum()
     assert_allclose(actual, desired)
+
+def test_make_cutout():
+    geom = WcsGeom.create(npix=(10, 10), binsz=1,
+                          proj='CAR', coordsys='GAL')
+    m = WcsNDMap(geom, data=np.ones((10, 10)), unit='m2')
+    pos=SkyCoord(0, 0, unit='deg', frame='galactic')
+    cutout=m.make_cutout(position=pos,radius=3.0*u.deg,margin=0.1*u.deg)
+    actual=cutout.data.sum()
+    assert_allclose(actual,9.0)
+
