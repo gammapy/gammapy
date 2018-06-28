@@ -589,6 +589,7 @@ class HpxGeom(MapGeom):
 
         self._ipix = None
         self._rmap = None
+        self._region = region
         self._create_lookup(region)
 
         if self._ipix is not None:
@@ -603,6 +604,14 @@ class HpxGeom(MapGeom):
         self._center_coord = tuple([lon, lat] +
                                    [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
         self._center_pix = self.coord_to_pix(self._center_coord)
+
+    @property
+    def _copy_init_kwargs(self):
+        """Get kwargs to init an instance with the same parameters."""
+        kwargs = {}
+        for arg in ['nside', 'nest', 'coordsys', 'region', 'axes', 'conv']:
+            kwargs[arg] = getattr(self, '_' + arg)
+        return kwargs
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""

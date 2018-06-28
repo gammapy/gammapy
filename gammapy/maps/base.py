@@ -499,6 +499,34 @@ class Map(object):
         """
         pass
 
+    def slice_by_idx(self, slices, copy=False):
+        """Slice sub map from map object.
+
+        For usage examples, see :ref:`mapslicing`.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            correspoding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        copy : bool
+            Whether to make a copy of the data.
+
+        Returns
+        -------
+        map_out : '~Map'
+            Sliced map object.
+        """
+        geom = self.geom.slice_by_idx(slices)
+        slices = tuple([slices.get(ax.name, slice(None)) for ax in self.geom.axes])
+        data = self.data[slices[::-1]]
+
+        if copy:
+            data = data.copy()
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
+
     def get_image_by_coord(self, coords, copy=True):
         """Return spatial map at the given axis coordinates.
 

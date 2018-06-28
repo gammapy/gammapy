@@ -107,6 +107,14 @@ class WcsGeom(MapGeom):
                                                   self.wcs)
 
     @property
+    def _copy_init_kwargs(self):
+        """Get kwargs to init an instance with the same parameters."""
+        kwargs = {}
+        for arg in ['wcs', 'npix', 'cdelt', 'crpix', 'axes', 'conv']:
+            kwargs[arg] = getattr(self, '_' + arg)
+        return kwargs
+
+    @property
     def wcs(self):
         """WCS projection object."""
         return self._wcs
@@ -216,7 +224,7 @@ class WcsGeom(MapGeom):
         it is projected onto the plane of intermediate world coordinates.
 
         Returns
-        ------
+        -------
         angle: `~astropy.coordinates.Angle`
         """
         return Angle(astropy.wcs.utils.proj_plane_pixel_scales(self.wcs), 'deg')
