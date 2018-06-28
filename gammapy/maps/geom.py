@@ -886,6 +886,15 @@ class MapCoord(object):
         return self.__class__(data, self.coordsys,
                               match_by_name=self._match_by_name)
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\taxes    : {}\n".format(list(self._data.keys()))
+        str_ += "\tshape   : {}\n".format(self.shape)
+        str_ += "\tndim    : {}\n".format(self.ndim)
+        str_ += "\tcoordsys: {}\n".format(self.coordsys)
+        return str_
+
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
     pass

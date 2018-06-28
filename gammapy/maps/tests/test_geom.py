@@ -224,4 +224,9 @@ def test_mapcoords_to_coordsys():
 
 def test_mapaxis_repr():
     axis = MapAxis([1, 2, 3], name='test')
-    assert axis.__class__.__name__ in repr(axis)
+    assert 'MapAxis' in repr(axis)
+
+
+def test_mapcoord_repr():
+    coord = MapCoord({'lon': 0, 'lat': 0, 'energy': 5})
+    assert 'MapCoord' in repr(coord)
