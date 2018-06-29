@@ -82,26 +82,22 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize=True, fa
         the input table PSF
     geom : `~gammapy.maps.MapGeom`
         the target geometry. The PSF kernel will be centered on the spatial centre.
-        the geometry axes should contain an energy MapAxis.
+        the geometry axes should contain an energy MapAxis. The kernel will be
+        duplicated along other axes.
     normalize : bool
         normalize the PSF kernel (per energy)
     factor : int
         the oversample factor to compute the PSF
     """
     # Find energy axis in geom
-    energy_idx = -1
-    for i, axis in enumerate(geom.axes):
-        if axis.type is 'energy':
-            energy_idx = i
+    energy_axis = geom.get_axes_by_type('energy')[0]
+    energy_idx = geom.axes.index(energy_axis)
+    energy_unit = u.Unit(energy_axis.unit)
 
-    if energy_idx == -1:
-        raise ValueError("No energy axis in target geometry for PSFKernel")
-
-    energy_unit = u.Unit(geom.axes[energy_idx].unit)
-
-    # TODO: change the logic to support non-regular geometry. This would allow energy dependent sizes for the kernel.
+    # TODO: change the logic to support non-regular geometry.
+    # This would allow energy dependent sizes for the kernel.
     if geom.is_regular is False:
-        raise ValueError("Non regular geometries non supported yet.")
+        raise ValueError("Non regular geometries are not supported yet.")
 
     # First upsample spatial geom
     upsampled_image_geom = geom.to_image().upsample(factor)
@@ -124,7 +120,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize=True, fa
 
     # loop over images
     for img, idx in kernel_map.iter_by_image():
-        energy = geom.axes[energy_idx].center[idx[energy_idx]] * energy_unit
+        energy = energy_axis.center[idx[energy_idx]] * energy_unit
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape) * solid_angles
         img += vals.value
 

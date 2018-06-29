@@ -1366,3 +1366,55 @@ class MapGeom(object):
             return True
         is_image = len(self.axes) == 0
         return is_image
+
+    @property
+    def axes_names(self):
+        """Returns list of axes names"""
+        return [_.name for _ in self.axes]
+
+    def get_axis_by_name(self, name):
+        """Return axis with corresponding name or type.
+
+        Parameters
+        ----------
+        name : str
+           the name of the requested axis
+
+        Returns
+        -------
+        axis : `~gammapy.maps.MapAxis`
+            the corresponding axis
+
+        """
+
+        # TODO : we implictly assume all axes have different names. This should be enforced at MapGeom creation.
+        for i, axis in enumerate(self.axes):
+            if axis.name.upper() == name.upper():
+                return axis
+        raise ValueError("Cannot find axis named {}".format(name))
+
+    def get_axes_by_type(self, type):
+        """Returns a tuple containing axes of a given type.
+
+        Parameters
+        ----------
+        type : str in {'energy', 'time', 'any'}
+           the name of the requested type of axis
+
+        Returns
+        -------
+        axes : list of `~gammapy.maps.MapAxis`
+            the corresponding list of axis
+        """
+        valid_types = ('energy', 'time', 'any')
+        if type not in valid_types:
+            raise ValueError("Invalid axis type {}. Should be {}.".format(type, valid_types))
+        axes_list=[]
+        for i, axis in enumerate(self.axes):
+            if axis.type == type:
+                axes_list.append(axis)
+
+        if len(axes_list) ==0:
+            raise ValueError("Cannot find type {}".format(type))
+
+        return axes_list
