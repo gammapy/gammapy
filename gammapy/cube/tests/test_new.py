@@ -102,7 +102,7 @@ def test_MapMaker():
     mmaker.process_obs(obs)
 
     assert mmaker.exposure_map.unit == "m2 s"
-    assert_quantity_allclose(mmaker.count_map.data.sum, 51152.0)
+    assert_quantity_allclose(mmaker.count_map.data.sum(), 51152.0)
 
 
 
