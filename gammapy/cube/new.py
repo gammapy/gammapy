@@ -409,13 +409,12 @@ class MapMaker(object):
         )
 
         self._add_cutouts(cutout_slices, count_obs_map, expo_obs_map, background_obs_map)
-        #self.exclusion_map.unit = expo_obs_map.unit
-        #self.background_map.unit = background_obs_map.unit
-        #self.count_map.unit = count_obs_map.unit
+
+
 
 
     def _add_cutouts(self, cutout_slices, count_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
         self.count_map.data[cutout_slices] += count_obs_map.data
-        self.exposure_map.data[cutout_slices] += expo_obs_map.data
+        self.exposure_map.data[cutout_slices] += (expo_obs_map.data * expo_obs_map.unit).to("m2 s")
         self.background_map.data[cutout_slices] += acceptance_obs_map.data
