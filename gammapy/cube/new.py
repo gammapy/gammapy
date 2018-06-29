@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-# import astropy.units as u
+#import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
@@ -416,5 +416,5 @@ class MapMaker(object):
     def _add_cutouts(self, cutout_slices, count_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
         self.count_map.data[cutout_slices] += count_obs_map.data
-        self.exposure_map.data[cutout_slices] += (expo_obs_map.data * expo_obs_map.unit).to("m2 s")
+        self.exposure_map.data[cutout_slices] += (expo_obs_map.data * expo_obs_map.unit).to("m2 s").value
         self.background_map.data[cutout_slices] += acceptance_obs_map.data
