@@ -629,12 +629,15 @@ class WcsNDMap(WcsMap):
         idx = (0,) * len(self.geom.axes)
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
-                            position=position, size=width, mode=mode, copy=copy)
+                            position=position, size=width, mode=mode)
 
         # Create the slices with the non-spatial axis
         cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
 
         geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
+        
+        if copy:
+            data=data.copy()
 
         return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)
