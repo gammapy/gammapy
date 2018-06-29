@@ -602,7 +602,7 @@ class WcsNDMap(WcsMap):
         image.data = data
         return image
 
-    def make_cutout(self, position, width, mode="strict"):
+    def make_cutout(self, position, width, mode="strict", copy=True):
         """
         Create a cutout of a WcsNDMap around a given position.
 
@@ -616,6 +616,10 @@ class WcsNDMap(WcsMap):
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
 
+        copy : bool, optional
+               If False (default), then the cutout data will be a view into the original data  array. 
+               If True, then the cutout data will hold a copy of the original data array.
+        
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
@@ -625,7 +629,7 @@ class WcsNDMap(WcsMap):
         idx = (0,) * len(self.geom.axes)
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
-                            position=position, size=width, mode=mode)
+                            position=position, size=width, mode=mode, copy=copy)
 
         # Create the slices with the non-spatial axis
         cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
