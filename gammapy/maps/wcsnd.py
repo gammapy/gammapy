@@ -604,21 +604,17 @@ class WcsNDMap(WcsMap):
 
     def make_cutout(self, position, width, mode="strict"):
         """
-        Create a cutout of a WcsNDMap around a given direction.
+        Create a cutout of a WcsNDMap around a given position.
 
         Parameters
         ----------
-
         position : `~astropy.coordinates.SkyCoord`
-            Center position of the cutout box
+            Center position of the cutout region.
         width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the box in (lon,lat)
-            If only one value is passed, a square region is extracted
-        margin : `~astropy.coordinates.Angle`, optional
-            Additional safety margin. If specified must be same length as radius
+            Angular sizes of the region in (lon, lat). If only one value is passed,
+            a square region is extracted. For more options see also `~astropy.nddata.utils.Cutout2D`.
         mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, `~astropy.nddata.utils.Cutout2D`
-            for details, see http://docs.astropy.org/en/stable/api/astropy.nddata.Cutout2D.html
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
 
         Returns
         -------
@@ -626,11 +622,10 @@ class WcsNDMap(WcsMap):
             The cutout map itself
         """
 
-
-        idx = (0,)*(self.data.ndim - 2)
+        idx = (0,) * len(self.geom.axes)
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
-                position=position, size=width, mode=mode)
+                            position=position, size=width, mode=mode)
 
         # Create the slices with the non-spatial axis
         cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
@@ -639,4 +634,3 @@ class WcsNDMap(WcsMap):
         data = self.data[cutout_slices]
 
         return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)
-    

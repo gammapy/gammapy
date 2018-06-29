@@ -369,22 +369,25 @@ def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
     m2 = m.upsample(2, order=0, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
 
+
 def test_coadd_unit():
-    geom = WcsGeom.create(npix=(10,10), binsz=1,
+    geom = WcsGeom.create(npix=(10, 10), binsz=1,
                           proj='CAR', coordsys='GAL')
-    m1 = WcsNDMap(geom, data=np.ones((10,10)), unit='m2')
-    m2 = WcsNDMap(geom, data=np.ones((10,10)), unit='cm2')
+    m1 = WcsNDMap(geom, data=np.ones((10, 10)), unit='m2')
+    m2 = WcsNDMap(geom, data=np.ones((10, 10)), unit='cm2')
 
     m1.coadd(m2)
 
     assert_allclose(m1.data, 1.0001)
 
+
 def test_make_region_mask():
     from regions import CircleSkyRegion
-    geom = WcsGeom.create(npix=(3,3), binsz=2,
+    geom = WcsGeom.create(npix=(3, 3), binsz=2,
                           proj='CAR', coordsys='GAL')
     m = WcsNDMap(geom)
-    region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'), 1.0*u.deg)
+    region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'),
+                             1.0 * u.deg)
     maskmap = m.make_region_mask(region)
 
     assert maskmap.data.dtype == bool
@@ -406,14 +409,13 @@ def test_smooth(kernel):
     actual = smoothed.data.sum()
     assert_allclose(actual, desired)
 
-def test_make_cutout():
 
-    geom = WcsGeom.create(npix=(10, 10), binsz=1,
+def test_make_cutout():
+    pos = SkyCoord(0, 0, unit='deg', frame='galactic')
+    geom = WcsGeom.create(npix=(10, 10), binsz=1, skydir=pos,
                           proj='CAR', coordsys='GAL', axes=axes2)
     m = WcsNDMap(geom, data=np.ones((3, 2, 10, 10)), unit='m2')
-    pos = SkyCoord(0, 0, unit='deg', frame='galactic')
-    cutout = m.make_cutout(position=pos,width=(2.0,3.0)*u.deg)
+    cutout = m.make_cutout(position=pos, width=(2.0, 3.0) * u.deg)
     actual = cutout.data.sum()
-    assert_allclose(actual,36.0)
+    assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)
-
