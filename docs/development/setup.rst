@@ -79,6 +79,8 @@ and always get the right version for Gammapy::
     >>> gammapy.__version__
     >>> gammapy.__githash__
 
+.. _setup_cython:
+
 Cython
 ------
 
