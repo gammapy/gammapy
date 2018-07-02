@@ -16,12 +16,42 @@ __all__ = [
     'PSFKernel',
 ]
 
+def _make_kernel_geom(geom, max_radius):
+    # Create a new geom object with an odd number of pixel and a maximum size
+    # This is useful for PSF kernel creation.
+    center = geom.center_coord[:2]
+    binsz = Quantity(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
+    max_radius = Quantity(max_radius, 'deg')
+    npix = 2 * int(max_radius / binsz) + 1
+    return WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
+                          coordsys=geom.coordsys, axes=geom.axes)
 
-def table_psf_to_kernel_map(table_psf, geom, normalize=True, factor=4):
+
+def _compute_kernel_separations(geom, factor):
+    # utility function used for preparing distance to the center of the upsampled geom
+    # TODO : take into account non regular geometry for energy dependent PSF kernel size
+    if geom.is_regular is False:
+        raise ValueError("Non regular geometries are not supported yet.")
+
+    upsampled_image_geom = geom.to_image().upsample(factor)
+    # get center coordinate
+    center_coord = upsampled_image_geom.center_coord * u.deg
+    # get coordinates
+    map_c = upsampled_image_geom.get_coord()
+    # compute distances to map center
+    separations = angular_separation(center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg)
+
+    # Create map
+    kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes),
+                               unit='')
+    return kernel_map, separations
+
+def table_psf_to_kernel_map(table_psf, geom, factor=4):
     """Compute a PSF kernel on a given MapGeom.
     If the MapGeom is not an image, the same kernel will be present on all axes.
 
     The PSF is estimated by oversampling defined by a given factor.
+    The PSF kernel is normalized
 
     Parameters
     ----------
@@ -29,49 +59,27 @@ def table_psf_to_kernel_map(table_psf, geom, normalize=True, factor=4):
         the input table PSF
     geom : `~gammapy.maps.MapGeom`
         the target geometry. The PSF kernel will be centered on the spatial center.
-    normalize : bool
-        normalize the PSF kernel (per energy)
     factor : int
         the oversample factor to compute the PSF
     """
-    # First upsample spatial geom
-    upsampled_image_geom = geom.to_image().upsample(factor)
 
-    # get center coordinate
-    center_coord = upsampled_image_geom.center_coord * u.deg
+    # prepare map and compute distances to map center
+    kernel_map, rads = _compute_kernel_separations(geom, factor)
 
-    # get coordinates
-    map_c = upsampled_image_geom.get_coord()
-
-    # get solid angles
-    solid_angles = upsampled_image_geom.solid_angle()
-
-    # compute distances to map center
-    rads = angular_separation(center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg)
-
-    vals = table_psf.evaluate(rad=rads).reshape(solid_angles.shape) * solid_angles
-
-    # Create map
-    kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes),
-                               unit='')
+    vals = table_psf.evaluate(rad=rads)
+    norm = np.sum(vals).value
 
     # loop over images and fill map
     for img, idx in kernel_map.iter_by_image():
-        img += vals.value
+        img += vals.reshape(img.shape).value/norm
 
     # downsample the psf kernel map. Take the average
-    kernel_map = kernel_map.downsample(factor, preserve_counts=False)
-
-    if normalize:
-        # normalize each image in map
-        for img, idx in kernel_map.iter_by_image():
-            norm = np.sum(img)
-            img /= norm
+    kernel_map = kernel_map.downsample(factor, preserve_counts=True)
 
     return kernel_map
 
 
-def energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize=True, factor=4):
+def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     """Compute an energy dependent PSF kernel on a given MapGeom.
 
     The PSF is estimated by oversampling defined by a given factor.
@@ -84,8 +92,6 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize=True, fa
         the target geometry. The PSF kernel will be centered on the spatial centre.
         the geometry axes should contain an energy MapAxis. The kernel will be
         duplicated along other axes.
-    normalize : bool
-        normalize the PSF kernel (per energy)
     factor : int
         the oversample factor to compute the PSF
     """
@@ -94,44 +100,17 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize=True, fa
     energy_idx = geom.axes.index(energy_axis)
     energy_unit = u.Unit(energy_axis.unit)
 
-    # TODO: change the logic to support non-regular geometry.
-    # This would allow energy dependent sizes for the kernel.
-    if geom.is_regular is False:
-        raise ValueError("Non regular geometries are not supported yet.")
-
-    # First upsample spatial geom
-    upsampled_image_geom = geom.to_image().upsample(factor)
-
-    # get center coordinate
-    center_coord = upsampled_image_geom.center_coord * u.deg
-
-    # get coordinates
-    map_c = upsampled_image_geom.get_coord()
-
-    # get solid angles
-    solid_angles = upsampled_image_geom.solid_angle()
-
-    # compute distances to map center
-    rads = angular_separation(center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg)
-
-    # Create map
-    kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes),
-                               unit='')
+    # prepare map and compute distances to map center
+    kernel_map, rads = _compute_kernel_separations(geom, factor)
 
     # loop over images
     for img, idx in kernel_map.iter_by_image():
         energy = energy_axis.center[idx[energy_idx]] * energy_unit
-        vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape) * solid_angles
-        img += vals.value
+        vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
+        img += vals.value / np.sum(vals).value
 
     # downsample the psf kernel map. Take the average
-    kernel_map = kernel_map.downsample(factor, preserve_counts=False)
-
-    if normalize:
-        # normalize each image in map
-        for img, idx in kernel_map.iter_by_image():
-            norm = np.sum(img)
-            img /= norm
+    kernel_map = kernel_map.downsample(factor, preserve_counts=True)
 
     return kernel_map
 
@@ -153,63 +132,27 @@ class PSFKernel(object):
         self._psf_kernel_map = psf_kernel_map
 
     @classmethod
-    def from_map(cls, psf_kernel_map):
-        return cls(psf_kernel_map)
-
-    @classmethod
     def read(cls, *args, **kwargs):
         """Read kernel Map from file."""
         psf_kernel_map = WcsNDMap.read(*args, **kwargs)
         return cls.from_map(psf_kernel_map)
 
     @classmethod
-    def from_energy_dependent_table_psf(cls, table_psf, geom, max_radius=None, normalize=True, factor=4):
-        """Create a PSF kernel from an EnergyDependentTablePSF on a given MapGeom.
-
-        The PSF is estimated by oversampling defined by a given factor.
-
-        Parameters
-        ----------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            the input table PSF
-        geom : `~gammapy.maps.WcsGeom`
-            the target geometry. The PSF kernel will be centered on the central pixel.
-            the geometry axes should contain an energy MapAxis.
-        max_radius : `~astropy.coordinates.Angle` or float
-            the maximum radius of the PSF kernel. If float assume unit is degree.
-        normalize : bool
-            normalize the PSF kernel (per energy)
-        factor : int
-            the oversample factor to compute the PSF
-        """
-        if max_radius is not None:
-            # Create a new geom accordingly
-            center = geom.center_coord[:2]
-            binsz = Quantity(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
-            max_radius = Quantity(max_radius, 'deg')
-            npix = 2 * int(max_radius / binsz) + 1
-            geom = WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
-                                  coordsys=geom.coordsys, axes=geom.axes)
-        return cls(energy_dependent_table_psf_to_kernel_map(table_psf, geom, normalize, factor))
-
-    @classmethod
     def from_table_psf(cls, table_psf, geom, max_radius=None, normalize=True, factor=4):
-        """Create a PSF kernel from an TablePSF on a given MapGeom.
+        """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given MapGeom.
         If the MapGeom is not an image, the same kernel will be present on all axes.
 
         The PSF is estimated by oversampling defined by a given factor.
 
         Parameters
         ----------
-        table_psf : `~gammapy.irf.TablePSF`
+        table_psf : `~gammapy.irf.TablePSF` or ~gammapy.irf.EnergyDependentTablePSF`
             the input table PSF
         geom : `~gammapy.maps.WcsGeom`
             the target geometry. The PSF kernel will be centered on the central pixel.
             the geometry axes should contain an energy MapAxis.
         max_radius : `~astropy.coordinates.Angle` or float
             the maximum radius of the PSF kernel. If float, we assume unit is degree.
-        normalize : bool
-            normalize the PSF kernel (per energy)
         factor : int
             the oversample factor to compute the PSF
 
@@ -219,14 +162,12 @@ class PSFKernel(object):
             the kernel Map with reduced geometry according to the max_radius
         """
         if max_radius is not None:
-            # Create a new geom accordingly
-            center = geom.center_coord[:2]
-            binsz = Quantity(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
-            max_radius = Quantity(max_radius, 'deg')
-            npix = 2 * int(max_radius / binsz) + 1
-            geom = WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
-                                  coordsys=geom.coordsys, axes=geom.axes)
-        return cls(table_psf_to_kernel_map(table_psf, geom, normalize, factor))
+            geom = _make_kernel_geom(geom, max_radius)
+
+        if isinstance(table_psf, TablePSF):
+            return cls(table_psf_to_kernel_map(table_psf, geom, factor))
+        else:
+            return cls(energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor))
 
     @classmethod
     def from_gauss(cls, geom, sigma, max_radius=None, containment_fraction=0.99,
@@ -266,11 +207,7 @@ class PSFKernel(object):
         max_radius = Angle(max_radius, 'deg')
 
         # Create a new geom according to given input
-        center = geom.center_coord[:2]
-        binsz = Quantity(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
-        npix = 2 * int(max_radius / binsz) + 1
-        geom = WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
-                              coordsys=geom.coordsys, axes=geom.axes)
+        geom = _make_kernel_geom(geom, max_radius)
 
         rad = Angle(np.linspace(0., max_radius, 200), 'deg')
 

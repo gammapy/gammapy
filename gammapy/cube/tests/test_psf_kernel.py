@@ -17,7 +17,7 @@ def test_table_psf_to_kernel_map():
 
     rad = Angle(np.linspace(0., 3 * sigma, 100), 'deg')
     table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
-    kernel = table_psf_to_kernel_map(table_psf, geom, normalize=True)
+    kernel = table_psf_to_kernel_map(table_psf, geom)
 
     # Is normalization OK?
     assert_allclose(kernel.data.sum(), 1.0, atol=1e-5)
