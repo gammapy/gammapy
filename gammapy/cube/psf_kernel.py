@@ -96,7 +96,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
         the oversample factor to compute the PSF
     """
     # Find energy axis in geom
-    energy_axis = geom.get_axes_by_type('energy')[0]
+    energy_axis = geom.get_axis_by_type('energy')
     energy_idx = geom.axes.index(energy_axis)
     energy_unit = u.Unit(energy_axis.unit)
 
