@@ -1373,7 +1373,7 @@ class MapGeom(object):
         return [_.name for _ in self.axes]
 
     def get_axis_by_name(self, name):
-        """Return axis with corresponding name or type.
+        """Return axis with corresponding name
 
         Parameters
         ----------
@@ -1393,8 +1393,8 @@ class MapGeom(object):
                 return axis
         raise ValueError("Cannot find axis named {}".format(name))
 
-    def get_axes_by_type(self, type):
-        """Returns a tuple containing axes of a given type.
+    def get_axis_by_type(self, type):
+        """Returns axis of given type.
 
         Parameters
         ----------
@@ -1403,18 +1403,14 @@ class MapGeom(object):
 
         Returns
         -------
-        axes : list of `~gammapy.maps.MapAxis`
-            the corresponding list of axis
+        axes : `~gammapy.maps.MapAxis`
+            the corresponding  axis
         """
         valid_types = ('energy', 'time', 'any')
         if type not in valid_types:
             raise ValueError("Invalid axis type {}. Should be {}.".format(type, valid_types))
-        axes_list=[]
+
         for i, axis in enumerate(self.axes):
             if axis.type == type:
-                axes_list.append(axis)
-
-        if len(axes_list) ==0:
-            raise ValueError("Cannot find type {}".format(type))
-
-        return axes_list
+                return axis
+        raise ValueError("Cannot find type {}".format(type))

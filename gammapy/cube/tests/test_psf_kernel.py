@@ -36,10 +36,10 @@ def test_psf_kernel_from_gauss():
     kernel = PSFKernel.from_gauss(geom, sigma)
 
     # Check that both maps are identical
-    assert_allclose(kernel.to_map().data[0], kernel.to_map().data[1])
+    assert_allclose(kernel.psf_kernel_map.data[0], kernel.psf_kernel_map.data[1])
 
     # Is there an odd number of pixels
-    assert_allclose(np.array(kernel.to_map().geom.npix) % 2, 1)
+    assert_allclose(np.array(kernel.psf_kernel_map.geom.npix) % 2, 1)
 
 
 def test_psf_kernel_convolve():

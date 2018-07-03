@@ -220,8 +220,8 @@ class PSFKernel(object):
         return cls(table_psf_to_kernel_map(table_psf, geom))
 
     def write(self, *args, **kwargs):
-        psf_kernel_map = self.to_map()
-        psf_kernel_map.write(*args, **kwargs)
+        """Write the Map object which contains the PSF kernel to file."""
+        self.psf_kernel_map.write(*args, **kwargs)
 
     def apply(self, map):
         """Apply the kernel to an input Map.
@@ -240,5 +240,5 @@ class PSFKernel(object):
         # TODO : check that the MapGeom are consistent
         convolved_map = Map.from_geom(geom=map.geom, unit=map.unit, meta=map.meta)
         for img, idx in map.iter_by_image():
-            convolved_map.data[idx] = convolve_fft(img, self.to_map().data[idx])
+            convolved_map.data[idx] = convolve_fft(img, self.psf_kernel_map.data[idx])
         return convolved_map
