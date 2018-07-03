@@ -126,6 +126,28 @@ class PSFKernel(object):
     ----------
     psf_kernel_map : `~gammapy.maps.Map`
         PSF kernel stored in a Map
+
+    Examples
+    --------
+
+    .. code:: python
+
+        import numpy as np
+        from gammapy.maps import WcsGeom, MapAxis
+        from astropy import units as u
+
+        # Define energy axis
+        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+
+        # Create WcsGeom
+        geom = WcsGeom.create(binsz=0.02*u.deg, width=10.0*u.deg, axes=[energy_axis])
+
+        # Extract EnergyDependentTablePSF from PSF IRF (here a PSF3D)
+        table_psf = psf.to_energy_dependent_table_psf(theta=0.5*u.deg)
+
+        psf_kernel = PSFKernel.from_table_psf(table_psf,geom, max_radius=1*u.deg)
+
+        some_map_convolved = psf_kernel.apply(some_map)
     """
 
     def __init__(self, psf_kernel_map):
@@ -142,7 +164,7 @@ class PSFKernel(object):
         return cls.from_map(psf_kernel_map)
 
     @classmethod
-    def from_table_psf(cls, table_psf, geom, max_radius=None, normalize=True, factor=4):
+    def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
         """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given MapGeom.
         If the MapGeom is not an image, the same kernel will be present on all axes.
 
@@ -165,6 +187,7 @@ class PSFKernel(object):
         kernel : `~gammapy.cube.PSFKernel`
             the kernel Map with reduced geometry according to the max_radius
         """
+        # TODO : use PSF containment radius if max_radius is None
         if max_radius is not None:
             geom = _make_kernel_geom(geom, max_radius)
 
@@ -192,8 +215,6 @@ class PSFKernel(object):
             Gaussian width. Assume degrees if float input
         max_radius : `~astropy.coordinates.Angle` or float
             Desired kernel map size. Implicit unit is degree.
-        normalize : bool
-            normalize the PSF kernel (per energy)
         factor : int
             the oversample factor to compute the PSF
 
