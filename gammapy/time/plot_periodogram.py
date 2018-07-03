@@ -38,7 +38,7 @@ def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best
     """
     # set flux errors
     if flux_err.any() == None:
-        flux_err = np.ones_like(flux)
+        flux_err = np.zeros_like(flux)
 
     # start plot
     import matplotlib.pyplot as plt
