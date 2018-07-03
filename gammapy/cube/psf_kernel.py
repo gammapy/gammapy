@@ -131,6 +131,10 @@ class PSFKernel(object):
     def __init__(self, psf_kernel_map):
         self._psf_kernel_map = psf_kernel_map
 
+    @property
+    def psf_kernel_map(self):
+        return self._psf_kernel_map
+
     @classmethod
     def read(cls, *args, **kwargs):
         """Read kernel Map from file."""
@@ -214,9 +218,6 @@ class PSFKernel(object):
         table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
 
         return cls(table_psf_to_kernel_map(table_psf, geom))
-
-    def to_map(self):
-        return self._psf_kernel_map
 
     def write(self, *args, **kwargs):
         psf_kernel_map = self.to_map()
