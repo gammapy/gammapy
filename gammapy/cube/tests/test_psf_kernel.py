@@ -5,14 +5,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency
-from ...maps import WcsNDMap, MapAxis, WcsGeom
+from ...utils.testing import requires_dependency, requires_data
+from ...maps import Map, WcsNDMap, MapAxis, WcsGeom
 from .. import PSFKernel
 from ..psf_kernel import table_psf_to_kernel_map
-from ...irf import TablePSF, EnergyDependentTablePSF
+from ...irf import TablePSF, EnergyDependentTablePSF, EnergyDependentMultiGaussPSF
 
-
-# TODO : add proper test with EnergyDependentTablePSF
 
 @requires_dependency('scipy')
 def test_table_psf_to_kernel_map():
@@ -76,3 +74,30 @@ def test_psf_kernel_convolve():
 
     # Is the maximum in the convolved map at the right position?
     assert conv_map.get_by_coord([1, 1]) == np.max(conv_map.data)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_energy_dependent_psf_kernel():
+    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
+
+    # Define energy axis
+    energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+
+    # Create WcsGeom and map
+    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
+    some_map = Map.from_geom(geom)
+    some_map.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
+
+    # Extract EnergyDependentTablePSF from PSF IRF (here a PSF3D)
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+
+    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
+
+    assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
+
+    some_map_convolved = psf_kernel.apply(some_map)
+
+    assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), np.array((0, 1, 1)))
