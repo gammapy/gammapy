@@ -45,6 +45,11 @@ def test_psf_kernel_from_gauss():
     # Is there an odd number of pixels
     assert_allclose(np.array(kernel.psf_kernel_map.geom.npix) % 2, 1)
 
+    # Test read and write
+    kernel.write('test_kernel.fits', overwrite=True)
+    newkernel = PSFKernel.read('test_kernel.fits')
+    assert_allclose(kernel.psf_kernel_map.data, newkernel.psf_kernel_map.data)
+
 @requires_dependency('scipy')
 def test_psf_kernel_convolve():
     sigma = 0.5 * u.deg
@@ -67,3 +72,4 @@ def test_psf_kernel_convolve():
 
     # Is the maximum in the convolved map at the right position?
     assert conv_map.get_by_coord([1,1]) == np.max(conv_map.data)
+

@@ -66,7 +66,7 @@ def table_psf_to_kernel_map(table_psf, geom, factor=4):
     kernel_map, rads = _compute_kernel_separations(geom, factor)
 
     vals = table_psf.evaluate(rad=rads)
-    norm = np.sum(vals).value
+    norm = vals.sum().value
 
     # loop over images and fill map
     for img, idx in kernel_map.iter_by_image():
@@ -106,7 +106,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     for img, idx in kernel_map.iter_by_image():
         energy = energy_axis.center[idx[energy_idx]] * energy_unit
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
-        img += vals.value / np.sum(vals).value
+        img += vals.value / vals.sum().value
 
     # downsample the psf kernel map. Take the average
     kernel_map = kernel_map.downsample(factor, preserve_counts=True)
@@ -160,8 +160,8 @@ class PSFKernel(object):
     def read(cls, *args, **kwargs):
         """Read kernel Map from file."""
 
-        psf_kernel_map = WcsNDMap.read(*args, **kwargs)
-        return cls.from_map(psf_kernel_map)
+        psf_kernel_map = Map.read(*args, **kwargs)
+        return cls(psf_kernel_map)
 
     @classmethod
     def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
@@ -198,8 +198,7 @@ class PSFKernel(object):
             return cls(energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor))
 
     @classmethod
-    def from_gauss(cls, geom, sigma, max_radius=None, containment_fraction=0.99,
-                   normalize=True, factor=4):
+    def from_gauss(cls, geom, sigma, max_radius=None, containment_fraction=0.99, factor=4):
         """Create Gaussian PSF.
 
         This is used for testing and examples.
@@ -239,7 +238,7 @@ class PSFKernel(object):
 
         table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
 
-        return cls(table_psf_to_kernel_map(table_psf, geom))
+        return cls(table_psf_to_kernel_map(table_psf, geom, factor))
 
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""
