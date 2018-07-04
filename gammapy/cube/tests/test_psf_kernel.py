@@ -12,6 +12,7 @@ from ...irf import TablePSF, EnergyDependentTablePSF
 
 # TODO : add proper test with EnergyDependentTablePSF
 
+@requires_dependency('scipy')
 def test_table_psf_to_kernel_map():
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
@@ -29,7 +30,7 @@ def test_table_psf_to_kernel_map():
     # absolute tolerance at 0.5 because of even number of pixel here
     assert_allclose(ind, geom.center_pix, atol=0.5)
 
-
+@requires_dependency('scipy')
 def test_psf_kernel_from_gauss():
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
@@ -43,7 +44,7 @@ def test_psf_kernel_from_gauss():
     # Is there an odd number of pixels
     assert_allclose(np.array(kernel.psf_kernel_map.geom.npix) % 2, 1)
 
-
+@requires_dependency('scipy')
 def test_psf_kernel_convolve():
     sigma = 0.5 * u.deg
     binsz = 0.05 * u.deg
