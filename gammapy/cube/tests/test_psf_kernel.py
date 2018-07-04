@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
+from ...utils.testing import requires_dependency
 from ...maps import WcsNDMap, MapAxis, WcsGeom
 from .. import PSFKernel
 from ..psf_kernel import table_psf_to_kernel_map
