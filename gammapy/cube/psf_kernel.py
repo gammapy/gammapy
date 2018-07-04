@@ -11,8 +11,6 @@ from ..image.models.gauss import Gauss2DPDF
 from ..irf import TablePSF
 
 __all__ = [
-   'table_psf_to_kernel_map',
-    'energy_dependent_table_psf_to_kernel_map',
     'PSFKernel',
 ]
 
@@ -48,6 +46,7 @@ def _compute_kernel_separations(geom, factor):
 
 def table_psf_to_kernel_map(table_psf, geom, factor=4):
     """Compute a PSF kernel on a given MapGeom.
+
     If the MapGeom is not an image, the same kernel will be present on all axes.
 
     The PSF is estimated by oversampling defined by a given factor.
@@ -160,12 +159,14 @@ class PSFKernel(object):
     @classmethod
     def read(cls, *args, **kwargs):
         """Read kernel Map from file."""
+
         psf_kernel_map = WcsNDMap.read(*args, **kwargs)
         return cls.from_map(psf_kernel_map)
 
     @classmethod
     def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
         """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given MapGeom.
+
         If the MapGeom is not an image, the same kernel will be present on all axes.
 
         The PSF is estimated by oversampling defined by a given factor.

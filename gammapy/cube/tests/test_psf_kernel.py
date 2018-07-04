@@ -6,9 +6,11 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
 from ...maps import WcsNDMap, MapAxis, WcsGeom
-from .. import PSFKernel, table_psf_to_kernel_map
+from .. import PSFKernel
+from ..psf_kernel import table_psf_to_kernel_map
 from ...irf import TablePSF, EnergyDependentTablePSF
 
+# TODO : add proper test with EnergyDependentTablePSF
 
 def test_table_psf_to_kernel_map():
     sigma = 0.5 * u.deg
@@ -49,14 +51,17 @@ def test_psf_kernel_convolve():
     testmap = WcsNDMap.create(binsz=binsz, width=5 * u.deg)
     testmap.fill_by_coord(([1], [1]), weights=np.array([2]))
 
-    kernel = PSFKernel.from_gauss(testmap.geom, sigma)
+    kernel = PSFKernel.from_gauss(testmap.geom, sigma, max_radius=1.5*u.deg)
+
+    # is kernel size OK?
+    assert kernel.psf_kernel_map.geom.npix[0] == 61
+    # is kernel maximum at the center?
+    assert kernel.psf_kernel_map.data[30,30] == np.max(kernel.psf_kernel_map.data)
 
     conv_map = kernel.apply(testmap)
 
     # Is convolved map normalization OK
     assert_allclose(conv_map.data.sum(), 2.0, atol=1e-3)
 
-    # Are the maxima at the same position?
-    index_conv = np.unravel_index(np.argmax(conv_map.data, axis=None), conv_map.data.shape)
-    index_test = np.unravel_index(np.argmax(testmap.data, axis=None), testmap.data.shape)
-    assert_allclose(index_conv, index_test)
+    # Is the maximum in the convolved map at the right position?
+    assert conv_map.get_by_coord([1,1]) == np.max(conv_map.data)
