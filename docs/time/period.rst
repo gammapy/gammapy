@@ -150,7 +150,7 @@ The robust periodogram reveals the period of :math:`P = (3.907 \pm 0.001) \mathr
 .. gp-extra-image:: time/example_robust_periodogram.png
     :width: 100%
 
-The maximum FAP of the highest periodogram peak is estimated to :math:`4.05e^{-15}` with the :math:`\texttt{Baluev}`-method.
+The maximum FAP of the highest periodogram peak is estimated to :math:`4.06e^{-19}` with the :math:`\texttt{Baluev}`-method.
 The other methods return following FAP:
 
 ===========   ===================
