@@ -11,6 +11,7 @@ from .. import PSFKernel
 from ..psf_kernel import table_psf_to_kernel_map
 from ...irf import TablePSF, EnergyDependentTablePSF
 
+
 # TODO : add proper test with EnergyDependentTablePSF
 
 @requires_dependency('scipy')
@@ -31,8 +32,9 @@ def test_table_psf_to_kernel_map():
     # absolute tolerance at 0.5 because of even number of pixel here
     assert_allclose(ind, geom.center_pix, atol=0.5)
 
+
 @requires_dependency('scipy')
-def test_psf_kernel_from_gauss():
+def test_psf_kernel_from_gauss_read_write(tmpdir):
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
     geom = WcsGeom.create(binsz=binsz, npix=150, axes=[MapAxis((0, 1, 2))])
@@ -45,10 +47,12 @@ def test_psf_kernel_from_gauss():
     # Is there an odd number of pixels
     assert_allclose(np.array(kernel.psf_kernel_map.geom.npix) % 2, 1)
 
+    filename = str(tmpdir / "test_kernel.fits")
     # Test read and write
-    kernel.write('test_kernel.fits', overwrite=True)
-    newkernel = PSFKernel.read('test_kernel.fits')
+    kernel.write(filename, overwrite=True)
+    newkernel = PSFKernel.read(filename)
     assert_allclose(kernel.psf_kernel_map.data, newkernel.psf_kernel_map.data)
+
 
 @requires_dependency('scipy')
 def test_psf_kernel_convolve():
@@ -58,12 +62,12 @@ def test_psf_kernel_convolve():
     testmap = WcsNDMap.create(binsz=binsz, width=5 * u.deg)
     testmap.fill_by_coord(([1], [1]), weights=np.array([2]))
 
-    kernel = PSFKernel.from_gauss(testmap.geom, sigma, max_radius=1.5*u.deg)
+    kernel = PSFKernel.from_gauss(testmap.geom, sigma, max_radius=1.5 * u.deg)
 
     # is kernel size OK?
     assert kernel.psf_kernel_map.geom.npix[0] == 61
     # is kernel maximum at the center?
-    assert kernel.psf_kernel_map.data[30,30] == np.max(kernel.psf_kernel_map.data)
+    assert kernel.psf_kernel_map.data[30, 30] == np.max(kernel.psf_kernel_map.data)
 
     conv_map = kernel.apply(testmap)
 
@@ -71,5 +75,4 @@ def test_psf_kernel_convolve():
     assert_allclose(conv_map.data.sum(), 2.0, atol=1e-3)
 
     # Is the maximum in the convolved map at the right position?
-    assert conv_map.get_by_coord([1,1]) == np.max(conv_map.data)
-
+    assert conv_map.get_by_coord([1, 1]) == np.max(conv_map.data)

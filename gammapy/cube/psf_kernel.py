@@ -14,6 +14,7 @@ __all__ = [
     'PSFKernel',
 ]
 
+
 def _make_kernel_geom(geom, max_radius):
     # Create a new geom object with an odd number of pixel and a maximum size
     # This is useful for PSF kernel creation.
@@ -44,6 +45,7 @@ def _compute_kernel_separations(geom, factor):
                                unit='')
     return kernel_map, separations
 
+
 def table_psf_to_kernel_map(table_psf, geom, factor=4):
     """Compute a PSF kernel on a given MapGeom.
 
@@ -70,7 +72,7 @@ def table_psf_to_kernel_map(table_psf, geom, factor=4):
 
     # loop over images and fill map
     for img, idx in kernel_map.iter_by_image():
-        img += vals.reshape(img.shape).value/norm
+        img += vals.reshape(img.shape).value / norm
 
     # downsample the psf kernel map. Take the average
     kernel_map = kernel_map.downsample(factor, preserve_counts=True)
@@ -132,21 +134,31 @@ class PSFKernel(object):
     .. code:: python
 
         import numpy as np
-        from gammapy.maps import WcsGeom, MapAxis
+        from gammapy.maps import Map, WcsGeom, MapAxis
+        from gammapy.irf import EnergyDependentMultiGaussPSF
+        from gammapy.cube import PSFKernel
         from astropy import units as u
 
         # Define energy axis
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
 
-        # Create WcsGeom
-        geom = WcsGeom.create(binsz=0.02*u.deg, width=10.0*u.deg, axes=[energy_axis])
+        # Create WcsGeom and map
+        geom = WcsGeom.create(binsz=0.02*u.deg, width=2.0*u.deg, axes=[energy_axis])
+        some_map = Map.from_geom(geom)
+        # Fill map at two positions
+        some_map.fill_by_coord([[0.2,0.4],[-0.1,0.6],[0.5,3.6]])
 
-        # Extract EnergyDependentTablePSF from PSF IRF (here a PSF3D)
+        # Extract EnergyDependentTablePSF from CTA 1DC IRF
+        filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         table_psf = psf.to_energy_dependent_table_psf(theta=0.5*u.deg)
 
         psf_kernel = PSFKernel.from_table_psf(table_psf,geom, max_radius=1*u.deg)
 
+        # Do the convolution
         some_map_convolved = psf_kernel.apply(some_map)
+
+        some_map_convolved.get_image_by_coord(dict(energy=0.6*u.TeV)).plot()
     """
 
     def __init__(self, psf_kernel_map):
