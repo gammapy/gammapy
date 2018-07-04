@@ -19,7 +19,7 @@ def test_table_psf_to_kernel_map():
     binsz = 0.1 * u.deg
     geom = WcsGeom.create(binsz=binsz, npix=150)
 
-    rad = Angle(np.linspace(0., 3 * sigma, 100), 'deg')
+    rad = Angle(np.linspace(0., 3 * sigma.to('deg').value, 100), 'deg')
     table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
     kernel = table_psf_to_kernel_map(table_psf, geom)
 
