@@ -79,11 +79,15 @@ class PSFMap(object):
         return self._psf_map
 
     @classmethod
-    def from_file(cls, filename, **kwargs):
+    def read(cls, filename, **kwargs):
         """ Read a psf_map from file and create a PSFMap object"""
 
         psfmap = Map.read(filename, **kwargs)
         return cls(psfmap)
+
+    def write(self, *args, **kwargs):
+        """Write the Map object containing the PSF Library map."""
+        self.psf_map.write(*args, **kwargs)
 
     def get_energy_dependent_table_psf(self, position):
         """ Returns EnergyDependentTable PSF at a given position
