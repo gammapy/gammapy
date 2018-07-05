@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
-from ..stats.poisson import excess_error
+from ..stats.poisson import excess_error, Helene_ULs
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
@@ -642,7 +642,7 @@ class LightCurveEstimator(object):
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
 
-    def light_curve(self, time_intervals, spectral_model, energy_range):
+    def light_curve(self, time_intervals, spectral_model, energy_range, sigma_ul_thres=3.):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -659,6 +659,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        sigma_ul_thres : float
+            Threshold on detection significance to compute Flux Upper Limits
 
         Returns
         -------
@@ -667,7 +669,7 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, sigma_ul_thres)
             if useinterval:
                 rows.append(row)
 
@@ -691,7 +693,7 @@ class LightCurveEstimator(object):
 
         return LightCurve(table)
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range):
+    def compute_flux_point(self, time_interval, spectral_model, energy_range, sigma_ul_thres=3.):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -702,6 +704,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        sigma_ul_thres : float
+            Threshold on detection significance to compute Flux Upper Limits
 
         Returns
         -------
@@ -800,12 +804,22 @@ class LightCurveEstimator(object):
 
             flux = measured_excess / predicted_excess.value
             flux *= int_flux
-            flux_err = int_flux / predicted_excess.value
+
             # Gaussian errors, TODO: should be improved
-            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err = int_flux / predicted_excess.value
+            delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err *= delta_excess
+
+            flux_ul = -1
+            sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
+            if sigma <= sigma_ul_thres:
+                flux_ul = Helene_ULs(n_on - alpha_mean * n_off, delta_excess, 99.73) #3 sigma ULs
+                flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
             flux_err = 0
+            flux_ul = -1
+            sigma = 0.
 
         # Store measurements in a dict and return that
         return useinterval, OrderedDict([
@@ -813,7 +827,8 @@ class LightCurveEstimator(object):
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-
+            ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
+            ('is_ul', sigma <= sigma_ul_thres)
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),
