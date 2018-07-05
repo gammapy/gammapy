@@ -71,15 +71,15 @@ class PSFMap(object):
         if not u.Unit(psf_map.geom.axes[0].unit).is_equivalent('deg'):
             raise(ValueError,"Incorrect rad axis position in input Map")
 
-        self._psfmap = psf_map
+        self._psf_map = psf_map
 
     @property
-    def psfmap(self):
+    def psf_map(self):
         """the PSFMap itself (~gammapy.maps.Map)"""
-        return self._psfmap
+        return self._psf_map
 
     @classmethod
-    def from_file(cls, filename, hdu=None, hdu_bands=None, map_type='auto'):
+    def from_file(cls, filename, **kwargs):
         """ Read a psf_map from file and create a PSFMap object"""
 
         psfmap = Map.read(filename, **kwargs)
@@ -102,25 +102,25 @@ class PSFMap(object):
             raise ValueError("EnergyDependentTablePSF can be extracted at one single position only.")
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self._psfmap.geom.axes[1].nbin)
-        pix_rad = np.arange(self._psfmap.geom.axes[0].nbin)
+        pix_ener = np.arange(self.psf_map.geom.axes[1].nbin)
+        pix_rad = np.arange(self.psf_map.geom.axes[0].nbin)
 
         # Convert position to pixels
-        pix_lon, pix_lat = self._psfmap.geom.to_image().coord_to_pix(position)
+        pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
 
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat,pix_rad,pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(self._psfmap.interp_by_pix(pix)*u.Unit(self._psfmap.unit))
+        psf_values = np.squeeze(self.psf_map.interp_by_pix(pix)*u.Unit(self.psf_map.unit))
 
-        energies = self._psfmap.geom.axes[1].center * self._psfmap.geom.axes[1].unit
-        rad = self._psfmap.geom.axes[0].center * self._psfmap.geom.axes[0].unit
+        energies = self.psf_map.geom.axes[1].center * self.psf_map.geom.axes[1].unit
+        rad = self.psf_map.geom.axes[0].center * self.psf_map.geom.axes[0].unit
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=energies,rad=rad,psf_value=psf_values.T)
 
-    def get_psf_kernel(self, position, npix, pixel_size, normalize=True, factor=5):
+    def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input MapGeom.
@@ -129,22 +129,20 @@ class PSFMap(object):
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinate
-        npix : int
-            number of pixels
-        pixel_size : float or `~astropy.coordinates.Angle`
-            angular size of a pixel. Default unit in degree.
-        normalize : bool
-            normalize PSF per energy bin.
+        geom : `~gammapy.maps.MapGeom`
+            the target geometry to use
+        max_radius: `~astropy.coordinates.Angle`
+            maximum angular size of the kernel map
         factor : int
             oversampling factor to compute the PSF
 
         Returns
         -------
-        kernel : `~gammapy.cube.WcsNDMapPSFKernel`
+        kernel : `~gammapy.cube.PSFKernel`
             the resulting kernel
         """
         table_psf = self.get_energy_dependent_table_psf(position)
-        return table_psf_to_kernel_array(table_psf, npix, pixel_size, normalize, factor)
+        return PSFKernel.from_table_psf(table_psf, geom, factor)
 
     def containment_radius_map(self, fraction = 0.68):
         """Returns the containement radius map.
