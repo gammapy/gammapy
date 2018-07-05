@@ -62,6 +62,48 @@ class PSFMap(object):
         the input PSF Map. Should be a Map with 2 non spatial axes.
         rad and true energy axes should be given in this specific order.
 
+    Examples
+    --------
+
+    .. code:: python
+
+        import numpy as np
+        from gammapy.maps import Map, WcsGeom, MapAxis
+        from gammapy.irf import EnergyDependentMultiGaussPSF
+        from gammapy.cube import make_psf_map, PSFMap
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
+
+        # Define energy axis
+        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+        # Define rad axis
+        rads = np.linspace(0., 0.5, 100) * u.deg
+        rad_axis = MapAxis.from_edges(rads, unit='deg', name='rad')
+
+        # Define parameters
+        pointing = SkyCoord(0., 0., unit='deg')
+        max_offset = 4 * u.deg
+
+        # Create WcsGeom
+        geom = WcsGeom.create(binsz=0.25*u.deg, width=10*u.deg, skydir=pointing, axes=[rad_axis, energy_axis])
+
+        # Extract EnergyDependentTablePSF from CTA 1DC IRF
+        filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+        psf3d = psf.to_psf3d(rads)
+
+        # create the PSF map for the specified pointing
+        psf_map = make_psf_map(psf3d, pointing, geom, max_offset)
+
+        # Create the PSFMap
+        psf_library = PSFMap(psf_map)
+
+        # Get an EnergyDependentTablePSF at any position in the image
+        psf_table = psf_library.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
+
+        # Write map to disk
+        psf_library.write('psf_map.fits')
+
     """
     def __init__(self, psf_map):
         # Check the presence of an energy axis
