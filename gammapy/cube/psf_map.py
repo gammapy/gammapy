@@ -109,10 +109,10 @@ class PSFMap(object):
     def __init__(self, psf_map):
         # Check the presence of an energy axis
         if psf_map.geom.axes[1].type is not 'energy':
-            raise (ValueError, "Incorrect energy axis position in input Map")
+            raise ValueError("Incorrect energy axis position in input Map")
 
         if not u.Unit(psf_map.geom.axes[0].unit).is_equivalent('deg'):
-            raise (ValueError, "Incorrect rad axis position in input Map")
+            raise ValueError("Incorrect rad axis position in input Map")
 
         self._psf_map = psf_map
 
