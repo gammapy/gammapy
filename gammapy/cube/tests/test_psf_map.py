@@ -79,4 +79,4 @@ def test_psfmap(tmpdir):
     psfmap.write(filename, overwrite=True)
     new_psfmap = PSFMap.read(filename)
 
-    assert_allclose(psfmap.psf_map.data, new_psfmap.psf_map.data)
+    assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)

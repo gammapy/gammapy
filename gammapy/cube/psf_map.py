@@ -146,7 +146,7 @@ class PSFMap(object):
             the resulting kernel
         """
         table_psf = self.get_energy_dependent_table_psf(position)
-        return PSFKernel.from_table_psf(table_psf, geom, factor)
+        return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
 
     def containment_radius_map(self, fraction = 0.68):
         """Returns the containement radius map.
