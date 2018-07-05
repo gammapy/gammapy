@@ -6,9 +6,9 @@ import astropy.units as u
 from astropy.units import Unit
 from astropy.coordinates import SkyCoord
 from ...irf import PSF3D
-from ...maps import WcsNDMap, MapAxis, WcsGeom
+from ...maps import MapAxis, WcsGeom
 from ...cube import PSFMap, make_psf_map
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency
 
 
 def fake_psf3d(sigma=0.15 * u.deg):
@@ -74,6 +74,11 @@ def test_psfmap(tmpdir):
                     psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.9), rtol=1e-3)
     assert_allclose(table_psf.containment_radius(1 * u.TeV, 0.5)[0],
                     psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.5), rtol=1e-3)
+
+    # create PSFKernel
+    kern_geom = WcsGeom.create(binsz=0.02, width=5., axes=[energy_axis])
+    psfkernel = psfmap.get_psf_kernel(SkyCoord(1, 1, unit='deg'), kern_geom, max_radius=1*u.deg)
+    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1,2)),1.0)
 
     # test read/write
     filename = str(tmpdir / "psfmap.fits")

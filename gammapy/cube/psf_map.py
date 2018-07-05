@@ -2,8 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from gammapy.irf import EnergyDependentTablePSF, PSF3D
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis, Map
+from ..irf import EnergyDependentTablePSF
+from ..maps import Map
+from ..cube import PSFKernel
 
 __all__ = [
     'make_psf_map',
