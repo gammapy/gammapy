@@ -105,13 +105,14 @@ class PSFMap(object):
         psf_library.write('psf_map.fits')
 
     """
+
     def __init__(self, psf_map):
         # Check the presence of an energy axis
         if psf_map.geom.axes[1].type is not 'energy':
-            raise(ValueError,"Incorrect energy axis position in input Map")
+            raise (ValueError, "Incorrect energy axis position in input Map")
 
         if not u.Unit(psf_map.geom.axes[0].unit).is_equivalent('deg'):
-            raise(ValueError,"Incorrect rad axis position in input Map")
+            raise (ValueError, "Incorrect rad axis position in input Map")
 
         self._psf_map = psf_map
 
@@ -155,16 +156,16 @@ class PSFMap(object):
         pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
 
         # Build the pixels tuple
-        pix = np.meshgrid(pix_lon, pix_lat,pix_rad,pix_ener)
+        pix = np.meshgrid(pix_lon, pix_lat, pix_rad, pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(self.psf_map.interp_by_pix(pix)*u.Unit(self.psf_map.unit))
+        psf_values = np.squeeze(self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit))
 
         energies = self.psf_map.geom.axes[1].center * self.psf_map.geom.axes[1].unit
         rad = self.psf_map.geom.axes[0].center * self.psf_map.geom.axes[0].unit
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
-        return EnergyDependentTablePSF(energy=energies,rad=rad,psf_value=psf_values.T)
+        return EnergyDependentTablePSF(energy=energies, rad=rad, psf_value=psf_values.T)
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
@@ -190,7 +191,7 @@ class PSFMap(object):
         table_psf = self.get_energy_dependent_table_psf(position)
         return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
 
-    def containment_radius_map(self, fraction = 0.68):
+    def containment_radius_map(self, fraction=0.68):
         """Returns the containement radius map.
 
         Parameters

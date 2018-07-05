@@ -51,7 +51,8 @@ def test_make_psf_map():
     assert psf_map.unit == Unit('sr-1')
 
     # check size
-    assert psf_map.data.shape == (4,50,25,25)
+    assert psf_map.data.shape == (4, 50, 25, 25)
+
 
 @requires_dependency('scipy')
 def test_psfmap(tmpdir):
