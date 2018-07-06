@@ -134,9 +134,9 @@ class PointingInfo(object):
         t_new = time.mjd
         t = self.time.mjd
         xyz = self.altaz.cartesian
-        x_new = interp1d(t, xyz.x.data)(t_new)
-        y_new = interp1d(t, xyz.y.data)(t_new)
-        z_new = interp1d(t, xyz.z.data)(t_new)
+        x_new = interp1d(t, xyz.x)(t_new)
+        y_new = interp1d(t, xyz.y)(t_new)
+        z_new = interp1d(t, xyz.z)(t_new)
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
         return SkyCoord(xyz_new, frame=altaz_frame, representation='unitspherical', unit='deg')
