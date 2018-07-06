@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.utils import lazyproperty
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from astropy.table import Table
-from astropy.coordinates import SkyCoord, AltAz
+from astropy.coordinates import SkyCoord, AltAz, CartesianRepresentation
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from .utils import _earth_location_from_dict
@@ -13,14 +13,10 @@ __all__ = [
 ]
 
 
-# TODO: share code with the `~gammapy.data.EventList` and `~gammapy.data.ObservationTable` classes.
 class PointingInfo(object):
     """IACT array pointing info.
 
     Data format specification: :ref:`gadf:iact-pnt`
-
-    This class has many cached properties.
-    Should be used as read-only.
 
     Parameters
     ----------
@@ -38,7 +34,7 @@ class PointingInfo(object):
         self.table = table
 
     @classmethod
-    def read(cls, filename, hdu=None):
+    def read(cls, filename, hdu='POINTING'):
         """Read `PointingInfo` table from file.
 
         Parameters
@@ -54,10 +50,6 @@ class PointingInfo(object):
             Pointing info object
         """
         filename = make_path(filename)
-
-        if hdu is None:
-            hdu = 'POINTING'
-
         table = Table.read(str(filename), hdu=hdu)
         return cls(table=table)
 
@@ -115,8 +107,8 @@ class PointingInfo(object):
     @lazyproperty
     def radec(self):
         """RA / DEC position from table (`~astropy.coordinates.SkyCoord`)"""
-        lon = self.table['RA_PNT'].astype('float64')
-        lat = self.table['DEC_PNT'].astype('float64')
+        lon = self.table['RA_PNT']
+        lat = self.table['DEC_PNT']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     @lazyproperty
@@ -126,7 +118,25 @@ class PointingInfo(object):
 
     @lazyproperty
     def altaz(self):
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        return self.radec.transform_to(self.altaz_frame)
+
+    @lazyproperty
+    def altaz_from_table(self):
         """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
-        lon = self.table['AZ_PNT'].astype('float64')
-        lat = self.table['ALT_PNT'].astype('float64')
+        lon = self.table['AZ_PNT']
+        lat = self.table['ALT_PNT']
         return SkyCoord(lon, lat, unit='deg', frame=self.altaz_frame)
+
+    def altaz_interpolate(self, time):
+        """Interpolate pointing for a given time."""
+        from scipy.interpolate import interp1d
+        t_new = time.mjd
+        t = self.time.mjd
+        xyz = self.altaz.cartesian
+        x_new = interp1d(t, xyz.x.data)(t_new)
+        y_new = interp1d(t, xyz.y.data)(t_new)
+        z_new = interp1d(t, xyz.z.data)(t_new)
+        xyz_new = CartesianRepresentation(x_new, y_new, z_new)
+        altaz_frame = AltAz(obstime=time, location=self.location)
+        return SkyCoord(xyz_new, frame=altaz_frame, representation='unitspherical', unit='deg')
