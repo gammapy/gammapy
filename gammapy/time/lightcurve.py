@@ -774,8 +774,8 @@ class LightCurveEstimator(object):
                 model=spectral_model
             )
             counts_predictor.run()
-            counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
-
+            counts_predicted_excess = counts_predictor.npred.data.data[e_idx]
+            
             obs_predicted_excess = np.sum(counts_predicted_excess)
 
             # compute effective normalisation between ON/OFF (for the interval)
