@@ -18,18 +18,21 @@ class SkyModelMapFit(object):
 
     Parameters
     ----------
+    model : `~gammapy.cube.SkyModel`
+        Fit model
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    model : `~gammapy.cube.SkyModel`
-        Fit model
+    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`, optional
+        PSF
     """
 
-    def __init__(self, model, counts, exposure):
+    def __init__(self, model, counts, exposure, psf=None):
         self.model = model
         self.counts = counts
         self.exposure = exposure
+        self.psf = psf
         self._init_evaluator()
 
         self._npred = None
@@ -53,8 +56,9 @@ class SkyModelMapFit(object):
 
     def _init_evaluator(self):
         """Initialize SkyModelEvaluator"""
-        self.evaluator = SkyModelMapEvaluator(self.model,
-                                              self.exposure)
+        self.evaluator = SkyModelMapEvaluator(sky_model=self.model,
+                                              exposure=self.exposure,
+                                              psf=self.psf)
 
     def compute_npred(self):
         """Compute predicted counts"""

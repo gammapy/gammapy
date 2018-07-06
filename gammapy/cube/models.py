@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.utils import lazyproperty
 from ..utils.modeling import ParameterList
 from ..utils.scripts import make_path
+from ..maps import Map
 
 __all__ = [
     'SourceLibrary',
@@ -188,8 +189,8 @@ class SkyModelMapEvaluator(object):
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
-    psf : TODO
-        PSF or PSF kernel
+    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
+        PSF
     """
 
     def __init__(self, sky_model=None, exposure=None, psf=None):
@@ -277,12 +278,32 @@ class SkyModelMapEvaluator(object):
         flux = dnde * volume
         return flux.to('cm-2 s-1')
 
+    def apply_aeff(self, flux):
+        """Compute npred cube
+
+        For now just divide flux cube by exposure
+        """
+        data = flux * self.exposure.quantity
+        flux = Map.from_geom(self.geom, unit=data.unit)
+        flux.data = data.value
+        return flux
+
+    def apply_psf(self, npred):
+        """Convolve npred cube with PSF"""
+        from . import PSFKernel
+        table_psf = self.psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+        psf_kernel = PSFKernel.from_table_psf(table_psf,
+                                              self.geom,
+                                              max_radius=1 * u.deg)
+
+        return psf_kernel.apply(npred)
+
     def compute_npred(self):
         """Evaluate model predicted counts.
-
-        For now, we simply multiply flux with exposure.
         """
         flux = self.compute_flux()
-        exposure = self.exposure.quantity
-        npred = flux * exposure
-        return npred.to('').value
+        npred = self.apply_aeff(flux)
+        if self.psf is not None:
+            npred = self.apply_psf(npred)
+        return npred.data
+

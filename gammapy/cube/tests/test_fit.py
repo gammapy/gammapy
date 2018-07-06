@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ...irf import EffectiveAreaTable2D
+from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...maps import MapAxis, WcsGeom, WcsNDMap
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
@@ -58,18 +58,26 @@ def exposure(geom):
                                                  offset_max=offset_max)
     return exposure_map
 
+@pytest.fixture(scope='session')
+def psf(geom):
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    return psf
+
 
 @pytest.fixture(scope='session')
-def counts(sky_model, exposure, geom):
-    evaluator = SkyModelMapEvaluator(sky_model, exposure)
+def counts(sky_model, exposure, psf):
+    evaluator = SkyModelMapEvaluator(sky_model=sky_model,
+                                     exposure=exposure,
+                                     psf=psf)
     npred = evaluator.compute_npred()
-    return WcsNDMap(geom, npred)
+    return WcsNDMap(exposure.geom, npred)
 
 
 @requires_dependency('scipy')
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
-def test_cube_fit(sky_model, counts, exposure):
+def test_cube_fit(sky_model, counts, exposure, psf):
     input_model = sky_model.copy()
 
     input_model.parameters['lon_0'].value = 0
@@ -83,7 +91,10 @@ def test_cube_fit(sky_model, counts, exposure):
         'amplitude': '1e-12 cm-2 s-1 TeV-1',
     })
 
-    fit = SkyModelMapFit(model=input_model, counts=counts, exposure=exposure)
+    fit = SkyModelMapFit(model=input_model,
+                         counts=counts,
+                         exposure=exposure,
+                         psf=psf)
     fit.fit()
 
     assert_quantity_allclose(fit.model.parameters['index'].quantity,
@@ -97,4 +108,4 @@ def test_cube_fit(sky_model, counts, exposure):
                              rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
-    assert_allclose(stat, 13079.031915029665)
+    assert_allclose(stat, 8.672365798603572)
