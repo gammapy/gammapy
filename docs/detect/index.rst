@@ -45,13 +45,13 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 
 .. code-block:: python
 
-	from astropy.convolution import Gaussian2DKernel
-	from gammapy.image import SkyImageList
-	from gammapy.detect import TSImageEstimator
-	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
-	kernel = Gaussian2DKernel(5)
+    from astropy.convolution import Gaussian2DKernel
+    from gammapy.image import SkyImageList
+    from gammapy.detect import TSImageEstimator
+    images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    kernel = Gaussian2DKernel(5)
     ts_estimator = TSImageEstimator()
-	result = ts_estimator.run(images, kernel)
+    result = ts_estimator.run(images, kernel)
 
 The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
@@ -66,8 +66,7 @@ E.g. here's how to find the largest TS value:
 .. code-block:: python
 
     import numpy as np
-    ts = result['ts']
-	np.nanmax(ts.data)
+	np.nanmax(result['ts'].data)
 
 Command line tool
 -----------------
@@ -77,8 +76,8 @@ on the Fermi example dataset by:
 
 .. code-block:: bash
 
-	$ cd $GAMMAPY_EXTRA/datasets/fermi_survey
-	$ gammapy-image-ts all.fits.gz ts_image_0.00.fits --scale 0
+    $ cd $GAMMAPY_EXTRA/datasets/fermi_survey
+    $ gammapy-image-ts all.fits.gz ts_image_0.00.fits --scale 0
 
 The command line tool additionally requires a psf json file, where the psf shape
 is defined by the parameters of a triple Gaussian model. See also
@@ -140,8 +139,8 @@ Usage example:
 
 .. code-block:: bash
 
-	$ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
-	$ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
+    $ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
+    $ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
 
 
 Reference/API
