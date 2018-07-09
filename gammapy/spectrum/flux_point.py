@@ -575,6 +575,16 @@ class FluxPointEstimator(object):
     Computes flux points for a given spectrum observation dataset
     (a 1-dim on/off observation), energy binning and spectral model.
 
+    A spectral model shape is assumed, all parameters except the norm are fixed
+    A 1D amplitude fit is done, to find the amplitude so that npred equals excess.
+
+    This is done for each group independently.
+
+    The method is used for example in this FERMI-LAT catalog paper
+    https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    or the HESS GPS paper
+    https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
+
     Parameters
     ----------
     obs : `~gammapy.spectrum.SpectrumObservation` or `~gammapy.spectrum.SpectrumObservationList`
