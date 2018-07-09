@@ -649,41 +649,6 @@ class FluxPointEstimator(object):
         TODO: At the moment just the global model with fixed parameters is
         returned
         """
-        # binning = EnergyBounds(binning)
-        # low_bins = binning.lower_bounds
-        # high_bins = binning.upper_bounds
-        #
-        # from sherpa.models import PowLaw1D
-        #
-        # if isinstance(model, models.PowerLaw):
-        #     temp = model.to_sherpa()
-        #     temp.gamma.freeze()
-        #     sherpa_models = [temp] * binning.nbins
-        # else:
-        #     sherpa_models = [None] * binning.nbins
-        #
-        # for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
-        #     log.info('Computing flux points in bin [{}, {}]'.format(low, high))
-        #
-        #     # Make PowerLaw approximation for higher order models
-        #     if sherpa_model is None:
-        #         flux_low = model(low)
-        #         flux_high = model(high)
-        #         index = powerlaw.power_law_g_from_points(e1=low, e2=high,
-        #                                                  f1=flux_low,
-        #                                                  f2=flux_high)
-        #
-        #         log.debug('Approximated power law index: {}'.format(index))
-        #         sherpa_model = PowLaw1D('powlaw1d.default')
-        #         sherpa_model.gamma = index
-        #         sherpa_model.gamma.freeze()
-        #         sherpa_model.ref = model.parameters.reference.to('keV')
-        #         sherpa_model.ampl = 1e-20
-        # return PowerLaw(
-        #    index=u.Quantity(2, ''),
-        #    amplitude=u.Quantity(1, 'm-2 s-1 TeV-1'),
-        #    reference=u.Quantity(1, 'TeV'),
-        # )
         approx_model = global_model.copy()
         for par in approx_model.parameters.parameters:
             if par.name != 'amplitude':
