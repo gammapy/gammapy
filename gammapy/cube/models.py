@@ -189,8 +189,8 @@ class SkyModelMapEvaluator(object):
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
-    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
-        PSF
+    psf : `~gammapy.cube.PSFKernel`
+        PSF kernel
     """
 
     def __init__(self, sky_model=None, exposure=None, psf=None):
@@ -290,13 +290,7 @@ class SkyModelMapEvaluator(object):
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
-        from . import PSFKernel
-        table_psf = self.psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
-        psf_kernel = PSFKernel.from_table_psf(table_psf,
-                                              self.geom,
-                                              max_radius=1 * u.deg)
-
-        return psf_kernel.apply(npred)
+        return self.psf.apply(npred)
 
     def compute_npred(self):
         """Evaluate model predicted counts.

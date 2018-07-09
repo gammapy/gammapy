@@ -12,7 +12,11 @@ from ...maps import MapAxis, WcsGeom, WcsNDMap
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from .. import (
-    SkyModel, SkyModelMapEvaluator, SkyModelMapFit, make_map_exposure_true_energy,
+    SkyModel,
+    SkyModelMapEvaluator,
+    SkyModelMapFit,
+    make_map_exposure_true_energy,
+    PSFKernel,
 )
 
 
@@ -62,7 +66,11 @@ def exposure(geom):
 def psf(geom):
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-    return psf
+    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+    psf_kernel = PSFKernel.from_table_psf(table_psf,
+                                          geom,
+                                          max_radius=1 * u.deg)
+    return psf_kernel
 
 
 @pytest.fixture(scope='session')

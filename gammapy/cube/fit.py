@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import astropy.units as u
 from .models import SkyModelMapEvaluator
 from ..stats import cash
 from ..utils.fitting import fit_minuit
@@ -24,8 +25,8 @@ class SkyModelMapFit(object):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`, optional
-        PSF
+    psf : `~gammapy.cube.PSFKernel`
+        PSF kernel
     """
 
     def __init__(self, model, counts, exposure, psf=None):
@@ -33,11 +34,12 @@ class SkyModelMapFit(object):
         self.counts = counts
         self.exposure = exposure
         self.psf = psf
-        self._init_evaluator()
 
         self._npred = None
         self._stat = None
         self._minuit = None
+
+        self._init_evaluator()
 
     @property
     def npred(self):
