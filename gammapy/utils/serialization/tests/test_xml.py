@@ -49,6 +49,7 @@ def test_basic():
     assert pars1['lon_0'].frozen == True
 
 
+@pytest.mark.xfail(reason='Need to update model regsitry')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 @pytest.mark.parametrize('filenames',[[
