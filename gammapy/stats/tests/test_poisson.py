@@ -39,8 +39,9 @@ def test_excess_error():
     assert_allclose(excess_error(n_on=4, n_off=9, alpha=0.5), 2.5)
 
 def test_Helene_ULs():
-    assert_allclose(Helene_ULs(excess=50, error=40, conf_level=99.73), 119.708038)
-    assert_allclose(Helene_ULs(excess=10, error=6, conf_level=99.73), 20.280005)
+    assert_allclose(Helene_ULs(excess=50, error=40, conf_level=99.73), 162.72769)
+    assert_allclose(Helene_ULs(excess=10, error=6, conf_level=95.45), 20.280005)
+    assert_allclose(Helene_ULs(excess=-23, error=8, conf_level=99.73), 12.186635)
 
 def test_significance():
     # Check that the Li & Ma limit formula is correct
