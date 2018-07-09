@@ -156,6 +156,11 @@ class PSFKernel(object):
         self._psf_kernel_map = psf_kernel_map
 
     @property
+    def data(self):
+        """Access the PSFKernel numpy array"""
+        return self._psf_kernel_map.data
+
+    @property
     def psf_kernel_map(self):
         """The map object holding the kernel (`~gammapy.maps.Map`)"""
         return self._psf_kernel_map
@@ -247,7 +252,7 @@ class PSFKernel(object):
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
 
-    def apply(self, map):
+    def apply(self, map, copy=True):
         """Apply the kernel to an input Map.
 
         Parameters
@@ -255,14 +260,19 @@ class PSFKernel(object):
         map : `~gammapy.maps.WcsNDMap`
             the model map to be convolved with the PSFKernel.
             It should have the same MapGeom than the current PSFKernel.
-
+        copy : bool
+            If set to True returns new map otherwise performs in-place convolution
         Returns
         -------
         convolved_map : `~gammapy.maps.Map`
             the convolved map
         """
         # TODO : check that the MapGeom are consistent
-        convolved_map = Map.from_geom(geom=map.geom, unit=map.unit, meta=map.meta)
+        if copy:
+            convolved_map = Map.from_geom(geom=map.geom, unit=map.unit, meta=map.meta)
+        else:
+            convolved_map = map
+
         for img, idx in map.iter_by_image():
             convolved_map.data[idx] = convolve_fft(img, self.psf_kernel_map.data[idx])
         return convolved_map
