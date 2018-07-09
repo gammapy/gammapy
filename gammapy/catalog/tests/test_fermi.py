@@ -82,7 +82,7 @@ class TestFermi3FGLObject:
         assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
         assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
 
-    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['idx'])
     def test_str_all(self, ref):
         ss = str(self.cat[ref['idx']])
         # TODO: put better assert on content. Maybe like for gamma-cat?
@@ -97,7 +97,7 @@ class TestFermi3FGLObject:
         assert_allclose(data['Unc_Flux100_300'][0], -1.44535601265261e-08)
 
     @requires_dependency('uncertainties')
-    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['idx'])
     def test_spectral_model(self, ref):
         model = self.cat[ref['idx']].spectral_model
 
@@ -107,12 +107,12 @@ class TestFermi3FGLObject:
         assert_quantity_allclose(dnde, ref['dnde'])
         assert_quantity_allclose(dnde_err, ref['dnde_err'])
 
-    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['idx'])
     def test_spatial_model(self, ref):
         model = self.cat[ref['idx']].spatial_model
         # TODO: add asserts
 
-    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['idx'])
     def test_sky_model(self, ref):
         model = self.cat[ref['idx']].sky_model
         # TODO: add asserts
@@ -254,7 +254,7 @@ class TestFermi3FHLObject:
         assert_allclose(data['Flux_Band'][0], 5.1698894054652555e-09)
 
     @requires_dependency('uncertainties')
-    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['idx'])
     def test_spectral_model(self, ref):
         model = self.cat[ref['idx']].spectral_model
 
@@ -264,12 +264,12 @@ class TestFermi3FHLObject:
         assert_quantity_allclose(dnde, ref['dnde'])
         assert_quantity_allclose(dnde_err, ref['dnde_err'])
 
-    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['idx'])
     def test_spatial_model(self, ref):
         model = self.cat[ref['idx']].spatial_model
         # TODO: add asserts
 
-    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
+    @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['idx'])
     def test_sky_model(self, ref):
         model = self.cat[ref['idx']].sky_model
         # TODO: add asserts
