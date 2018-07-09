@@ -10,21 +10,28 @@ __all__ = [
 
 def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([None]), loss='linear', scale=1):
     """
-    Computes the period of a light curve by robust regression techniques assuming a single harmonic model.
+    Compute a light curve's period.
 
-    To compute the periodogram peaks with robust regression, the scipy object `~scipy.optimize.least_squares` is called.
-    The false alarm probability of the highest periodogram peak can be computed with the `~false_alarm_probability`-method of `~astropy`.
-    It assumes Gaussian white noise light curves.
-    To evaluate the impact of the sampling pattern on the periodogram, it is recommend to compute the spectral window function with `~astropy`'s `astropy.stats.LombScargle`-class.
+    A single harmonic model is fitted to the light curve.
+    The periodogram returns the power for each period.
+    The maximum power indicates the period of the light curve, assuming an underlying periodic process.
 
-    For an introduction to the false alarm probability of periodogram peaks, see [1]_.
-    For an introduction to robust regression techniques and loss functions provided by scipy, see [2]_ and [3]_.
+    The fitting can be done by ordinary least square regression (Lomb-Scargle periodogram) or robust regression.
+    For robust regression, the scipy object `~scipy.optimize.least_squares` is called.
+    For an introduction to robust regression techniques and loss functions, see [1]_ and [2]_.
 
-    The function returns a results dictionary with the following content:
+    The significance of a periodogram peak can be evaluated in terms of a false alarm probability.
+    It can be computed with the `~false_alarm_probability`-method of `~astropy`, assuming Gaussian white noise light curves.
+    For an introduction to the false alarm probability of periodogram peaks, see [3]_.
+
+    The periodogram is biased by measurement errors, high order modes and sampling of the light curve.
+    To evaluate the impact of the sampling, compute the spectral window function with the `astropy.stats.LombScargle`-class.
+
+    The function returns a dictionary with the following content:
 
     - ``periods`` (`~numpy.ndarray`) -- Period grid in units of ``t``
     - ``power`` (`~numpy.ndarray`) -- Periodogram peaks at periods of ``pgrid``
-    - ``best_period`` (`float`) -- Location of the highest periodogram peak
+    - ``best_period`` (`float`) -- Period of the highest periodogram peak
 
     Parameters
     ----------
@@ -35,7 +42,7 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
     flux_err : `~numpy.ndarray` (optional, default=None)
         Flux error array of the light curve.
         Is set to 1 if not given.
-    periods : `~numpy.ndarray` (optional, default described below)
+    periods : `~numpy.ndarray` (optional, default=None)
         Period grid on which the periodogram is performed.
         If not given, a linear grid will be computed limited by the length of the light curve and the Nyquist frequency.
     loss : `str` (optional, default='linear')
@@ -53,10 +60,10 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
 
     References
     ----------
-    .. [1] Astropy docs, `Link <http://docs.astropy.org/en/stable/stats/lombscargle.html>`_
-    .. [2] Nikolay Mayorov (2015), "Robust nonlinear regression in scipy", `Link <http://scipy-cookbook.readthedocs.io/items/robust_regression.html>`_
-    .. [3] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
+    .. [1] Nikolay Mayorov (2015), "Robust nonlinear regression in scipy", `Link <http://scipy-cookbook.readthedocs.io/items/robust_regression.html>`_
+    .. [2] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
        `Link <https://www.jstatsoft.org/article/view/v069i09>`_
+    .. [3] Astropy docs, `Link <http://docs.astropy.org/en/stable/stats/lombscargle.html>`_
     """
     # set flux errors
     if flux_err.any() == None:
@@ -66,10 +73,10 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
     if periods.any() == None:
         periods = _period_grid(time)
 
-    # comnpute periodogram
+    # compute periodogram
     psd_data = _robust_regression(time, flux, flux_err, periods, loss, scale)
 
-    # find period with highest periodogram peak
+    # find period of highest periodogram peak
     best_period = periods[np.argmax(psd_data)]
 
     return OrderedDict([
@@ -115,7 +122,7 @@ def _noise(mu, t, y, dy):
 
 def _robust_regression(time, flux, flux_err, periods, loss, scale):
     """
-    Computes the periodogram peaks for given loss function and scale
+    Computes the periodogram peaks for a given loss function and scale
     """
     from scipy.optimize import least_squares
 

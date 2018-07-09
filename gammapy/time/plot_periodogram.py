@@ -9,10 +9,9 @@ __all__ = [
 
 def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best_period=None, fap=None):
     """
-    Plots a light curve and its periodogram.
+    Plot a light curve and its periodogram.
 
-    The highest period of the periodogram and its false alarm probability (FAP) will be added to the plot, if given.
-    If multiple FAPs are forwarded, the lowest one will be used.
+    The highest period of the periodogram and its false alarm probability (FAP) is added to the plot, if given.
 
     Parameters
     ----------
@@ -24,12 +23,13 @@ def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best
         Periods for the periodogram
     power : `~numpy.ndarray`
         Periodogram peaks of the data
-    flux_err : `~numpy.ndarray` (optional, default=np.zeros_like(flux))
-        Flux error array of the light curve
+    flux_err : `~numpy.ndarray` (optional, default=None)
+        Flux error array of the light curve.
+        Is set to 0 if not given.
     best_period : `float` (optional, default=None)
-        Highest period of the periodogram
+        Period of the highest periodogram peak
     fap : `float` (optional, default=None)
-        False alarm probability of ``best_period`` under the specified significance criterion.
+        False alarm probability of ``best_period`` under a certain significance criterion.
 
     Returns
     -------
@@ -52,7 +52,6 @@ def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best
     ax.errorbar(time, flux, flux_err, fmt='ok', label='light curve', elinewidth=1.5, capsize=0)
     ax.set_xlabel('time')
     ax.set_ylabel('flux')
-    # ax.set_xlim(np.min(time), np.max(time))
     ax.legend()
 
     # plot the periodogram
