@@ -683,13 +683,15 @@ class LightCurveEstimator(object):
 
         table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
         table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['flux_ul'] = [_['flux_ul'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['is_ul'] = [_['is_ul'] for _ in rows]
 
         table['livetime'] = [_['livetime'].value for _ in rows] * u.s
         table['n_on'] = [_['n_on'] for _ in rows]
         table['n_off'] = [_['n_off'] for _ in rows]
         table['alpha'] = [_['alpha'] for _ in rows]
         table['measured_excess'] = [_['measured_excess'] for _ in rows]
-        table['expected_excess'] = [_['expected_excess'].value for _ in rows]
+        table['expected_excess'] = [_['expected_excess'] for _ in rows]
 
         return LightCurve(table)
 
@@ -828,7 +830,7 @@ class LightCurveEstimator(object):
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
             ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
-            ('is_ul', sigma <= sigma_ul_thres)
+            ('is_ul', sigma <= sigma_ul_thres),
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),
