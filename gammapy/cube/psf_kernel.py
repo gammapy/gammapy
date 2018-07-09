@@ -158,7 +158,7 @@ class PSFKernel(object):
     @property
     def data(self):
         """Access the PSFKernel numpy array"""
-        return self._psfkernel_map.data
+        return self._psf_kernel_map.data
 
     @property
     def psf_kernel_map(self):
