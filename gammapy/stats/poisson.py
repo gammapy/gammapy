@@ -416,14 +416,16 @@ def _significance_direct_on_off(n_on, n_off, alpha):
 
 def Helene_ULs(excess, error, conf_level=95.45):
     """Compute Upper limit based on Helene et al., NIM 212 (1983) 319
+    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
+
 
     Parameters
     ----------
-    excess : double
+    excess : float
         Signal excess
-    error : double
+    error : float
         Gaussian Signal error
-    conf_level: double
+    conf_level: float
         Confidence level in percentage (1sigma=68.27, 2sigma=95.45, 3sigma=99.73, 5sigma=99.999943)
 
     Returns
@@ -445,53 +447,37 @@ def Helene_ULs(excess, error, conf_level=95.45):
         integral = (1.+erf(value))/2.
         integral2 = 1. - conf_level1*integral
         value_old = value
-
-        # The 1st Loop is for Speed & 2nd For Precision
         value_new = value_old+0.01
         if integral > integral2:
             value_new = 0.
         integral = (1.+erf(value_new))/2.
-
-        while integral < integral2:
-            value_old = value_new
-            value_new = value_new+0.01
-            integral = (1.+erf(value_new))/2.
-        value_new = value_old+0.0000001
-        integral = (1. + erf(value_new))/2.
-
-        while integral < integral2:
-            value_old = value_new
-            value_new = value_new+0.0000001
-            integral = (1.+erf(value_new))/2.
-        value_new = value_new*sqrt(2.)
-        conf_limit = (value_new+zeta)*error
-        return conf_limit
-    elif excess < 0.:
+    else:
         zeta = -excess/error
         value = zeta/sqrt(2.)
         integral = 1 - (1.+erf(value))/2.
         integral2 = 1. - conf_level1*integral
         value_old = value
-
-        # The 1st Loop is for Speed & 2nd For Precision
         value_new = value_old+0.01
         integral = (1.+erf(value_new))/2.
-        while integral < integral2:
-            value_old = value_new
-            value_new = value_new+0.01
-            integral = (1.+erf(value_new))/2.
-        value_new = value_old+0.0000001
-        integral = (1.+erf(value_new))/2.
 
-        while integral < integral2:
-            value_old = value_new
-            value_new = value_new+0.0000001
-            integral = (1.+erf(value_new))/2.
-        value_new = value_new*sqrt(2.)
-        conf_limit = (value_new-zeta)*error
-        return conf_limit
+    # The 1st Loop is for Speed & 2nd For Precision
+    while integral < integral2:
+        value_old = value_new
+        value_new = value_new+0.01
+        integral = (1.+erf(value_new))/2.
+    value_new = value_old+0.0000001
+    integral = (1. + erf(value_new))/2.
+
+    while integral < integral2:
+        value_new = value_new+0.0000001
+        integral = (1.+erf(value_new))/2.
+    value_new = value_new*sqrt(2.)
+
+    if excess >= 0.:
+        conf_limit = (value_new+zeta)*error
     else:
-        return 0.
+        conf_limit = (value_new-zeta)*error
+    return conf_limit
 
 def excess_matching_significance(mu_bkg, significance, method='lima'):
     r"""Compute excess matching a given significance.
