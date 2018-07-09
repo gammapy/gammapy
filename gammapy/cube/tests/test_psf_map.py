@@ -36,22 +36,22 @@ def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
     pointing = SkyCoord(0, 0, unit='deg')
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV')
-    rad_axis = MapAxis(nodes=np.linspace(0., 1., 51), unit='deg')
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy_true')
+    rad_axis = MapAxis(nodes=np.linspace(0., 1., 51), unit='deg', name='theta')
 
     geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
 
-    psf_map = make_psf_map(psf, pointing, geom, 3 * u.deg)
+    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
 
     # check axes ordering
-    assert psf_map.geom.axes[0] == rad_axis
-    assert psf_map.geom.axes[1] == energy_axis
+    assert psfmap.psf_map.geom.axes[0] == rad_axis
+    assert psfmap.psf_map.geom.axes[1] == energy_axis
 
     # Check unit
-    assert psf_map.unit == Unit('sr-1')
+    assert psfmap._psf_map.unit == Unit('sr-1')
 
     # check size
-    assert psf_map.data.shape == (4, 50, 25, 25)
+    assert psfmap.data.shape == (4, 50, 25, 25)
 
 
 @requires_dependency('scipy')
@@ -59,12 +59,12 @@ def test_psfmap(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
 
     pointing = SkyCoord(0, 0, unit='deg')
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV')
-    rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit='deg')
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy_true')
+    rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit='deg', name='theta')
 
     geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
 
-    psfmap = PSFMap(make_psf_map(psf, pointing, geom, 3 * u.deg))
+    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
 
     # Extract EnergyDependentTablePSF
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit='deg'))

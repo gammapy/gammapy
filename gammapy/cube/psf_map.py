@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import Angle
 from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
@@ -16,6 +17,7 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
+    The name of the rad MapAxis is expected to be 'rad'
 
     Parameters
     ----------
@@ -31,14 +33,21 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
 
     Returns
     -------
-    psfmap : `~gammapy.maps.Map`
+    psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    # retrieve energies. This should be properly tested
-    energy = ref_geom.axes[1].center * ref_geom.axes[1].unit
+    energy_axis = ref_geom.get_axis_by_name('energy_true')
+    energy = energy_axis.center * energy_axis.unit
 
-    # retrieve rad from psf IRF directly (this might be given as an argument instead)
-    rad = ref_geom.axes[0].center * ref_geom.axes[0].unit
+    rad_axis = ref_geom.get_axis_by_name('theta')
+    rad = Angle(rad_axis.center, unit=rad_axis.unit)
+
+    # Check axes positions
+    if ref_geom.axes_names.index(rad_axis.name) != 0:
+        raise ValueError("Incorrect theta axis position in input MapGeom")
+
+    if ref_geom.axes_names.index(energy_axis.name) != 1:
+        raise ValueError("Incorrect energy axis position in input MapGeom")
 
     # Compute separations with pointing position
     separations = pointing.separation(ref_geom.to_image().get_coord().skycoord)
@@ -46,12 +55,14 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
 
     # Compute PSF values
     psf_values = psf.evaluate(offset=separations[valid], energy=energy, rad=rad)
+
     # Re-order axes to be consistent with expected geometry
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))
+
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(ref_geom, unit='sr-1')
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
-    return psfmap
+    return PSFMap(psfmap)
 
 
 class PSFMap(object):
@@ -93,34 +104,46 @@ class PSFMap(object):
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         psf3d = psf.to_psf3d(rads)
 
-        # create the PSF map for the specified pointing
+        # create the PSFMap for the specified pointing
         psf_map = make_psf_map(psf3d, pointing, geom, max_offset)
 
-        # Create the PSFMap
-        psf_library = PSFMap(psf_map)
-
         # Get an EnergyDependentTablePSF at any position in the image
-        psf_table = psf_library.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
+        psf_table = psf_map.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
 
         # Write map to disk
-        psf_library.write('psf_map.fits')
+        psf_map.write('psf_map.fits')
 
     """
 
     def __init__(self, psf_map):
         # Check the presence of an energy axis
-        if psf_map.geom.axes[1].type is not 'energy':
+        if psf_map.geom.axes[1].name != 'energy_true':
             raise ValueError("Incorrect energy axis position in input Map")
 
-        if not u.Unit(psf_map.geom.axes[0].unit).is_equivalent('deg'):
-            raise ValueError("Incorrect rad axis position in input Map")
+        if psf_map.geom.axes[0].name is not 'theta':
+            raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
 
     @property
     def psf_map(self):
-        """the PSFMap itself (~gammapy.maps.Map)"""
+        """the PSFMap itself (`~gammapy.maps.Map`)"""
         return self._psf_map
+
+    @property
+    def data(self):
+        """the PSFMap data"""
+        return self._psf_map.data
+
+    @property
+    def quantity(self):
+        """the PSFMap data as a quantity"""
+        return self._psf_map.quantity
+
+    @property
+    def geom(self):
+        """The PSFMap MapGeom object"""
+        return self._psf_map.geom
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -131,7 +154,7 @@ class PSFMap(object):
 
     def write(self, *args, **kwargs):
         """Write the Map object containing the PSF Library map."""
-        self.psf_map.write(*args, **kwargs)
+        self._psf_map.write(*args, **kwargs)
 
     def get_energy_dependent_table_psf(self, position):
         """ Returns EnergyDependentTable PSF at a given position
@@ -150,8 +173,8 @@ class PSFMap(object):
             raise ValueError("EnergyDependentTablePSF can be extracted at one single position only.")
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.psf_map.geom.axes[1].nbin)
-        pix_rad = np.arange(self.psf_map.geom.axes[0].nbin)
+        pix_ener = np.arange(self.geom.axes[1].nbin)
+        pix_rad = np.arange(self.geom.axes[0].nbin)
 
         # Convert position to pixels
         pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
@@ -179,7 +202,7 @@ class PSFMap(object):
             the target position. Should be a single coordinate
         geom : `~gammapy.maps.MapGeom`
             the target geometry to use
-        max_radius: `~astropy.coordinates.Angle`
+        max_radius : `~astropy.coordinates.Angle`
             maximum angular size of the kernel map
         factor : int
             oversampling factor to compute the PSF
