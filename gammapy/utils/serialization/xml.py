@@ -33,30 +33,29 @@ __all__ = [
 ]
 
 
-# TODO: MapCubeFunction does not have a good equivalent yet
-model_registry = dict(spatial=dict(), spectral=dict())
-model_registry['spatial']['SkyDirFunction'] = spatial.SkyPointSource
-model_registry['spatial']['MapCubeFunction'] = spatial.SkyDiffuseMap
-model_registry['spatial']['ConstantValue'] = spatial.SkyDiffuseConstant
-model_registry['spatial']['RadialShell'] = spatial.SkyShell
-model_registry['spatial']['Gaussian'] = spatial.SkyGaussian
-model_registry['spectral']['PowerLaw'] = spectral.PowerLaw
-model_registry['spectral']['FileFunction'] = spectral.TableModel
+# TODO: Move to a separate file
+model_registry = {
+    'spectral':{
+        'PowerLaw':{
+            'model':spectral.PowerLaw,
+            'parameters':{
+                'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
+                'Index': ['index', ''],
+                'Scale': ['reference', 'MeV'],
+            }
+        }
+    },
+    'spatial':{
+        'SkyDirFunction':{
+            'model':spatial.SkyPointSource,
+            'parameters':{
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg']
+            }
+        }
+    }
+}
 
-
-parname_registry = dict(spatial=dict(), spectral=dict())
-parname_registry['spatial']['RA'] = 'lon_0', 'deg'
-parname_registry['spatial']['DEC'] = 'lat_0', 'deg'
-parname_registry['spatial']['Normalization'] = 'norm', ''
-parname_registry['spatial']['Value'] = 'value', 'MeV cm-2 s-1'
-parname_registry['spatial']['Radius'] = 'radius', 'deg'
-parname_registry['spatial']['Width'] = 'width', 'deg'
-parname_registry['spatial']['Sigma'] = 'sigma', 'deg'
-parname_registry['spectral']['Prefactor'] = 'amplitude', 'MeV cm-2 s-1'
-parname_registry['spectral']['Index'] = 'index', ''
-parname_registry['spectral']['Scale'] = 'reference', 'MeV'
-parname_registry['spectral']['PivotEnergy'] = 'reference', 'MeV'
-parname_registry['spectral']['Normalization'] = 'scale', ''
 
 
 class UnknownModelError(ValueError):
@@ -107,13 +106,14 @@ def xml_to_model(xml, which):
     `~gammapy.spectrum.models.SpectralModel`
     """
     type_ = xml['@type']
-    parameters = xml_to_parameter_list(xml['parameter'], which)
 
     try:
-        model = model_registry[which][type_]
+        model = model_registry[which][type_]['model']
     except KeyError:
         msg = "{} model '{}' not registered"
         raise UnknownModelError(msg.format(which, type_))
+    
+    parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
     if type_ == 'MapCubeFunction':
         filename = xml['@file']
@@ -136,7 +136,7 @@ def xml_to_model(xml, which):
     return model
 
 
-def xml_to_parameter_list(xml, which):
+def xml_to_parameter_list(xml, which, type_):
     """
     Convert XML to `~gammapy.utils.modeling.ParameterList`
 
@@ -145,10 +145,10 @@ def xml_to_parameter_list(xml, which):
     parameters = list()
     for par in np.atleast_1d(xml):
         try:
-            name, unit = parname_registry[which][par['@name']]
+            name, unit = model_registry[which][type_]['parameters'][par['@name']]
         except KeyError:
-            msg = "{} parameter '{}' not registered"
-            raise UnknownParameterError(msg.format(which, par['@name']))
+            msg = "Parameter '{}' not registered for {} model {}"
+            raise UnknownParameterError(msg.format(par['@name'], which, type_))
         
         parameters.append(Parameter(
             name=name,

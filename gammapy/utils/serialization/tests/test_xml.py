@@ -9,13 +9,27 @@ from ....image import models as spatial
 from ...serialization import xml_to_source_library, UnknownModelError
 import pytest
 
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-def test_xml_to_source_library():
-    filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
-    sourcelib = SourceLibrary.from_xml(filename)
+def test_basic():
 
-    assert len(sourcelib.skymodels) == 4
+    xml_str = '''<?xml version="1.0" encoding="utf-8"?>
+    <source_library title="source library">
+        <source name="3C 273" type="PointSource">
+            <spectrum type="PowerLaw">;i
+                <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10"></parameter>
+                <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"></parameter>
+                <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"></parameter>
+            </spectrum>
+            <spatialModel type="SkyDirFunction">
+                <parameter free="0" max="360" min="-360" name="RA" scale="1.0" value="187.25"></parameter>
+                <parameter free="0" max="90" min="-90" name="DEC" scale="1.0" value="2.17"></parameter>
+            </spatialModel>
+        </source>
+    </source_library>
+    '''
+
+    sourcelib = xml_to_source_library(xml_str)
+
+    assert len(sourcelib.skymodels) == 1
 
     model1 = sourcelib.skymodels[0]
     assert isinstance(model1.spectral_model, spectral.PowerLaw)
@@ -34,26 +48,8 @@ def test_xml_to_source_library():
     assert pars1['lon_0'].parmin == -360
     assert pars1['lon_0'].frozen == True
 
-    model3 = sourcelib.skymodels[2]
-    assert isinstance(model3.spectral_model, spectral.PowerLaw)
-    assert isinstance(model3.spatial_model, spatial.SkyDiffuseMap)
 
-    pars3 = model3.parameters
-    assert pars3['index'].value == 0
-    assert pars3['index'].unit == ''
-    assert pars3['index'].parmax == 1
-    assert pars3['index'].parmin == -1
-    assert pars3['index'].frozen == True
-
-    assert pars3['norm'].value == 1.0
-    assert pars3['norm'].unit == ''
-    assert pars3['norm'].parmax == 1e3
-    assert pars3['norm'].parmin == 1e-3
-    assert pars3['norm'].frozen == True
-
-    # TODO: Test Evaluate combined model as soon as '+' works for SkyModel
-
-
+@pytest.mark.xfail(reason='Need to update model regsitry')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 @pytest.mark.parametrize('filenames',[[
