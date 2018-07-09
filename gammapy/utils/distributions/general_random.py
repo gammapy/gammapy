@@ -25,7 +25,7 @@ class GeneralRandom(object):
     not required for random number generation."""
 
     def __init__(self, pdf, min_range, max_range,
-                ninversecdf=None, ran_res=1e3):
+                 ninversecdf=None, ran_res=1e3):
         """Initialize the lookup table
 
         Inputs:
@@ -37,8 +37,9 @@ class GeneralRandom(object):
         cdf: cumulative pdf
         inversecdf: the inverse lookup table
         delta_inversecdf: difference of inversecdf"""
-        self.ran_res = ran_res  # Resolution of the PDF
-        x = np.linspace(min_range, max_range, ran_res)
+
+        self.ran_res = int(ran_res)  # Resolution of the PDF
+        x = np.linspace(min_range, max_range, self.ran_res)
         # This is a good default for the number of reverse
         # lookups to not loose much information in the pdf
         if ninversecdf is None:

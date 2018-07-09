@@ -230,7 +230,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     if np.isscalar(xmin):
         logmin = np.log10(xmin)
         logmax = np.log10(xmax)
-        n = (logmax - logmin) * ndecade
+        n = int((logmax - logmin) * ndecade)
         x = np.logspace(logmin, logmax, n)
     else:
         x = np.append(xmin, xmax[-1])
