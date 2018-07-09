@@ -4,7 +4,6 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.convolution import convolve_fft
 from ..maps import Map, WcsGeom
 from ..image.models.gauss import Gauss2DPDF
@@ -19,9 +18,9 @@ def _make_kernel_geom(geom, max_radius):
     # Create a new geom object with an odd number of pixel and a maximum size
     # This is useful for PSF kernel creation.
     center = geom.center_coord[:2]
-    binsz = Quantity(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
-    max_radius = Quantity(max_radius, 'deg')
-    npix = 2 * int(max_radius / binsz) + 1
+    binsz = Angle(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
+    max_radius = Angle(max_radius)
+    npix = 2 * int(max_radius.deg / binsz.deg) + 1
     return WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
                           coordsys=geom.coordsys, axes=geom.axes)
 
@@ -63,21 +62,16 @@ def table_psf_to_kernel_map(table_psf, geom, factor=4):
     factor : int
         the oversample factor to compute the PSF
     """
-
     # prepare map and compute distances to map center
     kernel_map, rads = _compute_kernel_separations(geom, factor)
 
-    vals = table_psf.evaluate(rad=rads)
-    norm = vals.sum().value
+    vals = table_psf.evaluate(rad=rads).value
+    norm = vals.sum()
 
-    # loop over images and fill map
     for img, idx in kernel_map.iter_by_image():
-        img += vals.reshape(img.shape).value / norm
+        img += vals.reshape(img.shape) / norm
 
-    # downsample the psf kernel map. Take the average
-    kernel_map = kernel_map.downsample(factor, preserve_counts=True)
-
-    return kernel_map
+    return kernel_map.downsample(factor, preserve_counts=True)
 
 
 def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
@@ -110,10 +104,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
         img += vals.value / vals.sum().value
 
-    # downsample the psf kernel map. Take the average
-    kernel_map = kernel_map.downsample(factor, preserve_counts=True)
-
-    return kernel_map
+    return kernel_map.downsample(factor, preserve_counts=True)
 
 
 class PSFKernel(object):
@@ -121,7 +112,7 @@ class PSFKernel(object):
 
     This is a container class to store a PSF kernel
     that can be used to convolve `~gammapy.maps.WcsNDMap` objects.
-    It is usually computed from an EnergyDependentTablePSF
+    It is usually computed from an `~gammapy.irf.EnergyDependentTablePSF`.
 
     Parameters
     ----------
@@ -171,12 +162,12 @@ class PSFKernel(object):
 
     @property
     def psf_kernel_map(self):
+        """The map object holding the kernel (`~gammapy.maps.Map`)"""
         return self._psf_kernel_map
 
     @classmethod
     def read(cls, *args, **kwargs):
         """Read kernel Map from file."""
-
         psf_kernel_map = Map.read(*args, **kwargs)
         return cls(psf_kernel_map)
 
@@ -190,13 +181,13 @@ class PSFKernel(object):
 
         Parameters
         ----------
-        table_psf : `~gammapy.irf.TablePSF` or ~gammapy.irf.EnergyDependentTablePSF`
+        table_psf : `~gammapy.irf.TablePSF` or `~gammapy.irf.EnergyDependentTablePSF`
             the input table PSF
         geom : `~gammapy.maps.WcsGeom`
             the target geometry. The PSF kernel will be centered on the central pixel.
             the geometry axes should contain an energy MapAxis.
-        max_radius : `~astropy.coordinates.Angle` or float
-            the maximum radius of the PSF kernel. If float, we assume unit is degree.
+        max_radius : `~astropy.coordinates.Angle`
+            the maximum radius of the PSF kernel.
         factor : int
             the oversample factor to compute the PSF
 
@@ -228,10 +219,10 @@ class PSFKernel(object):
         ----------
         geom : `~gammapy.map.WcsGeom`
             Map geometry
-        sigma : `~astropy.coordinates.Angle` or float
-            Gaussian width. Assume degrees if float input
-        max_radius : `~astropy.coordinates.Angle` or float
-            Desired kernel map size. Implicit unit is degree.
+        sigma : `~astropy.coordinates.Angle`
+            Gaussian width.
+        max_radius : `~astropy.coordinates.Angle`
+            Desired kernel map size.
         factor : int
             the oversample factor to compute the PSF
 
@@ -240,18 +231,18 @@ class PSFKernel(object):
         kernel : `~gammapy.cube.PSFKernel`
             the kernel Map with reduced geometry according to the max_radius
         """
-        sigma = Angle(sigma, 'deg')
+        sigma = Angle(sigma)
 
         if max_radius is None:
-            max_radius = Gauss2DPDF(sigma.to('deg').value).containment_radius(
-                containment_fraction=containment_fraction)
+            max_radius = Gauss2DPDF(sigma.deg).containment_radius(
+                containment_fraction=containment_fraction) * u.deg
 
-        max_radius = Angle(max_radius, 'deg')
+        max_radius = Angle(max_radius)
 
         # Create a new geom according to given input
         geom = _make_kernel_geom(geom, max_radius)
 
-        rad = Angle(np.linspace(0., max_radius, 200), 'deg')
+        rad = Angle(np.linspace(0., max_radius.deg, 200), 'deg')
 
         table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
 

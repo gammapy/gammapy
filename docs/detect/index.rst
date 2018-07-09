@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _detect:
 
 ***********************************
@@ -15,6 +17,10 @@ prototypes.
 
 Detailed description of the methods can be found in [Stewart2009]_
 and [LiMa1983]_.
+
+Note that in Gammapy maps are stored as Numpy arrays, which implies that
+it's very easy to use `scikit-image`_ or `photutils`_ or other packages
+that have advanced image analysis and source detection methods readily available.
 
 Computation of TS images
 ========================
@@ -45,13 +51,13 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 
 .. code-block:: python
 
-	from astropy.convolution import Gaussian2DKernel
-	from gammapy.image import SkyImageList
-	from gammapy.detect import TSImageEstimator
-	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
-	kernel = Gaussian2DKernel(5)
+    from astropy.convolution import Gaussian2DKernel
+    from gammapy.image import SkyImageList
+    from gammapy.detect import TSImageEstimator
+    images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    kernel = Gaussian2DKernel(5)
     ts_estimator = TSImageEstimator()
-	result = ts_estimator.run(images, kernel)
+    result = ts_estimator.run(images, kernel)
 
 The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
@@ -66,19 +72,18 @@ E.g. here's how to find the largest TS value:
 .. code-block:: python
 
     import numpy as np
-    ts = result['ts']
-	np.nanmax(ts.data)
+	np.nanmax(result['ts'].data)
 
 Command line tool
 -----------------
 
-Gammapy also provides a command line tool ``gammapy-image-ts`` for TS image computation, which can be run
+Gammapy also provides a command line tool ``gammapy image ts`` for TS image computation, which can be run
 on the Fermi example dataset by:
 
 .. code-block:: bash
 
-	$ cd $GAMMAPY_EXTRA/datasets/fermi_survey
-	$ gammapy-image-ts all.fits.gz ts_image_0.00.fits --scale 0
+    $ cd $GAMMAPY_EXTRA/datasets/fermi_survey
+    $ gammapy image ts all.fits.gz ts_image_0.00.fits --scales 0
 
 The command line tool additionally requires a psf json file, where the psf shape
 is defined by the parameters of a triple Gaussian model. See also
@@ -95,7 +100,7 @@ Furthermore it is possible to compute residual TS images. Using the following op
 
 .. code-block:: bash
 
-	$ gammapy-image-ts all.fits.gz residual_ts_image_0.00.fits --scale 0 --residual --model model.fits.gz
+	$ gammapy image ts all.fits.gz residual_ts_image_0.00.fits --scales 0 --residual --model model.fits.gz
 
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
 
@@ -140,8 +145,8 @@ Usage example:
 
 .. code-block:: bash
 
-	$ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
-	$ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
+    $ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
+    $ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
 
 
 Reference/API

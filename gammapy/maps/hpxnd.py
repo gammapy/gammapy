@@ -239,7 +239,8 @@ class HpxNDMap(HpxMap):
 
             data, footprint = reproject_from_healpix((img, coordsys),
                                                      geom.wcs,
-                                                     shape_out=shape_out)
+                                                     shape_out=shape_out,
+                                                     nested=self.geom.nest)
             vals[...] = data
 
         return map_out

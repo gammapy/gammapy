@@ -5,6 +5,8 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.nddata import Cutout2D
+import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -599,3 +601,43 @@ class WcsNDMap(WcsMap):
         image = copy.copy(self)
         image.data = data
         return image
+
+    def make_cutout(self, position, width, mode="strict", copy=True):
+        """
+        Create a cutout of a WcsNDMap around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat). If only one value is passed,
+            a square region is extracted. For more options see also `~astropy.nddata.utils.Cutout2D`.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        copy : bool, optional
+               If False (default), then the cutout data will be a view into the original data  array. 
+               If True, then the cutout data will hold a copy of the original data array.
+        
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            The cutout map itself
+        """
+
+        idx = (0,) * len(self.geom.axes)
+
+        cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
+                            position=position, size=width, mode=mode)
+
+        # Create the slices with the non-spatial axis
+        cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
+
+        geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
+        data = self.data[cutout_slices]
+        
+        if copy:
+            data=data.copy()
+
+        return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)

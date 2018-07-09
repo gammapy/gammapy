@@ -33,6 +33,7 @@ dependencies:
   - sherpa
   - iminuit
   - pytest
+  - pytest-cov
   - sphinx
   - aplpy
   - pandoc

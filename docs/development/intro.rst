@@ -134,7 +134,7 @@ use ``upstream`` for the respository you forked from.
 In any case, you can use ``$ git remote -v`` to list all your configured
 remotes.
 
-When developing gammapy you never want to work on the ``master`` branch, but 
+When developing gammapy you never want to work on the ``master`` branch, but
 always on a dedicated feature branch.
 To create and switch the branch you are working on (see also :ref:`dev_working_example`):
 
@@ -149,7 +149,9 @@ To *activate* your development version (branch) of Gammapy in your environment:
 
     pip install -e .
 
-If you want to revert the build see :ref:`make_clean`.
+This build is necessary to compile the few Cython code (``*.pyx``). If you skip this
+step, some imports depending on Cython code will fail. This is described in more
+details here: :ref:`setup_cython`. If you want to revert the build see :ref:`make_clean`.
 
 For the development it is also convenient to fork and set up the :ref:`dev_gammapy-extra`:
 

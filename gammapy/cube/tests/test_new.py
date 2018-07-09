@@ -3,13 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis
-from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance
+from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance, MapMaker
+from ...data import DataStore
 
 pytest.importorskip('scipy')
 
@@ -88,3 +90,19 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     # pos = SkyCoord(85.6, 23, unit='deg')
     # val = bkg_cube.lookup(pos, energy=1 * u.TeV)
     # assert_allclose(val, 0)
+
+@requires_data('gammapy-extra')
+def test_MapMaker():
+    ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
+    obs = ds.obs(111140)
+    pos_SagA = SkyCoord(266.41681663, -29.00782497, unit="deg", frame="icrs")
+    energy_axis = MapAxis.from_edges([0.1,0.5,1.5,3.0,10.],name='energy',unit='TeV',interp='log')
+    geom = WcsGeom.create(binsz=0.1*u.deg, skydir=pos_SagA, width=15.0, axes=[energy_axis])
+    mmaker = MapMaker(geom, 4.0 * u.deg)
+    mmaker.process_obs(obs)
+
+    assert mmaker.exposure_map.unit == "m2 s"
+    assert_quantity_allclose(mmaker.count_map.data.sum(), 51152.0)
+
+
+

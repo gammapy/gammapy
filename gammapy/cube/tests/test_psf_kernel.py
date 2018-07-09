@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
+from ...irf import TablePSF, EnergyDependentMultiGaussPSF
 from ...maps import Map, WcsNDMap, MapAxis, WcsGeom
 from .. import PSFKernel
-from ..psf_kernel import table_psf_to_kernel_map
-from ...irf import TablePSF, EnergyDependentTablePSF, EnergyDependentMultiGaussPSF
 
 
 @requires_dependency('scipy')
@@ -20,13 +18,14 @@ def test_table_psf_to_kernel_map():
 
     rad = Angle(np.linspace(0., 3 * sigma.to('deg').value, 100), 'deg')
     table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
-    kernel = table_psf_to_kernel_map(table_psf, geom)
+    kernel = PSFKernel.from_table_psf(table_psf, geom)
+    kernel_array = kernel.psf_kernel_map.data
 
     # Is normalization OK?
-    assert_allclose(kernel.data.sum(), 1.0, atol=1e-5)
+    assert_allclose(kernel_array.sum(), 1.0, atol=1e-5)
 
     # maximum at the center of map?
-    ind = np.unravel_index(np.argmax(kernel.data, axis=None), kernel.data.shape)
+    ind = np.unravel_index(np.argmax(kernel_array, axis=None), kernel_array.shape)
     # absolute tolerance at 0.5 because of even number of pixel here
     assert_allclose(ind, geom.center_pix, atol=0.5)
 
@@ -79,7 +78,6 @@ def test_psf_kernel_convolve():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_energy_dependent_psf_kernel():
-    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
 
     # Define energy axis
     energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -89,7 +87,7 @@ def test_energy_dependent_psf_kernel():
     some_map = Map.from_geom(geom)
     some_map.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
-    # Extract EnergyDependentTablePSF from PSF IRF (here a PSF3D)
+    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)

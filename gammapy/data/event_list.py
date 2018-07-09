@@ -446,9 +446,8 @@ class EventListBase(object):
 
             ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
             events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
+            events.plot_time()
             plt.show()
-
         """
         import matplotlib.pyplot as plt
 
@@ -468,60 +467,6 @@ class EventListBase(object):
         t_center = (t[1:] + t[:-1]) / 2
 
         ax.plot(t_center, rate)
-
-        return ax
-
-    def plot_time_map(self, ax=None):
-        """A time map showing for each event the time between the previous and following event.
-
-        The use and implementation are described here:
-        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes
-
-        Examples
-        --------
-        Plot a time map of the events:
-
-        .. plot::
-            :include-source:
-
-            import matplotlib.pyplot as plt
-            from gammapy.data import DataStore
-
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-            events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
-            plt.show()
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        time = self.table['TIME']
-        first_event_time = np.min(time)
-
-        # Note the events are not necessarily in time order
-        relative_event_times = time - first_event_time
-
-        diffs = relative_event_times[1:] - relative_event_times[:-1]
-
-        xcoords = diffs[:-1]  # all differences except the last
-        ycoords = diffs[1:]  # all differences except the first
-
-        ax.set_title('Time Map')
-
-        ax.set_xlabel('time before event / s')
-        ax.set_ylabel('time after event / s')
-        ax.scatter(xcoords, ycoords)
 
         return ax
 
@@ -698,15 +643,7 @@ class EventList(EventListBase):
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
         self.plot_image_radec(ax=axes[0])
-        #        self.plot_time_map(ax=axes[1])
         self.plot_time(ax=axes[1])
-
-        # log-log scale for time map
-        #        xlims = axes[1].set_xlim()
-        #        ylims = axes[1].set_ylim()
-        #        axes[1].set_xlim(1e-3, xlims[1])
-        #        axes[1].set_ylim(1e-3, ylims[1])
-        #        axes[1].loglog()
         # TODO: self.plot_energy_dependence(ax=axes[x])
         # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
