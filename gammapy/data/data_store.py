@@ -200,7 +200,7 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warn('Obs {} not in store, skip.'.format(_))
+                    log.warning('Obs {} not in store, skip.'.format(_))
                     continue
                 else:
                     raise err

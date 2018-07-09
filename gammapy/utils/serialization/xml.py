@@ -19,7 +19,7 @@ import gammapy.image.models as spatial
 import gammapy.spectrum.models as spectral
 
 
-log = logging.getLogger(__name__) 
+log = logging.getLogger(__name__)
 
 
 __all__ = [
@@ -91,7 +91,7 @@ def xml_to_skymodel(xml):
     type_ = xml['@type']
     # TODO: Support ctools radial acceptance
     if type_ == 'RadialAcceptance':
-        log.warn("Radial acceptance models are not supported")
+        log.warning("Radial acceptance models are not supported")
         return None
 
     name = xml['@name']
@@ -112,7 +112,7 @@ def xml_to_model(xml, which):
     except KeyError:
         msg = "{} model '{}' not registered"
         raise UnknownModelError(msg.format(which, type_))
-    
+
     parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
     if type_ == 'MapCubeFunction':
@@ -149,7 +149,7 @@ def xml_to_parameter_list(xml, which, type_):
         except KeyError:
             msg = "Parameter '{}' not registered for {} model {}"
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
-        
+
         parameters.append(Parameter(
             name=name,
             value=float(par['@value']) * float(par['@scale']),
@@ -208,7 +208,7 @@ def model_to_xml(model, which):
     if not model_found:
         msg = "{} model {} not in registry".format(which, model)
         raise UnknownModelError(msg)
-    
+
     indent = 8 * ' '
     xml = indent + '<{} '.format(tag)
     if xml_type in ['MapCubeFunction', 'FileFunction']:

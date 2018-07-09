@@ -176,10 +176,10 @@ class HDUIndexTable(Table):
                              ''.format(obs_id, hdu_type, hdu_class))
         else:
             idx = idx[0]
-            log.warn('Found multiple HDU matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}.'
-                     ''.format(obs_id, hdu_type, hdu_class) +
-                     ' Returning the first entry, which has HDU_TYPE = {} and HDU_CLASS = {}'
-                     ''.format(self[idx]['HDU_TYPE'], self[idx]['HDU_CLASS']))
+            log.warning('Found multiple HDU matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}.'
+                        ''.format(obs_id, hdu_type, hdu_class) +
+                        ' Returning the first entry, which has HDU_TYPE = {} and HDU_CLASS = {}'
+                        ''.format(self[idx]['HDU_TYPE'], self[idx]['HDU_CLASS']))
 
         return self.location_info(idx)
 
