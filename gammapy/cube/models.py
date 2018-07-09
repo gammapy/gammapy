@@ -283,10 +283,10 @@ class SkyModelMapEvaluator(object):
 
         For now just divide flux cube by exposure
         """
-        data = flux * self.exposure.quantity
-        flux = Map.from_geom(self.geom, unit=data.unit)
-        flux.data = data.value
-        return flux
+        npred_ = (flux * self.exposure.quantity).to('')
+        npred = Map.from_geom(self.geom, unit='')
+        npred.data = npred_.value
+        return npred
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
