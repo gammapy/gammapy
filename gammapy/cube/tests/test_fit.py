@@ -85,7 +85,7 @@ def counts(sky_model, exposure, psf):
     evaluator = SkyModelMapEvaluator(sky_model=sky_model,
                                      exposure=exposure,
                                      psf=psf,
-                                     background=background)
+                                     )
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)
 
@@ -93,7 +93,7 @@ def counts(sky_model, exposure, psf):
 @requires_dependency('scipy')
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
-def test_cube_fit(sky_model, counts, exposure, psf):
+def test_cube_fit(sky_model, counts, exposure, psf, background):
     input_model = sky_model.copy()
 
     input_model.parameters['lon_0'].value = 0
@@ -110,7 +110,8 @@ def test_cube_fit(sky_model, counts, exposure, psf):
     fit = SkyModelMapFit(model=input_model,
                          counts=counts,
                          exposure=exposure,
-                         psf=psf)
+                         psf=psf,
+                         background=background)
     fit.fit()
 
     assert_quantity_allclose(fit.model.parameters['index'].quantity,
