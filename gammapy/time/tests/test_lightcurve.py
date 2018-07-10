@@ -219,7 +219,7 @@ def test_lightcurve_estimator():
 
     # TODO: change dataset and also add LC point with weak signal
     # or even negative excess that is an UL
-    assert_allclose(table['flux_ul'][0], 4.642903419805981e-11, rtol=1e-2)
+    assert_allclose(table['flux_ul'][0], 4.712087e-11, rtol=1e-2)
     assert table['is_ul'][0] == False
 
     # same but with threshold equal to 2 TeV

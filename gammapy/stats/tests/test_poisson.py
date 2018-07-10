@@ -13,7 +13,7 @@ from ..poisson import (
     significance_on_off,
     excess_matching_significance,
     excess_matching_significance_on_off,
-    Helene_ULs,
+    excess_ul_helene,
 )
 
 pytest.importorskip('scipy')
@@ -39,17 +39,16 @@ def test_excess_error():
     assert_allclose(excess_error(n_on=4, n_off=9, alpha=0.5), 2.5)
 
 
-def test_Helene_ULs():
+def test_excess_ul_helene():
     # The reference values here are from the HESS software
     # TODO: change to reference values from the Helene paper
-    assert_allclose(Helene_ULs(excess=50, excess_error=40, conf_level=0.9973), 162.72769, rtol=1e-3)
-    assert_allclose(Helene_ULs(excess=10, excess_error=6, conf_level=0.9545), 20.280005, rtol=1e-3)
-    assert_allclose(Helene_ULs(excess=-23, excess_error=8, conf_level=0.9973), 12.186635, rtol=1e-3)
+    assert_allclose(excess_ul_helene(excess=50, excess_error=40, significance=3), 171.353908, rtol=1e-3)
+    assert_allclose(excess_ul_helene(excess=10, excess_error=6, significance=2), 22.123334, rtol=1e-3)
+    assert_allclose(excess_ul_helene(excess=-23, excess_error=8, significance=3), 13.372179, rtol=1e-3)
 
     # Check in the very high, Gaussian signal limit, where you have
     # 10000 photons with Poisson noise and no background.
-    conf_level = 1 - significance_to_probability_normal(1)
-    assert_allclose(Helene_ULs(excess=10000, excess_error=100, conf_level=conf_level), 10100, atol=0.1)
+    assert_allclose(excess_ul_helene(excess=10000, excess_error=100, significance=1), 10100, atol=0.1)
 
 
 def test_significance():

@@ -6,6 +6,7 @@ Poisson significance computations for these two cases.
 * background estimated from ``n_off`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from .significance import significance_to_probability_normal
 import numpy as np
 
 __all__ = [
@@ -17,7 +18,7 @@ __all__ = [
     'significance_on_off',
     'excess_matching_significance',
     'excess_matching_significance_on_off',
-    'Helene_ULs',
+    'excess_ul_helene',
 ]
 
 __doctest_skip__ = ['*']
@@ -415,7 +416,7 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     return significance
 
 
-def Helene_ULs(excess, excess_error, conf_level=0.9545):
+def excess_ul_helene(excess, excess_error, significance):
     """Compute excess upper limit using the Helene method.
 
     Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
@@ -428,19 +429,15 @@ def Helene_ULs(excess, excess_error, conf_level=0.9545):
         Gaussian excess error
         For on / off measurement, use this function to compute it:
         `~gammapy.stats.excess_error`.
-    conf_level : float
-        Confidence level (range: 0 to 1)
-        Default `conf_level=0.9545` is 3 sigma
-        If you have a significance, you can use
-        `~gammapy.stats.significance_to_probability_normal`
-        to compute the confidence level.
+    significance : float
+        Confidence level significance for the excess upper limit.
 
     Returns
     -------
     excess_ul : float
         Upper limit for the excess
     """
-    conf_level1 = 1. - conf_level
+    conf_level1 = significance_to_probability_normal(significance)
 
     if excess_error <= 0:
         raise ValueError('Non-positive excess_error: {}'.format(excess_error))

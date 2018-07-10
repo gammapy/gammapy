@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
-from ..stats.poisson import excess_error, Helene_ULs
+from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
@@ -642,7 +642,7 @@ class LightCurveEstimator(object):
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
 
-    def light_curve(self, time_intervals, spectral_model, energy_range, sigma_ul_thres=3.):
+    def light_curve(self, time_intervals, spectral_model, energy_range, ul_significance=3):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -659,8 +659,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
-        sigma_ul_thres : float
-            Threshold on detection significance to compute Flux Upper Limits
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -669,7 +669,7 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, sigma_ul_thres)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, ul_significance)
             if useinterval:
                 rows.append(row)
 
@@ -695,7 +695,7 @@ class LightCurveEstimator(object):
 
         return LightCurve(table)
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range, sigma_ul_thres=3.):
+    def compute_flux_point(self, time_interval, spectral_model, energy_range, ul_significance=3):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -706,8 +706,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
-        sigma_ul_thres : float
-            Threshold on detection significance to compute Flux Upper Limits
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -814,8 +814,7 @@ class LightCurveEstimator(object):
 
             sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
             is_ul = sigma <= 3
-            conf_level = 0.9973 # 3 sigma ULs
-            flux_ul = Helene_ULs(n_on - alpha_mean * n_off, delta_excess, conf_level)
+            flux_ul = excess_ul_helene(n_on - alpha_mean * n_off, delta_excess, ul_significance)
             flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
