@@ -414,70 +414,79 @@ def _significance_direct_on_off(n_on, n_off, alpha):
 
     return significance
 
-def Helene_ULs(excess, error, conf_level=95.45):
-    """Compute Upper limit based on Helene et al., NIM 212 (1983) 319
-    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
 
+def Helene_ULs(excess, excess_error, conf_level=0.9545):
+    """Compute excess upper limit using the Helene method.
+
+    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
 
     Parameters
     ----------
     excess : float
         Signal excess
-    error : float
-        Gaussian Signal error
-    conf_level: float
-        Confidence level in percentage (1sigma=68.27, 2sigma=95.45, 3sigma=99.73, 5sigma=99.999943)
+    excess_error : float
+        Gaussian excess error
+        For on / off measurement, use this function to compute it:
+        `~gammapy.stats.excess_error`.
+    conf_level : float
+        Confidence level (range: 0 to 1)
+        Default `conf_level=0.9545` is 3 sigma
+        If you have a significance, you can use
+        `~gammapy.stats.significance_to_probability_normal`
+        to compute the confidence level.
 
     Returns
     -------
-    double
+    excess_ul : float
         Upper limit for the excess
     """
+    conf_level1 = 1. - conf_level
 
-    conf_level1 = 1. - conf_level/100.
-
-    if error <= 0:
-        return 0.
+    if excess_error <= 0:
+        raise ValueError('Non-positive excess_error: {}'.format(excess_error))
 
     from math import sqrt
     from scipy.special import erf
+
     if excess >= 0.:
-        zeta = excess/error
-        value = zeta/sqrt(2.)
-        integral = (1.+erf(value))/2.
-        integral2 = 1. - conf_level1*integral
+        zeta = excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
         value_old = value
-        value_new = value_old+0.01
+        value_new = value_old + 0.01
         if integral > integral2:
             value_new = 0.
-        integral = (1.+erf(value_new))/2.
+        integral = (1. + erf(value_new)) / 2.
     else:
-        zeta = -excess/error
-        value = zeta/sqrt(2.)
-        integral = 1 - (1.+erf(value))/2.
-        integral2 = 1. - conf_level1*integral
+        zeta = -excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = 1 - (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
         value_old = value
-        value_new = value_old+0.01
-        integral = (1.+erf(value_new))/2.
+        value_new = value_old + 0.01
+        integral = (1. + erf(value_new)) / 2.
 
     # The 1st Loop is for Speed & 2nd For Precision
     while integral < integral2:
         value_old = value_new
-        value_new = value_new+0.01
-        integral = (1.+erf(value_new))/2.
-    value_new = value_old+0.0000001
-    integral = (1. + erf(value_new))/2.
+        value_new = value_new + 0.01
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_old + 0.0000001
+    integral = (1. + erf(value_new)) / 2.
 
     while integral < integral2:
-        value_new = value_new+0.0000001
-        integral = (1.+erf(value_new))/2.
-    value_new = value_new*sqrt(2.)
+        value_new = value_new + 0.0000001
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_new * sqrt(2.)
 
     if excess >= 0.:
-        conf_limit = (value_new+zeta)*error
+        conf_limit = (value_new + zeta) * excess_error
     else:
-        conf_limit = (value_new-zeta)*error
+        conf_limit = (value_new - zeta) * excess_error
+
     return conf_limit
+
 
 def excess_matching_significance(mu_bkg, significance, method='lima'):
     r"""Compute excess matching a given significance.
