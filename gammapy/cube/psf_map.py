@@ -43,11 +43,11 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
 
     # Check axes positions
-    if ref_geom.axes_names.index(rad_axis.name) != 0:
-        raise ValueError("Incorrect theta axis position in input MapGeom")
+#    if ref_geom.axes_names.index(rad_axis.name) != 0:
+#        raise ValueError("Incorrect theta axis position in input MapGeom")
 
-    if ref_geom.axes_names.index(energy_axis.name) != 1:
-        raise ValueError("Incorrect energy axis position in input MapGeom")
+#    if ref_geom.axes_names.index(energy_axis.name) != 1:
+#        raise ValueError("Incorrect energy axis position in input MapGeom")
 
     # Compute separations with pointing position
     separations = pointing.separation(ref_geom.to_image().get_coord().skycoord)
@@ -86,11 +86,11 @@ class PSFMap(object):
         from astropy import units as u
         from astropy.coordinates import SkyCoord
 
-        # Define energy axis
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
-        # Define rad axis
+        # Define energy axis. Note that the name is fixed.
+        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy_true')
+        # Define rad axis. Again note the axis name
         rads = np.linspace(0., 0.5, 100) * u.deg
-        rad_axis = MapAxis.from_edges(rads, unit='deg', name='rad')
+        rad_axis = MapAxis.from_edges(rads, unit='deg', name='theta')
 
         # Define parameters
         pointing = SkyCoord(0., 0., unit='deg')
@@ -117,10 +117,10 @@ class PSFMap(object):
 
     def __init__(self, psf_map):
         # Check the presence of an energy axis
-        if psf_map.geom.axes[1].name != 'energy_true':
+        if psf_map.geom.axes[1].name.upper() != 'ENERGY_TRUE':
             raise ValueError("Incorrect energy axis position in input Map")
 
-        if psf_map.geom.axes[0].name is not 'theta':
+        if psf_map.geom.axes[0].name.upper() != 'THETA':
             raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
