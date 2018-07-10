@@ -84,7 +84,7 @@ def psf(geom):
 def counts(sky_model, exposure, psf):
     evaluator = SkyModelMapEvaluator(sky_model=sky_model,
                                      exposure=exposure,
-                                     psf=psf,
+                                     psf=psf
                                      )
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)
