@@ -6,6 +6,7 @@ from numpy.testing.utils import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy import units as u
+from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDependentMultiGaussPSF
 
@@ -54,6 +55,19 @@ class TestEnergyDependentMultiGaussPSF:
         # TODO: try to improve precision, so that rtol can be lowered
         assert_allclose(desired, actual.degree, rtol=0.03)
 
+    def test_to_psf3d(self, psf):
+        rads = np.linspace(0.,1.0,301)*u.deg
+        psf_3d = psf.to_psf3d(rads)
+        assert psf_3d.rad_lo.shape == (300,)
+        assert psf_3d.rad_lo.unit == 'deg'
+
+        theta=0.5*u.deg
+        energy = 0.5*u.TeV
+
+        containment = np.linspace(0.1, 0.95, 10)
+        desired = np.array([psf.containment_radius(energy,theta,_).value for _ in containment])
+        actual = np.array([psf_3d.containment_radius(energy,theta,_).value for _ in containment])
+        assert_allclose(np.squeeze(desired),actual,rtol=0.01)
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')

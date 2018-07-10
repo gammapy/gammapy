@@ -12,3 +12,4 @@ from .basic_cube import *
 from .fit import *
 from .new import *
 from .psf_kernel import *
+from .psf_map import *
