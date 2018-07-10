@@ -15,7 +15,7 @@ bg_cube_model.plot_image(energy=Quantity(2., 'TeV'))
 bg_cube_model.plot_spectrum(coord=Angle([0., 0.], 'degree'))
 
 outname = 'cube_background_model'
-bg_cube_model.write('{}_bin_table.fits'.format(outname), format='table', clobber=True)
-bg_cube_model.write('{}_image.fits'.format(outname), format='image', clobber=True)
+bg_cube_model.write('{}_bin_table.fits'.format(outname), format='table', overwrite=True)
+bg_cube_model.write('{}_image.fits'.format(outname), format='image', overwrite=True)
 
 plt.show()

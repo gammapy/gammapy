@@ -122,9 +122,9 @@ class SherpaMultiGaussPSF(object):
         fraction = np.nansum(p[mask])
         if 0:  # debug
             sau.get_data().y = p
-            sau.save_data('psf_sherpa.fits', clobber=True)
+            sau.save_data('psf_sherpa.fits', overwrite=True)
             sau.get_data().y = mask.astype('int')
-            sau.save_data('mask_sherpa.fits', clobber=True)
+            sau.save_data('mask_sherpa.fits', overwrite=True)
         return fraction
 
 

@@ -29,4 +29,4 @@ print('shape: {0}'.format(kernel_image.shape))
 print(psf.info())
 
 print('Writing {0}'.format(outfile))
-fits.writeto(outfile, data=kernel_image, clobber=True)
+fits.writeto(outfile, data=kernel_image, overwrite=True)

@@ -107,7 +107,7 @@ class OffDataBackgroundMaker(object):
             raise ValueError('Invalid selection: {}'.format(selection))
 
         log.info('Writing {}'.format(self.run_list))
-        obs_table.write(self.run_list, format='ascii.csv')
+        obs_table.write(self.run_list, format='ascii.csv', overwrite=True)
 
     def group_observations(self):
         """Group the background observation list.
