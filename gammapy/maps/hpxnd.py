@@ -257,7 +257,7 @@ class HpxNDMap(HpxMap):
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
         map_out.coadd(self)
         coords = geom.get_coord(flat=True)
         m = self.geom.contains(coords)
@@ -269,7 +269,7 @@ class HpxNDMap(HpxMap):
             # FIXME: These modes don't work at present because
             # interp_by_coord doesn't support extrapolation
             vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
-                                        else order)
+            else order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))
@@ -278,35 +278,35 @@ class HpxNDMap(HpxMap):
 
     def crop(self, crop_width):
         geom = self.geom.crop(crop_width)
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
         map_out.coadd(self)
         return map_out
 
     def upsample(self, factor, preserve_counts=True):
 
         map_out = self.__class__(self.geom.upsample(factor),
-                                 meta=copy.deepcopy(self.meta))
+                                 meta=copy.deepcopy(self.meta), unit=self.unit)
         coords = map_out.geom.get_coord(flat=True)
         vals = self.get_by_coord(coords)
         m = np.isfinite(vals)
         map_out.fill_by_coord([c[m] for c in coords], vals[m])
 
         if preserve_counts:
-            map_out.data /= factor**2
+            map_out.data /= factor ** 2
 
         return map_out
 
     def downsample(self, factor, preserve_counts=True):
 
         map_out = self.__class__(self.geom.downsample(factor),
-                                 meta=copy.deepcopy(self.meta))
+                                 meta=copy.deepcopy(self.meta), unit=self.unit)
         idx = self.geom.get_idx(flat=True)
         coords = self.geom.pix_to_coord(idx)
         vals = self.get_by_idx(idx)
         map_out.fill_by_coord(coords, vals)
 
         if not preserve_counts:
-            map_out.data /= factor**2
+            map_out.data /= factor ** 2
 
         return map_out
 
@@ -462,7 +462,7 @@ class HpxNDMap(HpxMap):
     def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
-        map_out = self.__class__(hpx_out, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(hpx_out, meta=copy.deepcopy(self.meta), unit=self.unit)
         idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
         if self.geom.nside.size > 1:
@@ -485,7 +485,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.to_ud_graded(order)
-        map_out = self.__class__(new_hpx, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(new_hpx, meta=copy.deepcopy(self.meta), unit=self.unit)
 
         if np.all(order <= self.geom.order):
             # Downsample
