@@ -398,7 +398,7 @@ class WcsNDMap(WcsMap):
 
         pad_width = [(t, t) for t in pad_width]
         data = np.pad(self.data, pad_width[::-1], mode, **kw)
-        map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
         return map_out
 
     def _pad_coadd(self, geom, pad_width, mode, cval, order):
@@ -407,7 +407,7 @@ class WcsNDMap(WcsMap):
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
         idx_out = geom.get_idx(flat=True)[::-1]
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
+        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
         map_out.coadd(self)
         if mode == 'constant':
             pad_msk = np.zeros_like(map_out.data, dtype=bool)
@@ -419,7 +419,7 @@ class WcsNDMap(WcsMap):
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
             vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
-                                        else order)
+            else order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))
@@ -437,11 +437,11 @@ class WcsNDMap(WcsMap):
             for ax in self.geom.axes:
                 slices += [slice(None)]
             data = self.data[slices[::-1]]
-            map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta))
+            map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
         else:
             # FIXME: This could be done more efficiently by
             # constructing the appropriate slices for each image plane
-            map_out = self.__class__(geom, meta=copy.deepcopy(self.meta))
+            map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
             map_out.coadd(self)
 
         return map_out
@@ -454,8 +454,8 @@ class WcsNDMap(WcsMap):
                (idx[1] - 0.5 * (factor - 1)) / factor,) + idx[2:]
         data = map_coordinates(self.data.T, pix, order=order, mode='nearest')
         if preserve_counts:
-            data /= factor**2
-        return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
+            data /= factor ** 2
+        return self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
 
     def downsample(self, factor, preserve_counts=True):
         from skimage.measure import block_reduce
@@ -463,8 +463,8 @@ class WcsNDMap(WcsMap):
         block_size = tuple([factor, factor] + [1] * (self.geom.ndim - 2))
         data = block_reduce(self.data, block_size[::-1], np.nansum)
         if not preserve_counts:
-            data /= factor**2
-        return self.__class__(geom, data, meta=copy.deepcopy(self.meta))
+            data /= factor ** 2
+        return self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
@@ -636,8 +636,8 @@ class WcsNDMap(WcsMap):
 
         geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
-        
+
         if copy:
-            data=data.copy()
+            data = data.copy()
 
         return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)

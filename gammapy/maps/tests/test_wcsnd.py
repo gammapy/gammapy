@@ -352,23 +352,23 @@ def test_wcsndmap_crop(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsndmap_downsample(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsNDMap(geom)
+    m = WcsNDMap(geom, unit='m2')
     # Check whether we can downsample
     if (np.all(np.mod(geom.npix[0], 2) == 0) and
             np.all(np.mod(geom.npix[1], 2) == 0)):
         m2 = m.downsample(2, preserve_counts=True)
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
-
+        assert m.unit == m2.unit
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz,
                           proj=proj, coordsys=coordsys, axes=axes)
-    m = WcsNDMap(geom)
+    m = WcsNDMap(geom, unit='m2')
     m2 = m.upsample(2, order=0, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
-
+    assert m.unit == m2.unit
 
 def test_coadd_unit():
     geom = WcsGeom.create(npix=(10, 10), binsz=1,
