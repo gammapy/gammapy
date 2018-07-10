@@ -267,7 +267,14 @@ class PSFKernel(object):
         convolved_map : `~gammapy.maps.Map`
             the convolved map
         """
-        # TODO : check that the MapGeom are consistent
+        # check that kernel and map pixel sizes are consistent
+        s1 = map.geom.pixel_scales
+        s2 = self._psf_kernel_map.geom.pixel_scales
+
+        if (s1-s2).max() > Angle('0.001 deg'):
+            raise ValueError('Map and kernel pixel scales are inconsistent')
+
+
         if copy:
             convolved_map = Map.from_geom(geom=map.geom, unit=map.unit, meta=map.meta)
         else:
