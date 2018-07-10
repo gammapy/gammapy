@@ -116,4 +116,4 @@ def test_cube_fit(sky_model, counts, exposure, psf):
                              rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
-    assert_allclose(stat, 8.672365798603572)
+    assert_allclose(stat, 13079.031915029665)
