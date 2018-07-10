@@ -303,8 +303,7 @@ class SkyModelMapEvaluator(object):
         if self.psf is not None:
             npred = self.apply_psf(npred)
         if self.background:
-            return npred.data + self.background.data
-        else:
-            return npred.data
+            npred.data += self.background.data
+        return npred.data
 
 
