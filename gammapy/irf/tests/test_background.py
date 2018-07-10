@@ -14,6 +14,20 @@ def bkg_3d():
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     return Background3D.read(filename, hdu='BACKGROUND')
 
+@pytest.fixture(scope='session')
+def bkg_3d_simple():
+    """A simple Background2D test case"""
+    energy = [0.1, 10, 1000] * u.TeV
+    det_x = [0, 1, 2, 3] * u.deg
+    det_y = [0, 1, 2, 3] * u.deg
+    data = np.zeros((2, 3, 3)) * u.Unit('s-1 MeV-1 sr-1')
+    data.value[1, 0, 0] = 2
+    data.value[1, 1, 1] = 4
+    return Background3D(
+        energy_lo=energy[:-1], energy_hi=energy[1:],
+        detx_lo=det_x[:-1], detx_hi=det_x[1:], dety_lo=det_y[:-1], dety_hi=det_y[1:],
+        data=data
+    )
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -33,8 +47,6 @@ def test_background_3d_basics(bkg_3d):
     assert axis.unit == 'deg'
 
     data = bkg_3d.data.data
-    assert data.shape == (21, 36, 36)
-    assert data.unit == u.Unit('s-1 MeV-1 sr-1')
 
 
 @requires_dependency('scipy')
@@ -51,6 +63,71 @@ def test_background_3d_write(bkg_3d):
     assert_equal(hdu.data['DETX_LO'][0], bkg_3d.data.axis('detx').lo.value)
     assert hdu.header['TUNIT1'] == bkg_3d.data.axis('detx').lo.unit
 
+    assert data.shape == (21, 36, 36)
+    assert data.unit == u.Unit('s-1 MeV-1 sr-1')
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_background_3d_basics2(bkg_3d_simple):
+    assert 'NDDataArray summary info' in str(bkg_3d_simple.data)
+
+    axis = bkg_3d_simple.data.axis('energy')
+    assert axis.nbins == 2
+    assert axis.unit == 'TeV'
+
+    axis = bkg_3d_simple.data.axis('detx')
+    assert axis.nbins == 3
+    assert axis.unit == 'deg'
+
+    axis = bkg_3d_simple.data.axis('dety')
+    assert axis.nbins == 3
+    assert axis.unit == 'deg'
+
+    data = bkg_3d_simple.data.data
+    assert data.shape == (2, 3, 3)
+    assert data.unit == u.Unit('s-1 MeV-1 sr-1')
+
+def test_background_3d_read_write(tmpdir, bkg_3d_simple):
+    filename = str(tmpdir / "bkg3d.fits")
+    bkg_3d_simple.to_fits().writeto(filename)
+
+    bkg_3d = Background3D.read(filename)
+
+    axis = bkg_3d.data.axis('energy')
+    assert axis.nbins == 2
+    assert axis.unit == 'TeV'
+
+    axis = bkg_3d.data.axis('detx')
+    assert axis.nbins == 3
+    assert axis.unit == 'deg'
+
+    axis = bkg_3d.data.axis('dety')
+    assert axis.nbins == 3
+    assert axis.unit == 'deg'
+
+    data = bkg_3d.data.data
+    assert data.shape == (2, 3, 3)
+    assert data.unit == 's-1 MeV-1 sr-1'
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_background_3d_evaluate_2(bkg_3d_simple):
+    # Evaluate at log center between nodes in energy
+    bkg_rate = bkg_3d_simple.evaluate(detx=np.array([1,0.5]) * u.deg, dety=np.array([1,0.5]) * u.deg, energy_reco=np.ones(2) * 1 * u.TeV)
+    assert_allclose(res.value, 0)
+    assert res.shape == (2,)
+    assert res.unit == 's-1 MeV-1 sr-1'
+
+    res = bkg_3d_simple.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=100 * u.TeV)
+    assert_allclose(res.value, [3, 2])
+
+    res = bkg_3d_simple.evaluate(fov_offset=[1, 0.5] * u.deg, energy_reco=[1, 100] * u.TeV)
+    assert_allclose(res.value, [[0, 0], [3, 2]])
+    assert res.shape == (2, 2)
+
+    res = bkg_3d_simple.evaluate(fov_offset=1 * u.deg, energy_reco=[1, 100] * u.TeV)
+    assert_allclose(res.value, [0, 3])
+    assert res.shape == (2,)
 
 @pytest.fixture(scope='session')
 def bkg_2d():
