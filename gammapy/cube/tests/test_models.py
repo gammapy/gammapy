@@ -23,6 +23,12 @@ def exposure(geom):
     m.quantity = np.ones((2, 4, 5)) * u.Quantity('100 m2 s')
     return m
 
+@pytest.fixture(scope='session')
+def background(geom):
+    m = Map.from_geom(geom)
+    m.quantity = np.ones((2, 4, 5))*1e-7
+    return m
+
 
 @pytest.fixture(scope='session')
 def sky_model():
@@ -125,4 +131,12 @@ class TestSkyModelMapEvaluator:
     def test_compute_npred(self):
         out = self.evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 7.312826994672788e-07)
+        npred_expected = 7.312826994672788e-07
+        assert_allclose(out.sum(), npred_expected)
+
+        evaluator_bkg = SkyModelMapEvaluator(sky_model(), exposure(geom()), background=background(geom()))
+        out_bkg = evaluator_bkg.compute_npred()
+        npred_back_expected = npred_expected + 40.0e-7
+        assert_allclose(out_bkg.sum(), npred_back_expected)
+
+

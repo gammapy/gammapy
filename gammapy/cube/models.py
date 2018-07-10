@@ -191,12 +191,15 @@ class SkyModelMapEvaluator(object):
         Exposure map
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
+    background : `~gammapy.maps.Map`
+        background map
     """
 
-    def __init__(self, sky_model=None, exposure=None, psf=None):
+    def __init__(self, sky_model=None, exposure=None, psf=None, background=None):
         self.sky_model = sky_model
         self.exposure = exposure
         self.psf = psf
+        self.background = background
 
     @lazyproperty
     def geom(self):
@@ -299,5 +302,9 @@ class SkyModelMapEvaluator(object):
         npred = self.apply_aeff(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
-        return npred.data
+        if self.background:
+            return npred.data + self.background.data
+        else:
+            return npred.data
+
 
