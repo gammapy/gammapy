@@ -282,7 +282,7 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsndmap_reproject(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                           skydir=skydir, coordsys=coordsys, axes=axes)
-    m = WcsNDMap(geom)
+    m = WcsNDMap(geom, unit="m2")
 
     if geom.projection == 'AIT' and geom.is_allsky:
         pytest.xfail('Bug in reproject version <= 0.3.1')
@@ -296,6 +296,7 @@ def test_wcsndmap_reproject(npix, binsz, coordsys, proj, skydir, axes):
     m0 = m.reproject(geom0, order=1)
 
     assert_allclose(m.data, m0.data)
+    assert m0.unit == m.unit
 
     # TODO : Reproject to a different spatial geometry
 

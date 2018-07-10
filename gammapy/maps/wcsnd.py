@@ -298,7 +298,7 @@ class WcsNDMap(WcsMap):
     def _reproject_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
 
-        map_out = WcsNDMap(geom)
+        map_out = WcsNDMap(geom, unit=self.unit)
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])
 
