@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
-from ...maps import MapAxis, WcsGeom, WcsNDMap
+from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from .. import (
@@ -63,6 +63,13 @@ def exposure(geom):
     return exposure_map
 
 @pytest.fixture(scope='session')
+def background(geom):
+    m = Map.from_geom(geom)
+    m.quantity = np.ones((9, 150, 400))*1e-5
+    return m
+
+
+@pytest.fixture(scope='session')
 def psf(geom):
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
@@ -77,7 +84,8 @@ def psf(geom):
 def counts(sky_model, exposure, psf):
     evaluator = SkyModelMapEvaluator(sky_model=sky_model,
                                      exposure=exposure,
-                                     psf=psf)
+                                     psf=psf,
+                                     background=background)
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)
 
@@ -116,4 +124,6 @@ def test_cube_fit(sky_model, counts, exposure, psf):
                              rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
-    assert_allclose(stat, 8.672365798603572)
+    stat_expected = 13878.660101673398
+    assert_allclose(stat, stat_expected, rtol=1e-2)
+
