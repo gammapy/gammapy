@@ -103,7 +103,7 @@ class SkyImageList(UserList):
             super(SkyImageList, self).__setitem__(key, image)
 
     @classmethod
-    def from_hdu_list(cls, hdu_list):
+    def from_hdulist(cls, hdu_list):
         """Construct from `~astropy.io.fits.HDUList`.
         """
         images = []
@@ -117,7 +117,7 @@ class SkyImageList(UserList):
         """Read from FITS file."""
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdu_list:
-            images = cls.from_hdu_list(hdu_list)
+            images = cls.from_hdulist(hdu_list)
         return images
 
     def to_hdu_list(self):

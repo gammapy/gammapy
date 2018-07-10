@@ -164,7 +164,7 @@ class Map(object):
         """
         filename = str(make_path(filename))
         with fits.open(filename, memmap=False) as hdulist:
-            map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
+            map_out = cls.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
         return map_out
 
@@ -211,7 +211,7 @@ class Map(object):
         return map_out
 
     @classmethod
-    def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
         if map_type == 'auto':
             map_type = cls._get_map_type(hdulist, hdu)
         cls_out = cls._get_map_cls(map_type)

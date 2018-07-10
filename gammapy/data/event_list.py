@@ -760,6 +760,19 @@ class EventListDataset(object):
         self.gti = gti
 
     @classmethod
+    def from_hdulist(cls, hdu_list):
+        """Create `EventList` from a `~astropy.io.fits.HDUList`."""
+        # TODO: This doesn't work because FITS / Table is not integrated.
+        # Maybe the easiest solution for now it to write the hdu_list
+        # to an in-memory buffer with StringIO and then read it
+        # back using Table.read()?
+        raise NotImplementedError
+        event_list = EventList.from_hdu(hdu_list['EVENTS'])
+        gti = GTI.from_hdu(hdu_list['GTI'])
+
+        return cls(event_list=event_list, gti=gti)
+
+    @classmethod
     def read(cls, filename):
         """Read event list from FITS file."""
         event_list = EventList.read(filename)
