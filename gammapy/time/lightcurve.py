@@ -812,16 +812,15 @@ class LightCurveEstimator(object):
             delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
             flux_err *= delta_excess
 
-            flux_ul = -1
             sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
-            if sigma <= sigma_ul_thres:
-                flux_ul = Helene_ULs(n_on - alpha_mean * n_off, delta_excess, 99.73) #3 sigma ULs
-                flux_ul *= int_flux / predicted_excess.value
+            is_ul = sigma <= 3
+            conf_level = 0.9973 # 3 sigma ULs
+            flux_ul = Helene_ULs(n_on - alpha_mean * n_off, delta_excess, conf_level)
+            flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
             flux_err = 0
             flux_ul = -1
-            sigma = 0.
 
         # Store measurements in a dict and return that
         return useinterval, OrderedDict([
@@ -830,7 +829,7 @@ class LightCurveEstimator(object):
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
             ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
-            ('is_ul', sigma <= sigma_ul_thres),
+            ('is_ul', is_ul),
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),

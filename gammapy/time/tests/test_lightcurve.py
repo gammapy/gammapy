@@ -211,17 +211,16 @@ def test_lightcurve_estimator():
 
     assert_quantity_allclose(len(table), 2)
 
-    # TODO:
-    # The uncommented values are with containment correction, this does not
-    # work at the moment, try to reproduce them later
-    # assert_allclose(table['flux'][0], 5.70852574714e-11, rtol=1e-2)
     assert_allclose(table['flux'][0], 3.759367126537715e-11, rtol=1e-2)
-    # assert_allclose(table['flux'][-1], 6.16718031281e-11, rtol=1e-2)
     assert_allclose(table['flux'][-1], 3.8700838947652217e-11, rtol=1e-2)
 
     assert_allclose(table['flux_err'][0], 3.175731544692804e-12, rtol=1e-2)
-    # assert_allclose(table['flux_err'][-1], 5.91581572415e-12, rtol=1e-2)
     assert_allclose(table['flux_err'][-1], 3.181191593075743e-12, rtol=1e-2)
+
+    # TODO: change dataset and also add LC point with weak signal
+    # or even negative excess that is an UL
+    assert_allclose(table['flux_ul'][0], 4.642903419805981e-11, rtol=1e-2)
+    assert table['is_ul'][0] == False
 
     # same but with threshold equal to 2 TeV
     lc = lc_estimator.light_curve(
