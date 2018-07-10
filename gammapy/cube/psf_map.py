@@ -42,13 +42,6 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     rad_axis = ref_geom.get_axis_by_name('theta')
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
 
-    # Check axes positions
-#    if ref_geom.axes_names.index(rad_axis.name) != 0:
-#        raise ValueError("Incorrect theta axis position in input MapGeom")
-
-#    if ref_geom.axes_names.index(energy_axis.name) != 1:
-#        raise ValueError("Incorrect energy axis position in input MapGeom")
-
     # Compute separations with pointing position
     separations = pointing.separation(ref_geom.to_image().get_coord().skycoord)
     valid = np.where(separations < max_offset)
@@ -62,6 +55,7 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(ref_geom, unit='sr-1')
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
+
     return PSFMap(psfmap)
 
 
@@ -116,7 +110,6 @@ class PSFMap(object):
     """
 
     def __init__(self, psf_map):
-        # Check the presence of an energy axis
         if psf_map.geom.axes[1].name.upper() != 'ENERGY_TRUE':
             raise ValueError("Incorrect energy axis position in input Map")
 
@@ -147,8 +140,7 @@ class PSFMap(object):
 
     @classmethod
     def read(cls, filename, **kwargs):
-        """ Read a psf_map from file and create a PSFMap object"""
-
+        """Read a psf_map from file and create a PSFMap object"""
         psfmap = Map.read(filename, **kwargs)
         return cls(psfmap)
 
@@ -216,7 +208,7 @@ class PSFMap(object):
         return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
 
     def containment_radius_map(self, fraction=0.68):
-        """Returns the containement radius map.
+        """Returns the containment radius map.
 
         Parameters
         ----------
@@ -228,5 +220,4 @@ class PSFMap(object):
         containment_radius_map : `~gammapy.maps.Map`
             a 3D map giving the containment radius at each energy and each position of the initial psf_map
         """
-
         raise NotImplementedError

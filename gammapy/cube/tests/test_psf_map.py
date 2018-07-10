@@ -20,7 +20,6 @@ def fake_psf3d(sigma=0.15 * u.deg):
     rad = np.linspace(0, 1., 101) * u.deg
     rad_lo = rad[:-1]
     rad_hi = rad[1:]
-    #    rad = 0.5*(rad_lo + rad_hi)
 
     O, R, E = np.meshgrid(offsets, rad, energy)
 
@@ -32,6 +31,7 @@ def fake_psf3d(sigma=0.15 * u.deg):
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
 
+@requires_dependency('scipy')
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
@@ -43,14 +43,9 @@ def test_make_psf_map():
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
 
-    # check axes ordering
     assert psfmap.psf_map.geom.axes[0] == rad_axis
     assert psfmap.psf_map.geom.axes[1] == energy_axis
-
-    # Check unit
-    assert psfmap._psf_map.unit == Unit('sr-1')
-
-    # check size
+    assert psfmap.psf_map.unit == Unit('sr-1')
     assert psfmap.data.shape == (4, 50, 25, 25)
 
 
@@ -77,8 +72,8 @@ def test_psfmap(tmpdir):
 
     # create PSFKernel
     kern_geom = WcsGeom.create(binsz=0.02, width=5., axes=[energy_axis])
-    psfkernel = psfmap.get_psf_kernel(SkyCoord(1, 1, unit='deg'), kern_geom, max_radius=1*u.deg)
-    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1,2)),1.0)
+    psfkernel = psfmap.get_psf_kernel(SkyCoord(1, 1, unit='deg'), kern_geom, max_radius=1 * u.deg)
+    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0)
 
     # test read/write
     filename = str(tmpdir / "psfmap.fits")
