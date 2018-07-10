@@ -246,7 +246,7 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def _reproject_hpx(self, geom, order=1, mode='interp'):
-        map_out = HpxNDMap(geom)
+        map_out = HpxNDMap(geom, unit=self.unit)
         axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
                           zip(geom.axes, self.geom.axes)])
 
