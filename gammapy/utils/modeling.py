@@ -49,8 +49,8 @@ class Parameter(object):
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin or np.nan
-        self.parmax = parmax or np.nan
+        self.parmin = parmin if parmin is not None else np.nan
+        self.parmax = parmax if parmax is not None else np.nan
         self.frozen = frozen
 
     @property

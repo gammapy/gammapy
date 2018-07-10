@@ -395,12 +395,12 @@ class EnergyDependentMultiGaussPSF(object):
         energies = self.energy
 
         # Defaults and input handling
-        if theta:
+        if theta is not None:
             theta = Angle(theta)
         else:
             theta = Angle(0, 'deg')
 
-        if rad:
+        if rad is not None:
             rad = Angle(rad).to('deg')
         else:
             rad = Angle(np.arange(0, 1.5, 0.005), 'deg')

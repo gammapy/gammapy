@@ -157,9 +157,12 @@ class BgRateTable(object):
             Axis
         """
         import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
 
-        energy = energy or self.energy.nodes
+        if ax is None:
+            ax = plt.gca()
+
+        if energy is None:
+            energy = self.energy.nodes
         values = self.data.evaluate(energy=energy)
         xerr = (
             energy.value - self.energy.lo.value,
@@ -235,9 +238,12 @@ class Psf68Table(object):
             Axis
         """
         import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+        if ax is None:
+            ax = plt.gca()
 
-        energy = energy or self.energy.nodes
+        if energy is None:
+            energy = self.energy.nodes
+
         values = self.data.evaluate(energy=energy)
         xerr = (
             energy.value - self.energy.lo.value,
@@ -313,9 +319,11 @@ class SensitivityTable(object):
             Axis
         """
         import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+        if ax is None:
+            ax = plt.gca()
 
-        energy = energy or self.energy.nodes
+        if energy is None:
+            energy = self.energy.nodes
         values = self.data.evaluate(energy=energy)
         xerr = (
             energy.value - self.energy.lo.value,

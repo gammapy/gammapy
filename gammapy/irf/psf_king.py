@@ -232,8 +232,10 @@ class PSFKing(object):
         energies = self.energy
 
         # Defaults
-        theta = theta or Angle(0, 'deg')
-        rad = rad or Angle(np.arange(0, 1.5, 0.005), 'deg')
+        if theta is None:
+            theta = Angle(0, 'deg')
+        if rad is None:
+            rad = Angle(np.arange(0, 1.5, 0.005), 'deg')
         psf_value = Quantity(np.empty((len(energies), len(rad))), 'deg^-2')
 
         for i, energy in enumerate(energies):
