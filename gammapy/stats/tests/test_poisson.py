@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency
+from ..significance import significance_to_probability_normal
 from ..poisson import (
     background,
     background_error,
@@ -13,6 +13,7 @@ from ..poisson import (
     significance_on_off,
     excess_matching_significance,
     excess_matching_significance_on_off,
+    excess_ul_helene,
 )
 
 pytest.importorskip('scipy')
@@ -36,6 +37,18 @@ def test_excess():
 def test_excess_error():
     assert_allclose(excess_error(n_on=10, n_off=20, alpha=0.1), 3.1937439)
     assert_allclose(excess_error(n_on=4, n_off=9, alpha=0.5), 2.5)
+
+
+def test_excess_ul_helene():
+    # The reference values here are from the HESS software
+    # TODO: change to reference values from the Helene paper
+    assert_allclose(excess_ul_helene(excess=50, excess_error=40, significance=3), 171.353908, rtol=1e-3)
+    assert_allclose(excess_ul_helene(excess=10, excess_error=6, significance=2), 22.123334, rtol=1e-3)
+    assert_allclose(excess_ul_helene(excess=-23, excess_error=8, significance=3), 13.372179, rtol=1e-3)
+
+    # Check in the very high, Gaussian signal limit, where you have
+    # 10000 photons with Poisson noise and no background.
+    assert_allclose(excess_ul_helene(excess=10000, excess_error=100, significance=1), 10100, atol=0.1)
 
 
 def test_significance():
@@ -83,14 +96,14 @@ def test_excess_matching_significance_on_off():
     assert_allclose(excess, [9.82966, 12.038423], atol=1e-3)
     excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=0.1, significance=5, method='simple')
     assert_allclose(excess, [26.05544, 27.03444], atol=1e-3)
-    excess = excess_matching_significance_on_off(n_off=10, alpha=[0.1,0.3], significance=5)
+    excess = excess_matching_significance_on_off(n_off=10, alpha=[0.1, 0.3], significance=5)
     assert_allclose(excess, [9.82966, 16.664516], atol=1e-3)
-    excess = excess_matching_significance_on_off(n_off=10, alpha=0.1, significance=[3,5])
+    excess = excess_matching_significance_on_off(n_off=10, alpha=0.1, significance=[3, 5])
     assert_allclose(excess, [4.818497, 9.82966], atol=1e-3)
-    excess = excess_matching_significance_on_off(n_off=[10,20], alpha=[0.1,0.3], significance=[3,5])
+    excess = excess_matching_significance_on_off(n_off=[10, 20], alpha=[0.1, 0.3], significance=[3, 5])
     assert_allclose(excess, [4.818497, 20.68810], atol=1e-3)
-    excess = excess_matching_significance_on_off(n_off=[[10,20],[10,20]], alpha=0.1, significance=5)
-    assert_allclose(excess, [[9.82966, 12.038423],[9.82966, 12.038423]], atol=1e-3)
+    excess = excess_matching_significance_on_off(n_off=[[10, 20], [10, 20]], alpha=0.1, significance=5)
+    assert_allclose(excess, [[9.82966, 12.038423], [9.82966, 12.038423]], atol=1e-3)
 
 
 @pytest.mark.parametrize('p', TEST_CASES)

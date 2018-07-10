@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
-from ..stats.poisson import excess_error
+from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
@@ -642,7 +642,7 @@ class LightCurveEstimator(object):
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
 
-    def light_curve(self, time_intervals, spectral_model, energy_range):
+    def light_curve(self, time_intervals, spectral_model, energy_range, ul_significance=3):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -659,6 +659,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -667,7 +669,7 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, ul_significance)
             if useinterval:
                 rows.append(row)
 
@@ -681,17 +683,19 @@ class LightCurveEstimator(object):
 
         table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
         table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['flux_ul'] = [_['flux_ul'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['is_ul'] = [_['is_ul'] for _ in rows]
 
         table['livetime'] = [_['livetime'].value for _ in rows] * u.s
         table['n_on'] = [_['n_on'] for _ in rows]
         table['n_off'] = [_['n_off'] for _ in rows]
         table['alpha'] = [_['alpha'] for _ in rows]
         table['measured_excess'] = [_['measured_excess'] for _ in rows]
-        table['expected_excess'] = [_['expected_excess'].value for _ in rows]
+        table['expected_excess'] = [_['expected_excess'] for _ in rows]
 
         return LightCurve(table)
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range):
+    def compute_flux_point(self, time_interval, spectral_model, energy_range, ul_significance=3):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -702,6 +706,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -800,12 +806,20 @@ class LightCurveEstimator(object):
 
             flux = measured_excess / predicted_excess.value
             flux *= int_flux
-            flux_err = int_flux / predicted_excess.value
+
             # Gaussian errors, TODO: should be improved
-            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err = int_flux / predicted_excess.value
+            delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err *= delta_excess
+
+            sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
+            is_ul = sigma <= 3
+            flux_ul = excess_ul_helene(n_on - alpha_mean * n_off, delta_excess, ul_significance)
+            flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
             flux_err = 0
+            flux_ul = -1
 
         # Store measurements in a dict and return that
         return useinterval, OrderedDict([
@@ -813,7 +827,8 @@ class LightCurveEstimator(object):
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-
+            ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
+            ('is_ul', is_ul),
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),

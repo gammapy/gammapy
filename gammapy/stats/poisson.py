@@ -6,6 +6,7 @@ Poisson significance computations for these two cases.
 * background estimated from ``n_off`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from .significance import significance_to_probability_normal
 import numpy as np
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     'significance_on_off',
     'excess_matching_significance',
     'excess_matching_significance_on_off',
+    'excess_ul_helene',
 ]
 
 __doctest_skip__ = ['*']
@@ -412,6 +414,75 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     significance = norm.isf(probability)
 
     return significance
+
+
+def excess_ul_helene(excess, excess_error, significance):
+    """Compute excess upper limit using the Helene method.
+
+    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
+
+    Parameters
+    ----------
+    excess : float
+        Signal excess
+    excess_error : float
+        Gaussian excess error
+        For on / off measurement, use this function to compute it:
+        `~gammapy.stats.excess_error`.
+    significance : float
+        Confidence level significance for the excess upper limit.
+
+    Returns
+    -------
+    excess_ul : float
+        Upper limit for the excess
+    """
+    conf_level1 = significance_to_probability_normal(significance)
+
+    if excess_error <= 0:
+        raise ValueError('Non-positive excess_error: {}'.format(excess_error))
+
+    from math import sqrt
+    from scipy.special import erf
+
+    if excess >= 0.:
+        zeta = excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
+        value_old = value
+        value_new = value_old + 0.01
+        if integral > integral2:
+            value_new = 0.
+        integral = (1. + erf(value_new)) / 2.
+    else:
+        zeta = -excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = 1 - (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
+        value_old = value
+        value_new = value_old + 0.01
+        integral = (1. + erf(value_new)) / 2.
+
+    # The 1st Loop is for Speed & 2nd For Precision
+    while integral < integral2:
+        value_old = value_new
+        value_new = value_new + 0.01
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_old + 0.0000001
+    integral = (1. + erf(value_new)) / 2.
+
+    while integral < integral2:
+        value_new = value_new + 0.0000001
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_new * sqrt(2.)
+
+    if excess >= 0.:
+        conf_limit = (value_new + zeta) * excess_error
+    else:
+        conf_limit = (value_new - zeta) * excess_error
+
+    return conf_limit
 
 
 def excess_matching_significance(mu_bkg, significance, method='lima'):
