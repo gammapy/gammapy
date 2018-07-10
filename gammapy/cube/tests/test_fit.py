@@ -65,7 +65,7 @@ def exposure(geom):
 @pytest.fixture(scope='session')
 def background(geom):
     m = Map.from_geom(geom)
-    m.quantity = np.ones((9, 150, 400))*1e-5
+    m.quantity = np.ones(m.data.shape)*1e-5
     return m
 
 

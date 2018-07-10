@@ -27,6 +27,8 @@ class SkyModelMapFit(object):
         Exposure cube
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
+    background : `~gammapy.maps.WcsNDMap`
+        Background Cube
     """
 
     def __init__(self, model, counts, exposure, psf=None, background=None):
