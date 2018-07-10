@@ -579,8 +579,8 @@ class FluxPointEstimator(object):
     ----------
     obs : `~gammapy.spectrum.SpectrumObservation` or `~gammapy.spectrum.SpectrumObservationList`
         Spectrum observation(s)
-    groups : `~gammapy.spectrum.SpectrumEnergyGroups`
-        Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
+    groups : `~gammapy.spectrum.FluxPointBins`
+        Energy groups (usually output of `~gammapy.spectrum.FluxPointBinMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     """
