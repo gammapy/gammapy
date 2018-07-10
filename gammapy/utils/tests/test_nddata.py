@@ -35,12 +35,6 @@ def nddata_1d(axis_x):
 
 @pytest.fixture(scope='session')
 def nddata_2d(axis_energy, axis_offset):
-    #    return NDDataArray(
-    #        axes=[axis_energy, axis_offset],
-    #        data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
-    #        interp_kwargs=dict(bounds_error=False, fill_value=None),
-    #    )
-
     return NDDataArray(
         axes=[axis_energy, axis_offset],
         data=np.arange(8).reshape(2, 4) * u.cm * u.cm,
@@ -49,7 +43,6 @@ def nddata_2d(axis_energy, axis_offset):
 
 
 class TestNDDataArray:
-
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
@@ -95,17 +88,16 @@ class TestNDDataArray:
         out = nddata_2d.evaluate(energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (12, 3, 2)
 
-    # @pytest.mark.parametrize("shape",[(2,),(3,2), (4,2,3)])
-    @pytest.mark.parametrize("shape", [(1,)])
+    @pytest.mark.parametrize("shape", [(2,), (3, 2), (4, 2, 3)])
     def test_evaluate_at_coord_2d(self, nddata_2d, shape):
         points = dict(energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
         out = nddata_2d.evaluate_at_coord(points=points)
         assert out.shape == shape
-        assert_allclose(out.value, np.ones(shape) * 1)
+        assert_allclose(out.value, 1)
 
         points = dict(energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
         out = nddata_2d.evaluate_at_coord(points=points)
-        assert_allclose(out.value, np.ones(shape) * 5)
+        assert_allclose(out.value, 5)
 
     def test_evaluate_1d_linear(self, nddata_1d):
         # This should test all cases of interest:
