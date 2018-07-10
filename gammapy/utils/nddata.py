@@ -125,7 +125,7 @@ class NDDataArray(object):
             node.append(temp)
         return node
 
-    def evaluate(self, method=None, **kwargs):
+    def evaluate(self, method="linear", **kwargs):
         """Evaluate NDData Array
 
         This function provides a uniform interface to several interpolators.
@@ -146,6 +146,7 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
+
         values = []
         for axis in self.axes:
             # Extract values for each axis, default: nodes
@@ -159,14 +160,22 @@ class NDDataArray(object):
         if kwargs != {}:
             raise ValueError("Input given for unknown axis: {}".format(kwargs))
 
-        if method is None:
-            out = self._eval_regular_grid_interp(values)
-        elif method == 'linear':
-            out = self._eval_regular_grid_interp(values, method='linear')
-        elif method == 'nearest':
-            out = self._eval_regular_grid_interp(values, method='nearest')
+        # This is necessary since np.append does not support the 1D case
+        if self.dim > 1:
+            shapes = np.concatenate([np.shape(_) for _ in values])
         else:
-            raise ValueError('Interpolator {} not available'.format(method))
+            shapes = values[0].shape
+
+        # Flatten in order to support 2D array input
+        values = [_.flatten() for _ in values]
+        points = list(itertools.product(*values))
+
+        if self._regular_grid_interp is None:
+            self._add_regular_grid_interp()
+
+        res = self._regular_grid_interp(points, method=method, **kwargs)
+
+        out = np.reshape(res, shapes).squeeze()
 
         # Clip interpolated values to be non-negative
         np.clip(out, 0, None, out=out)
@@ -175,25 +184,40 @@ class NDDataArray(object):
 
         return out
 
-    def _eval_regular_grid_interp(self, values, **kwargs):
-        """Evaluate linear interpolator
+    def evaluate_at_coord(self, points, method="linear", **kwargs):
+        """Evaluate NDData Array on set of points
 
-        Input: list of values to evaluate, in correct units and correct order.
+        This function provides a uniform interface to several interpolators.
+        The evaluation nodes are given as ``kwargs``.
+
+        Currently available:
+        `~scipy.interpolate.RegularGridInterpolator`, methods: linear, nearest
+
+        Parameters
+        ----------
+        points: dict
+            contains the coordinates on which you want to interpolate (axis_name: value)
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            Keys are the axis names, Values the evaluation points
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
         """
+
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        # This is necessary since np.append does not support the 1D case
-        if self.dim > 1:
-            shapes = np.concatenate([np.shape(_) for _ in values])
+        axis_points_list = [points[axis.name] for axis in self.axes]
+        res = self._regular_grid_interp(tuple(axis_points_list), method=method, **kwargs)
 
-        else:
-            shapes = values[0].shape
-        # Flatten in order to support 2D array input
-        values = [_.flatten() for _ in values]
-        points = list(itertools.product(*values))
-        res = self._regular_grid_interp(points, **kwargs)
-        res = np.reshape(res, shapes).squeeze()
+        # Clip interpolated values to be non-negative
+        np.clip(res, 0, None, out=res)
+        # Attach units to the output
+        res = res * self.data.unit
 
         return res
 
@@ -212,6 +236,7 @@ class NDDataArray(object):
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]
+
         values = self.data.value
 
         # If values contains nan, only setup interpolator in valid range

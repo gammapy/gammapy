@@ -16,7 +16,7 @@ def axis_x():
 
 @pytest.fixture(scope='session')
 def axis_energy():
-    return BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log')
+    return BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy')
 
 
 @pytest.fixture(scope='session')
@@ -88,6 +88,14 @@ class TestNDDataArray:
         # Case 3: axis1 array, axis2 = 2Darray
         out = nddata_2d.evaluate(energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (12, 3, 2)
+
+    # @pytest.mark.parametrize("shape",[(2,),(3,2), (4,2,3)])
+    @pytest.mark.parametrize("shape", [(1,)])
+    def test_evaluate_at_coord_2d(self, nddata_2d, shape):
+        points = dict(energy=np.ones(shape) * 3.39801176 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        out = nddata_2d.evaluate_at_coord(points=points)
+        assert out.shape == shape
+        assert_allclose(out.value, np.ones(shape) * 5)
 
     def test_evaluate_1d_linear(self, nddata_1d):
         # This should test all cases of interest:
