@@ -16,7 +16,7 @@ def axis_x():
 
 @pytest.fixture(scope='session')
 def axis_energy():
-    return BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy')
+    return BinnedDataAxis.logspace(0.1, 1000, 2, unit=u.TeV, name='energy', interpolation_mode='log')
 
 
 @pytest.fixture(scope='session')
@@ -35,9 +35,15 @@ def nddata_1d(axis_x):
 
 @pytest.fixture(scope='session')
 def nddata_2d(axis_energy, axis_offset):
+    #    return NDDataArray(
+    #        axes=[axis_energy, axis_offset],
+    #        data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
+    #        interp_kwargs=dict(bounds_error=False, fill_value=None),
+    #    )
+
     return NDDataArray(
         axes=[axis_energy, axis_offset],
-        data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
+        data=np.arange(8).reshape(2, 4) * u.cm * u.cm,
         interp_kwargs=dict(bounds_error=False, fill_value=None),
     )
 
@@ -59,7 +65,7 @@ class TestNDDataArray:
         assert_equal(node, [1])
 
     def test_find_node_2d(self, nddata_2d):
-        node = nddata_2d.find_node(energy=4 * u.TeV, offset=0.4 * u.deg)
+        node = nddata_2d.find_node(energy=100 * u.TeV, offset=0.4 * u.deg)
         assert_equal(node[0], [1])
         assert_equal(node[1], [2])
 
@@ -92,9 +98,13 @@ class TestNDDataArray:
     # @pytest.mark.parametrize("shape",[(2,),(3,2), (4,2,3)])
     @pytest.mark.parametrize("shape", [(1,)])
     def test_evaluate_at_coord_2d(self, nddata_2d, shape):
-        points = dict(energy=np.ones(shape) * 3.39801176 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        points = dict(energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
         out = nddata_2d.evaluate_at_coord(points=points)
         assert out.shape == shape
+        assert_allclose(out.value, np.ones(shape) * 1)
+
+        points = dict(energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        out = nddata_2d.evaluate_at_coord(points=points)
         assert_allclose(out.value, np.ones(shape) * 5)
 
     def test_evaluate_1d_linear(self, nddata_1d):

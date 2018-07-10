@@ -211,7 +211,7 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        axis_points_list = [points[axis.name] for axis in self.axes]
+        axis_points_list = [axis._interp_values(points[axis.name].to(axis.unit).value) for axis in self.axes]
         res = self._regular_grid_interp(tuple(axis_points_list), method=method, **kwargs)
 
         # Clip interpolated values to be non-negative
