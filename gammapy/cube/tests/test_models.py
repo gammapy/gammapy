@@ -131,12 +131,11 @@ class TestSkyModelMapEvaluator:
     def test_compute_npred(self):
         out = self.evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        npred_expected = 7.312826994672788e-07
-        assert_allclose(out.sum(), npred_expected)
+        assert_allclose(out.sum(), 7.312826994672788e-07)
 
-        evaluator_bkg = SkyModelMapEvaluator(sky_model(), exposure(geom()), background=background(geom()))
+    def test_compute_npred_withbkg(self, sky_model, exposure, background):
+        evaluator_bkg = SkyModelMapEvaluator(sky_model, exposure, background=background)
         out_bkg = evaluator_bkg.compute_npred()
-        npred_back_expected = npred_expected + 40.0e-7
-        assert_allclose(out_bkg.sum(), npred_back_expected)
+        assert_allclose(out_bkg.sum(), 47.312826994672788e-07)
 
 
