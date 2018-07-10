@@ -38,9 +38,7 @@ class NDDataArray(object):
     of an individual axis ('log', 'linear') can be passed to the axis on
     initialization."""
 
-    def __init__(self, axes, data=None, meta=None,
-                 interp_kwargs=None):
-
+    def __init__(self, axes, data=None, meta=None, interp_kwargs=None):
         self._axes = axes
         if data is not None:
             self.data = data
@@ -125,7 +123,7 @@ class NDDataArray(object):
             node.append(temp)
         return node
 
-    def evaluate(self, method="linear", **kwargs):
+    def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
 
         This function provides a uniform interface to several interpolators.
@@ -146,7 +144,6 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-
         values = []
         for axis in self.axes:
             # Extract values for each axis, default: nodes
@@ -173,6 +170,7 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
+        method = method or self.default_interp_kwargs.get('method', None)
         res = self._regular_grid_interp(points, method=method, **kwargs)
 
         out = np.reshape(res, shapes).squeeze()
@@ -185,13 +183,11 @@ class NDDataArray(object):
         return out
 
     def evaluate_at_coord(self, points, method="linear", **kwargs):
-        """Evaluate NDData Array on set of points
+        """Evaluate NDData Array on set of points.
 
-        This function provides a uniform interface to several interpolators.
-        The evaluation nodes are given as ``kwargs``.
-
-        Currently available:
-        `~scipy.interpolate.RegularGridInterpolator`, methods: linear, nearest
+        TODO: merge with `evaluate`?
+        This method was added to support evaluating on arbitrary arrays
+        of coordinates, not just on the outer product like `evaluate`.
 
         Parameters
         ----------
@@ -207,12 +203,14 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        axis_points_list = [axis._interp_values(points[axis.name].to(axis.unit).value) for axis in self.axes]
-        res = self._regular_grid_interp(tuple(axis_points_list), method=method, **kwargs)
+        points = tuple([
+            axis._interp_values(points[axis.name].to(axis.unit).value)
+            for axis in self.axes
+        ])
+        res = self._regular_grid_interp(points, method=method, **kwargs)
 
         # Clip interpolated values to be non-negative
         np.clip(res, 0, None, out=res)
