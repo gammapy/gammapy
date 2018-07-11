@@ -248,10 +248,10 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     if isinstance(bkg, Background3D):
         map_coord = ref_geom.get_coord()
         # Compute offsets of all pixels
-        detx = map_coord.skycoord.separation(pointing)
+        detx = offset
         # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for detx, dety
         dety = Angle(np.zeros_like(detx), detx.unit)
-        # Retrieve energies from WcsNDMap
+        # Retrieve energies from map coordinates
         energy_reco = map_coord[energy_axis.name] * energy_axis.unit
         data = bkg.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     else:
