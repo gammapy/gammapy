@@ -34,15 +34,18 @@ def phase_bkg_estimator():
     return estimator
 
 
+@requires_data('gammapy-extra')
 def test_basic(phase_bkg_estimator):
     assert 'PhaseBackgroundEstimator' in str(phase_bkg_estimator)
 
 
+@requires_data('gammapy-extra')
 def test_run(phase_bkg_estimator):
     phase_bkg_estimator.run()
     assert len(phase_bkg_estimator.result) == 1
 
 
+@requires_data('gammapy-extra')
 def test_filter_events(obs_list, on_region):
     all_events = obs_list[0].events.select_circular_region(on_region)
     ev1 = PhaseBackgroundEstimator.filter_events(all_events, (0, 0.3))
@@ -51,6 +54,7 @@ def test_filter_events(obs_list, on_region):
     assert len(all_events.table) == len(ev1.table) + len(ev2.table)
 
 
+@requires_data('gammapy-extra')
 def test_process(phase_bkg_estimator, obs_list):
     assert isinstance(phase_bkg_estimator.process(obs_list[0]), BackgroundEstimate)
 
