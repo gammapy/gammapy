@@ -12,7 +12,11 @@ packagename = os.path.basename(os.path.dirname(__file__))
 TESTED_VERSIONS[packagename] = version.version
 
 # Treat all DeprecationWarnings as exceptions
-enable_deprecations_as_exceptions()
+
+# Some deprecation warnings are coming from sherpa using deprecated numpy and astropy behaviour
+# Remove the limitation once the oldest supported/tested version has been fixed
+enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=['numpy', 'sherpa'])
+
 
 # Declare for which packages version numbers should be displayed
 # when running the tests
