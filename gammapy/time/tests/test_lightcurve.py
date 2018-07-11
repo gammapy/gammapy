@@ -12,7 +12,7 @@ from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
 from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import EnergyBounds
-from ...data import Target, DataStore
+from ...data import DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
@@ -158,12 +158,11 @@ def spec_extraction():
     target_position = SkyCoord(ra=83.63308, dec=22.01450, unit='deg')
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
-    target = Target(on_region=on_region, name='Crab', tag='ana_crab')
 
     exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
     allsky_mask = SkyImage.read(exclusion_file)
     exclusion_mask = allsky_mask.cutout(
-        position=target.on_region.center,
+        position=on_region.center,
         size=Angle('6 deg'),
     )
     bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,

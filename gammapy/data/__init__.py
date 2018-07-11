@@ -8,7 +8,6 @@ class InvalidDataError(Exception):
     """Invalid data found."""
 
 from .utils import *
-from .target import *
 from .pointing import *
 from .data_store import *
 from .event_list import *
