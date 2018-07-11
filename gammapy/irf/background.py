@@ -7,7 +7,8 @@ from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-
+from ..utils.energy import EnergyBounds
+from ..spectrum.utils import _trapz_loglog
 __all__ = [
     'Background3D',
     'Background2D',
@@ -160,6 +161,41 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
+    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins, method=None,
+                                  **kwargs):
+        """
+        Evaluate the `Background3D` at given FOV coordinate and integrate over the energy. The detx, dety, energy_reco_lo
+        and energy_reco_hi should have the same dimension. this method allows for example to have different spatial
+        coordinate depending on the energy bin
+        Parameters
+        ----------
+        detx : `~astropy.coordinates.Angle`
+                FOV coordinate X-axis binning. Same dimension than det_y
+        dety: `~astropy.coordinates.Angle`
+                FOV coordinate Y-axis binning. Same dimension than det_x
+        energy_range: `~astropy.units.Quantity`
+            Energy range edges on which to compute the integration(vector 1D)
+        n_integration_bins : int
+            Number of energy bins used for the integration
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
+        """
+        e_lo, e_hi = energy_range
+        energy_edges = EnergyBounds.equal_log_spacing(e_lo, e_hi, n_integration_bins)
+        energy_bins = energy_edges.log_centers
+        #TODO: insert new axes, remove tile and use numpy.borascasting
+        ee=np.tile(energy_bins, reps=detx.shape+(1,))
+        xx=np.tile(detx, reps=energy_bins.shape + (1,1)).T
+        yy=np.tile(dety, reps=energy_bins.shape + (1,1)).T
+        bkg_evaluated = self.evaluate(detx=xx, dety=yy,energy_reco=ee, **kwargs)
+        bkg_integrated = _trapz_loglog(bkg_evaluated,energy_bins)
+        return bkg_integrated
 
 class Background2D(object):
     """Background 2D.
