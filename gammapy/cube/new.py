@@ -255,8 +255,6 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         energy_reco = map_coord[energy_axis.name] * energy_axis.unit
         data = bkg.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     else:
-        # Compute offsets of all pixels
-        offset = make_separation_map(ref_geom, pointing).quantity
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry
         energy = energy_axis.center * energy_axis.unit
