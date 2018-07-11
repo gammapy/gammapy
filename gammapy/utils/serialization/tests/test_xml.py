@@ -9,44 +9,6 @@ from ....image import models as spatial
 from ...serialization import xml_to_source_library, UnknownModelError
 import pytest
 
-def test_basic():
-
-    xml_str = '''<?xml version="1.0" encoding="utf-8"?>
-    <source_library title="source library">
-        <source name="3C 273" type="PointSource">
-            <spectrum type="PowerLaw">;i
-                <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10"></parameter>
-                <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"></parameter>
-                <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"></parameter>
-            </spectrum>
-            <spatialModel type="PointSource">
-                <parameter free="0" max="360" min="-360" name="RA" scale="1.0" value="187.25"></parameter>
-                <parameter free="0" max="90" min="-90" name="DEC" scale="1.0" value="2.17"></parameter>
-            </spatialModel>
-        </source>
-    </source_library>
-    '''
-
-    sourcelib = xml_to_source_library(xml_str)
-
-    assert len(sourcelib.skymodels) == 1
-
-    model1 = sourcelib.skymodels[0]
-    assert isinstance(model1.spectral_model, spectral.PowerLaw)
-    assert isinstance(model1.spatial_model, spatial.SkyPointSource)
-
-    pars1 = model1.parameters
-    assert pars1['index'].value == -2.1
-    assert pars1['index'].unit == ''
-    assert pars1['index'].parmax == -1.0
-    assert pars1['index'].parmin == -5.0
-    assert pars1['index'].frozen == False
-
-    assert pars1['lon_0'].value == 187.25
-    assert pars1['lon_0'].unit == 'deg'
-    assert pars1['lon_0'].parmax == 360
-    assert pars1['lon_0'].parmin == -360
-    assert pars1['lon_0'].frozen == True
 
 def test_complex():
     #TODO: add tests for MapCubeFunction (3D fits file) and SpatialMap (2D fits)
