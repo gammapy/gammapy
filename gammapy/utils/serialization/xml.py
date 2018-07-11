@@ -17,7 +17,8 @@ import logging
 import astropy.units as u
 import gammapy.image.models as spatial
 import gammapy.spectrum.models as spectral
-
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 
 log = logging.getLogger(__name__) 
 
@@ -33,29 +34,86 @@ __all__ = [
 ]
 
 
-# TODO: Move to a separate file
+# TODO: Move to a separate file ?
 model_registry = {
     'spectral':{
+        #TODO: ctools index is defined as E^index and gammapy as E^-index
         'PowerLaw':{
             'model':spectral.PowerLaw,
             'parameters':{
                 'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
+                'PivotEnergy': ['reference', 'MeV']
+            }
+        },
+        #TODO: add transformation from Ecut to lambda_ (1/Ecut)
+        'ExponentialCutoffPowerLaw': {
+            'model': spectral.ExponentialCutoffPowerLaw,
+            'parameters': {
+                'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
+                'Index': ['index', ''],
+                'Scale': ['reference', 'MeV'],
+                'PivotEnergy': ['reference', 'MeV'],
+                'CutoffEnergy': ['lambda_', 'MeV'], # parameter lambda_=1/Ecut will be inverted on model creation
             }
         }
     },
     'spatial':{
-        'SkyDirFunction':{
+        'PointSource':{
             'model':spatial.SkyPointSource,
             'parameters':{
-                'RA': ['lon_0', 'deg'],
-                'DEC': ['lat_0', 'deg']
+                'RA': ['RA_0', 'deg'],
+                'DEC': ['DEC_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg']
+            }
+        },
+        'RadialGaussian': {
+            'model': spatial.SkyGaussian,
+            'parameters': {
+                'RA': ['RA_0', 'deg'],
+                'DEC': ['DEC_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Sigma': ['sigma', 'deg']
+            }
+        },
+        'RadialDisk': {
+            'model': spatial.SkyDisk,
+            'parameters': {
+                'RA': ['RA_0', 'deg'],
+                'DEC': ['DEC_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Radius': ['r_0', 'deg']
+
+            }
+        },
+        'RadialShell': {
+            'model': spatial.SkyShell,
+            'parameters': {
+                'RA': ['RA_0', 'deg'],
+                'DEC': ['DEC_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Radius': ['radius', 'deg'],
+                'Width': ['width', 'deg']
+
+            }
+        },
+        #TODO: in ctools xml, the parameter is a filename. SkyDiffuseMap wants a Map object
+        'DiffuseMap': {
+            'model': spatial.SkyDiffuseMap,
+            'parameters': {
+                'file': ['map', 'deg'],
+                'Prefactor': ['norm', 'deg']
             }
         }
     }
 }
-
+# For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
+model_registry['spatial']['SkyDirFunction']= model_registry['spatial']['PointSource']
 
 
 class UnknownModelError(ValueError):
@@ -115,6 +173,7 @@ def xml_to_model(xml, which):
     
     parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
+
     if type_ == 'MapCubeFunction':
         filename = xml['@file']
         map_ = Map.read(filename)
@@ -133,6 +192,18 @@ def xml_to_model(xml, which):
             kwargs[par.name] = -1 * u.Unit(par.unit)
         model = model(**kwargs)
         model.parameters = parameters
+        if type_ == 'PowerLaw':
+            model.parameters['index'].value *= -1
+            model.parameters['index'].parmin *= -1
+            model.parameters['index'].parmax *= -1
+        if type_ == 'ExponentialCutoffPowerLaw':
+            model.parameters['lambda_'].value = 1/model.parameters['lambda_'].value
+            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit+'-1'
+            model.parameters['lambda_'].parmin = 1/model.parameters['lambda_'].parmin
+            model.parameters['lambda_'].parmax = 1/model.parameters['lambda_'].parmax
+            model.parameters['index'].value *= -1
+            model.parameters['index'].parmin *= -1
+            model.parameters['index'].parmax *= -1
     return model
 
 
@@ -149,7 +220,6 @@ def xml_to_parameter_list(xml, which, type_):
         except KeyError:
             msg = "Parameter '{}' not registered for {} model {}"
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
-        
         parameters.append(Parameter(
             name=name,
             value=float(par['@value']) * float(par['@scale']),
@@ -158,6 +228,14 @@ def xml_to_parameter_list(xml, which, type_):
             parmax=float(par['@max']),
             frozen=bool(1 - int(par['@free']))
         ))
+    if parameters[0].name == 'RA_0' and parameters[1].name == 'DEC_0':
+        celestial_source = SkyCoord(parameters[0].value * u.deg, parameters[1].value * u.deg, frame='icrs')
+        glon,glat=celestial_source.galactic.l, celestial_source.galactic.b
+        parameters[0].name='lon_0'
+        parameters[1].name='lat_0'
+        parameters[0].value=glon.value
+        parameters[1].value=glat.value
+
     return ParameterList(parameters)
 
 
