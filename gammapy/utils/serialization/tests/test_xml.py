@@ -49,13 +49,13 @@ def test_basic():
     assert pars1['lon_0'].frozen == True
 
 def test_complex():
-
+    #TODO: add tests for MapCubeFunction (3D fits file) and SpatialMap (2D fits)
     xml_str = '''<?xml version="1.0" encoding="utf-8"?>
     <source_library title="source library">
-        <source name="Source 1" type="PointSource">
+        <source name="Source 0" type="PointSource">
             <spectrum type="PowerLaw">
                 <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10" />
-                <parameter free="1" max="1.0" min="5.0" name="Index" scale="1.0" value="2.1"/>
+                <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"/>
                 <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"/>
             </spectrum>
             <spatialModel type="PointSource">
@@ -63,11 +63,23 @@ def test_complex():
                 <parameter free="0" max="90" min="-90" name="GLAT" scale="1.0" value="1.0"/>
             </spatialModel>
         </source>
-        <source name="Source 2" type="RadialGaussian">
+        <source name="Source 1" type="SkyDirFunction">
             <spectrum type="PowerLaw">
                 <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10" />
-                <parameter free="1" max="1.0" min="5.0" name="Index" scale="1.0" value="2.1"/>
+                <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"/>
                 <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"/>
+            </spectrum>
+            <spatialModel type="SkyDirFunction">
+                <parameter free="0" max="360" min="-360" name="GLON" scale="1.0" value="0.5"/>
+                <parameter free="0" max="90" min="-90" name="GLAT" scale="1.0" value="1.0"/>
+            </spatialModel>
+        </source>              
+        <source name="Source 2" type="RadialGaussian">
+            <spectrum type="ExponentialCutoffPowerLaw">
+                <parameter name="Prefactor" value="2.48" error="0" scale="1e-18" min="1e-07" max="1000" free="1" />
+                <parameter name="Index" value="-2.2" error="0" scale="1" min="-5" max="-1" free="-1" />
+                <parameter name="CutoffEnergy" value="100" error="0" scale="1" min="0.01" max="1000" free="1" />
+                <parameter name="PivotEnergy" value="1" scale="1000000" min="0.01" max="1000" free="0" />
             </spectrum>
             <spatialModel type="RadialGaussian">
                 <parameter free="0" max="360" min="-360" name="GLON" scale="1.0" value="1.0"/>
@@ -105,9 +117,13 @@ def test_complex():
 
     sourcelib = xml_to_source_library(xml_str)
 
-    assert len(sourcelib.skymodels) == 4
+    assert len(sourcelib.skymodels) == 5
 
-    model1 = sourcelib.skymodels[0]
+    model0 = sourcelib.skymodels[0]
+    assert isinstance(model0.spectral_model, spectral.PowerLaw)
+    assert isinstance(model0.spatial_model, spatial.SkyPointSource)
+
+    model1 = sourcelib.skymodels[1]
     assert isinstance(model1.spectral_model, spectral.PowerLaw)
     assert isinstance(model1.spatial_model, spatial.SkyPointSource)
 
@@ -130,34 +146,32 @@ def test_complex():
     assert pars1['lat_0'].parmin == -90
     assert pars1['lat_0'].frozen == True
 
-    model2 = sourcelib.skymodels[1]
-    assert isinstance(model2.spectral_model, spectral.PowerLaw)
+    model2 = sourcelib.skymodels[2]
+    assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
     assert isinstance(model2.spatial_model, spatial.SkyGaussian)
 
     pars2 = model2.parameters
-    assert pars2['index'].value == 2.1
+    assert pars2['sigma'].unit == 'deg'
+    assert pars2['lambda_'].value == 0.01
+    assert pars2['lambda_'].unit == 'MeV-1'
+    assert pars2['lambda_'].parmin == 100
+    assert pars2['lambda_'].parmax == 0.001
+    assert pars2['index'].value == 2.2
     assert pars2['index'].unit == ''
     assert pars2['index'].parmax == 1.0
     assert pars2['index'].parmin == 5.0
-    assert pars2['index'].frozen == False
 
-    assert pars2['lon_0'].value == 1.0
-    assert pars2['lon_0'].unit == 'deg'
-    assert pars2['lon_0'].parmax == 360
-    assert pars2['lon_0'].parmin == -360
-    assert pars2['lon_0'].frozen == True
+    model3 = sourcelib.skymodels[3]
+    assert isinstance(model3.spatial_model, spatial.SkyDisk)
+    pars3 = model3.parameters
+    assert pars3['r_0'].unit == 'deg'
 
-    assert pars2['lat_0'].value == 0.5
-    assert pars2['lat_0'].unit == 'deg'
-    assert pars2['lat_0'].parmax == 90
-    assert pars2['lat_0'].parmin == -90
-    assert pars2['lat_0'].frozen == True
+    model4 = sourcelib.skymodels[4]
+    assert isinstance(model4.spatial_model, spatial.SkyShell)
+    pars4 = model4.parameters
+    assert pars4['radius'].unit == 'deg'
+    assert pars4['width'].unit == 'deg'
 
-    assert pars2['sigma'].value == 0.2
-    assert pars2['sigma'].unit == 'deg'
-    assert pars2['sigma'].parmax == 10
-    assert pars2['sigma'].parmin == 0.01
-    assert pars2['sigma'].frozen == False
 
 @pytest.mark.xfail(reason='Need to update model regsitry')
 @requires_data('gammapy-extra')

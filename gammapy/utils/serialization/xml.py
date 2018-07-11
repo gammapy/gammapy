@@ -47,7 +47,7 @@ model_registry = {
                 'PivotEnergy': ['reference', 'MeV']
             }
         },
-        #TODO: add transformation from Ecut to lambda (1/Ecut)
+        #TODO: add transformation from Ecut to lambda_ (1/Ecut)
         'ExponentialCutoffPowerLaw': {
             'model': spectral.ExponentialCutoffPowerLaw,
             'parameters': {
@@ -55,7 +55,7 @@ model_registry = {
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
                 'PivotEnergy': ['reference', 'MeV'],
-                'CutoffEnergy': ['lambda', 'MeV'],
+                'CutoffEnergy': ['lambda_', 'MeV'], # parameter lambda_=1/Ecut will be inverted on model creation
             }
         }
     },
@@ -112,7 +112,8 @@ model_registry = {
         }
     }
 }
-
+# For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
+model_registry['spatial']['SkyDirFunction']= model_registry['spatial']['PointSource']
 
 
 class UnknownModelError(ValueError):
@@ -172,6 +173,7 @@ def xml_to_model(xml, which):
     
     parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
+
     if type_ == 'MapCubeFunction':
         filename = xml['@file']
         map_ = Map.read(filename)
@@ -190,6 +192,18 @@ def xml_to_model(xml, which):
             kwargs[par.name] = -1 * u.Unit(par.unit)
         model = model(**kwargs)
         model.parameters = parameters
+        if type_ == 'PowerLaw':
+            model.parameters['index'].value *= -1
+            model.parameters['index'].parmin *= -1
+            model.parameters['index'].parmax *= -1
+        if type_ == 'ExponentialCutoffPowerLaw':
+            model.parameters['lambda_'].value = 1/model.parameters['lambda_'].value
+            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit+'-1'
+            model.parameters['lambda_'].parmin = 1/model.parameters['lambda_'].parmin
+            model.parameters['lambda_'].parmax = 1/model.parameters['lambda_'].parmax
+            model.parameters['index'].value *= -1
+            model.parameters['index'].parmin *= -1
+            model.parameters['index'].parmax *= -1
     return model
 
 
