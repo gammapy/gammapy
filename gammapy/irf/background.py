@@ -150,6 +150,7 @@ class Background3D(object):
             Interpolation method
         kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+            
         Returns
         -------
         array : `~astropy.units.Quantity`
