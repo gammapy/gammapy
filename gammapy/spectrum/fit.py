@@ -44,7 +44,7 @@ class SpectrumFit(object):
         Background model to be used in cash fits
     method : {'sherpa', 'iminuit'}
         Optimization backend for the fit
-    err_method : {'sherpa'}
+    err_method : {'sherpa', 'iminuit'}
         Optimization backend for error estimation
     """
 
