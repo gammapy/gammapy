@@ -8,7 +8,8 @@ import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
-from ..spectrum.utils import _trapz_loglog
+
+
 __all__ = [
     'Background3D',
     'Background2D',
@@ -161,7 +162,7 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins, method=None,
+    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins, method="linear",
                                   **kwargs):
         """
         Evaluate the `Background3D` at given FOV coordinate and integrate over the energy. The detx, dety, energy_reco_lo
@@ -186,6 +187,9 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
+        #Here because we get a circular import error
+        from ..spectrum.utils import _trapz_loglog
+
         e_lo, e_hi = energy_range
         energy_edges = EnergyBounds.equal_log_spacing(e_lo, e_hi, n_integration_bins)
         energy_bins = energy_edges.log_centers
@@ -193,7 +197,8 @@ class Background3D(object):
         ee=np.tile(energy_bins, reps=detx.shape+(1,))
         xx=np.tile(detx, reps=energy_bins.shape + (1,1)).T
         yy=np.tile(dety, reps=energy_bins.shape + (1,1)).T
-        bkg_evaluated = self.evaluate(detx=xx, dety=yy,energy_reco=ee, **kwargs)
+        #assert 2 == 3
+        bkg_evaluated = self.evaluate(detx=xx, dety=yy,energy_reco=ee, method=method, **kwargs)
         bkg_integrated = _trapz_loglog(bkg_evaluated,energy_bins)
         return bkg_integrated
 

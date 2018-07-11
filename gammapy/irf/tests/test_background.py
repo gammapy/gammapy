@@ -3,11 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
-from astropy.io import fits
+from astropy.units import Quantity
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
-
+from ...utils.energy import EnergyBounds
 
 @pytest.fixture(scope='session')
 def bkg_3d():
@@ -71,7 +72,6 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
 
 
 @requires_dependency('scipy')
-@requires_data('gammapy-extra')
 def test_background_3d_evaluate(bkg_3d):
     # Evaluate at nodes in energy
     res = bkg_3d.evaluate(detx=np.array([1, 0.5]) * u.deg, dety=np.array([1, 0.5]) * u.deg,
@@ -90,6 +90,23 @@ def test_background_3d_evaluate(bkg_3d):
     res = bkg_3d.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     assert_allclose(res.value, [[0, 0], [1.5, 2]])
     assert res.shape == (2, 2)
+
+
+@requires_dependency('scipy')
+def test_background_3d_integrate(bkg_3d):
+    """
+    energy_band = EnergyBounds([0.1, 10] * u.TeV)
+    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
+                                           energy_range=energy_band, n_integration_bins=1)
+    assert_quantity_allclose(res, Quantity(0, "1 / (MeV s sr)") * energy_band.bands)
+    """
+
+    energy_band = EnergyBounds([10, 1000] * u.TeV)
+    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
+                                           energy_range=energy_band, n_integration_bins=1)
+    assert 2=3
+    assert_quantity_allclose(res[0], Quantity(2, "1 / (MeV s sr)") * energy_band.bands)
+
 
 
 @pytest.fixture(scope='session')
