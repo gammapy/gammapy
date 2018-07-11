@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
@@ -41,7 +41,7 @@ def sky_model():
 @pytest.fixture(scope='session')
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1., 1., 10), unit=u.TeV)
-    return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(8, 3),
+    return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(2, 2),
                           coordsys='GAL', axes=[axis])
 
 
@@ -53,7 +53,6 @@ def exposure(geom):
     pointing = SkyCoord(1, 0.5, unit='deg', frame='galactic')
     livetime = 1 * u.hour
     offset_max = 3 * u.deg
-    offset = Angle('2 deg')
 
     exposure_map = make_map_exposure_true_energy(pointing=pointing,
                                                  livetime=livetime,
@@ -66,10 +65,11 @@ def exposure(geom):
 def psf(geom):
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
     psf_kernel = PSFKernel.from_table_psf(table_psf,
                                           geom,
-                                          max_radius=1 * u.deg)
+                                          max_radius=0.5 * u.deg)
     return psf_kernel
 
 
@@ -88,9 +88,9 @@ def counts(sky_model, exposure, psf):
 def test_cube_fit(sky_model, counts, exposure, psf):
     input_model = sky_model.copy()
 
-    input_model.parameters['lon_0'].value = 0
+    input_model.parameters['lon_0'].value = 0.5
     input_model.parameters['index'].value = 2
-    input_model.parameters['lat_0'].frozen = True
+    input_model.parameters['lat_0'].value = 0.5
     input_model.parameters['sigma'].frozen = True
 
     input_model.parameters.set_parameter_errors({
