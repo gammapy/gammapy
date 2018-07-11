@@ -8,6 +8,8 @@ from ..utils.fitting import fit_minuit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
+from itertools import product
+
 
 __all__ = [
     'SpectrumFit',
@@ -462,6 +464,7 @@ class SpectrumFit(object):
         """Iminuit minimization"""
         parameters, minuit = fit_minuit(parameters=self.model.parameters,
                                         function=self.total_stat)
+        self._iminuit_fit = minuit
         log.debug(minuit)
         self._make_fit_result(parameters)
 
@@ -512,6 +515,8 @@ class SpectrumFit(object):
         """Estimate parameter errors."""
         if self.err_method == 'sherpa':
             self._est_errors_sherpa()
+        elif self.err_method == 'iminuit':
+            self._est_errors_iminuit()
         else:
             raise NotImplementedError('{}'.format(self.err_method))
 
@@ -519,6 +524,22 @@ class SpectrumFit(object):
             res.covar_axis = self.covar_axis
             res.covariance = self.covariance
             res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
+
+    def _est_errors_iminuit(self):
+        # this covariance is a dict indexed by tuples containing combinations of
+        # parameter names
+        cov = self._iminuit_fit.covariance
+
+        #create tuples of combinations
+        d = self.model.parameters.to_dict()
+        parameter_names = [l['name'] for l in d['parameters'] if l['frozen'] == False]
+        self.covar_axis = parameter_names
+        parameter_combinations = list(product(parameter_names, repeat=2))
+
+        cov = np.array([cov[combination] for combination in parameter_combinations])
+        cov = cov.reshape(len(parameter_names), -1)
+        self.covariance = cov
+
 
     def _est_errors_sherpa(self):
         """Wrapper around Sherpa error estimator."""
