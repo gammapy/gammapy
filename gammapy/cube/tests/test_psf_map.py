@@ -81,3 +81,32 @@ def test_psfmap(tmpdir):
     new_psfmap = PSFMap.read(filename)
 
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
+
+
+def test_containment_radius_map(tmpdir):
+    psf = fake_psf3d(0.15 * u.deg)
+
+    pointing = SkyCoord(0, 0, unit='deg')
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy_true')
+    rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit='deg', name='theta')
+
+    geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
+
+    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
+
+    theta = np.asarray([1.])*u.deg
+    energy = np.asarray([1.,2.])*u.TeV
+    fractions = np.asarray([0.68,0.90])
+
+    for energyvalue in energy:
+        for thetavalue in theta:
+            for fractionsvalue in fractions:
+                contmap = psfmap.containment_radius_map(energyvalue, fractionsvalue)
+                valuecontmap = contmap.interp_by_coord([[thetavalue.value], [0]])[0]
+
+                contpsf = psf.containment_radius(energyvalue, thetavalue,fractionsvalue).value
+                assert_allclose(valuecontmap,contpsf,rtol=1e-03)
+
+
+
+

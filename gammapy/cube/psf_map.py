@@ -207,11 +207,12 @@ class PSFMap(object):
         table_psf = self.get_energy_dependent_table_psf(position)
         return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
 
-    def containment_radius_map(self, fraction=0.68):
+    def containment_radius_map(self, energy,fraction=0.68):
         """Returns the containment radius map.
 
         Parameters
         ----------
+        energy :
         fraction : float
             the containment fraction (a positive number <=1). Default 0.68.
 
@@ -220,4 +221,11 @@ class PSFMap(object):
         containment_radius_map : `~gammapy.maps.Map`
             a 3D map giving the containment radius at each energy and each position of the initial psf_map
         """
-        raise NotImplementedError
+        mapcoordarr = self.geom.to_image().get_coord().skycoord.flatten()
+        containmentradius_map = Map.from_geom(self.geom.to_image(),unit='deg')
+
+        for coord in mapcoordarr:
+            psf_table = self.get_energy_dependent_table_psf(coord)
+            containmentradius_map.fill_by_coord(coord,psf_table.containment_radius(energy,fraction))
+
+        return containmentradius_map
