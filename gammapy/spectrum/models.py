@@ -834,7 +834,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-    lambda : `~astropy.units.Quantity`
+    lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
 
     Examples
