@@ -73,18 +73,20 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_background_3d_evaluate(bkg_3d):
-    # Evaluate at log center between nodes in energy
-    res = bkg_3d.evaluate(detx=np.array([1,0.5]) * u.deg, dety=np.array([1,0.5]) * u.deg, energy_reco=np.ones(2) * 1 * u.TeV)
+    # Evaluate at nodes in energy
+    res = bkg_3d.evaluate(detx=np.array([1, 0.5]) * u.deg, dety=np.array([1, 0.5]) * u.deg,
+                          energy_reco=np.ones(2) * 1 * u.TeV)
     assert_allclose(res.value, 0)
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
-    res = bkg_3d.evaluate(detx=np.array([1,0.5]) * u.deg, dety=np.array([1,0.5]) * u.deg, energy_reco=np.ones(2) * 100 * u.TeV)
+    res = bkg_3d.evaluate(detx=np.array([1, 0.5]) * u.deg, dety=np.array([1, 0.5]) * u.deg,
+                          energy_reco=np.ones(2) * 100 * u.TeV)
     assert_allclose(res.value, [1.5, 2])
 
-    detx= np.array(([1, 0.5], [1, 0.5])) * u.deg
-    dety= np.array(([1, 0.5],[1, 0.5])) * u.deg
-    energy_reco= np.array(([1, 1],[100, 100])) * u.TeV
+    detx = np.array(([1, 0.5], [1, 0.5])) * u.deg
+    dety = np.array(([1, 0.5], [1, 0.5])) * u.deg
+    energy_reco = np.array(([1, 1], [100, 100])) * u.TeV
     res = bkg_3d.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     assert_allclose(res.value, [[0, 0], [1.5, 2]])
     assert res.shape == (2, 2)

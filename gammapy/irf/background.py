@@ -134,15 +134,15 @@ class Background3D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, det_x, det_y, energy_reco, method=None, **kwargs):
+    def evaluate(self, detx, dety, energy_reco, method=None, **kwargs):
         """
         Evaluate the `Background3D` at a given FOV coordinate and energy. The coordinates det_x, det_y and erngy_reco
         should have the same dimension that match the numbers of point you want to evaluate
         Parameters
         ----------
-        det_x : `~astropy.coordinates.Angle`
+        detx : `~astropy.coordinates.Angle`
                 FOV coordinate X-axis binning. Same dimension than det_y and energy_reco
-        det_y: `~astropy.coordinates.Angle`
+        dety: `~astropy.coordinates.Angle`
                 FOV coordinate Y-axis binning. Same dimension than det_x and energy_reco
         energy_reco : `~astropy.units.Quantity`
                 energy on which you want to interpolate. Same dimension than det_x and det_y
@@ -155,7 +155,7 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        points=dict(detx=det_x, dety=det_y, energy=energy_reco)
+        points = dict(detx=detx, dety=dety, energy=energy_reco)
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
@@ -237,7 +237,7 @@ class Background2D(object):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             bkg = cls.from_hdulist(hdulist, hdu=hdu)
-        
+
         return bkg
 
     def to_table(self):
