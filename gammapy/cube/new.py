@@ -236,7 +236,6 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
-
     # Compute the expected background
     # TODO: properly transform FOV to sky coordinates
     # For now we assume the background is radially symmetric
@@ -262,9 +261,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry
         energy = energy_axis.center * energy_axis.unit
-        data = bkg.data.evaluate(offset=offset[0,:,:], energy=energy)
-        data_shape = ref_geom.shape + offset.shape
-        data = np.reshape(data, data_shape)
+        data = bkg.evaluate(offset=offset[0,:,:], energy=energy)
 
     # TODO: add proper integral over energy
     energy_axis = ref_geom.axes[0]
