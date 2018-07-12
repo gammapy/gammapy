@@ -28,7 +28,7 @@ class SherpaModel(ArithmeticModel):
 
         sherpa_name = 'sherpa_model'
         par_list = list()
-        for par in self.fit.model.parameters.parameters:
+        for par in self.fit._model.parameters.parameters:
             sherpa_par = par.to_sherpa(modelname='source')
             # setattr(self, name, sherpa_par)
             par_list.append(sherpa_par)
@@ -46,13 +46,13 @@ class SherpaModel(ArithmeticModel):
     @modelCacher1d
     def calc(self, p, x, xhi=None):
         # Adjust model parameters
-        n_src = len(self.fit.model.parameters.parameters)
+        n_src = len(self.fit._model.parameters.parameters)
         for idx, par in enumerate(p):
             # Special case background model
             if idx >= n_src:
                 self.fit.background_model.parameters.parameters[idx - n_src].value = par
             else:
-                self.fit.model.parameters.parameters[idx].value = par
+                self.fit._model.parameters.parameters[idx].value = par
 
         self.fit.predict_counts()
         # Return ones since sherpa does some check on the shape

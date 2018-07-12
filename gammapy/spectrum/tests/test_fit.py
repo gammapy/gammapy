@@ -245,9 +245,9 @@ class TestSpectralFit:
         self.fit.result[0].to_table()
 
     def test_compound(self):
-        self.fit.model = self.fit.model * 2
-        self.fit.fit()
-        result = self.fit.result[0]
+        fit = SpectrumFit(self.obs_list[0], self.pwl * 2)
+        fit.fit()
+        result = fit.result[0]
         pars = result.model.parameters
         assert_quantity_allclose(pars['index'].value, 2.2542315426423283)
         # amplitude should come out roughly * 0.5
