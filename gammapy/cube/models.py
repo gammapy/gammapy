@@ -12,8 +12,10 @@ from ..maps import Map
 __all__ = [
     'SourceLibrary',
     'SkyModel',
+    'CompoundSkyModel',
     'SkyModelMapEvaluator',
 ]
+
 
 class SourceLibrary(object):
     """Collection of `~gammapy.cube.models.SkyModel`
@@ -26,15 +28,13 @@ class SourceLibrary(object):
     Examples
     --------
 
-    Read a SourceLibrary from an XML file
-
-    .. code-block :: python
+    Read a SourceLibrary from an XML file::
 
         from gammapy.cube import SourceLibrary
         filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
         sourcelib = SourceLibrary.from_xml(filename)
-
     """
+
     def __init__(self, skymodels):
         self.skymodels = skymodels
 
@@ -58,9 +58,9 @@ class SourceLibrary(object):
 class SkyModel(object):
     """Sky model component.
 
-    This model represents a factorised sky model. It has a
-    `~gammapy.utils.modeling.ParameterList` combinining the spatial and spectral
-    parameters
+    This model represents a factorised sky model.
+    It has a `~gammapy.utils.modeling.ParameterList`
+    combining the spatial and spectral parameters.
 
     TODO: add possibility to have a temporal model component also.
 
@@ -108,7 +108,7 @@ class SkyModel(object):
 
     @property
     def parameters(self):
-        """`~gammapy.utils.modeling.ParameterList`"""
+        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
         return self._parameters
 
     @parameters.setter
@@ -175,7 +175,14 @@ class CompoundSkyModel(object):
     """Represents the algebraic combination of two
     `~gammapy.cube.models.SkyModel`
 
+    Parameters
+    ----------
+    model1, model2 : `SkyModel`
+        Two sky models
+    operator : callable
+        Binary operator to combine the models
     """
+
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
@@ -184,6 +191,7 @@ class CompoundSkyModel(object):
     # TODO: Think about how to deal with covariance matrix
     @property
     def parameters(self):
+        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
         return ParameterList(val)
 
@@ -365,5 +373,3 @@ class SkyModelMapEvaluator(object):
         if self.background:
             npred.data += self.background.data
         return npred.data
-
-
