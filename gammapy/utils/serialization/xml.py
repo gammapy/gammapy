@@ -37,7 +37,6 @@ __all__ = [
 # TODO: Move to a separate file ?
 model_registry = {
     'spectral':{
-        #TODO: ctools index is defined as E^index and gammapy as E^-index
         'PowerLaw':{
             'model':spectral.PowerLaw,
             'parameters':{
@@ -47,7 +46,6 @@ model_registry = {
                 'PivotEnergy': ['reference', 'MeV']
             }
         },
-        #TODO: add transformation from Ecut to lambda_ (1/Ecut)
         'ExponentialCutoffPowerLaw': {
             'model': spectral.ExponentialCutoffPowerLaw,
             'parameters': {
@@ -57,14 +55,29 @@ model_registry = {
                 'PivotEnergy': ['reference', 'MeV'],
                 'CutoffEnergy': ['lambda_', 'MeV'], # parameter lambda_=1/Ecut will be inverted on model creation
             }
+        },
+        'ConstantValue': {
+            'model': spectral.ConstantModel,
+            'parameters': {
+                'Value': ['const', 'cm-2 s-1 MeV-1'],
+                'Normalization': ['const', 'cm-2 s-1 MeV-1']
+            }
+        },
+        #TODO: FileFunction is not working
+        'FileFunction': {
+            'model': spectral.TableModel,
+            'parameters': {
+                'Value': ['const', 'cm-2 s-1 MeV-1'],
+                'Normalization': ['const', 'cm-2 s-1 MeV-1']
+            }
         }
     },
     'spatial':{
         'PointSource':{
             'model':spatial.SkyPointSource,
             'parameters':{
-                'RA': ['RA_0', 'deg'],
-                'DEC': ['DEC_0', 'deg'],
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg']
             }
@@ -72,8 +85,8 @@ model_registry = {
         'RadialGaussian': {
             'model': spatial.SkyGaussian,
             'parameters': {
-                'RA': ['RA_0', 'deg'],
-                'DEC': ['DEC_0', 'deg'],
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
                 'Sigma': ['sigma', 'deg']
@@ -82,8 +95,8 @@ model_registry = {
         'RadialDisk': {
             'model': spatial.SkyDisk,
             'parameters': {
-                'RA': ['RA_0', 'deg'],
-                'DEC': ['DEC_0', 'deg'],
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
                 'Radius': ['r_0', 'deg']
@@ -93,8 +106,8 @@ model_registry = {
         'RadialShell': {
             'model': spatial.SkyShell,
             'parameters': {
-                'RA': ['RA_0', 'deg'],
-                'DEC': ['DEC_0', 'deg'],
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
                 'Radius': ['radius', 'deg'],
@@ -102,18 +115,32 @@ model_registry = {
 
             }
         },
-        #TODO: in ctools xml, the parameter is a filename. SkyDiffuseMap wants a Map object
         'DiffuseMap': {
             'model': spatial.SkyDiffuseMap,
             'parameters': {
-                'file': ['map', 'deg'],
-                'Prefactor': ['norm', 'deg']
+                'Prefactor': ['norm', ''],
+                'Normalization': ['norm', ''],
+                'Value': ['norm', '']
+            }
+        },
+        'DiffuseIsotropic': {
+            'model': spatial.SkyDiffuseConstant,
+            'parameters': {
+                'Prefactor': ['value', ''],
+                'Normalization': ['value', ''],
+                'Value': ['value', '']
             }
         }
     }
 }
 # For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
 model_registry['spatial']['SkyDirFunction']= model_registry['spatial']['PointSource']
+model_registry['spatial']['SpatialMap']= model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['DiffuseMapCube']= model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['MapCubeFunction']= model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['ConstantValue']= model_registry['spatial']['DiffuseIsotropic']
+model_registry['spectral']['Constant']= model_registry['spectral']['ConstantValue']
+
 
 
 class UnknownModelError(ValueError):
@@ -174,7 +201,7 @@ def xml_to_model(xml, which):
     parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
 
-    if type_ == 'MapCubeFunction':
+    if type_ in ['MapCubeFunction', 'DiffuseMapCube', 'DiffuseMap', 'SpatialMap']:
         filename = xml['@file']
         map_ = Map.read(filename)
         model = model(map=map_, norm=-1, meta=dict(filename=filename))
@@ -228,13 +255,6 @@ def xml_to_parameter_list(xml, which, type_):
             parmax=float(par['@max']),
             frozen=bool(1 - int(par['@free']))
         ))
-    if parameters[0].name == 'RA_0' and parameters[1].name == 'DEC_0':
-        celestial_source = SkyCoord(parameters[0].value * u.deg, parameters[1].value * u.deg, frame='icrs')
-        glon,glat=celestial_source.galactic.l, celestial_source.galactic.b
-        parameters[0].name='lon_0'
-        parameters[1].name='lat_0'
-        parameters[0].value=glon.value
-        parameters[1].value=glat.value
 
     return ParameterList(parameters)
 
@@ -279,6 +299,7 @@ def model_to_xml(model, which):
 
     model_found = False
     for xml_type, type_ in model_registry[which].items():
+        print(type_)
         if isinstance(model, type_):
             model_found = True
             break

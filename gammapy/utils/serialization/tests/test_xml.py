@@ -11,7 +11,6 @@ import pytest
 
 
 def test_complex():
-    #TODO: add tests for MapCubeFunction (3D fits file) and SpatialMap (2D fits)
     xml_str = '''<?xml version="1.0" encoding="utf-8"?>
     <source_library title="source library">
         <source name="Source 0" type="PointSource">
@@ -73,13 +72,32 @@ def test_complex():
                 <parameter free="1" max="10" min="0.01" name="Radius" scale="1" value="0.8"/>                
                 <parameter free="1" max="10" min="0.01" name="Width" scale="1" value="0.1"/>                
             </spatialModel>
-        </source>          
+        </source>
+        <source name="RXJ1713" type="DiffuseSource">
+            <spectrum type="ExponentialCutoffPowerLaw">
+                <parameter name="Prefactor" scale="1e-17" value="2.3" min="1e-07" max="1000.0" free="1"/>
+                <parameter name="Index" scale="-1" value="2.06" min="0.0" max="+5.0" free="1"/>
+                <parameter name="PivotEnergy" scale="1e6" value="1.0" min="0.01" max="1000.0" free="0"/>
+                <parameter name="CutoffEnergy" scale="1e6" value="12.9" min="0.01" max="1000.0" free="1"/>
+            </spectrum>
+            <spatialModel type="DiffuseMap" file="$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits">
+                <parameter name="Prefactor" value="1" scale="1" min="0.001" max="1000" free="0"/>
+            </spatialModel>
+        </source>
+        <source name="IEM" type="DiffuseSource">
+            <spectrum type="ConstantValue">
+                <parameter name="Value" value="1" error="0" scale="1" min="1e-05" max="100000" free="1" />
+            </spectrum>
+            <spatialModel type="MapCubeFunction" file="$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits">
+                <parameter name="Normalization" value="1" scale="1" min="0.001" max="1000" free="0" />
+            </spatialModel>
+        </source>                            
     </source_library>
     '''
 
     sourcelib = xml_to_source_library(xml_str)
 
-    assert len(sourcelib.skymodels) == 5
+    assert len(sourcelib.skymodels) == 7
 
     model0 = sourcelib.skymodels[0]
     assert isinstance(model0.spectral_model, spectral.PowerLaw)
@@ -134,6 +152,11 @@ def test_complex():
     assert pars4['radius'].unit == 'deg'
     assert pars4['width'].unit == 'deg'
 
+    model5 = sourcelib.skymodels[5]
+    assert isinstance(model5.spatial_model, spatial.SkyDiffuseMap)
+
+    model6 = sourcelib.skymodels[6]
+    assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
 
 @pytest.mark.xfail(reason='Need to update model regsitry')
 @requires_data('gammapy-extra')
