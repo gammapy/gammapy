@@ -199,13 +199,6 @@ class SpectrumEnergyGroups(UserList):
         return table
 
     @property
-    def bin_idx_range(self):
-        """Tuple (left, right) with range of bin indices (both edges inclusive)."""
-        left = self[0].bin_idx_min
-        right = self[-1].bin_idx_max
-        return left, right
-
-    @property
     def energy_range(self):
         """Total energy range (`~astropy.units.Quantity` of length 2)."""
         return Quantity([self[0].energy_min, self[-1].energy_max])
@@ -268,10 +261,9 @@ class SpectrumEnergyGroupMaker(object):
 
     def __init__(self, obs):
         self.obs = obs
-        self.groups = self._groups_from_obs(obs)
+        self.groups = None
 
-    @staticmethod
-    def _groups_from_obs(obs):
+    def groups_from_obs(self):
         """Compute energy groups list with one group per energy bin.
 
         Parameters
@@ -285,11 +277,11 @@ class SpectrumEnergyGroupMaker(object):
             List of energy groups
         """
         # Start with a table with the obs energy binning
-        table = obs.stats_table()
+        table = self.obs.stats_table()
         # Make one group per bin
         table['bin_idx'] = np.arange(len(table))
         table['energy_group_idx'] = np.arange(len(table))
-        return SpectrumEnergyGroups.from_total_table(table)
+        self.groups = SpectrumEnergyGroups.from_total_table(table)
 
     def compute_groups_fixed(self, ebounds):
         """Apply grouping for a given fixed energy binning.

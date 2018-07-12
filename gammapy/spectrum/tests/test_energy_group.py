@@ -130,6 +130,13 @@ class TestSpectrumEnergyGroupMaker:
         return SpectrumObservation(on_vector=on_vector)
 
 
+    def test_groups_from_obs(self, obs):
+        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg.groups_from_obs()
+        groups = seg.groups
+
+        assert len(groups) == obs.e_reco.nbins
+
     @pytest.mark.parametrize('ebounds', [
         [1.25, 4.5, 6.5] * u.TeV,
         [2, 5, 7] * u.TeV,
