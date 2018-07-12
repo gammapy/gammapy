@@ -49,7 +49,7 @@ class SourceLibrary(object):
         """Read SourceLibrary from XML file"""
         path = make_path(filename)
         xml = path.read_text()
-        return self.from_xml(xml)
+        return cls.from_xml(xml)
 
     def to_xml(self, filename):
         """Write SourceLibrary to XML file"""
