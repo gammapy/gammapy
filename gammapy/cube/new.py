@@ -244,11 +244,12 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     # TODO: add a uniform API to the two background classes
     energy_axis = ref_geom.axes[0]
     # Compute offsets of all pixels
-    offset = make_separation_map(ref_geom, pointing).quantity
+    map_coord = ref_geom.get_coord()
+    #Compute offset at all the pixels and energy of the Map
+    offset=map_coord.skycoord.separation(pointing)
 
     if isinstance(bkg, Background3D):
         map_coord = ref_geom.get_coord()
-        # Compute offsets of all pixels
         detx = offset
         # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for detx, dety
         dety = Angle(np.zeros_like(detx), detx.unit)
@@ -261,7 +262,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry
         energy = energy_axis.center * energy_axis.unit
-        data = bkg.data.evaluate(offset=offset, energy=energy)
+        data = bkg.data.evaluate(offset=offset[0,:,:], energy=energy)
         data_shape = ref_geom.shape + offset.shape
         data = np.reshape(data, data_shape)
 
@@ -273,7 +274,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
-    data[:, offset >= offset_max] = 0
+    data[:, offset[0,:,:] >= offset_max] = 0
 
     return WcsNDMap(ref_geom, data=data)
 
