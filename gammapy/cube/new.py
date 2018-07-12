@@ -215,7 +215,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry
         energy = energy_axis.center * energy_axis.unit
-        data = bkg.evaluate(offset=offset[0,:,:], energy=energy)
+        data = bkg.evaluate(fov_altaz_lon=offset[0,:,:], energy=energy)
 
     # TODO: add proper integral over energy
     energy_axis = ref_geom.axes[0]

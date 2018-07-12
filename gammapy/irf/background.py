@@ -300,17 +300,15 @@ class Background2D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, fov_offset, fov_phi=None, energy_reco=None, **kwargs):
+    def evaluate(self, fov_altaz_lon, energy_reco, fov_altaz_lat = 0, **kwargs):
         """
-        Evaluate the `Background2D` at a given offset and energy.
+        Evaluate the `Background2D` at a given offset and energy. To have the same API than background 3D for the
+        background evaluation, the offset is fov_altaz_lon.
 
         Parameters
         ----------
-        fov_offset : `~astropy.coordinates.Angle`
-            Offset in the FOV
-        fov_phi: `~astropy.coordinates.Angle`
-            Azimuth angle in the FOV.
-            Not used for this class since the background model is radially symmetric
+        fov_altaz_lon, fov_altaz_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame
         energy_reco : `~astropy.units.Quantity`
             Reconstructed energy
         kwargs : dict
@@ -324,5 +322,5 @@ class Background2D(object):
         if energy_reco is None:
             energy_reco = self.data.axis('energy').nodes
 
-        array = self.data.evaluate(offset=fov_offset, energy=energy_reco, **kwargs)
+        array = self.data.evaluate(offset=fov_altaz_lon, energy=energy_reco, **kwargs)
         return array
