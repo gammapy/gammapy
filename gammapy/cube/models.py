@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import copy
 import astropy.units as u
+import operator
 from astropy.utils import lazyproperty
 from ..utils.modeling import ParameterList
 from ..utils.scripts import make_path
@@ -162,6 +163,65 @@ class SkyModel(object):
     def copy(self):
         """A deep copy"""
         return copy.deepcopy(self)
+
+    def __add__(self, skymodel):
+        return CompoundSkyModel(self, skymodel, operator.add)
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+
+class CompoundSkyModel(object):
+    """Represents the algebraic combination of two
+    `~gammapy.cube.models.SkyModel`
+
+    """
+    def __init__(self, model1, model2, operator):
+        self.model1 = model1
+        self.model2 = model2
+        self.operator = operator
+
+    # TODO: Think about how to deal with covariance matrix
+    @property
+    def parameters(self):
+        val = self.model1.parameters.parameters + self.model2.parameters.parameters
+        return ParameterList(val)
+
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = len(self.model1.parameters.parameters)
+        self.model1.parameters.parameters = parameters.parameters[:idx]
+        self.model2.parameters.parameters = parameters.parameters[idx:]
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += '\n    Component 1 : {}'.format(self.model1)
+        ss += '\n    Component 2 : {}'.format(self.model2)
+        ss += '\n    Operator : {}'.format(self.operator)
+        return ss
+
+    def evaluate(self, lon, lat, energy):
+        """Evaluate the compound model at given points.
+
+        Return differential surface brightness cube.
+        At the moment in units: ``cm-2 s-1 TeV-1 deg-2``
+
+        Parameters
+        ----------
+        lon, lat : `~astropy.units.Quantity`
+            Spatial coordinates
+        energy : `~astropy.units.Quantity`
+            Energy coordinate
+
+        Returns
+        -------
+        value : `~astropy.units.Quantity`
+            Model value at the given point.
+        """
+        val1 = self.model1.evaluate(lon, lat, energy)
+        val2 = self.model2.evaluate(lon, lat, energy)
+
+        return self.operator(val1, val2)
 
 
 class SkyModelMapEvaluator(object):
