@@ -690,13 +690,12 @@ class FluxPointEstimator(object):
             Flux point upper limit.
 
         """
-
         from scipy.optimize import brentq
-
+        model = fit.result[0].model.copy()
         # this is a prototype for fast flux point upper limit
         # calculation using brentq
-        amplitude = fit.result[0].model.parameters['amplitude'].value / 1E-12
-        amplitude_err = fit.result[0].model.parameters.error('amplitude') / 1E-12
+        amplitude = model.parameters['amplitude'].value / 1E-12
+        amplitude_err = model.parameters.error('amplitude') / 1E-12
 
         if negative:
             amplitude_max = amplitude
@@ -706,16 +705,15 @@ class FluxPointEstimator(object):
             amplitude_min = amplitude
 
         def ts_diff(x):
-            pars = fit.model.parameters
-            pars['amplitude'].value = x * 1E-12
-            stat = fit.total_stat(pars)
+            model.parameters['amplitude'].value = x * 1E-12
+            stat = fit.total_stat(model.parameters)
             return (stat_best_fit + delta_ts) - stat
 
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
-            fit.model.parameters['amplitude'].value = result * 1E-12
-            return fit.model(fit.model.parameters['reference'].quantity)
+            model.parameters['amplitude'].value = result * 1E-12
+            return model(model.parameters['reference'].quantity)
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
@@ -740,16 +738,16 @@ class FluxPointEstimator(object):
             Sqrt(TS) for flux point.
 
         """
+        model = fit.result[0].model.copy()
         # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = fit.result[0].model.parameters['amplitude'].value
+        amplitude = model.parameters['amplitude'].value
 
         # determine TS value for amplitude zero
-        pars = fit.model.parameters
-        pars['amplitude'].value = 0
-        stat_null = fit.total_stat(pars)
+        model.parameters['amplitude'].value = 0
+        stat_null = fit.total_stat(model.parameters)
 
         # set amplitude of fit model to best fit amplitude
-        fit.model.parameters['amplitude'].value = amplitude
+        model.parameters['amplitude'].value = amplitude
 
         # compute sqrt TS
         ts = np.abs(stat_null - stat_best_fit)
