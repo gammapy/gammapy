@@ -81,7 +81,6 @@ The following pages describe ``gammapy.spectrum`` in more detail:
    :maxdepth: 1
 
    fitting
-   energy_group
 
 Reference/API
 =============
