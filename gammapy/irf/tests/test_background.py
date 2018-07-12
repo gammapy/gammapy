@@ -141,19 +141,19 @@ def test_background_2d_evaluate(bkg_2d):
     # There's some redundancy, and no case exactly at a node in energy
 
     # Evaluate at log center between nodes in energy
-    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, energy_reco=1 * u.TeV)
+    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, fov_altaz_lat=0* u.deg, energy_reco=1 * u.TeV)
     assert_allclose(res.value, 0)
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
-    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, energy_reco=100 * u.TeV)
+    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, fov_altaz_lat=0* u.deg, energy_reco=100 * u.TeV)
     assert_allclose(res.value, [3, 2])
 
-    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, energy_reco=[1, 100] * u.TeV)
+    res = bkg_2d.evaluate(fov_altaz_lon=[1, 0.5] * u.deg, fov_altaz_lat=0* u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
-    res = bkg_2d.evaluate(fov_altaz_lon=1 * u.deg, energy_reco=[1, 100] * u.TeV)
+    res = bkg_2d.evaluate(fov_altaz_lon=1 * u.deg, fov_altaz_lat=0* u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
 
