@@ -92,17 +92,17 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     # assert_allclose(val, 0)
 
 @requires_data('gammapy-extra')
-def test_MapMaker():
+@pytest.mark.parametrize("mode, expected", [("trim", 160530.0), ("strict", 53486.0)])
+def test_MapMaker(mode,expected):
     ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
-    obs = ds.obs(111140)
     pos_SagA = SkyCoord(266.41681663, -29.00782497, unit="deg", frame="icrs")
     energy_axis = MapAxis.from_edges([0.1,0.5,1.5,3.0,10.],name='energy',unit='TeV',interp='log')
     geom = WcsGeom.create(binsz=0.1*u.deg, skydir=pos_SagA, width=15.0, axes=[energy_axis])
-    mmaker = MapMaker(geom, 4.0 * u.deg)
-    mmaker.process_obs(obs)
-
+    mmaker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
+    for obsid in ds.obs_table['OBS_ID']:
+        mmaker.process_obs(ds.obs(obsid))
     assert mmaker.exposure_map.unit == "m2 s"
-    assert_quantity_allclose(mmaker.count_map.data.sum(), 51152.0)
+    assert_quantity_allclose(mmaker.count_map.data.sum(), expected)
 
 
 

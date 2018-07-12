@@ -640,4 +640,4 @@ class WcsNDMap(WcsMap):
         if copy:
             data = data.copy()
 
-        return WcsNDMap(geom, data, meta=self.meta, unit=self.unit)
+        return WcsNDMap(geom, data, meta=self.meta, unit=self.unit), cutout_slices

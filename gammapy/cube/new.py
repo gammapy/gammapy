@@ -9,7 +9,6 @@ from ..maps import WcsNDMap, WcsGeom, Map
 from .basic_cube import fill_map_counts
 
 __all__ = [
-    'make_cutout',
     'make_separation_map',
     'make_map_counts',
     'make_map_exposure_true_energy',
@@ -17,51 +16,6 @@ __all__ = [
     'make_map_fov_background',
     'MapMaker',
 ]
-
-
-def make_cutout(ndmap, position, size, margin='0.1 deg'):
-    """Create a cutout of a WcsNDMap around a given direction.
-
-    Parameters
-    ----------
-    ndmap : `~gammapy.maps.WcsNDMap`
-        Map on which the cutout has to be extracted
-    position : `~astropy.coordinates.SkyCoord`
-        Center position of the cutout box
-    size : tuple of `~astropy.coordinates.Angle`
-        Angular sizes of the box
-    margin : `~astropy.coordinates.Angle`
-        Additional safety margin
-
-    Returns
-    -------
-    cutout : `~gammapy.maps.WcsNDMap`
-        The cutout map itself
-    cutout_slices : tuple
-        Tuple of 1-dim slice objects
-    """
-    # Here we implicitly assume ndmap has 3 dimensions.
-    # We might add a test to check this
-
-    # cutout box size
-    size = Angle(size) + Angle(margin)
-
-    # First create a cutout 2D of the ndmap
-    cutout2d = Cutout2D(
-        data=ndmap.data[0], wcs=ndmap.geom.wcs,
-        position=position, size=size, mode='strict'
-    )
-
-    # Create the slices with the non-spatial axis
-    cutout_slices = tuple([slice(0, ndmap.data.shape[0])]) + cutout2d.slices_original
-
-    # Build the new WcsGeom object
-    geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=ndmap.geom.axes)
-    data = ndmap.data[cutout_slices]
-
-    ndmap_cutout = WcsNDMap(geom, data)
-
-    return ndmap_cutout, cutout_slices
 
 
 def make_separation_map(geom, position):
@@ -349,9 +303,12 @@ class MapMaker(object):
         Reference image geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+    cutout_mode : {'trim', 'partial', 'strict'}, optional
+            Options for making cutouts. Should be left to the default value 'trim'
+            unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, ref_geom, offset_max):
+    def __init__(self, ref_geom, offset_max, cutout_mode="trim"):
         self.offset_max = offset_max
         self.ref_geom = ref_geom
 
@@ -368,6 +325,8 @@ class MapMaker(object):
         self.exclusion_map = WcsNDMap(self.ref_geom)
         self.exclusion_map.data += 1
 
+        self.cutout_mode = cutout_mode
+
     def process_obs(self, obs):
         """Process one observation.
 
@@ -378,9 +337,8 @@ class MapMaker(object):
         """
         # First make cutout of the global image
         try:
-            exclusion_mask_cutout, cutout_slices = make_cutout(
-                self.exclusion_map, obs.pointing_radec,
-                [2 * self.offset_max, 2 * self.offset_max],
+            exclusion_mask_cutout, cutout_slices = self.exclusion_map.make_cutout(
+                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
             )
         except PartialOverlapError:
             # TODO: can we silently do the right thing here? Discuss

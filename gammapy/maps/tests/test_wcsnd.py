@@ -416,7 +416,7 @@ def test_make_cutout():
     geom = WcsGeom.create(npix=(10, 10), binsz=1, skydir=pos,
                           proj='CAR', coordsys='GAL', axes=axes2)
     m = WcsNDMap(geom, data=np.ones((3, 2, 10, 10)), unit='m2')
-    cutout = m.make_cutout(position=pos, width=(2.0, 3.0) * u.deg)
+    cutout, _ = m.make_cutout(position=pos, width=(2.0, 3.0) * u.deg)
     actual = cutout.data.sum()
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)
