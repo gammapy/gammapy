@@ -5,7 +5,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
-from ...data import DataStore, ObservationList, ObservationStats, Target
+from ...data import DataStore, ObservationList, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
@@ -26,12 +26,11 @@ def get_obs(id):
 
 
 @pytest.fixture(scope='session')
-def target():
+def on_region():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg)
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
-
-    return Target(position=pos, on_region=on_region, name='Crab Nebula', tag='crab')
+    return on_region
 
 
 @pytest.fixture(scope='session')
@@ -40,9 +39,9 @@ def mask():
 
 
 @pytest.fixture(scope='session')
-def stats(target, mask):
+def stats(on_region, mask):
     obs = get_obs(23523)
-    bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs)
     bg = bge.process(obs)
@@ -50,9 +49,9 @@ def stats(target, mask):
 
 
 @pytest.fixture(scope='session')
-def stats_stacked(target, mask):
+def stats_stacked(on_region, mask):
     obs_list = get_obs_list()
-    bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs_list)
     bge.run()
