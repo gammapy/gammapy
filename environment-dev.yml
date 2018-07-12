@@ -30,6 +30,7 @@ dependencies:
   - uncertainties
   - healpy
   - reproject
+  - photutils
   - sherpa
   - iminuit
   - pytest
