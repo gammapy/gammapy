@@ -19,7 +19,7 @@ def test_sky_point_source():
         lat_0='45 deg',
     )
     lon = [1, 1.1] * u.deg
-    lat = 45 * u.deg
+    lat = [45, 45.2] * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
     assert_allclose(val.value, [1, 0])

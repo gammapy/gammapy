@@ -81,9 +81,18 @@ class SkyPointSource(SkySpatialModel):
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
         """Evaluate the model (static function)."""
-        tolerance = 1 * u.arcsec
-        sep = angular_separation(lon, lat, lon_0, lat_0)
-        val = np.where(sep < tolerance, 1, 0)
+
+        wrapval=lon_0 + 180*u.deg
+        lon = Angle(lon).wrap_at(wrapval)
+
+        _, grad_lon = np.gradient(lon)
+        grad_lat, _ = np.gradient(lat)
+        lon_diff = np.abs((lon - lon_0) / grad_lon)
+        lat_diff = np.abs((lat - lat_0) / grad_lat)
+
+        lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0)
+        lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0)
+        val = lon_val * lat_val
         return val * u.Unit('sr-1')
 
 
