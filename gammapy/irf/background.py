@@ -7,6 +7,7 @@ from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
+from ..utils.energy import EnergyBounds
 
 __all__ = [
     'Background3D',
@@ -159,6 +160,48 @@ class Background3D(object):
         points = dict(detx=detx, dety=dety, energy=energy_reco)
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
+
+    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins=1, method="linear",
+                                  **kwargs):
+        """
+        Evaluate the `Background3D` at given FOV coordinate and integrate over the energy range.
+
+        Parameters
+        ----------
+        detx, dety : `~astropy.coordinates.Angle`
+            FOV coordinates
+        energy_range: `~astropy.units.Quantity`
+            Energy range edges on which to compute the integration containing the minimal and maximal value of the range
+        n_integration_bins : int
+            Number of energy bins used for the integration
+        method : {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            Passed to `scipy.interpolate.RegularGridInterpolator`.
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes detx, dety
+        """
+        detx = np.atleast_2d(detx)
+        dety = np.atleast_2d(dety)
+        energy_edges = EnergyBounds.equal_log_spacing(energy_range[0], energy_range[1], n_integration_bins)
+
+        # TODO: insert new axes, remove tile and use numpy broadcasting
+        energy_reco = np.tile(energy_edges, reps=detx.shape + (1,))
+        detx = np.tile(detx, reps=energy_edges.shape + (1, 1))
+        detx = np.moveaxis(detx, 0, -1)
+        dety = np.tile(dety, reps=energy_edges.shape + (1, 1))
+        dety = np.moveaxis(dety, 0, -1)
+
+        bkg_evaluated = self.evaluate(
+            detx=detx,
+            dety=dety,
+            energy_reco=energy_reco,
+            method=method, **kwargs
+        )
+        return np.trapz(bkg_evaluated, energy_edges).decompose()
 
 
 class Background2D(object):
