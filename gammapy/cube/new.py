@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
+from astropy.units import Quantity
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
 from ..irf import Background3D
@@ -189,25 +190,32 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
-    # Compute offsets of all pixels
-    offset = make_separation_map(ref_geom, pointing).quantity
-
-    # Retrieve energies from WcsNDMap
-    # Note this would require a log_center from the geometry
-    energy = ref_geom.axes[0].center * ref_geom.axes[0].unit
-
     # Compute the expected background
     # TODO: properly transform FOV to sky coordinates
     # For now we assume the background is radially symmetric
 
     # TODO: add a uniform API to the two background classes
-    if isinstance(bkg, Background3D):
-        data = bkg.data.evaluate(detx=offset, dety='0 deg', energy=energy)
-    else:
-        data = bkg.data.evaluate(offset=offset, energy=energy)
+    energy_axis = ref_geom.axes[0]
+    # Compute offsets of all pixels
+    map_coord = ref_geom.get_coord()
+    #Compute offset at all the pixels and energy of the Map
+    offset=map_coord.skycoord.separation(pointing)
 
-    data_shape = ref_geom.shape + offset.shape
-    data = np.reshape(data, data_shape)
+    if isinstance(bkg, Background3D):
+        map_coord = ref_geom.get_coord()
+        detx = offset
+        # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for detx, dety
+        dety = Angle(np.zeros_like(detx), detx.unit)
+        # Retrieve energies from map coordinates
+        energy_reco = map_coord[energy_axis.name] * energy_axis.unit
+        #Here detx, dety, and e_reco have the same shape and contain all the coordinates of the point on which you want
+        #  to evaluate the background
+        data = bkg.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
+    else:
+        # Retrieve energies from WcsNDMap
+        # Note this would require a log_center from the geometry
+        energy = energy_axis.center * energy_axis.unit
+        data = bkg.evaluate(offset=offset[0,:,:], energy=energy)
 
     # TODO: add proper integral over energy
     energy_axis = ref_geom.axes[0]
@@ -217,7 +225,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
-    data[:, offset >= offset_max] = 0
+    data[:, offset[0,:,:] >= offset_max] = 0
 
     return WcsNDMap(ref_geom, data=data)
 
@@ -367,9 +375,6 @@ class MapMaker(object):
         )
 
         self._add_cutouts(cutout_slices, count_obs_map, expo_obs_map, background_obs_map)
-
-
-
 
     def _add_cutouts(self, cutout_slices, count_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
