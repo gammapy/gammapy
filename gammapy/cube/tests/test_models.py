@@ -23,10 +23,11 @@ def exposure(geom):
     m.quantity = np.ones((2, 4, 5)) * u.Quantity('100 m2 s')
     return m
 
+
 @pytest.fixture(scope='session')
 def background(geom):
     m = Map.from_geom(geom)
-    m.quantity = np.ones((2, 4, 5))*1e-7
+    m.quantity = np.ones((2, 4, 5)) * 1e-7
     return m
 
 
@@ -72,6 +73,24 @@ class TestSkyModel:
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value, 1.76838826e-13)
+
+
+class TestCompoundSkyModel:
+
+    @staticmethod
+    def test_add(sky_model):
+        compound_model = sky_model + sky_model
+        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
+        assert compound_model.parameters.names == parnames
+
+        lon = 3 * u.deg * np.ones(shape=(3, 4))
+        lat = 4 * u.deg * np.ones(shape=(3, 4))
+        energy = [1, 1, 1, 1, 1] * u.TeV
+
+        q = compound_model.evaluate(lon, lat, energy)
+
+        assert q.shape == (5, 3, 4)
+        assert_allclose(q.value, 3.536776513153229e-13)
 
 
 @requires_dependency('scipy')
@@ -137,5 +156,3 @@ class TestSkyModelMapEvaluator:
         evaluator_bkg = SkyModelMapEvaluator(sky_model, exposure, background=background)
         out_bkg = evaluator_bkg.compute_npred()
         assert_allclose(out_bkg.sum(), 47.312826994672788e-07)
-
-
