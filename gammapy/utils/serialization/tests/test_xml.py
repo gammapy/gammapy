@@ -93,7 +93,7 @@ def test_complex():
     </source_library>
     '''
 
-    sourcelib = xml_to_source_library(xml_str)
+    sourcelib = SourceLibrary.from_xml(xml_str)
 
     assert len(sourcelib.skymodels) == 7
 
@@ -167,7 +167,7 @@ def test_complex():
 def test_models(filenames, tmpdir):
     outfile = tmpdir / 'models_out.xml'
     for filename in filenames:
-        sourcelib = SourceLibrary.from_xml(filename)
+        sourcelib = SourceLibrary.read(filename)
         sourcelib.to_xml(outfile)
 
         sourcelib_roundtrip = SourceLibrary.from_xml(outfile)

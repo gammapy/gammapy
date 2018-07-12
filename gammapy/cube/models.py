@@ -39,12 +39,17 @@ class SourceLibrary(object):
         self.skymodels = skymodels
 
     @classmethod
-    def from_xml(cls, filename):
-        """Read SourceLibrary from XML file"""
+    def from_xml(cls, xml):
+        """Read SourceLibrary from XML string"""
         from ..utils.serialization import xml_to_source_library
+        return xml_to_source_library(xml)
+
+    @classmethod
+    def read(cls, filename):
+        """Read SourceLibrary from XML file"""
         path = make_path(filename)
         xml = path.read_text()
-        return xml_to_source_library(xml)
+        return self.from_xml(xml)
 
     def to_xml(self, filename):
         """Write SourceLibrary to XML file"""
