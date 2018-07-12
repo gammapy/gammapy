@@ -7,6 +7,7 @@ Period detection and plotting
 
 Introduction
 ============
+
 `~gammapy.time` provides methods for period detection in time series,
 i.e. light curves of :math:`\gamma`-ray sources.
 The period detection is implemented in the scope of the Lomb-Scargle periodogram,
@@ -37,8 +38,10 @@ The loss functions for the robust periodogram are provided by `scipy.optimize.le
 
 Getting Started
 ===============
-Basis Usage
+
+Basic Usage
 -----------
+
 `~gammapy.time.robust_periodogram` takes a light curve with data format ``time`` and ``flux`` as input.
 It returns the period grid, the periodogram peaks and the location of the highest periodogram peak.
 
@@ -57,6 +60,7 @@ since this period is not contained in the linear period grid automatically compu
 
 Period Grid
 -----------
+
 The checked periods can be specified optionally by forwarding an array ``periods``.
 
 .. code-block:: python
@@ -70,6 +74,7 @@ If not given, a linear grid will be computed limited by the length of the light 
 
 Measurement Uncertainties
 -------------------------
+
 `~gammapy.time.robust_periodogram` can also handle measurement uncertainties.
 They can be forwarded as an array ``flux_err``.
 
@@ -83,6 +88,7 @@ They can be forwarded as an array ``flux_err``.
 
 Loss Function and Loss Scale
 ----------------------------
+
 To obtain a robust periodogram, loss function ``loss`` and loss scale parameter ``scale`` need to be given.
 
 .. code-block:: python
@@ -110,7 +116,8 @@ Also, if ``scale`` is set to infinity, this results in the Lomb-Scargle periodog
 Default settings are recommended if no outliers are expected in the light curve.
 
 False Alarm Probabilities
------------------------
+-------------------------
+
 For the determination of peak significance in terms of a false alarm probability, see [1]_ and [7]_.
 Methods for the false alarm probability can be chosen from ``methods`` [3]_.
 The respective modul can be called, for example with the ``Baluev``-method:
@@ -121,9 +128,9 @@ The respective modul can be called, for example with the ``Baluev``-method:
     >>> periods = np.linspace(0.1, 10, 100)
     >>> periodogram = robust_periodogram(time, flux, periods=periods)
     >>> fap = _statistics.false_alarm_probability(
-                        periodogram['power'].max(), 1. / periodogram['periods'].min(),
-                        time, flux, flux_err, 'standard', 'baluev'
-                        )
+    ...     periodogram['power'].max(), 1. / periodogram['periods'].min(),
+    ...     time, flux, flux_err, 'standard', 'baluev'
+    ... )
     >>> fap
     0.0
 
@@ -132,6 +139,7 @@ because it internally calls `astropy.stats.LombScargle` (linear least square reg
 
 Plotting
 --------
+
 For plotting, `~gammapy.time.plot_periodogram` can be used.
 It takes the output of `~gammapy.time.robust_periodogram` as input.
 
@@ -140,13 +148,14 @@ It takes the output of `~gammapy.time.robust_periodogram` as input.
     >>> import matplotlib.pyplot as plt
     >>> from gammapy.time import plot_periodogram
     >>> fig = plot_periodogram(
-                    time, flux, periodogram['periods'], periodogram['power'],
-                    flux_err, periodogram['best_period'], fap
-                    )
+    ...     time, flux, periodogram['periods'], periodogram['power'],
+    ...     flux_err, periodogram['best_period'], fap
+    ... )
     >>> fig.show()
 
 Example
 =======
+
 An example of detecting a period with `~gammapy.time.robust_periodogram` is shown in the figure below.
 The code can be found under [4]_.
 The light curve of the X-ray binary LS 5039 is used, observed  in 2005 with H.E.S.S.
