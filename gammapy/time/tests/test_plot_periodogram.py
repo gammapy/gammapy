@@ -1,28 +1,41 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-from ..period import lomb_scargle
-from ...utils.testing import requires_dependency
+from astropy.stats.lombscargle import _statistics
+from .test_period import simulate_test_data, fap_astropy
+from ..period import robust_periodogram
 from ..plot_periodogram import plot_periodogram
-from .test_period import simulate_test_data
+from ...utils.testing import requires_dependency
+
+
+@pytest.mark.parametrize('pars', [
+    dict(
+        period=7, amplitude=2, t_length=100,
+        n_data=1000, n_obs=500, n_outliers=50,
+        loss='cauchy', scale=1,
+    ),
+])
 
 
 @requires_dependency('scipy')
-@pytest.mark.parametrize('test_case', [
-    dict(period=7, amplitude=2, t_length=100, n_data=1000,
-         n_obs=500, n_outliers=0, dt=0.5,
-         max_period=None, criteria='all', n_bootstraps=10),
-])
-def test_lomb_scargle_plot(test_case):
+
+
+def test_plot_periodogram(pars):
     test_data = simulate_test_data(
-        test_case['period'], test_case['amplitude'], test_case['t_length'],
-        test_case['n_data'], test_case['n_obs'], test_case['n_outliers'],
+        pars['period'], pars['amplitude'], pars['t_length'],
+        pars['n_data'], pars['n_obs'], pars['n_outliers'],
     )
-    result = lomb_scargle(
-        test_data['t'], test_data['y'], test_data['dy'], test_case['dt'],
-        test_case['max_period'], test_case['criteria'], test_case['n_bootstraps'],
+
+    periodogram = robust_periodogram(
+        test_data['t'], test_data['y'], test_data['dy'],
+        loss=pars['loss'], scale=pars['scale'],
     )
-    plot_periodogram(
-        test_data['t'], test_data['y'], test_data['dy'], result['pgrid'],
-        result['psd'], result['swf'], result['period'], result['fap'],
+
+    fap = fap_astropy(periodogram['power'], 1. / periodogram['periods'],
+                      test_data['t'], test_data['y'], test_data['dy'],
+                      )
+
+    plot = plot_periodogram(
+        test_data['t'], test_data['y'], periodogram['periods'], periodogram['power'],
+        test_data['dy'], periodogram['best_period'], max([*fap.values()])
     )
