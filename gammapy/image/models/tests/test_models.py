@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+import numpy as np
 import astropy.units as u
 from ....utils.testing import requires_dependency, requires_data
 from ..new import (
@@ -15,14 +16,13 @@ from ..new import (
 
 def test_sky_point_source():
     model = SkyPointSource(
-        lon_0='1 deg',
-        lat_0='45 deg',
+        lon_0 = '2.5 deg',
+        lat_0 = '2.5 deg'
     )
-    lon = [1, 1.1] * u.deg
-    lat = 45 * u.deg
+    lat, lon = np.mgrid[0:6, 0:6] * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
-    assert_allclose(val.value, [1, 0])
+    assert_allclose(val.sum().value, 1.0)
 
 
 def test_sky_gaussian():
