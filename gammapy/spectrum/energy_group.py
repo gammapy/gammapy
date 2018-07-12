@@ -216,6 +216,13 @@ class SpectrumEnergyGroups(UserList):
         energy.append(self[-1].energy_max)
         return Quantity(energy)
 
+    @property
+    def bin_idx_bounds(self):
+        """Energy group bin index bounds (`~astropy.units.Quantity`)."""
+        bin = [_.bin_idx_min for _ in self]
+        bin.append(self[-1].bin_idx_max)
+        return bin
+
     def find_list_idx(self, energy):
         """Find the list index corresponding to a given energy."""
         for idx, group in enumerate(self):
@@ -230,110 +237,95 @@ class SpectrumEnergyGroups(UserList):
 
         raise IndexError('No group found with energy: {}'.format(energy))
 
-    def find_list_idx_range(self, energy_min, energy_max):
-        """TODO: document.
+    # def find_list_idx_range(self, energy_min, energy_max):
+    #     """TODO: document.
+    #
+    #     * Min index is the bin that contains ``energy_range.min``
+    #     * Max index is the bin that is below the one that contains ``energy_range.max``
+    #     * This way we don't loose any bins or count them twice.
+    #     * Containment is checked for each bin as [min, max)
+    #     """
+    #     idx_min = self.find_list_idx(energy=energy_min)
+    #     idx_max = self.find_list_idx(energy=energy_max) - 1
+    #     return idx_min, idx_max
+    #
+    # def make_and_replace_merged_group(self, list_idx_min, list_idx_max, bin_type):
+    #     """Merge energy groups and update indexes"""
+    #     # Create a merged group object
+    #     group = self.make_merged_group(
+    #         list_idx_min=list_idx_min,
+    #         list_idx_max=list_idx_max,
+    #         bin_type=bin_type,
+    #     )
+    #
+    #     # Delete previous groups
+    #     [self.pop(list_idx_min) for _ in range(list_idx_max - list_idx_min + 1)]
+    #
+    #     # Insert the merged group
+    #     self.insert(list_idx_min, group)
+    #     self.reindex_groups()
+    #     return self
+    #
+    # def reindex_groups(self):
+    #     """Re-index groups"""
+    #     for energy_group_idx, group in enumerate(self):
+    #         group.energy_group_idx = energy_group_idx
+    #
+    # def make_merged_group(self, list_idx_min, list_idx_max, bin_type):
+    #     """Merge group according to indexes"""
+    #     left_group = self[list_idx_min]
+    #     right_group = self[list_idx_max]
+    #
+    #     return SpectrumEnergyGroup(
+    #         energy_group_idx=INVALID_GROUP_INDEX,
+    #         bin_idx_min=left_group.bin_idx_min,
+    #         bin_idx_max=right_group.bin_idx_max,
+    #         bin_type=bin_type,
+    #         energy_min=left_group.energy_min,
+    #         energy_max=right_group.energy_max,
+    #     )
+    #
+    # # TODO: choose one of the apply energy min / max methods!
+    #
+    # def apply_energy_min_old(self, energy):
+    #     """Modify list in-place to apply a min energy cut."""
+    #     idx_max = self.find_list_idx(energy)
+    #     self.make_and_replace_merged_group(0, idx_max, 'underflow')
+    #
+    # def apply_energy_min(self, energy):
+    #     t = self.to_group_table()
+    #     idx_max = np.where(t['energy_min'].quantity < energy)[0][-1]
+    #     self.make_and_replace_merged_group(0, idx_max, 'underflow')
+    #
+    # def apply_energy_max_old(self, energy):
+    #     """Modify list in-place to apply a max energy cut."""
+    #     idx_min = self.find_list_idx(energy)
+    #     idx_max = len(self) - 1
+    #     self.make_and_replace_merged_group(idx_min, idx_max, 'overflow')
+    #
+    # def apply_energy_max(self, energy):
+    #     t = self.to_group_table()
+    #     idx_min = np.where(t['energy_max'].quantity > energy)[0][0]
+    #     self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
+    #
+    # def clip_to_valid_range(self, list_idx):
+    #     """TODO: document"""
+    #     if self[list_idx].bin_type == 'underflow':
+    #         list_idx += 1
+    #
+    #     if self[list_idx].bin_type == 'overflow':
+    #         list_idx -= 1
+    #
+    #     if list_idx < 0:
+    #         raise IndexError('list_idx {} < 0'.format(list_idx))
+    #     if list_idx >= len(self):
+    #         raise IndexError('list_idx {} > len(self)'.format(list_idx))
+    #
+    #     return list_idx
 
-        * Min index is the bin that contains ``energy_range.min``
-        * Max index is the bin that is below the one that contains ``energy_range.max``
-        * This way we don't loose any bins or count them twice.
-        * Containment is checked for each bin as [min, max)
-        """
-        idx_min = self.find_list_idx(energy=energy_min)
-        idx_max = self.find_list_idx(energy=energy_max) - 1
-        return idx_min, idx_max
+    # def apply_energy_binning(self, ebounds):
+    #     """Apply an energy binning."""
 
-    def make_and_replace_merged_group(self, list_idx_min, list_idx_max, bin_type):
-        """Merge energy groups and update indexes"""
-        # Create a merged group object
-        group = self.make_merged_group(
-            list_idx_min=list_idx_min,
-            list_idx_max=list_idx_max,
-            bin_type=bin_type,
-        )
-
-        # Delete previous groups
-        [self.pop(list_idx_min) for _ in range(list_idx_max - list_idx_min + 1)]
-
-        # Insert the merged group
-        self.insert(list_idx_min, group)
-        self.reindex_groups()
-        return self
-
-    def reindex_groups(self):
-        """Re-index groups"""
-        for energy_group_idx, group in enumerate(self):
-            group.energy_group_idx = energy_group_idx
-
-    def make_merged_group(self, list_idx_min, list_idx_max, bin_type):
-        """Merge group according to indexes"""
-        left_group = self[list_idx_min]
-        right_group = self[list_idx_max]
-
-        return SpectrumEnergyGroup(
-            energy_group_idx=INVALID_GROUP_INDEX,
-            bin_idx_min=left_group.bin_idx_min,
-            bin_idx_max=right_group.bin_idx_max,
-            bin_type=bin_type,
-            energy_min=left_group.energy_min,
-            energy_max=right_group.energy_max,
-        )
-
-    # TODO: choose one of the apply energy min / max methods!
-
-    def apply_energy_min_old(self, energy):
-        """Modify list in-place to apply a min energy cut."""
-        idx_max = self.find_list_idx(energy)
-        self.make_and_replace_merged_group(0, idx_max, 'underflow')
-
-    def apply_energy_min(self, energy):
-        t = self.to_group_table()
-        idx_max = np.where(t['energy_min'].quantity < energy)[0][-1]
-        self.make_and_replace_merged_group(0, idx_max, 'underflow')
-
-    def apply_energy_max_old(self, energy):
-        """Modify list in-place to apply a max energy cut."""
-        idx_min = self.find_list_idx(energy)
-        idx_max = len(self) - 1
-        self.make_and_replace_merged_group(idx_min, idx_max, 'overflow')
-
-    def apply_energy_max(self, energy):
-        t = self.to_group_table()
-        idx_min = np.where(t['energy_max'].quantity > energy)[0][0]
-        self.make_and_replace_merged_group(idx_min, len(self) - 1, 'overflow')
-
-    def clip_to_valid_range(self, list_idx):
-        """TODO: document"""
-        if self[list_idx].bin_type == 'underflow':
-            list_idx += 1
-
-        if self[list_idx].bin_type == 'overflow':
-            list_idx -= 1
-
-        if list_idx < 0:
-            raise IndexError('list_idx {} < 0'.format(list_idx))
-        if list_idx >= len(self):
-            raise IndexError('list_idx {} > len(self)'.format(list_idx))
-
-        return list_idx
-
-    def apply_energy_binning(self, ebounds):
-        """Apply an energy binning."""
-
-        for idx in range(len(ebounds) - 1):
-            energy_min = ebounds[idx]
-            energy_max = ebounds[idx + 1]
-            list_idx_min, list_idx_max = self.find_list_idx_range(energy_min, energy_max)
-
-            # Be sure to leave underflow and overflow bins alone
-            # TODO: this is pretty ugly ... make it better somehow!
-            list_idx_min = self.clip_to_valid_range(list_idx_min)
-            list_idx_max = self.clip_to_valid_range(list_idx_max)
-
-            self.make_and_replace_merged_group(
-                list_idx_min=list_idx_min,
-                list_idx_max=list_idx_max,
-                bin_type='normal',
-            )
 
 
 class SpectrumEnergyGroupMaker(object):
@@ -373,6 +365,7 @@ class SpectrumEnergyGroupMaker(object):
 
     def __init__(self, obs):
         self.obs = obs
+        self.safe_bins = range(self.obs.e_reco.nbins)
         self.groups = self._groups_from_obs(obs)
 
     @staticmethod
@@ -406,20 +399,14 @@ class SpectrumEnergyGroupMaker(object):
         * group bins above the safe energy range into one group of type "overflow"
         """
         bins = self.obs.on_vector.bins_in_safe_range
+        bin_idx_bounds = self.groups.bin_idx_bounds
 
         underflow = bins[0] - 1
+        overflow = bins[-1] - underflow
+        max_bin = self.obs.e_reco.nbins - 1
 
         # If no low threshold is set no underflow bin is needed
-        if underflow >= 0:
-            self.groups.make_and_replace_merged_group(0, underflow, 'underflow')
-
-        # The group binning has changed
-        overflow = bins[-1] - underflow
-        max_bin = self.groups[-1].energy_group_idx
-
-        # If no high threshold is set no overflow bin is needed
-        if overflow <= max_bin:
-            self.groups.make_and_replace_merged_group(overflow, max_bin, 'overflow')
+        if (underflow >= 0) or (overflow <= max_bin):
 
     def compute_groups_fixed(self, ebounds):
         """Apply grouping for a given fixed energy binning.
@@ -429,59 +416,95 @@ class SpectrumEnergyGroupMaker(object):
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
-        self.groups.apply_energy_min(energy=ebounds[0])
-        self.groups.apply_energy_max(energy=ebounds[-1])
-        self.groups.apply_energy_binning(ebounds=ebounds)
+        groups = []
+        ebounds_length = len(ebounds)
+        energy_binning_offset = ebounds - 1 * u.MeV
+        diff = energy_binning_offset[:, np.newaxis] - self.obs.e_reco.lower_bounds
+        lower_indices = np.argmin(np.sign(diff), axis=1)
 
-    def compute_groups_adaptive(self, min_signif, rebin_factor=2):
-        """Compute energy binning for flux points.
+        if lower_indices[-1] == 0:
+            lower_indices[-1] = self.obs.e_reco.nbins + 1
 
-        This is useful to get an energy binning to use with
-        :func:`~gammapy.spectrum.FluxPoints` Each bin in the
-        resulting energy binning will include a ``min_signif`` source detection.
+        energy_group_idx = 0
 
-        TODO: It is required that at least two fine bins be included in one
-        flux point interval, otherwise the sherpa covariance method breaks
-        down.
+        # minindex = np.argmin(np.sign(self.safe_bins[0] - lower_indices))
+        # if lower_indices[minindex] > 0:
+        #     group = SpectrumEnergyGroup(energy_group_idx, 0,
+        #                                 lower_indices[minindex] - 1, 'underflow',
+        #                                 self.obs.e_reco.lower_bounds[0],
+        #                                 self.obs.e_reco.upper_bounds[lower_indices[minindex] -1])
+        #     groups.append(group)
+        #     energy_group_idx += 1
 
-        Parameters
-        ----------
-        min_signif : float
-            Required significance for each bin
-        """
-        obs = self.obs
-        # NOTE: Results may vary from FitSpectrum since there the rebin
-        # parameter can only have fixed values, here it grows linearly. Also it
-        # has to start at 2 here (see docstring)
+        for index in range(ebounds_length-1):
+            if (lower_indices[index] >= self.safe_bins[0]) and (lower_indices[index+1]-1 <= self.safe_bins[-1]):
+                group = SpectrumEnergyGroup(energy_group_idx, lower_indices[index], lower_indices[index+1]-1, 'normal', self.obs.e_reco.lower_bounds[lower_indices[index]], self.obs.e_reco.upper_bounds[lower_indices[index]])
+                groups.append(group)
+                energy_group_idx +=1
 
-        # First first bin above low threshold and last bin below high threshold
-        current_ebins = obs.on_vector.energy
-        current_bin = (current_ebins.find_node(obs.lo_threshold) + 1)[0]
-        max_bin = (current_ebins.find_node(obs.hi_threshold))[0]
+        # maxbin = self.obs.e_reco.nbins
+        # if lower_indices[-1] < self.safe_bins[0]:
+        #     maxbin = lower_indices[-1]
+        # else:
+        #     maxbin = lower_indices[np.argmin(np.sign(self.safe_bins[-1] - lower_indices))]
+        # if maxbin < self.obs.e_reco.nbins:
+        #     group = SpectrumEnergyGroup(energy_group_idx, maxbin,
+        #                                 self.obs.e_reco.nbins, 'overflow',
+        #                                 self.obs.e_reco.lower_bounds[maxbin],
+        #                                 self.obs.e_reco.upper_bounds[self.obs.e_reco.nbins])
+        #     groups.append(group)
+        self.groups = SpectrumEnergyGroups(groups)
 
-        # List holding final energy binning
-        binning = [current_ebins.lo[current_bin]]
 
-        # Precompute ObservationStats for each bin
-        obs_stats = [obs.stats(i) for i in range(current_ebins.nbins)]
-        while current_bin + rebin_factor <= max_bin:
-            # Merge bins together until min_signif is reached
-            stats_list = obs_stats[current_bin:current_bin + rebin_factor:1]
-            stats = ObservationStats.stack(stats_list)
-            sigma = stats.sigma
-            if sigma < min_signif or np.isnan(sigma):
-                rebin_factor += 1
-                continue
-
-            # Append upper bin edge of good energy bin to final binning
-            binning.append(current_ebins.lo[current_bin + rebin_factor])
-            current_bin += rebin_factor
-
-        binning = Quantity(binning)
-        # Replace highest bin edge by high threshold
-        binning[-1] = obs.hi_threshold
-
-        # TODO: fill self.groups instead of returning the binning!
-        # self.groups.apply_energy_binning(binning)
-
-        return binning
+    # def compute_groups_adaptive(self, min_signif, rebin_factor=2):
+    #     """Compute energy binning for flux points.
+    #
+    #     This is useful to get an energy binning to use with
+    #     :func:`~gammapy.spectrum.FluxPoints` Each bin in the
+    #     resulting energy binning will include a ``min_signif`` source detection.
+    #
+    #     TODO: It is required that at least two fine bins be included in one
+    #     flux point interval, otherwise the sherpa covariance method breaks
+    #     down.
+    #
+    #     Parameters
+    #     ----------
+    #     min_signif : float
+    #         Required significance for each bin
+    #     """
+    #     obs = self.obs
+    #     # NOTE: Results may vary from FitSpectrum since there the rebin
+    #     # parameter can only have fixed values, here it grows linearly. Also it
+    #     # has to start at 2 here (see docstring)
+    #
+    #     # First first bin above low threshold and last bin below high threshold
+    #     current_ebins = obs.on_vector.energy
+    #     current_bin = (current_ebins.find_node(obs.lo_threshold) + 1)[0]
+    #     max_bin = (current_ebins.find_node(obs.hi_threshold))[0]
+    #
+    #     # List holding final energy binning
+    #     binning = [current_ebins.lo[current_bin]]
+    #
+    #     # Precompute ObservationStats for each bin
+    #     obs_stats = [obs.stats(i) for i in range(current_ebins.nbins)]
+    #     while current_bin + rebin_factor <= max_bin:
+    #         # Merge bins together until min_signif is reached
+    #         stats_list = obs_stats[current_bin:current_bin + rebin_factor:1]
+    #         stats = ObservationStats.stack(stats_list)
+    #         sigma = stats.sigma
+    #         if sigma < min_signif or np.isnan(sigma):
+    #             rebin_factor += 1
+    #             continue
+    #
+    #         # Append upper bin edge of good energy bin to final binning
+    #         binning.append(current_ebins.lo[current_bin + rebin_factor])
+    #         current_bin += rebin_factor
+    #
+    #     binning = Quantity(binning)
+    #     # Replace highest bin edge by high threshold
+    #     binning[-1] = obs.hi_threshold
+    #
+    #     # TODO: fill self.groups instead of returning the binning!
+    #     # self.groups.apply_energy_binning(binning)
+    #
+    #     return binning
