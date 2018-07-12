@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from ...modeling import ParameterList, Parameter
 from ...testing import requires_dependency
-from .. import fit_minuit
+from .. import fit_iminuit
 
 
-@requires_dependency('iminuit')  
+@requires_dependency('iminuit')
 def test_iminuit():
     def f(parameters):
         x = parameters['x'].value
@@ -18,7 +18,7 @@ def test_iminuit():
         [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
     )
 
-    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
 
     assert_allclose(pars_in['x'].value, 2.1, rtol=1e-2)
     assert_allclose(pars_in['y'].value, 3.1, rtol=1e-2)
@@ -34,12 +34,12 @@ def test_iminuit():
 
     # Test freeze
     pars_in['x'].frozen = True
-    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
     assert minuit.list_of_fixed_param() == ['x']
 
     # Test limits
     pars_in['y'].parmin = 4
-    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
     states = minuit.get_param_states()
     assert not states[0]['has_limits']
     assert not states[2]['has_limits']
@@ -50,6 +50,6 @@ def test_iminuit():
 
     # Test stepsize via covariance matrix
     pars_in.set_parameter_errors({'x': '0.2', 'y': '0.1'})
-    pars_out, minuit = fit_minuit(function=f, parameters=pars_in)
+    pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
 
     assert minuit.migrad_ok()

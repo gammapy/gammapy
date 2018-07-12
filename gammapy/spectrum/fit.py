@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
-from ..utils.fitting import fit_minuit
+from ..utils.fitting import fit_iminuit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
@@ -369,7 +369,7 @@ class SpectrumFit(object):
 
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
-    
+
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
@@ -447,8 +447,8 @@ class SpectrumFit(object):
 
     def _fit_iminuit(self):
         """Iminuit minimization"""
-        parameters, minuit = fit_minuit(parameters=self._model.parameters,
-                                        function=self.total_stat)
+        parameters, minuit = fit_iminuit(parameters=self._model.parameters,
+                                         function=self.total_stat)
         self._iminuit_fit = minuit
         log.debug(minuit)
         self._make_fit_result(parameters)
@@ -514,9 +514,9 @@ class SpectrumFit(object):
         # The iminuit covariance is a dict indexed by tuples containing combinations of
         # parameter names
 
-        #create tuples of combinations
+        # create tuples of combinations
         d = self._model.parameters.to_dict()
-        parameter_names = [l['name'] for l in d['parameters'] if l['frozen'] == False]
+        parameter_names = [l['name'] for l in d['parameters'] if not l['frozen']]
         self.covar_axis = parameter_names
         parameter_combinations = list(product(parameter_names, repeat=2))
 
@@ -529,7 +529,6 @@ class SpectrumFit(object):
 
         cov = cov.reshape(len(parameter_names), -1)
         self.covariance = cov
-
 
     def _est_errors_sherpa(self):
         """Wrapper around Sherpa error estimator."""

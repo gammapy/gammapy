@@ -7,11 +7,11 @@ from ..modeling import ParameterList, Parameter
 
 
 __all__ = [
-    'fit_minuit',
+    'fit_iminuit',
 ]
 
 
-def fit_minuit(parameters, function):
+def fit_iminuit(parameters, function):
     """iminuit optimization
 
     The input `~gammapy.utils.modeling.ParameterList` is copied internally
@@ -84,6 +84,5 @@ def make_minuit_kwargs(parameters):
             err = parameters.error(par.name)
             if err != '0':
                 kwargs['error_{}'.format(par.name)] = err
-
 
     return kwargs
