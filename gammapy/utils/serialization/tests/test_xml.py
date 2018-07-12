@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
+import pytest
 from ...testing import requires_data, requires_dependency
-from ...scripts import make_path
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
 from ....image import models as spatial
 from ...serialization import xml_to_source_library, UnknownModelError
-import pytest
 
 
 def test_complex():
@@ -158,12 +156,13 @@ def test_complex():
     model6 = sourcelib.skymodels[6]
     assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
 
+
 @pytest.mark.xfail(reason='Need to update model regsitry')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
-@pytest.mark.parametrize('filenames',[[
-     '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
-     '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+@pytest.mark.parametrize('filenames', [[
+    '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
+    '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
 ]])
 def test_models(filenames, tmpdir):
     outfile = tmpdir / 'models_out.xml'
@@ -189,6 +188,6 @@ def test_xml_errors():
     xml += '</source_library>'
 
     with pytest.raises(UnknownModelError):
-        model = xml_to_source_library(xml)
+        xml_to_source_library(xml)
 
     # TODO: Think about a more elaborate XML validation scheme

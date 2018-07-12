@@ -20,8 +20,7 @@ import gammapy.spectrum.models as spectral
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-log = logging.getLogger(__name__) 
-
+log = logging.getLogger(__name__)
 
 __all__ = [
     'UnknownModelError',
@@ -33,13 +32,12 @@ __all__ = [
     'source_library_to_xml',
 ]
 
-
 # TODO: Move to a separate file ?
 model_registry = {
-    'spectral':{
-        'PowerLaw':{
-            'model':spectral.PowerLaw,
-            'parameters':{
+    'spectral': {
+        'PowerLaw': {
+            'model': spectral.PowerLaw,
+            'parameters': {
                 'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
@@ -53,7 +51,7 @@ model_registry = {
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
                 'PivotEnergy': ['reference', 'MeV'],
-                'CutoffEnergy': ['lambda_', 'MeV'], # parameter lambda_=1/Ecut will be inverted on model creation
+                'CutoffEnergy': ['lambda_', 'MeV'],  # parameter lambda_=1/Ecut will be inverted on model creation
             }
         },
         'ConstantValue': {
@@ -63,7 +61,7 @@ model_registry = {
                 'Normalization': ['const', 'cm-2 s-1 MeV-1']
             }
         },
-        #TODO: FileFunction is not working
+        # TODO: FileFunction is not working
         'FileFunction': {
             'model': spectral.TableModel,
             'parameters': {
@@ -72,10 +70,10 @@ model_registry = {
             }
         }
     },
-    'spatial':{
-        'PointSource':{
-            'model':spatial.SkyPointSource,
-            'parameters':{
+    'spatial': {
+        'PointSource': {
+            'model': spatial.SkyPointSource,
+            'parameters': {
                 'RA': ['lon_0', 'deg'],
                 'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
@@ -134,13 +132,12 @@ model_registry = {
     }
 }
 # For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
-model_registry['spatial']['SkyDirFunction']= model_registry['spatial']['PointSource']
-model_registry['spatial']['SpatialMap']= model_registry['spatial']['DiffuseMap']
-model_registry['spatial']['DiffuseMapCube']= model_registry['spatial']['DiffuseMap']
-model_registry['spatial']['MapCubeFunction']= model_registry['spatial']['DiffuseMap']
-model_registry['spatial']['ConstantValue']= model_registry['spatial']['DiffuseIsotropic']
-model_registry['spectral']['Constant']= model_registry['spectral']['ConstantValue']
-
+model_registry['spatial']['SkyDirFunction'] = model_registry['spatial']['PointSource']
+model_registry['spatial']['SpatialMap'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['DiffuseMapCube'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['MapCubeFunction'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['ConstantValue'] = model_registry['spatial']['DiffuseIsotropic']
+model_registry['spectral']['Constant'] = model_registry['spectral']['ConstantValue']
 
 
 class UnknownModelError(ValueError):
@@ -197,9 +194,8 @@ def xml_to_model(xml, which):
     except KeyError:
         msg = "{} model '{}' not registered"
         raise UnknownModelError(msg.format(which, type_))
-    
-    parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
+    parameters = xml_to_parameter_list(xml['parameter'], which, type_)
 
     if type_ in ['MapCubeFunction', 'DiffuseMapCube', 'DiffuseMap', 'SpatialMap']:
         filename = xml['@file']
@@ -224,10 +220,10 @@ def xml_to_model(xml, which):
             model.parameters['index'].parmin *= -1
             model.parameters['index'].parmax *= -1
         if type_ == 'ExponentialCutoffPowerLaw':
-            model.parameters['lambda_'].value = 1/model.parameters['lambda_'].value
-            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit+'-1'
-            model.parameters['lambda_'].parmin = 1/model.parameters['lambda_'].parmin
-            model.parameters['lambda_'].parmax = 1/model.parameters['lambda_'].parmax
+            model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
+            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
+            model.parameters['lambda_'].parmin = 1 / model.parameters['lambda_'].parmin
+            model.parameters['lambda_'].parmax = 1 / model.parameters['lambda_'].parmax
             model.parameters['index'].value *= -1
             model.parameters['index'].parmin *= -1
             model.parameters['index'].parmax *= -1
@@ -299,7 +295,6 @@ def model_to_xml(model, which):
 
     model_found = False
     for xml_type, type_ in model_registry[which].items():
-        print(type_)
         if isinstance(model, type_):
             model_found = True
             break
@@ -307,7 +302,7 @@ def model_to_xml(model, which):
     if not model_found:
         msg = "{} model {} not in registry".format(which, model)
         raise UnknownModelError(msg)
-    
+
     indent = 8 * ' '
     xml = indent + '<{} '.format(tag)
     if xml_type in ['MapCubeFunction', 'FileFunction']:
