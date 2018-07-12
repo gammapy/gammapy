@@ -16,7 +16,6 @@ from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, SpectralModel, ExponentialCutoffPowerLaw
 from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFitter, FluxPointEstimator
 
-
 FLUX_POINTS_FILES = [
     'diff_flux_points.ecsv',
     'diff_flux_points.fits',
@@ -157,9 +156,8 @@ def test_flux_points(config):
     # TODO: replace this with a simple test case in a fixture
     filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
     obs = SpectrumObservation.read(filename)
+    ebounds = [0.3, 1, 30] * u.TeV
     seg = SpectrumEnergyGroupMaker(obs=obs)
-    ebounds = [0.3, 1, 3, 10, 30] * u.TeV
-    seg.compute_range_safe()
     seg.compute_groups_fixed(ebounds=ebounds)
 
     if config == 'pl':
@@ -171,11 +169,11 @@ def test_flux_points(config):
             ),
             obs=obs,
             seg=seg,
-            dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_errp=5.0050e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_ul=3.7998e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde=6.523663e-11,
+            dnde_err=1.12954e-11,
+            dnde_errn=1.076992e-7,
+            dnde_errp=1.188907e-7,
+            dnde_ul=9.023994e-11,
             res=-0.1126,
             res_err=0.1536,
         )
@@ -185,15 +183,15 @@ def test_flux_points(config):
                 index=Quantity(2, ''),
                 amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
                 reference=Quantity(1, 'TeV'),
-                lambda_= Quantity(0.1, 'TeV-1')
+                lambda_=Quantity(0.1, 'TeV-1')
             ),
             obs=obs,
             seg=seg,
-            dnde=2.7465e-11 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_err=4.7555e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_errn=4.5333e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_errp=5.0050e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            dnde_ul=3.7998e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            dnde=6.171423e-11,
+            dnde_err=1.068601e-11,
+            dnde_errn=1.018883e-7,
+            dnde_errp=1.124765e-7,
+            dnde_ul=8.53686e-11,
             res=-0.057955,
             res_err=0.1634,
         )
@@ -209,7 +207,7 @@ def test_flux_points(config):
 class FluxPointTester:
     def __init__(self, config):
         self.config = config
-        self.rtol = 0.5E-2  # accuracy of 0.5%
+        self.rtol = 0.005
         self.setup()
 
     def setup(self):
@@ -244,26 +242,25 @@ class FluxPointTester:
     def test_values(self):
         flux_points = self.fpe.flux_points
 
-        actual = flux_points.table['dnde'].quantity[0]
+        actual = flux_points.table['dnde'][0]
         desired = self.config['dnde']
-        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+        assert_allclose(actual, desired, rtol=self.rtol)
 
-        actual = flux_points.table['dnde_err'].quantity[0]
+        actual = flux_points.table['dnde_err'][0]
         desired = self.config['dnde_err']
-        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+        assert_allclose(actual, desired, rtol=self.rtol)
 
-        actual = flux_points.table['dnde_ul'].quantity[0]
+        actual = flux_points.table['dnde_ul'][0]
         desired = self.config['dnde_ul']
-        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+        assert_allclose(actual, desired, rtol=self.rtol)
 
-        actual = flux_points.table['dnde_errn'].quantity[0]
+        actual = flux_points.table['dnde_errn'][0]
         desired = self.config['dnde_errn']
-        assert_quantity_allclose(actual, desired, rtol=self.rtol)
+        assert_allclose(actual, desired, rtol=self.rtol)
 
-        actual = flux_points.table['dnde_errp'].quantity[0]
+        actual = flux_points.table['dnde_errp'][0]
         desired = self.config['dnde_errp']
-        assert_quantity_allclose(actual, desired, rtol=self.rtol)
-
+        assert_allclose(actual, desired, rtol=self.rtol)
 
     def test_spectrum_result(self):
         result = SpectrumResult(
@@ -385,7 +382,7 @@ def test_compute_flux_points_dnde_fermi():
     source = fermi_3fgl['3FGL J0835.3-4510']
 
     flux_points = source.flux_points.to_sed_type('dnde', model=source.spectral_model,
-                                                  method='log_center', pwl_approx=True)
+                                                 method='log_center', pwl_approx=True)
 
     for column in ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']:
         actual = flux_points.table['e2' + column].quantity
