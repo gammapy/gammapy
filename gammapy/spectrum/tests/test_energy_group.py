@@ -82,14 +82,14 @@ class TestSpectrumEnergyGroups:
         groups2 = SpectrumEnergyGroups.from_group_table(table)
         assert groups2 == groups
 
-    # @pytest.mark.xfail
-    # def test_total_table(self, groups):
-    #     """Check that info to and from total table round-trips"""
-    #     table = groups.to_total_table()
-    #     # The energy_min and energy_max aren't available to fill in `to_total_table`,
-    #     # because they aren'
-    #     groups2 = SpectrumEnergyGroups.from_total_table(table)
-    #     assert groups2 == groups
+    @pytest.mark.xfail
+    def test_total_table(self, groups):
+        """Check that info to and from total table round-trips"""
+        table = groups.to_total_table()
+        # The energy_min and energy_max aren't available to fill in `to_total_table`,
+        # because they aren'
+        groups2 = SpectrumEnergyGroups.from_total_table(table)
+        assert groups2 == groups
 
     def test_energy_range(self, groups):
         actual = groups.energy_range
@@ -113,65 +113,6 @@ class TestSpectrumEnergyGroups:
         with pytest.raises(IndexError):
             groups.find_list_idx(energy=300 * u.TeV)  # too high, left edge is not inclusive
 
-    # def test_make_and_replace_merged_group(self, groups):
-    #     groups.make_and_replace_merged_group(0, 1, 'underflow')
-    #     groups.make_and_replace_merged_group(1, 1, 'normal')
-    #     groups.make_and_replace_merged_group(2, 2, 'overflow')
-    #
-    #     expected = SpectrumEnergyGroups([
-    #         SpectrumEnergyGroup(0, 10, 25, 'underflow', 100 * u.TeV, 260 * u.TeV),
-    #         SpectrumEnergyGroup(1, 26, 26, 'normal', 260 * u.TeV, 270 * u.TeV),
-    #         SpectrumEnergyGroup(2, 27, 30, 'overflow', 270 * u.TeV, 300 * u.TeV),
-    #     ])
-    #
-    #     assert groups == expected
-
-    # def test_apply_energy_min_and_max(self, groups):
-    #     groups.apply_energy_min(210 * u.TeV)
-    #     groups.apply_energy_max(260 * u.TeV)
-    #
-    #     expected = SpectrumEnergyGroups([
-    #         SpectrumEnergyGroup(0, 10, 20, 'underflow', 100 * u.TeV, 210 * u.TeV),
-    #         SpectrumEnergyGroup(1, 21, 25, 'normal', 210 * u.TeV, 260 * u.TeV),
-    #         SpectrumEnergyGroup(2, 26, 30, 'overflow', 260 * u.TeV, 300 * u.TeV),
-    #     ])
-    #
-    #     assert groups == expected
-
-    @pytest.mark.xfail(reason='apply_energy_binning is still buggy at the upper ebounds edge '
-                       'as well as for ebounds bins that are very small, i.e. have no bin!')
-    def test_apply_energy_binning_same_ebounds(self, groups):
-        """Grouping with original ebounds should leave groups unchanged."""
-        ebounds = groups.energy_bounds
-        ebounds[-1] = 299 * u.TeV
-        groups2 = groups.copy()
-        groups2.apply_energy_binning(ebounds)
-        print(ebounds)
-        print(groups)
-        print(groups2)
-        assert groups == groups2
-
-    def test_apply_energy_binning_different_ebounds(self):
-        # TODO: Use the same groups fixture for this test as for all other tests.
-        # (if changes are needed there to cover all interesting behaviour, do it there!)
-        groups = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(i, i, i, 'normal', (i + 1) * u.TeV, (i + 2) * u.TeV)
-            for i in range(9)
-        ])
-
-        ebounds = [2, 5, 7] * u.TeV
-        groups.apply_energy_binning(ebounds)
-
-        expected = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(0, 0, 0, 'normal', 1 * u.TeV, 2 * u.TeV),
-            SpectrumEnergyGroup(1, 1, 3, 'normal', 2 * u.TeV, 5 * u.TeV),
-            SpectrumEnergyGroup(2, 4, 5, 'normal', 5 * u.TeV, 7 * u.TeV),
-            SpectrumEnergyGroup(3, 6, 6, 'normal', 7 * u.TeV, 8 * u.TeV),
-            SpectrumEnergyGroup(4, 7, 7, 'normal', 8 * u.TeV, 9 * u.TeV),
-            SpectrumEnergyGroup(5, 8, 8, 'normal', 9 * u.TeV, 10 * u.TeV),
-        ])
-
-        assert groups == expected
 
 
 class TestSpectrumEnergyGroupMaker:
@@ -188,11 +129,12 @@ class TestSpectrumEnergyGroupMaker:
         )
         return SpectrumObservation(on_vector=on_vector)
 
+
     @pytest.mark.parametrize('ebounds', [
-        [1.25, 5.5, 7.5] * u.TeV,
+        [1.25, 4.5, 6.5] * u.TeV,
         [2, 5, 7] * u.TeV,
     ])
-    def test_groups_fixed(self, obs, ebounds):
+    def test_compute_groups_fixed(self, obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
@@ -206,15 +148,18 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
-    @requires_dependency('scipy')
-    @requires_data('gammapy-extra')
-    def test_adaptive(self):
-        obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
-        obs = SpectrumObservationList([obs]).stack()
-
+    @pytest.mark.parametrize('ebounds', [
+        [-1, 6, 100] * u.TeV,
+    ])
+    def test_compute_groups_fixed_OOB(self, obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
-        seg.compute_range_safe()
-        energy_binning = seg.compute_groups_adaptive(min_signif=3)
+        seg.compute_groups_fixed(ebounds=ebounds)
+        groups = seg.groups
 
-        # energy_binning = calculate_flux_point_binning(obs_list=[obs], min_signif=3)
-        assert_quantity_allclose(energy_binning[5], 2.448 * u.TeV, rtol=1e-3)
+        expected = SpectrumEnergyGroups([
+            SpectrumEnergyGroup(0, 0, 4, 'normal', 1 * u.TeV, 6 * u.TeV),
+            SpectrumEnergyGroup(1, 5, 8, 'normal', 6 * u.TeV, 10 * u.TeV),
+        ])
+
+        assert groups == expected
+

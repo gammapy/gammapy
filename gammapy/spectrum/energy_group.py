@@ -18,6 +18,7 @@ from collections import OrderedDict
 from copy import deepcopy
 import numpy as np
 from ..extern.six.moves import UserList
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
@@ -216,13 +217,6 @@ class SpectrumEnergyGroups(UserList):
         energy.append(self[-1].energy_max)
         return Quantity(energy)
 
-    @property
-    def bin_idx_bounds(self):
-        """Energy group bin index bounds (`~astropy.units.Quantity`)."""
-        bin = [_.bin_idx_min for _ in self]
-        bin.append(self[-1].bin_idx_max)
-        return bin
-
     def find_list_idx(self, energy):
         """Find the list index corresponding to a given energy."""
         for idx, group in enumerate(self):
@@ -365,7 +359,6 @@ class SpectrumEnergyGroupMaker(object):
 
     def __init__(self, obs):
         self.obs = obs
-        self.safe_bins = range(self.obs.e_reco.nbins)
         self.groups = self._groups_from_obs(obs)
 
     @staticmethod
@@ -389,25 +382,6 @@ class SpectrumEnergyGroupMaker(object):
         table['energy_group_idx'] = np.arange(len(table))
         return SpectrumEnergyGroups.from_total_table(table)
 
-    def compute_range_safe(self):
-        """Apply safe energy range of observation to ``groups``.
-
-        This method takes the safe energy range information from ``self.obs``
-        and changes ``self.groups`` like this:
-
-        * group bins below the safe energy range into one group of type "underflow"
-        * group bins above the safe energy range into one group of type "overflow"
-        """
-        bins = self.obs.on_vector.bins_in_safe_range
-        bin_idx_bounds = self.groups.bin_idx_bounds
-
-        underflow = bins[0] - 1
-        overflow = bins[-1] - underflow
-        max_bin = self.obs.e_reco.nbins - 1
-
-        # If no low threshold is set no underflow bin is needed
-        if (underflow >= 0) or (overflow <= max_bin):
-
     def compute_groups_fixed(self, ebounds):
         """Apply grouping for a given fixed energy binning.
 
@@ -423,36 +397,33 @@ class SpectrumEnergyGroupMaker(object):
         lower_indices = np.argmin(np.sign(diff), axis=1)
 
         if lower_indices[-1] == 0:
-            lower_indices[-1] = self.obs.e_reco.nbins + 1
+            lower_indices[-1] = self.obs.e_reco.nbins
 
         energy_group_idx = 0
 
-        # minindex = np.argmin(np.sign(self.safe_bins[0] - lower_indices))
-        # if lower_indices[minindex] > 0:
-        #     group = SpectrumEnergyGroup(energy_group_idx, 0,
-        #                                 lower_indices[minindex] - 1, 'underflow',
-        #                                 self.obs.e_reco.lower_bounds[0],
-        #                                 self.obs.e_reco.upper_bounds[lower_indices[minindex] -1])
-        #     groups.append(group)
-        #     energy_group_idx += 1
+        if lower_indices[0] > 0:
+            group = SpectrumEnergyGroup(energy_group_idx, 0,
+                                        lower_indices[0] - 1, 'underflow',
+                                        Quantity(self.obs.e_reco.lower_bounds[0]),
+                                        Quantity(self.obs.e_reco.upper_bounds[lower_indices[0]-1]))
+            groups.append(group)
+            energy_group_idx += 1
 
         for index in range(ebounds_length-1):
-            if (lower_indices[index] >= self.safe_bins[0]) and (lower_indices[index+1]-1 <= self.safe_bins[-1]):
-                group = SpectrumEnergyGroup(energy_group_idx, lower_indices[index], lower_indices[index+1]-1, 'normal', self.obs.e_reco.lower_bounds[lower_indices[index]], self.obs.e_reco.upper_bounds[lower_indices[index]])
-                groups.append(group)
-                energy_group_idx +=1
+            group = SpectrumEnergyGroup(energy_group_idx, lower_indices[index], lower_indices[index+1]-1,
+                                        'normal',
+                                        Quantity(self.obs.e_reco.lower_bounds[lower_indices[index]]),
+                                        Quantity(self.obs.e_reco.upper_bounds[lower_indices[index+1]-1]))
+            groups.append(group)
+            energy_group_idx +=1
 
-        # maxbin = self.obs.e_reco.nbins
-        # if lower_indices[-1] < self.safe_bins[0]:
-        #     maxbin = lower_indices[-1]
-        # else:
-        #     maxbin = lower_indices[np.argmin(np.sign(self.safe_bins[-1] - lower_indices))]
-        # if maxbin < self.obs.e_reco.nbins:
-        #     group = SpectrumEnergyGroup(energy_group_idx, maxbin,
-        #                                 self.obs.e_reco.nbins, 'overflow',
-        #                                 self.obs.e_reco.lower_bounds[maxbin],
-        #                                 self.obs.e_reco.upper_bounds[self.obs.e_reco.nbins])
-        #     groups.append(group)
+        maxbin = lower_indices[-1]
+        if maxbin < self.obs.e_reco.nbins:
+            group = SpectrumEnergyGroup(energy_group_idx, maxbin,
+                                        self.obs.e_reco.nbins-1, 'overflow',
+                                        Quantity(self.obs.e_reco.lower_bounds[maxbin]),
+                                        Quantity(self.obs.e_reco.upper_bounds[-1]))
+            groups.append(group)
         self.groups = SpectrumEnergyGroups(groups)
 
 
