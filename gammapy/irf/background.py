@@ -300,14 +300,14 @@ class Background2D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, fov_altaz_lon, fov_altaz_lat, energy_reco, **kwargs):
+    def evaluate(self, fov_lon, fov_lat, energy_reco, **kwargs):
         """
         Evaluate the `Background2D` at a given offset and energy. To have the same API than background 3D for the
         background evaluation, the offset is fov_altaz_lon.
 
         Parameters
         ----------
-        fov_altaz_lon, fov_altaz_lat : `~astropy.coordinates.Angle`
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
             FOV coordinates expecting in AltAz frame.
         energy_reco : `~astropy.units.Quantity`
             Reconstructed energy
@@ -319,5 +319,5 @@ class Background2D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        offset= np.sqrt(fov_altaz_lon**2 + fov_altaz_lat**2)
+        offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
         return self.data.evaluate(offset=offset, energy=energy_reco, **kwargs)
