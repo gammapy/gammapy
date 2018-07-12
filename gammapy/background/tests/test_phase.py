@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
+from ...utils.testing import requires_data
 from ...data import DataStore, EventList
 from .. import BackgroundEstimate, PhaseBackgroundEstimator
+
 
 @pytest.fixture
 def on_region():
@@ -57,4 +59,3 @@ def test_filter_events(obs_list, on_region):
 @requires_data('gammapy-extra')
 def test_process(phase_bkg_estimator, obs_list):
     assert isinstance(phase_bkg_estimator.process(obs_list[0]), BackgroundEstimate)
-
