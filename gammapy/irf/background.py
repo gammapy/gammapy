@@ -161,44 +161,47 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins, method="linear",
+    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins=1, method="linear",
                                   **kwargs):
         """
         Evaluate the `Background3D` at given FOV coordinate and integrate over the energy range.
+
         Parameters
         ----------
-        detx : `~astropy.coordinates.Angle`
-                FOV coordinate X-axis binning. Same dimension than det_y
-        dety: `~astropy.coordinates.Angle`
-                FOV coordinate Y-axis binning. Same dimension than det_x
+        detx, dety : `~astropy.coordinates.Angle`
+            FOV coordinates
         energy_range: `~astropy.units.Quantity`
             Energy range edges on which to compute the integration containing the minimal and maximal value of the range
         n_integration_bins : int
             Number of energy bins used for the integration
-        method : str {'linear', 'nearest'}, optional
+        method : {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+            Passed to `scipy.interpolate.RegularGridInterpolator`.
 
         Returns
         -------
         array : `~astropy.units.Quantity`
-            Interpolated values, axis order is the same as for the NDData array
+            Returns 2D array with axes detx, dety
         """
-        # Here it allows to support scalar
         detx = np.atleast_2d(detx)
-        dety = np.atleast_2d(detx)
-        e_lo, e_hi = energy_range
-        energy_edges = EnergyBounds.equal_log_spacing(e_lo, e_hi, n_integration_bins)
-        # TODO: insert new axes, remove tile and use numpy.borascasting
-        ee = np.tile(energy_edges, reps=detx.shape + (1,))
-        xx = np.tile(detx, reps=energy_edges.shape + (1, 1))
-        yy = np.tile(dety, reps=energy_edges.shape + (1, 1))
-        # xx and yy have (energy, spatial) dim and ee has (spatial, energy). So I have to move the energy axis to the end.
-        bkg_evaluated = self.evaluate(detx=np.moveaxis(xx, 0, -1), dety=np.moveaxis(yy, 0, -1), energy_reco=ee,
-                                      method=method, **kwargs)
-        bkg_integrated = np.trapz(bkg_evaluated, energy_edges).decompose()
-        return bkg_integrated
+        dety = np.atleast_2d(dety)
+        energy_edges = EnergyBounds.equal_log_spacing(energy_range[0], energy_range[1], n_integration_bins)
+
+        # TODO: insert new axes, remove tile and use numpy broadcasting
+        energy_reco = np.tile(energy_edges, reps=detx.shape + (1,))
+        detx = np.tile(detx, reps=energy_edges.shape + (1, 1))
+        detx = np.moveaxis(detx, 0, -1)
+        dety = np.tile(dety, reps=energy_edges.shape + (1, 1))
+        dety = np.moveaxis(dety, 0, -1)
+
+        bkg_evaluated = self.evaluate(
+            detx=detx,
+            dety=dety,
+            energy_reco=energy_reco,
+            method=method, **kwargs
+        )
+        return np.trapz(bkg_evaluated, energy_edges).decompose()
 
 
 class Background2D(object):

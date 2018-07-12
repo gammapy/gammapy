@@ -2,13 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import assert_quantity_allclose
+from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.units import Quantity
 from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
-from ...utils.energy import EnergyBounds
 
 
 @pytest.fixture(scope='session')
@@ -18,11 +15,13 @@ def bkg_3d():
     det_x = [0, 1, 2, 3] * u.deg
     det_y = [0, 1, 2, 3] * u.deg
     data = np.zeros((2, 3, 3)) * u.Unit('s-1 MeV-1 sr-1')
+    # Axis order is (energy, detx, dety)
     data.value[1, 0, 0] = 2
     data.value[1, 1, 1] = 4
     return Background3D(
         energy_lo=energy[:-1], energy_hi=energy[1:],
-        detx_lo=det_x[:-1], detx_hi=det_x[1:], dety_lo=det_y[:-1], dety_hi=det_y[1:],
+        detx_lo=det_x[:-1], detx_hi=det_x[1:],
+        dety_lo=det_y[:-1], dety_hi=det_y[1:],
         data=data
     )
 
@@ -75,19 +74,19 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
 @requires_dependency('scipy')
 def test_background_3d_evaluate(bkg_3d):
     # Evaluate at nodes in energy
-    res = bkg_3d.evaluate(detx=np.array([1, 0.5]) * u.deg, dety=np.array([1, 0.5]) * u.deg,
+    res = bkg_3d.evaluate(detx=[1, 0.5] * u.deg, dety=[1, 0.5] * u.deg,
                           energy_reco=np.ones(2) * 1 * u.TeV)
     assert_allclose(res.value, 0)
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
-    res = bkg_3d.evaluate(detx=np.array([1, 0.5]) * u.deg, dety=np.array([1, 0.5]) * u.deg,
+    res = bkg_3d.evaluate(detx=[1, 0.5] * u.deg, dety=[1, 0.5] * u.deg,
                           energy_reco=np.ones(2) * 100 * u.TeV)
     assert_allclose(res.value, [1.5, 2])
 
-    detx = np.array(([1, 0.5], [1, 0.5])) * u.deg
-    dety = np.array(([1, 0.5], [1, 0.5])) * u.deg
-    energy_reco = np.array(([1, 1], [100, 100])) * u.TeV
+    detx = [[1, 0.5], [1, 0.5]] * u.deg
+    dety = [[1, 0.5], [1, 0.5]] * u.deg
+    energy_reco = [[1, 1], [100, 100]] * u.TeV
     res = bkg_3d.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     assert_allclose(res.value, [[0, 0], [1.5, 2]])
     assert res.shape == (2, 2)
@@ -95,33 +94,30 @@ def test_background_3d_evaluate(bkg_3d):
 
 @requires_dependency('scipy')
 def test_background_3d_integrate(bkg_3d):
-    """
-    Test the integrate method on one range where I know the value of the background on the energy edges of the range
-    """
-    # At 0.1 and 0.5 TeV, the background dummy rate is 0 for all the offset
-    energy_band = EnergyBounds([0.1, 0.5] * u.TeV)
-    expected_int_bkg = np.trapz(Quantity(np.array([0, 0]), "1 / (MeV s sr)"), energy_band).decompose()
-    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
-                                           energy_range=energy_band, n_integration_bins=1)
-    assert_quantity_allclose(res[0], expected_int_bkg)
+    # TODO: change test case to something better (with known answer)
+    # e.g. constant spectrum or power-law.
 
-    # At 1 and 100 TeV, the background dummy rates are respectively 0 and 2 for the offset of 0.5 degree
-    energy_band = EnergyBounds([1, 100] * u.TeV)
-    expected_int_bkg = np.trapz(Quantity(np.array([0, 2]), "1 / (MeV s sr)"), energy_band).decompose()
-    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
-                                           energy_range=energy_band, n_integration_bins=1)
-    assert_quantity_allclose(res[0], expected_int_bkg)
+    rate = bkg_3d.integrate_on_energy_range(
+        detx=0.5 * u.deg, dety=0.5 * u.deg,
+        energy_range=[0.1, 0.5] * u.TeV,
+    )
+    assert rate.shape == (1, 1)
+    assert rate.unit == 's-1 sr-1'
+    assert_allclose(rate.value, 0)
 
-    # At 1 and 100 TeV, the background dummy rates are respectively 0 and 2 for the offset of 0.5 degree and 0
-    # and 1.5 for an offset of 1 degree
-    energy_band = EnergyBounds([1, 100] * u.TeV)
-    detx = np.array(([1, 0.5], [1, 0.5])) * u.deg
-    dety = np.array(([1, 0.5], [1, 0.5])) * u.deg
-    res = bkg_3d.integrate_on_energy_range(detx=detx, dety=dety,
-                                           energy_range=energy_band, n_integration_bins=1)
-    expected_int_bkg = np.trapz(Quantity(np.array([[[0, 1.5], [0, 2]], [[0, 1.5], [0, 2]]]), "1 / (MeV s sr)"),
-                                energy_band).decompose()
-    assert_quantity_allclose(res, expected_int_bkg)
+    rate = bkg_3d.integrate_on_energy_range(
+        detx=0.5 * u.deg, dety=0.5 * u.deg,
+        energy_range=[1, 100] * u.TeV,
+    )
+    assert_allclose(rate.value, 99000000)
+
+    rate = bkg_3d.integrate_on_energy_range(
+        detx=[[1, 0.5], [1, 0.5]] * u.deg,
+        dety=[[1, 1], [0.5, 0.5]] * u.deg,
+        energy_range=[1, 100] * u.TeV,
+    )
+    assert rate.shape == (2, 2)
+    assert_allclose(rate.value, [[74250000., 49500000], [49500000., 99000000.]])
 
 
 @pytest.fixture(scope='session')
