@@ -59,6 +59,13 @@ class SourceLibrary(object):
         with filename.open('w') as output:
             output.write(xml)
 
+    def to_compound_model(self):
+        """Return `~gammapy.cube.models.CompoundSkyModel`"""
+        compound_model = self.skymodels[0]
+        for sky_model in self.skymodels[1:]:
+            compound_model = compound_model + sky_model
+        return compound_model
+
 
 class SkyModel(object):
     """Sky model component.

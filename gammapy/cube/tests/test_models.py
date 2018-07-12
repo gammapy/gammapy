@@ -8,7 +8,12 @@ from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
-from ..models import SkyModel, SkyModelMapEvaluator
+from ..models import (
+    SkyModel,
+    SkyModelMapEvaluator,
+    SourceLibrary,
+    CompoundSkyModel,
+)
 
 
 @pytest.fixture(scope='session')
@@ -41,6 +46,14 @@ def sky_model():
     )
     return SkyModel(spatial_model, spectral_model)
 
+
+class TestSourceLibrary:
+    def setup(self):
+        self.source_library = SourceLibrary([sky_model(), sky_model()])
+
+    def test_to_compound_model(self):
+        compound = self.source_library.to_compound_model()
+        assert isinstance(compound, CompoundSkyModel)
 
 class TestSkyModel:
     @staticmethod
