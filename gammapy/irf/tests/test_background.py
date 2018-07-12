@@ -10,6 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 from ...utils.energy import EnergyBounds
 
+
 @pytest.fixture(scope='session')
 def bkg_3d():
     """A simple Background2D test case"""
@@ -95,18 +96,32 @@ def test_background_3d_evaluate(bkg_3d):
 @requires_dependency('scipy')
 def test_background_3d_integrate(bkg_3d):
     """
-    energy_band = EnergyBounds([0.1, 10] * u.TeV)
-    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
-                                           energy_range=energy_band, n_integration_bins=1)
-    assert_quantity_allclose(res, Quantity(0, "1 / (MeV s sr)") * energy_band.bands)
+    Test the integrate method on one range where I know the value of the background on the energy edges of the range
     """
-
-    energy_band = EnergyBounds([10, 1000] * u.TeV)
+    # At 0.1 and 0.5 TeV, the background dummy rate is 0 for all the offset
+    energy_band = EnergyBounds([0.1, 0.5] * u.TeV)
+    expected_int_bkg = np.trapz(Quantity(np.array([0, 0]), "1 / (MeV s sr)"), energy_band).decompose()
     res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
                                            energy_range=energy_band, n_integration_bins=1)
-    assert 2=3
-    assert_quantity_allclose(res[0], Quantity(2, "1 / (MeV s sr)") * energy_band.bands)
+    assert_quantity_allclose(res[0], expected_int_bkg)
 
+    # At 1 and 100 TeV, the background dummy rates are respectively 0 and 2 for the offset of 0.5 degree
+    energy_band = EnergyBounds([1, 100] * u.TeV)
+    expected_int_bkg = np.trapz(Quantity(np.array([0, 2]), "1 / (MeV s sr)"), energy_band).decompose()
+    res = bkg_3d.integrate_on_energy_range(detx=np.array([0.5]) * u.deg, dety=np.array([0.5]) * u.deg,
+                                           energy_range=energy_band, n_integration_bins=1)
+    assert_quantity_allclose(res[0], expected_int_bkg)
+
+    # At 1 and 100 TeV, the background dummy rates are respectively 0 and 2 for the offset of 0.5 degree and 0
+    # and 1.5 for an offset of 1 degree
+    energy_band = EnergyBounds([1, 100] * u.TeV)
+    detx = np.array(([1, 0.5], [1, 0.5])) * u.deg
+    dety = np.array(([1, 0.5], [1, 0.5])) * u.deg
+    res = bkg_3d.integrate_on_energy_range(detx=detx, dety=dety,
+                                           energy_range=energy_band, n_integration_bins=1)
+    expected_int_bkg = np.trapz(Quantity(np.array([[[0, 1.5], [0, 2]], [[0, 1.5], [0, 2]]]), "1 / (MeV s sr)"),
+                                energy_band).decompose()
+    assert_quantity_allclose(res, expected_int_bkg)
 
 
 @pytest.fixture(scope='session')
