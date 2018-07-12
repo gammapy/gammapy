@@ -30,15 +30,6 @@ __all__ = [
     'SpectrumEnergyGroupMaker',
 ]
 
-# TODO: improve the code so that this isn't needed!
-INVALID_GROUP_INDEX = -99
-
-# TODO: this is used for input at the moment,
-# but for output the `bin_type` field is used.
-# Make up your mind!
-UNDERFLOW_BIN_INDEX = -1
-OVERFLOW_BIN_INDEX = -2
-
 
 class SpectrumEnergyGroup(object):
     """Spectrum energy group.
@@ -137,13 +128,9 @@ class SpectrumEnergyGroups(UserList):
             group_table = table[mask]
             bin_idx_min = group_table['bin_idx'][0]
             bin_idx_max = group_table['bin_idx'][-1]
-            # bin_type = group_table['bin_type']
-            if energy_group_idx == UNDERFLOW_BIN_INDEX:
-                bin_type = 'underflow'
-            elif energy_group_idx == OVERFLOW_BIN_INDEX:
-                bin_type = 'overflow'
-            else:
-                bin_type = 'normal'
+            if len(set(group_table['bin_type'])) > 1:
+                raise ValueError('Inconsistent bin_type within group.')
+            bin_type = group_table['bin_type'][0]
             energy_min = group_table['energy_min'].quantity[0]
             energy_max = group_table['energy_max'].quantity[-1]
 
@@ -266,11 +253,14 @@ class SpectrumEnergyGroupMaker(object):
         groups : `~gammapy.spectrum.SpectrumEnergyGroups`
             List of energy groups
         """
-        # Start with a table with the obs energy binning
-        table = self.obs.stats_table()
-        # Make one group per bin
-        table['bin_idx'] = np.arange(len(table))
-        table['energy_group_idx'] = np.arange(len(table))
+        ebounds_obs = self.obs.e_reco
+        size = ebounds_obs.nbins
+        table = Table()
+        table['bin_idx'] = np.arange(size)
+        table['energy_group_idx'] = np.arange(size)
+        table['bin_type'] = ['normal'] * size
+        table['energy_min'] = ebounds_obs.lower_bounds
+        table['energy_max'] = ebounds_obs.upper_bounds
         self.groups = SpectrumEnergyGroups.from_total_table(table)
 
     def compute_groups_fixed(self, ebounds):
