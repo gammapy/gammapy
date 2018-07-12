@@ -321,3 +321,37 @@ class Background2D(object):
         """
         offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
         return self.data.evaluate(offset=offset, energy=energy_reco, **kwargs)
+
+    def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1, method="linear",
+                                  **kwargs):
+        """
+        Evaluate the `Background32` at given FOV coordinate and integrate over the energy range.
+
+        Parameters
+        ----------
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame.
+        energy_range: `~astropy.units.Quantity`
+            Energy range edges on which to compute the integration containing the minimal and maximal value of the range
+        n_integration_bins : int
+            Number of energy bins used for the integration
+        method : {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            Passed to `scipy.interpolate.RegularGridInterpolator`.
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+        """
+        energy_edges = EnergyBounds.equal_log_spacing(energy_range[0], energy_range[1], n_integration_bins)
+
+        bkg_evaluated = self.evaluate(
+            fov_lon=fov_lon,
+            fov_lat=fov_lat,
+            energy_reco=energy_edges,
+            method=method, **kwargs
+        )
+        bkg_evaluated = np.moveaxis(bkg_evaluated, 0, -1)
+        return np.trapz(bkg_evaluated, energy_edges).decompose()

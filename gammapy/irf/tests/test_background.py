@@ -175,3 +175,31 @@ def test_background_2d_read_write(tmpdir, bkg_2d):
     data = bkg_2d_2.data.data
     assert data.shape == (2, 3)
     assert data.unit == 's-1 MeV-1 sr-1'
+
+
+@requires_dependency('scipy')
+def test_background_2d_integrate(bkg_2d):
+    # TODO: change test case to something better (with known answer)
+    # e.g. constant spectrum or power-law.
+
+    rate = bkg_2d.integrate_on_energy_range(
+        fov_lon=[1, 0.5] * u.deg,
+        fov_lat=0 * u.deg,
+        energy_range=[0.1, 0.5] * u.TeV, )
+
+    assert rate.shape == (2,)
+    assert rate.unit == 's-1 sr-1'
+    assert_allclose(rate.value, [0, 0])
+
+    rate = bkg_2d.integrate_on_energy_range(
+        fov_lon=[1, 0.5] * u.deg,
+        fov_lat=0 * u.deg,
+        energy_range=[1, 100] * u.TeV, )
+    assert_allclose(rate.value, [1.485e+08, 9.900e+07])
+
+    rate = bkg_2d.integrate_on_energy_range(
+        fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
+        fov_lat=0 * u.deg,
+        energy_range=[1, 100] * u.TeV, )
+    assert rate.shape == (2, 2)
+    assert_allclose(rate.value, [[1.485e+08, 9.900e+07], [1.485e+08, 9.900e+07]])
