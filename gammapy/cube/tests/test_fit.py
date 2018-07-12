@@ -40,7 +40,7 @@ def sky_model():
 
 @pytest.fixture(scope='session')
 def geom():
-    axis = MapAxis.from_edges(np.logspace(-1., 1., 10), unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1., 1., 3), unit=u.TeV)
     return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(2, 2),
                           coordsys='GAL', axes=[axis])
 
@@ -124,6 +124,6 @@ def test_cube_fit(sky_model, counts, exposure, psf, background):
                              rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
-    stat_expected = 13878.660101673398
+    stat_expected = 3840.0605649268496
     assert_allclose(stat, stat_expected, rtol=1e-2)
 
