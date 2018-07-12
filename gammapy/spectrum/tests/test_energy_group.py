@@ -4,10 +4,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_data, requires_dependency
 from ..core import PHACountsSpectrum
-from ..observation import SpectrumObservation, SpectrumObservationList
+from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroups, SpectrumEnergyGroupMaker, SpectrumEnergyGroup
 
 
@@ -82,12 +80,8 @@ class TestSpectrumEnergyGroups:
         groups2 = SpectrumEnergyGroups.from_group_table(table)
         assert groups2 == groups
 
-    @pytest.mark.xfail
-    def test_total_table(self, groups):
-        """Check that info to and from total table round-trips"""
+    def test_from_total_table(self, groups):
         table = groups.to_total_table()
-        # The energy_min and energy_max aren't available to fill in `to_total_table`,
-        # because they aren'
         groups2 = SpectrumEnergyGroups.from_total_table(table)
         assert groups2 == groups
 
@@ -114,7 +108,6 @@ class TestSpectrumEnergyGroups:
             groups.find_list_idx(energy=300 * u.TeV)  # too high, left edge is not inclusive
 
 
-
 class TestSpectrumEnergyGroupMaker:
 
     @pytest.fixture(scope='session')
@@ -128,7 +121,6 @@ class TestSpectrumEnergyGroupMaker:
             livetime=99 * u.s
         )
         return SpectrumObservation(on_vector=on_vector)
-
 
     def test_groups_from_obs(self, obs):
         seg = SpectrumEnergyGroupMaker(obs=obs)
@@ -158,7 +150,7 @@ class TestSpectrumEnergyGroupMaker:
     @pytest.mark.parametrize('ebounds', [
         [-1, 6, 100] * u.TeV,
     ])
-    def test_compute_groups_fixed_OOB(self, obs, ebounds):
+    def test_compute_groups_fixed_out_of_bounds(self, obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
@@ -169,4 +161,3 @@ class TestSpectrumEnergyGroupMaker:
         ])
 
         assert groups == expected
-

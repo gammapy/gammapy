@@ -23,7 +23,6 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
 from ..utils.table import table_from_row_data, table_row_to_dict
-from ..data import ObservationStats
 
 __all__ = [
     'SpectrumEnergyGroup',
@@ -63,8 +62,8 @@ class SpectrumEnergyGroup(object):
         if bin_type not in self.valid_bin_types:
             raise ValueError('Invalid bin type: {}'.format(bin_type))
         self.bin_type = bin_type
-        self.energy_min = energy_min
-        self.energy_max = energy_max
+        self.energy_min = Quantity(energy_min)
+        self.energy_max = Quantity(energy_max)
 
     @classmethod
     def from_dict(cls, data):
@@ -100,6 +99,8 @@ class SpectrumEnergyGroup(object):
         table['bin_idx'] = self.bin_idx_array
         table['energy_group_idx'] = self.energy_group_idx
         table['bin_type'] = self.bin_type
+        table['energy_min'] = self.energy_min
+        table['energy_max'] = self.energy_max
         return table
 
     def contains_energy(self, energy):
@@ -110,7 +111,7 @@ class SpectrumEnergyGroup(object):
 class SpectrumEnergyGroups(UserList):
     """List of `~gammapy.spectrum.SpectrumEnergyGroup` objects.
 
-    A helper class used by the `gammapy.spectrum.SpectrumEnergyMaker`.
+    A helper class used by the `gammapy.spectrum.SpectrumEnergyGroupsMaker`.
     """
 
     def __repr__(self):
@@ -216,13 +217,8 @@ class SpectrumEnergyGroups(UserList):
             if group.contains_energy(energy):
                 return idx
 
-            # TODO: do we need / want this behaviour?
-            # If yes, could add via a kwarg `last_bin_right_edge_inclusive=False`
-            # For last energy group
-            # if idx == len(self) - 1 and energy == group.energy_max:
-            #     return idx
-
         raise IndexError('No group found with energy: {}'.format(energy))
+
 
 class SpectrumEnergyGroupMaker(object):
     """Energy bin groups for spectral analysis.
@@ -233,12 +229,6 @@ class SpectrumEnergyGroupMaker(object):
 
     The input ``obs`` is used read-only, to access the counts energy
     binning, as well as some other info that is used for energy bin grouping.
-
-    This class creates the ``groups`` attribute on construction,
-    with exactly one group per energy bin. It is then modified by calling
-    methods on this class, usually to declare some bins as under- and
-    overflow (i.e. not to be used in spectral analysis), and to group
-    bins (e.g. for flux point computation).
 
     See :ref:`spectrum_energy_group` for examples.
 
@@ -291,38 +281,56 @@ class SpectrumEnergyGroupMaker(object):
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
+        ebounds_obs = self.obs.e_reco
         groups = []
-        ebounds_length = len(ebounds)
-        energy_binning_offset = ebounds - 1 * u.MeV
-        diff = energy_binning_offset[:, np.newaxis] - self.obs.e_reco.lower_bounds
-        lower_indices = np.argmin(np.sign(diff), axis=1)
 
+        # Calculate all differences between `ebounds` and `ebounds_obs`
+        # Find the indices where the sign changes
+        energy_binning_offset = ebounds - 1 * u.MeV
+        diff = energy_binning_offset[:, np.newaxis] - ebounds_obs.lower_bounds
+        lower_indices = np.argmin(np.sign(diff), axis=1)
+        # Make sure the last bin is not the first bin.
         if lower_indices[-1] == 0:
-            lower_indices[-1] = self.obs.e_reco.nbins
+            lower_indices[-1] = ebounds_obs.nbins
 
         energy_group_idx = 0
 
         if lower_indices[0] > 0:
-            group = SpectrumEnergyGroup(energy_group_idx, 0,
-                                        lower_indices[0] - 1, 'underflow',
-                                        Quantity(self.obs.e_reco.lower_bounds[0]),
-                                        Quantity(self.obs.e_reco.upper_bounds[lower_indices[0]-1]))
+            # Create underflow group
+            group = SpectrumEnergyGroup(
+                energy_group_idx=energy_group_idx,
+                bin_idx_min=0,
+                bin_idx_max=lower_indices[0] - 1,
+                bin_type='underflow',
+                energy_min=ebounds_obs.lower_bounds[0],
+                energy_max=ebounds_obs.upper_bounds[lower_indices[0] - 1],
+            )
             groups.append(group)
             energy_group_idx += 1
 
-        for index in range(ebounds_length-1):
-            group = SpectrumEnergyGroup(energy_group_idx, lower_indices[index], lower_indices[index+1]-1,
-                                        'normal',
-                                        Quantity(self.obs.e_reco.lower_bounds[lower_indices[index]]),
-                                        Quantity(self.obs.e_reco.upper_bounds[lower_indices[index+1]-1]))
+        # Create normal groups (could be none)
+        for index in range(len(ebounds) - 1):
+            group = SpectrumEnergyGroup(
+                energy_group_idx=energy_group_idx,
+                bin_idx_min=lower_indices[index],
+                bin_idx_max=lower_indices[index + 1] - 1,
+                bin_type='normal',
+                energy_min=ebounds_obs.lower_bounds[lower_indices[index]],
+                energy_max=ebounds_obs.upper_bounds[lower_indices[index + 1] - 1],
+            )
             groups.append(group)
-            energy_group_idx +=1
+            energy_group_idx += 1
 
         maxbin = lower_indices[-1]
-        if maxbin < self.obs.e_reco.nbins:
-            group = SpectrumEnergyGroup(energy_group_idx, maxbin,
-                                        self.obs.e_reco.nbins-1, 'overflow',
-                                        Quantity(self.obs.e_reco.lower_bounds[maxbin]),
-                                        Quantity(self.obs.e_reco.upper_bounds[-1]))
+        if maxbin < ebounds_obs.nbins:
+            # Create overflow group
+            group = SpectrumEnergyGroup(
+                energy_group_idx=energy_group_idx,
+                bin_idx_min=maxbin,
+                bin_idx_max=ebounds_obs.nbins - 1,
+                bin_type='overflow',
+                energy_min=ebounds_obs.lower_bounds[maxbin],
+                energy_max=ebounds_obs.upper_bounds[-1])
             groups.append(group)
+
         self.groups = SpectrumEnergyGroups(groups)
