@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import astropy.units as u
 from .models import SkyModelMapEvaluator
 from ..stats import cash
-from ..utils.fitting import fit_minuit
+from ..utils.fitting import fit_iminuit
 
 __all__ = [
     'SkyModelMapFit',
@@ -87,6 +86,6 @@ class SkyModelMapFit(object):
 
     def fit(self):
         """Run the fit"""
-        parameters, minuit = fit_minuit(parameters=self.model.parameters,
-                                        function=self.total_stat)
+        parameters, minuit = fit_iminuit(parameters=self.model.parameters,
+                                         function=self.total_stat)
         self._minuit = minuit
