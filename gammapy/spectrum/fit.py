@@ -31,7 +31,8 @@ class SpectrumFit(object):
     obs_list : `~gammapy.spectrum.SpectrumObservationList`, `~gammapy.spectrum.SpectrumObservation`
         Observation(s) to fit
     model : `~gammapy.spectrum.models.SpectralModel`
-        Source model. Should return counts if ``forward_folded`` is False and a flux otherwise
+        Source model with initial parameter values. Should return counts if
+        ``forward_folded`` is False and a flux otherwise
     stat : {'wstat', 'cash'}
         Fit statistic
     forward_folded : bool, default: True
@@ -72,7 +73,7 @@ class SpectrumFit(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\nSource model {}'.format(self.model)
+        ss += '\nSource model {}'.format(self._model.__class__.__name__)
         ss += '\nStat {}'.format(self.stat)
         ss += '\nForward Folded {}'.format(self.forward_folded)
         ss += '\nFit range {}'.format(self.fit_range)
@@ -94,20 +95,6 @@ class SpectrumFit(object):
         etc.
         """
         return self._result
-
-    @property
-    def model(self):
-        """Source model
-
-        The model parameters change every time the likelihood is evaluated. In
-        order to access the best-fit model parameters, use
-        :func:`gammapy.spectrum.SpectrumFit.result`
-        """
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        self._model = model
 
     @property
     def background_model(self):
@@ -224,7 +211,7 @@ class SpectrumFit(object):
         predicted_counts = []
         for obs in self.obs_list:
             mu_sig = self._predict_counts_helper(obs,
-                                                 self.model,
+                                                 self._model,
                                                  self.forward_folded)
             mu_bkg = None
             if self.background_model is not None:
@@ -351,7 +338,7 @@ class SpectrumFit(object):
         parameters : `~gammapy.utils.fitting.ParameterList`
             Model parameters
         """
-        self.model.parameters = parameters
+        self._model.parameters = parameters
         self.predict_counts()
         self.calc_statval()
         total_stat = np.sum([np.sum(v) for v in self.statval], dtype=np.float64)
@@ -382,9 +369,7 @@ class SpectrumFit(object):
 
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
-
-        TODO: Replace by something more generic
-
+    
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
@@ -397,8 +382,8 @@ class SpectrumFit(object):
         likelihood = []
         self._model = model
         for val in parvals:
-            self.model.parameters[parname].value = val
-            stat = self.total_stat(self.model.parameters)
+            self._model.parameters[parname].value = val
+            stat = self.total_stat(self._model.parameters)
             likelihood.append(stat)
         return np.array(likelihood)
 
@@ -458,11 +443,11 @@ class SpectrumFit(object):
                                NelderMead())
         fitresult = self._sherpa_fit.fit()
         log.debug(fitresult)
-        self._make_fit_result(self.model.parameters)
+        self._make_fit_result(self._model.parameters)
 
     def _fit_iminuit(self):
         """Iminuit minimization"""
-        parameters, minuit = fit_minuit(parameters=self.model.parameters,
+        parameters, minuit = fit_minuit(parameters=self._model.parameters,
                                         function=self.total_stat)
         self._iminuit_fit = minuit
         log.debug(minuit)
@@ -480,7 +465,7 @@ class SpectrumFit(object):
 
         # run again with best fit parameters
         self.total_stat(parameters)
-        model = self.model.copy()
+        model = self._model.copy()
 
         if self.background_model is not None:
             bkg_model = self.background_model.copy()
@@ -530,7 +515,7 @@ class SpectrumFit(object):
         # parameter names
 
         #create tuples of combinations
-        d = self.model.parameters.to_dict()
+        d = self._model.parameters.to_dict()
         parameter_names = [l['name'] for l in d['parameters'] if l['frozen'] == False]
         self.covar_axis = parameter_names
         parameter_combinations = list(product(parameter_names, repeat=2))
