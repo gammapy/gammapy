@@ -526,9 +526,8 @@ class SpectrumFit(object):
             res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
 
     def _est_errors_iminuit(self):
-        # this covariance is a dict indexed by tuples containing combinations of
+        # The iminuit covariance is a dict indexed by tuples containing combinations of
         # parameter names
-        cov = self._iminuit_fit.covariance
 
         #create tuples of combinations
         d = self.model.parameters.to_dict()
@@ -536,7 +535,13 @@ class SpectrumFit(object):
         self.covar_axis = parameter_names
         parameter_combinations = list(product(parameter_names, repeat=2))
 
-        cov = np.array([cov[combination] for combination in parameter_combinations])
+        if self._iminuit_fit.covariance:
+            iminuit_covariance = self._iminuit_fit.covariance
+            cov = np.array([iminuit_covariance[c] for c in parameter_combinations])
+        else:
+            # fit did not converge
+            cov = np.repeat(np.nan, len(parameter_combinations))
+
         cov = cov.reshape(len(parameter_names), -1)
         self.covariance = cov
 
