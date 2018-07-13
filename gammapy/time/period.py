@@ -22,7 +22,7 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
 
     The significance of a periodogram peak can be evaluated in terms of a false alarm probability.
     It can be computed with the `~false_alarm_probability`-method of `~astropy`, assuming Gaussian white noise light curves.
-    For an introduction to the false alarm probability of periodogram peaks, see [3]_.
+    For an introduction to the false alarm probability of periodogram peaks, see :ref:`stats-lombscargle`.
 
     The periodogram is biased by measurement errors, high order modes and sampling of the light curve.
     To evaluate the impact of the sampling, compute the spectral window function with the `astropy.stats.LombScargle`-class.
@@ -60,10 +60,10 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
 
     References
     ----------
-    .. [1] Nikolay Mayorov (2015), "Robust nonlinear regression in scipy", `Link <http://scipy-cookbook.readthedocs.io/items/robust_regression.html>`_
+    .. [1] Nikolay Mayorov (2015), "Robust nonlinear regression in scipy",
+       see `here <http://scipy-cookbook.readthedocs.io/items/robust_regression.html>`__
     .. [2] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
-       `Link <https://www.jstatsoft.org/article/view/v069i09>`_
-    .. [3] Astropy docs, `Link <http://docs.astropy.org/en/stable/stats/lombscargle.html>`_
+       see `here <https://www.jstatsoft.org/article/view/v069i09>`__
     """
     # set flux errors
     if flux_err.any() == None:
