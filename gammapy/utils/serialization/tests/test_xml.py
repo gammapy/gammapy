@@ -49,8 +49,8 @@ def test_complex():
         <source name="Source 3" type="RadialDisk">
             <spectrum type="PowerLaw">
                 <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10" />
-                <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"/>
-                <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"/>
+                <parameter free="1" name="Index" scale="1.0" value="-2.1"/>
+                <parameter free="0" name="Scale" scale="1.0" value="100.0"/>
             </spectrum>
             <spatialModel type="RadialDisk">
                 <parameter free="0" max="360" min="-360" name="GLON" scale="1.0" value="358"/>

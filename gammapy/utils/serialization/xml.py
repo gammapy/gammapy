@@ -215,6 +215,9 @@ def xml_to_model(xml, which):
             kwargs[par.name] = -1 * u.Unit(par.unit)
         model = model(**kwargs)
         model.parameters = parameters
+
+        # Special case models for which the XML definition does not map one to
+        # one to the gammapy model definition
         if type_ == 'PowerLaw':
             model.parameters['index'].value *= -1
             model.parameters['index'].parmin *= -1
@@ -243,13 +246,19 @@ def xml_to_parameter_list(xml, which, type_):
         except KeyError:
             msg = "Parameter '{}' not registered for {} model {}"
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
+
+        value = float(par['@value']) * float(par['@scale']) 
+        parmin = float(par['@min']) if '@min' in par.keys() else None
+        parmax = float(par['@max']) if '@max' in par.keys() else None
+        frozen=bool(1 - int(par['@free']))
+
         parameters.append(Parameter(
             name=name,
-            value=float(par['@value']) * float(par['@scale']),
+            value=value,
             unit=unit,
-            parmin=float(par['@min']),
-            parmax=float(par['@max']),
-            frozen=bool(1 - int(par['@free']))
+            parmin=parmin,
+            parmax=parmax,
+            frozen=frozen,
         ))
 
     return ParameterList(parameters)
