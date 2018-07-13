@@ -162,6 +162,9 @@ The light curve of the X-ray binary LS 5039 is used, observed  in 2005 with H.E.
 at energies above :math:`0.1 \mathrm{TeV}` [4]_.
 The robust periodogram reveals the period of :math:`P = (3.907 \pm 0.001) \mathrm{d}` in agreement with [5]_ and [6]_.
 
+.. gp-extra-image:: time/example_robust_periodogram.png
+    :width: 100%
+
 The maximum FAP of the highest periodogram peak is estimated to :math:`4.06e^{-19}` with the :math:`\texttt{Baluev}`-method.
 The other methods return following FAP:
 
@@ -188,6 +191,9 @@ The periodogram has many spurious peaks, which are due to several factors:
    Its impact can be qualified by the spectral window function.
    This is the periodogram of the observation window and can be computed
    by setting ``flux`` and ``flux err`` to one and running `astropy.stats.LombScargle`.
+
+   .. gp-extra-image:: time/example_spectral_window_function.png
+       :width: 100%
 
    It shows a prominent peak around one day that arises from the nightly observation cycle.
    Aliases in the light curve's periodogram, :math:`P_{{alias}}`, are expected to appear at :math:`f_{{true}} + n f_{{window}}`.
