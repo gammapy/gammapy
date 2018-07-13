@@ -180,9 +180,9 @@ class EnergyDispersion(object):
         if e_reco is None:
             e_reco = e_true
 
-        data = np.flipud(np.eye(10))
+        data = np.flipud(np.eye(len(e_reco) - 1))
 
-        cls(
+        return cls(
             e_true_lo=e_true[:-1],
             e_true_hi=e_true[1:],
             e_reco_lo=e_reco[:-1],

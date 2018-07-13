@@ -7,6 +7,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
+from ...cube.psf_kernel import PSFKernel
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
@@ -30,7 +31,7 @@ def sky_model():
 
 @pytest.fixture(scope='session')
 def geom():
-    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys='GAL', axes=[axis])
 
 
@@ -54,9 +55,15 @@ def edisp(geom):
     return EnergyDispersion.from_diagonal_matrix(e_true=e_true)
 
 
+@pytest.fixture(scope='session')
+def psf(geom):
+    sigma = 0.5 * u.deg
+    return PSFKernel.from_gauss(geom, sigma)
+
+
 @pytest.fixture()
-def evaluator(sky_model, exposure, background):
-    return SkyModelMapEvaluator(sky_model, exposure, background)
+def evaluator(sky_model, exposure, background, psf, edisp):
+    return SkyModelMapEvaluator(sky_model, exposure, background, psf, edisp)
 
 
 class TestSourceLibrary:
@@ -165,7 +172,6 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_compute_dnde(evaluator):
         out = evaluator.compute_dnde()
-
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert_allclose(out.value.mean(), 7.460919e-14)
@@ -173,9 +179,26 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_compute_flux(evaluator):
         out = evaluator.compute_flux()
-
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1'
+        assert_allclose(out.value.mean(), 1.828206748668197e-14)
+
+    """
+    @staticmethod
+    def test_apply_psf(evaluator):
+        flux = evaluator.compute_flux()
+        out = evaluator.apply_psf(evaluator, flux)
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.value.mean(), 1.828206748668197e-14)
+    """
+
+    @staticmethod
+    def test_apply_edisp(evaluator):
+        flux = evaluator.compute_flux()
+        npred = Map.from_geom(evaluator.geom, unit='')
+        npred.data = flux.value
+        out = evaluator.apply_edisp(npred)
+        assert out.shape == (2, 4, 5)
         assert_allclose(out.value.mean(), 1.828206748668197e-14)
 
     @staticmethod
