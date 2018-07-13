@@ -396,48 +396,6 @@ class SkyCube(MapBase):
         energy = self.energy_axis.wcs_pix2world(z)
         return position, energy
 
-    def to_sherpa_data3d(self, dstype='Data3D'):
-        """Convert sky cube to sherpa `Data3D` or `Data3DInt` object.
-
-        Parameters
-        ----------
-        dstype : {'Data3D', 'Data3DInt'}
-            Sherpa data type.
-        """
-        from .sherpa_ import Data3D, Data3DInt
-        energies = self.energies(mode='edges').to("TeV").value
-        elo = energies[:-1]
-        ehi = energies[1:]
-        n_ebins = len(elo)
-        if dstype == 'Data3DInt':
-            coordinates = self.sky_image_ref.coordinates(mode="edges")
-            ra = coordinates.data.lon.degree
-            dec = coordinates.data.lat.degree
-            ra_cube_hi = np.tile(ra[0:-1, 0:-1], (n_ebins, 1, 1))
-            ra_cube_lo = np.tile(ra[0:-1, 1:], (n_ebins, 1, 1))
-            dec_cube_hi = np.tile(dec[1:, 0:-1], (n_ebins, 1, 1))
-            dec_cube_lo = np.tile(dec[0:-1, 0:-1], (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra[0:-1, 0:-1]) * u.TeV
-            return Data3DInt('', elo_cube.ravel(), ra_cube_lo.ravel(), dec_cube_lo.ravel(), ehi_cube.ravel(),
-                             ra_cube_hi.ravel(), dec_cube_hi.ravel(), self.data.value.ravel(),
-                             self.data.value.ravel().shape)
-
-        elif dstype == 'Data3D':
-            coordinates = self.sky_image_ref.coordinates()
-            ra = coordinates.data.lon.degree
-            dec = coordinates.data.lat.degree
-            ra_cube = np.tile(ra, (n_ebins, 1, 1))
-            dec_cube = np.tile(dec, (n_ebins, 1, 1))
-            elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
-            ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra) * u.TeV
-            return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
-                          dec_cube.ravel(), self.data.value.ravel(),
-                          self.data.value.ravel().shape)
-
-        else:
-            raise ValueError('Invalid sherpa data type.')
-
     def sky_image(self, energy, interpolation=None):
         """Slice a 2-dim `~gammapy.image.SkyImage` from the cube at a given energy.
 
