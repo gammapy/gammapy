@@ -217,8 +217,6 @@ class SpectrumEnergyGroupMaker(object):
     The input ``obs`` is used read-only, to access the counts energy
     binning, as well as some other info that is used for energy bin grouping.
 
-    See :ref:`spectrum_energy_group` for examples.
-
     Parameters
     ----------
     obs : `~gammapy.spectrum.SpectrumObservation`
