@@ -717,7 +717,7 @@ class FluxPointEstimator(object):
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
-            return np.nan * u.Unit(fit.model.parameters['amplitude'].unit)
+            return np.nan * u.Unit(fit.result[0].model.parameters['amplitude'].unit)
 
     def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
         """
@@ -756,18 +756,18 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
- #       energy_min = energy_group.energy_min
- #       energy_max = energy_group.energy_max
-
-        self.obs.on_vector.bins_in_safe_range = range(energy_group.bin_idx_min,energy_group.bin_idx_max)
+        # Set quality bins to only bins in energy_group
+        quality = np.zeros(len(self.obs.on_vector.quality),dtype=int)
+#        quality = self.obs.on_vector.quality
+        for bin in range(len(self.obs.on_vector.quality)):
+            if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (energy_group.bin_type != 'normal'):
+                self.obs.on_vector.quality[bin] = 1
+        self.obs.on_vector.quality = quality
 
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
         fit = SpectrumFit(self.obs, model)
-
-        # TODO: Notice channels contained in energy_group
-#        fit.fit_range = energy_min, energy_max
 
         log.debug(
             'Calling Sherpa fit for flux point '
@@ -789,8 +789,8 @@ class FluxPointEstimator(object):
 
         return OrderedDict([
             ('e_ref', energy_ref),
-            ('e_min', energy_min),
-            ('e_max', energy_max),
+            ('e_min', energy_group.energy_min),
+            ('e_max', energy_group.energy_max),
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
