@@ -141,19 +141,22 @@ def test_background_2d_evaluate(bkg_2d):
     # There's some redundancy, and no case exactly at a node in energy
 
     # Evaluate at log center between nodes in energy
-    res = bkg_2d.evaluate(fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=1 * u.TeV)
-    assert_allclose(res.value, 0)
+    res = bkg_2d.evaluate(fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 1] * u.TeV)
+    assert_allclose(res.value, [0, 0])
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
-    res = bkg_2d.evaluate(fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=100 * u.TeV)
+    res = bkg_2d.evaluate(fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[100, 100] * u.TeV)
     assert_allclose(res.value, [3, 2])
+    res = bkg_2d.evaluate(
+        fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
+        fov_lat=0 * u.deg,
+        energy_reco=[[1, 1], [100, 100]] * u.TeV)
 
-    res = bkg_2d.evaluate(fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
-    res = bkg_2d.evaluate(fov_lon=1 * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV)
+    res = bkg_2d.evaluate(fov_lon=[1,1] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
 
@@ -187,15 +190,15 @@ def test_background_2d_integrate(bkg_2d):
         fov_lat=0 * u.deg,
         energy_range=[0.1, 0.5] * u.TeV, )
 
-    assert rate.shape == (2,)
+    assert rate.shape == (1, 2)
     assert rate.unit == 's-1 sr-1'
-    assert_allclose(rate.value, [0, 0])
+    assert_allclose(rate.value[0], [0, 0])
 
     rate = bkg_2d.integrate_on_energy_range(
         fov_lon=[1, 0.5] * u.deg,
         fov_lat=0 * u.deg,
         energy_range=[1, 100] * u.TeV, )
-    assert_allclose(rate.value, [1.485e+08, 9.900e+07])
+    assert_allclose(rate.value[0], [1.485e+08, 9.900e+07])
 
     rate = bkg_2d.integrate_on_energy_range(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,

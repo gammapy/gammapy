@@ -299,8 +299,9 @@ class Background2D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, fov_lon, fov_lat, energy_reco, **kwargs):
-        """Evaluate at a given FOV position and energy.
+    def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
+        """Evaluate at a given FOV position and energy. The fov_lon, fov_lat, energy_reco has to have the same shape
+        since this is a set of points on which you want to evaluate
 
         To have the same API than background 3D for the
         background evaluation, the offset is ``fov_altaz_lon``.
@@ -308,9 +309,11 @@ class Background2D(object):
         Parameters
         ----------
         fov_lon, fov_lat : `~astropy.coordinates.Angle`
-            FOV coordinates expecting in AltAz frame.
+            FOV coordinates expecting in AltAz frame, same shape than energy_reco
         energy_reco : `~astropy.units.Quantity`
-            Reconstructed energy
+            Reconstructed energy, same dimension than fov_lat and fov_lat
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
         kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
@@ -320,7 +323,8 @@ class Background2D(object):
             Interpolated values, axis order is the same as for the NDData array
         """
         offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
-        return self.data.evaluate(offset=offset, energy=energy_reco, **kwargs)
+        points = dict(offset=offset, energy=energy_reco)
+        return self.data.evaluate_at_coord(points=points, method=method, **kwargs)
 
     def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1,
                                   method="linear", **kwargs):
@@ -344,15 +348,23 @@ class Background2D(object):
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
+        fov_lon = np.atleast_2d(fov_lon)
+        fov_lat = np.atleast_2d(fov_lat)
         energy_edges = EnergyBounds.equal_log_spacing(
             energy_range[0], energy_range[1], n_integration_bins,
         )
+        # TODO: insert new axes, remove tile and use numpy broadcasting
+        energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
+        fov_lon = np.tile(fov_lon, reps=energy_edges.shape + (1, 1))
+        fov_lon = np.moveaxis(fov_lon, 0, -1)
+        fov_lat = np.tile(fov_lat, reps=energy_edges.shape + (1, 1))
+        fov_lat = np.moveaxis(fov_lat, 0, -1)
 
         bkg_evaluated = self.evaluate(
             fov_lon=fov_lon,
             fov_lat=fov_lat,
-            energy_reco=energy_edges,
+            energy_reco=energy_reco,
             method=method, **kwargs
         )
-        bkg_evaluated = np.moveaxis(bkg_evaluated, 0, -1)
+
         return np.trapz(bkg_evaluated, energy_edges).decompose()
