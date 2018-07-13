@@ -728,13 +728,6 @@ class SkyCube(MapBase):
 
         return fits.HDUList([image_hdu, energy_hdu])
 
-    def to_images(self):
-        """Convert to `~gammapy.cube.SkyCubeImages`."""
-        from .images import SkyCubeImages
-        energies = self.energies(mode='center')
-        images = [self.sky_image(energy) for energy in energies]
-        return SkyCubeImages(self.name, images, self.wcs, energies)
-
     def spectrum(self, region):
         """Extract spectrum in a given sky region.
 

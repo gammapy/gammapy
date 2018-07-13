@@ -65,11 +65,6 @@ class TestSkyCube(object):
         self.sky_cube = FermiGalacticCenter.diffuse_model()
         assert self.sky_cube.data.shape == (30, 21, 61)
 
-    def test_to_images(self):
-        images = self.sky_cube.to_images()
-        cube = images.to_cube()
-        SkyCube.assert_allclose(self.sky_cube, cube)
-
     def test_init(self):
         name = 'Axel'
         data = self.sky_cube.data
