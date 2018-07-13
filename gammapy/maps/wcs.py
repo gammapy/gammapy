@@ -662,26 +662,25 @@ class WcsGeom(MapGeom):
     def get_region_mask_array(self, region):
         """Return mask of pixels inside region in the the form of boolean array
 
-
-
         Parameters
         ----------
         region : `~regions.PixelRegion` or `~regions.SkyRegion` object
             A region on the sky could be defined in pixel or sky coordinates.
 
-        Return
-        ------
+        Returns
+        -------
         mask_array : `~numpy.ndarray` of booleans
             the array of booleans
         """
-
         from regions import PixCoord
+
+        if not self.is_regular:
+            raise NotImplementedError("Region mask is not working yet with multi-resolution maps")
+
         # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
         if isinstance(region, SkyRegion):
             region = region.to_pixel(self.wcs)
 
-        if not self.is_regular:
-            raise NotImplementedError("Region mask is not working yet with multiresolution maps")
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
         return region.contains(pixcoord)

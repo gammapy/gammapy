@@ -540,8 +540,8 @@ class WcsNDMap(WcsMap):
         inside : bool
           Output map is True inside the input region if inside is set to True and False outside and conversely.
 
-        Return
-        ------
+        Returns
+        -------
         mask_map : `~gammapy.maps.WcsNDMap`
             the mask map
         """
