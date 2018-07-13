@@ -596,7 +596,7 @@ class FluxPointEstimator(object):
     """
 
     def __init__(self, obs, groups, model):
-        self.obs = obs
+        self.obs = obs.copy()
         self.groups = groups
         self.model = model
         self.flux_points = None
@@ -756,8 +756,10 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
-        energy_min = energy_group.energy_min
-        energy_max = energy_group.energy_max
+ #       energy_min = energy_group.energy_min
+ #       energy_max = energy_group.energy_max
+
+        self.obs.on_vector.bins_in_safe_range = range(energy_group.bin_idx_min,energy_group.bin_idx_max)
 
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
@@ -765,7 +767,7 @@ class FluxPointEstimator(object):
         fit = SpectrumFit(self.obs, model)
 
         # TODO: Notice channels contained in energy_group
-        fit.fit_range = energy_min, energy_max
+#        fit.fit_range = energy_min, energy_max
 
         log.debug(
             'Calling Sherpa fit for flux point '
