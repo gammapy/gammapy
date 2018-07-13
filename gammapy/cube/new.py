@@ -198,8 +198,8 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     energy_axis = ref_geom.axes[0]
     # Compute offsets of all pixels
     map_coord = ref_geom.get_coord()
-    #Compute offset at all the pixels and energy of the Map
-    offset=map_coord.skycoord.separation(pointing)
+    # Compute offset at all the pixels and energy of the Map
+    offset = map_coord.skycoord.separation(pointing)
 
     if isinstance(bkg, Background3D):
         map_coord = ref_geom.get_coord()
@@ -208,14 +208,14 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
         dety = Angle(np.zeros_like(detx), detx.unit)
         # Retrieve energies from map coordinates
         energy_reco = map_coord[energy_axis.name] * energy_axis.unit
-        #Here detx, dety, and e_reco have the same shape and contain all the coordinates of the point on which you want
+        # Here detx, dety, and e_reco have the same shape and contain all the coordinates of the point on which you want
         #  to evaluate the background
         data = bkg.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
     else:
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry
         energy = energy_axis.center * energy_axis.unit
-        data = bkg.evaluate(offset=offset[0,:,:], energy=energy)
+        data = bkg.evaluate(fov_lon=offset[0, :, :], fov_lat=0, energy=energy)
 
     # TODO: add proper integral over energy
     energy_axis = ref_geom.axes[0]
@@ -225,7 +225,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
-    data[:, offset[0,:,:] >= offset_max] = 0
+    data[:, offset[0, :, :] >= offset_max] = 0
 
     return WcsNDMap(ref_geom, data=data)
 

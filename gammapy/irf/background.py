@@ -136,17 +136,14 @@ class Background3D(object):
         return fits.BinTableHDU(self.to_table(), name=name)
 
     def evaluate(self, detx, dety, energy_reco, method="linear", **kwargs):
-        """
-        Evaluate the `Background3D` at a given FOV coordinate and energy. The coordinates det_x, det_y and erngy_reco
-        should have the same dimension that match the numbers of point you want to evaluate
+        """Evaluate at given FOV position and energy.
+
         Parameters
         ----------
-        detx : `~astropy.coordinates.Angle`
-                FOV coordinate X-axis binning. Same dimension than det_y and energy_reco
-        dety: `~astropy.coordinates.Angle`
-                FOV coordinate Y-axis binning. Same dimension than det_x and energy_reco
+        detx, dety : `~astropy.coordinates.Angle`
+            FOV coordinates
         energy_reco : `~astropy.units.Quantity`
-                energy on which you want to interpolate. Same dimension than det_x and det_y
+            energy on which you want to interpolate. Same dimension than det_x and det_y
         method : str {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
@@ -161,19 +158,18 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins=1, method="linear",
-                                  **kwargs):
-        """
-        Evaluate the `Background3D` at given FOV coordinate and integrate over the energy range.
+    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins=1,
+                                  method="linear", **kwargs):
+        """Integrate over an energy range.
 
         Parameters
         ----------
         detx, dety : `~astropy.coordinates.Angle`
             FOV coordinates
         energy_range: `~astropy.units.Quantity`
-            Energy range edges on which to compute the integration containing the minimal and maximal value of the range
+            Energy range
         n_integration_bins : int
-            Number of energy bins used for the integration
+            Number of bins in the energy range
         method : {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
@@ -186,7 +182,9 @@ class Background3D(object):
         """
         detx = np.atleast_2d(detx)
         dety = np.atleast_2d(dety)
-        energy_edges = EnergyBounds.equal_log_spacing(energy_range[0], energy_range[1], n_integration_bins)
+        energy_edges = EnergyBounds.equal_log_spacing(
+            energy_range[0], energy_range[1], n_integration_bins,
+        )
 
         # TODO: insert new axes, remove tile and use numpy broadcasting
         energy_reco = np.tile(energy_edges, reps=detx.shape + (1,))
@@ -199,7 +197,8 @@ class Background3D(object):
             detx=detx,
             dety=dety,
             energy_reco=energy_reco,
-            method=method, **kwargs
+            method=method,
+            **kwargs
         )
         return np.trapz(bkg_evaluated, energy_edges).decompose()
 
@@ -300,17 +299,16 @@ class Background2D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, fov_offset, fov_phi=None, energy_reco=None, **kwargs):
-        """
-        Evaluate the `Background2D` at a given offset and energy.
+    def evaluate(self, fov_lon, fov_lat, energy_reco, **kwargs):
+        """Evaluate at a given FOV position and energy.
+
+        To have the same API than background 3D for the
+        background evaluation, the offset is ``fov_altaz_lon``.
 
         Parameters
         ----------
-        fov_offset : `~astropy.coordinates.Angle`
-            Offset in the FOV
-        fov_phi: `~astropy.coordinates.Angle`
-            Azimuth angle in the FOV.
-            Not used for this class since the background model is radially symmetric
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame.
         energy_reco : `~astropy.units.Quantity`
             Reconstructed energy
         kwargs : dict
@@ -321,8 +319,40 @@ class Background2D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        if energy_reco is None:
-            energy_reco = self.data.axis('energy').nodes
+        offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
+        return self.data.evaluate(offset=offset, energy=energy_reco, **kwargs)
 
-        array = self.data.evaluate(offset=fov_offset, energy=energy_reco, **kwargs)
-        return array
+    def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1,
+                                  method="linear", **kwargs):
+        """Integrate over an energy range.
+
+        Parameters
+        ----------
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame.
+        energy_range: `~astropy.units.Quantity`
+            Energy range
+        n_integration_bins : int
+            Number of bins in the energy range
+        method : {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            Passed to `scipy.interpolate.RegularGridInterpolator`.
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+        """
+        energy_edges = EnergyBounds.equal_log_spacing(
+            energy_range[0], energy_range[1], n_integration_bins,
+        )
+
+        bkg_evaluated = self.evaluate(
+            fov_lon=fov_lon,
+            fov_lat=fov_lat,
+            energy_reco=energy_edges,
+            method=method, **kwargs
+        )
+        bkg_evaluated = np.moveaxis(bkg_evaluated, 0, -1)
+        return np.trapz(bkg_evaluated, energy_edges).decompose()
