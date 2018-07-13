@@ -312,9 +312,9 @@ class MapMaker(object):
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
     cutout_mode : {'trim', 'strict'}, optional
-            Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
-             Should be left to the default value 'trim'
-            unless you want only fully contained observations to be added to the map
+        Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
+        Should be left to the default value 'trim'
+        unless you want only fully contained observations to be added to the map
     """
 
     def __init__(self, ref_geom, offset_max, cutout_mode="trim"):
