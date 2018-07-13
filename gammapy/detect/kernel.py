@@ -156,8 +156,8 @@ class KernelBackgroundEstimator(object):
     # TODO: make more flexible, e.g. allow using TS images tec.
     def _estimate_significance(self, counts, background):
         kernel = CustomKernel(self.kernel_src)
-        images_lima = compute_lima_image(counts, background, kernel=kernel)
-        return images_lima['significance']
+        images_lima = compute_lima_image(counts.to_wcs_nd_map(), background.to_wcs_nd_map(), kernel=kernel)
+        return SkyImage.from_wcs_nd_map(images_lima['significance'])
 
     def _run_iteration(self, images):
         """Run one iteration.

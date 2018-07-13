@@ -116,13 +116,15 @@ dataset as above, the corresponding images can be computed using the
 .. code-block:: python
 
     from astropy.convolution import Tophat2DKernel
-    from gammapy.image import SkyImageList
+    from gammapy.maps import Map
     from gammapy.detect import compute_lima_image
-    images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    counts = Map.read(filename, hdu='COUNTS')
+    background = Map.read(filename, hdu='BACKGROUND')
     kernel = Tophat2DKernel(5)
-    result = compute_lima_image(images['COUNTS'], images['BACKGROUND'], kernel)
+    result = compute_lima_image(counts, background, kernel)
 
-The function returns a `~gammapy.image.SkyImageList`, that bundles all resulting
+The function returns a dictionary, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
 
 
