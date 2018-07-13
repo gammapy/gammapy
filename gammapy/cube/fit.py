@@ -24,24 +24,31 @@ class SkyModelMapFit(object):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    psf : `~gammapy.cube.PSFKernel`
-        PSF kernel
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
+    edisp : `~gammapy.irf.EnergyDispersion`
+        Energy dispersion
     """
 
-    def __init__(self, model, counts, exposure, psf=None, background=None):
+    def __init__(self, model, counts, exposure, background=None, psf=None, edisp=None):
         self.model = model
         self.counts = counts
         self.exposure = exposure
-        self.psf = psf
         self.background = background
+        self.psf = psf
+        self.edisp = edisp
 
         self._npred = None
         self._stat = None
         self._minuit = None
 
-        self._init_evaluator()
+        self.evaluator = SkyModelMapEvaluator(
+            sky_model=self.model,
+            exposure=self.exposure,
+            background=self.background,
+            psf=self.psf,
+            edisp=self.edisp,
+        )
 
     @property
     def npred(self):
@@ -57,13 +64,6 @@ class SkyModelMapFit(object):
     def minuit(self):
         """`~iminuit.Minuit` object"""
         return self._minuit
-
-    def _init_evaluator(self):
-        """Initialize SkyModelEvaluator"""
-        self.evaluator = SkyModelMapEvaluator(sky_model=self.model,
-                                              exposure=self.exposure,
-                                              psf=self.psf,
-                                              background=self.background)
 
     def compute_npred(self):
         """Compute predicted counts"""

@@ -269,17 +269,20 @@ class SkyModelMapEvaluator(object):
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
-    psf : `~gammapy.cube.PSFKernel`
-        PSF kernel
     background : `~gammapy.maps.Map`
         background map
+    psf : `~gammapy.cube.PSFKernel`
+        PSF kernel
+    edisp : `~gammapy.irf.EnergyDispersion`
+        Energy dispersion
     """
 
-    def __init__(self, sky_model=None, exposure=None, psf=None, background=None):
+    def __init__(self, sky_model=None, exposure=None, background=None, psf=None, edisp=None):
         self.sky_model = sky_model
         self.exposure = exposure
-        self.psf = psf
         self.background = background
+        self.psf = psf
+        self.edisp = edisp
 
     @lazyproperty
     def geom(self):
@@ -375,6 +378,10 @@ class SkyModelMapEvaluator(object):
         """Convolve npred cube with PSF"""
         return self.psf.apply(npred)
 
+    def apply_edisp(self, npred):
+        """Convolve npred cube with PSF"""
+        return self.edisp.apply(npred)
+
     def compute_npred(self):
         """Evaluate model predicted counts.
         """
@@ -382,6 +389,8 @@ class SkyModelMapEvaluator(object):
         npred = self.apply_aeff(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
+        if self.edisp is not None:
+            npred = self.apply_edisp(npred)
         if self.background:
             npred.data += self.background.data
         return npred.data
