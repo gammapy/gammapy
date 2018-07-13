@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 import logging
 import numpy as np
-from ..image import SkyImage, SkyImageList
 from ..maps import WcsNDMap
 from ..stats import significance, significance_on_off
 
@@ -22,13 +21,13 @@ def compute_lima_image(counts, background, kernel, exposure=None):
 
     Parameters
     ----------
-    counts : `~gammapy.maps.WCSNDMap`
+    counts : `~gammapy.maps.WcsNDMap`
         Counts image
-    background : `~gammapy.maps.WCSNDMap`
+    background : `~gammapy.maps.WcsNDMap`
         Background image
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~gammapy.maps.WCSNDMap`
+    exposure : `~gammapy.maps.WcsNDMap`
         Exposure image
 
     Returns
@@ -54,7 +53,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    # TODO: we should make coopies of the geom to make them independent objects 
+    # TODO: we should make coopies of the geom to make them independent objects
     images = {
         'significance': WcsNDMap(counts.geom, significance_conv),
         'counts': WcsNDMap(counts.geom, counts_conv),
@@ -75,23 +74,24 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     Parameters
     ----------
-    n_on : `~gammapy.image.SkyImage`
+    n_on : `~gammapy.maps.WcsNDMap`
         Counts image
-    n_off : `~gammapy.image.SkyImage`
+    n_off : `~gammapy.maps.WcsNDMap`
         Off counts image
-    a_on : `~gammapy.image.SkyImage`
+    a_on : `~gammapy.maps.WcsNDMap`
         Relative background efficiency in the on region
-    a_off : `~gammapy.image.SkyImage`
+    a_off : `~gammapy.maps.WcsNDMap`
         Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~gammapy.image.SkyImage`
+    exposure : `~gammapy.maps.WcsNDMap`
         Exposure image
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageList`
-        Results images container
+    images : `~dict`
+        Dictionary containing result maps
+        Keys are: significance, n_on, background, excess, alpha
 
     See also
     --------
@@ -107,18 +107,18 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     n_on_conv = convolve(n_on.data, kernel.array, **conv_opt)
     a_on_conv = convolve(a_on.data, kernel.array, **conv_opt)
-    alpha_conv = a_on_conv / a_off
+    alpha_conv = a_on_conv / a_off.data
     background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
     significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
 
-    images = SkyImageList([
-        SkyImage(name='significance', data=significance_conv),
-        SkyImage(name='n_on', data=n_on_conv),
-        SkyImage(name='background', data=background_conv),
-        SkyImage(name='excess', data=excess_conv),
-        SkyImage(name='alpha', data=alpha_conv),
-    ])
+    images = {
+        'significance': WcsNDMap(n_on.geom, data=significance_conv),
+        'n_on': WcsNDMap(n_on.geom, data=n_on_conv),
+        'background': WcsNDMap(n_on.geom, data=background_conv),
+        'excess': WcsNDMap(n_on.geom, data=excess_conv),
+        'alpha': WcsNDMap(n_on.geom, data=alpha_conv),
+    }
 
     # TODO: should we be doing this here?
     # Wouldn't it be better to let users decide if they want this,
