@@ -48,7 +48,6 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     dy : `~numpy.ndarray`
         flux error of observation
     """
-
     rand = np.random.RandomState(42)
     dt = t_length / n_data
     t = np.linspace(0, t_length, n_data)
@@ -91,18 +90,17 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     fap : `~collections.OrderedDict`
         false alarm probability dictionary (see description above).
     """
-
     fap = OrderedDict()
 
-    if 'single' in [*method]:
+    if 'single' in method:
         fap['single'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'single')
-    if 'naive' in [*method]:
+    if 'naive' in method:
         fap['naive'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'naive')
-    if 'davies' in [*method]:
+    if 'davies' in method:
         fap['davies'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'davies')
-    if 'baluev' in [*method]:
+    if 'baluev' in method:
         fap['baluev'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'baluev')
-    if 'bootstrap' in [*method]:
+    if 'bootstrap' in method:
         fap['bootstrap'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard',
                                                                'bootstrap', dict(n_bootstraps=100, random_seed=42))
 
