@@ -156,7 +156,7 @@ def test_background_2d_evaluate(bkg_2d):
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
-    res = bkg_2d.evaluate(fov_lon=[1,1] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV)
+    res = bkg_2d.evaluate(fov_lon=[1, 1] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
 
