@@ -56,6 +56,13 @@ def test_filter_events(obs_list, on_region):
     assert len(all_events.table) == len(ev1.table) + len(ev2.table)
 
 
+@pytest.mark.parametrize('example_phase_interval, output', [
+    ([[0.2, 0.3]], [[0.2, 0.3]]),
+    ([[0.9, 0.1]], [[0.9, 1], [0, 0.1]])
+    ])
+def test_check_phase_interval(example_phase_interval, output):
+    assert PhaseBackgroundEstimator._check_phase_interval(example_phase_interval) == output
+
 @requires_data('gammapy-extra')
 def test_process(phase_bkg_estimator, obs_list):
     assert isinstance(phase_bkg_estimator.process(obs_list[0]), BackgroundEstimate)
