@@ -203,14 +203,14 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
 
     if isinstance(bkg, Background3D):
         map_coord = ref_geom.get_coord()
-        detx = offset
-        # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for detx, dety
-        dety = Angle(np.zeros_like(detx), detx.unit)
+        fov_lon = offset
+        # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for fov_lon, fov_lat
+        fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
         # Retrieve energies from map coordinates
         energy_reco = map_coord[energy_axis.name] * energy_axis.unit
-        # Here detx, dety, and e_reco have the same shape and contain all the coordinates of the point on which you want
+        # Here fov_lon, fov_lat, and e_reco have the same shape and contain all the coordinates of the point on which you want
         #  to evaluate the background
-        data = bkg.evaluate(detx=detx, dety=dety, energy_reco=energy_reco)
+        data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
     else:
         # Retrieve energies from WcsNDMap
         # Note this would require a log_center from the geometry

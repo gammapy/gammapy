@@ -24,10 +24,10 @@ class Background3D(object):
     -----------
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
-    detx_lo, detx_hi : `~astropy.units.Quantity`
-        FOV coordinate X-axis binning
-    dety_lo, dety_hi : `~astropy.units.Quantity`
-        FOV coordinate Y-axis binning
+    fov_lon_lo, fov_lon_hi : `~astropy.units.Quantity`
+        FOV coordinate X-axis binning, in AltAz frame.
+    fov_lat_lo, fov_lat_hi : `~astropy.units.Quantity`
+        FOV coordinate Y-axis binning, in AltAz frame.
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
 
@@ -42,15 +42,15 @@ class Background3D(object):
     Background3D
     NDDataArray summary info
     energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
-    detx           : size =    36, min = -5.833 deg, max =  5.833 deg
-    dety           : size =    36, min = -5.833 deg, max =  5.833 deg
+    fov_lon           : size =    36, min = -5.833 deg, max =  5.833 deg
+    fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 
     def __init__(self, energy_lo, energy_hi,
-                 detx_lo, detx_hi, dety_lo, dety_hi,
+                 fov_lon_lo, fov_lon_hi, fov_lat_lo, fov_lat_hi,
                  data, meta=None, interp_kwargs=None):
 
         if interp_kwargs is None:
@@ -60,11 +60,11 @@ class Background3D(object):
                 energy_lo, energy_hi,
                 interpolation_mode='log', name='energy'),
             BinnedDataAxis(
-                detx_lo, detx_hi,
-                interpolation_mode='linear', name='detx'),
+                fov_lon_lo, fov_lon_hi,
+                interpolation_mode='linear', name='fov_lon'),
             BinnedDataAxis(
-                dety_lo, dety_hi,
-                interpolation_mode='linear', name='dety'),
+                fov_lat_lo, fov_lat_hi,
+                interpolation_mode='linear', name='fov_lat'),
         ]
         self.data = NDDataArray(axes=axes, data=data,
                                 interp_kwargs=interp_kwargs)
@@ -96,10 +96,10 @@ class Background3D(object):
         return cls(
             energy_lo=table['ENERG_LO'].quantity[0],
             energy_hi=table['ENERG_HI'].quantity[0],
-            detx_lo=table['DETX_LO'].quantity[0],
-            detx_hi=table['DETX_HI'].quantity[0],
-            dety_lo=table['DETY_LO'].quantity[0],
-            dety_hi=table['DETY_HI'].quantity[0],
+            fov_lon_lo=table['DETX_LO'].quantity[0],
+            fov_lon_hi=table['DETX_HI'].quantity[0],
+            fov_lat_lo=table['DETY_LO'].quantity[0],
+            fov_lat_hi=table['DETY_HI'].quantity[0],
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )
@@ -122,10 +122,10 @@ class Background3D(object):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
         table = Table(meta=meta)
-        table['DETX_LO'] = self.data.axis('detx').lo[np.newaxis]
-        table['DETX_HI'] = self.data.axis('detx').hi[np.newaxis]
-        table['DETY_LO'] = self.data.axis('dety').lo[np.newaxis]
-        table['DETY_HI'] = self.data.axis('dety').hi[np.newaxis]
+        table['DETX_LO'] = self.data.axis('fov_lon').lo[np.newaxis]
+        table['DETX_HI'] = self.data.axis('fov_lon').hi[np.newaxis]
+        table['DETY_LO'] = self.data.axis('fov_lat').lo[np.newaxis]
+        table['DETY_HI'] = self.data.axis('fov_lat').hi[np.newaxis]
         table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
         table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
         table['BKG'] = self.data.data[np.newaxis]
@@ -135,15 +135,15 @@ class Background3D(object):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, detx, dety, energy_reco, method="linear", **kwargs):
+    def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
         """Evaluate at given FOV position and energy.
 
         Parameters
         ----------
-        detx, dety : `~astropy.coordinates.Angle`
-            FOV coordinates
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame.
         energy_reco : `~astropy.units.Quantity`
-            energy on which you want to interpolate. Same dimension than det_x and det_y
+            energy on which you want to interpolate. Same dimension than fov_lat and fov_lat
         method : str {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
@@ -154,18 +154,18 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        points = dict(detx=detx, dety=dety, energy=energy_reco)
+        points = dict(fov_lon=fov_lon, fov_lat=fov_lat, energy=energy_reco)
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(self, detx, dety, energy_range, n_integration_bins=1,
+    def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1,
                                   method="linear", **kwargs):
         """Integrate over an energy range.
 
         Parameters
         ----------
-        detx, dety : `~astropy.coordinates.Angle`
-            FOV coordinates
+        fov_lon, fov_lat : `~astropy.coordinates.Angle`
+            FOV coordinates expecting in AltAz frame.
         energy_range: `~astropy.units.Quantity`
             Energy range
         n_integration_bins : int
@@ -178,24 +178,24 @@ class Background3D(object):
         Returns
         -------
         array : `~astropy.units.Quantity`
-            Returns 2D array with axes detx, dety
+            Returns 2D array with axes fov_lon, fov_lat
         """
-        detx = np.atleast_2d(detx)
-        dety = np.atleast_2d(dety)
+        fov_lon = np.atleast_2d(fov_lon)
+        fov_lat = np.atleast_2d(fov_lat)
         energy_edges = EnergyBounds.equal_log_spacing(
             energy_range[0], energy_range[1], n_integration_bins,
         )
 
         # TODO: insert new axes, remove tile and use numpy broadcasting
-        energy_reco = np.tile(energy_edges, reps=detx.shape + (1,))
-        detx = np.tile(detx, reps=energy_edges.shape + (1, 1))
-        detx = np.moveaxis(detx, 0, -1)
-        dety = np.tile(dety, reps=energy_edges.shape + (1, 1))
-        dety = np.moveaxis(dety, 0, -1)
+        energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
+        fov_lon = np.tile(fov_lon, reps=energy_edges.shape + (1, 1))
+        fov_lon = np.moveaxis(fov_lon, 0, -1)
+        fov_lat = np.tile(fov_lat, reps=energy_edges.shape + (1, 1))
+        fov_lat = np.moveaxis(fov_lat, 0, -1)
 
         bkg_evaluated = self.evaluate(
-            detx=detx,
-            dety=dety,
+            fov_lon=fov_lon,
+            fov_lat=fov_lat,
             energy_reco=energy_reco,
             method=method,
             **kwargs
