@@ -16,10 +16,10 @@ class TestIRFWrite:
         self.offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
         self.migra_lo = np.linspace(0, 3, 4)[:-1]
         self.migra_hi = np.linspace(0, 3, 4)[1:]
-        self.detx_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
-        self.detx_hi = np.linspace(-6, 6, 11)[1:] * u.deg
-        self.dety_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
-        self.dety_hi = np.linspace(-6, 6, 11)[1:] * u.deg
+        self.fov_lon_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
+        self.fov_lon_hi = np.linspace(-6, 6, 11)[1:] * u.deg
+        self.fov_lat_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
+        self.fov_lat_hi = np.linspace(-6, 6, 11)[1:] * u.deg
         self.aeff_data = np.random.rand(10, 3) * u.cm * u.cm
         self.edisp_data = np.random.rand(10, 3, 3)
         self.bkg_data = np.random.rand(10, 10, 10) / u.MeV / u.s / u.sr
@@ -31,8 +31,8 @@ class TestIRFWrite:
                                         offset_lo=self.offset_lo, offset_hi=self.offset_hi,
                                         data=self.edisp_data)
         self.bkg = Background3D(energy_lo=self.energy_lo, energy_hi=self.energy_hi,
-                                detx_lo=self.detx_lo, detx_hi=self.detx_hi,
-                                dety_lo=self.dety_lo, dety_hi=self.dety_hi,
+                                fov_lon_lo=self.fov_lon_lo, fov_lon_hi=self.fov_lon_hi,
+                                fov_lat_lo=self.fov_lat_lo, fov_lat_hi=self.fov_lat_hi,
                                 data=self.bkg_data)
 
     def test_array_to_container(self):
