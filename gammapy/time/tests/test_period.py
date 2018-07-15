@@ -3,8 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from collections import OrderedDict
-from astropy.stats.lombscargle import _statistics
+from astropy.stats.lombscargle._statistics import false_alarm_probability
 from ..period import robust_periodogram
 from ...utils.testing import requires_dependency
 
@@ -72,7 +71,7 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     Function for estimation of periodogram peak significance.
     Assumes Gaussian white noise light curve.
 
-    Returns an OrderedDict with the false alarm probability for each method.
+    Returns a dict with the false alarm probability for each method.
 
     Parameters
     ----------
@@ -87,22 +86,22 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
 
     Returns
     -------
-    fap : `~collections.OrderedDict`
+    fap : `dict`
         false alarm probability dictionary (see description above).
     """
-    fap = OrderedDict()
+    fap = {}
 
     if 'single' in method:
-        fap['single'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'single')
+        fap['single'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'single')
     if 'naive' in method:
-        fap['naive'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'naive')
+        fap['naive'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'naive')
     if 'davies' in method:
-        fap['davies'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'davies')
+        fap['davies'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'davies')
     if 'baluev' in method:
-        fap['baluev'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'baluev')
+        fap['baluev'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'baluev')
     if 'bootstrap' in method:
-        fap['bootstrap'] = _statistics.false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard',
-                                                               'bootstrap', dict(n_bootstraps=100, random_seed=42))
+        fap['bootstrap'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard',
+                                                   'bootstrap', dict(n_bootstraps=100, random_seed=42))
 
     return fap
 
@@ -133,9 +132,10 @@ def test_period(pars):
         periods=pars['periods'], loss=pars['loss'], scale=pars['scale'],
     )
 
-    fap = fap_astropy(periodogram['power'], 1. / periodogram['periods'],
-                      test_data['t'], test_data['y'], test_data['dy'], pars['fap']
-                      )
+    fap = fap_astropy(
+        periodogram['power'], 1. / periodogram['periods'],
+        test_data['t'], test_data['y'], test_data['dy'], pars['fap']
+    )
 
     assert_allclose(periodogram['best_period'], pars['period'], atol=pars['periods'].min())
     assert_allclose(fap['single'], pars['fap']['single'], rtol=1e-3)

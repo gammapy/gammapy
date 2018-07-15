@@ -36,12 +36,11 @@ def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best
     fig : `~matplotlib.figure.Figure`
         Matplotlib figure
     """
+    import matplotlib.pyplot as plt
+
     # set flux errors
     if flux_err.any() == None:
         flux_err = np.zeros_like(flux)
-
-    # start plot
-    import matplotlib.pyplot as plt
 
     # set up the figure & axes for plotting
     fig = plt.figure(figsize=(16, 9))
