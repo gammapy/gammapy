@@ -6,9 +6,61 @@ from numpy.testing.utils import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy import units as u
-from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDependentMultiGaussPSF
+
+
+def make_test_psf(energy_bins=15, theta_bins=12):
+    """Create a test FITS PSF file.
+
+    A log-linear dependency in energy is assumed, where the size of
+    the PSF decreases by a factor of tow over tow decades. The
+    theta dependency is a parabola where at theta = 2 deg the size
+    of the PSF has increased by 30%.
+
+    Parameters
+    ----------
+    energy_bins : int
+        Number of energy bins.
+    theta_bins : int
+        Number of theta bins.
+
+    Returns
+    -------
+    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
+        PSF.
+    """
+    energies_all = np.logspace(-1, 2, energy_bins + 1)
+    energies_lo = energies_all[:-1]
+    energies_hi = energies_all[1:]
+    theta_lo = np.linspace(0, 2.2, theta_bins)
+
+    def sigma_energy_theta(energy, theta, sigma):
+        # log-linear dependency of sigma with energy
+        # m and b are choosen such, that at 100 TeV
+        # we have sigma and at 0.1 TeV we have sigma/2
+        m = -sigma / 6.
+        b = sigma + m
+        return (2 * b + m * np.log10(energy)) * (0.3 / 4 * theta ** 2 + 1)
+
+    # Compute norms and sigmas values are taken from the psf.txt in
+    # irf/test/data
+    energies, thetas = np.meshgrid(energies_lo, theta_lo)
+
+    sigmas = []
+    for sigma in [0.0219206, 0.0905762, 0.0426358]:
+        sigmas.append(sigma_energy_theta(energies, thetas, sigma))
+
+    norms = []
+    for norm in 302.654 * np.array([1, 0.0406003, 0.444632]):
+        norms.append(norm * np.ones((theta_bins, energy_bins)))
+
+    return EnergyDependentMultiGaussPSF(
+        u.Quantity(energies_lo, 'TeV'),
+        u.Quantity(energies_hi, 'TeV'),
+        u.Quantity(theta_lo, 'deg'),
+        sigmas, norms,
+    )
 
 
 @requires_dependency('scipy')
@@ -56,18 +108,19 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(desired, actual.degree, rtol=0.03)
 
     def test_to_psf3d(self, psf):
-        rads = np.linspace(0.,1.0,301)*u.deg
+        rads = np.linspace(0., 1.0, 301) * u.deg
         psf_3d = psf.to_psf3d(rads)
         assert psf_3d.rad_lo.shape == (300,)
         assert psf_3d.rad_lo.unit == 'deg'
 
-        theta=0.5*u.deg
-        energy = 0.5*u.TeV
+        theta = 0.5 * u.deg
+        energy = 0.5 * u.TeV
 
         containment = np.linspace(0.1, 0.95, 10)
-        desired = np.array([psf.containment_radius(energy,theta,_).value for _ in containment])
-        actual = np.array([psf_3d.containment_radius(energy,theta,_).value for _ in containment])
-        assert_allclose(np.squeeze(desired),actual,rtol=0.01)
+        desired = np.array([psf.containment_radius(energy, theta, _).value for _ in containment])
+        actual = np.array([psf_3d.containment_radius(energy, theta, _).value for _ in containment])
+        assert_allclose(np.squeeze(desired), actual, rtol=0.01)
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
