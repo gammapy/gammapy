@@ -11,10 +11,10 @@ from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
+from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
-from .utils import _earth_location_from_dict
 from .gti import GTI
 from . import InvalidDataError
 
@@ -569,7 +569,7 @@ class EventList(EventListBase):
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.table.meta)
+        return earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):

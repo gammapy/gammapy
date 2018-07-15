@@ -12,11 +12,11 @@ from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.energy import Energy
+from ..utils.fits import earth_location_from_dict
 from ..utils.time import time_ref_from_dict
 from ..utils.table import table_row_to_dict
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
-from .utils import _earth_location_from_dict
 from ..irf import EnergyDependentTablePSF, IRFStacker, PSF3D
 
 __all__ = [
@@ -617,7 +617,7 @@ class DataStoreObservation(object):
     @lazyproperty
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.obs_info)
+        return earth_location_from_dict(self.obs_info)
 
     @lazyproperty
     def muoneff(self):

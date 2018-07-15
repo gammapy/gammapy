@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.utils import lazyproperty
-from astropy.units import Quantity, Unit
+from astropy.units import Quantity
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz, CartesianRepresentation
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from .utils import _earth_location_from_dict
+from ..utils.fits import earth_location_from_dict
 
 __all__ = [
     'PointingInfo',
@@ -82,7 +82,7 @@ class PointingInfo(object):
     @lazyproperty
     def location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.table.meta)
+        return earth_location_from_dict(self.table.meta)
 
     @lazyproperty
     def time_ref(self):
