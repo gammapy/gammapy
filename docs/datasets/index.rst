@@ -137,10 +137,7 @@ Example how to make a dataset (from scratch, no file is loaded):
 Using `gammapy.datasets`
 ========================
 
-.. toctree::
-   :maxdepth: 1
-
-   make_datasets
+tbd
 
 Reference/API
 =============
