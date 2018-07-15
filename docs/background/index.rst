@@ -32,7 +32,6 @@ If you'd like to learn more about using `gammapy.background`, read the following
 .. toctree::
    :maxdepth: 1
 
-   energy_offset_array
    reflected
 
 Reference/API
