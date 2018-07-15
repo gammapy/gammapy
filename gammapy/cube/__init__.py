@@ -3,7 +3,6 @@
 Sky cubes (3-dimensional: energy, lon, lat).
 """
 from .core import *
-from .utils import *
 from .models import *
 from .basic_cube import *
 from .fit import *
