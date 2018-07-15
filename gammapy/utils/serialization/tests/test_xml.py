@@ -8,6 +8,7 @@ from ....image import models as spatial
 from ...serialization import xml_to_source_library, UnknownModelError
 
 
+@requires_data('gammapy-extra')
 def test_complex():
     xml_str = '''<?xml version="1.0" encoding="utf-8"?>
     <source_library title="source library">
