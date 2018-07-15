@@ -22,6 +22,48 @@ __all__ = [
 SPECTRAL_INDEX = 2.3
 
 
+def make_exposure_cube(pointing,
+                       livetime,
+                       aeff,
+                       ref_cube,
+                       offset_max,
+                       ):
+    """Calculate exposure cube.
+
+    Parameters
+    ----------
+    pointing : `~astropy.coordinates.SkyCoord`
+        Pointing direction
+    livetime : `~astropy.units.Quantity`
+        Livetime
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`
+        Effective area table
+    ref_cube : `~gammapy.cube.SkyCube`
+        Reference cube used to define geometry
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum field of view offset.
+
+    Returns
+    -------
+    expcube : `~gammapy.cube.SkyCube`
+        Exposure cube (3D)
+    """
+    from ..cube import SkyCube
+    coordinates = ref_cube.sky_image_ref.coordinates()
+    offset = coordinates.separation(pointing)
+    energy = ref_cube.energies()
+
+    exposure = aeff.data.evaluate(offset=offset, energy=energy)
+    exposure *= livetime
+    exposure[:, offset >= offset_max] = 0
+
+    return SkyCube(
+        data=exposure,
+        wcs=ref_cube.wcs,
+        energy_axis=ref_cube.energy_axis,
+    )
+
+
 class BasicImageEstimator(object):
     """
     BasicImageEstimator base class.
@@ -174,7 +216,6 @@ class IACTBasicImageEstimator(BasicImageEstimator):
         observation : `~gammapy.data.DataStoreObservation`
             Observation object
         """
-        from ..cube import make_exposure_cube
         p = self.parameters
         return make_exposure_cube(
             livetime=observation.observation_live_time_duration,
