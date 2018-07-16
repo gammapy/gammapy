@@ -189,9 +189,9 @@ class Background3D(object):
         # TODO: insert new axes, remove tile and use numpy broadcasting
         energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
         fov_lon = np.tile(fov_lon, reps=energy_edges.shape + (1, 1))
-        fov_lon = np.moveaxis(fov_lon, 0, -1)
+        fov_lon = np.rollaxis(fov_lon, 0, 3)
         fov_lat = np.tile(fov_lat, reps=energy_edges.shape + (1, 1))
-        fov_lat = np.moveaxis(fov_lat, 0, -1)
+        fov_lat = np.rollaxis(fov_lat, 0, 3)
 
         bkg_evaluated = self.evaluate(
             fov_lon=fov_lon,
@@ -200,6 +200,7 @@ class Background3D(object):
             method=method,
             **kwargs
         )
+        # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision
         return np.trapz(bkg_evaluated, energy_edges).decompose()
 
 
@@ -356,9 +357,9 @@ class Background2D(object):
         # TODO: insert new axes, remove tile and use numpy broadcasting
         energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
         fov_lon = np.tile(fov_lon, reps=energy_edges.shape + (1, 1))
-        fov_lon = np.moveaxis(fov_lon, 0, -1)
+        fov_lon = np.rollaxis(fov_lon, 0, 3)
         fov_lat = np.tile(fov_lat, reps=energy_edges.shape + (1, 1))
-        fov_lat = np.moveaxis(fov_lat, 0, -1)
+        fov_lat = np.rollaxis(fov_lat, 0, 3)
 
         bkg_evaluated = self.evaluate(
             fov_lon=fov_lon,
@@ -367,4 +368,5 @@ class Background2D(object):
             method=method, **kwargs
         )
 
+        # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision
         return np.trapz(bkg_evaluated, energy_edges).decompose()
