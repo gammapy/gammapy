@@ -9,7 +9,6 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.table import Table
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ...image import SkyImage
 from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..hess import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
 
@@ -45,33 +44,6 @@ class TestSourceCatalogHGPS:
         # Thus we expect `HGPSC 084` at row 83
         c = cat.gaussian_component(83)
         assert c.name == 'HGPSC 084'
-
-    @staticmethod
-    @requires_dependency('scipy')
-    @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
-    def test_large_scale_component(cat, source_name):
-        # This test compares the flux values from the LS model within source
-        # regions with ones listed in the catalog, agreement is <1%
-        ls_model = cat.large_scale_component
-
-        source = cat[source_name]
-        rspec = source.data['RSpec']
-        npix = int(2.5 * rspec.value / 0.02)
-
-        image = SkyImage.empty(
-            xref=source.position.galactic.l.deg,
-            yref=source.position.galactic.b.deg,
-            nxpix=npix,
-            nypix=npix,
-        )
-        coordinates = image.coordinates()
-        image.data = ls_model.evaluate(coordinates)
-        image.data *= image.solid_angle()
-
-        mask = coordinates.separation(source.position) < rspec
-        flux_ls = image.data[mask].sum()
-
-        assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
 
 
 @requires_data('gammapy-extra')
