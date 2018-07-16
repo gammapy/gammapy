@@ -8,6 +8,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.modeling.models import Gaussian1D
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
@@ -15,13 +16,13 @@ from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
 from ..cube.models import SkyModel
-from ..background.models import GaussianBand2D
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
     'SourceCatalogHGPS',
     'SourceCatalogObjectHGPS',
     'SourceCatalogObjectHGPSComponent',
+    'SourceCatalogLargeScaleHGPS',
 ]
 
 # Flux factor, used for printing
@@ -647,10 +648,10 @@ class SourceCatalogHGPS(SourceCatalog):
 
     @property
     def large_scale_component(self):
-        """Large scale component model (`~gammapy.background.models.GaussianBand2D`).
+        """Large scale component model (`~gammapy.catalog.SourceCatalogLargeScaleHGPS`).
         """
         table = self.table_large_scale_component
-        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0, ext=0))
+        return SourceCatalogLargeScaleHGPS(table, spline_kwargs=dict(k=3, s=0, ext=0))
 
     def _make_source_object(self, index):
         """Make `SourceCatalogObject` for given row index"""
@@ -688,6 +689,124 @@ class SourceCatalogHGPS(SourceCatalog):
         data = table_row_to_dict(self.table_components[row_idx])
         data['row_index'] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
+
+
+class SourceCatalogLargeScaleHGPS(object):
+    """Gaussian band model.
+
+    This 2-dimensional model is Gaussian in ``y`` for a given ``x``,
+    and the Gaussian parameters can vary in ``x``.
+
+    One application of this model is the diffuse emission along the
+    Galactic plane, i.e. ``x = GLON`` and ``y = GLAT``.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table of Gaussian parameters.
+        ``x``, ``amplitude``, ``mean``, ``stddev``.
+    spline_kwargs : dict
+        Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
+    """
+
+    def __init__(self, table, spline_kwargs=None):
+        from scipy.interpolate import UnivariateSpline
+
+        if spline_kwargs is None:
+            spline_kwargs = dict(k=1, s=0)
+
+        self.table = table
+        glon = Angle(self.table['GLON']).wrap_at('180d')
+
+        splines, units = {}, {}
+
+        for column in table.colnames:
+            y = self.table[column].quantity
+            spline = UnivariateSpline(glon.degree, y.value, **spline_kwargs)
+            splines[column] = spline
+            units[column] = y.unit
+
+        self._splines = splines
+        self._units = units
+
+    def _interpolate_parameter(self, parname, glon):
+        glon = glon.wrap_at('180d')
+        y = self._splines[parname](glon.degree)
+        return y * self._units[parname]
+
+    def peak_brightness(self, glon):
+        """Peak brightness at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Surface_Brightness', glon)
+
+    def peak_brightness_error(self, glon):
+        """Peak brightness error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Surface_Brightness_Err', glon)
+
+    def width(self, glon):
+        """Width at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width', glon)
+
+    def width_error(self, glon):
+        """Width error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width_Err', glon)
+
+    def peak_latitude(self, glon):
+        """Peak position at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT', glon)
+
+    def peak_latitude_error(self, glon):
+        """Peak position error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT_Err', glon)
+
+    def evaluate(self, position):
+        """Evaluate model at a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        """
+        glon, glat = position.galactic.l, position.galactic.b
+        width = self.width(glon)
+        amplitude = self.peak_brightness(glon)
+        mean = self.peak_latitude(glon)
+        return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)
 
 
 class SkySumModel(object):
@@ -734,5 +853,3 @@ class SkySumModel(object):
     def evaluate(self, lon, lat, energy):
         # TODO: untested; add test or remove
         return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
-
-

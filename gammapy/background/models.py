@@ -13,7 +13,6 @@ from .energy_offset_array import EnergyOffsetArray
 from .fov_cube import _make_bin_edges_array, FOVCube
 
 __all__ = [
-    'GaussianBand2D',
     'FOVCubeBackgroundModel',
     'EnergyOffsetBackgroundModel',
 ]
@@ -144,120 +143,6 @@ def _poisson_gauss_smooth(counts, bkg):
     kernel = np.exp(-0.5 * x ** 2)
     bkg_smooth = convolve(bkg, kernel / np.sum(kernel), mode="reflect")
     return bkg_smooth
-
-
-class GaussianBand2D(object):
-    """Gaussian band model.
-
-    This 2-dimensional model is Gaussian in ``y`` for a given ``x``,
-    and the Gaussian parameters can vary in ``x``.
-
-    One application of this model is the diffuse emission along the
-    Galactic plane, i.e. ``x = GLON`` and ``y = GLAT``.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table of Gaussian parameters.
-        ``x``, ``amplitude``, ``mean``, ``stddev``.
-    spline_kwargs : dict
-        Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
-    """
-    def __init__(self, table, spline_kwargs=DEFAULT_SPLINE_KWARGS):
-        from scipy.interpolate import UnivariateSpline
-
-        self.table = table
-        glon = Angle(self.table['GLON']).wrap_at('180d')
-
-        splines, units = {}, {}
-
-        for column in table.colnames:
-            y = self.table[column].quantity
-            spline = UnivariateSpline(glon.degree, y.value, **spline_kwargs)
-            splines[column] = spline
-            units[column] = y.unit
-
-        self._splines = splines
-        self._units = units
-
-    def _interpolate_parameter(self, parname, glon):
-        glon = glon.wrap_at('180d')
-        y = self._splines[parname](glon.degree)
-        return y * self._units[parname]
-
-    def peak_brightness(self, glon):
-        """Peak brightness at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('Surface_Brightness', glon)
-
-    def peak_brightness_error(self, glon):
-        """Peak brightness error at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('Surface_Brightness_Err', glon)
-
-    def width(self, glon):
-        """Width at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('Width', glon)
-
-    def width_error(self, glon):
-        """Width error at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('Width_Err', glon)
-
-    def peak_latitude(self, glon):
-        """Peak position at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('GLAT', glon)
-
-    def peak_latitude_error(self, glon):
-        """Peak position error at a given longitude.
-
-        Parameters
-        ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
-            Galactic Longitude.
-        """
-        return self._interpolate_parameter('GLAT_Err', glon)
-
-    def evaluate(self, position):
-        """Evaluate model at a given position.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Position on the sky.
-        """
-        glon, glat = position.galactic.l, position.galactic.b
-        width = self.width(glon)
-        amplitude = self.peak_brightness(glon)
-        mean = self.peak_latitude(glon)
-        return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)
 
 
 class FOVCubeBackgroundModel(object):
