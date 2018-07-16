@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ..background.background_estimate import BackgroundEstimate
+from .background_estimate import BackgroundEstimate
+from gammapy.data import EventList
+import numpy as np
 
 __all__ = [
     'PhaseBackgroundEstimator',
 ]
+
 
 class PhaseBackgroundEstimator(object):
     """Background estimation with on and off phases.
@@ -16,28 +19,26 @@ class PhaseBackgroundEstimator(object):
 
     For a usage example see future notebook.
 
-    TODO : The phase interval is assumed to be between 0 and 1.
-    TODO : It supports only one ON-phase zone and one OFF-phase zone.
-    TODO : In case one phase zone is between 0.9 and 0.1 (for example), it won't understand it.
+    TODO: The phase interval has to be between 0 and 1.
+    Cases like [-0.1, 0.1], for example, are still not supported.
 
     Parameters
     ----------
     on_region : `~regions.CircleSkyRegion`
-        Target region
+        Target region in the sky
     obs_list : `~gammapy.data.ObservationList`
         Observations to process
-    on_phase : `~tuple`
-        on-phase-zone defined by a tuple of the two edges of the interval
-    off_phase : `~tuple`
-        off-phase-zone defined by a tuple of the two edges of the interval
+    on_phase : `tuple` or list of tuples
+        on-phase defined by the two edges of each interval (edges are excluded)
+    off_phase : `tuple` or list of tuples
+        off-phase defined by the two edges of each interval (edges are excluded)
     """
 
     def __init__(self, on_region, on_phase, off_phase, obs_list):
         self.on_region = on_region
         self.obs_list = obs_list
-        self.on_phase = on_phase
-        self.off_phase = off_phase
-
+        self.on_phase = np.atleast_2d(on_phase)
+        self.off_phase = np.atleast_2d(off_phase)
         self.result = None
 
     def __str__(self):
@@ -64,15 +65,34 @@ class PhaseBackgroundEstimator(object):
         mask = (tuple_phase_zone[0] < p) & (p < tuple_phase_zone[1])
         return events.select_row_subset(mask)
 
+    @staticmethod
+    def _check_phase_intervals(list_phase_interval):
+        """Split phase intervals that go beyond phase 1"""
+        for phase_interval in list_phase_interval:
+            if phase_interval[0] > phase_interval[1]:
+                list_phase_interval.remove(phase_interval)
+                list_phase_interval.append([phase_interval[0], 1])
+                list_phase_interval.append([0, phase_interval[1]])
+        return list_phase_interval
+
     def process(self, obs):
         """Estimate background for one observation."""
         all_events = obs.events.select_circular_region(self.on_region)
 
-        on_events = self.filter_events(all_events, self.on_phase)
-        off_events = self.filter_events(all_events, self.off_phase)
+        self.on_phase = self._check_phase_intervals(self.on_phase)
+        self.off_phase = self._check_phase_intervals(self.off_phase)
 
-        a_on = self.on_phase[1] - self.on_phase[0]
-        a_off = self.off_phase[1] - self.off_phase[0]
+        # Loop over all ON- and OFF- phase intervals to filter the ON- and OFF- events
+        list_on_events = [self.filter_events(all_events, each_on_phase) for each_on_phase in self.on_phase]
+        list_off_events = [self.filter_events(all_events, each_off_phase) for each_off_phase in self.off_phase]
+
+        # Loop over all ON- and OFF- phase intervals to compute the normalization factors a_on and a_off
+        a_on = np.fromiter((each_on_phase[1] - each_on_phase[0] for each_on_phase in self.on_phase), np.float).sum()
+        a_off = np.fromiter((each_off_phase[1] - each_off_phase[0] for each_off_phase in self.off_phase), np.float).sum()
+
+        on_events = EventList.stack(list_on_events)
+        off_events = EventList.stack(list_off_events)
+
         return BackgroundEstimate(
             on_region=self.on_region,
             on_events=on_events,
