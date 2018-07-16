@@ -649,26 +649,13 @@ class EventList(EventListBase):
         plt.tight_layout()
 
     def plot_image_radec(self, ax=None, number_bins=50):
-        """Plot a sky  counts image in RADEC coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
+        """Plot a sky counts image in RA/DEC coordinates.
         """
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         from matplotlib.colors import PowerNorm
 
         ax = plt.gca() if ax is None else ax
-
-        # max_x = max(self.table['RA'])
-        # min_x = min(self.table['RA'])
-        # max_y = max(self.table['DEC'])
-        # min_y = min(self.table['DEC'])
-        #
-        # x_edges = np.linspace(min_x, max_x, number_bins)
-        # y_edges = np.linspace(min_y, max_y, number_bins)
 
         count_image, x_edges, y_edges = np.histogram2d(
             self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
@@ -678,7 +665,8 @@ class EventList(EventListBase):
         ax.set_xlabel('RA')
         ax.set_ylabel('DEC')
 
-        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value, '+', ms=20, mew=3, color='white')
+        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value,
+                '+', ms=20, mew=3, color='white')
 
         im = ax.imshow(count_image, interpolation='nearest', origin='low',
                        extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
@@ -692,12 +680,7 @@ class EventList(EventListBase):
         plt.colorbar(im, cax=cax)
 
     def plot_image(self, ax=None, number_bins=50):
-        """Plot the counts as a function of x and y camera coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
+        """Plot a counts image in field of view coordinates.
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
@@ -796,19 +779,6 @@ class EventListDataset(object):
     def __init__(self, event_list, gti=None):
         self.event_list = event_list
         self.gti = gti
-
-    @classmethod
-    def from_hdu_list(cls, hdu_list):
-        """Create `EventList` from a `~astropy.io.fits.HDUList`."""
-        # TODO: This doesn't work because FITS / Table is not integrated.
-        # Maybe the easiest solution for now it to write the hdu_list
-        # to an in-memory buffer with StringIO and then read it
-        # back using Table.read()?
-        raise NotImplementedError
-        event_list = EventList.from_hdu(hdu_list['EVENTS'])
-        gti = GTI.from_hdu(hdu_list['GTI'])
-
-        return cls(event_list=event_list, gti=gti)
 
     @classmethod
     def read(cls, filename):
