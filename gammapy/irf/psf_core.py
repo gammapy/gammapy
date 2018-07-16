@@ -25,7 +25,6 @@ from ..image.models.gauss import Gauss2DPDF, MultiGauss2D
 __all__ = [
     'GaussPSF',
     'HESSMultiGaussPSF',
-    'SherpaMultiGaussPSF',
     'multi_gauss_psf_kernel',
 ]
 
@@ -43,89 +42,6 @@ class GaussPSF(Gauss2DPDF):
         d['ampl'] = binsz ** 2 * self.norm
         d['fwhm'] = gaussian_sigma_to_fwhm / binsz * self.sigma
         return {'psf1': d}
-
-
-class SherpaMultiGaussPSF(object):
-    """Multi-Gauss PSF as represented in the Sherpa software.
-
-    Note that Sherpa uses the following function
-    f(x,y) = f(r) = A exp[-f(r/F)^2]
-    f = 2.7725887 = 4log2 relates the full-width
-    at half-maximum F to the Gaussian sigma
-    """
-
-    def __init__(self, source):
-        if isinstance(source, dict):
-            # Assume source is a dict with correct format
-            self.pars = source
-            # elif isinstance(source, HESS):
-            # Get pars dict by from HESS object
-            # self.pars = source.to_sherpa()
-        elif isinstance(source, six.string_types):
-            # Assume it is a JSON filename
-            fh = open(source)
-            self.pars = json.load(fh)
-            fh.close()
-        else:
-            raise ValueError('Unknown source: {}'.format(source))
-
-    def __str__(self):
-        return json.dumps(self.pars, sort_keys=True, indent=4)
-
-    def center_psf(self):
-        """Set ``xpos`` and ``ypos`` of the PSF to the dataspace center."""
-        import sherpa.astro.ui as sau
-        try:
-            ny, nx = sau.get_data().shape
-            for _ in ['psf1', 'psf2', 'psf3']:
-                par = sau.get_par(_ + '.xpos')
-                par.val = nx / 2.
-
-                par = sau.get_par(_ + '.ypos')
-                par.val = ny / 2.
-        except:
-            raise Exception('PSF is not centered.')
-
-    def set(self):
-        """Set the PSF for Sherpa."""
-        import sherpa.astro.ui as sau
-        from ..scripts.image_fit import read_json
-        read_json(self.pars, sau.set_model)
-        sau.load_psf('psf', sau.get_model())
-        self.center_psf()
-        sau.set_psf('psf')
-
-    def evaluate(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
-        """Hand-coded evaluate for debugging."""
-        f = 4 * np.log(2)
-        psf1 = ampl1 * np.exp(-f * t ** 2 / fwhm1 ** 2)
-        psf2 = ampl2 * np.exp(-f * t ** 2 / fwhm2 ** 2)
-        psf3 = ampl3 * np.exp(-f * t ** 2 / fwhm3 ** 2)
-        return psf1 + psf2 + psf3
-
-    def containment_fraction(self, theta, npix=1000):
-        """Compute fraction of PSF contained inside theta."""
-        import sherpa.astro.ui as sau
-        sau.dataspace2d((npix, npix))
-        self.set()
-        # x_center = get_psf().kernel.pars.xpos
-        # y_center = get_psf().kernel.pars.ypos
-        x_center, y_center = sau.get_psf().model.center
-        x_center, y_center = x_center + 0.5, y_center + 0.5  # shift seen on image.
-        x, y = sau.get_data().x0, sau.get_data().x1
-        # Note: Here we have to use the source image, before I used
-        # get_model_image(), which returns the PSF-convolved PSF image,
-        # which is a factor of sqrt(2) ~ 1.4 too wide!!!
-        p = sau.get_source_image().y.flatten()
-        p /= np.nansum(p)
-        mask = (x - x_center) ** 2 + (y - y_center) ** 2 < theta ** 2
-        fraction = np.nansum(p[mask])
-        if 0:  # debug
-            sau.get_data().y = p
-            sau.save_data('psf_sherpa.fits', clobber=True)
-            sau.get_data().y = mask.astype('int')
-            sau.save_data('mask_sherpa.fits', clobber=True)
-        return fraction
 
 
 class HESSMultiGaussPSF(object):
