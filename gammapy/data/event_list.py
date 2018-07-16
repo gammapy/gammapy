@@ -730,36 +730,15 @@ class EventListLAT(EventListBase):
     >>> events = EventListLAT.read(filename)
     """
 
-    def plot_image(self, center, size):
-        """A quick look function to generate a count skymap with all the photons
-        within a certain square (rectangle).
-
-        Fermi-LAT eventlist could encompass large fraction of the sky,
-        this way we can restirct the skymap to a squared (rectangular)
-        region of interest (ROI)
-
-        We evaluate the number of pixel of the skymap such that we have a
-        bin size 0.1 deg, this is what is suggested by default in fermipy
-        http://fermipy.readthedocs.io/en/latest/config.html
-
-        Parameters
-        -----------
-        center : `~astropy.coordinates.SkyCoord`
-            Sky circle center
-        size : `~astropy.coordinates.Quantity`
-            size of the square defining our ROI
-        """
-        from ..image import SkyImage
-        binsz = Quantity(0.1, 'deg')
-        nxpix = int(size[0] / binsz)
-        nypix = int(size[1] / binsz)
-        counts_image = SkyImage.empty(
-            nxpix=nxpix, nypix=nypix, binsz=binsz.value,
-            xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
-            coordsys='CEL', proj='TAN',
+    def plot_image(self):
+        """Quick look counts map sky plot."""
+        from ..maps import WcsNDMap
+        m = WcsNDMap.create(
+            npix=(360, 180), binsz=1.0, proj='AIT', coordsys='GAL',
         )
-        counts_image.fill_events(self)
-        counts_image.show()
+        coord = self.radec
+        m.fill_by_coord(coord)
+        m.plot(stretch='sqrt')
 
 
 class EventListDataset(object):

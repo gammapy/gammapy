@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
-from astropy.coordinates import Angle, SkyCoord
 import pytest
-from regions import CircleSkyRegion
+from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency, requires_data
-from ...data import EventList, EventListDataset, EventListDatasetChecker
-from ...datasets import gammapy_extra
+from ...data import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
 
 
 @requires_data('gammapy-extra')
@@ -49,15 +47,19 @@ class TestEventListHESS:
 class TestEventListFermi:
     def setup(self):
         filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
-        self.events = EventList.read(filename)
+        self.events = EventListLAT.read(filename)
 
     def test_basics(self):
         assert 'EventList' in str(self.events)
 
+    @requires_dependency('matplotlib')
+    def test_plot_image(self):
+        self.events.plot_image()
+
 
 @requires_data('gammapy-extra')
 def test_EventListDataset():
-    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
+    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
     dset = EventListDataset.read(filename)
     assert 'Event list dataset info' in str(dset)
 
@@ -69,7 +71,7 @@ def test_EventListDataset():
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_EventListDatasetChecker():
-    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
+    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
     dset = EventListDataset.read(filename)
     checker = EventListDatasetChecker(dset)
     checker.run('all')
