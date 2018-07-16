@@ -8,4 +8,3 @@ from .gammacat import *
 from .registry import *
 from .snrcat import *
 from .utils import *
-from .xmatch import *
