@@ -187,10 +187,6 @@ def compute_total_stats(counts, exposure, background=None,
     -------
     result : dict
         Dictionary of total stats (for now, see the code for which entries it has).
-
-    See also
-    --------
-    gammapy.image.profile.FluxProfile.compute
     """
     counts = np.asanyarray(counts)
     exposure = np.asanyarray(exposure)
