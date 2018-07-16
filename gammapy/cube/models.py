@@ -46,7 +46,18 @@ class SourceLibrary(object):
 
     @classmethod
     def read(cls, filename):
-        """Read SourceLibrary from XML file"""
+        """Read SourceLibrary from XML file
+
+        The XML definition of some models is uncompatible with the models
+        currently implemented in gammapy. Therefore the following modifications
+        happen to the XML model definition
+
+        * PowerLaw: The spectral index is negative in XML but positive in
+          gammapy. Parameter limits are ignored
+
+        * ExponentialCutoffPowerLaw: The cutoff energy is transferred to
+          lambda = 1 / cutof energy on read
+        """
         path = make_path(filename)
         xml = path.read_text()
         return cls.from_xml(xml)

@@ -220,16 +220,16 @@ def xml_to_model(xml, which):
         # one to the gammapy model definition
         if type_ == 'PowerLaw':
             model.parameters['index'].value *= -1
-            model.parameters['index'].parmin *= -1
-            model.parameters['index'].parmax *= -1
+            model.parameters['index'].parmin = None
+            model.parameters['index'].parmax = None
         if type_ == 'ExponentialCutoffPowerLaw':
             model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
             model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
-            model.parameters['lambda_'].parmin = 1 / model.parameters['lambda_'].parmin
-            model.parameters['lambda_'].parmax = 1 / model.parameters['lambda_'].parmax
+            model.parameters['lambda_'].parmin = None
+            model.parameters['lambda_'].parmax = None
             model.parameters['index'].value *= -1
-            model.parameters['index'].parmin *= -1
-            model.parameters['index'].parmax *= -1
+            model.parameters['index'].parmin = None
+            model.parameters['index'].parmax = None
     return model
 
 
