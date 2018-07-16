@@ -10,34 +10,44 @@ __all__ = [
 ]
 
 # HESS publication: 2006A&A...457..899A
-hess_pl = {'amplitude': 3.45e-11 * u.Unit('1 / (cm2 s TeV)'),
-           'index': 2.63,
-           'reference': 1 * u.TeV}
+hess_pl = {
+    'amplitude': 3.45e-11 * u.Unit('1 / (cm2 s TeV)'),
+    'index': 2.63,
+    'reference': 1 * u.TeV,
+}
 
-hess_ecpl = {'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
-             'index': 2.39,
-             'lambda_': 1 / (14.3 * u.TeV),
-             'reference': 1 * u.TeV}
+hess_ecpl = {
+    'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
+    'index': 2.39,
+    'lambda_': 1 / (14.3 * u.TeV),
+    'reference': 1 * u.TeV,
+}
 
 # HEGRA publication : 2004ApJ...614..897A
-hegra = {'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
-         'index': 2.62,
-         'reference': 1 * u.TeV}
+hegra = {
+    'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
+    'index': 2.62,
+    'reference': 1 * u.TeV,
+}
 
 # MAGIC publication: 2015JHEAp...5...30A
 # note that in the paper the beta of the LogParabola is given as negative in  
 # Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
 # Also MAGIC uses log10 in the LogParabola expression, gammapy uses ln, hence
 # the conversion factor
-magic_lp ={'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
-		   'alpha': 2.47,
-		   'beta': 0.24 / np.log(10),
-		   'reference': 1 * u.TeV}
+magic_lp = {
+    'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
+    'alpha': 2.47,
+    'beta': 0.24 / np.log(10),
+    'reference': 1 * u.TeV,
+}
 
-magic_ecpl = {'amplitude': 3.80e-11 * u.Unit('1 / (cm2 s TeV)'),
-             'index': 2.21,
-             'lambda_': 1 / (6. * u.TeV),
-             'reference': 1 * u.TeV}
+magic_ecpl = {
+    'amplitude': 3.80e-11 * u.Unit('1 / (cm2 s TeV)'),
+    'index': 2.21,
+    'lambda_': 1 / (6. * u.TeV),
+    'reference': 1 * u.TeV,
+}
 
 
 class MeyerCrabModel(SpectralModel):

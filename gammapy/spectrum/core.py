@@ -7,7 +7,6 @@ import logging
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
-from .. import version
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis

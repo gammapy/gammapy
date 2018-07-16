@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
 import numpy as np
-from regions import CircleSkyRegion
 import astropy.units as u
+from regions import CircleSkyRegion
 from . import PHACountsSpectrum
 from . import SpectrumObservation, SpectrumObservationList
 from ..utils.scripts import make_path
@@ -157,7 +156,7 @@ class SpectrumExtraction(object):
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
             offset=offset,
-            livetime = obs.observation_live_time_duration,
+            livetime=obs.observation_live_time_duration,
             obs_id=obs.obs_info['OBS_ID'])
 
         self._off_vector = self._on_vector.copy()
