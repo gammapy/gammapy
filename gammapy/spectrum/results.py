@@ -401,8 +401,6 @@ class SpectrumResult(object):
         ax1 : `~matplotlib.axes.Axes`
             Residuals plot axis
         """
-        import matplotlib.pyplot as plt
-
         ax0, ax1 = get_plot_axis(**fig_kwargs)
         ax0.set_yscale('log')
 

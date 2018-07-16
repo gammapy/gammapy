@@ -128,28 +128,6 @@ The function returns a dictionary, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
 
 
-Iterative source detection
-==========================
-
-In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection.
-It takes as arguments count, background and exposure FITS images (in separate files, unlike previous tool)
-and a list of ``--scales`` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
-
-It implements the following algorithm:
-
-1. Compute significance images on multiple scales (disk-correlate)
-2. Largest peak on any scale gives a seed position / extension (the scale)
-3. Fit a 2D Gauss-model source using the seed parameters
-4. Add the source to a list of detected sources and the background model
-5. Restart at step 1, but this time with detected sources added to the background model, i.e. significance images will be "residual significance" images.
-
-Usage example:
-
-.. code-block:: bash
-
-    $ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
-    $ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
-
 
 Reference/API
 =============
