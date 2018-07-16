@@ -5,10 +5,8 @@ from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
-from ..irf import EffectiveAreaTable2D, EffectiveAreaTable
-from ..irf import EnergyDispersion2D
-from ..irf import EnergyDependentMultiGaussPSF
-from ..background import FOVCube
+from ..irf import EffectiveAreaTable2D, EffectiveAreaTable, Background3D
+from ..irf import EnergyDispersion2D, EnergyDependentMultiGaussPSF
 
 __all__ = [
     'CTAIrf',
@@ -46,7 +44,7 @@ class CTAIrf(object):
         Energy dispersion
     psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
         Point spread function
-    bkg : `~gammapy.background.FOVCube`
+    bkg : `~gammapy.irf.Background3D`
         Background rate
     ref_sensi : `~gammapy.irf.SensitivityTable`
         Reference Sensitivity
@@ -72,13 +70,7 @@ class CTAIrf(object):
         hdu_list = fits.open(filename)
 
         aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
-
-        # TODO: fix `FOVCube.read`, then use it directly here.
-        table = hdu_list['BACKGROUND']
-        table.columns.change_name(str('BGD'), str('BKG'))
-        table.header['TUNIT7'] = '1 / (MeV s sr)'
-        bkg = FOVCube.from_fits_table(table, scheme='bg_cube')
-
+        bkg = Background3D.read(filename, hdu='BACKGROUND')
         edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
