@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .test_period import simulate_test_data, fap_astropy
+import pytest
+from ...utils.testing import requires_dependency
 from ..period import robust_periodogram
 from ..plot_periodogram import plot_periodogram
-from ...utils.testing import requires_dependency
+from .test_period import simulate_test_data, fap_astropy
+
+pytest.importorskip('astropy', '3.0')
 
 
 @requires_dependency('scipy')

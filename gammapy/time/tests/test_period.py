@@ -7,6 +7,8 @@ from astropy.stats import LombScargle
 from ..period import robust_periodogram
 from ...utils.testing import requires_dependency
 
+pytest.importorskip('astropy', '3.0')
+
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     """
