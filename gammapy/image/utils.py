@@ -10,7 +10,6 @@ from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
 
 __all__ = [
-    'block_reduce_hdu',
     'image_groupby',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
@@ -259,47 +258,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     header.update(pars)
 
     return header
-
-
-def block_reduce_hdu(input_hdu, block_size, func, cval=0):
-    """Provides block reduce functionality for image HDUs.
-
-    See http://scikit-image.org/docs/dev/api/skimage.measure.html#skimage.measure.block_reduce
-
-    Parameters
-    ----------
-    image_hdu : `~astropy.io.fits.ImageHDU`
-        Original image HDU, unscaled
-    block_size : `~numpy.ndarray`
-        Array containing down-sampling integer factor along each axis.
-    func : callable
-        Function object which is used to calculate the return value for each local block.
-        This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
-    cval : float, optional
-        Constant padding value if image is not perfectly divisible by the block size. Default 0.
-
-    Returns
-    -------
-    image_hdu : `~astropy.io.fits.ImageHDU`
-        Rebinned Image HDU
-    """
-    from skimage.measure import block_reduce
-
-    header = input_hdu.header.copy()
-    data = input_hdu.data
-    # Define new header values for new resolution
-    header['CDELT1'] = header['CDELT1'] * block_size[0]
-    header['CDELT2'] = header['CDELT2'] * block_size[1]
-    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) / block_size[0]) + 0.5
-    header['CRPIX2'] = ((header['CRPIX2'] - 0.5) / block_size[1]) + 0.5
-    if len(input_hdu.data.shape) == 3:
-        block_size = (1, block_size[1], block_size[0])
-    elif len(input_hdu.data.shape) == 2:
-        block_size = (block_size[1], block_size[0])
-    data_reduced = block_reduce(data, block_size, func, cval)
-    # Put rebinned data into a fitsHDU
-    rebinned_image = fits.ImageHDU(data=data_reduced, header=header)
-    return rebinned_image
 
 
 def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
