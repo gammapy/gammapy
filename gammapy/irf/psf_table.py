@@ -544,7 +544,7 @@ class EnergyDependentTablePSF(object):
         return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
     def table_psf_at_energy(self, energy, interp_kwargs=None, **kwargs):
-        """Evaluate the `EnergyOffsetArray` at one given energy.
+        """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
@@ -555,12 +555,11 @@ class EnergyDependentTablePSF(object):
 
         Returns
         -------
-        table : `~astropy.table.Table`
-            Table with two columns: offset, value
+        psf : `~gammapy.irf.TablePSF`
+            Table PSF
         """
         psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
-        table_psf = TablePSF(self.rad, psf_value, **kwargs)
-        return table_psf
+        return TablePSF(self.rad, psf_value, **kwargs)
 
     def kernels(self, cube, rad_max, **kwargs):
         """
