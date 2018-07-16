@@ -27,8 +27,8 @@ def test_complex():
     pars1 = model1.parameters
     assert pars1['index'].value == 2.1
     assert pars1['index'].unit == ''
-    assert pars1['index'].parmax == 1.0
-    assert pars1['index'].parmin == 5.0
+    assert pars1['index'].parmax == None
+    assert pars1['index'].parmin == None
     assert pars1['index'].frozen == False
 
     assert pars1['lon_0'].value == 0.5
@@ -51,12 +51,12 @@ def test_complex():
     assert pars2['sigma'].unit == 'deg'
     assert pars2['lambda_'].value == 0.01
     assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].parmin == 100
-    assert pars2['lambda_'].parmax == 0.001
+    assert pars2['lambda_'].parmin == None
+    assert pars2['lambda_'].parmax == None
     assert pars2['index'].value == 2.2
     assert pars2['index'].unit == ''
-    assert pars2['index'].parmax == 1.0
-    assert pars2['index'].parmin == 5.0
+    assert pars2['index'].parmax == None
+    assert pars2['index'].parmin == None
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)
