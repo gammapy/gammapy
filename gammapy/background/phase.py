@@ -8,6 +8,7 @@ __all__ = [
     'PhaseBackgroundEstimator',
 ]
 
+
 class PhaseBackgroundEstimator(object):
     """Background estimation with on and off phases.
 
@@ -18,19 +19,19 @@ class PhaseBackgroundEstimator(object):
 
     For a usage example see future notebook.
 
-    TODO : The phase interval is assumed to be between 0 and 1.
-    TODO : In case one phase zone is between 0.9 and 0.1 (for example), it won't understand it.
+    TODO: The phase interval has to be between 0 and 1.
+    Cases like [-0.1, 0.1], for example, are still not supported.
 
     Parameters
     ----------
     on_region : `~regions.CircleSkyRegion`
-        Target region
+        Target region in the sky
     obs_list : `~gammapy.data.ObservationList`
         Observations to process
     on_phase : `tuple` or list of tuples
-        on-phase-zone defined by a list of tuples of the two edges of the intervals
+        on-phase defined by the two edges of each interval (edges are excluded)
     off_phase : `tuple` or list of tuples
-        off-phase-zone defined by a list of tuples of the two edges of the intervals
+        off-phase defined by the two edges of each interval (edges are excluded)
     """
 
     def __init__(self, on_region, on_phase, off_phase, obs_list):
@@ -65,7 +66,8 @@ class PhaseBackgroundEstimator(object):
         return events.select_row_subset(mask)
 
     @staticmethod
-    def _check_phase_interval(list_phase_interval):
+    def _check_phase_intervals(list_phase_interval):
+        """Split phase intervals that go beyond phase 1"""
         for phase_interval in list_phase_interval:
             if phase_interval[0] > phase_interval[1]:
                 list_phase_interval.remove(phase_interval)
@@ -75,11 +77,10 @@ class PhaseBackgroundEstimator(object):
 
     def process(self, obs):
         """Estimate background for one observation."""
-
         all_events = obs.events.select_circular_region(self.on_region)
 
-        self.on_phase = self._check_phase_interval(self.on_phase)
-        self.off_phase = self._check_phase_interval(self.off_phase)
+        self.on_phase = self._check_phase_intervals(self.on_phase)
+        self.off_phase = self._check_phase_intervals(self.off_phase)
 
         # Loop over all ON- and OFF- phase intervals to filter the ON- and OFF- events
         list_on_events = [self.filter_events(all_events, each_on_phase) for each_on_phase in self.on_phase]
@@ -101,5 +102,3 @@ class PhaseBackgroundEstimator(object):
             a_off=a_off,
             method='Phase Bkg Estimator',
         )
-
-
