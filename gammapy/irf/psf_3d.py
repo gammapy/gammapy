@@ -166,7 +166,7 @@ class PSF3D(object):
 
     def evaluate(self, energy=None, offset=None, rad=None,
                  interp_kwargs=None):
-        """Interpolate the value of the `EnergyOffsetArray` at a given offset and energy.
+        """Interpolate PSF value at a given offset and energy.
 
         Parameters
         ----------
@@ -240,7 +240,7 @@ class PSF3D(object):
         )
 
     def to_table_psf(self, energy, theta='0 deg', interp_kwargs=None, **kwargs):
-        """Evaluate the `EnergyOffsetArray` at one given energy.
+        """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
@@ -253,16 +253,14 @@ class PSF3D(object):
 
         Returns
         -------
-        table : `~astropy.table.Table`
-            Table with two columns: offset, value
+        psf : `~gammapy.irf.TablePSF`
+            Table PSF
         """
         energy = Quantity(energy)
         theta = Angle(theta)
         psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
         rad = self._rad_center()
-        table_psf = TablePSF(rad, psf_value, **kwargs)
-
-        return table_psf
+        return TablePSF(rad, psf_value, **kwargs)
 
     def containment_radius(self, energy, theta='0 deg', fraction=0.68, interp_kwargs=None):
         """Containment radius.
