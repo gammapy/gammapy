@@ -15,6 +15,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 class HDULocation(object):
     """HDU localisation and loading.
 
@@ -98,8 +99,8 @@ class HDULocation(object):
             from ..irf import PSFKing
             return PSFKing.read(filename, hdu=hdu_name)
         elif hdu_class == 'bkg_2d':
-            from ..background import EnergyOffsetArray
-            return EnergyOffsetArray.read(filename, hdu=hdu_name, data_name='bkg')
+            from ..irf import Background2D
+            return Background2D.read(filename, hdu=hdu_name, data_name='bkg')
         elif hdu_class == 'bkg_3d':
             from ..irf import Background3D
             return Background3D.read(filename, hdu=hdu_name)
