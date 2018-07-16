@@ -4,6 +4,5 @@ from .energy_offset_array import *
 from .background_estimate import *
 from .fov_cube import *
 from .ring import *
-from .models import *
 from .reflected import *
 from .phase import *
