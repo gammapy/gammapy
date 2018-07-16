@@ -262,25 +262,6 @@ class SourceCatalog(object):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.table)
 
-    def select_image_region(self, image):
-        """
-        Select all source within an image
-
-        Parameters
-        ----------
-        image : `~gammapy.image.SkyImage`
-            Sky image
-
-        Returns
-        -------
-        catalog : `SourceCatalog`
-            Source catalog selection.
-        """
-        catalog = self.copy()
-        selection = image.contains(self.positions)
-        catalog.table = catalog.table[selection]
-        return catalog
-
     def copy(self):
         """Copy catalog"""
         return deepcopy(self)
