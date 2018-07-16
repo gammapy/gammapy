@@ -2,7 +2,6 @@
 """
 Gammapy command line interface (scripts).
 """
-from .cube_background import *
 from .spectrum_pipe import *
 from .cta_irf import *
 from .cta_utils import *
