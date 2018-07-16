@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.stats.lombscargle._statistics import false_alarm_probability
+from astropy.stats import LombScargle
 from ..period import robust_periodogram
 from ...utils.testing import requires_dependency
 
@@ -89,19 +89,24 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     fap : `dict`
         false alarm probability dictionary (see description above).
     """
+    ls = LombScargle(t, y, dy, normalization='standard')
+    maximum_frequency = freq.max()
+
+    def _calc_fap(method, **kwargs):
+        return ls.false_alarm_probability(power.max(), maximum_frequency=maximum_frequency, method=method, **kwargs)
+
     fap = {}
 
     if 'single' in method:
-        fap['single'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'single')
+        fap['single'] = _calc_fap('single')
     if 'naive' in method:
-        fap['naive'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'naive')
+        fap['naive'] = _calc_fap('naive')
     if 'davies' in method:
-        fap['davies'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'davies')
+        fap['davies'] = _calc_fap('davies')
     if 'baluev' in method:
-        fap['baluev'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard', 'baluev')
+        fap['baluev'] = _calc_fap('baluev')
     if 'bootstrap' in method:
-        fap['bootstrap'] = false_alarm_probability(power.max(), freq.max(), t, y, dy, 'standard',
-                                                   'bootstrap', dict(n_bootstraps=100, random_seed=42))
+        fap['bootstrap'] = _calc_fap('bootstrap', method_kwds=dict(n_bootstraps=100, random_seed=42))
 
     return fap
 
