@@ -4,7 +4,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-
 from astropy.coordinates import Angle
 
 __all__ = [

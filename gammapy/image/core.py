@@ -15,9 +15,9 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.convolution import Tophat2DKernel
 from astropy import units as u
 from astropy.nddata.utils import Cutout2D
-from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
+from regions import PixCoord, PixelRegion, SkyRegion
 from ..utils.fits import SmartHDUList, fits_header_to_meta_dict
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
