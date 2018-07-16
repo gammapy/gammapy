@@ -1,6 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Measure image properties.
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
@@ -85,11 +83,6 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
         table.add_column(Column(data=mean, name=tag + '_MEAN'))
 
     return table
-
-
-def _wrapped_coordinates(image):
-    coords = image.coordinates()
-    return coords.data.lon.wrap_at('180d'), coords.data.lat
 
 
 def measure_image_moments(image):
@@ -231,6 +224,11 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     for radius in radii:
         containment.append(measure_containment(image, position, radius))
     return radii, Quantity(containment)
+
+
+def _wrapped_coordinates(image):
+    coords = image.coordinates()
+    return coords.data.lon.wrap_at('180d'), coords.data.lat
 
 
 def _split_xys(pos):
