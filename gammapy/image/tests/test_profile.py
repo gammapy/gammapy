@@ -10,6 +10,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, mpl_savefig_check
 from ...image import SkyImage
 from ..profile import compute_binning, ImageProfile, ImageProfileEstimator
+from ..profile import radial_profile, radial_profile_label_image
 
 
 @requires_dependency('pandas')
@@ -124,3 +125,18 @@ class TestImageProfile(object):
     def test_peek(self):
         self.profile.peek()
         mpl_savefig_check()
+
+
+@requires_dependency('scipy')
+def test_radial_profile():
+    image = SkyImage.empty()
+    image.data.fill(1)
+    center = image.center
+    radius = Angle([0.1, 0.2, 0.4, 0.5, 1.0], 'deg')
+
+    labels = radial_profile_label_image(image, center, radius)
+    assert labels.data.max() == 5
+
+    profile = radial_profile(image, center, radius)
+    assert len(profile) == 4
+    assert_allclose(profile['MEAN'], 1)
