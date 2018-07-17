@@ -4,26 +4,23 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
+from ...irf import EnergyDependentTablePSF
 from ...image import SkyImage, SkyImageList
-from ...datasets import FermiGalacticCenter
 from ..kernel import KernelBackgroundEstimator
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestKernelBackgroundEstimator(object):
-    def setup_class(self):
-        """Prepares appropriate input and defines inputs for test cases.
-        """
+    def setup(self):
         source_kernel = np.ones((1, 3))
         background_kernel = np.ones((5, 3))
-
-        # Loads prepared inputs into estimator
         self.kbe = KernelBackgroundEstimator(
             kernel_src=source_kernel,
             kernel_bkg=background_kernel,
             significance_threshold=4,
-            mask_dilation_radius=1 * u.deg
+            mask_dilation_radius='1 deg',
+            keep_record=True,
         )
 
     def _images_point(self):
@@ -41,7 +38,8 @@ class TestKernelBackgroundEstimator(object):
         # Initial counts required by one of the tests.
         images = self._images_point()
 
-        psf = FermiGalacticCenter.psf()
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
+        psf = EnergyDependentTablePSF.read(filename)
         erange = [10, 500] * u.GeV
         psf = psf.table_psf_in_energy_band(erange)
         rad_max = psf.containment_radius(0.99)
@@ -88,3 +86,4 @@ class TestKernelBackgroundEstimator(object):
 
         assert_allclose(mask.sum(), 89)
         assert_allclose(background, 42 * np.ones((10, 10)))
+        assert len(self.kbe.images_stack) == 4
