@@ -6,9 +6,13 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
-from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL,
-                                PLSuperExpCutoff3FGL)
+from ...spectrum.models import (
+    PowerLaw,
+    LogParabola,
+    ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff3FGL,
+)
+from .. import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
 
 SOURCES_3FGL = [
     dict(
