@@ -4,8 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
+from ...irf import EnergyDependentTablePSF
 from ...image import SkyImage, SkyImageList
-from ...datasets import FermiGalacticCenter
 from ..kernel import KernelBackgroundEstimator
 
 
@@ -41,7 +41,8 @@ class TestKernelBackgroundEstimator(object):
         # Initial counts required by one of the tests.
         images = self._images_point()
 
-        psf = FermiGalacticCenter.psf()
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
+        psf = EnergyDependentTablePSF.read(filename)
         erange = [10, 500] * u.GeV
         psf = psf.table_psf_in_energy_band(erange)
         rad_max = psf.containment_radius(0.99)
