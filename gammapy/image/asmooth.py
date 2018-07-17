@@ -8,7 +8,6 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from ..stats import significance
-from ..maps import WcsNDMap
 from .utils import scale_cube
 
 __all__ = ['ASmooth']
@@ -109,6 +108,8 @@ class ASmooth(object):
                 * 'scales'
                 * 'significance'.
         """
+        from ..maps import WcsNDMap
+
         pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
 
