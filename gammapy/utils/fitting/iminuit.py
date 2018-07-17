@@ -85,4 +85,7 @@ def make_minuit_kwargs(parameters):
             if err != '0':
                 kwargs['error_{}'.format(par.name)] = err
 
+        # TODO: Check if we need 0.5 or 1
+        kwargs['errordef'] = 1
+
     return kwargs
