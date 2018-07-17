@@ -99,8 +99,6 @@ Functions that return more than a single value shouldn't return a list
 or dictionary of values but rather a Python Bunch result object. A Bunch
 is similar to a dict, except that it allows attribute access to the result
 values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
-An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyImageList`
-class.
 
 .. _dev-python2and3:
 
