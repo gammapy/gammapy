@@ -4,10 +4,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import warnings
-from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils.data import download_file
 from astropy.utils import lazyproperty
 from .core import gammapy_extra
 from ..data import EventList
@@ -22,29 +20,7 @@ __all__ = [
     'FermiLATDataset',
     'FermiGalacticCenter',
     'FermiVelaRegion',
-    'fetch_fermi_diffuse_background_model',
-    'load_lat_psf_performance',
 ]
-
-
-def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
-    """Fetch Fermi diffuse background model.
-
-    Parameters
-    ----------
-    filename : str
-        Diffuse model file name
-
-    Returns
-    -------
-    filename : str
-        Full local path name
-    """
-    BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/'
-
-    url = BASE_URL + filename
-    filename = download_file(url, cache=True)
-    return filename
 
 
 class FermiGalacticCenter(object):
@@ -190,51 +166,6 @@ class FermiVelaRegion(object):
         """Livetime cube (`~astropy.io.fits.HDUList`)."""
         filename = FermiVelaRegion.filenames()['livetime_cube']
         return fits.open(filename)
-
-
-def load_lat_psf_performance(performance_file):
-    """Loads Fermi-LAT TOTAL PSF performance data.
-
-    These points are extracted by hand from:
-
-    * `PSF_P7REP_SOURCE_V15 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/p7rep_v15/lat_Performance_files/cPsfEnergy_P7REP_SOURCE_V15.png>`_
-    * `PSF_P7SOURCEV6 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/pass7v6/lat_Performance_files/cPsfEnergy_P7SOURCE_V6.png>`_
-
-    As such, a 10% error in the values should be assumed.
-
-    Parameters
-    ----------
-    performance_file : str
-        Specify which PSF performance file to return.
-
-        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment
-        * ``P7REP_SOURCE_V15_95`` P7REP_SOURCE_V15, 95% containment
-        * ``P7SOURCEV6_68`` P7SOURCEV6, 68% containment
-        * ``P7SOURCEV6_95`` P7SOURCEV6, 95% containment
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-        Table of psf size (deg) for selected containment radius and IRF at
-        energies (MeV).
-    """
-    filename = gammapy_extra.filename('test_datasets/unbundled/fermi//fermi_irf_data.fits')
-    hdus = fits.open(filename)
-
-    perf_files = OrderedDict()
-    perf_files['P7REP_SOURCE_V15_68'] = hdus[1]
-    perf_files['P7REP_SOURCE_V15_95'] = hdus[4]
-    perf_files['P7SOURCEV6_68'] = hdus[3]
-    perf_files['P7SOURCEV6_95'] = hdus[2]
-    hdu = perf_files[performance_file]
-    table = Table(hdu.data)
-    table.rename_column('col1', 'energy')
-    table.rename_column('col2', 'containment_angle')
-
-    table['energy'].unit = 'MeV'
-    table['containment_angle'].unit = 'deg'
-
-    return table
 
 
 class FermiLATDataset(object):
