@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy.convolution import Gaussian2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import TSImageEstimator
+from ...utils.scripts import make_path
 from ...image import SkyImageList
+from ...detect import TSImageEstimator, compute_ts_image_multiscale
 
 
 @requires_dependency('scipy')
@@ -35,3 +37,32 @@ def test_compute_ts_map():
     assert_allclose(1.0227934338735763e-09, result['flux'].data[99, 99], rtol=1e-3)
     assert_allclose(3.842162268386843e-11, result['flux_err'].data[99, 99], rtol=1e-3)
     assert_allclose(1.0996355030292762e-09, result['flux_ul'].data[99, 99], rtol=1e-3)
+
+
+@requires_dependency('scipy')
+@requires_dependency('skimage')
+@requires_data('gammapy-extra')
+@pytest.mark.parametrize('scale', ['0.000', '0.050', '0.100', '0.200'])
+def test_compute_ts_image_multiscale(tmpdir, scale):
+    path = make_path('$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image')
+    images_in = SkyImageList.read(path / 'input_all.fits.gz')
+
+    psf_parameters = {
+        "psf1": {"fwhm": 7.0644601350928475, "ampl": 1},
+        "psf2": {"fwhm": 1e-05, "ampl": 0},
+        "psf3": {"fwhm": 1e-05, "ampl": 0},
+    }
+
+    images_out = compute_ts_image_multiscale(
+        images_in, psf_parameters, [float(scale)],
+    )
+    # Function returns a Python list of `SkyImageList`. TODO: simplify
+    images_out = images_out[0]
+
+    images_ref = SkyImageList.read(path / 'expected_ts_{}.fits.gz'.format(scale))
+
+    opts = dict(rtol=1e-2, atol=1e-5, equal_nan=True)
+    assert_allclose(images_out['ts'].data, images_ref['ts'].data, **opts)
+    assert_allclose(images_out['sqrt_ts'].data, images_ref['sqrt_ts'].data, **opts)
+    assert_allclose(images_out['flux'].data, images_ref['amplitude'].data, **opts)
+    assert 'niter' in images_out.names
