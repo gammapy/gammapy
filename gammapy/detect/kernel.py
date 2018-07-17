@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import logging
 import numpy as np
 import astropy.units as u
@@ -42,11 +41,6 @@ class KernelBackgroundEstimator(object):
     delete_intermediate_results : bool
         Specify whether results of intermediate iterations should be deleted.
         (Otherwise, these are held in memory). Default True.
-    save_intermediate_results : bool
-        Specify whether to save intermediate results as FITS files to disk.
-        Default False.
-    base_dir : str (optional)
-        Base of filenames if save_intermediate_results = True. Default 'temp'.
 
     See Also
     --------
@@ -56,14 +50,13 @@ class KernelBackgroundEstimator(object):
 
     def __init__(self, kernel_src, kernel_bkg,
                  significance_threshold=5, mask_dilation_radius=0.02 * u.deg,
-                 delete_intermediate_results=False,
-                 save_intermediate_results=False, base_dir='temp'):
+                 delete_intermediate_results=False):
 
-        self.parameters = OrderedDict(significance_threshold=significance_threshold,
-                                      mask_dilation_radius=mask_dilation_radius,
-                                      save_intermediate_results=save_intermediate_results,
-                                      delete_intermediate_results=delete_intermediate_results,
-                                      base_dir=base_dir)
+        self.parameters = {
+            'significance_threshold': significance_threshold,
+            'mask_dilation_radius': mask_dilation_radius,
+            'delete_intermediate_results': delete_intermediate_results,
+        }
 
         self.kernel_src = kernel_src
         self.kernel_bkg = kernel_bkg
@@ -115,9 +108,6 @@ class KernelBackgroundEstimator(object):
                 self.images_stack = [result]
             else:
                 self.images_stack += [result_previous, result]
-
-            if p['save_intermediate_results']:
-                result.write(p['base_dir'] + 'ibe_iteration_{}.fits')
 
             if self._is_converged(result, result_previous) and (idx >= niter_min):
                 log.info('Exclusion mask succesfully converged,'
