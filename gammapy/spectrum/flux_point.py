@@ -601,6 +601,8 @@ class FluxPointEstimator(object):
         self.model = model
         self.flux_points = None
 
+        self._fit = None
+
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
         s += str(self.obs) + '\n'
@@ -645,7 +647,10 @@ class FluxPointEstimator(object):
     @staticmethod
     def compute_approx_model(global_model, energy_group):
         """
-        Compute approximate model, to be used in the energy bin.
+        Compute approximate model
+        
+        This is the model used for the fit in one energy bin.
+
         TODO: At the moment just the global model with fixed parameters is
         returned
         """
@@ -757,35 +762,35 @@ class FluxPointEstimator(object):
         from .fit import SpectrumFit
 
         # Set quality bins to only bins in energy_group
-        quality = np.zeros(len(self.obs.on_vector.quality),dtype=int)
-#        quality = self.obs.on_vector.quality
-        for bin in range(len(self.obs.on_vector.quality)):
-            if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (energy_group.bin_type != 'normal'):
-                self.obs.on_vector.quality[bin] = 1
+        quality = np.zeros(self.obs.e_reco.nbins, dtype=int)
+        quality[0:energy_group.bin_idx_min] =  1
+        quality[energy_group.bin_idx_max + 1:] = 1
         self.obs.on_vector.quality = quality
 
-        # Set reference and remove min amplitude
+        # Set reference to bin center
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
-        fit = SpectrumFit(self.obs, model)
+        self._fit = SpectrumFit(self.obs, model)
 
         log.debug(
-            'Calling Sherpa fit for flux point '
-            ' in energy range:\n{}'.format(fit)
+            'Calling SpectrumFit for flux point '
+            ' in energy range:\n{}'.format(self._fit)
         )
 
-        fit.fit()
-        fit.est_errors()
+        self._fit.fit()
+        self._fit.est_errors()
 
         # compute TS value for all observations
-        stat_best_fit = np.sum([res.statval for res in fit.result])
+        stat_best_fit = np.sum([res.statval for res in self._fit.result])
 
-        dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
+        dnde, dnde_err = self._fit.result[0].model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(self._fit, stat_best_fit=stat_best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
-        dnde_errp = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
+        dnde_ul = self.compute_flux_point_ul(self._fit, stat_best_fit=stat_best_fit)
+        dnde_errp = self.compute_flux_point_ul(
+            self._fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(
+            self._fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
