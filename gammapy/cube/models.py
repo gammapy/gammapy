@@ -380,7 +380,9 @@ class SkyModelMapEvaluator(object):
 
     def apply_edisp(self, npred):
         """Convolve npred cube with edisp"""
-        return np.dot(npred.data, self.edisp.pdf_matrix)
+        a = np.rollaxis(npred, 0, 3)
+        npred1 = np.dot(a, self.edisp.pdf_matrix)
+        return np.rollaxis(npred1, 2, 0)
 
     def compute_npred(self):
         """Evaluate model predicted counts.
@@ -389,14 +391,9 @@ class SkyModelMapEvaluator(object):
         npred = self.apply_aeff(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
-
-        # Here `npred` is still a `Map`, from the next line on
-        # we only use Numpy arrays. No geom needed.
-        # TODO: discuss and decide whether we need to make map
-        # objects in `apply_aeff` and `apply_psf`.
+        # TODO: discuss and decide whether we need to make map objects in `apply_aeff` and `apply_psf`.
         if self.edisp is not None:
-            npred = self.apply_edisp(npred.data)
+            npred.data = self.apply_edisp(npred.data)
         if self.background:
-            npred += self.background.data
-
+            npred.data += self.background.data
         return npred.data

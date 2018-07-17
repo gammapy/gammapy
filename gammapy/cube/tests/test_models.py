@@ -62,8 +62,8 @@ def psf(geom):
 
 
 @pytest.fixture()
-def evaluator(sky_model, exposure, background, psf, edisp):
-    return SkyModelMapEvaluator(sky_model, exposure, background, psf, edisp)
+def evaluator(sky_model, exposure, background, edisp):
+    return SkyModelMapEvaluator(sky_model, exposure, background, edisp=edisp)
 
 
 class TestSourceLibrary:
@@ -195,11 +195,10 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_apply_edisp(evaluator):
         flux = evaluator.compute_flux()
-        npred = Map.from_geom(evaluator.geom, unit='')
-        npred.data = flux.value
+        npred = flux.value
         out = evaluator.apply_edisp(npred)
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.value.mean(), 1.828206748668197e-14)
+        assert_allclose(out.mean(), 1.828206748668197e-14)
 
     @staticmethod
     def test_compute_npred(evaluator):
