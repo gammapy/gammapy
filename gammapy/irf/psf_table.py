@@ -7,6 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution.utils import discretize_oversample_2D
 from ..image.models.gauss import Gauss2DPDF
+from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 
@@ -494,6 +495,7 @@ class EnergyDependentTablePSF(object):
         filename : str
             File name
         """
+        filename = str(make_path(filename))
         with fits.open(filename, memmap=False) as hdulist:
             psf = cls.from_fits(hdulist)
 
