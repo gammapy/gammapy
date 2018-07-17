@@ -7,7 +7,7 @@ from ...image import SkyImageList, SkyImage
 class TestSkyImageList:
     @staticmethod
     def assert_hdu_list_roundtrips(images, check_wcs=True):
-        images2 = SkyImageList.from_hdu_list(images.to_hdu_list())
+        images2 = SkyImageList.from_hdulist(images.to_hdu_list())
         SkyImageList.assert_allclose(images, images2, check_wcs=check_wcs)
         return images2
 

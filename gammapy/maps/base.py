@@ -89,8 +89,8 @@ class Map(object):
         """Map geometry (`~gammapy.maps.MapGeom`)"""
         return self._geom
 
-    @classmethod
-    def create(cls, **kwargs):
+    @staticmethod
+    def create(**kwargs):
         """Create an empty map object.
 
         This method accepts generic options
@@ -136,8 +136,8 @@ class Map(object):
         else:
             raise ValueError('Unrecognized map type: {}'.format(map_type))
 
-    @classmethod
-    def read(cls, filename, hdu=None, hdu_bands=None, map_type='auto'):
+    @staticmethod
+    def read(filename, hdu=None, hdu_bands=None, map_type='auto'):
         """Read a map from a FITS file.
 
         Parameters
@@ -164,12 +164,10 @@ class Map(object):
         """
         filename = str(make_path(filename))
         with fits.open(filename, memmap=False) as hdulist:
-            map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
-        return map_out
-
-    @classmethod
-    def from_geom(cls, geom, meta=None, map_type='auto', unit=''):
+    @staticmethod
+    def from_geom(geom, meta=None, map_type='auto', unit=''):
         """Generate an empty map from a `~Geom` instance.
 
         Parameters
@@ -206,17 +204,15 @@ class Map(object):
             else:
                 raise ValueError('Unrecognized geom type.')
 
-        cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out(geom, meta=meta, unit=unit)
-        return map_out
+        cls_out = Map._get_map_cls(map_type)
+        return cls_out(geom, meta=meta, unit=unit)
 
-    @classmethod
-    def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+    @staticmethod
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):
         if map_type == 'auto':
-            map_type = cls._get_map_type(hdulist, hdu)
-        cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
-        return map_out
+            map_type = Map._get_map_type(hdulist, hdu)
+        cls_out = Map._get_map_cls(map_type)
+        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
 
     @staticmethod
     def _get_meta_from_header(header):

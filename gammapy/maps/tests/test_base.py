@@ -128,7 +128,7 @@ def test_map_meta_read_write(map_type):
 
     assert header['META'] == '{"user": "test"}'
 
-    m2 = Map.from_hdu_list(hdulist)
+    m2 = Map.from_hdulist(hdulist)
     assert m2.meta == meta
 
 
@@ -162,7 +162,7 @@ def test_map_unit_read_write(map_type, unit):
 
     assert Unit(header['UNIT']) == Unit(unit)
 
-    m2 = Map.from_hdu_list(hdu_list)
+    m2 = Map.from_hdulist(hdu_list)
     assert m2.unit == unit
 
 
