@@ -244,9 +244,6 @@ class SmartHDUList(object):
     >>> hdus.get_hdu(2)  # by index
     >>> hdus.get_hdu(hdu_type='image')  # first image (skip primary if empty)
     >>> hdus.get_hdu(hdu_type='table')  # first table
-
-    TODO: add more conveniences, e.g. to create HDU lists from lists of Gammapy
-    objects that can be serialised to FITS (e.g. SkyImage, SkyCube, EventList, ...)
     """
 
     def __init__(self, hdu_list):
