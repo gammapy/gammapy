@@ -12,18 +12,15 @@ from ..kernel import KernelBackgroundEstimator
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestKernelBackgroundEstimator(object):
-    def setup_class(self):
-        """Prepares appropriate input and defines inputs for test cases.
-        """
+    def setup(self):
         source_kernel = np.ones((1, 3))
         background_kernel = np.ones((5, 3))
-
-        # Loads prepared inputs into estimator
         self.kbe = KernelBackgroundEstimator(
             kernel_src=source_kernel,
             kernel_bkg=background_kernel,
             significance_threshold=4,
-            mask_dilation_radius=1 * u.deg
+            mask_dilation_radius='1 deg',
+            keep_record=True,
         )
 
     def _images_point(self):
@@ -89,3 +86,4 @@ class TestKernelBackgroundEstimator(object):
 
         assert_allclose(mask.sum(), 89)
         assert_allclose(background, 42 * np.ones((10, 10)))
+        assert len(self.kbe.images_stack) == 4

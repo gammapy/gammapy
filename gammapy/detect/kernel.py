@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-import astropy.units as u
+from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel, CustomKernel
 from ..image import SkyImage, SkyImageList
 from .lima import compute_lima_image
@@ -36,11 +36,11 @@ class KernelBackgroundEstimator(object):
         Background convolution kernel as a numpy array.
     significance_threshold : float
         Significance threshold above which regions are excluded.
-    mask_dilation_radius : `~astropy.units.Quantity`
+    mask_dilation_radius : `~astropy.coordinates.Angle`
         Radius by which mask is dilated with each iteration.
-    delete_intermediate_results : bool
-        Specify whether results of intermediate iterations should be deleted.
-        (Otherwise, these are held in memory). Default True.
+    keep_record : bool
+        Keep record of intermediate results while the algorithm runs?
+        Default False.
 
     See Also
     --------
@@ -49,13 +49,13 @@ class KernelBackgroundEstimator(object):
     """
 
     def __init__(self, kernel_src, kernel_bkg,
-                 significance_threshold=5, mask_dilation_radius=0.02 * u.deg,
-                 delete_intermediate_results=False):
+                 significance_threshold=5, mask_dilation_radius='0.02 deg',
+                 keep_record=False):
 
         self.parameters = {
             'significance_threshold': significance_threshold,
-            'mask_dilation_radius': mask_dilation_radius,
-            'delete_intermediate_results': delete_intermediate_results,
+            'mask_dilation_radius': Angle(mask_dilation_radius),
+            'keep_record': keep_record,
         }
 
         self.kernel_src = kernel_src
@@ -101,35 +101,52 @@ class KernelBackgroundEstimator(object):
         self.images_stack.append(images)
 
         for idx in range(niter_max):
-            result_previous = self.images_stack.pop()
-            result = self._run_iteration(result_previous)
+            result = self._run_iteration(images)
 
-            if p['delete_intermediate_results']:
-                self.images_stack = [result]
-            else:
-                self.images_stack += [result_previous, result]
+            if p['keep_record']:
+                self.images_stack.append(result)
 
-            if self._is_converged(result, result_previous) and (idx >= niter_min):
+            if self._is_converged(result, images) and (idx >= niter_min):
                 log.info('Exclusion mask succesfully converged,'
                          ' after {} iterations.'.format(idx))
                 break
 
         return result
 
-    def _is_converged(self, result, result_previous):
-        """Check convergence.
+    def _run_iteration(self, images):
+        """Run one iteration.
 
-        Criterion: exclusion masks unchanged in subsequent iterations.
+        Parameters
+        ----------
+        images : `gammapy.image.SkyImageList`
+            Input sky images
         """
-        from scipy.ndimage.morphology import binary_fill_holes
-        mask = result['exclusion'].data == result_previous['exclusion'].data
+        images.check_required(['counts', 'exclusion', 'background'])
 
-        # Because of pixel to pixel noise, the masks can still differ.
-        # This is handled by removing structures of the scale of one pixel
-        mask = binary_fill_holes(mask)
-        return np.all(mask)
+        significance = self._estimate_significance(images['counts'], images['background'])
+        exclusion = self._estimate_exclusion(images['counts'], significance)
+        background = self._estimate_background(images['counts'], exclusion)
 
-    # TODO: make more flexible, e.g. allow using adaptive ring etc.
+        return SkyImageList([images['counts'], background, exclusion, significance])
+
+    def _estimate_significance(self, counts, background):
+        kernel = CustomKernel(self.kernel_src)
+        images_lima = compute_lima_image(counts.to_wcs_nd_map(), background.to_wcs_nd_map(), kernel=kernel)
+        return SkyImage.from_wcs_nd_map(images_lima['significance'])
+
+    def _estimate_exclusion(self, counts, significance):
+        from scipy.ndimage import binary_erosion
+        wcs = counts.wcs.copy()
+        p = self.parameters
+        radius = p['mask_dilation_radius'].to('deg').value
+        scale = counts.wcs_pixel_scale()[0].value
+        mask_dilation_radius_pix = radius / scale
+        structure = np.array(Tophat2DKernel(mask_dilation_radius_pix))
+
+        mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
+        mask = binary_erosion(mask, structure, border_value=1)
+        return SkyImage(name='exclusion', data=mask.astype('float'), wcs=wcs)
+
     def _estimate_background(self, counts, exclusion):
         """
         Estimate background by convolving the excluded counts image with
@@ -143,35 +160,16 @@ class KernelBackgroundEstimator(object):
         norm = exclusion.convolve(self.kernel_bkg, mode='constant')
         return SkyImage(name='background', data=data.data / norm.data, wcs=wcs)
 
-    # TODO: make more flexible, e.g. allow using TS images tec.
-    def _estimate_significance(self, counts, background):
-        kernel = CustomKernel(self.kernel_src)
-        images_lima = compute_lima_image(counts.to_wcs_nd_map(), background.to_wcs_nd_map(), kernel=kernel)
-        return SkyImage.from_wcs_nd_map(images_lima['significance'])
+    @staticmethod
+    def _is_converged(result, result_previous):
+        """Check convergence.
 
-    def _run_iteration(self, images):
-        """Run one iteration.
-
-        Parameters
-        ----------
-        images : `gammapy.image.SkyImageList`
-            Input sky images
+        Criterion: exclusion masks unchanged in subsequent iterations.
         """
-        from scipy.ndimage import binary_erosion
-        images.check_required(['counts', 'exclusion', 'background'])
-        wcs = images['counts'].wcs.copy()
-        p = self.parameters
+        from scipy.ndimage.morphology import binary_fill_holes
+        mask = result['exclusion'].data == result_previous['exclusion'].data
 
-        significance = self._estimate_significance(images['counts'], images['background'])
-
-        # update exclusion mask
-        radius = p['mask_dilation_radius'].to('deg')
-        scale = images['counts'].wcs_pixel_scale()[0]
-        structure = np.array(Tophat2DKernel((radius / scale).value))
-
-        mask = (significance.data < p['significance_threshold']) | np.isnan(significance)
-        mask = binary_erosion(mask, structure, border_value=1)
-        exclusion = SkyImage(name='exclusion', data=mask.astype('float'), wcs=wcs)
-
-        background = self._estimate_background(images['counts'], exclusion)
-        return SkyImageList([images['counts'], background, exclusion, significance])
+        # Because of pixel to pixel noise, the masks can still differ.
+        # This is handled by removing structures of the scale of one pixel
+        mask = binary_fill_holes(mask)
+        return np.all(mask)
