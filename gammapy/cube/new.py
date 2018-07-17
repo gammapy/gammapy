@@ -7,7 +7,7 @@ from astropy.nddata import Cutout2D
 from astropy.nddata.utils import PartialOverlapError
 from ..irf import Background3D
 from ..maps import WcsNDMap, WcsGeom, Map
-from .basic_cube import fill_map_counts
+from .counts import fill_map_counts
 
 __all__ = [
     'make_separation_map',
