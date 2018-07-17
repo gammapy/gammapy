@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
+from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
@@ -40,7 +41,7 @@ def sky_model():
 
 @pytest.fixture(scope='session')
 def geom():
-    axis = MapAxis.from_edges(np.logspace(-1., 1., 3), unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1., 1., 3), name="energy", unit=u.TeV)
     return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(2, 2),
                           coordsys='GAL', axes=[axis])
 
@@ -67,6 +68,10 @@ def background(geom):
     m.quantity = np.ones(m.data.shape)*1e-5
     return m
 
+@pytest.fixture(scope='session')
+def edisp(geom):
+    e_true = geom.get_axis_by_name('energy').edges
+    return EnergyDispersion.from_diagonal_matrix(e_true=e_true)
 
 @pytest.fixture(scope='session')
 def psf(geom):
@@ -81,10 +86,11 @@ def psf(geom):
 
 
 @pytest.fixture(scope='session')
-def counts(sky_model, exposure, psf):
+def counts(sky_model, exposure, psf, edisp):
     evaluator = SkyModelMapEvaluator(sky_model=sky_model,
                                      exposure=exposure,
-                                     psf=psf)
+                                     psf=psf,
+                                     edisp=edisp)
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)
 
@@ -92,7 +98,7 @@ def counts(sky_model, exposure, psf):
 @requires_dependency('scipy')
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
-def test_cube_fit(sky_model, counts, exposure, psf, background):
+def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     input_model = sky_model.copy()
 
     input_model.parameters['lon_0'].value = 0.5
@@ -110,7 +116,8 @@ def test_cube_fit(sky_model, counts, exposure, psf, background):
                          counts=counts,
                          exposure=exposure,
                          psf=psf,
-                         background=background)
+                         background=background,
+                         edisp=edisp)
     fit.fit()
 
     assert_quantity_allclose(fit.model.parameters['index'].quantity,

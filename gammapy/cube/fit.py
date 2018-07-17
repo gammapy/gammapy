@@ -26,6 +26,8 @@ class SkyModelMapFit(object):
         Exposure cube
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
+    psf : `~gammapy.cube.PSFKernel`
+        PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     """

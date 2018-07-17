@@ -61,9 +61,9 @@ def psf(geom):
     return PSFKernel.from_gauss(geom, sigma)
 
 
-@pytest.fixture()
-def evaluator(sky_model, exposure, background, edisp):
-    return SkyModelMapEvaluator(sky_model, exposure, background, edisp=edisp)
+@pytest.fixture(scope='session')
+def evaluator(sky_model, exposure, background, psf, edisp):
+    return SkyModelMapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
 
 
 class TestSourceLibrary:
@@ -183,20 +183,19 @@ class TestSkyModelMapEvaluator:
         assert out.unit == 'cm-2 s-1'
         assert_allclose(out.value.mean(), 1.828206748668197e-14)
 
-    """
+
     @staticmethod
     def test_apply_psf(evaluator):
         flux = evaluator.compute_flux()
-        out = evaluator.apply_psf(evaluator, flux)
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.value.mean(), 1.828206748668197e-14)
-    """
+        npred = evaluator.apply_aeff(flux)
+        out = evaluator.apply_psf(npred)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.mean(), 1.2574065e-08)
 
     @staticmethod
     def test_apply_edisp(evaluator):
         flux = evaluator.compute_flux()
-        npred = flux.value
-        out = evaluator.apply_edisp(npred)
+        out = evaluator.apply_edisp(flux.value)
         assert out.shape == (2, 4, 5)
         assert_allclose(out.mean(), 1.828206748668197e-14)
 
@@ -204,4 +203,4 @@ class TestSkyModelMapEvaluator:
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 47.312826994672788e-07)
+        assert_allclose(out.sum(), 45.02963e-07)
