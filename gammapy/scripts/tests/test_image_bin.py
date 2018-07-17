@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, run_cli
-from ...image import SkyImage
+from ...maps import Map
+from ...utils.testing import assert_wcs_allclose
 from ..main import cli
 
 
@@ -16,6 +18,7 @@ def test_bin_image_main(tmpdir):
     args = ['image', 'bin', event_file, reference_file, out_file]
     run_cli(cli, args)
 
-    actual = SkyImage.read(out_file)
-    expected = SkyImage.read(reference_file)
-    SkyImage.assert_allclose(actual, expected)
+    actual = Map.read(out_file)
+    expected = Map.read(reference_file)
+    assert_allclose(actual.data, expected.data)
+    assert_wcs_allclose(actual.geom.wcs, expected.geom.wcs)

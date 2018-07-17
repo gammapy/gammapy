@@ -2,9 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
-import numpy as np
 from ..data import EventList
-from ..image import SkyImage
+from ..maps import Map
+from ..cube import fill_map_counts
 
 log = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ def cli_image_bin(event_file, reference_file, out_file, overwrite):
     events = EventList.read(event_file)
 
     log.info('Reading {}'.format(reference_file))
-    image = SkyImage.read(reference_file)
+    m_ref = Map.read(reference_file)
 
-    image.data = np.zeros_like(image.data, dtype='int32')
-    image.fill_events(events)
+    counts_map = Map.from_geom(m_ref.geom)
+    fill_map_counts(counts_map, events)
 
     log.info('Writing {}'.format(out_file))
-    image.write(out_file, overwrite=overwrite)
+    counts_map.write(out_file, overwrite=overwrite)
