@@ -26,6 +26,17 @@ class TestEnergyDispersion:
             bias=self.bias,
         )
 
+    def test_from_diagonal_matrix(self):
+        e_true = [1, 3, 7, 10] * u.TeV
+        edisp = EnergyDispersion.from_diagonal_matrix(e_true)
+
+        assert edisp.pdf_matrix.shape == (3, 3)
+        assert_equal(edisp.pdf_matrix[0][0], 0)
+        assert_equal(edisp.pdf_matrix[2][0], 1)
+
+        assert edisp.e_reco.bins.unit == 'TeV'
+        assert_allclose(edisp.e_reco.bins.value, e_true.value)
+
     def test_str(self):
         assert 'EnergyDispersion' in str(self.edisp)
 
@@ -94,6 +105,9 @@ class TestEnergyDispersion2D:
         sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
         bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
         self.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
+
+    def test_str(self):
+        assert 'EnergyDispersion2D' in str(self.edisp)
 
     def test_evaluation(self):
         # TODO: Move to tests for NDDataArray
@@ -165,7 +179,7 @@ class TestEnergyDispersion2D:
         mpl_savefig_check()
 
     @requires_dependency('matplotlib')
-    def test_plot_migration(self):
+    def test_plot_bias(self):
         self.edisp.plot_bias()
         mpl_savefig_check()
 
