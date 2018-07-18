@@ -83,8 +83,7 @@ class SkyModelMapFit(object):
         self.model.parameters = parameters
         self.compute_npred()
         self.compute_stat()
-        total_stat = np.sum(self.stat, dtype=np.float64)
-        return total_stat
+        return np.sum(self.stat, dtype=np.float64)
 
     def fit(self):
         """Run the fit"""
