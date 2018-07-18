@@ -11,7 +11,7 @@ __all__ = [
     'make_map_counts',
     'make_map_exposure_true_energy',
     'make_map_background_irf',
-    'make_map_fov_background',
+    'make_map_background_fov',
     'MapMaker',
 ]
 
@@ -216,7 +216,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
     return WcsNDMap(ref_geom, data=data)
 
 
-def make_map_fov_background(acceptance_map, counts_map, exclusion_mask):
+def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
     """Build Normalized background map from a given acceptance map and count map.
 
     This operation is normally performed on single observation maps.
@@ -356,7 +356,7 @@ class MapMaker(object):
             obs.bkg, cutout_geom, self.offset_max,
         )
 
-        background_obs_map = make_map_fov_background(
+        background_obs_map = make_map_background_fov(
             acceptance_obs_map, count_obs_map, exclusion_mask_cutout,
         )
 
