@@ -165,7 +165,7 @@ class TestEnergyDispersion2D:
         mpl_savefig_check()
 
     @requires_dependency('matplotlib')
-    def test_plot_migration(self):
+    def test_plot_bias(self):
         self.edisp.plot_bias()
         mpl_savefig_check()
 
