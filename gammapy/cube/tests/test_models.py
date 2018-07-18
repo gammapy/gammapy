@@ -187,7 +187,7 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_apply_psf(evaluator):
         flux = evaluator.compute_flux()
-        npred = evaluator.apply_aeff(flux)
+        npred = evaluator.apply_exposure(flux)
         out = evaluator.apply_psf(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.mean(), 1.2574065e-08)

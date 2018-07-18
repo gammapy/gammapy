@@ -10,7 +10,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis
-from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance, MapMaker
+from ..new import make_map_separation, make_map_exposure_true_energy, make_map_background_irf, MapMaker
 from ...data import DataStore
 
 pytest.importorskip('scipy')
@@ -43,7 +43,7 @@ def test_separation_map():
                           binsz=0.1, coordsys='GAL', proj='CAR',
                           axes=[MapAxis.from_edges([0, 2, 3])])
     position = SkyCoord(1, 0, unit='deg', frame='galactic').icrs
-    m = make_separation_map(geom, position)
+    m = make_map_separation(geom, position)
 
     assert m.unit == 'deg'
     assert m.data.shape == (10, 10)
@@ -51,7 +51,7 @@ def test_separation_map():
 
     # Make sure it also works for 2D maps as input
     geom = m.geom.to_image()
-    m = make_separation_map(geom, position)
+    m = make_map_separation(geom, position)
     assert m.unit == 'deg'
     assert m.data.shape == (10, 10)
     assert_allclose(m.data[0, 0], 0.7106291438079875)
@@ -78,7 +78,7 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     livetime = Quantity(1581.17, 's')
     offset_max = Angle(2.2, 'deg')
 
-    m = make_map_hadron_acceptance(
+    m = make_map_background_irf(
         pointing, livetime, bkg_3d, counts_cube.geom, offset_max,
     )
 

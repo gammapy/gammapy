@@ -375,7 +375,7 @@ class SkyModelMapEvaluator(object):
         flux = dnde * volume
         return flux.to('cm-2 s-1')
 
-    def apply_aeff(self, flux):
+    def apply_exposure(self, flux):
         """Compute npred cube
 
         For now just divide flux cube by exposure
@@ -399,7 +399,7 @@ class SkyModelMapEvaluator(object):
         """Evaluate model predicted counts.
         """
         flux = self.compute_flux()
-        npred = self.apply_aeff(flux)
+        npred = self.apply_exposure(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
         # TODO: discuss and decide whether we need to make map objects in `apply_aeff` and `apply_psf`.

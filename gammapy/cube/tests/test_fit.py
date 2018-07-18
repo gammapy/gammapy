@@ -55,23 +55,28 @@ def exposure(geom):
     livetime = 1 * u.hour
     offset_max = 3 * u.deg
 
-    exposure_map = make_map_exposure_true_energy(pointing=pointing,
-                                                 livetime=livetime,
-                                                 aeff=aeff,
-                                                 ref_geom=geom,
-                                                 offset_max=offset_max)
+    exposure_map = make_map_exposure_true_energy(
+        pointing=pointing,
+        livetime=livetime,
+        aeff=aeff,
+        ref_geom=geom,
+        offset_max=offset_max,
+    )
     return exposure_map
+
 
 @pytest.fixture(scope='session')
 def background(geom):
     m = Map.from_geom(geom)
-    m.quantity = np.ones(m.data.shape)*1e-5
+    m.quantity = np.ones(m.data.shape) * 1e-5
     return m
+
 
 @pytest.fixture(scope='session')
 def edisp(geom):
     e_true = geom.get_axis_by_name('energy').edges
     return EnergyDispersion.from_diagonal_matrix(e_true=e_true)
+
 
 @pytest.fixture(scope='session')
 def psf(geom):
@@ -87,10 +92,12 @@ def psf(geom):
 
 @pytest.fixture(scope='session')
 def counts(sky_model, exposure, psf, edisp):
-    evaluator = SkyModelMapEvaluator(sky_model=sky_model,
-                                     exposure=exposure,
-                                     psf=psf,
-                                     edisp=edisp)
+    evaluator = SkyModelMapEvaluator(
+        sky_model=sky_model,
+        exposure=exposure,
+        psf=psf,
+        edisp=edisp,
+    )
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)
 
@@ -112,12 +119,14 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
         'amplitude': '1e-12 cm-2 s-1 TeV-1',
     })
 
-    fit = SkyModelMapFit(model=input_model,
-                         counts=counts,
-                         exposure=exposure,
-                         psf=psf,
-                         background=background,
-                         edisp=edisp)
+    fit = SkyModelMapFit(
+        model=input_model,
+        counts=counts,
+        exposure=exposure,
+        psf=psf,
+        background=background,
+        edisp=edisp,
+    )
     fit.fit()
 
     assert_quantity_allclose(fit.model.parameters['index'].quantity,
@@ -133,4 +142,3 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     stat = np.sum(fit.stat, dtype='float64')
     stat_expected = 3840.0605649268496
     assert_allclose(stat, stat_expected, rtol=1e-2)
-

@@ -1,25 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
-from astropy.nddata import Cutout2D
+from astropy.coordinates import Angle
 from astropy.nddata.utils import PartialOverlapError
-from ..irf import Background3D
-from ..maps import WcsNDMap, WcsGeom, Map
+from ..maps import WcsNDMap, Map
 from .counts import fill_map_counts
 
 __all__ = [
-    'make_separation_map',
+    'make_map_separation',
     'make_map_counts',
     'make_map_exposure_true_energy',
-    'make_map_hadron_acceptance',
-    'make_map_fov_background',
+    'make_map_background_irf',
+    'make_map_background_fov',
     'MapMaker',
 ]
 
+log = logging.getLogger(__name__)
 
-def make_separation_map(geom, position):
+
+def make_map_separation(geom, position):
     """Compute distance of pixels to a given position for the input reference WCSGeom.
 
     Result is returned as a 2D WcsNDmap
@@ -59,6 +59,8 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
         Event list
     ref_geom : `~gammapy.maps.WcsGeom`
         Reference WcsGeom object used to define geometry (space - energy)
+    pointing : `~astropy.coordinates.SkyCoord`
+        Pointing direction
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
     
@@ -71,7 +73,7 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     fill_map_counts(count_map, events)
 
     # Compute and apply FOV offset mask
-    offset = make_separation_map(ref_geom, pointing).quantity
+    offset = make_map_separation(ref_geom, pointing).quantity
     offset_mask = offset >= offset_max
     count_map.data[:, offset_mask] = 0
 
@@ -99,7 +101,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     expmap : `~gammapy.maps.WcsNDMap`
         Exposure cube (3D) in true energy bins
     """
-    offset = make_separation_map(ref_geom, pointing).quantity
+    offset = make_map_separation(ref_geom, pointing).quantity
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
@@ -159,15 +161,8 @@ def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref
     raise NotImplementedError
 
 
-def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
-    """Compute hadron acceptance cube i.e.  background predicted counts.
-
-    This function evaluates the background rate model on
-    a WcsNDMap, and then multiplies with the cube bin size,
-    computed via ???, resulting
-    in a cube with values that contain predicted background
-    counts per bin. 
-    The output cube is - obviously - in reco energy.
+def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
+    """Compute background map from background IRFs.
 
     TODO: Call a method on bkg that returns integral over energy bin directly
     Related: https://github.com/gammapy/gammapy/pull/1342
@@ -219,7 +214,7 @@ def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
     return WcsNDMap(ref_geom, data=data)
 
 
-def make_map_fov_background(acceptance_map, counts_map, exclusion_mask):
+def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
     """Build Normalized background map from a given acceptance map and count map.
 
     This operation is normally performed on single observation maps.
@@ -242,8 +237,6 @@ def make_map_fov_background(acceptance_map, counts_map, exclusion_mask):
     norm_bkg_map : `~gammapy.maps.WcsNDMap`
         Normalized background
     """
-    # TODO: Here we should test that WcsGeom are consistent
-
     # We resize the mask
     mask = np.resize(np.squeeze(exclusion_mask.data), acceptance_map.data.shape)
 
@@ -259,36 +252,6 @@ def make_map_fov_background(acceptance_map, counts_map, exclusion_mask):
     norm_bkg = norm_factor * acceptance_map.data.T
 
     return WcsNDMap(acceptance_map.geom, data=norm_bkg.T)
-
-
-def make_map_ring_background(ring_estimator, acceptance_map, counts_map, exclusion_mask):
-    """Estimate background map using rings.
-
-    Build normalized background map from a given acceptance map and count map using
-    the ring background technique.
-    This operation is performed on single observation maps.
-    An exclusion map is used to avoid using regions with significant gamma-ray emission.
-    All maps are assumed to follow the same WcsGeom.
-
-    Note that the RingBackgroundEstimator class has to be adapted to support WcsNDMaps.
-
-    Parameters
-    ----------
-    ring_estimator: `~gammapy.background.AdaptiveRingBackgroundEstimator` or `RingBackgroundEstimator`
-        Ring background estimator object
-    acceptance_map : `~gammapy.maps.WcsNDMap`
-        Hadron acceptance map (i.e. predicted background map)
-    counts_map : `~gammapy.maps.WcsNDMap`
-        Counts map
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
-
-    Returns
-    -------
-    norm_bkg_map : `~gammapy.maps.WcsNDMap`
-         the normalized background
-    """
-    raise NotImplementedError
 
 
 class MapMaker(object):
@@ -340,7 +303,7 @@ class MapMaker(object):
             )
         except PartialOverlapError:
             # TODO: can we silently do the right thing here? Discuss
-            print("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
+            log.info("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
             return
 
         cutout_geom = exclusion_mask_cutout.geom
@@ -354,12 +317,12 @@ class MapMaker(object):
             obs.aeff, cutout_geom, self.offset_max,
         )
 
-        acceptance_obs_map = make_map_hadron_acceptance(
+        acceptance_obs_map = make_map_background_irf(
             obs.pointing_radec, obs.observation_live_time_duration,
             obs.bkg, cutout_geom, self.offset_max,
         )
 
-        background_obs_map = make_map_fov_background(
+        background_obs_map = make_map_background_fov(
             acceptance_obs_map, count_obs_map, exclusion_mask_cutout,
         )
 
