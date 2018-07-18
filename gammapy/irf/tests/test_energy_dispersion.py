@@ -37,7 +37,6 @@ class TestEnergyDispersion:
         assert edisp.e_reco.bins.unit == 'TeV'
         assert_allclose(edisp.e_reco.bins.value, e_true.value)
 
-
     def test_str(self):
         assert 'EnergyDispersion' in str(self.edisp)
 
@@ -106,6 +105,9 @@ class TestEnergyDispersion2D:
         sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
         bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
         self.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
+
+    def test_str(self):
+        assert 'EnergyDispersion2D' in str(self.edisp)
 
     def test_evaluation(self):
         # TODO: Move to tests for NDDataArray
