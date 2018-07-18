@@ -165,6 +165,32 @@ class EnergyDispersion(object):
         return edisp.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
 
     @classmethod
+    def from_diagonal_matrix(cls, e_true, e_reco=None):
+        """Create from diagonal unit matrix.
+
+        This is useful for testing.
+        Or in cases where code always applies an edisp,
+        but you don't want it to do anything.
+
+        Parameters
+        ----------
+        e_true, e_reco : `~astropy.units.Quantity`
+            Energy bounds for true and reconstructed energy axis
+        """
+        if e_reco is None:
+            e_reco = e_true
+
+        data = np.flipud(np.eye(len(e_reco) - 1))
+
+        return cls(
+            e_true_lo=e_true[:-1],
+            e_true_hi=e_true[1:],
+            e_reco_lo=e_reco[:-1],
+            e_reco_hi=e_reco[1:],
+            data=data,
+        )
+
+    @classmethod
     def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
         """Create `EnergyDispersion` object from `~astropy.io.fits.HDUList`.
 
@@ -588,7 +614,7 @@ class EnergyDispersion2D(object):
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, data, interp_kwargs=None, meta=None,):
+                 offset_hi, data, interp_kwargs=None, meta=None, ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
@@ -675,7 +701,7 @@ class EnergyDispersion2D(object):
         m_lo = table['MIGRA_LO'].quantity[0]
         m_hi = table['MIGRA_HI'].quantity[0]
 
-        matrix = table['MATRIX'].quantity[0].transpose() ## TODO Why does this need to be transposed?
+        matrix = table['MATRIX'].quantity[0].transpose()  ## TODO Why does this need to be transposed?
         return cls(e_true_lo=e_lo, e_true_hi=e_hi,
                    offset_lo=o_lo, offset_hi=o_hi,
                    migra_lo=m_lo, migra_hi=m_hi, data=matrix)

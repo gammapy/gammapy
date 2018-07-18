@@ -6,6 +6,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
+from ...irf.energy_dispersion import EnergyDispersion
+from ...cube.psf_kernel import PSFKernel
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
@@ -17,8 +19,19 @@ from ..models import (
 
 
 @pytest.fixture(scope='session')
+def sky_model():
+    spatial_model = SkyGaussian(
+        lon_0='3 deg', lat_0='4 deg', sigma='3 deg',
+    )
+    spectral_model = PowerLaw(
+        index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV',
+    )
+    return SkyModel(spatial_model, spectral_model)
+
+
+@pytest.fixture(scope='session')
 def geom():
-    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys='GAL', axes=[axis])
 
 
@@ -37,14 +50,20 @@ def background(geom):
 
 
 @pytest.fixture(scope='session')
-def sky_model():
-    spatial_model = SkyGaussian(
-        lon_0='3 deg', lat_0='4 deg', sigma='3 deg',
-    )
-    spectral_model = PowerLaw(
-        index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV',
-    )
-    return SkyModel(spatial_model, spectral_model)
+def edisp(geom):
+    e_true = geom.get_axis_by_name('energy').edges
+    return EnergyDispersion.from_diagonal_matrix(e_true=e_true)
+
+
+@pytest.fixture(scope='session')
+def psf(geom):
+    sigma = 0.5 * u.deg
+    return PSFKernel.from_gauss(geom, sigma)
+
+
+@pytest.fixture(scope='session')
+def evaluator(sky_model, exposure, background, psf, edisp):
+    return SkyModelMapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
 
 
 class TestSourceLibrary:
@@ -54,6 +73,7 @@ class TestSourceLibrary:
     def test_to_compound_model(self):
         compound = self.source_library.to_compound_model()
         assert isinstance(compound, CompoundSkyModel)
+
 
 class TestSkyModel:
     @staticmethod
@@ -109,63 +129,78 @@ class TestCompoundSkyModel:
 @requires_dependency('scipy')
 class TestSkyModelMapEvaluator:
 
-    def setup(self):
-        self.evaluator = SkyModelMapEvaluator(sky_model(), exposure(geom()))
-
-    def test_energy_center(self):
-        val = self.evaluator.energy_center
+    @staticmethod
+    def test_energy_center(evaluator):
+        val = evaluator.energy_center
         assert val.shape == (2,)
         assert val.unit == 'TeV'
 
-    def test_energy_edges(self):
-        val = self.evaluator.energy_edges
+    @staticmethod
+    def test_energy_edges(evaluator):
+        val = evaluator.energy_edges
         assert val.shape == (3,)
         assert val.unit == 'TeV'
 
-    def test_energy_bin_width(self):
-        val = self.evaluator.energy_bin_width
+    @staticmethod
+    def test_energy_bin_width(evaluator):
+        val = evaluator.energy_bin_width
         assert val.shape == (2,)
         assert val.unit == 'TeV'
 
-    def test_lon_lat(self):
-        val = self.evaluator.lon
+    @staticmethod
+    def test_lon_lat(evaluator):
+        val = evaluator.lon
         assert val.shape == (4, 5)
         assert val.unit == 'deg'
 
-        val = self.evaluator.lat
+        val = evaluator.lat
         assert val.shape == (4, 5)
         assert val.unit == 'deg'
 
-    def test_solid_angle(self):
-        val = self.evaluator.solid_angle
+    @staticmethod
+    def test_solid_angle(evaluator):
+        val = evaluator.solid_angle
         assert val.shape == (2, 4, 5)
         assert val.unit == 'sr'
 
-    def test_bin_volume(self):
-        val = self.evaluator.bin_volume
+    @staticmethod
+    def test_bin_volume(evaluator):
+        val = evaluator.bin_volume
         assert val.shape == (2, 4, 5)
         assert val.unit == 'TeV sr'
 
-    def test_compute_dnde(self):
-        out = self.evaluator.compute_dnde()
-
+    @staticmethod
+    def test_compute_dnde(evaluator):
+        out = evaluator.compute_dnde()
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert_allclose(out.value.mean(), 7.460919e-14)
 
-    def test_compute_flux(self):
-        out = self.evaluator.compute_flux()
-
+    @staticmethod
+    def test_compute_flux(evaluator):
+        out = evaluator.compute_flux()
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1'
         assert_allclose(out.value.mean(), 1.828206748668197e-14)
 
-    def test_compute_npred(self):
-        out = self.evaluator.compute_npred()
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 7.312826994672788e-07)
 
-    def test_compute_npred_withbkg(self, sky_model, exposure, background):
-        evaluator_bkg = SkyModelMapEvaluator(sky_model, exposure, background=background)
-        out_bkg = evaluator_bkg.compute_npred()
-        assert_allclose(out_bkg.sum(), 47.312826994672788e-07)
+    @staticmethod
+    def test_apply_psf(evaluator):
+        flux = evaluator.compute_flux()
+        npred = evaluator.apply_aeff(flux)
+        out = evaluator.apply_psf(npred)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.mean(), 1.2574065e-08)
+
+    @staticmethod
+    def test_apply_edisp(evaluator):
+        flux = evaluator.compute_flux()
+        out = evaluator.apply_edisp(flux.value)
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.mean(), 1.828206748668197e-14)
+
+    @staticmethod
+    def test_compute_npred(evaluator):
+        out = evaluator.compute_npred()
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.sum(), 45.02963e-07)
