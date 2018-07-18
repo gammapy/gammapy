@@ -1,12 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
-from astropy.nddata import Cutout2D
+from astropy.coordinates import Angle
 from astropy.nddata.utils import PartialOverlapError
-from ..irf import Background3D
-from ..maps import WcsNDMap, WcsGeom, Map
+from ..maps import WcsNDMap, Map
 from .counts import fill_map_counts
 
 __all__ = [
