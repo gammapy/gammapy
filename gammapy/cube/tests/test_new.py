@@ -10,7 +10,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis
-from ..new import make_separation_map, make_map_exposure_true_energy, make_map_hadron_acceptance, MapMaker
+from ..new import make_separation_map, make_map_exposure_true_energy, make_map_background_irf, MapMaker
 from ...data import DataStore
 
 pytest.importorskip('scipy')
@@ -78,7 +78,7 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     livetime = Quantity(1581.17, 's')
     offset_max = Angle(2.2, 'deg')
 
-    m = make_map_hadron_acceptance(
+    m = make_map_background_irf(
         pointing, livetime, bkg_3d, counts_cube.geom, offset_max,
     )
 

@@ -10,7 +10,7 @@ __all__ = [
     'make_separation_map',
     'make_map_counts',
     'make_map_exposure_true_energy',
-    'make_map_hadron_acceptance',
+    'make_map_background_irf',
     'make_map_fov_background',
     'MapMaker',
 ]
@@ -156,7 +156,7 @@ def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref
     raise NotImplementedError
 
 
-def make_map_hadron_acceptance(pointing, livetime, bkg, ref_geom, offset_max):
+def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
     """Compute hadron acceptance cube i.e.  background predicted counts.
 
     This function evaluates the background rate model on
@@ -351,7 +351,7 @@ class MapMaker(object):
             obs.aeff, cutout_geom, self.offset_max,
         )
 
-        acceptance_obs_map = make_map_hadron_acceptance(
+        acceptance_obs_map = make_map_background_irf(
             obs.pointing_radec, obs.observation_live_time_duration,
             obs.bkg, cutout_geom, self.offset_max,
         )
