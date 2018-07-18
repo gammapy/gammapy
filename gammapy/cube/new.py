@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata.utils import PartialOverlapError
@@ -14,6 +15,8 @@ __all__ = [
     'make_map_background_fov',
     'MapMaker',
 ]
+
+log = logging.getLogger(__name__)
 
 
 def make_map_separation(geom, position):
@@ -56,6 +59,8 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
         Event list
     ref_geom : `~gammapy.maps.WcsGeom`
         Reference WcsGeom object used to define geometry (space - energy)
+    pointing : `~astropy.coordinates.SkyCoord`
+        Pointing direction
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
     
@@ -298,7 +303,7 @@ class MapMaker(object):
             )
         except PartialOverlapError:
             # TODO: can we silently do the right thing here? Discuss
-            print("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
+            log.info("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
             return
 
         cutout_geom = exclusion_mask_cutout.geom
