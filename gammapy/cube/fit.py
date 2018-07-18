@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from .models import SkyModelMapEvaluator
+from .models import MapEvaluator
 from ..stats import cash
 from ..utils.fitting import fit_iminuit
 
 __all__ = [
-    'SkyModelMapFit',
+    'MapFit',
 ]
 
 
-class SkyModelMapFit(object):
+class MapFit(object):
     """Perform sky model likelihood fit on maps.
 
     This is the first go at such a class. It's geared to the
@@ -44,7 +44,7 @@ class SkyModelMapFit(object):
         self._stat = None
         self._minuit = None
 
-        self.evaluator = SkyModelMapEvaluator(
+        self.evaluator = MapEvaluator(
             sky_model=self.model,
             exposure=self.exposure,
             background=self.background,

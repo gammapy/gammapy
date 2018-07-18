@@ -14,8 +14,8 @@ from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from .. import (
     SkyModel,
-    SkyModelMapEvaluator,
-    SkyModelMapFit,
+    MapEvaluator,
+    MapFit,
     make_map_exposure_true_energy,
     PSFKernel,
 )
@@ -92,7 +92,7 @@ def psf(geom):
 
 @pytest.fixture(scope='session')
 def counts(sky_model, exposure, psf, edisp):
-    evaluator = SkyModelMapEvaluator(
+    evaluator = MapEvaluator(
         sky_model=sky_model,
         exposure=exposure,
         psf=psf,
@@ -119,7 +119,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
         'amplitude': '1e-12 cm-2 s-1 TeV-1',
     })
 
-    fit = SkyModelMapFit(
+    fit = MapFit(
         model=input_model,
         counts=counts,
         exposure=exposure,

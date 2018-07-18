@@ -12,7 +12,7 @@ from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
     SkyModel,
-    SkyModelMapEvaluator,
+    MapEvaluator,
     SourceLibrary,
     CompoundSkyModel,
 )
@@ -63,7 +63,7 @@ def psf(geom):
 
 @pytest.fixture(scope='session')
 def evaluator(sky_model, exposure, background, psf, edisp):
-    return SkyModelMapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
+    return MapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
 
 
 class TestSourceLibrary:
