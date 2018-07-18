@@ -3,7 +3,7 @@
 Utilities to compute J-factor maps
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...cube import make_separation_map
+from ...cube import make_map_separation
 from ...maps import WcsNDMap
 import astropy.units as u
 import numpy as np
@@ -57,7 +57,7 @@ class JFactory(object):
 
         TODO: Needs to be implemented more efficiently
         """
-        angular_dist = make_separation_map(
+        angular_dist = make_map_separation(
             geom=self.map_.geom,
             position=self.center)
         rmin = angular_dist.quantity.to('rad').data * self.distance

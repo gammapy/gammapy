@@ -7,7 +7,7 @@ from ..maps import WcsNDMap, Map
 from .counts import fill_map_counts
 
 __all__ = [
-    'make_separation_map',
+    'make_map_separation',
     'make_map_counts',
     'make_map_exposure_true_energy',
     'make_map_background_irf',
@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-def make_separation_map(geom, position):
+def make_map_separation(geom, position):
     """Compute distance of pixels to a given position for the input reference WCSGeom.
 
     Result is returned as a 2D WcsNDmap
@@ -68,7 +68,7 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     fill_map_counts(count_map, events)
 
     # Compute and apply FOV offset mask
-    offset = make_separation_map(ref_geom, pointing).quantity
+    offset = make_map_separation(ref_geom, pointing).quantity
     offset_mask = offset >= offset_max
     count_map.data[:, offset_mask] = 0
 
@@ -96,7 +96,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     expmap : `~gammapy.maps.WcsNDMap`
         Exposure cube (3D) in true energy bins
     """
-    offset = make_separation_map(ref_geom, pointing).quantity
+    offset = make_map_separation(ref_geom, pointing).quantity
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
