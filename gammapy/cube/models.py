@@ -13,7 +13,7 @@ __all__ = [
     'SourceLibrary',
     'SkyModel',
     'CompoundSkyModel',
-    'SkyModelMapEvaluator',
+    'MapEvaluator',
 ]
 
 
@@ -255,7 +255,7 @@ class CompoundSkyModel(object):
         return self.operator(val1, val2)
 
 
-class SkyModelMapEvaluator(object):
+class MapEvaluator(object):
     """Sky model evaluation on maps.
 
     This is a first attempt to compute flux as well as predicted counts maps.
