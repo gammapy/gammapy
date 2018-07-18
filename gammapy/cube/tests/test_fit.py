@@ -15,7 +15,7 @@ from ...spectrum.models import PowerLaw
 from .. import (
     SkyModel,
     MapEvaluator,
-    SkyModelMapFit,
+    MapFit,
     make_map_exposure_true_energy,
     PSFKernel,
 )
@@ -119,7 +119,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
         'amplitude': '1e-12 cm-2 s-1 TeV-1',
     })
 
-    fit = SkyModelMapFit(
+    fit = MapFit(
         model=input_model,
         counts=counts,
         exposure=exposure,

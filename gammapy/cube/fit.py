@@ -6,11 +6,11 @@ from ..stats import cash
 from ..utils.fitting import fit_iminuit
 
 __all__ = [
-    'SkyModelMapFit',
+    'MapFit',
 ]
 
 
-class SkyModelMapFit(object):
+class MapFit(object):
     """Perform sky model likelihood fit on maps.
 
     This is the first go at such a class. It's geared to the
