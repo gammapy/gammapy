@@ -26,6 +26,18 @@ class TestEnergyDispersion:
             bias=self.bias,
         )
 
+    def test_from_diagonal_matrix(self):
+        e_true = [1, 3, 7, 10] * u.TeV
+        edisp = EnergyDispersion.from_diagonal_matrix(e_true)
+
+        assert edisp.pdf_matrix.shape == (3, 3)
+        assert_equal(edisp.pdf_matrix[0][0], 0)
+        assert_equal(edisp.pdf_matrix[2][0], 1)
+
+        assert edisp.e_reco.bins.unit == 'TeV'
+        assert_allclose(edisp.e_reco.bins.value, e_true.value)
+
+
     def test_str(self):
         assert 'EnergyDispersion' in str(self.edisp)
 
