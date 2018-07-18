@@ -468,7 +468,10 @@ class WcsNDMap(WcsMap):
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
-        Plot image on matplotlib WCS axes.
+        Plot image on matplotlib WCS axes if the Map is 2D.
+        If the Map is 3D, provides an image of a given slice
+        in one panel and the total 1D spectra in another panel
+        with an interactive slider.
 
         Parameters
         ----------
@@ -495,38 +498,116 @@ class WcsNDMap(WcsMap):
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
 
-        if not self.geom.is_image:
-            raise TypeError('Only supported on 2D maps')
 
         if fig is None:
             fig = plt.gcf()
 
-        if ax is None:
-            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
-
-        data = self.data
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
-        norm = simple_norm(data[np.isfinite(data)], stretch)
-        kwargs.setdefault('norm', norm)
 
-        caxes = ax.imshow(data, **kwargs)
 
-        cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
-        try:
-            ax.coords['glon'].set_axislabel('Galactic Longitude')
-            ax.coords['glat'].set_axislabel('Galactic Latitude')
-        except KeyError:
-            ax.coords['ra'].set_axislabel('Right Ascension')
-            ax.coords['dec'].set_axislabel('Declination')
-        except AttributeError:
-            log.info("Can't set coordinate axes. No WCS information available.")
 
-        # without this the axis limits are changed when calling scatter
-        ax.autoscale(enable=False)
-        return fig, ax, cbar
+        if self.geom.ndim == 2:
+            if ax is None:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+
+            data = self.data
+            norm = simple_norm(data[np.isfinite(data)], stretch)
+            kwargs.setdefault('norm', norm)
+            caxes = ax.imshow(data, **kwargs)
+            cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
+            # without this the axis limits are changed when calling scatter
+            ax.autoscale(enable=False)
+
+            try:
+                ax.coords['glon'].set_axislabel('Galactic Longitude')
+                ax.coords['glat'].set_axislabel('Galactic Latitude')
+            except KeyError:
+                ax.coords['ra'].set_axislabel('Right Ascension')
+                ax.coords['dec'].set_axislabel('Declination')
+            except AttributeError:
+                log.info("Can't set coordinate axes. No WCS information available.")
+
+            return fig, ax, cbar
+
+        elif self.geom.ndim == 3:
+
+            try:
+                from ipywidgets.widgets.interaction import interact, fixed
+                import ipywidgets as widgets
+            except:
+                raise ImportError('ipywidgets is not installed.')
+
+            @interact(
+                     index=widgets.IntSlider(min=0, max=self.data.shape[0] - 1, step=1, value=1,
+                                             description=self.geom.axes_names[0]+' slice'),
+                     stretch=widgets.RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
+                                                  description='Plot stretch'),
+                     mapND=fixed(self)
+                    )
+            def _plot_interactive(mapND, index, stretch='linear'):
+                """
+                Plot ND array on matplotlib WCS axes with interactive widgets
+
+                index : integer
+                    Slice index of the non spatial dimension.
+                stretch : str
+                    Passed to `astropy.visualization.simple_norm`
+                Returns
+                -------
+                #TODO: currently returns nothing.
+                        Not sure if interact can return something.
+                        Was producing errors when I tried.
+
+                fig : `~matplotlib.figure.Figure`
+                    Figure object.
+                ax : `~astropy.visualization.wcsaxes.WCSAxes`
+                    WCS axis object
+                cbar : `~matplotlib.colorbar.Colorbar` or None
+                    Colorbar object.
+                """
+
+                fig = plt.gcf()
+
+                fig.set_size_inches(12, 5)
+                ax1 = fig.add_subplot(1, 2, 1, projection=mapND.geom.wcs)
+                ax2 = fig.add_subplot(1, 2, 2)
+
+                axes = mapND.geom.get_axis_by_name(mapND.geom.axes_names[0])
+
+                data_2D = mapND.get_image_by_idx([index]).data
+                norm = simple_norm(data_2D[np.isfinite(data_2D)], stretch)
+
+                caxes = ax1.imshow(data_2D, norm=norm)
+                cbar = fig.colorbar(caxes, ax=ax1)
+                ax1.set_title('{:.2f}-{:.2f} {} '.format(axes.edges[index],
+                                                         axes.edges[index + 1], mapND.geom.axes[0].unit.name))
+
+                ax2.plot(axes.center, mapND.data.sum(axis=(1, 2)))
+                ax2.set_yscale('log')
+                ax2.set_xscale('log')
+                ax2.axvline(axes.center[index], ls=':')
+                ax2.set_xlabel('{} ({})'.format(mapND.geom.axes_names[0], mapND.geom.axes[0].unit.name))
+                ax2.set_ylabel(mapND.unit.to_string())
+
+                try:
+                    ax1.coords['glon'].set_axislabel('Galactic Longitude')
+                    ax1.coords['glat'].set_axislabel('Galactic Latitude')
+                except KeyError:
+                    ax1.coords['ra'].set_axislabel('Right Ascension')
+                    ax1.coords['dec'].set_axislabel('Declination')
+                except AttributeError:
+                    log.info("Can't set coordinate axes. No WCS information available.")
+
+                plt.show()
+
+                # return fig, ax1, cbar
+        else:
+            raise TypeError('Maps of dimension greater than 3 not currently supported')
+
+
 
     def make_region_mask(self, region, inside=True):
         """Create a mask of a given region
