@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 from astropy.io import fits
 from ..utils.random import get_random_state
+from ..utils.scripts import make_path
 
 
 def fill_poisson(map_in, mu, random_state='random-seed'):
@@ -139,3 +141,16 @@ def find_bintable_hdu(hdulist):
             return hdu
 
     raise AttributeError('No BinTable HDU found.')
+
+
+def read_fits_hdus(filename):
+    """Read fits file with mutiple image hdus and return an `OrderedDict`
+    of `Map` objects.
+    """
+    from .wcsnd import WcsNDMap
+    maps = OrderedDict()
+
+    for hdu in fits.open(str(make_path(filename))):
+        maps[hdu.name] = WcsNDMap.from_hdu(hdu)
+
+    return maps

@@ -13,7 +13,7 @@ from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.io import fits
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ..irf import multi_gauss_psf_kernel
-from ..image import measure_containment_radius, SkyImageList, SkyImage, BasicImageEstimator
+from ..maps import WcsNDMap
 from ..image.models import SkyShell
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython,
@@ -22,7 +22,7 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
 __all__ = [
     'compute_ts_image_multiscale',
     'compute_maximum_ts_image',
-    'TSImageEstimator',
+    'TSMapEstimator',
 ]
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,6 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1e-12
 MAX_NITER = 20
 RTOL = 1e-3
-CONTAINMENT = 0.8
 
 
 def _extract_array(array, shape, position):
@@ -75,9 +74,9 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-class TSImageEstimator(object):
+class TSMapEstimator(object):
     """
-    Compute TS image using different optimization methods.
+    Compute TS map using different optimization methods.
 
     Parameters
     ----------
@@ -99,8 +98,8 @@ class TSImageEstimator(object):
         Upper limit estimation method.
     ul_sigma : int (2)
         Sigma for flux upper limits.
-    parallel : bool (True)
-        Whether to use multiple cores for parallel processing.
+    n_jobs : int
+        Number of parallel jobs to use for the computation.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
@@ -129,7 +128,7 @@ class TSImageEstimator(object):
     """
 
     def __init__(self, method='root brentq', error_method='covar', error_sigma=1,
-                 ul_method='covar', ul_sigma=2, parallel=True, threshold=None, rtol=0.001):
+                 ul_method='covar', ul_sigma=2, n_jobs=1, threshold=None, rtol=0.001):
 
         if method not in ['root brentq', 'root newton', 'leastsq iter']:
             raise ValueError("Not a valid method: '{}'".format(method))
@@ -143,69 +142,68 @@ class TSImageEstimator(object):
         p['error_sigma'] = error_sigma
         p['ul_method'] = ul_method
         p['ul_sigma'] = ul_sigma
-        p['parallel'] = parallel
+        p['n_jobs'] = n_jobs
         p['threshold'] = threshold
         p['rtol'] = rtol
         self.parameters = p
 
     @staticmethod
-    def flux_default(images, kernel):
-        """Estimate default flux image using a given kernel.
+    def flux_default(maps, kernel):
+        """Estimate default flux map using a given kernel.
 
         Parameters
         ----------
-        images : `SkyImageList`
-            List of input sky images. Requires `counts`, `background` and `exposure`.
+        maps : `OrderedDict` or `Dict`
+            Dict of input sky maps. Requires `counts`, `background` and `exposure` maps.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        flux_approx : `SkyImage`
-            Approximate flux image.
+        flux_approx : `WcsNDMap`
+            Approximate flux map.
         """
         from scipy.signal import fftconvolve
-        flux = BasicImageEstimator.flux(images)
-        flux.data = fftconvolve(flux.data, kernel.array, mode='same')
-        flux.data /= np.sum(kernel.array ** 2)
-        return flux
+        flux = (maps['counts'].data - maps['background'].data) / maps['exposure'].data
+        flux = fftconvolve(flux, kernel.array, mode='same')
+        flux /= np.sum(kernel.array ** 2)
+        return WcsNDMap(maps['counts'].geom, data=flux)
 
     @staticmethod
-    def mask_default(images, kernel):
+    def mask_default(maps, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
-        images : `SkyImageList`
-            List of input sky images. Requires `background` and `exposure`.
+        maps : `OrderedDict` or `Dict`
+            Dict of input sky maps. . Requires `background` and `exposure`.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        mask : `SkyImage`
-            Mask image.
+        mask : : `WcsNDMap`
+            Mask map.
         """
-        mask = SkyImage.empty_like(images['background'], name='mask', fill=0)
-        mask.data = mask.data.astype(int)
+        mask = np.zeros(maps['exposure'].data.shape, dtype=int)
 
         # mask boundary
         slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         slice_y = slice(kernel.shape[0] // 2, -kernel.shape[0] // 2 + 1)
-        mask.data[slice_y, slice_x] = 1
+        mask[slice_y, slice_x] = 1
 
-        # Positions where exposure == 0 are not processed
-        mask.data = (images['exposure'].data > 0) & mask.data
+        # positions where exposure == 0 are not processed
+        mask &= (maps['exposure'].data > 0)
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask.data[images['background'].data == 0] = 0
-        return mask
+        mask[maps['background'].data == 0] = 0
+        return WcsNDMap(geom= maps['exposure'].geom, data=mask, dtype='int')
 
     @staticmethod
-    def sqrt_ts(image_ts):
-        """Compute sqrt(TS) image.
+    def sqrt_ts(map_ts):
+        """Compute sqrt(TS) map.
 
         Compute sqrt(TS) as defined by:
 
@@ -220,47 +218,40 @@ class TSImageEstimator(object):
 
         Parameters
         ----------
-        image_ts : `SkyImage`
-            Input TS image.
+        map_ts : `WcsNDMap`
+            Input TS map.
 
         Returns
         -------
-        sqrt_ts : `SkyImage`
-            Sqrt(TS) image
+        sqrt_ts : `WcsNDMap`
+            Sqrt(TS) map.
         """
-        sqrt_ts = SkyImage.empty_like(image_ts)
-        sqrt_ts.name = 'sqrt_ts'
         with np.errstate(invalid='ignore', divide='ignore'):
-            ts = image_ts.data
-            sqrt_ts.data = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
-        return sqrt_ts
+            ts = map_ts.data
+            sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+        return WcsNDMap(geom=map_ts.geom, data=sqrt_ts)
 
-    def run(self, images, kernel, which='all'):
+    def run(self, maps, kernel, which='all'):
         """
-        Run TS image estimation.
+        Run TS map estimation.
 
-        Requires `counts`, `exposure` and `background` image to run.
+        Requires `counts`, `exposure` and `background` map to run.
 
         Parameters
         ----------
         kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
             Source model kernel.
-        images : `SkyImageList`
-            List of input sky images.
+        maps : `OrderedDict`
+            List of input sky maps.
         which : list of str or 'all'
-            Which images to compute.
+            Which maps to compute.
 
         Returns
         -------
-        images : `~gammapy.image.SkyImageList`
-            Result images.
-
+        maps : `OrderedDict`
+            Result maps.
         """
-        t_0 = time()
-        images.check_required(['counts', 'background', 'exposure'])
         p = self.parameters
-
-        result = SkyImageList()
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -268,47 +259,56 @@ class TSImageEstimator(object):
         if which == 'all':
             which = ['ts', 'sqrt_ts', 'flux', 'flux_err', 'flux_ul', 'niter']
 
+        result = OrderedDict()
         for name in which:
-            result[name] = SkyImage.empty_like(images['counts'], fill=np.nan)
+            data = np.nan * np.ones_like(maps['counts'].data)
+            result[name] = WcsNDMap(geom=maps['counts'].geom, data=data)
 
-        mask = self.mask_default(images, kernel)
+        mask = self.mask_default(maps, kernel)
 
-        if 'mask' in images.names:
-            mask.data &= images['mask'].data
-
-        x, y = np.where(mask)
-        positions = list(zip(x, y))
+        if 'mask' in maps:
+            mask.data &= maps['mask'].data
 
         if p['method'] == 'root newton':
-            flux = self.flux_default(images, kernel).data
+            flux = self.flux_default(maps, kernel).data
         else:
             flux = None
 
-        # prpare dtype for cython methods
-        counts = images['counts'].data.astype(float)
-        background = images['background'].data.astype(float)
-        exposure = images['exposure'].data.astype(float)
+        # prepare dtype for cython methods
+        counts = maps['counts'].data.astype(float)
+        background = maps['background'].data.astype(float)
+        exposure = maps['exposure'].data.astype(float)
 
-        # Compute null statistics for the whole image
-        c_0_image = _cash_cython(counts, background)
+        # Compute null statistics per pixel for the whole image
+        c_0 = _cash_cython(counts, background)
 
         error_method = p['error_method'] if 'flux_err' in which else 'none'
         ul_method = p['ul_method'] if 'flux_ul' in which else 'none'
 
-        wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
-                       c_0_image=c_0_image, kernel=kernel, flux=flux, method=p['method'],
-                       error_method=error_method, threshold=p['threshold'],
-                       error_sigma=p['error_sigma'], ul_method=ul_method,
-                       ul_sigma=p['ul_sigma'], rtol=p['rtol'])
+        wrap = partial(
+            _ts_value,
+            counts=counts,
+            exposure=exposure,
+            background=background,
+            c_0=c_0,
+            kernel=kernel,
+            flux=flux,
+            method=p['method'],
+            error_method=error_method,
+            threshold=p['threshold'],
+            error_sigma=p['error_sigma'],
+            ul_method=ul_method,
+            ul_sigma=p['ul_sigma'],
+            rtol=p['rtol']
+            )
 
-        if p['parallel']:
-            log.info('Using {} cores to compute TS image.'.format(cpu_count()))
-            pool = Pool()
+
+        x, y = np.where(mask.data)
+        positions = list(zip(x, y))
+
+        with Pool(processes=p['n_jobs']) as pool:
+            log.info('Using {} jobs to compute TS map.'.format(p['n_jobs']))
             results = pool.map(wrap, positions)
-            pool.close()
-            pool.join()
-        else:
-            results = map(wrap, positions)
 
         # Set TS values at given positions
         j, i = zip(*positions)
@@ -325,8 +325,6 @@ class TSImageEstimator(object):
         if 'sqrt_ts' in which:
             result['sqrt_ts'] = self.sqrt_ts(result['ts'])
 
-        runtime = np.round(time() - t_0, 2)
-        result.meta = OrderedDict(runtime=runtime)
         return result
 
     def __str__(self):
@@ -341,7 +339,7 @@ class TSImageEstimator(object):
         return info
 
 
-def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='auto',
+def compute_ts_image_multiscale(maps, psf_parameters, scales=[0], downsample='auto',
                                 residual=False, morphology='Gaussian2D', width=None,
                                 **kwargs):
     """Compute multi-scale TS images using ``compute_ts_image``.
@@ -377,12 +375,12 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
     multiscale_result : list
         List of `~gammapy.image.SkyImageList` objects.
     """
-    BINSZ = abs(images['counts'].wcs.wcs.cdelt[0])
-    shape = images['counts'].data.shape
+    BINSZ = maps['counts'].geom.pixel_scales.mean().value
+    shape = maps['counts'].data.shape
 
     multiscale_result = []
 
-    ts_estimator = TSImageEstimator(**kwargs)
+    ts_estimator = TSMapEstimator(**kwargs)
 
     for scale in scales:
         log.info('Computing {}TS image for scale {:.3f} deg and {}'
@@ -407,16 +405,16 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
             log.info('Using down sampling factor of {}'.format(factor))
             downsampled = True
 
-        funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
-
-        images_downsampled = SkyImageList()
-        for name, func in zip(images.names, funcs):
+        maps_downsampled = OrderedDict()
+        for name in maps:
             if downsampled:
-                pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))
-                images_downsampled[name] = images[name].pad(pad_width)
-                images_downsampled[name] = images_downsampled[name].downsample(factor, func)
+                pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+                maps_downsampled[name] = maps[name].pad(pad_width)
+                preserve_counts = name in ['counts', 'background', 'exclusion']
+                maps_downsampled[name] = maps_downsampled[name].downsample(factor,
+                                             preserve_counts=preserve_counts)
             else:
-                images_downsampled[name] = images[name]
+                maps_downsampled[name] = maps[name]
 
         # Set up PSF and source kernel
         kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
@@ -438,18 +436,19 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
             kernel.normalize()
 
         if residual:
-            images_downsampled['background'].data += images_downsampled['model'].data
+            maps_downsampled['background'].data += maps_downsampled['model'].data
 
         # Compute TS image
-        ts_results = ts_estimator.run(images_downsampled, kernel)
-
-        log.info('TS image computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
-        ts_results.meta['MORPH'] = (morphology, 'Source morphology assumption')
-        ts_results.meta['SCALE'] = (scale, 'Source morphology size scale in deg')
+        ts_results = ts_estimator.run(maps_downsampled, kernel)
 
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'flux', 'flux_err', 'niter'], [1, 1, 1, 0]):
-                ts_results[name] = ts_results[name].upsample(factor, order=order)
+                preserve_counts = name in ['flux', 'flux_err']
+                ts_results[name] = ts_results[name].upsample(
+                    factor=factor,
+                    preserve_counts=preserve_counts,
+                    order=order
+                    )
                 ts_results[name] = ts_results[name].crop(crop_width=pad_width)
 
         multiscale_result.append(ts_results)
@@ -498,7 +497,7 @@ def compute_maximum_ts_image(ts_image_results):
     ], meta=meta)
 
 
-def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
+def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
               method, error_method, error_sigma, ul_method, ul_sigma, threshold, rtol):
     """Compute TS value at a given pixel position.
 
@@ -529,7 +528,8 @@ def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
     counts_ = _extract_array(counts, kernel.shape, position)
     background_ = _extract_array(background, kernel.shape, position)
     exposure_ = _extract_array(exposure, kernel.shape, position)
-    c_0_ = _extract_array(c_0_image, kernel.shape, position)
+    c_0_ = _extract_array(c_0, kernel.shape, position)
+
     model = (exposure_ * kernel._array)
 
     c_0 = c_0_.sum()
@@ -724,26 +724,3 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             return np.nan
-
-
-def _flux_correlation_radius(kernel, containment=CONTAINMENT):
-    """Compute equivalent top-hat kernel radius for a given kernel instance and containment fraction.
-
-    Parameters
-    ----------
-    kernel : `astropy.convolution.Kernel2D`
-        Astropy kernel instance.
-    containment : float (default = 0.8)
-        Containment fraction.
-
-    Returns
-    -------
-    kernel : float
-        Equivalent Tophat kernel radius.
-    """
-    kernel_image = fits.ImageHDU(kernel.array)
-    y, x = kernel.center
-    r_c = measure_containment_radius(kernel_image, x, y, containment)
-    # Containment radius of Tophat kernel is given by r_c_tophat = r_0 * sqrt(C)
-    # by setting r_c = r_c_tophat we can estimate the equivalent containment radius r_0
-    return r_c / np.sqrt(containment)
