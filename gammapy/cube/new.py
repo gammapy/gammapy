@@ -125,42 +125,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     return WcsNDMap(ref_geom, data)
 
 
-def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref_geom, offset_max, etrue_bins):
-    """Compute exposure WcsNDMap in reco energy.
-
-    After convolution by Edisp and assuming a true energy spectrum.
-    This is useful to perform 2D imaging studies.
-
-    Parameters
-    ----------
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing direction
-    livetime : `~astropy.units.Quantity`
-        Livetime
-    aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area table
-    edisp : `~gammapy.irf.EnergyDispersion2D`
-        Energy dispersion table
-    spectrum : `~gammapy.spectrum.models`
-        Spectral model
-    ref_geom : `~gammapy.maps.WcsGeom`
-        Reference WcsGeom object used to define geometry (space - energy)
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
-    etrue_bins : `~astropy.units.Quantity`
-        True energy bins (edges or centers?)
-
-    Returns
-    -------
-    expmap : `~gammapy.maps.WcsNDMap`
-        Exposure cube (3D) in reco energy bins
-    """
-    # First Compute exposure in true energy
-    # Then compute 4D edisp cube
-    # Do the product and sum
-    raise NotImplementedError
-
-
 def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
     """Compute background map from background IRFs.
 
