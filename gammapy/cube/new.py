@@ -157,14 +157,7 @@ def make_map_exposure_reco_energy(pointing, livetime, aeff, edisp, spectrum, ref
 
 
 def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
-    """Compute hadron acceptance cube i.e.  background predicted counts.
-
-    This function evaluates the background rate model on
-    a WcsNDMap, and then multiplies with the cube bin size,
-    computed via ???, resulting
-    in a cube with values that contain predicted background
-    counts per bin. 
-    The output cube is - obviously - in reco energy.
+    """Compute background map from background IRFs.
 
     TODO: Call a method on bkg that returns integral over energy bin directly
     Related: https://github.com/gammapy/gammapy/pull/1342
@@ -239,8 +232,6 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
     norm_bkg_map : `~gammapy.maps.WcsNDMap`
         Normalized background
     """
-    # TODO: Here we should test that WcsGeom are consistent
-
     # We resize the mask
     mask = np.resize(np.squeeze(exclusion_mask.data), acceptance_map.data.shape)
 
@@ -256,36 +247,6 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
     norm_bkg = norm_factor * acceptance_map.data.T
 
     return WcsNDMap(acceptance_map.geom, data=norm_bkg.T)
-
-
-def make_map_ring_background(ring_estimator, acceptance_map, counts_map, exclusion_mask):
-    """Estimate background map using rings.
-
-    Build normalized background map from a given acceptance map and count map using
-    the ring background technique.
-    This operation is performed on single observation maps.
-    An exclusion map is used to avoid using regions with significant gamma-ray emission.
-    All maps are assumed to follow the same WcsGeom.
-
-    Note that the RingBackgroundEstimator class has to be adapted to support WcsNDMaps.
-
-    Parameters
-    ----------
-    ring_estimator: `~gammapy.background.AdaptiveRingBackgroundEstimator` or `RingBackgroundEstimator`
-        Ring background estimator object
-    acceptance_map : `~gammapy.maps.WcsNDMap`
-        Hadron acceptance map (i.e. predicted background map)
-    counts_map : `~gammapy.maps.WcsNDMap`
-        Counts map
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
-
-    Returns
-    -------
-    norm_bkg_map : `~gammapy.maps.WcsNDMap`
-         the normalized background
-    """
-    raise NotImplementedError
 
 
 class MapMaker(object):
