@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_data
-from ...image import SkyImage, SkyImageList
+from ...maps import Map
 from ..kernel import KernelBackgroundEstimator
 
 pytest.importorskip('scipy')
@@ -13,12 +13,21 @@ pytest.importorskip('scipy')
 @pytest.fixture(scope='session')
 def images():
     """A simple test case for the algorithm."""
-    counts = SkyImage.empty(name='counts', nxpix=10, nypix=10, binsz=1, fill=42.)
+    counts = Map.create(npix=10, binsz=1)
+    counts.data += 42
     counts.data[4][4] = 1000
 
-    background = SkyImage.empty_like(counts, fill=42., name='background')
-    exclusion = SkyImage.empty_like(counts, name='exclusion', fill=1.)
-    return SkyImageList([counts, background, exclusion])
+    background = Map.from_geom(counts.geom)
+    background.data += 42
+
+    exclusion = Map.from_geom(counts.geom)
+    exclusion.data += 1
+
+    return {
+        'counts': counts,
+        'background': background,
+        'exclusion': exclusion,
+    }
 
 
 @pytest.fixture()
@@ -36,8 +45,7 @@ def kbe():
 
 @requires_data('gammapy-extra')
 def test_run_iteration(kbe, images):
-    # Call the _run_iteration code as this is what is explicitly being tested
-    result = kbe._run_iteration(images)
+    result = kbe.run_iteration(images)
     mask, background = result['exclusion'].data, result['background'].data
 
     # Check mask
