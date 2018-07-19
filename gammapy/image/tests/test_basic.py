@@ -1,13 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
-from collections import OrderedDict
-
+import pytest
 from numpy.testing.utils import assert_allclose
-
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
-
 from .. import SkyImage, FermiLATBasicImageEstimator, IACTBasicImageEstimator
 from ...background import RingBackgroundEstimator
 from ...data import DataStore
@@ -30,6 +27,7 @@ class TestFermiLATBasicImageEstimator:
         filename = '$GAMMAPY_FERMI_LAT_DATA/2fhl/fermi_2fhl_data_config.yaml'
         self.dataset = FermiLATDataset(filename)
 
+    @pytest.mark.xfail
     def test_run(self):
         if 'FERMI_DIFFUSE_DIR' in os.environ:
             which = 'all'
