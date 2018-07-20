@@ -45,13 +45,14 @@ class SpectrumFit(object):
         Background model to be used in cash fits
     method : {'sherpa', 'iminuit'}
         Optimization backend for the fit
-    err_method : {'sherpa', 'iminuit'}
-        Optimization backend for error estimation
+    error_method : {'covar', 'conf', 'HESSE', 'MINOS'}
+        Method of the error estimation depending on the backend.
+        TODO: Not implemented yet. For now 'covar'/'HESSE' are used by default.
     """
 
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
                  fit_range=None, background_model=None,
-                 method='sherpa', err_method='sherpa'):
+                 method='sherpa', error_method=None):
         self.obs_list = obs_list
         self._model = model
         self.stat = stat
@@ -59,7 +60,7 @@ class SpectrumFit(object):
         self.fit_range = fit_range
         self._background_model = background_model
         self.method = method
-        self.err_method = err_method
+        self.error_method = error_method
 
         self._predicted_counts = None
         self._statval = None
@@ -80,7 +81,7 @@ class SpectrumFit(object):
         if self.background_model is not None:
             ss += '\nBackground model {}'.format(self.background_model)
         ss += '\nBackend {}'.format(self.method)
-        ss += '\nError Backend {}'.format(self.err_method)
+        ss += '\nError Method {}'.format(self.error_method)
 
         return ss
 
@@ -498,12 +499,12 @@ class SpectrumFit(object):
 
     def est_errors(self):
         """Estimate parameter errors."""
-        if self.err_method == 'sherpa':
+        if self.method == 'sherpa':
             self._est_errors_sherpa()
-        elif self.err_method == 'iminuit':
+        elif self.method == 'iminuit':
             self._est_errors_iminuit()
         else:
-            raise NotImplementedError('{}'.format(self.err_method))
+            raise NotImplementedError('{}'.format(self.method))
 
         for res in self.result:
             res.covar_axis = self.covar_axis
