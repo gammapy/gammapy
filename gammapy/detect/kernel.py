@@ -152,9 +152,7 @@ class KernelBackgroundEstimator(object):
         mask = (significance.data < self.parameters['significance_threshold']) | np.isnan(significance.data)
         mask = binary_erosion(mask, structure, border_value=1)
 
-        exclusion = Map.from_geom(counts.geom)
-        exclusion.data = mask.astype('float')
-        return exclusion
+        return counts.clone(data=mask.astype('float'))
 
     def _estimate_background(self, counts, exclusion):
         """
