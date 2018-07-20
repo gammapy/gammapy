@@ -91,9 +91,9 @@ def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
     # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
 
-    relpath = refuri.split(str(Path("gammapy/docs/")))[1]
-    foldersplit = relpath.split('/')
-    base = '../' * (len(foldersplit) - 1) + 'notebooks/'
+    relpath = refuri.split(str(Path('/gammapy/docs')))[1]
+    foldersplit = relpath.split(os.sep)
+    base = '../' * (len(foldersplit) - 2) + 'notebooks' + os.sep
     full_name = notebook + '.html'
     ref = base + full_name
     roles.set_classes(options)
