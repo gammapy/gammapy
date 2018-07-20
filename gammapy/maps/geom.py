@@ -886,6 +886,10 @@ class MapCoord(object):
         return self.__class__(data, self.coordsys,
                               match_by_name=self._match_by_name)
 
+    def copy(self):
+        """Copy geom object."""
+        return copy.deepcopy(self)
+
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"

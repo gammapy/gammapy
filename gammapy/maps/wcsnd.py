@@ -617,9 +617,9 @@ class WcsNDMap(WcsMap):
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
 
         copy : bool, optional
-               If False (default), then the cutout data will be a view into the original data  array. 
+               If False (default), then the cutout data will be a view into the original data  array.
                If True, then the cutout data will hold a copy of the original data array.
-        
+
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`

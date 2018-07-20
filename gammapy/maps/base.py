@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import copy
+import inspect
 import json
 import numpy as np
 from collections import OrderedDict
@@ -894,6 +896,34 @@ class Map(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
+
+    def clone(self, **kwargs):
+        """Clone map instance and overwrite given attributes.
+
+        Parameters
+        ----------
+
+
+        Returns
+        --------
+
+        """
+        init_args = inspect.getargspec(self.__init__).args
+        init_args.remove('self')
+        init_args.remove('dtype')
+
+        for attr in init_args:
+            if attr not in kwargs:
+                value = getattr(self, attr)
+                if attr == 'data' and 'dtype' in kwargs:
+                    value = value.astype(kwargs['dtype'], copy=True)
+                else:
+                    value = copy.deepcopy(value)
+
+                kwargs[attr] = value
+
+        return self.__class__(**kwargs)
+
 
     def __repr__(self):
         str_ = self.__class__.__name__
