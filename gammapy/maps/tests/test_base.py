@@ -43,6 +43,28 @@ def test_map_create(binsz, width, map_type, skydir, axes, unit):
     assert m.unit == unit
 
 
+@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
+                         mapbase_args_with_axes)
+def test_map_clone(binsz, width, map_type, skydir, axes, unit):
+    m = Map.create(binsz=binsz, width=width, map_type=map_type,
+                   skydir=skydir, axes=axes, unit=unit)
+
+    m_clone = m.clone()
+    assert repr(m) == repr(m_clone)
+
+    m_clone = m.clone(unit='cm-2 s-1')
+    assert m_clone.unit == 'cm-2 s-1'
+
+    m_clone = m.clone(meta=OrderedDict([('is_clone', True)]))
+    assert m_clone.meta['is_clone']
+
+    m_clone = m.clone(dtype=np.int)
+    assert m_clone.data.dtype == np.int
+
+    m_clone = m.clone(data=42 * np.ones(m.data.shape))
+    assert m_clone.data[(0,) * m_clone.data.ndim] == 42
+
+
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
     m = Map.from_geom(geom)
