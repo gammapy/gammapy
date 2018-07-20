@@ -85,8 +85,16 @@ class MapFit(object):
         self.compute_stat()
         return np.sum(self.stat, dtype=np.float64)
 
-    def fit(self):
-        """Run the fit"""
+    def fit(self, minuit_kwargs={}):
+        """Run the fit
+
+        Parameters
+        ----------
+        minuit_kwargs : `dict`
+            *Builtin Keyword Arguments* that are passed on to the `Minuit` constructor of iminuit.
+            See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+        """
         parameters, minuit = fit_iminuit(parameters=self.model.parameters,
-                                         function=self.total_stat)
+                                         function=self.total_stat,
+                                         minuit_kwargs=minuit_kwargs)
         self._minuit = minuit

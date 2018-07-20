@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-def fit_iminuit(parameters, function):
+def fit_iminuit(parameters, function, minuit_kwargs={}):
     """iminuit optimization
 
     The input `~gammapy.utils.modeling.ParameterList` is copied internally
@@ -25,6 +25,9 @@ def fit_iminuit(parameters, function):
         Parameters with starting values
     function : callable
         Likelihood function
+    minuit_kwargs : `dict`
+        *Builtin Keyword Arguments* that are passed on to the `Minuit` constructor.
+        See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
 
     Returns
     -------
@@ -37,7 +40,7 @@ def fit_iminuit(parameters, function):
 
     parameters = parameters.copy()
     minuit_func = MinuitFunction(function, parameters)
-    minuit_kwargs = make_minuit_kwargs(parameters)
+    minuit_kwargs.update(make_minuit_par_kwargs(parameters))
 
     minuit = Minuit(minuit_func.fcn,
                     forced_parameters=parameters.names,
@@ -69,8 +72,11 @@ class MinuitFunction(object):
         return val
 
 
-def make_minuit_kwargs(parameters):
-    """Create kwargs for iminuit"""
+def make_minuit_par_kwargs(parameters):
+    """Create *Parameter Keyword Arguments* for the `Minuit` constructor.
+
+    See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+    """
     kwargs = dict()
     for par in parameters.parameters:
         kwargs[par.name] = par.value
