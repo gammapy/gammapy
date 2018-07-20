@@ -51,7 +51,6 @@ Using `gammapy.image`
 Many of the :ref:`tutorials` show examples using ``gammapy.image``:
 
 * :gp-extra-notebook:`first_steps`
-* :gp-extra-notebook:`image_analysis`
 * :gp-extra-notebook:`analysis_3d`
 
 Documentation pages with more detailed information:

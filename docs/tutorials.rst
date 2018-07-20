@@ -99,11 +99,11 @@ Notebooks
    :hidden:
 
    notebooks/first_steps.ipynb
+   notebooks/intro_maps.ipynb
    notebooks/cta_1dc_introduction.ipynb
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
    notebooks/simulate_3d.ipynb
-   notebooks/image_analysis.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_models.ipynb
@@ -126,6 +126,7 @@ Interested to do a first analysis of simulated CTA data?
 
 3-dimensional cube analysis:
 
+- `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 

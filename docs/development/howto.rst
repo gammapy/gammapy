@@ -943,11 +943,11 @@ a source parser for .ipynb files. From docstrings and high-level docs in Gammapy
 can link to these *fixed-text* formatted versions using the ``gp-extra-notebook``
 Sphinx role providing **only the filename**.
 
-Example: :gp-extra-notebook:`image_analysis`
+Example: :gp-extra-notebook:`analysis_3d`
 
 Sphinx directive to generate that link::
 
-      :gp-extra-notebook:`image_analysis`
+      :gp-extra-notebook:`analysis_3d`
 
 More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
