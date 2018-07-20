@@ -242,7 +242,7 @@ class WcsNDMap(WcsMap):
                       kind=kind, fill_value=fill_value)
         data_interp = fn(float(pix))
         geom = self.geom.to_image()
-        return self.__class__(geom, data_interp)
+        return self.clone(data=data, geom=geom)
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
@@ -282,18 +282,11 @@ class WcsNDMap(WcsMap):
                                     buffersize=buffersize))
 
     def sum_over_axes(self):
-        if self.geom.ndim == 2:
-            return copy.deepcopy(self)
-
-        map_out = self.__class__(self.geom.to_image())
-        if not self.geom.is_regular:
-            vals = self.get_by_idx(self.geom.get_idx())
-            map_out.fill_by_coord(self.geom.get_coord()[:2], vals)
-        else:
-            axis = tuple(range(self.data.ndim - 2))
-            map_out.data = np.sum(self.data, axis=axis)
-
-        return map_out
+        axis = tuple(range(self.data.ndim - 2))
+        data = np.nansum(self.data, axis=axis)
+        geom = self.geom.to_image()
+        # TODO: summing over the axis can change the unit, handle this correctly
+        return self.clone(geom=geom, data=data)
 
     def _reproject_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
@@ -392,14 +385,13 @@ class WcsNDMap(WcsMap):
         geometries but should be more efficient when working with
         large maps.
         """
-        kw = {}
+        kwargs = {}
         if mode == 'constant':
-            kw['constant_values'] = cval
+            kwargs['constant_values'] = cval
 
         pad_width = [(t, t) for t in pad_width]
-        data = np.pad(self.data, pad_width[::-1], mode, **kw)
-        map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
-        return map_out
+        data = np.pad(self.data, pad_width[::-1], mode)
+        return self.clone(geom=geom, data=data)
 
     def _pad_coadd(self, geom, pad_width, mode, cval, order):
         """Pad a map manually by coadding the original map with the new
@@ -407,7 +399,7 @@ class WcsNDMap(WcsMap):
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
         idx_out = geom.get_idx(flat=True)[::-1]
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
+        map_out = self.clone(geom=geom, data=None)
         map_out.coadd(self)
         if mode == 'constant':
             pad_msk = np.zeros_like(map_out.data, dtype=bool)
@@ -437,11 +429,11 @@ class WcsNDMap(WcsMap):
             for ax in self.geom.axes:
                 slices += [slice(None)]
             data = self.data[slices[::-1]]
-            map_out = self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
+            map_out = self.clone(geom=geom, data=data)
         else:
             # FIXME: This could be done more efficiently by
             # constructing the appropriate slices for each image plane
-            map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
+            map_out = self.clone(geom=geom, data=None)
             map_out.coadd(self)
 
         return map_out
@@ -455,7 +447,7 @@ class WcsNDMap(WcsMap):
         data = map_coordinates(self.data.T, pix, order=order, mode='nearest')
         if preserve_counts:
             data /= factor ** 2
-        return self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
+        return self.clone(data=data, geom=geom)
 
     def downsample(self, factor, preserve_counts=True):
         from skimage.measure import block_reduce
@@ -464,7 +456,7 @@ class WcsNDMap(WcsMap):
         data = block_reduce(self.data, block_size[::-1], np.nansum)
         if not preserve_counts:
             data /= factor ** 2
-        return self.__class__(geom, data, meta=copy.deepcopy(self.meta), unit=self.unit)
+        return self.clone(data=data, geom=geom)
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
         """
@@ -549,7 +541,7 @@ class WcsNDMap(WcsMap):
         if inside is False:
             np.logical_not(mask, out=mask)
         # TODO : update meta table to include something about the region used for mask creation?
-        return WcsNDMap(geom=self.geom, data=mask, meta=self.meta)
+        return self.clone(data=mask, dtype='bool')
 
     def smooth(self, radius, kernel='gauss', **kwargs):
         """
@@ -598,9 +590,7 @@ class WcsNDMap(WcsMap):
         else:
             raise ValueError('Invalid option kernel = {}'.format(kernel))
 
-        image = copy.copy(self)
-        image.data = data
-        return image
+        return self.clone(data=data)
 
     def make_cutout(self, position, width, mode="strict", copy=True):
         """
@@ -641,4 +631,4 @@ class WcsNDMap(WcsMap):
         if copy:
             data = data.copy()
 
-        return WcsNDMap(geom, data, meta=self.meta, unit=self.unit), cutout_slices
+        return self.clone(geom=geom, data=data), cutout_slices

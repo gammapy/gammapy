@@ -902,15 +902,20 @@ class Map(object):
 
         Parameters
         ----------
-
+        **kwargs : dict
+            Keyword arguments to overwrite in the map constructor.
 
         Returns
         --------
-
+        clone : `Map`
+            Cloned Map.
         """
         init_args = inspect.getargspec(self.__init__).args
         init_args.remove('self')
         init_args.remove('dtype')
+
+        if 'geom' in kwargs and 'data' not in kwargs:
+            raise ValueError("Can't clone and overwrite geometry if the data is not overwritten too.")
 
         for attr in init_args:
             if attr not in kwargs:
@@ -921,7 +926,6 @@ class Map(object):
                     value = copy.deepcopy(value)
 
                 kwargs[attr] = value
-
         return self.__class__(**kwargs)
 
 
