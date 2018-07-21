@@ -75,6 +75,7 @@ intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/'
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
 intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
+intersphinx_mapping['iminuit'] = ('http://iminuit.readthedocs.io/en/latest/', None)
 
 
 # List of patterns, relative to source directory, that match files and
