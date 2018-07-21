@@ -402,12 +402,18 @@ class SpectrumFit(object):
 
         return ax
 
-    def fit(self):
-        """Run the fit."""
+    def fit(self, opts_minuit=None):
+        """Run the fit
+
+        Parameters
+        ----------
+        opts_minuit : dict (optional)
+            Options passed to `iminuit.Minuit` constructor
+        """
         if self.method == 'sherpa':
             self._fit_sherpa()
         elif self.method == 'iminuit':
-            self._fit_iminuit()
+            self._fit_iminuit(opts_minuit)
         else:
             raise NotImplementedError('method: {}'.format(self.method))
 
@@ -446,10 +452,11 @@ class SpectrumFit(object):
         log.debug(fitresult)
         self._make_fit_result(self._model.parameters)
 
-    def _fit_iminuit(self):
+    def _fit_iminuit(self, opts_minuit):
         """Iminuit minimization"""
         parameters, minuit = fit_iminuit(parameters=self._model.parameters,
-                                         function=self.total_stat)
+                                         function=self.total_stat,
+                                         opts_minuit=opts_minuit)
         self._iminuit_fit = minuit
         log.debug(minuit)
         self._make_fit_result(parameters)
