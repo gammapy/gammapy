@@ -8,12 +8,6 @@ Structures for images / cubes (``maps``)
 
 .. currentmodule:: gammapy.maps
 
-.. warning::
-
-    The code in `gammapy.maps` is currently in an
-    experimental/development state. Method and class names may change
-    in the future.
-
 Introduction
 ============
 
