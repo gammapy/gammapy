@@ -52,9 +52,22 @@ class Map(object):
             self._unit = Unit(unit).to_string()
 
         if meta is None:
-            self.meta = OrderedDict()
+            self._meta = OrderedDict()
         else:
-            self.meta = OrderedDict(meta)
+            self._meta = OrderedDict(meta)
+
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getargspec(self.__init__).args
+        argnames.remove('self')
+        argnames.remove('dtype')
+
+        for arg in argnames:
+            value = getattr(self, '_' + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
 
     @property
     def data(self):
@@ -70,6 +83,11 @@ class Map(object):
     def unit(self):
         """Map unit (`~astropy.units.Unit`)"""
         return Unit(self._unit)
+
+    @property
+    def meta(self):
+        """Map meta (`~OrderedDict`)"""
+        return self._meta
 
     @data.setter
     def data(self, val):
@@ -897,8 +915,8 @@ class Map(object):
         """
         pass
 
-    def clone(self, **kwargs):
-        """Clone map instance and overwrite given attributes.
+    def copy(self, **kwargs):
+        """Copy map instance and overwrite given attributes, except for geometry.
 
         Parameters
         ----------
@@ -907,26 +925,12 @@ class Map(object):
 
         Returns
         --------
-        clone : `Map`
-            Cloned Map.
+        copy : `Map`
+            Copied Map.
         """
-        init_args = inspect.getargspec(self.__init__).args
-        init_args.remove('self')
-        init_args.remove('dtype')
-
-        if 'geom' in kwargs and 'data' not in kwargs:
-            raise ValueError("Can't clone and overwrite geometry if the data is not overwritten too.")
-
-        for attr in init_args:
-            if attr not in kwargs:
-                value = getattr(self, attr)
-                if attr == 'data' and 'dtype' in kwargs:
-                    value = value.astype(kwargs['dtype'], copy=True)
-                else:
-                    value = copy.deepcopy(value)
-
-                kwargs[attr] = value
-        return self.__class__(**kwargs)
+        if 'geom' in kwargs:
+            raise ValueError("Can't copy and change geometry of the map.")
+        return self._init_copy(**kwargs)
 
 
     def __repr__(self):

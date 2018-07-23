@@ -207,7 +207,7 @@ class HpxNDMap(HpxMap):
         geom = self.geom.to_image()
         axis = tuple(range(self.data.ndim - 1))
         data = np.nansum(self.data, axis=axis)
-        return self.clone(geom=geom, data=data)
+        return self._init_copy(geom=geom, data=data)
 
     def _reproject_wcs(self, geom, order=1, mode='interp'):
 
@@ -250,7 +250,7 @@ class HpxNDMap(HpxMap):
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
-        map_out = self.clone(geom=geom, data=None)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         coords = geom.get_coord(flat=True)
         m = self.geom.contains(coords)
@@ -271,7 +271,7 @@ class HpxNDMap(HpxMap):
 
     def crop(self, crop_width):
         geom = self.geom.crop(crop_width)
-        map_out = self.clone(geom=geom, data=None)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         return map_out
 
@@ -283,16 +283,14 @@ class HpxNDMap(HpxMap):
         if preserve_counts:
             data /= factor ** 2
 
-        return self.clone(geom=geom, data=data)
+        return self._init_copy(geom=geom, data=data)
 
     def downsample(self, factor, preserve_counts=True):
         geom = self.geom.downsample(factor)
         coords = self.geom.get_coord()
         vals = self.get_by_coord(coords)
 
-        # if we provide data=None the data is not cloned by rather created from
-        # the altered geometry
-        map_out = self.clone(geom=geom, data=None)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.fill_by_coord(coords, vals)
 
         if not preserve_counts:
@@ -452,7 +450,7 @@ class HpxNDMap(HpxMap):
     def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
-        map_out = self.clone(geom=hpx_out, data=None)
+        map_out = self._init_copy(geom=hpx_out, data=None)
         idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
         if self.geom.nside.size > 1:
@@ -475,7 +473,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.to_ud_graded(order)
-        map_out = self.clone(geom=new_hpx, data=None)
+        map_out = self._init_copy(geom=new_hpx, data=None)
 
         if np.all(order <= self.geom.order):
             # Downsample

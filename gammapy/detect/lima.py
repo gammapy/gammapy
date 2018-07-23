@@ -55,10 +55,10 @@ def compute_lima_image(counts, background, kernel, exposure=None):
 
     # TODO: we should make coopies of the geom to make them independent objects
     images = {
-        'significance': counts.clone(data=significance_conv),
-        'counts': counts.clone(data=counts_conv),
-        'background': counts.clone(data=background_conv),
-        'excess': counts.clone(data=excess_conv),
+        'significance': counts.copy(data=significance_conv),
+        'counts': counts.copy(data=counts_conv),
+        'background': counts.copy(data=background_conv),
+        'excess': counts.copy(data=excess_conv),
     }
 
     # TODO: should we be doing this here?
@@ -113,11 +113,11 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
 
     images = {
-        'significance': n_on.clone(data=significance_conv),
-        'n_on': n_on.clone(data=n_on_conv),
-        'background': n_on.clone(data=background_conv),
-        'excess': n_on.clone(data=excess_conv),
-        'alpha': n_on.clone(data=alpha_conv),
+        'significance': n_on.copy(data=significance_conv),
+        'n_on': n_on.copy(data=n_on_conv),
+        'background': n_on.copy(data=background_conv),
+        'excess': n_on.copy(data=excess_conv),
+        'alpha': n_on.copy(data=alpha_conv),
     }
 
     # TODO: should we be doing this here?
@@ -137,4 +137,4 @@ def _add_other_images(images, exposure, kernel, conv_opt):
     exposure_conv = convolve(exposure.data, kernel.array, **conv_opt)
     flux = images['excess'].data / exposure_conv
     # TODO: we should make coopies of the geom to make them independent objects
-    images['flux'] = images['excess'].clone(data=flux)
+    images['flux'] = images['excess'].copy(data=flux)

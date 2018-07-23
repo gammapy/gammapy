@@ -215,7 +215,7 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
 
     norm_bkg = norm_factor * acceptance_map.data.T
 
-    return acceptance_map.clone(data=norm_bkg.T)
+    return acceptance_map.copy(data=norm_bkg.T)
 
 
 class MapMaker(object):
