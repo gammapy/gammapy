@@ -126,7 +126,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     return WcsNDMap(ref_geom, data)
 
 
-def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
+def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_integration_bins=1):
     """Compute background map from background IRFs.
 
     TODO: Call a method on bkg that returns integral over energy bin directly
@@ -144,6 +144,8 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
         Reference geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset
+    n_integration_bins : int
+            Number of bins used to integrate on each energy range
 
     Returns
     -------
@@ -168,7 +170,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
         data_int[ie, :, :] = bkg.integrate_on_energy_range(
             fov_lon=fov_lon[0, :, :],
             fov_lat=fov_lat[0, :, :],
-            energy_range=[e_lo * energy_axis.unit, e_hi * energy_axis.unit], n_integration_bins=1)
+            energy_range=[e_lo * energy_axis.unit, e_hi * energy_axis.unit], n_integration_bins=n_integration_bins)
 
     d_omega = ref_geom.solid_angle()
     data = (data_int * d_omega * livetime).to('').value
