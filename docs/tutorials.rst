@@ -171,7 +171,7 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
-- `Dark matter spatial and spectral models <notebooks/astro_dark_matter.ipynb>`__ | *astro_dark_matter.ipynb*
+- `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 
 Work in progress
 ----------------
