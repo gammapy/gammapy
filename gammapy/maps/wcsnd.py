@@ -177,7 +177,7 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data.T
 
-        fn = RegularGridInterpolator(grid_pix, data, fill_value=None,
+        fn = RegularGridInterpolator(grid_pix, data, fill_value=0,
                                      bounds_error=False, method=method)
         return fn(tuple(pix))
 
