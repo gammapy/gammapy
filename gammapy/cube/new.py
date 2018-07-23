@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.coordinates import Angle
+from astropy.units import Quantity
 from astropy.nddata.utils import PartialOverlapError
 from ..maps import WcsNDMap, Map
 from .counts import fill_map_counts
@@ -162,13 +163,15 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
     # Compute offset at all the pixels and energy of the Map
     fov_lon = map_coord.skycoord.separation(pointing)
     fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
-    data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
+    data_int = Quantity(np.zeros_like(fov_lat.value), "s^-1 sr^-1")
+    for ie, (e_lo, e_hi) in enumerate(zip(energy_axis.edges[0:-1], energy_axis.edges[1:])):
+        data_int[ie, :, :] = bkg.integrate_on_energy_range(
+            fov_lon=fov_lon[0, :, :],
+            fov_lat=fov_lat[0, :, :],
+            energy_range=[e_lo * energy_axis.unit, e_hi * energy_axis.unit], n_integration_bins=1)
 
-    # TODO: add proper integral over energy
-    energy_axis = ref_geom.axes[0]
-    d_energy = np.diff(energy_axis.edges) * energy_axis.unit
     d_omega = ref_geom.solid_angle()
-    data = (data * d_energy[:, np.newaxis, np.newaxis] * d_omega * livetime).to('').value
+    data = (data_int * d_omega * livetime).to('').value
 
     # Put exposure outside offset max to zero
     # This might be more generaly dealt with a mask map
