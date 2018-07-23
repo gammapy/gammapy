@@ -3,14 +3,11 @@
 Model parameter handling
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import abc
 import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table, Column, vstack
-from ..extern import xmltodict
-from .scripts import make_path
 
 __all__ = [
     'Parameter',
