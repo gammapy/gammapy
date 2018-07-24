@@ -13,6 +13,7 @@ __all__ = [
     'SourceLibrary',
     'SkyModel',
     'CompoundSkyModel',
+    'SumSkyModel',
     'MapEvaluator',
 ]
 
@@ -253,6 +254,46 @@ class CompoundSkyModel(object):
         val2 = self.model2.evaluate(lon, lat, energy)
 
         return self.operator(val1, val2)
+
+
+class SumSkyModel(object):
+    """Sum of a list of `SkyModel`s.
+
+    Not sure if we want this class, or only a + operator on SkyModel.
+    If we keep it, then probably SkyModel should become an ABC
+    and the current SkyModel renamed to SkyModelFactorised or something like that?
+
+
+    Parameters
+    ----------
+    models : list
+        List of SkyModel objects
+    """
+
+    def __init__(self, models):
+        self._models = models
+
+    def __len__(self):
+        return len(self._models)
+
+    def __getitem__(self, item):
+        return self._models[item]
+
+    @property
+    def parameters(self):
+        """Concatenated parameters.
+
+        Currently no way to distinguish spectral and spatial.
+        """
+        from ..utils.modeling import ParameterList
+        pars = []
+        for model in self._models:
+            for p in model.parameters:
+                pars.append(p)
+        return ParameterList(pars)
+
+    def evaluate(self, lon, lat, energy):
+        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
 
 
 class MapEvaluator(object):

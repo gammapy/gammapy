@@ -15,7 +15,7 @@ from ..utils.table import table_row_to_dict
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel
+from ..cube.models import SkyModel, SumSkyModel
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -529,7 +529,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         if self.spatial_model_type in {'2-gaussian', '3-gaussian'}:
             models = [c.sky_model for c in self.components]
-            return SkySumModel(models)
+            return SumSkyModel(models)
         else:
             spatial_model = self.spatial_model
             # TODO: there are two spectral models
@@ -807,49 +807,3 @@ class SourceCatalogLargeScaleHGPS(object):
         amplitude = self.peak_brightness(glon)
         mean = self.peak_latitude(glon)
         return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)
-
-
-class SkySumModel(object):
-    """Additive sum of `SkyModel`.
-
-    TODO: fully implement this class or remove?
-
-    Not sure if we want this class, or only a + operator on SkyModel.
-    If we keep it, then probably SkyModel should become an ABC
-    and the current SkyModel renamed to SkyModelFactorised or something like that?
-
-    I'm only adding this for now as a hack to migrate the multi-Gauss HGPS
-    models to the new model classes.
-    See https://github.com/gammapy/gammapy/pull/1387
-
-    Parameters
-    ----------
-    models : list
-        List of SkyModel objects
-    """
-
-    def __init__(self, models):
-        self._models = models
-
-    def __len__(self):
-        return len(self._models)
-
-    def __getitem__(self, item):
-        return self._models[item]
-
-    @property
-    def parameters(self):
-        """Concatenated parameters.
-
-        Currently no way to distinguish spectral and spatial.
-        """
-        from ..utils.modeling import ParameterList
-        pars = []
-        for model in self._models:
-            for p in model.parameters:
-                pars.append(p)
-        return ParameterList(pars)
-
-    def evaluate(self, lon, lat, energy):
-        # TODO: untested; add test or remove
-        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
