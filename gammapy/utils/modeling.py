@@ -28,13 +28,11 @@ class Parameter(object):
     unit : str, optional
         Unit of the parameter (if value is given as float)
     parmin : float, optional
-        Parameter value minimum. Used as minimum boundary value
-        in a model fit
+        Minimum parameter value allowed in fit
     parmax : float, optional
-        Parameter value maximum. Used as minimum boundary value
-        in a model fit
+        Maximum parameter value allowed in fit
     frozen : bool, optional
-        Whether the parameter is free to be varied in a model fit
+        Is the parameter frozen in a fit?
     """
 
     def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
@@ -52,8 +50,7 @@ class Parameter(object):
 
     @property
     def quantity(self):
-        retval = self.value * u.Unit(self.unit)
-        return retval
+        return self.value * u.Unit(self.unit)
 
     @quantity.setter
     def quantity(self, par):
@@ -64,16 +61,17 @@ class Parameter(object):
     def __str__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
         ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})'
-
         return ss.format(**self.__dict__)
 
     def to_dict(self):
-        return dict(name=self.name,
-                    value=float(self.value),
-                    unit=str(self.unit),
-                    frozen=self.frozen,
-                    min=float(self.parmin),
-                    max=float(self.parmax))
+        return dict(
+            name=self.name,
+            value=float(self.value),
+            unit=str(self.unit),
+            min=float(self.parmin),
+            max=float(self.parmax),
+            frozen=self.frozen,
+        )
 
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
@@ -99,8 +97,8 @@ class ParameterList(object):
     parameters : list of `Parameter`
         List of parameters
     covariance : `~numpy.ndarray`
-        Parameters covariance matrix. Order of values as specified by
-        `parameters`.
+        Parameters covariance matrix.
+        Order of values as specified by `parameters`.
     """
 
     def __init__(self, parameters, covariance=None):

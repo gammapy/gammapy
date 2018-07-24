@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+from numpy.testing import assert_allclose
 from ...testing import requires_data, requires_dependency
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
@@ -27,21 +28,21 @@ def test_complex():
     pars1 = model1.parameters
     assert pars1['index'].value == 2.1
     assert pars1['index'].unit == ''
-    assert pars1['index'].parmax == None
-    assert pars1['index'].parmin == None
-    assert pars1['index'].frozen == False
+    assert pars1['index'].parmax is None
+    assert pars1['index'].parmin is None
+    assert pars1['index'].frozen is False
 
     assert pars1['lon_0'].value == 0.5
     assert pars1['lon_0'].unit == 'deg'
     assert pars1['lon_0'].parmax == 360
     assert pars1['lon_0'].parmin == -360
-    assert pars1['lon_0'].frozen == True
+    assert pars1['lon_0'].frozen is True
 
     assert pars1['lat_0'].value == 1.0
     assert pars1['lat_0'].unit == 'deg'
     assert pars1['lat_0'].parmax == 90
     assert pars1['lat_0'].parmin == -90
-    assert pars1['lat_0'].frozen == True
+    assert pars1['lat_0'].frozen is True
 
     model2 = sourcelib.skymodels[2]
     assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
@@ -51,12 +52,12 @@ def test_complex():
     assert pars2['sigma'].unit == 'deg'
     assert pars2['lambda_'].value == 0.01
     assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].parmin == None
-    assert pars2['lambda_'].parmax == None
+    assert pars2['lambda_'].parmin is None
+    assert pars2['lambda_'].parmax is None
     assert pars2['index'].value == 2.2
     assert pars2['index'].unit == ''
-    assert pars2['index'].parmax == None
-    assert pars2['index'].parmin == None
+    assert pars2['index'].parmax is None
+    assert pars2['index'].parmin is None
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)
@@ -76,26 +77,6 @@ def test_complex():
     assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
 
 
-@pytest.mark.xfail(reason='Need to update model regsitry')
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-@pytest.mark.parametrize('filenames', [[
-    '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
-    '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
-]])
-def test_models(filenames, tmpdir):
-    outfile = tmpdir / 'models_out.xml'
-    for filename in filenames:
-        sourcelib = SourceLibrary.read(filename)
-        sourcelib.to_xml(outfile)
-
-        sourcelib_roundtrip = SourceLibrary.from_xml(outfile)
-
-        for model, model_roundtrip in zip(sourcelib.skymodels,
-                                          sourcelib_roundtrip.skymodels):
-            assert str(model) == str(model_roundtrip)
-
-
 def test_xml_errors():
     xml = '<?xml version="1.0" standalone="no"?>\n'
     xml += '<source_library title="broken source library">\n'
@@ -110,3 +91,54 @@ def test_xml_errors():
         xml_to_source_library(xml)
 
     # TODO: Think about a more elaborate XML validation scheme
+
+
+@pytest.mark.xfail(reason='Need to improve XML read')
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+@pytest.mark.parametrize('filename', [
+    '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
+    '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+])
+def test_models(filename, tmpdir):
+    outfile = tmpdir / 'models_out.xml'
+    sourcelib = SourceLibrary.read(filename)
+    sourcelib.to_xml(outfile)
+
+    sourcelib_roundtrip = SourceLibrary.from_xml(outfile)
+
+    for model, model_roundtrip in zip(sourcelib.skymodels,
+                                      sourcelib_roundtrip.skymodels):
+        assert str(model) == str(model_roundtrip)
+
+
+@pytest.mark.xfail(reason='Need to improve XML read')
+@requires_data('gammapy-extra')
+def test_source_library_old_xml_file():
+    filename = '$GAMMAPY_EXTRA/test_datasets/models/shell.xml'
+    sources = SourceLibrary.read(filename)
+
+    assert len(sources.source_list) == 2
+
+    source = sources.source_list[0]
+    assert source.source_name == 'CrabShell'
+    assert_allclose(source.spectral_model.parameters['Index'].value, 2.48)
+
+    xml = sources.to_xml()
+    assert 'sources' in xml
+
+
+@pytest.mark.xfail(reason='Need to improve XML read')
+@requires_data('gammapy-extra')
+def test_source_library_new_xml_file():
+    filename = '$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml'
+    sources = SourceLibrary.read(filename)
+
+    assert len(sources.source_list) == 47
+
+    source = sources.source_list[0]
+    assert source.source_name == 'HESS J0632+057'
+    assert_allclose(source.spectral_model.parameters['Index'].value, -2.5299999713897705)
+
+    xml = sources.to_xml()
+    assert 'sources' in xml

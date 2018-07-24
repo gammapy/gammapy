@@ -8,17 +8,15 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
+import numpy as np
+import astropy.units as u
 from ...extern import xmltodict
-from ...cube.models import SourceLibrary, SkyModel
 from ..modeling import Parameter, ParameterList
 from ...maps import Map
-import numpy as np
-import logging
-import astropy.units as u
-import gammapy.image.models as spatial
-import gammapy.spectrum.models as spectral
-from astropy.coordinates import SkyCoord
-import astropy.units as u
+from ...image import models as spatial
+from ...spectrum import models as spectral
+from ...cube.models import SourceLibrary, SkyModel
 
 log = logging.getLogger(__name__)
 
@@ -247,10 +245,10 @@ def xml_to_parameter_list(xml, which, type_):
             msg = "Parameter '{}' not registered for {} model {}"
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
 
-        value = float(par['@value']) * float(par['@scale']) 
+        value = float(par['@value']) * float(par['@scale'])
         parmin = float(par['@min']) if '@min' in par.keys() else None
         parmax = float(par['@max']) if '@max' in par.keys() else None
-        frozen=bool(1 - int(par['@free']))
+        frozen = bool(1 - int(par['@free']))
 
         parameters.append(Parameter(
             name=name,
