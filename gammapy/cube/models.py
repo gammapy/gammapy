@@ -73,10 +73,11 @@ class SourceLibrary(object):
 
     def to_compound_model(self):
         """Return `~gammapy.cube.models.CompoundSkyModel`"""
-        compound_model = self.skymodels[0]
-        for sky_model in self.skymodels[1:]:
-            compound_model = compound_model + sky_model
-        return compound_model
+        return np.sum([m for m in self.skymodels])
+
+    def to_sum_model(self):
+        """Return `~gammapy.cube.models.SumSkyModel`"""
+        return SumSkyModel(self.skymodels)
 
 
 class SkyModel(object):
@@ -197,8 +198,10 @@ class CompoundSkyModel(object):
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        val = self.model1.parameters.parameters + self.model2.parameters.parameters
-        return ParameterList(val)
+        return ParameterList(
+            self.model1.parameters.parameters +
+            self.model2.parameters.parameters
+        )
 
     @parameters.setter
     def parameters(self, parameters):
@@ -244,21 +247,14 @@ class SumSkyModel(object):
     If we keep it, then probably SkyModel should become an ABC
     and the current SkyModel renamed to SkyModelFactorised or something like that?
 
-
     Parameters
     ----------
-    models : list
+    components : list
         List of SkyModel objects
     """
 
-    def __init__(self, models):
-        self._models = models
-
-    def __len__(self):
-        return len(self._models)
-
-    def __getitem__(self, item):
-        return self._models[item]
+    def __init__(self, components):
+        self.components = components
 
     @property
     def parameters(self):
@@ -266,15 +262,17 @@ class SumSkyModel(object):
 
         Currently no way to distinguish spectral and spatial.
         """
-        from ..utils.modeling import ParameterList
         pars = []
-        for model in self._models:
-            for p in model.parameters:
+        for model in self.components:
+            for p in model.parameters.parameters:
                 pars.append(p)
         return ParameterList(pars)
 
     def evaluate(self, lon, lat, energy):
-        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
+        out = self.components[0].evaluate(lon, lat, energy)
+        for component in self.components[1:]:
+            out += component.evaluate(lon, lat, energy)
+        return out
 
 
 class MapEvaluator(object):
