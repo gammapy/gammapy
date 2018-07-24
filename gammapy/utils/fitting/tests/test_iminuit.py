@@ -20,9 +20,8 @@ def test_iminuit():
 
     pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
 
-    assert_allclose(pars_in['x'].value, 2.1, rtol=1e-2)
-    assert_allclose(pars_in['y'].value, 3.1, rtol=1e-2)
-    assert_allclose(pars_in['z'].value, 4.1, rtol=1e-2)
+    # Input and output parameters are the same objects
+    assert pars_in['x'] is pars_out['x']
 
     assert_allclose(pars_out['x'].value, 2, rtol=1e-2)
     assert_allclose(pars_out['y'].value, 3, rtol=1e-2)
