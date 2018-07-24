@@ -298,6 +298,16 @@ class MapMaker(object):
         self.exposure_map.data[cutout_slices] += expo_obs_map.quantity.to(self.exposure_map.unit).value
         self.background_map.data[cutout_slices] += acceptance_obs_map.data
 
+    def process_obs(self, obs):
+        """
+        This will process a single observation and add it to the global cutout image.
+        This function may be removed after discussions.
+
+        """
+        cs, count, exp, back = self.process_single_obs(obs)
+        self._add_cutouts(cs, count, exp, back)
+
+
     def run(self, obs_list):
         """
         Run MapMaker for a list of observations to create
@@ -310,8 +320,7 @@ class MapMaker(object):
 
         Returns
         -----------
-        map_list:
-            List of counts, background and exposure maps.
+        maps: dict of stacked counts, background and exposure maps.
         """
 
         from astropy.utils.console import ProgressBar
@@ -319,6 +328,48 @@ class MapMaker(object):
         for obs in ProgressBar(obs_list):
             cs, count, exp, back = self.process_single_obs(obs)
             self._add_cutouts(cs, count, exp, back)
+
+        maps = {
+            'counts': self.counts_map,
+            'background': self.background_map,
+            'exposure': self.exposure_map
+                }
+        return maps
+
+    def create_list(self, obs_list):
+        """
+        Return a list of counts, exposure and background maps.
+        This is useful if the user wants maps separately for each observation,
+        instead of a single stacked map.
+
+        This will be quite intensive, so should be used only if necessary.
+        Parameters
+        -----------------
+         obs_list: `~gammapy.data.ObservationList`
+            List of observations
+
+        Returns
+        -----------
+            maps: dict of list of counts, background and exposure maps.
+        """
+
+        from astropy.utils.console import ProgressBar
+        counts_map = []
+        back_map = []
+        exp_map = []
+        for obs in ProgressBar(obs_list):
+            cs, count, exp, back = self.process_single_obs(obs)
+            counts_map.append(count)
+            back_map.append(back)
+            exp_map.append(exp)
+
+        maps = {"counts_map": counts_map,
+                "background_map": back_map,
+                "exposure_map": exp_map}
+
+        return maps
+
+
 
 
 
