@@ -7,8 +7,6 @@ from ...cube import make_map_separation
 from ...maps import WcsNDMap
 import astropy.units as u
 import numpy as np
-import copy
-
 
 __all__ = [
     'JFactory',

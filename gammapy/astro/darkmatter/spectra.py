@@ -10,7 +10,6 @@ from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
 from ...spectrum.models import TableModel
 
-
 __all__ = [
     'PrimaryFlux'
 ]

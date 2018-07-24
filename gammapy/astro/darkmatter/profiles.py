@@ -89,7 +89,7 @@ class NFWProfile(DMProfile):
     """Default scale radius as given in reference 2"""
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
-        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('rho_s', u.Quantity(rho_s))
@@ -131,7 +131,7 @@ class EinastoProfile(DMProfile):
 
     def __init__(self, r_s=None, alpha=None, rho_s=1 * u.Unit('GeV / cm3')):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
-        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
@@ -167,7 +167,7 @@ class IsothermalProfile(DMProfile):
     """Default scale radius as given in reference 2"""
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
-        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
@@ -201,7 +201,7 @@ class BurkertProfile(DMProfile):
     """Default scale radius as given in reference 2"""
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
-        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
@@ -236,7 +236,7 @@ class MooreProfile(DMProfile):
     """Default scale radius as given in reference 2"""
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
-        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else rs
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = ParameterList([
             Parameter('r_s', u.Quantity(r_s)),
