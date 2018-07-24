@@ -103,10 +103,6 @@ class SkyModel(object):
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
         self.name = name
-        self._parameters = ParameterList(
-            self.spatial_model.parameters.parameters +
-            self.spectral_model.parameters.parameters
-        )
 
     @property
     def spatial_model(self):
@@ -121,7 +117,10 @@ class SkyModel(object):
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        return self._parameters
+        return ParameterList(
+            self.spatial_model.parameters.parameters +
+            self.spectral_model.parameters.parameters
+        )
 
     @parameters.setter
     def parameters(self, parameters):
@@ -267,6 +266,14 @@ class SumSkyModel(object):
             for p in model.parameters.parameters:
                 pars.append(p)
         return ParameterList(pars)
+
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = 0
+        for component in self.components:
+            n_par = len(component.parameters.parameters)
+            component.parameters.parameters = parameters.parameters[idx:idx+n_par]
+            idx += n_par
 
     def evaluate(self, lon, lat, energy):
         out = self.components[0].evaluate(lon, lat, energy)

@@ -142,6 +142,11 @@ class TestCompoundSkyModel:
         # Check that model parameters are references to the parts
         assert compound_model.parameters['lon_0'] is compound_model.model1.parameters['lon_0']
 
+        # Check that parameter assignment works
+        assert compound_model.parameters.parameters[-1].value == 1
+        compound_model.parameters = compound_model.parameters.copy()
+        assert compound_model.parameters.parameters[-1].value == 1
+
     @staticmethod
     def test_evaluate(compound_model):
         lon = 3 * u.deg * np.ones(shape=(3, 4))
@@ -169,6 +174,11 @@ class TestSumSkyModel:
 
         # Check that model parameters are references to the parts
         assert sum_model.parameters['lon_0'] is sum_model.components[0].parameters['lon_0']
+
+        # Check that parameter assignment works
+        assert sum_model.parameters.parameters[-1].value == 1
+        sum_model.parameters = sum_model.parameters.copy()
+        assert sum_model.parameters.parameters[-1].value == 1
 
     @staticmethod
     def test_evaluate(sum_model):
