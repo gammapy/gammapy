@@ -530,7 +530,7 @@ class PowerLaw(SpectralModel):
         self.parameters = ParameterList([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
-            Parameter('reference', reference, parmin=0, frozen=True)
+            Parameter('reference', reference, min=0, frozen=True)
         ])
 
     @staticmethod
@@ -1152,7 +1152,7 @@ class TableModel(SpectralModel):
     def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = ParameterList([
-            Parameter('scale', scale, parmin=0, unit='')
+            Parameter('scale', scale, min=0, unit='')
         ])
         self.energy = energy
         self.values = values
@@ -1519,10 +1519,10 @@ class AbsorbedSpectralModel(SpectralModel):
             param_list.append(param)
 
         # Add parameter to the list
-        param_min = self.absorption.data.axes[0].lo[0]
-        param_max = self.absorption.data.axes[0].lo[-1]
+        min_ = self.absorption.data.axes[0].lo[0]
+        max_ = self.absorption.data.axes[0].lo[-1]
         par = Parameter(parameter_name, parameter,
-                        parmin=param_min, parmax=param_max,
+                        min=min_, max=max_,
                         frozen=True)
         param_list.append(par)
 
