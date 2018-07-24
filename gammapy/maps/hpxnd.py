@@ -204,17 +204,10 @@ class HpxNDMap(HpxMap):
         map_out : `~HpxNDMap`
             Summed map.
         """
-        hpx_out = self.geom.to_image()
-        map_out = self.__class__(hpx_out)
-
-        if self.geom.nside.size > 1:
-            vals = self.get_by_idx(self.geom.get_idx(flat=True))
-            map_out.fill_by_coord(self.geom.get_coord(flat=True)[:2], vals)
-        else:
-            axis = tuple(range(self.data.ndim - 1))
-            map_out.data = np.sum(self.data, axis=axis)
-
-        return map_out
+        geom = self.geom.to_image()
+        axis = tuple(range(self.data.ndim - 1))
+        data = np.nansum(self.data, axis=axis)
+        return self._init_copy(geom=geom, data=data)
 
     def _reproject_wcs(self, geom, order=1, mode='interp'):
 
@@ -257,7 +250,7 @@ class HpxNDMap(HpxMap):
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         coords = geom.get_coord(flat=True)
         m = self.geom.contains(coords)
@@ -278,31 +271,26 @@ class HpxNDMap(HpxMap):
 
     def crop(self, crop_width):
         geom = self.geom.crop(crop_width)
-        map_out = self.__class__(geom, meta=copy.deepcopy(self.meta), unit=self.unit)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         return map_out
 
     def upsample(self, factor, preserve_counts=True):
-
-        map_out = self.__class__(self.geom.upsample(factor),
-                                 meta=copy.deepcopy(self.meta), unit=self.unit)
-        coords = map_out.geom.get_coord(flat=True)
-        vals = self.get_by_coord(coords)
-        m = np.isfinite(vals)
-        map_out.fill_by_coord([c[m] for c in coords], vals[m])
+        geom = self.geom.upsample(factor)
+        coords = geom.get_coord()
+        data = self.get_by_coord(coords)
 
         if preserve_counts:
-            map_out.data /= factor ** 2
+            data /= factor ** 2
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
     def downsample(self, factor, preserve_counts=True):
+        geom = self.geom.downsample(factor)
+        coords = self.geom.get_coord()
+        vals = self.get_by_coord(coords)
 
-        map_out = self.__class__(self.geom.downsample(factor),
-                                 meta=copy.deepcopy(self.meta), unit=self.unit)
-        idx = self.geom.get_idx(flat=True)
-        coords = self.geom.pix_to_coord(idx)
-        vals = self.get_by_idx(idx)
+        map_out = self._init_copy(geom=geom, data=None)
         map_out.fill_by_coord(coords, vals)
 
         if not preserve_counts:
@@ -462,7 +450,7 @@ class HpxNDMap(HpxMap):
     def to_swapped(self):
         import healpy as hp
         hpx_out = self.geom.to_swapped()
-        map_out = self.__class__(hpx_out, meta=copy.deepcopy(self.meta), unit=self.unit)
+        map_out = self._init_copy(geom=hpx_out, data=None)
         idx = self.geom.get_idx(flat=True)
         vals = self.get_by_idx(idx)
         if self.geom.nside.size > 1:
@@ -485,7 +473,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.to_ud_graded(order)
-        map_out = self.__class__(new_hpx, meta=copy.deepcopy(self.meta), unit=self.unit)
+        map_out = self._init_copy(geom=new_hpx, data=None)
 
         if np.all(order <= self.geom.order):
             # Downsample

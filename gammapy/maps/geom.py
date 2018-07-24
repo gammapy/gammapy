@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import copy
+import inspect
 import re
 from collections import OrderedDict
 import numpy as np
@@ -886,6 +887,10 @@ class MapCoord(object):
         return self.__class__(data, self.coordsys,
                               match_by_name=self._match_by_name)
 
+    def copy(self):
+        """Copy geom object."""
+        return copy.deepcopy(self)
+
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
@@ -1215,9 +1220,7 @@ class MapGeom(object):
                 axes.append(ax_sliced)
                 # in the case where isinstance(ax_slice, int) the axes is dropped
 
-        kwargs = self._copy_init_kwargs
-        kwargs['axes'] = axes
-        return self.__class__(**kwargs)
+        return self._init_copy(axes=axes)
 
     @abc.abstractmethod
     def to_image(self):
@@ -1414,3 +1417,15 @@ class MapGeom(object):
             if axis.type == type:
                 return axis
         raise ValueError("Cannot find type {}".format(type))
+
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getargspec(self.__init__).args
+        argnames.remove('self')
+
+        for arg in argnames:
+            value = getattr(self, '_' + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)

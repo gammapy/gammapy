@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import copy
+import inspect
 import json
 import numpy as np
 from collections import OrderedDict
@@ -50,9 +52,22 @@ class Map(object):
             self._unit = Unit(unit).to_string()
 
         if meta is None:
-            self.meta = OrderedDict()
+            self._meta = OrderedDict()
         else:
-            self.meta = OrderedDict(meta)
+            self._meta = OrderedDict(meta)
+
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getargspec(self.__init__).args
+        argnames.remove('self')
+        argnames.remove('dtype')
+
+        for arg in argnames:
+            value = getattr(self, '_' + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
 
     @property
     def data(self):
@@ -68,6 +83,11 @@ class Map(object):
     def unit(self):
         """Map unit (`~astropy.units.Unit`)"""
         return Unit(self._unit)
+
+    @property
+    def meta(self):
+        """Map meta (`~OrderedDict`)"""
+        return self._meta
 
     @data.setter
     def data(self, val):
@@ -894,6 +914,24 @@ class Map(object):
             Values vector. Pixels at `idx` will be set to these values.
         """
         pass
+
+    def copy(self, **kwargs):
+        """Copy map instance and overwrite given attributes, except for geometry.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map constructor.
+
+        Returns
+        --------
+        copy : `Map`
+            Copied Map.
+        """
+        if 'geom' in kwargs:
+            raise ValueError("Can't copy and change geometry of the map.")
+        return self._init_copy(**kwargs)
+
 
     def __repr__(self):
         str_ = self.__class__.__name__

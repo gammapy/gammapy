@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-# TODO: use `Map.clone` or `Map.copy` once available
+# TODO: use `Map.copy` or `Map.copy` once available
 # instead of the awkward way with `Map.from_geom` and adjusting map data after.
 class KernelBackgroundEstimator(object):
     """Estimate background and exclusion mask iteratively.
@@ -152,9 +152,7 @@ class KernelBackgroundEstimator(object):
         mask = (significance.data < self.parameters['significance_threshold']) | np.isnan(significance.data)
         mask = binary_erosion(mask, structure, border_value=1)
 
-        exclusion = Map.from_geom(counts.geom)
-        exclusion.data = mask.astype('float')
-        return exclusion
+        return counts.copy(data=mask.astype('float'))
 
     def _estimate_background(self, counts, exclusion):
         """

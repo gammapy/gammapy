@@ -23,14 +23,14 @@ def make_map_separation(geom, position):
     """Compute distance of pixels to a given position for the input reference WCSGeom.
 
     Result is returned as a 2D WcsNDmap
-    
+
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
     position : `~astropy.coordinates.SkyCoord`
         Reference position
-    
+
     Returns
     -------
     separation : `~gammapy.maps.Map`
@@ -63,7 +63,7 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
         Pointing direction
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
-    
+
     Returns
     -------
     cntmap : `~gammapy.maps.WcsNDMap`
@@ -215,7 +215,7 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
 
     norm_bkg = norm_factor * acceptance_map.data.T
 
-    return WcsNDMap(acceptance_map.geom, data=norm_bkg.T)
+    return acceptance_map.copy(data=norm_bkg.T)
 
 
 class MapMaker(object):
@@ -240,11 +240,9 @@ class MapMaker(object):
         # We instantiate the end products of the MakeMaps class
         self.count_map = WcsNDMap(self.ref_geom)
 
-        data = np.zeros_like(self.count_map.data)
-        self.exposure_map = WcsNDMap(self.ref_geom, data, unit="m2 s")
+        self.exposure_map = WcsNDMap(self.ref_geom, unit="m2 s")
 
-        data = np.zeros_like(self.count_map.data)
-        self.background_map = WcsNDMap(self.ref_geom, data)
+        self.background_map = WcsNDMap(self.ref_geom)
 
         # We will need this general exclusion mask for the analysis
         self.exclusion_map = WcsNDMap(self.ref_geom)
