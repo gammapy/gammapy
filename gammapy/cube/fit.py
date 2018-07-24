@@ -96,4 +96,5 @@ class MapFit(object):
         parameters, minuit = fit_iminuit(parameters=self.model.parameters,
                                          function=self.total_stat,
                                          opts_minuit=opts_minuit)
+        self.model.parameters = parameters
         self._minuit = minuit

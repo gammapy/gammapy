@@ -85,6 +85,14 @@ class TestSkyModel:
         assert 'SkyModel' in str(sky_model)
 
     @staticmethod
+    def test_parameters(sky_model):
+        # Check that the total model parameters are references
+        # to the spatial and spectral parameters, not copies
+        # see https://github.com/gammapy/gammapy/issues/1556
+        assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+        assert sky_model.parameters['amplitude'] is sky_model.spectral_model.parameters['amplitude']
+
+    @staticmethod
     def test_evaluate_scalar(sky_model):
         lon = 3 * u.deg
         lat = 4 * u.deg
