@@ -330,9 +330,9 @@ class MapMaker(object):
             self._add_cutouts(cs, count, exp, back)
 
         maps = {
-            'counts': self.counts_map,
-            'background': self.background_map,
-            'exposure': self.exposure_map
+            'counts_map': self.counts_map,
+            'background_map': self.background_map,
+            'exposure_map': self.exposure_map
                 }
         return maps
 
