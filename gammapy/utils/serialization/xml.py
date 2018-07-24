@@ -139,15 +139,11 @@ model_registry['spectral']['Constant'] = model_registry['spectral']['ConstantVal
 
 
 class UnknownModelError(ValueError):
-    """
-    Error when encountering unknown model types.
-    """
+    """Error when encountering unknown models."""
 
 
 class UnknownParameterError(ValueError):
-    """
-    Error when encountering unknown model types.
-    """
+    """Error when encountering unknown parameters."""
 
 
 def xml_to_source_library(xml):
@@ -218,16 +214,16 @@ def xml_to_model(xml, which):
         # one to the gammapy model definition
         if type_ == 'PowerLaw':
             model.parameters['index'].value *= -1
-            model.parameters['index'].parmin = None
-            model.parameters['index'].parmax = None
+            model.parameters['index'].min = None
+            model.parameters['index'].max = None
         if type_ == 'ExponentialCutoffPowerLaw':
             model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
             model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
-            model.parameters['lambda_'].parmin = None
-            model.parameters['lambda_'].parmax = None
+            model.parameters['lambda_'].min = None
+            model.parameters['lambda_'].max = None
             model.parameters['index'].value *= -1
-            model.parameters['index'].parmin = None
-            model.parameters['index'].parmax = None
+            model.parameters['index'].min = None
+            model.parameters['index'].max = None
     return model
 
 
@@ -246,16 +242,16 @@ def xml_to_parameter_list(xml, which, type_):
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
 
         value = float(par['@value']) * float(par['@scale'])
-        parmin = float(par['@min']) if '@min' in par.keys() else None
-        parmax = float(par['@max']) if '@max' in par.keys() else None
+        min_ = float(par['@min']) if '@min' in par.keys() else None
+        max_ = float(par['@max']) if '@max' in par.keys() else None
         frozen = bool(1 - int(par['@free']))
 
         parameters.append(Parameter(
             name=name,
             value=value,
             unit=unit,
-            parmin=parmin,
-            parmax=parmax,
+            min=min_,
+            max=max_,
             frozen=frozen,
         ))
 
@@ -340,11 +336,9 @@ def parameter_list_to_xml(parameters, which):
             raise UnknownParameterError(msg)
 
         xml += indent
-        xml += val.format(int(not par.frozen),
-                          par.parmax,
-                          par.parmin,
-                          xml_par,
-                          par.quantity.to(unit).value)
+        free = int(not par.frozen)
+        value = par.quantity.to(unit).value
+        xml += val.format(free, par.max, par.min, xml_par, value)
         xml += '\n'
 
     return xml

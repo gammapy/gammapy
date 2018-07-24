@@ -10,6 +10,6 @@ def test_parameter():
     assert par.name == 'spam'
     assert par.value == 42
     assert par.unit == 'deg'
-    assert par.parmin is np.nan
-    assert par.parmax is np.nan
+    assert par.min is np.nan
+    assert par.max is np.nan
     assert par.frozen is False

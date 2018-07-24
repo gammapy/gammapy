@@ -38,7 +38,7 @@ def test_iminuit():
     assert minuit.list_of_fixed_param() == ['x']
 
     # Test limits
-    pars_in['y'].parmin = 4
+    pars_in['y'].min = 4
     pars_out, minuit = fit_iminuit(function=f, parameters=pars_in)
     states = minuit.get_param_states()
     assert not states[0]['has_limits']

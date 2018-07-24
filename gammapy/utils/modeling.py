@@ -27,15 +27,15 @@ class Parameter(object):
         Value of the parameter
     unit : str, optional
         Unit of the parameter (if value is given as float)
-    parmin : float, optional
+    min : float, optional
         Minimum parameter value allowed in fit
-    parmax : float, optional
+    max : float, optional
         Maximum parameter value allowed in fit
     frozen : bool, optional
         Is the parameter frozen in a fit?
     """
 
-    def __init__(self, name, value, unit='', parmin=None, parmax=None, frozen=False):
+    def __init__(self, name, value, unit='', min=None, max=None, frozen=False):
         self.name = name
 
         if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
@@ -44,8 +44,8 @@ class Parameter(object):
             self.value = value
             self.unit = unit
 
-        self.parmin = parmin or np.nan
-        self.parmax = parmax or np.nan
+        self.min = min or np.nan
+        self.max = max or np.nan
         self.frozen = frozen
 
     @property
@@ -58,9 +58,9 @@ class Parameter(object):
         self.value = par.value
         self.unit = str(par.unit)
 
-    def __str__(self):
+    def __repr__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
-        ss += 'min={parmin!r}, max={parmax!r}, frozen={frozen!r})'
+        ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
         return ss.format(**self.__dict__)
 
     def to_dict(self):
@@ -68,8 +68,8 @@ class Parameter(object):
             name=self.name,
             value=float(self.value),
             unit=str(self.unit),
-            min=float(self.parmin),
-            max=float(self.parmax),
+            min=float(self.min),
+            max=float(self.max),
             frozen=self.frozen,
         )
 
@@ -77,12 +77,12 @@ class Parameter(object):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
 
-        parmin = np.finfo(np.float32).min if np.isnan(self.parmin) else self.parmin
-        parmax = np.finfo(np.float32).max if np.isnan(self.parmax) else self.parmax
+        min_ = np.finfo(np.float32).min if np.isnan(self.min) else self.min
+        max_ = np.finfo(np.float32).max if np.isnan(self.max) else self.max
 
         par = Parameter(modelname=modelname, name=self.name,
                         val=self.value, units=self.unit,
-                        min=parmin, max=parmax,
+                        min=min_, max=max_,
                         frozen=self.frozen)
         return par
 
@@ -161,8 +161,8 @@ class ParameterList(object):
             pars.append(Parameter(name=par['name'],
                                   value=float(par['value']),
                                   unit=par['unit'],
-                                  parmin=float(par['min']),
-                                  parmax=float(par['max']),
+                                  min=float(par['min']),
+                                  max=float(par['max']),
                                   frozen=par['frozen']))
             try:
                 covariance = np.array(val['covariance'])

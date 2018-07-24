@@ -28,20 +28,20 @@ def test_complex():
     pars1 = model1.parameters
     assert pars1['index'].value == 2.1
     assert pars1['index'].unit == ''
-    assert pars1['index'].parmax is None
-    assert pars1['index'].parmin is None
+    assert pars1['index'].max is None
+    assert pars1['index'].min is None
     assert pars1['index'].frozen is False
 
     assert pars1['lon_0'].value == 0.5
     assert pars1['lon_0'].unit == 'deg'
-    assert pars1['lon_0'].parmax == 360
-    assert pars1['lon_0'].parmin == -360
+    assert pars1['lon_0'].max == 360
+    assert pars1['lon_0'].min == -360
     assert pars1['lon_0'].frozen is True
 
     assert pars1['lat_0'].value == 1.0
     assert pars1['lat_0'].unit == 'deg'
-    assert pars1['lat_0'].parmax == 90
-    assert pars1['lat_0'].parmin == -90
+    assert pars1['lat_0'].max == 90
+    assert pars1['lat_0'].min == -90
     assert pars1['lat_0'].frozen is True
 
     model2 = sourcelib.skymodels[2]
@@ -52,12 +52,12 @@ def test_complex():
     assert pars2['sigma'].unit == 'deg'
     assert pars2['lambda_'].value == 0.01
     assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].parmin is None
-    assert pars2['lambda_'].parmax is None
+    assert pars2['lambda_'].min is None
+    assert pars2['lambda_'].max is None
     assert pars2['index'].value == 2.2
     assert pars2['index'].unit == ''
-    assert pars2['index'].parmax is None
-    assert pars2['index'].parmin is None
+    assert pars2['index'].max is None
+    assert pars2['index'].min is None
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)

@@ -83,7 +83,7 @@ def make_minuit_par_kwargs(parameters):
         kwargs[par.name] = par.value
         if par.frozen:
             kwargs['fix_{}'.format(par.name)] = True
-        limits = par.parmin, par.parmax
+        limits = par.min, par.max
         limits = np.where(np.isnan(limits), None, limits)
         kwargs['limit_{}'.format(par.name)] = limits
 
