@@ -19,7 +19,7 @@ functionality available:
 
 .. code-block:: bash
 
-    conda install scikit-image aplpy photutils reproject iminuit
+    conda install scikit-image photutils reproject iminuit
 
 To update to the latest version:
 

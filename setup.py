@@ -124,7 +124,6 @@ setup(
       ],
       plotting=[
           'matplotlib>=1.5',
-          'aplpy>=0.9',
       ],
     ),
     author=AUTHOR,
