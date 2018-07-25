@@ -1,12 +1,50 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from ...testing import requires_data, requires_dependency
 from ....cube import SourceLibrary
 from ....spectrum import models as spectral
 from ....image import models as spatial
 from ...serialization import xml_to_source_library, UnknownModelError
+
+
+def test_from_xml():
+    xml = '''<?xml version="1.0" encoding="utf-8"?>
+        <source_library title="source library">
+            <source name="3C 273" type="PointSource">
+                <spectrum type="PowerLaw">;i
+                    <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10"></parameter>
+                    <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"></parameter>
+                    <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"></parameter>
+                </spectrum>
+                <spatialModel type="SkyDirFunction">
+                    <parameter free="0" max="360" min="-360" name="RA" scale="1.0" value="187.25"></parameter>
+                    <parameter free="0" max="90" min="-90" name="DEC" scale="1.0" value="2.17"></parameter>
+                </spatialModel>
+            </source>
+        </source_library>
+        '''
+    source_library = SourceLibrary.from_xml(xml)
+    sky_model = source_library.skymodels[0]
+    assert_allclose(sky_model.parameters['lon_0'].value, 187.25)
+
+
+def test_xml_errors():
+    xml = '<?xml version="1.0" standalone="no"?>\n'
+    xml += '<source_library title="broken source library">\n'
+    xml += '    <source name="CrabShell" type="ExtendedSource">\n'
+    xml += '        <spatialModel type="ElefantShapedSource">\n'
+    xml += '            <parameter name="RA" value="1" scale="1" min="1" max="1" free="1"/>\n'
+    xml += '        </spatialModel>\n'
+    xml += '    </source>\n'
+    xml += '</source_library>'
+
+    with pytest.raises(UnknownModelError):
+        xml_to_source_library(xml)
+
+    # TODO: Think about a more elaborate XML validation scheme
 
 
 @requires_data('gammapy-extra')
@@ -28,8 +66,8 @@ def test_complex():
     pars1 = model1.parameters
     assert pars1['index'].value == 2.1
     assert pars1['index'].unit == ''
-    assert pars1['index'].max is None
-    assert pars1['index'].min is None
+    assert pars1['index'].max is np.nan
+    assert pars1['index'].min is np.nan
     assert pars1['index'].frozen is False
 
     assert pars1['lon_0'].value == 0.5
@@ -52,12 +90,12 @@ def test_complex():
     assert pars2['sigma'].unit == 'deg'
     assert pars2['lambda_'].value == 0.01
     assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].min is None
-    assert pars2['lambda_'].max is None
+    assert pars2['lambda_'].min is np.nan
+    assert pars2['lambda_'].max is np.nan
     assert pars2['index'].value == 2.2
     assert pars2['index'].unit == ''
-    assert pars2['index'].max is None
-    assert pars2['index'].min is None
+    assert pars2['index'].max is np.nan
+    assert pars2['index'].min is np.nan
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)
@@ -75,22 +113,6 @@ def test_complex():
 
     model6 = sourcelib.skymodels[6]
     assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
-
-
-def test_xml_errors():
-    xml = '<?xml version="1.0" standalone="no"?>\n'
-    xml += '<source_library title="broken source library">\n'
-    xml += '    <source name="CrabShell" type="ExtendedSource">\n'
-    xml += '        <spatialModel type="ElefantShapedSource">\n'
-    xml += '            <parameter name="RA" value="1" scale="1" min="1" max="1" free="1"/>\n'
-    xml += '        </spatialModel>\n'
-    xml += '    </source>\n'
-    xml += '</source_library>'
-
-    with pytest.raises(UnknownModelError):
-        xml_to_source_library(xml)
-
-    # TODO: Think about a more elaborate XML validation scheme
 
 
 @pytest.mark.xfail(reason='Need to improve XML read')

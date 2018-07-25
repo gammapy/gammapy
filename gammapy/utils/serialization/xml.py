@@ -214,16 +214,17 @@ def xml_to_model(xml, which):
         # one to the gammapy model definition
         if type_ == 'PowerLaw':
             model.parameters['index'].value *= -1
-            model.parameters['index'].min = None
-            model.parameters['index'].max = None
+            model.parameters['index'].min = np.nan
+            model.parameters['index'].max = np.nan
         if type_ == 'ExponentialCutoffPowerLaw':
             model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
             model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
-            model.parameters['lambda_'].min = None
-            model.parameters['lambda_'].max = None
+            model.parameters['lambda_'].min = np.nan
+            model.parameters['lambda_'].max = np.nan
             model.parameters['index'].value *= -1
-            model.parameters['index'].min = None
-            model.parameters['index'].max = None
+            model.parameters['index'].min = np.nan
+            model.parameters['index'].max = np.nan
+
     return model
 
 
@@ -242,8 +243,8 @@ def xml_to_parameter_list(xml, which, type_):
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
 
         value = float(par['@value']) * float(par['@scale'])
-        min_ = float(par['@min']) if '@min' in par.keys() else None
-        max_ = float(par['@max']) if '@max' in par.keys() else None
+        min_ = float(par.get('@min', 'nan'))
+        max_ = float(par.get('@max', 'nan'))
         frozen = bool(1 - int(par['@free']))
 
         parameters.append(Parameter(
