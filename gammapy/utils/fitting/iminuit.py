@@ -100,7 +100,6 @@ def _get_covar(minuit):
     """
     n = len(minuit.parameters)
     m = np.zeros((n, n))
-    print(minuit.covariance)
     for i1, k1 in enumerate(minuit.parameters):
         for i2, k2 in enumerate(minuit.parameters):
             if set([k1, k2]).issubset(minuit.list_of_vary_param()):
