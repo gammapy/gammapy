@@ -289,11 +289,12 @@ class ParameterList(object):
         errors : dict of `~astropy.units.Quantity`
             Dict of parameter errors.
         """
-        values = []
+        diag = []
         for par in self.parameters:
-            quantity = errors.get(par.name, 0 * u.Unit(par.unit))
-            values.append(u.Quantity(quantity, par.unit).value)
-        self.covariance = np.diag(values) ** 2
+            error = errors.get(par.name, 0)
+            error = u.Quantity(error, par.unit).value
+            diag.append(error)
+        self.covariance = np.diag(diag) ** 2
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
