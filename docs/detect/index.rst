@@ -28,10 +28,10 @@ Computation of TS images
 .. gp-extra-image:: detect/fermi_ts_image.png
     :width: 100%
 
-Test statistics image computed using `~gammapy.detect.TSImageEstimator` for an
+Test statistics image computed using `~gammapy.detect.TSMapEstimator` for an
 example Fermi dataset.
 
-The `gammapy.detect` module includes a high performance `~gammapy.detect.TSImageEstimator` class to
+The `gammapy.detect` module includes a high performance `~gammapy.detect.TSMapEstimator` class to
 compute test statistics (TS) images for gamma-ray survey data. The implementation is based on the method
 described in [Stewart2009]_.
 
@@ -52,57 +52,26 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 .. code-block:: python
 
     from astropy.convolution import Gaussian2DKernel
-    from gammapy.image import SkyImageList
-    from gammapy.detect import TSImageEstimator
-    images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    from gammapy.detect import TSMapEstimator
+    from gammapy.maps import Map
+
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    maps = {}
+    maps['counts'] = Map.read(filename, hdu='counts')
+    maps['exposure'] = Map.read(filename, hdu='exposure')
+    maps['background'] = Map.read(filename, hdu='background')
+
     kernel = Gaussian2DKernel(5)
-    ts_estimator = TSImageEstimator()
-    result = ts_estimator.run(images, kernel)
+    ts_estimator = TSMapEstimator()
+    result = ts_estimator.run(maps, kernel)
 
-The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
-data. E.g. the time needed for the TS image computation can be checked by:
-
-.. code-block:: python
-
-	result.meta['runtime']
-
-The TS `~gammapy.image.SkyImage` itself can be accessed from the `~gammapy.image.SkyImageList` object.
+The function returns an `~OrderedDict` object, that bundles all resulting maps.
 E.g. here's how to find the largest TS value:
 
 .. code-block:: python
 
     import numpy as np
 	np.nanmax(result['ts'].data)
-
-Command line tool
------------------
-
-Gammapy also provides a command line tool ``gammapy image ts`` for TS image computation, which can be run
-on the Fermi example dataset by:
-
-.. code-block:: bash
-
-    $ cd $GAMMAPY_EXTRA/datasets/fermi_survey
-    $ gammapy image ts all.fits.gz ts_image_0.00.fits --scales 0
-
-The command line tool additionally requires a psf json file, where the psf shape
-is defined by the parameters of a triple Gaussian model. See also
-`gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
-a Gaussian source kernel, where the width in degree can be defined by the
-``--scale`` parameter. Multiple scales can be selected by passing a list to the
-``scales`` parameter.  When setting ``--scale 0`` only the psf is used as source
-model, which is the preferred setting to detect point sources. When using scales
-that are larger than five times the binning of the data, the data is sampled down
-and later sampled up again to speed up the performance. See
-`~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.
-
-Furthermore it is possible to compute residual TS images. Using the following options:
-
-.. code-block:: bash
-
-	$ gammapy image ts all.fits.gz residual_ts_image_0.00.fits --scales 0 --residual --model model.fits.gz
-
-When ``--residual`` is set an excess model must be provided using the ``--model`` option.
 
 
 Computation of Li & Ma significance images
