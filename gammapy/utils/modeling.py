@@ -22,20 +22,21 @@ class Parameter(object):
     Parameters
     ----------
     name : str
-        Name of the parameter
+        Name
     value : float or `~astropy.units.Quantity`
-        Value of the parameter
+        Value
     unit : str, optional
-        Unit of the parameter (if value is given as float)
+        Unit
     min : float, optional
-        Minimum parameter value allowed in fit
+        Minimum (sometimes used in fitting)
     max : float, optional
-        Maximum parameter value allowed in fit
+        Maximum (sometimes used in fitting)
     frozen : bool, optional
-        Is the parameter frozen in a fit?
+        Frozen? (used in fitting)
     """
+    __slots__ = ['_name', '_value', '_unit', '_min', '_max', '_frozen']
 
-    def __init__(self, name, value, unit='', min=None, max=None, frozen=False):
+    def __init__(self, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
         self.name = name
 
         if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
@@ -44,9 +45,57 @@ class Parameter(object):
             self.value = value
             self.unit = unit
 
-        self.min = min or np.nan
-        self.max = max or np.nan
+        self.min = min
+        self.max = max
         self.frozen = frozen
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, val):
+        self._name = str(val)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        self._value = float(val)
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = str(val)
+
+    @property
+    def min(self):
+        return self._min
+
+    @min.setter
+    def min(self, val):
+        self._min = float(val)
+
+    @property
+    def max(self):
+        return self._max
+
+    @max.setter
+    def max(self, val):
+        self._max = float(val)
+
+    @property
+    def frozen(self):
+        return self._frozen
+
+    @frozen.setter
+    def frozen(self, val):
+        self._frozen = bool(val)
 
     @property
     def quantity(self):
@@ -61,30 +110,32 @@ class Parameter(object):
     def __repr__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
         ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
-        return ss.format(**self.__dict__)
+        return ss.format(**self.to_dict())
 
     def to_dict(self):
         return dict(
             name=self.name,
-            value=float(self.value),
-            unit=str(self.unit),
-            min=float(self.min),
-            max=float(self.max),
+            value=self.value,
+            unit=self.unit,
+            min=self.min,
+            max=self.max,
             frozen=self.frozen,
         )
 
     def to_sherpa(self, modelname='Default'):
         """Convert to sherpa parameter"""
         from sherpa.models import Parameter
-
         min_ = np.finfo(np.float32).min if np.isnan(self.min) else self.min
         max_ = np.finfo(np.float32).max if np.isnan(self.max) else self.max
-
-        par = Parameter(modelname=modelname, name=self.name,
-                        val=self.value, units=self.unit,
-                        min=min_, max=max_,
-                        frozen=self.frozen)
-        return par
+        return Parameter(
+            modelname=modelname,
+            name=self.name,
+            val=self.value,
+            units=self.unit,
+            min=min_,
+            max=max_,
+            frozen=self.frozen,
+        )
 
 
 class ParameterList(object):
