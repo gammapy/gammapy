@@ -2,6 +2,7 @@
 """Functions to compute TS images."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import contextlib
 from time import time
 import warnings
 from collections import OrderedDict
@@ -333,7 +334,7 @@ class TSMapEstimator(object):
         x, y = np.where(mask.data)
         positions = list(zip(x, y))
 
-        with Pool(processes=p['n_jobs']) as pool:
+        with contextlib.closing(Pool(processes=p['n_jobs'])) as pool:
             log.info('Using {} jobs to compute TS map.'.format(p['n_jobs']))
             results = pool.map(wrap, positions)
 
