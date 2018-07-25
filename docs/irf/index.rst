@@ -31,6 +31,38 @@ Getting Started
 see :gp-extra-notebook:`cta_1dc_introduction` for an example how to access IACT IRFs.
 
 
+Effective area
+==============
+
+See `~gammapy.irf.EffectiveAreaTable` and `~gammapy.irf.EffectiveAreaTable2D`.
+
+Background
+==========
+
+See `~gammapy.irf.Background2D` and `~gammapy.irf.Background2D`.
+
+PSF
+===
+
+The `~gammapy.irf.TablePSF` and `~gammapy.irf.EnergyDependentTablePSF` classes
+represent radially-symmetric PSFs where the PSF is given at a number of offsets.
+
+The `~gammapy.cube.PSFKernel` represents a PSF kernel.
+
+.. plot:: irf/plot_fermi_psf.py
+
+Energy Dispersion
+=================
+
+The `~gammapy.irf.EnergyDispersion` class represents an energy migration matrix
+(finite probabilities per pixel) with ``y=log(energy_reco)``.
+
+The `~gammapy.irf.EnergyDispersion2D` class represents a probability
+density with ``y=energy_reco/energy_true`` that can also have a FOV offset dependence.
+
+.. plot:: irf/plot_edisp.py
+
+
 Using `gammapy.irf`
 ===================
 
@@ -42,7 +74,6 @@ If you'd like to learn more about using `gammapy.irf`, read the following sub-pa
    theory
    aeff
    edisp
-   psf
 
 Reference/API
 =============
