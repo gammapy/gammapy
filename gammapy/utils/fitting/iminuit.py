@@ -13,11 +13,6 @@ __all__ = [
 def fit_iminuit(parameters, function, opts_minuit=None):
     """iminuit optimization
 
-    The input `~gammapy.utils.modeling.ParameterList` is copied internally
-    before the fit and will thus not be modified. The best-fit parameter values
-    are contained in the output `~gammapy.utils.modeling.ParameterList` or the
-    `~iminuit.Minuit` object.
-
     Parameters
     ----------
     parameters : `~gammapy.utils.modeling.ParameterList`
@@ -36,7 +31,6 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
-    parameters = parameters.copy()
     minuit_func = MinuitFunction(function, parameters)
 
     if opts_minuit is None:
@@ -48,6 +42,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
                     **opts_minuit)
 
     minuit.migrad()
+
     return parameters, minuit
 
 
@@ -66,11 +61,10 @@ class MinuitFunction(object):
         self.function = function
         self.parameters = parameters
 
-    def fcn(self, *p):
-        for parval, par in zip(p, self.parameters.parameters):
-            par.value = parval
-        val = self.function(self.parameters)
-        return val
+    def fcn(self, *values):
+        for value, parameter in zip(values, self.parameters.parameters):
+            parameter.value = value
+        return self.function(self.parameters)
 
 
 def make_minuit_par_kwargs(parameters):
@@ -78,7 +72,7 @@ def make_minuit_par_kwargs(parameters):
 
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
-    kwargs = dict()
+    kwargs = {}
     for par in parameters.parameters:
         kwargs[par.name] = par.value
         if par.frozen:

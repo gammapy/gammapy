@@ -12,9 +12,10 @@ from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
     SkyModel,
-    MapEvaluator,
     SourceLibrary,
     CompoundSkyModel,
+    SumSkyModel,
+    MapEvaluator,
 )
 
 
@@ -71,8 +72,20 @@ class TestSourceLibrary:
         self.source_library = SourceLibrary([sky_model(), sky_model()])
 
     def test_to_compound_model(self):
-        compound = self.source_library.to_compound_model()
-        assert isinstance(compound, CompoundSkyModel)
+        model = self.source_library.to_compound_model()
+        assert isinstance(model, CompoundSkyModel)
+        pars = model.parameters.parameters
+        assert len(pars) == 12
+        assert pars[0].name == 'lon_0'
+        assert pars[-1].name == 'reference'
+
+    def test_to_sum_model(self):
+        model = self.source_library.to_sum_model()
+        assert isinstance(model, SumSkyModel)
+        pars = model.parameters.parameters
+        assert len(pars) == 12
+        assert pars[0].name == 'lon_0'
+        assert pars[-1].name == 'reference'
 
 
 class TestSkyModel:
@@ -83,6 +96,12 @@ class TestSkyModel:
     @staticmethod
     def test_str(sky_model):
         assert 'SkyModel' in str(sky_model)
+
+    @staticmethod
+    def test_parameters(sky_model):
+        # Check that model parameters are references to the spatial and spectral parts
+        assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+        assert sky_model.parameters['amplitude'] is sky_model.spectral_model.parameters['amplitude']
 
     @staticmethod
     def test_evaluate_scalar(sky_model):
@@ -111,17 +130,65 @@ class TestSkyModel:
 class TestCompoundSkyModel:
 
     @staticmethod
-    def test_add(sky_model):
-        compound_model = sky_model + sky_model
+    @pytest.fixture()
+    def compound_model(sky_model):
+        return sky_model + sky_model
+
+    @staticmethod
+    def test_parameters(compound_model):
         parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
         assert compound_model.parameters.names == parnames
 
+        # Check that model parameters are references to the parts
+        assert compound_model.parameters['lon_0'] is compound_model.model1.parameters['lon_0']
+
+        # Check that parameter assignment works
+        assert compound_model.parameters.parameters[-1].value == 1
+        compound_model.parameters = compound_model.parameters.copy()
+        assert compound_model.parameters.parameters[-1].value == 1
+
+    @staticmethod
+    def test_evaluate(compound_model):
         lon = 3 * u.deg * np.ones(shape=(3, 4))
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
         q = compound_model.evaluate(lon, lat, energy)
 
+        assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
+        assert q.shape == (5, 3, 4)
+        assert_allclose(q.value, 3.536776513153229e-13)
+
+
+class TestSumSkyModel:
+
+    @staticmethod
+    @pytest.fixture()
+    def sum_model(sky_model):
+        return SumSkyModel([sky_model, sky_model])
+
+    @staticmethod
+    def test_parameters(sum_model):
+        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
+        assert sum_model.parameters.names == parnames
+
+        # Check that model parameters are references to the parts
+        assert sum_model.parameters['lon_0'] is sum_model.components[0].parameters['lon_0']
+
+        # Check that parameter assignment works
+        assert sum_model.parameters.parameters[-1].value == 1
+        sum_model.parameters = sum_model.parameters.copy()
+        assert sum_model.parameters.parameters[-1].value == 1
+
+    @staticmethod
+    def test_evaluate(sum_model):
+        lon = 3 * u.deg * np.ones(shape=(3, 4))
+        lat = 4 * u.deg * np.ones(shape=(3, 4))
+        energy = [1, 1, 1, 1, 1] * u.TeV
+
+        q = sum_model.evaluate(lon, lat, energy)
+
+        assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value, 3.536776513153229e-13)
 
@@ -182,7 +249,6 @@ class TestSkyModelMapEvaluator:
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1'
         assert_allclose(out.value.mean(), 1.828206748668197e-14)
-
 
     @staticmethod
     def test_apply_psf(evaluator):

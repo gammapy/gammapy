@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
@@ -129,15 +128,15 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     )
     fit.fit()
 
-    assert_quantity_allclose(fit.model.parameters['index'].quantity,
-                             sky_model.parameters['index'].quantity,
-                             rtol=1e-2)
-    assert_quantity_allclose(fit.model.parameters['amplitude'].quantity,
-                             sky_model.parameters['amplitude'].quantity,
-                             rtol=1e-2)
-    assert_quantity_allclose(fit.model.parameters['lon_0'].quantity,
-                             sky_model.parameters['lon_0'].quantity,
-                             rtol=1e-2)
+    assert_allclose(fit.model.parameters['index'].value,
+                    sky_model.parameters['index'].value,
+                    rtol=1e-2)
+    assert_allclose(fit.model.parameters['amplitude'].value,
+                    sky_model.parameters['amplitude'].value,
+                    rtol=1e-2)
+    assert_allclose(fit.model.parameters['lon_0'].value,
+                    sky_model.parameters['lon_0'].value,
+                    rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
     stat_expected = 3840.0605649268496

@@ -73,10 +73,11 @@ class SourceLibrary(object):
 
     def to_compound_model(self):
         """Return `~gammapy.cube.models.CompoundSkyModel`"""
-        compound_model = self.skymodels[0]
-        for sky_model in self.skymodels[1:]:
-            compound_model = compound_model + sky_model
-        return compound_model
+        return np.sum([m for m in self.skymodels])
+
+    def to_sum_model(self):
+        """Return `~gammapy.cube.models.SumSkyModel`"""
+        return SumSkyModel(self.skymodels)
 
 
 class SkyModel(object):
@@ -102,13 +103,6 @@ class SkyModel(object):
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
         self.name = name
-        self._init_parameters()
-
-    def _init_parameters(self):
-        """Create flat list of parameters"""
-        parameters = self.spatial_model.parameters.copy()
-        parameters.parameters += self.spectral_model.parameters.parameters
-        self._parameters = parameters
 
     @property
     def spatial_model(self):
@@ -121,23 +115,18 @@ class SkyModel(object):
         return self._spectral_model
 
     @property
-    def spatial_pars(self):
-        """List of spatial parameter names"""
-        return self.spatial_model.parameters.names
-
-    @property
-    def spectral_pars(self):
-        """List of spectral parameter names"""
-        return self.spectral_model.parameters.names
-
-    @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        return self._parameters
+        return ParameterList(
+            self.spatial_model.parameters.parameters +
+            self.spectral_model.parameters.parameters
+        )
 
     @parameters.setter
     def parameters(self, parameters):
-        self._parameters = parameters
+        idx = len(self.spatial_model.parameters.parameters)
+        self._spatial_model.parameters.parameters = parameters.parameters[:idx]
+        self._spectral_model.parameters.parameters = parameters.parameters[idx:]
 
     def __repr__(self):
         fmt = '{}(spatial_model={!r}, spectral_model={!r})'
@@ -168,16 +157,8 @@ class SkyModel(object):
         value : `~astropy.units.Quantity`
             Model value at the given point.
         """
-        spatial_kwargs = dict()
-        spectral_kwargs = dict()
-        for par in self.parameters.parameters:
-            if par.name in self.spatial_pars:
-                spatial_kwargs[par.name] = par.quantity
-            else:
-                spectral_kwargs[par.name] = par.quantity
-
-        val_spatial = self.spatial_model.evaluate(lon, lat, **spatial_kwargs)
-        val_spectral = self.spectral_model.evaluate(energy, **spectral_kwargs)
+        val_spatial = self.spatial_model(lon, lat)
+        val_spectral = self.spectral_model(energy)
         val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
 
         val = val_spatial * val_spectral
@@ -216,8 +197,10 @@ class CompoundSkyModel(object):
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        val = self.model1.parameters.parameters + self.model2.parameters.parameters
-        return ParameterList(val)
+        return ParameterList(
+            self.model1.parameters.parameters +
+            self.model2.parameters.parameters
+        )
 
     @parameters.setter
     def parameters(self, parameters):
@@ -263,21 +246,14 @@ class SumSkyModel(object):
     If we keep it, then probably SkyModel should become an ABC
     and the current SkyModel renamed to SkyModelFactorised or something like that?
 
-
     Parameters
     ----------
-    models : list
+    components : list
         List of SkyModel objects
     """
 
-    def __init__(self, models):
-        self._models = models
-
-    def __len__(self):
-        return len(self._models)
-
-    def __getitem__(self, item):
-        return self._models[item]
+    def __init__(self, components):
+        self.components = components
 
     @property
     def parameters(self):
@@ -285,15 +261,25 @@ class SumSkyModel(object):
 
         Currently no way to distinguish spectral and spatial.
         """
-        from ..utils.modeling import ParameterList
         pars = []
-        for model in self._models:
-            for p in model.parameters:
+        for model in self.components:
+            for p in model.parameters.parameters:
                 pars.append(p)
         return ParameterList(pars)
 
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = 0
+        for component in self.components:
+            n_par = len(component.parameters.parameters)
+            component.parameters.parameters = parameters.parameters[idx:idx+n_par]
+            idx += n_par
+
     def evaluate(self, lon, lat, energy):
-        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
+        out = self.components[0].evaluate(lon, lat, energy)
+        for component in self.components[1:]:
+            out += component.evaluate(lon, lat, energy)
+        return out
 
 
 class MapEvaluator(object):
