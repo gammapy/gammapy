@@ -13,15 +13,12 @@ from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.io import fits
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ..irf import multi_gauss_psf_kernel
-from ..maps import WcsNDMap
 from ..image.models import SkyShell
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython,
                                       _x_best_leastsq)
 
 __all__ = [
-    'compute_ts_image_multiscale',
-    'compute_maximum_ts_image',
     'TSMapEstimator',
 ]
 
@@ -30,6 +27,14 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1e-12
 MAX_NITER = 20
 RTOL = 1e-3
+UPSAMPLING_ARGS = {
+    'ts' : {'order': 1, 'preserve_counts': False},
+    'sqrt_ts': {'order': 1, 'preserve_counts': False},
+    'flux': {'order': 1, 'preserve_counts': False},
+    'flux_ul': {'order': 1, 'preserve_counts': False},
+    'flux_err': {'order': 1, 'preserve_counts': False},
+    'niter': {'order': 0, 'preserve_counts': False},
+    }
 
 
 def _extract_array(array, shape, position):
@@ -78,18 +83,26 @@ class TSMapEstimator(object):
     """
     Compute TS map using different optimization methods.
 
+
+    The map is computed fitting by a single parameter amplitude fit. The fit is
+    simplified by finding roots of the the derivative of the fit statistics using
+    various root finding algorithms. The approach is sescribed in Appendix A
+    in Stewart (2009).
+
     Parameters
     ----------
     method : str ('root')
         The following options are available:
 
         * ``'root brentq'`` (default)
-            Fit amplitude finding roots of the the derivative of
-            the fit statistics. Described in Appendix A in Stewart (2009).
+            Fit amplitude by finding the roots of the the derivative of the fit
+            statistics using the brentq method.
         * ``'root newton'``
-            TODO: document
+            Fit amplitude by finding the roots of the the derivative of the fit
+            statistics using Newton's method.
         * ``'leastsq iter'``
-
+            Fit the amplitude by an iterative least square fit, that can be solved
+            analytically.
     error_method : ['covar', 'conf']
         Error estimation method.
     error_sigma : int (1)
@@ -167,7 +180,7 @@ class TSMapEstimator(object):
         flux = (maps['counts'].data - maps['background'].data) / maps['exposure'].data
         flux = fftconvolve(flux, kernel.array, mode='same')
         flux /= np.sum(kernel.array ** 2)
-        return WcsNDMap(maps['counts'].geom, data=flux)
+        return maps['counts'].copy(data=flux)
 
     @staticmethod
     def mask_default(maps, kernel):
@@ -182,7 +195,7 @@ class TSMapEstimator(object):
 
         Returns
         -------
-        mask : : `WcsNDMap`
+        mask : `WcsNDMap`
             Mask map.
         """
         mask = np.zeros(maps['exposure'].data.shape, dtype=int)
@@ -199,7 +212,7 @@ class TSMapEstimator(object):
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
         mask[maps['background'].data == 0] = 0
-        return WcsNDMap(geom= maps['exposure'].geom, data=mask, dtype='int')
+        return maps['exposure'].copy(data=mask.astype('int'))
 
     @staticmethod
     def sqrt_ts(map_ts):
@@ -229,9 +242,9 @@ class TSMapEstimator(object):
         with np.errstate(invalid='ignore', divide='ignore'):
             ts = map_ts.data
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
-        return WcsNDMap(geom=map_ts.geom, data=sqrt_ts)
+        return map_ts.copy(data=sqrt_ts)
 
-    def run(self, maps, kernel, which='all'):
+    def run(self, maps, kernel, which='all', downsampling_factor=None):
         """
         Run TS map estimation.
 
@@ -245,6 +258,10 @@ class TSMapEstimator(object):
             List of input sky maps.
         which : list of str or 'all'
             Which maps to compute.
+        downsampling_factor : int
+            Sample down the input maps to speed up the computation. Only integer
+            values that are a multiple of 2 are allowed. Note that the kernel is
+            not sampled down, but must be provided with the downsampled bin size.
 
         Returns
         -------
@@ -252,6 +269,16 @@ class TSMapEstimator(object):
             Result maps.
         """
         p = self.parameters
+
+        if downsampling_factor:
+            shape = maps['counts'].data.shape
+            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+
+            for name in maps:
+                maps[name] = maps[name].pad(pad_width)
+                preserve_counts = name in ['counts', 'background', 'exclusion']
+                maps[name] = maps[name].downsample(downsampling_factor,
+                                            preserve_counts=preserve_counts)
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -262,7 +289,7 @@ class TSMapEstimator(object):
         result = OrderedDict()
         for name in which:
             data = np.nan * np.ones_like(maps['counts'].data)
-            result[name] = WcsNDMap(geom=maps['counts'].geom, data=data)
+            result[name] = maps['counts'].copy(data=data)
 
         mask = self.mask_default(maps, kernel)
 
@@ -325,6 +352,15 @@ class TSMapEstimator(object):
         if 'sqrt_ts' in which:
             result['sqrt_ts'] = self.sqrt_ts(result['ts'])
 
+        if downsampling_factor:
+            for name in which:
+                result[name] = result[name].upsample(
+                    factor=downsampling_factor,
+                    preserve_counts=UPSAMPLING_ARGS[name]['preserve_counts'],
+                    order=UPSAMPLING_ARGS[name]['order']
+                    )
+                result[name] = result[name].crop(crop_width=pad_width)
+
         return result
 
     def __str__(self):
@@ -338,163 +374,6 @@ class TSMapEstimator(object):
             info += '\t{key:13s}: {value}\n'.format(key=key, value=p[key])
         return info
 
-
-def compute_ts_image_multiscale(maps, psf_parameters, scales=[0], downsample='auto',
-                                residual=False, morphology='Gaussian2D', width=None,
-                                **kwargs):
-    """Compute multi-scale TS images using ``compute_ts_image``.
-
-    High level TS image computation using a multi-Gauss PSF kernel and assuming
-    a given source morphology. To optimize the performance the input data
-    can be sampled down when computing TS images on larger scales.
-
-    Parameters
-    ----------
-    images : `~gammapy.image.SkyImageList`
-        Image collection containing the data. Must contain the following:
-            * 'counts', Counts image
-            * 'background', Background image
-            * 'exposure', Exposure image
-    psf_parameters : dict
-        Dict defining the multi gauss PSF parameters.
-        See `~gammapy.irf.multi_gauss_psf` for details.
-    scales : list ([0])
-        List of scales to use for TS image computation.
-    downsample : int ('auto')
-        Down sampling factor. Can be set to 'auto' if the down sampling
-        factor should be chosen automatically.
-    residual : bool (False)
-        Compute a TS residual image.
-    morphology : str ('Gaussian2D')
-        Source morphology assumption. Either 'Gaussian2D' or 'Shell2D'.
-    **kwargs : dict
-        Keyword arguments forwarded to `TSImageEstimator`.
-
-    Returns
-    -------
-    multiscale_result : list
-        List of `~gammapy.image.SkyImageList` objects.
-    """
-    BINSZ = maps['counts'].geom.pixel_scales.mean().value
-    shape = maps['counts'].data.shape
-
-    multiscale_result = []
-
-    ts_estimator = TSMapEstimator(**kwargs)
-
-    for scale in scales:
-        log.info('Computing {}TS image for scale {:.3f} deg and {}'
-                 ' morphology.'.format('residual ' if residual else '',
-                                       scale,
-                                       morphology))
-
-        # Sample down and require that scale parameters is at least 5 pix
-        if downsample == 'auto':
-            factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
-                                    scale < 20 * BINSZ, scale < 40 * BINSZ],
-                                   [1, 2, 4, 4], 8))
-        else:
-            factor = int(downsample)
-
-        if factor == 1:
-            log.info('No down sampling used.')
-            downsampled = False
-        else:
-            if morphology == 'Shell2D':
-                factor /= 2
-            log.info('Using down sampling factor of {}'.format(factor))
-            downsampled = True
-
-        maps_downsampled = OrderedDict()
-        for name in maps:
-            if downsampled:
-                pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
-                maps_downsampled[name] = maps[name].pad(pad_width)
-                preserve_counts = name in ['counts', 'background', 'exclusion']
-                maps_downsampled[name] = maps_downsampled[name].downsample(factor,
-                                             preserve_counts=preserve_counts)
-            else:
-                maps_downsampled[name] = maps[name]
-
-        # Set up PSF and source kernel
-        kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
-                                        NEW_BINSZ=BINSZ * factor,
-                                        mode='oversample')
-
-        if scale > 0:
-            from astropy.convolution import convolve
-            sigma = scale / (BINSZ * factor)
-            if morphology == 'Gaussian2D':
-                source_kernel = Gaussian2DKernel(sigma, mode='oversample')
-            elif morphology == 'Shell2D':
-                model = SkyShell(lon_0=0, lat_0=0, r_i=sigma, r_o=(1 + width) * sigma)
-                x_size = _round_up_to_odd_integer(2 * sigma * (1 + width) + kernel.shape[0] / 2)
-                source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
-            else:
-                raise ValueError('Unknown morphology: {}'.format(morphology))
-            kernel = convolve(source_kernel, kernel)
-            kernel.normalize()
-
-        if residual:
-            maps_downsampled['background'].data += maps_downsampled['model'].data
-
-        # Compute TS image
-        ts_results = ts_estimator.run(maps_downsampled, kernel)
-
-        if downsampled:
-            for name, order in zip(['ts', 'sqrt_ts', 'flux', 'flux_err', 'niter'], [1, 1, 1, 0]):
-                preserve_counts = name in ['flux', 'flux_err']
-                ts_results[name] = ts_results[name].upsample(
-                    factor=factor,
-                    preserve_counts=preserve_counts,
-                    order=order
-                    )
-                ts_results[name] = ts_results[name].crop(crop_width=pad_width)
-
-        multiscale_result.append(ts_results)
-
-    return multiscale_result
-
-
-def compute_maximum_ts_image(ts_image_results):
-    """Compute maximum TS image across a list of given TS images.
-
-    Parameters
-    ----------
-    ts_image_results : list
-        List of `~gammapy.image.SkyImageList` objects.
-
-    Returns
-    -------
-    images : `~gammapy.image.SkyImageList`
-        Images (ts, niter, amplitude)
-    """
-    # Get data
-    ts = np.dstack([result.ts for result in ts_image_results])
-    niter = np.dstack([result.niter for result in ts_image_results])
-    amplitude = np.dstack([result.amplitude for result in ts_image_results])
-    scales = [result.scale for result in ts_image_results]
-
-    # Set up max arrays
-    ts_max = np.max(ts, axis=2)
-    scale_max = np.zeros(ts.shape[:-1])
-    niter_max = np.zeros(ts.shape[:-1])
-    amplitude_max = np.zeros(ts.shape[:-1])
-
-    for idx_scale, scale in enumerate(scales):
-        index = np.where(ts[:, :, idx_scale] == ts_max)
-        scale_max[index] = scale
-        niter_max[index] = niter[:, :, idx_scale][index]
-        amplitude_max[index] = amplitude[:, :, idx_scale][index]
-
-    meta = OrderedDict()
-    meta['MORPH'] = (ts_image_results[0].morphology, 'Source morphology assumption')
-
-    return SkyImageList([
-        SkyImage(name='ts', data=ts_max.astype('float32')),
-        SkyImage(name='niter', data=niter_max.astype('int16')),
-        SkyImage(name='amplitude', data=amplitude_max.astype('float32')),
-    ], meta=meta)
 
 
 def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
