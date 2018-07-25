@@ -28,14 +28,6 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1e-12
 MAX_NITER = 20
 RTOL = 1e-3
-UPSAMPLING_ARGS = {
-    'ts' : {'order': 1, 'preserve_counts': False},
-    'sqrt_ts': {'order': 1, 'preserve_counts': False},
-    'flux': {'order': 1, 'preserve_counts': False},
-    'flux_ul': {'order': 1, 'preserve_counts': False},
-    'flux_err': {'order': 1, 'preserve_counts': False},
-    'niter': {'order': 0, 'preserve_counts': False},
-    }
 
 
 def _extract_array(array, shape, position):
@@ -355,10 +347,11 @@ class TSMapEstimator(object):
 
         if downsampling_factor:
             for name in which:
+                order = 0 if name == 'niter' else 1
                 result[name] = result[name].upsample(
                     factor=downsampling_factor,
-                    preserve_counts=UPSAMPLING_ARGS[name]['preserve_counts'],
-                    order=UPSAMPLING_ARGS[name]['order']
+                    preserve_counts=False,
+                    order=order
                     )
                 result[name] = result[name].crop(crop_width=pad_width)
 
