@@ -5,7 +5,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from astropy.convolution.utils import discretize_oversample_2D
 from ..image.models.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
@@ -151,51 +150,6 @@ class TablePSF(object):
         point = SkyCoord(lon, lat)
         rad = center.separation(point)
         return self.evaluate(rad)
-
-    def kernel(self, reference, rad_max, normalize=True,
-               discretize_model_kwargs=dict(factor=10)):
-        """
-        Make a 2-dimensional kernel image.
-
-        The kernel image is evaluated on a cartesian grid defined by the
-        reference sky image.
-
-        Parameters
-        ----------
-        reference : `~gammapy.image.SkyImage` or `~gammapy.cube.SkyCube`
-            Reference sky image or sky cube defining the spatial grid.
-        rad_max : `~astropy.coordinates.Angle`
-            Radial size of the kernel
-        normalize : bool
-            Whether to normalize the kernel.
-
-        Returns
-        -------
-        kernel : `~astropy.units.Quantity`
-            Kernel 2D image of Quantities
-        """
-        from ..cube import SkyCube
-        rad_max = Angle(rad_max)
-
-        if isinstance(reference, SkyCube):
-            reference = reference.sky_image_ref
-
-        pixel_size = reference.wcs_pixel_scale()[0]
-
-        def _model(x, y):
-            """Model in the appropriate format for discretize_model."""
-            rad = np.sqrt(x * x + y * y) * pixel_size
-            return self.evaluate(rad)
-
-        npix = int(rad_max.radian / pixel_size.radian)
-        pix_range = (-npix, npix + 1)
-
-        kernel = discretize_oversample_2D(_model, x_range=pix_range, y_range=pix_range,
-                                          **discretize_model_kwargs)
-        if normalize:
-            kernel = kernel / kernel.sum()
-
-        return kernel
 
     def evaluate(self, rad, quantity='dp_domega'):
         r"""Evaluate PSF.
@@ -562,40 +516,6 @@ class EnergyDependentTablePSF(object):
         """
         psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
         return TablePSF(self.rad, psf_value, **kwargs)
-
-    def kernels(self, cube, rad_max, **kwargs):
-        """
-        Make a set of 2D kernel images, representing the PSF at different energies.
-
-        The kernel image is evaluated on the spatial and energy grid defined by
-        the reference sky cube.
-
-        Parameters
-        ----------
-        cube : `~gammapy.cube.SkyCube`
-            Reference sky cube.
-        rad_max `~astropy.coordinates.Angle`
-            PSF kernel size
-        kwargs : dict
-            Keyword arguments passed to `EnergyDependentTablePSF.table_psf_in_energy_band()`.
-
-        Returns
-        -------
-        kernels : list of `~numpy.ndarray`
-            List of 2D convolution kernels.
-        """
-        energies = cube.energies(mode='edges')
-
-        kernels = []
-        for emin, emax in zip(energies[:-1], energies[1:]):
-            energy_band = Quantity([emin, emax])
-            try:
-                psf = self.table_psf_in_energy_band(energy_band, **kwargs)
-                kernel = psf.kernel(cube.sky_image_ref, rad_max=rad_max)
-            except ValueError:
-                kernel = np.nan * np.ones((1, 1))  # Dummy, means "no kernel available"
-            kernels.append(kernel)
-        return kernels
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2,
                                  spectrum=None, **kwargs):

@@ -10,7 +10,6 @@ from ...utils.testing import assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...datasets import FermiGalacticCenter
 from ...irf import TablePSF, EnergyDependentTablePSF
-from ...image import SkyImage
 
 
 @requires_dependency('scipy')
@@ -110,11 +109,6 @@ def test_EnergyDependentTablePSF():
     desired = 1.0
     energy_band = Quantity([10, 500], 'GeV')
     psf_band = psf.table_psf_in_energy_band(energy_band)
-
-    ref = SkyImage.empty(binsz=0.1)
-    rad_max = psf_band.containment_radius(0.99)
-    actual = psf_band.kernel(ref, normalize=True, rad_max=rad_max).value.sum()
-    assert_allclose(actual, desired)
 
 
 @requires_data('gammapy-extra')
