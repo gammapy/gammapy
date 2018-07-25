@@ -11,7 +11,6 @@ from astropy.coordinates import Angle
 import astropy.wcs.utils
 import astropy.units as u
 from regions import SkyRegion
-from ..image.utils import make_header
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
@@ -44,6 +43,71 @@ def cast_to_shape(param, shape, dtype):
         param[i] = p * np.ones(shape, dtype=dtype)
 
     return tuple(param)
+
+
+# TODO: remove this function, move code to the one caller below
+def _make_image_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
+                       proj='CAR', coordsys='GAL',
+                       xrefpix=None, yrefpix=None):
+    """Generate a FITS header from scratch.
+
+    Uses the same parameter names as the Fermi tool gtbin.
+
+    If no reference pixel position is given it is assumed ot be
+    at the center of the image.
+
+    Parameters
+    ----------
+    nxpix : int, optional
+        Number of pixels in x axis. Default is 100.
+    nypix : int, optional
+        Number of pixels in y axis. Default is 100.
+    binsz : float, optional
+        Bin size for x and y axes in units of degrees. Default is 0.1.
+    xref : float, optional
+        Coordinate system value at reference pixel for x axis. Default is 0.
+    yref : float, optional
+        Coordinate system value at reference pixel for y axis. Default is 0.
+    proj : string, optional
+        Projection type. Default is 'CAR' (cartesian).
+    coordsys : {'CEL', 'GAL'}, optional
+        Coordinate system. Default is 'GAL' (Galactic).
+    xrefpix : float, optional
+        Coordinate system reference pixel for x axis. Default is None.
+    yrefpix: float, optional
+        Coordinate system reference pixel for y axis. Default is None.
+
+    Returns
+    -------
+    header : `~astropy.io.fits.Header`
+        Header
+    """
+    nxpix = int(nxpix)
+    nypix = int(nypix)
+    if not xrefpix:
+        xrefpix = (nxpix + 1) / 2.
+    if not yrefpix:
+        yrefpix = (nypix + 1) / 2.
+
+    if coordsys == 'CEL':
+        ctype1, ctype2 = 'RA---', 'DEC--'
+    elif coordsys == 'GAL':
+        ctype1, ctype2 = 'GLON-', 'GLAT-'
+    else:
+        raise ValueError('Unsupported coordsys: {}'.format(proj))
+
+    pars = {
+        'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
+        'CTYPE1': ctype1 + proj,
+        'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1': -binsz,
+        'CTYPE2': ctype2 + proj,
+        'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
+    }
+
+    header = fits.Header()
+    header.update(pars)
+
+    return header
 
 
 class WcsGeom(MapGeom):
@@ -309,9 +373,11 @@ class WcsGeom(MapGeom):
 
         # FIXME: Need to propagate refpix
 
-        header = make_header(npix[0].flat[0], npix[1].flat[0],
-                             binsz[0].flat[0], float(xref), float(yref),
-                             proj, coordsys, refpix, refpix)
+        header = _make_image_header(
+            npix[0].flat[0], npix[1].flat[0],
+            binsz[0].flat[0], float(xref), float(yref),
+            proj, coordsys, refpix, refpix,
+        )
         wcs = WCS(header)
         return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
 
@@ -496,7 +562,6 @@ class WcsGeom(MapGeom):
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
 
-
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
         if coords.size == 0:
@@ -561,7 +626,7 @@ class WcsGeom(MapGeom):
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
                     np.putmask(idxs[i], (idx < 0) | (
-                               idx >= self.axes[i - 2].nbin), -1)
+                            idx >= self.axes[i - 2].nbin), -1)
 
         return idxs
 

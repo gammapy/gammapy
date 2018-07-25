@@ -17,11 +17,11 @@ from astropy import units as u
 from astropy.nddata.utils import Cutout2D
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
-from regions import PixCoord, PixelRegion, SkyRegion
+from regions import PixCoord, SkyRegion
 from ..utils.fits import SmartHDUList, fits_header_to_meta_dict
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
-from ..image.utils import make_header
+from ..maps.wcs import _make_image_header
 
 __all__ = ['SkyImage']
 
@@ -268,8 +268,10 @@ class SkyImage(MapBase):
         image : `~gammapy.image.SkyImage`
             Empty image.
         """
-        header = make_header(nxpix, nypix, binsz, xref, yref,
-                             proj, coordsys, xrefpix, yrefpix)
+        header = _make_image_header(
+            nxpix, nypix, binsz, xref, yref,
+            proj, coordsys, xrefpix, yrefpix,
+        )
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
         header.update(meta)
