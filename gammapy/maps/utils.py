@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 from astropy.io import fits
 from ..utils.random import get_random_state
-from ..utils.scripts import make_path
 
 
 def fill_poisson(map_in, mu, random_state='random-seed'):
