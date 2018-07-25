@@ -5,7 +5,6 @@ from ...utils.testing import requires_dependency
 from ...image import (
     colormap_hess,
     colormap_milagro,
-    GalacticPlaneSurveyPanelPlot,
 )
 
 
@@ -44,9 +43,3 @@ def test_colormap_milagro():
             (1., (1.0, 1.0, 1.0)),
             ]
     _check_cmap_rgb_vals(vals, cmap)
-
-
-@requires_dependency('matplotlib')
-def test_GalacticPlaneSurveyPanelPlot():
-    plot = GalacticPlaneSurveyPanelPlot(npanels=3)
-    assert_allclose(plot.panel_parameters['npanels'], 3)

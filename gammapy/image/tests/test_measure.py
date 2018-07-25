@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import pytest
 from astropy.units import Quantity
 from astropy.modeling.models import Gaussian2D
 from astropy.coordinates import SkyCoord
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
-from ...image import (measure_labeled_regions,
-                      measure_containment_radius,
+from ...image import (measure_containment_radius,
                       measure_image_moments,
                       measure_containment,
                       measure_curve_of_growth, SkyImage)
@@ -15,17 +15,9 @@ from ...image import (measure_labeled_regions,
 BINSZ = 0.02
 
 
-def generate_example_image():
-    """
-    Generate some greyscale image to run the detection on.
-    """
-    x = y = np.linspace(0, 3 * np.pi, 100)
-    X, Y = np.meshgrid(x, y)
-    image = X * Y * np.sin(X) ** 2 * np.sin(Y) ** 2
-    return image
 
-
-def generate_gaussian_image():
+@pytest.fixture
+def gaussian_image():
     """
     Generate some greyscale image to run the detection on.
     """
@@ -40,21 +32,9 @@ def generate_gaussian_image():
     return image
 
 
-GAUSSIAN_IMAGE = generate_gaussian_image()
-
-
-@requires_dependency('scipy')
-def test_measure():
-    image = generate_example_image()
-    labels = np.zeros_like(image, dtype=int)
-    labels[10:20, 20:30] = 1
-    results = measure_labeled_regions(image, labels)
-    # TODO: check output!
-
-
-def test_measure_image_moments():
+def test_measure_image_moments(gaussian_image):
     """Test measure_image_moments function"""
-    moments = measure_image_moments(GAUSSIAN_IMAGE)
+    moments = measure_image_moments(gaussian_image)
     reference = [Quantity(1, 'cm-2 s-1'),
                  Quantity(0, 'deg'),
                  Quantity(0, 'deg'),
@@ -66,29 +46,29 @@ def test_measure_image_moments():
         assert_quantity_allclose(val, ref, atol=Quantity(1e-12, val.unit))
 
 
-def test_measure_containment():
+def test_measure_containment(gaussian_image):
     """Test measure_containment function"""
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
     radius = Quantity(0.2 * np.sqrt(2 * np.log(5)), 'deg')
-    frac = measure_containment(GAUSSIAN_IMAGE, position, radius)
+    frac = measure_containment(gaussian_image, position, radius)
     ref = Quantity(0.8, 'cm-2 s-1')
     assert_quantity_allclose(frac, ref, rtol=0.01)
 
 
 @requires_dependency('scipy')
-def test_measure_containment_radius():
+def test_measure_containment_radius(gaussian_image):
     """Test measure_containment_radius function"""
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
-    rad = measure_containment_radius(GAUSSIAN_IMAGE, position, 0.8)
+    rad = measure_containment_radius(gaussian_image, position, 0.8)
     ref = Quantity(0.2 * np.sqrt(2 * np.log(5)), 'deg')
     assert_quantity_allclose(rad, ref, rtol=0.01)
 
 
-def test_measure_curve_of_growth():
+def test_measure_curve_of_growth(gaussian_image):
     """Test measure_curve_of_growth function"""
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
     radius_max = Quantity(0.6, 'deg')
-    radius, containment = measure_curve_of_growth(GAUSSIAN_IMAGE, position, radius_max)
+    radius, containment = measure_curve_of_growth(gaussian_image, position, radius_max)
     sigma = Quantity(0.2, 'deg')
     containment_ana = Quantity(1 - np.exp(-0.5 * (radius / sigma) ** 2).value, 'cm-2 s-1')
     assert_quantity_allclose(containment, containment_ana, rtol=0.1)
