@@ -9,14 +9,13 @@ from astropy.coordinates import SkyCoord
 from ..utils.fits import earth_location_from_dict
 from ..utils.time import time_ref_from_dict
 from ..utils.table import table_row_to_dict
-from .data_store import ObservationList
 from ..irf import EnergyDependentTablePSF, PSF3D
 
 __all__ = [
     'Observation',
     'ObservationMeta',
     'ObservationIACT',
-    'DataStoreObservation',
+    'ObservationIACTLinked',
     'ObservationIACTMaker',
     'Checker',
     'ObservationChecker',
@@ -42,26 +41,29 @@ class Observation(object):
         Energy dispersion, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/edisp/index.html
     psf : `~gammapy.irf.PSF3D` or `~gammapy.irf.EnergyDependentMultiGaussPSF` or `~gammapy.irf.PSFKing`
         Tabled Point Spread Function, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/psf/index.html
+    bkg: `~gammapy.irf.Background2D` or `~gammapy.irf.Background3D`
+        Background rate, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html
 
     Other Parameters
     ----------------
     **kwargs :
         All other keyword arguments are passed on to the `~gammapy.data.ObservationMeta` constructor and can be
-        accessed via the `metadata` class attribute:
+        accessed via the `meta` class attribute:
 
-        >>> from gammapy.data.observation import Observation
+        >>> from gammapy.data import Observation
         >>> myObs = Observation(obs_id=1, events=my_event_list, myMetadata='Best observation ever!')
-        >>> myObs.metadata.myMetadata
+        >>> myObs.meta.myMetadata
 
     """
-    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, **kwargs):
+    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None, **kwargs):
         self.obs_id = obs_id
         self.gti = gti
         self.events = events
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
-        self.metadata = ObservationMeta(**kwargs)
+        self.bkg = bkg
+        self.meta = ObservationMeta(**kwargs)
 
     def __str__(self):
         """Generate summary info string."""
@@ -87,13 +89,14 @@ class ObservationMeta(object):
     """Container class for observation metadata
 
     TODO: Maybe come up with some basic metadata that every observation holds
+          or maybe just add the metadata to the obs.__dict__ ??
 
     Parameter
     ---------
     **kwargs :
         Arbitrary keyword arguments that will be stored as class attributes:
 
-        >>> from gammapy.data.observation import ObservationMeta
+        >>> from gammapy.data import ObservationMeta
         >>> myObsMeta = ObservationMeta(myMeta='hands off!', yourMeta='whatever', ourMeta='fine...')
         >>> myObsMeta.myMeta
 
@@ -133,7 +136,7 @@ class ObservationIACT(Observation):
         Defined as dead-time over observation time.
 
         Dead-time is defined as the time during the observation
-        where the detector didn't record events:
+        where the detector did not record events:
         https://en.wikipedia.org/wiki/Dead_time
         https://adsabs.harvard.edu/abs/2004APh....22..285F
 
@@ -143,7 +146,7 @@ class ObservationIACT(Observation):
         Observation start time
     tstop : `~astropy.units.Quantity`
         Observation stop time
-    telescope_ids : list of `int`
+    telescope_ids : list of int
         Telescope IDs of participating telescopes
 
     Other Parameters
@@ -177,6 +180,14 @@ class ObservationIACT(Observation):
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
         return ss
+
+    @classmethod
+    def from_data_store(cls, data_store, obs_id):
+        """Convenient method to create this observation from a DataStore object.
+
+        See :func:`gammapy.data.ObservationIACTMaker.from_data_store`
+        """
+        return ObservationIACTMaker.from_data_store(data_store, obs_id)
 
     # TODO: This method should be moved outside of this class
     def make_psf(self, position, energy=None, rad=None):
@@ -217,7 +228,7 @@ class ObservationIACT(Observation):
         return psf
 
 
-class DataStoreObservation(ObservationIACT):
+class ObservationIACTLinked(ObservationIACT):
     """An IACT observation linked to a DataStore object.
 
     In this way the event list, for example, will not be stored in memory but always be read from disk.
@@ -238,7 +249,7 @@ class DataStoreObservation(ObservationIACT):
     """
 
     def __init__(self, data_store, obs_id, **kwargs):
-        super(DataStoreObservation, self).__init__(**kwargs)
+        super(ObservationIACTLinked, self).__init__(**kwargs)
         # Assert that `obs_id` is available
         if obs_id not in data_store.obs_table['OBS_ID']:
             raise ValueError('OBS_ID = {} not in obs index table.'.format(obs_id))
@@ -257,57 +268,48 @@ class DataStoreObservation(ObservationIACT):
     def events(self, value):
         pass
 
+    @classmethod
+    def from_data_store(cls, data_store, obs_id):
+        """Convenient method to create this observation from a DataStore object.
+
+        See :func:`gammapy.data.ObservationIACTMaker.from_data_store`
+        """
+        return ObservationIACTMaker.from_data_store(data_store, obs_id, link_data_store=True)
+
 
 class ObservationIACTMaker(object):
+    """Make IACT observations from different input types"""
     @staticmethod
-    def from_data_store(data_store, obs_ids=None, link_data_store=False):
-        """Make a list of IACT observations from a DataStore object.
+    def from_data_store(data_store, obs_id, link_data_store=False):
+        """Make an IACT observations from a DataStore object.
 
         Parameters
         ----------
         data_store : `~gammapy.data.DataStore`
             DataStore object
-        obs_ids : `int` or list of `int`, default: `None`
-            Observation IDs. If `None`, all observations in the DataStore object will be selected.
+        obs_id : int
+            Observation ID
         link_data_store : `bool`, default: `False`
-            If true, the observations will be linked to the DataStore object. See `~gammapy.data.DataStoreObservation`.
+            If true, the observations will be linked to the DataStore object. See `~gammapy.data.ObservationIACTLinked`.
 
         Returns
         --------
-        obs_list : list of `~gammapy.data.ObservationIACT` or `~gammapy.data.DataStoreObservation`
-            If `link_data_store` is True, a list of `~gammapy.data.DataStoreObservation` will be returned.
+        obs : `~gammapy.data.ObservationIACT` or `~gammapy.data.ObservationIACTLinked`
+            If `link_data_store` is True, a `~gammapy.data.ObservationIACTLinked` instance will be returned.
 
         """
-        obs_ids = np.atleast_1d(obs_ids)
+        obs = ObservationIACTLinked(data_store, obs_id) if link_data_store else ObservationIACT(obs_id=obs_id)
+        obs_filler = _ObservationIACTFillerFromDataStore(obs, data_store, obs_id)
+        obs_filler.run()
 
-        # If no obs_ids are given, take all obs_ids available in the DataStore object
-        if not obs_ids:
-            obs_ids = data_store.obs_table['OBS_ID']
-
-        # List of Observation objects that will be returned
-        # TODO: Use a normal list, for this we have to move the two methods of ObservationList
-        #       make_mean_psf is used once, make_mean_edisp is not used at all at the moment
-        obs_list = ObservationList()
-
-        for obs_id in obs_ids:
-            obs = DataStoreObservation(data_store, obs_id) if link_data_store else ObservationIACT(obs_id=obs_id)
-            obs_filler = _ObservationIACTFillerFromDataStore(obs, data_store, obs_id)
-            obs_filler.fill()
-
-            obs_list.append(obs)
-
-        return obs_list
+        return obs
 
 
 class _ObservationIACTFillerFromDataStore(object):
-    """Helper class for the ObservationIACTMaker to fill an Observation with data from a DataStore object
+    """Helper class for the ObservationIACTMaker to fill an Observation with data from a DataStore object.
 
     Additionally it stores following parameters in the metadata of the observation:
 
-    bkg_2d : `~gammapy.irf.Background2D`
-        2D Background rate, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#bkg-2d
-    bkg_3d : `~gammapy.irf.Background3D`
-        3D Background rate, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#bkg-3d
     target_radec : `~astropy.coordinates.SkyCoord`
         Target RA / DEC sky coordinates
     observatory_earth_location : `~astropy.coordinates.EarthLocation`
@@ -327,24 +329,20 @@ class _ObservationIACTFillerFromDataStore(object):
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
 
-    def fill_events_and_gti(self):
-        """Locates and loads the event list and GTIs via the HDU_TYPE and HDU_CLASS keywords.
+    def fill_from_hdu_types(self):
+        """Locates and loads objects from HDU tables via the HDU_TYPE and HDU_CLASS keywords.
 
         For details see: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
-        TODO: data_store should get a method like 'load', like the one from the old DataStoreObservation class
+        TODO: data_store should get a method like `load`, like the one from the old DataStoreObservation class
         """
-        self.obs.events = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='events').load()
-        self.obs.gti = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='gti').load()
-
-    def fill_irfs(self):
-        """Locates and loads the IRFS via the HDU_TYPE and HDU_CLASS keywords
-
-        For details see: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
-        TODO: data_store should get a method like 'load', like the one from the old DataStoreObservation class
-        """
-        self.obs.aeff = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='aeff').load()
-        self.obs.edisp = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='edisp').load()
-        self.obs.psf = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='psf').load()
+        # hdu types and the observation attributes happen to coincide
+        hdu_type_to_obs_attr = OrderedDict(events='events', gti='gti', aeff='aeff', edisp='edisp', psf='psf', bkg='bkg')
+        for hdu_type, obs_attr in hdu_type_to_obs_attr.items():
+            try:
+                setattr(self.obs, obs_attr,
+                        self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type=hdu_type).load())
+            except IndexError:
+                log.warning('fill_{} failed'.format(obs_attr))
 
     def fill_tstart(self):
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
@@ -371,32 +369,32 @@ class _ObservationIACTFillerFromDataStore(object):
         alt, az = self.obs_info['ALT_PNT'], self.obs_info['AZ_PNT']
         self.obs.pointing_altaz = SkyCoord(az, alt, unit='deg', frame='altaz')
 
-    def fill_poiinting_zen(self):
+    def fill_pointing_zen(self):
         self.obs.pointing_zen = Quantity(self.obs_info['ZEN_PNT'], unit='deg')
 
     def fill_target_radec(self):
         lon, lat = self.obs_info['RA_OBJ'], self.obs_info['DEC_OBJ']
-        self.obs.metadata.target_radec = SkyCoord(lon, lat, unit='deg', frame='icrs')
+        self.obs.meta.target_radec = SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     def fill_observatory_earth_location(self):
-        self.obs.metadata.observatory_earth_location = earth_location_from_dict(self.obs_info)
+        self.obs.meta.observatory_earth_location = earth_location_from_dict(self.obs_info)
 
     def fill_muoneff(self):
-        self.obs.metadata.muoneff = self.obs_info['MUONEFF']
+        self.obs.meta.muoneff = self.obs_info['MUONEFF']
 
-    def fill(self):
+    def run(self):
         fill_methods = [method for method in dir(self) if method.startswith('fill_')]
         for fill_method in fill_methods:
             try:
                 getattr(self, fill_method)()
-            except KeyError:
+            except KeyError or IndexError:
                 log.warning("{} failed".format(fill_method))
 
 
 class Checker(object):
     """Base class to perform some sanity checks on a certain container class.
 
-    TODO: Move this to another file/module
+    TODO: Move this class to another file/module
     """
     def run(self, checks='all'):
         """Run checks.
