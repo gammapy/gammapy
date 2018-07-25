@@ -99,9 +99,10 @@ def _get_covar(minuit):
     but we still want to support v1.2
     """
     n = len(minuit.parameters)
-    m = np.empty((n, n))
+    m = np.zeros((n, n))
     print(minuit.covariance)
     for i1, k1 in enumerate(minuit.parameters):
         for i2, k2 in enumerate(minuit.parameters):
-            m[i1, i2] = minuit.covariance[(k1, k2)]
+            if set([k1, k2]).issubset(minuit.list_of_vary_param()):
+                m[i1, i2] = minuit.covariance[(k1, k2)]
     return m
