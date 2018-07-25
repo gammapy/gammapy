@@ -36,6 +36,10 @@ def fit_iminuit(parameters, function, opts_minuit=None):
         opts_minuit = {}
     opts_minuit.update(make_minuit_par_kwargs(parameters))
 
+    # In Gammapy, we have the factor 2 in the likelihood function
+    # This means `errordef=1` in the Minuit interface is correct
+    opts_minuit.setdefault('errordef', 1)
+
     minuit = Minuit(minuit_func.fcn,
                     forced_parameters=parameters.names,
                     **opts_minuit)
@@ -75,8 +79,7 @@ def make_minuit_par_kwargs(parameters):
     kwargs = {}
     for par in parameters.parameters:
         kwargs[par.name] = par.value
-        if par.frozen:
-            kwargs['fix_{}'.format(par.name)] = True
+
         min_ = None if np.isnan(par.min) else par.min
         max_ = None if np.isnan(par.max) else par.max
         kwargs['limit_{}'.format(par.name)] = (min_, max_)
@@ -86,8 +89,8 @@ def make_minuit_par_kwargs(parameters):
         else:
             kwargs['error_{}'.format(par.name)] = parameters.error(par.name)
 
-        # TODO: Check if we need 0.5 or 1
-        kwargs['errordef'] = 1
+        if par.frozen:
+            kwargs['fix_{}'.format(par.name)] = True
 
     return kwargs
 
