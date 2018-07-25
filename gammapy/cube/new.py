@@ -219,7 +219,7 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
 
 
 class MapMaker(object):
-    """Make all basic maps for a single observation.
+    """Make all basic maps from observations.
 
     Parameters
     ----------
@@ -251,8 +251,8 @@ class MapMaker(object):
         self.cutout_mode = cutout_mode
         self.maps={}
 
-    def process_single_obs(self, obs):
-        """Process one observation.
+    def process_obs(self, obs):
+        """Process one observation and add it to the cutout image
 
         Parameters
         ----------
@@ -289,15 +289,8 @@ class MapMaker(object):
             acceptance_obs_map, counts_obs_map, exclusion_mask_cutout,
         )
 
-        return cutout_slices, counts_obs_map, expo_obs_map, background_obs_map
+        self._add_cutouts(cutout_slices, counts_obs_map, expo_obs_map, background_obs_map)
 
-    def process_obs(self, obs):
-        """
-         This will process a single observation and add it to the global cutout image.
-         This function may be removed after discussions.
-         """
-        cs, counts, exp, back = self.process_single_obs(obs)
-        self._add_cutouts(cs, counts, exp, back)
 
     def _add_cutouts(self, cutout_slices, counts_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
@@ -323,9 +316,7 @@ class MapMaker(object):
         from astropy.utils.console import ProgressBar
 
         for obs in ProgressBar(obs_list):
-            cs, count, exp, back = self.process_single_obs(obs)
-            self._add_cutouts(cs, count, exp, back)
-
+            self.process_obs(obs)
         self.maps = {
             'counts_map': self.counts_map,
             'background_map': self.background_map,
@@ -333,33 +324,3 @@ class MapMaker(object):
                 }
         return self.maps
 
-    def create_list(self, obs_list):
-        """
-        Return a list of counts, exposure and background maps.
-        This is useful if the user wants maps separately for each observation,
-        instead of a single stacked map.
-
-        This will be quite intensive, so should be used only if necessary.
-        Parameters
-        -----------------
-         obs_list: `~gammapy.data.ObservationList`
-            List of observations
-
-        Returns
-        -----------
-            map_list: dict of list of counts, background and exposure maps.
-        """
-
-        from astropy.utils.console import ProgressBar
-        counts_map, back_map, exp_map = [], [], []
-        for obs in ProgressBar(obs_list):
-            cs, count, exp, back = self.process_single_obs(obs)
-            counts_map.append(count)
-            back_map.append(back)
-            exp_map.append(exp)
-
-        map_list = {"counts_map": counts_map,
-                "background_map": back_map,
-                "exposure_map": exp_map}
-
-        return map_list

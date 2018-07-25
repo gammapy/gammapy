@@ -91,6 +91,7 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     # val = bkg_cube.lookup(pos, energy=1 * u.TeV)
     # assert_allclose(val, 0)
 
+
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("mode, expected", [("trim", 107214.0), ("strict", 53486.0)])
 def test_MapMaker(mode,expected):
@@ -100,10 +101,16 @@ def test_MapMaker(mode,expected):
     geom = WcsGeom.create(binsz=0.1*u.deg, skydir=pos_SagA, width=15.0, axes=[energy_axis])
     mmaker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
     obs = [110380, 111140]
+
     for obsid in obs:
         mmaker.process_obs(ds.obs(obsid))
     assert mmaker.exposure_map.unit == "m2 s"
-    assert_quantity_allclose(mmaker.count_map.data.sum(), expected)
+    assert_quantity_allclose(mmaker.counts_map.data.sum(), expected)
 
+    maker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
+    obslist = ds.obs_list(obs)
+    maps = maker.run(obslist)
+    assert maps['exposure_map'].unit == "m2 s"
+    assert_quantity_allclose(maps['counts_map'].data.sum(), expected)
 
 
