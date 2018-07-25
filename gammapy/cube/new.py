@@ -69,15 +69,15 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     cntmap : `~gammapy.maps.WcsNDMap`
         Count cube (3D) in true energy bins
     """
-    count_map = WcsNDMap(ref_geom)
-    fill_map_counts(count_map, events)
+    counts_map = WcsNDMap(ref_geom)
+    fill_map_counts(counts_map, events)
 
     # Compute and apply FOV offset mask
     offset = make_map_separation(ref_geom, pointing).quantity
     offset_mask = offset >= offset_max
-    count_map.data[:, offset_mask] = 0
+    counts_map.data[:, offset_mask] = 0
 
-    return count_map
+    return counts_map
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max):
@@ -179,7 +179,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max):
 
 
 def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
-    """Build Normalized background map from a given acceptance map and count map.
+    """Build Normalized background map from a given acceptance map and counts map.
 
     This operation is normally performed on single observation maps.
     An exclusion map is used to avoid using regions with significant gamma-ray emission.
@@ -238,7 +238,7 @@ class MapMaker(object):
         self.ref_geom = ref_geom
 
         # We instantiate the end products of the MakeMaps class
-        self.count_map = WcsNDMap(self.ref_geom)
+        self.counts_map = WcsNDMap(self.ref_geom)
 
         self.exposure_map = WcsNDMap(self.ref_geom, unit="m2 s")
 
@@ -249,8 +249,9 @@ class MapMaker(object):
         self.exclusion_map.data += 1
 
         self.cutout_mode = cutout_mode
+        self.maps={}
 
-    def process_obs(self, obs):
+    def process_single_obs(self, obs):
         """Process one observation.
 
         Parameters
@@ -270,7 +271,7 @@ class MapMaker(object):
 
         cutout_geom = exclusion_mask_cutout.geom
 
-        count_obs_map = make_map_counts(
+        counts_obs_map = make_map_counts(
             obs.events, cutout_geom, obs.pointing_radec, self.offset_max,
         )
 
@@ -285,13 +286,80 @@ class MapMaker(object):
         )
 
         background_obs_map = make_map_background_fov(
-            acceptance_obs_map, count_obs_map, exclusion_mask_cutout,
+            acceptance_obs_map, counts_obs_map, exclusion_mask_cutout,
         )
 
-        self._add_cutouts(cutout_slices, count_obs_map, expo_obs_map, background_obs_map)
+        return cutout_slices, counts_obs_map, expo_obs_map, background_obs_map
 
-    def _add_cutouts(self, cutout_slices, count_obs_map, expo_obs_map, acceptance_obs_map):
+    def process_obs(self, obs):
+        """
+         This will process a single observation and add it to the global cutout image.
+         This function may be removed after discussions.
+         """
+        cs, counts, exp, back = self.process_single_obs(obs)
+        self._add_cutouts(cs, counts, exp, back)
+
+    def _add_cutouts(self, cutout_slices, counts_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
-        self.count_map.data[cutout_slices] += count_obs_map.data
+        self.counts_map.data[cutout_slices] += counts_obs_map.data
         self.exposure_map.data[cutout_slices] += expo_obs_map.quantity.to(self.exposure_map.unit).value
         self.background_map.data[cutout_slices] += acceptance_obs_map.data
+
+    def run(self, obs_list):
+        """
+        Run MapMaker for a list of observations to create
+        stacked counts, exposure and background maps
+
+        Parameters
+        --------------
+        obs_list: `~gammapy.data.ObservationList`
+            List of observations
+
+        Returns
+        -----------
+        maps: dict of stacked counts, background and exposure maps.
+        """
+
+        from astropy.utils.console import ProgressBar
+
+        for obs in ProgressBar(obs_list):
+            cs, count, exp, back = self.process_single_obs(obs)
+            self._add_cutouts(cs, count, exp, back)
+
+        self.maps = {
+            'counts_map': self.counts_map,
+            'background_map': self.background_map,
+            'exposure_map': self.exposure_map
+                }
+        return self.maps
+
+    def create_list(self, obs_list):
+        """
+        Return a list of counts, exposure and background maps.
+        This is useful if the user wants maps separately for each observation,
+        instead of a single stacked map.
+
+        This will be quite intensive, so should be used only if necessary.
+        Parameters
+        -----------------
+         obs_list: `~gammapy.data.ObservationList`
+            List of observations
+
+        Returns
+        -----------
+            map_list: dict of list of counts, background and exposure maps.
+        """
+
+        from astropy.utils.console import ProgressBar
+        counts_map, back_map, exp_map = [], [], []
+        for obs in ProgressBar(obs_list):
+            cs, count, exp, back = self.process_single_obs(obs)
+            counts_map.append(count)
+            back_map.append(back)
+            exp_map.append(exp)
+
+        map_list = {"counts_map": counts_map,
+                "background_map": back_map,
+                "exposure_map": exp_map}
+
+        return map_list
