@@ -241,7 +241,7 @@ class CompoundSkyModel(object):
 
 
 class SumSkyModel(object):
-    """Sum of a list of `SkyModel`s.
+    """Sum of independent `SkyModel` components.
 
     Not sure if we want this class, or only a + operator on SkyModel.
     If we keep it, then probably SkyModel should become an ABC
