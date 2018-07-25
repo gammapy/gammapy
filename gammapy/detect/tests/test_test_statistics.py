@@ -5,23 +5,29 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy.convolution import Gaussian2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...utils.scripts import make_path
-from ...maps.utils import read_fits_hdus
+from ...maps import Map
 from ...detect import TSMapEstimator
+
+
+@pytest.fixture
+def input_maps():
+    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+    maps = {}
+    maps['counts'] = Map.read(filename, hdu='counts')
+    maps['exposure'] = Map.read(filename, hdu='exposure')
+    maps['background'] = Map.read(filename, hdu='background')
+    return maps
 
 
 @requires_dependency('scipy')
 @requires_dependency('skimage')
 @requires_data('gammapy-extra')
-def test_compute_ts_map():
+def test_compute_ts_map(input_maps):
     """Minimal test of compute_ts_image"""
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-    maps = read_fits_hdus(filename)
-
     kernel = Gaussian2DKernel(5)
 
     ts_estimator = TSMapEstimator(method='leastsq iter', n_jobs=4)
-    result = ts_estimator.run(maps, kernel=kernel)
+    result = ts_estimator.run(input_maps, kernel=kernel)
 
     assert_allclose(1714.23, result['ts'].data[99, 99], rtol=1e-2)
     assert_allclose(3, result['niter'].data[99, 99])
@@ -33,15 +39,12 @@ def test_compute_ts_map():
 @requires_dependency('scipy')
 @requires_dependency('skimage')
 @requires_data('gammapy-extra')
-def test_compute_ts_map_downsampled():
+def test_compute_ts_map_downsampled(input_maps):
     """Minimal test of compute_ts_image"""
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-    maps = read_fits_hdus(filename)
-
     kernel = Gaussian2DKernel(2.5)
 
     ts_estimator = TSMapEstimator(method='root brentq', n_jobs=4)
-    result = ts_estimator.run(maps, kernel=kernel, downsampling_factor=2)
+    result = ts_estimator.run(input_maps, kernel=kernel, downsampling_factor=2)
 
     assert_allclose(1675.28, result['ts'].data[99, 99], rtol=1e-2)
     assert_allclose(7, result['niter'].data[99, 99])

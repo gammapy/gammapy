@@ -141,16 +141,3 @@ def find_bintable_hdu(hdulist):
             return hdu
 
     raise AttributeError('No BinTable HDU found.')
-
-
-def read_fits_hdus(filename):
-    """Read fits file with mutiple image hdus and return an `OrderedDict`
-    of `Map` objects.
-    """
-    from .wcsnd import WcsNDMap
-    maps = OrderedDict()
-
-    for hdu in fits.open(str(make_path(filename))):
-        maps[hdu.name] = WcsNDMap.from_hdu(hdu)
-
-    return maps
