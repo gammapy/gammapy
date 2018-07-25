@@ -157,7 +157,7 @@ class SpectrumExtraction(object):
             backscal=bkg.a_on,
             offset=offset,
             livetime=obs.observation_live_time_duration,
-            obs_id=obs.obs_info['OBS_ID'])
+            obs_id=obs.obs_id)
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
