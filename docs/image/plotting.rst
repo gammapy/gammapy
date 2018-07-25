@@ -18,6 +18,6 @@ Multi-panel Galactic plane survey image plots
 ---------------------------------------------
 
 The following example shows how to plot a very wide Galactic plane survey image
-by splitting it into multiple panels using the `~gammapy.image.GalacticPlaneSurveyPanelPlot` class.
+by splitting it into multiple panels using the `~gammapy.image.MapPanelPlotter` class.
 
 .. plot:: image/survey_example.py
