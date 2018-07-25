@@ -100,9 +100,13 @@ class SkyModel(object):
     """
 
     def __init__(self, spatial_model, spectral_model, name='SkyModel'):
+        self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
-        self.name = name
+        self._parameters = ParameterList(
+            spatial_model.parameters.parameters +
+            spectral_model.parameters.parameters
+        )
 
     @property
     def spatial_model(self):
@@ -117,10 +121,7 @@ class SkyModel(object):
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        return ParameterList(
-            self.spatial_model.parameters.parameters +
-            self.spectral_model.parameters.parameters
-        )
+        return self._parameters
 
     @parameters.setter
     def parameters(self, parameters):
@@ -254,6 +255,11 @@ class SumSkyModel(object):
 
     def __init__(self, components):
         self.components = components
+        pars = []
+        for model in self.components:
+            for p in model.parameters.parameters:
+                pars.append(p)
+        self._parameters = ParameterList(pars)
 
     @property
     def parameters(self):
@@ -261,11 +267,7 @@ class SumSkyModel(object):
 
         Currently no way to distinguish spectral and spatial.
         """
-        pars = []
-        for model in self.components:
-            for p in model.parameters.parameters:
-                pars.append(p)
-        return ParameterList(pars)
+        return self._parameters
 
     @parameters.setter
     def parameters(self, parameters):

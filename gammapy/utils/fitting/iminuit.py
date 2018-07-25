@@ -4,7 +4,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-
 __all__ = [
     'fit_iminuit',
 ]
@@ -42,6 +41,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
                     **opts_minuit)
 
     minuit.migrad()
+    parameters.covariance = _get_covar(minuit)
 
     return parameters, minuit
 
@@ -77,16 +77,32 @@ def make_minuit_par_kwargs(parameters):
         kwargs[par.name] = par.value
         if par.frozen:
             kwargs['fix_{}'.format(par.name)] = True
-        limits = par.min, par.max
-        limits = np.where(np.isnan(limits), None, limits)
-        kwargs['limit_{}'.format(par.name)] = limits
+        min_ = None if np.isnan(par.min) else par.min
+        max_ = None if np.isnan(par.max) else par.max
+        kwargs['limit_{}'.format(par.name)] = (min_, max_)
 
-        if parameters.covariance is not None:
-            err = parameters.error(par.name)
-            if err != '0':
-                kwargs['error_{}'.format(par.name)] = err
+        if parameters.covariance is None:
+            kwargs['error_{}'.format(par.name)] = 1
+        else:
+            kwargs['error_{}'.format(par.name)] = parameters.error(par.name)
 
         # TODO: Check if we need 0.5 or 1
         kwargs['errordef'] = 1
 
     return kwargs
+
+
+def _get_covar(minuit):
+    """Get full covar matrix as Numpy array.
+
+    This was added as `minuit.np_covariance` in `iminuit` in v1.3,
+    but we still want to support v1.2
+    """
+    n = len(minuit.parameters)
+    m = np.zeros((n, n))
+    print(minuit.covariance)
+    for i1, k1 in enumerate(minuit.parameters):
+        for i2, k2 in enumerate(minuit.parameters):
+            if set([k1, k2]).issubset(minuit.list_of_vary_param()):
+                m[i1, i2] = minuit.covariance[(k1, k2)]
+    return m

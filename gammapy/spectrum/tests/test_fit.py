@@ -232,9 +232,7 @@ class TestSpectralFit:
                                  2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'),
                                  rtol=1e-2)
         assert_allclose(result.npred_src[60], 0.5642179482961884)
-
-        with pytest.raises(ValueError):
-            self.fit.result[0].to_table()
+        self.fit.result[0].to_table()
 
     def test_basic_errors(self):
         self.fit.fit()

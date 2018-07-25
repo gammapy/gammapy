@@ -21,24 +21,6 @@ from .. import (
 
 
 @pytest.fixture(scope='session')
-def sky_model():
-    spatial_model = SkyGaussian(
-        lon_0='0.2 deg',
-        lat_0='0.1 deg',
-        sigma='0.2 deg',
-    )
-    spectral_model = PowerLaw(
-        index=3,
-        amplitude='1e-11 cm-2 s-1 TeV-1',
-        reference='1 TeV',
-    )
-    return SkyModel(
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
-    )
-
-
-@pytest.fixture(scope='session')
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1., 1., 3), name="energy", unit=u.TeV)
     return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(2, 2),
@@ -89,11 +71,30 @@ def psf(geom):
     return psf_kernel
 
 
-@pytest.fixture(scope='session')
-def counts(sky_model, exposure, psf, edisp):
+@pytest.fixture
+def sky_model():
+    spatial_model = SkyGaussian(
+        lon_0='0.2 deg',
+        lat_0='0.1 deg',
+        sigma='0.2 deg',
+    )
+    spectral_model = PowerLaw(
+        index=3,
+        amplitude='1e-11 cm-2 s-1 TeV-1',
+        reference='1 TeV',
+    )
+    return SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+    )
+
+
+@pytest.fixture
+def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
         sky_model=sky_model,
         exposure=exposure,
+        background=background,
         psf=psf,
         edisp=edisp,
     )
@@ -105,38 +106,41 @@ def counts(sky_model, exposure, psf, edisp):
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
 def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
-    input_model = sky_model.copy()
+    sky_model.parameters['lon_0'].value = 0.5
+    sky_model.parameters['lat_0'].value = 0.5
+    sky_model.parameters['index'].value = 2
+    sky_model.parameters['sigma'].frozen = True
 
-    input_model.parameters['lon_0'].value = 0.5
-    input_model.parameters['index'].value = 2
-    input_model.parameters['lat_0'].value = 0.5
-    input_model.parameters['sigma'].frozen = True
-
-    input_model.parameters.set_parameter_errors({
-        'lon_0': '0.1 deg',
-        'index': '0.1',
-        'amplitude': '1e-12 cm-2 s-1 TeV-1',
+    sky_model.parameters.set_parameter_errors({
+        'lon_0': '0.01 deg',
+        'lat_0': '0.01 deg',
+        'sigma': '0.02 deg',
+        'index': 0.1,
+        'amplitude': '1e-13 cm-2 s-1 TeV-1',
     })
 
     fit = MapFit(
-        model=input_model,
+        model=sky_model,
         counts=counts,
         exposure=exposure,
-        psf=psf,
         background=background,
+        psf=psf,
         edisp=edisp,
     )
     fit.fit()
+    pars = fit.model.parameters
 
-    assert_allclose(fit.model.parameters['index'].value,
-                    sky_model.parameters['index'].value,
-                    rtol=1e-2)
-    assert_allclose(fit.model.parameters['amplitude'].value,
-                    sky_model.parameters['amplitude'].value,
-                    rtol=1e-2)
-    assert_allclose(fit.model.parameters['lon_0'].value,
-                    sky_model.parameters['lon_0'].value,
-                    rtol=1e-2)
+    assert sky_model.parameters['lon_0'] is fit.model.parameters['lon_0']
+    assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+
+    assert_allclose(pars['lon_0'].value, 0.2, rtol=1e-2)
+    assert_allclose(pars.error('lon_0'), 0.005895, rtol=1e-2)
+
+    assert_allclose(pars['index'].value, 3, rtol=1e-2)
+    assert_allclose(pars.error('index'), 0.05614, rtol=1e-2)
+
+    assert_allclose(pars['amplitude'].value, 1e-11, rtol=1e-2)
+    assert_allclose(pars.error('amplitude'), 3.936e-13, rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
     stat_expected = 3840.0605649268496
