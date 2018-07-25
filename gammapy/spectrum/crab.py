@@ -55,17 +55,14 @@ class MeyerCrabModel(SpectralModel):
 
     See 2010A%26A...523A...2M, Appendix D.
     """
+    coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708])
 
     def __init__(self):
-        coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475,
-                                 -0.53616, -10.2708])
-        self.parameters = ParameterList([
-            Parameter('coefficients', coefficients)
-        ])
+        self.parameters = ParameterList([])
 
     @staticmethod
-    def evaluate(energy, coefficients):
-        polynomial = np.poly1d(coefficients)
+    def evaluate(energy):
+        polynomial = np.poly1d(MeyerCrabModel.coefficients)
         log_energy = np.log10(energy.to('TeV').value)
         log_flux = polynomial(log_energy)
         flux = np.power(10, log_flux) * u.Unit('erg / (cm2 s)')
