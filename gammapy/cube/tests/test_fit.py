@@ -99,10 +99,6 @@ def counts(sky_model, exposure, background, psf, edisp):
         edisp=edisp,
     )
     npred = evaluator.compute_npred()
-    # PSF kernel apply with FFT convolve did give negative npred previously
-    # TODO: resolve this somehow
-    assert np.min(npred) >= 0
-
     return WcsNDMap(exposure.geom, npred)
 
 
