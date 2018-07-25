@@ -9,6 +9,8 @@ from astropy.coordinates import SkyCoord
 from ..utils.fits import earth_location_from_dict
 from ..utils.time import time_ref_from_dict
 from ..utils.table import table_row_to_dict
+from .data_store import ObservationList
+from ..irf import EnergyDependentTablePSF, PSF3D
 
 __all__ = [
     'Observation',
@@ -16,6 +18,7 @@ __all__ = [
     'ObservationIACT',
     'DataStoreObservation',
     'ObservationIACTMaker',
+    'Checker',
     'ObservationChecker',
 ]
 
@@ -23,16 +26,16 @@ log = logging.getLogger(__name__)
 
 
 class Observation(object):
-    """Container class for a generic observations
+    """Container class for a generic observation
 
     Parameters
     ----------
-    obs_id : `int`
+    obs_id : int
         Observation ID
-    events : `~gammapy.data.EventList`
-        Event list, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html
     gti : `~gammapy.data.GTI`
         Good Time Intervals, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/events/gti.html
+    events : `~gammapy.data.EventList`
+        Event list, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/aeff/index.html
     edisp : `~gammapy.irf.EnergyDispersion2D`
@@ -46,15 +49,15 @@ class Observation(object):
         All other keyword arguments are passed on to the `~gammapy.data.ObservationMeta` constructor and can be
         accessed via the `metadata` class attribute:
 
-        >>> from gammapy.data import Observation
-        >>> myObs = Observation(obs_id=1, events=my_event_list, psf=my_psf, myMetadata='Best observation ever!')
+        >>> from gammapy.data.observation import Observation
+        >>> myObs = Observation(obs_id=1, events=my_event_list, myMetadata='Best observation ever!')
         >>> myObs.metadata.myMetadata
 
     """
-    def __init__(self, obs_id=None, events=None, gti=None, aeff=None, edisp=None, psf=None, **kwargs):
+    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, **kwargs):
         self.obs_id = obs_id
-        self.events = events
         self.gti = gti
+        self.events = events
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -64,13 +67,20 @@ class Observation(object):
         """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
         ss += '- Number of events: {}\n'.format(len(self.events.table) if self.events else 'None')
-        ss += '- PSF type: {}\n'.format(type(self.psf))
+        ss += '- Number of good time intervals: {}\n'.format(len(self.gti.table) if self.gti else 'None')
+        ss += '- Type of eff. area: {}\n'.format(type(self.aeff))
+        ss += '- Type of energy disp.: {}\n'.format(type(self.edisp))
+        ss += '- Type of PSF: {}\n'.format(type(self.psf))
         return ss
 
-    def check_observation(self):
-        """Convenient method to perform some basic sanity checks on this observation with the ObservationChecker."""
+    def check_observation(self, checks='all'):
+        """Convenient method to perform some basic sanity checks on
+        this observation with the ObservationChecker.
+
+        See docstring of :func:`gammapy.data.ObservationChecker.run`
+        """
         obs_checker = ObservationChecker(self)
-        return obs_checker.check_all()
+        return obs_checker.run(checks)
 
 
 class ObservationMeta(object):
@@ -83,9 +93,10 @@ class ObservationMeta(object):
     **kwargs :
         Arbitrary keyword arguments that will be stored as class attributes:
 
-        >>> from gammapy.data import ObservationMeta
+        >>> from gammapy.data.observation import ObservationMeta
         >>> myObsMeta = ObservationMeta(myMeta='hands off!', yourMeta='whatever', ourMeta='fine...')
         >>> myObsMeta.myMeta
+
     """
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -157,16 +168,53 @@ class ObservationIACT(Observation):
 
     def __str__(self):
         """Generate summary info string."""
-        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Number of events: {}\n'.format(len(self.events.table) if self.events else 'None')
-        ss += '- PSF type: {}\n'.format(type(self.psf))
+        ss = super(ObservationIACT, self).__str__()
         ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd if self.tstart else 'None')
-        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec if
-                                                                self.pointing_radec else 'None')
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
+            self.pointing_radec.ra if self.pointing_radec else 'None',
+            self.pointing_radec.dec if self.pointing_radec else 'None')
         ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
         return ss
+
+    # TODO: This method should be moved outside of this class
+    def make_psf(self, position, energy=None, rad=None):
+        """Make energy-dependent PSF for a given source position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position at which to compute the PSF
+        energy : `~astropy.units.Quantity`
+            1-dim energy array for the output PSF.
+            If none is given, the energy array of the PSF from the observation is used.
+        rad : `~astropy.coordinates.Angle`
+            1-dim offset wrt source position array for the output PSF.
+            If none is given, the offset array of the PSF from the observation is used.
+
+        Returns
+        -------
+        psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Energy dependent psf table
+        """
+        offset = position.separation(self.pointing_radec)
+        energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
+        rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
+
+        if isinstance(self.psf, PSF3D):
+            # PSF3D is a table PSF, so we use the native RAD binning by default
+            # TODO: should handle this via a uniform caller API
+            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
+        else:
+            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset, rad=rad).evaluate(energy)
+
+        arf = self.aeff.data.evaluate(offset=offset, energy=energy)
+        exposure = arf * self.observation_live_time_duration
+
+        psf = EnergyDependentTablePSF(energy=energy, rad=rad,
+                                      exposure=exposure, psf_value=psf_value)
+        return psf
 
 
 class DataStoreObservation(ObservationIACT):
@@ -226,7 +274,7 @@ class ObservationIACTMaker(object):
 
         Returns
         --------
-        obs_list : list of `~gammapy.data.Observation` or `~gammapy.data.DataStoreObservation`
+        obs_list : list of `~gammapy.data.ObservationIACT` or `~gammapy.data.DataStoreObservation`
             If `link_data_store` is True, a list of `~gammapy.data.DataStoreObservation` will be returned.
 
         """
@@ -237,7 +285,9 @@ class ObservationIACTMaker(object):
             obs_ids = data_store.obs_table['OBS_ID']
 
         # List of Observation objects that will be returned
-        obs_list = []
+        # TODO: Use a normal list, for this we have to move the two methods of ObservationList
+        #       make_mean_psf is used once, make_mean_edisp is not used at all at the moment
+        obs_list = ObservationList()
 
         for obs_id in obs_ids:
             obs = DataStoreObservation(data_store, obs_id) if link_data_store else ObservationIACT(obs_id=obs_id)
@@ -277,22 +327,24 @@ class _ObservationIACTFillerFromDataStore(object):
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
 
-    def fill_from_hdu_index_table(self):
-        """Locates and loads the HDU of interest via the HDU_TYPE and HDU_CLASS keywords.
+    def fill_events_and_gti(self):
+        """Locates and loads the event list and GTIs via the HDU_TYPE and HDU_CLASS keywords.
 
         For details see: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
+        TODO: data_store should get a method like 'load', like the one from the old DataStoreObservation class
         """
-        obs_from_hdu_dict = {
-            'events': ['events', None], 'gti': ['gti', None], 'aeff': ['aeff', None], 'edisp': ['edisp', None],
-            'psf': ['psf', None]
-        }
-        for obs_attr, hdu_value in obs_from_hdu_dict.items():
-            try:
-                setattr(self.obs, obs_attr, self.data_store.hdu_table.hdu_location(obs_id=self.obs_id,
-                                                                                   hdu_type=hdu_value[0],
-                                                                                   hdu_class=hdu_value[1]).load())
-            except KeyError:
-                log.warning("Could not fill {}".format(obs_attr))
+        self.obs.events = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='events').load()
+        self.obs.gti = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='gti').load()
+
+    def fill_irfs(self):
+        """Locates and loads the IRFS via the HDU_TYPE and HDU_CLASS keywords
+
+        For details see: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
+        TODO: data_store should get a method like 'load', like the one from the old DataStoreObservation class
+        """
+        self.obs.aeff = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='aeff').load()
+        self.obs.edisp = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='edisp').load()
+        self.obs.psf = self.data_store.hdu_table.hdu_location(obs_id=self.obs_id, hdu_type='psf').load()
 
     def fill_tstart(self):
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
@@ -341,7 +393,65 @@ class _ObservationIACTFillerFromDataStore(object):
                 log.warning("{} failed".format(fill_method))
 
 
-class ObservationChecker(object):
+class Checker(object):
+    """Base class to perform some sanity checks on a certain container class.
+
+    TODO: Move this to another file/module
+    """
+    def run(self, checks='all'):
+        """Run checks.
+
+        Parameters
+        ----------
+        checks : str or list of str or 'all' (default)
+            Which checks to run, a list of available checks is found in the property `available_checks`.
+
+        Returns
+        -------
+        results : `~collections.OrderedDict`
+            Dictionary with failure messages for the individual checks that failed.
+            If `results['status'] == 'ok'`, every available check passed.
+        """
+        if checks == 'all':
+            checks = self.available_checks
+        else:
+            unknown_checks = set(checks).difference(self.available_checks)
+            if unknown_checks:
+                raise ValueError('Unknown checks: {}'.format(unknown_checks))
+
+        results = OrderedDict()
+        for check in np.atleast_1d(checks):
+            try:
+                check_method = getattr(self, 'check_{}'.format(check))
+                results[check] = check_method()
+            except AttributeError:
+                results[check] = OrderedDict(status='Not available')
+
+        self._check_all_status(results)
+
+        return results
+
+    @property
+    def available_checks(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def _add_status(check_result):
+        if check_result:
+            check_result['status'] = "failed"
+        else:
+            check_result['status'] = "ok"
+
+    @staticmethod
+    def _check_all_status(results):
+        status = 'ok'
+        for key in results:
+            if results[key]['status'] == 'failed':
+                status = 'failed'
+        results['status'] = status
+
+
+class ObservationChecker(Checker):
     """Class to perform sanity checks on an Observation object
 
     Parameter
@@ -352,36 +462,32 @@ class ObservationChecker(object):
     def __init__(self, observation=None):
         self.obs = observation
 
-    def check_all(self):
-        """Perform some basic sanity checks on an observation.
-
-        Returns
-        -------
-        results : `~collections.OrderedDict`
-            Dictionary with failure messages for the individual checks that failed.
-            If `results['status'] == 'ok'`, every check passed.
-        """
-        results = OrderedDict()
-        self.results['event list'] = self.check_event_list()
-        self.results['effective area'] = self.check_effective_area()
-        self.results['energy dispersion'] = self.check_energy_dispersion()
-        self.results['psf'] = self.check_psf()
-
-        status = 'ok'
-        for key in results:
-            if results[key]['status'] == 'failed':
-                status = 'failed'
-        results['status'] = status
-
-        return results
+    @property
+    def available_checks(self):
+        return ['event_list', 'gti', 'effective_area', 'energy_dispersion', 'psf']
 
     def check_event_list(self):
-        """Check event list"""
+        """Check event list
+        TODO: Implement an EventListChecker and just call it from here, same goes for the rest of the checks. Like:
+            >>> def check_event_list(self):
+            >>>     return EventListChecker(obs.events).run()
+        """
         check_result = OrderedDict()
         if len(self.obs.events.table) == 0:
             check_result['nr of events'] = 'No events found in the event list'
 
         self._add_status(check_result)
+
+        return check_result
+
+    def check_gti(self):
+        """Check GTI"""
+        check_result = OrderedDict()
+        if len(self.obs.gti.table) == 0:
+            check_result['nr of gtis'] = 'No good time intervals found in the GTI table'
+
+        self._add_status(check_result)
+
         return check_result
 
     def check_effective_area(self):
@@ -393,6 +499,7 @@ class ObservationChecker(object):
             check_result['values'] = "maximum entry of effective area table <= 0"
 
         self._add_status(check_result)
+
         return check_result
 
     def check_energy_dispersion(self):
@@ -402,6 +509,7 @@ class ObservationChecker(object):
             check_result['value'] = "maximum entry of energy dispersion table <= 0"
 
         self._add_status(check_result)
+
         return check_result
 
     def check_psf(self):
@@ -411,11 +519,5 @@ class ObservationChecker(object):
             check_result['energy thresholds'] = "LO_THRES >= HI_THRES in psf meta data"
 
         self._add_status(check_result)
-        return check_result
 
-    @staticmethod
-    def _add_status(check_result):
-        if check_result:
-            check_result['status'] = "failed"
-        else:
-            check_result['status'] = "ok"
+        return check_result
