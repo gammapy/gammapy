@@ -9,8 +9,7 @@ from astropy.coordinates import Angle
 __all__ = [
     'colormap_hess',
     'colormap_milagro',
-    'fits_to_png',
-    'SkyImagePanelPlotter',
+    'MapPanelPlotter',
     'illustrate_colormap',
     'grayify_colormap',
 ]
@@ -18,12 +17,12 @@ __all__ = [
 __doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
 
 
-class SkyImagePanelPlotter(object):
+class MapPanelPlotter(object):
     """
-    Sky image panel plotter class
+    Mape panel plotter class.
 
     Given a `~matplotlib.pyplot.Figure` object this class creates axes objects
-    using `~matplotlib.gridspec.GridSpec` and plots a given sky image onto these.
+    using `~matplotlib.gridspec.GridSpec` and plots a given sky map onto these.
 
     Parameters
     ----------
@@ -80,41 +79,41 @@ class SkyImagePanelPlotter(object):
         ax.set_ylim(*ylim_pix)
         return ax
 
-    def plot_panel(self, skyimage, panel=1, panel_fov=None, **kwargs):
+    def plot_panel(self, image, panel=1, panel_fov=None, **kwargs):
         """
         Plot sky image on one panel.
 
         Parameters
         ----------
-        skyimage : `~gammapy.image.SkyImage`
-            Sky image to plot.
+        map : `~gammapy.maps.WcsNDMap`
+            Map to plot.
         panel : int
             Which panel to plot on (counted from top).
         """
         if panel_fov is None:
             panel_fov = panel
         spec = self.grid_spec[panel]
-        ax = self.figure.add_subplot(spec, projection=skyimage.wcs)
+        ax = self.figure.add_subplot(spec, projection=image.geom.wcs)
         try:
-            ax = skyimage.plot(ax=ax, **kwargs)[1]
+            ax = image.plot(ax=ax, **kwargs)[1]
         except AttributeError:
-            ax = skyimage.plot_rgb(ax=ax, **kwargs)
+            ax = image.plot_rgb(ax=ax, **kwargs)
         ax = self._set_ax_fov(ax, panel_fov)
         return ax
 
-    def plot(self, skyimage, **kwargs):
+    def plot(self, image, **kwargs):
         """
         Plot sky image on all panels.
 
         Parameters
         ----------
-        skyimage : `~gammapy.image.SkyImage`
-            Sky image to plot.
+       map : `~gammapy.maps.WcsNDMap`
+            Map to plot.
         """
         p = self.parameters
         axes = []
         for panel in range(p['npanels']):
-            ax = self.plot_panel(skyimage, panel=panel, **kwargs)
+            ax = self.plot_panel(image, panel=panel, **kwargs)
             axes.append(ax)
         return axes
 
@@ -266,63 +265,6 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     cmap = LinearSegmentedColormap.from_list(name='milagro', colors=rgb_colors)
 
     return cmap
-
-
-def fits_to_png(infile, outfile, draw, dpi=100):
-    """Plot FITS image in PNG format.
-
-    For the default ``dpi=100`` a 1:1 copy of the pixels in the FITS image
-    and the PNG image is achieved, i.e. they have exactly the same size.
-
-    Parameters
-    ----------
-    infile : str
-        Input FITS file name
-    outfile : str
-        Output PNG file name
-    draw : callable
-        Callback function ``draw(figure)``
-        where ``figure`` is an `~aplpy.FITSFigure`.
-    dpi : int
-        Resolution
-
-    Examples
-    --------
-    >>> def draw(figure):
-    ...     x, y, width, height = 42, 0, 3, 2
-    ...     figure.recenter(x, y, width, height)
-    ...     figure.show_grayscale()
-    >>> from gammapy.image import fits_to_png
-    >>> fits_to_png('image.fits', 'image.png', draw)
-    """
-    import matplotlib
-    matplotlib.use('Agg')  # Prevents image popup
-    import matplotlib.pyplot as plt
-    from astropy.io import fits
-    from aplpy import FITSFigure
-
-    # Peak ahead just to get the figure size
-    NAXIS1 = float(fits.getval(infile, 'NAXIS1'))
-    NAXIS2 = float(fits.getval(infile, 'NAXIS2'))
-
-    # Note: For dpi=100 I get exactly the same FITS and PNG image size in pix.
-    figsize = np.array((NAXIS1, NAXIS2))
-    figure = plt.figure(figsize=figsize / dpi)
-    # Also try this:
-    # matplotlib.rcParams['figure.figsize'] = NAXIS1, NAXIS2
-    # figsize(x,y)
-
-    subplot = [0, 0, 1, 1]
-    figure = FITSFigure(infile, figure=figure, subplot=subplot)
-
-    draw(figure)
-
-    figure.axis_labels.hide()
-    figure.tick_labels.hide()
-    figure.ticks.set_linewidth(0)
-    figure.frame.set_linewidth(0)
-
-    figure.save(outfile, max_dpi=dpi, adjust_bbox=False)
 
 
 def grayify_colormap(cmap, mode='hsp'):

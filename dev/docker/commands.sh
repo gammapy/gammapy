@@ -43,7 +43,6 @@ if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL uncertainties; fi
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
 if [[ $SETUP_CMD == build_docs* ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION Sphinx matplotlib scipy; fi
 if [[ $SETUP_CMD == build_docs* ]]; then $PIP_INSTALL linkchecker; fi
-if [[ $SETUP_CMD == build_docs* ]]; then $PIP_INSTALL aplpy; fi
 if [[ $SETUP_CMD == 'test --coverage' ]]; then $PIP_INSTALL coverage coveralls; fi
 python setup.py $SETUP_CMD
 if [[ $SETUP_CMD == build_docs* ]]; then linkchecker docs/_build/html; fi

@@ -36,7 +36,6 @@ dependencies:
   - pytest
   - pytest-cov
   - sphinx
-  - aplpy
   - pandoc
   - pylint
   - flake8

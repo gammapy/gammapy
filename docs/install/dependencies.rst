@@ -42,7 +42,6 @@ Currently optional dependencies that are being considered as core dependencies:
 Allowed optional dependencies:
 
 * `matplotlib`_ for plotting
-* `aplpy`_ for sky image plotting (provides a high-level API)
 * `pandas`_ CSV read / write; DataFrame
 * `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
@@ -52,4 +51,4 @@ Allowed optional dependencies:
 * `emcee`_ for fitting by MCMC sampling
 * `h5py`_ for `HDF5 <http://en.wikipedia.org/wiki/Hierarchical_Data_Format>`__ data handling
 * `healpy`_ for `HEALPIX <http://healpix.jpl.nasa.gov/>`__ data handling
-* `nbsphinx`_ for transformation of Jupyter notebooks into fixed-text documentation 
+* `nbsphinx`_ for transformation of Jupyter notebooks into fixed-text documentation

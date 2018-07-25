@@ -72,7 +72,6 @@ intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/'
 intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/', None)
-intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
 intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
 intersphinx_mapping['iminuit'] = ('http://iminuit.readthedocs.io/en/latest/', None)
