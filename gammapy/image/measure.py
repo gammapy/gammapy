@@ -20,7 +20,7 @@ def measure_image_moments(image):
 
     Parameters
     ----------
-    image : `gammapy.image.SkyImage`
+    image : `gammapy.maps.Map`
         Image to measure on.
 
     Returns
@@ -29,16 +29,17 @@ def measure_image_moments(image):
         List of image moments:
         [A, x_cms, y_cms, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
     """
+    data = image.quantity
     x, y = _wrapped_coordinates(image)
-    A = image.data[np.isfinite(image.data)].sum()
+    A = data[np.isfinite(data)].sum()
 
     # Center of mass
-    x_cms = (x * image.data)[np.isfinite(image.data)].sum() / A
-    y_cms = (y * image.data)[np.isfinite(image.data)].sum() / A
+    x_cms = (x * data)[np.isfinite(data)].sum() / A
+    y_cms = (y * data)[np.isfinite(data)].sum() / A
 
     # Second moments
-    x_var = ((x - x_cms) ** 2 * image.data)[np.isfinite(image.data)].sum() / A
-    y_var = ((y - y_cms) ** 2 * image.data)[np.isfinite(image.data)].sum() / A
+    x_var = ((x - x_cms) ** 2 * data)[np.isfinite(data)].sum() / A
+    y_var = ((y - y_cms) ** 2 * data)[np.isfinite(data)].sum() / A
     x_sigma = np.sqrt(x_var)
     y_sigma = np.sqrt(y_var)
 
@@ -51,15 +52,16 @@ def measure_containment(image, position, radius):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyImage`
+    image :`gammapy.maps.Map`
         Image to measure on.
     position : `~astropy.coordinates.SkyCoord`
         Source position on the sky.
     radius : float
         Radius of the region to measure the containment in.
     """
-    separation = image.coordinates().separation(position)
-    return measure_containment_fraction(image.data, radius, separation)
+    coords = image.geom.get_coord()
+    separation = coords.skycoord.separation(position)
+    return measure_containment_fraction(image.quantity, radius, separation)
 
 
 def measure_containment_radius(image, position, containment_fraction=0.8):
@@ -70,7 +72,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyImage`
+    image :`gammapy.maps.Map`
         Image to measure on.
     position : `~astropy.coordinates.SkyCoord`
         Source position on the sky.
@@ -83,11 +85,12 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
         Containment radius (pix)
     """
     from scipy.optimize import brentq
-
-    separation = image.coordinates().separation(position)
+    data = image.quantity
+    coords = image.geom.get_coord()
+    separation = coords.skycoord.separation(position)
 
     # Normalize image
-    data = image.data / image.data[np.isfinite(image.data)].sum()
+    data = data / data[np.isfinite(data)].sum()
 
     def func(r):
         return measure_containment_fraction(data, r, separation.value) - containment_fraction
@@ -96,12 +99,12 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
     return Quantity(containment_radius, separation.unit)
 
 
-def measure_containment_fraction(image, radius, separation):
+def measure_containment_fraction(data, radius, separation):
     """Measure containment fraction.
 
     Parameters
     ----------
-    image :`gammapy.image.SkyImage`
+    data :`~astropy.unit.Quantity`
         Image to measure on.
     radius : `~astropy.units.Quantity`
         Containment radius.
@@ -115,8 +118,8 @@ def measure_containment_fraction(image, radius, separation):
     """
     # Set up indices and containment mask
     containment_mask = separation < radius
-    mask = np.logical_and(np.isfinite(image), containment_mask)
-    containment_fraction = image[mask].sum()
+    mask = np.isfinite(data) & containment_mask
+    containment_fraction = data[mask].sum()
     return containment_fraction
 
 
@@ -154,6 +157,6 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
 
 
 def _wrapped_coordinates(image):
-    coords = image.coordinates()
+    coords = image.geom.get_coord().skycoord
     return coords.data.lon.wrap_at('180d'), coords.data.lat
 
