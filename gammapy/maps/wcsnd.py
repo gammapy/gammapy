@@ -530,7 +530,19 @@ class WcsNDMap(WcsMap):
 
 
     def plot_interactive(self, ax=None, fig=None, **kwargs):
+        """
+        Plot ND array on matplotlib WCS axes with interactive widgets
+        to explore the non spatial axes.
 
+        Parameters
+        ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+        """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
         from ipywidgets.widgets.interaction import interact, fixed
