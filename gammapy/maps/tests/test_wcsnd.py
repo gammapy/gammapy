@@ -242,12 +242,18 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     m = WcsNDMap(geom)
     coords = m.geom.get_coord(flat=True)
     m.set_by_coord(coords, coords[1])
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp='nearest', fill_value=None))
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp='linear', fill_value=None))
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp=1, fill_value=None))
-    m.interp_by_coord(coords, interp=1, fill_value=0)
+    assert_allclose(coords[1], m.interp_by_coord(coords, interp='nearest'))
+    assert_allclose(coords[1], m.interp_by_coord(coords, interp='linear'))
+    assert_allclose(coords[1], m.interp_by_coord(coords, interp=1))
     if geom.is_regular and not geom.is_allsky:
         assert_allclose(coords[1], m.interp_by_coord(coords, interp='cubic'))
+
+    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=SkyCoord(0., 0., unit='deg', frame='icrs'),
+                          proj=proj, coordsys=coordsys, axes=axes)
+    m = WcsNDMap(geom)
+    coords = m.geom.get_coord(flat=True)
+    assert_allclose(np.zeros_like(m.interp_by_coord(coords, fill_value=0)), m.interp_by_coord(coords, fill_value=0))
+
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
