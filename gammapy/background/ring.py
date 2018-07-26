@@ -5,9 +5,11 @@ from collections import OrderedDict
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
+from astropy.convolution import convolve_fft
 import astropy.units as u
 from ..image import SkyImage, SkyImageList
 from ..image.utils import scale_cube
+from ..maps import Map
 
 __all__ = [
     'AdaptiveRingBackgroundEstimator',
@@ -17,6 +19,27 @@ __all__ = [
     'ring_alpha',
 ]
 
+
+def _convolve_map(map, kernel):
+    """Convolve input map with kernel.
+
+    The same kernel is used for each 2D map along the map axes.
+
+    Parameters
+    ----------
+    map : `~gammapy.maps.WcsNDMap`
+        input map
+    kernel : `~astropy.convolution.Ring2DKernel`
+        the kernel
+    Returns
+    -------
+    convolved_map : `~gammapy.maps.WcsNDMap`
+        output map
+    """
+    convolved_map = map.copy()
+    for img, idx in map.iter_by_image():
+        convolved_map.data[idx] = convolve_fft(img, kernel)#, normalize_kernel=True, boundary='fill', fill_value=0)
+    return convolved_map
 
 class AdaptiveRingBackgroundEstimator(object):
     """Adaptive ring background algorithm.
@@ -256,14 +279,16 @@ class RingBackgroundEstimator(object):
 
         from astropy import units as u
         from gammapy.background import RingBackgroundEstimator
-        from gammapy.image import SkyImageList
+        from gammapy.maps import WcsNDMap
 
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-        images = SkyImageList.read(filename)
-        images['exposure'].name = 'exposure_on'
+        images=dict()
+        images['counts']=WcsNDMap.read(filename, hdu='counts')
+        images['exposure_on']=WcsNDMap.read(filename, hdu='exposure')
+        images['exclusion']=WcsNDMap.read(filename, hdu='exclusion')
         ring_bkg = RingBackgroundEstimator(r_in=0.35 * u.deg, width=0.3 * u.deg)
         results = ring_bkg.run(images)
-        results['background'].show()
+        results['background'].plot()
 
 
     See Also
@@ -279,8 +304,8 @@ class RingBackgroundEstimator(object):
 
         Parameters
         ----------
-        image : `gammapy.image.SkyImage`
-            Image
+        image : `~gammapy.maps.WcsNDMap`
+            Input Map
 
         Returns
         -------
@@ -289,7 +314,7 @@ class RingBackgroundEstimator(object):
         """
         p = self.parameters
 
-        scale = image.wcs_pixel_scale()[0]
+        scale = image.geom.pixel_scales[0].to('deg')
         r_in = p['r_in'].to('deg') / scale
         width = p['width'].to('deg') / scale
 
@@ -300,36 +325,31 @@ class RingBackgroundEstimator(object):
     def run(self, images):
         """Run ring background algorithm.
 
-        Required sky images: {required}
+        Required Maps: {required}
 
         Parameters
         ----------
-        images : `SkyImageList`
-            Input sky images.
+        images : dict of `~gammapy.maps.WcsNDMap`
+            Input sky maps.
 
         Returns
         -------
-        result : `SkyImageList`
-            Result sky images
+        result : dict of `~gammapy.maps.WcsNDMap`
+            Result sky maps
         """
         p = self.parameters
         required = ['counts', 'exposure_on', 'exclusion']
-        images.check_required(required)
-        counts, exposure_on, exclusion = [images[_] for _ in required]
-        wcs = counts.wcs.copy()
 
-        result = SkyImageList()
+        counts, exposure_on, exclusion = [images[_] for _ in required]
+
+        result = dict()
         ring = self.kernel(counts)
 
-        counts_excluded = SkyImage(data=counts.data * exclusion.data, wcs=wcs)
-        result['off'] = counts_excluded.convolve(ring.array, mode='constant',
-                                                 use_fft=p['use_fft_convolution'])
-        result['off'].data = result['off'].data.astype(int)
+        counts_excluded = counts.copy(data=counts.data * exclusion.data.astype('float'))
+        result['off'] = _convolve_map(counts_excluded, ring)
 
-        exposure_on_excluded = SkyImage(data=exposure_on.data * exclusion.data, wcs=wcs)
-
-        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, mode='constant',
-                                                               use_fft=p['use_fft_convolution'])
+        exposure_on_excluded = exposure_on.copy(data=exposure_on.data * exclusion.data.astype('float'))
+        result['exposure_off'] = _convolve_map(exposure_on_excluded, ring)
 
         with np.errstate(divide='ignore', invalid='ignore'):
             # set pixels, where ring is too small to NaN
@@ -340,10 +360,11 @@ class RingBackgroundEstimator(object):
             result['off'].data[not_has_exposure] = 0
             result['exposure_off'].data[not_has_exposure] = 0
 
-            result['alpha'] = SkyImage(data=exposure_on.data / result['exposure_off'].data, wcs=wcs)
+            result['alpha'] = exposure_on.copy(data=exposure_on.data / result['exposure_off'].data)
             result['alpha'].data[not_has_exposure] = 0
 
-        result['background'] = SkyImage(data=result['alpha'].data * result['off'].data, wcs=wcs)
+        result['background'] = counts.copy(data=result['alpha'].data * result['off'].data)
+
         return result
 
     def info(self):
