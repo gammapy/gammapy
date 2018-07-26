@@ -563,12 +563,17 @@ class WcsGeom(MapGeom):
         mode : {'center', 'edges'}
             Get center or edge coordinates for the spatial axes.
 
+<<<<<<< HEAD
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
         pix = self.get_pix(idx=idx, mode=mode)
+=======
+    def get_coord(self, idx=None, flat=False, mode='center'):
+        pix = self._get_pix_coords(idx=idx, mode=mode)
+>>>>>>> Migrate gammapy.image.profile to maps and clean up
         coords = self.pix_to_coord(pix)
 
         if flat:

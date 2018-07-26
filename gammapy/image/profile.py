@@ -5,13 +5,11 @@ from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
-from .core import SkyImage
+from astropy.coordinates import Angle
 
 __all__ = [
     'ImageProfile',
     'ImageProfileEstimator',
-    'radial_profile',
-    'radial_profile_label_image',
 ]
 
 
@@ -68,8 +66,10 @@ class ImageProfileEstimator(object):
         Coordinate edges to define a custom measument grid (optional).
     method : ['sum', 'mean']
         Compute sum or mean within profile bins.
-    axis : ['lon', 'lat']
+    axis : ['lon', 'lat', 'radial']
         Along which axis to estimate the profile.
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate for the radial profile option.
 
     Examples
     --------
@@ -100,17 +100,20 @@ class ImageProfileEstimator(object):
 
     """
 
-    def __init__(self, x_edges=None, method='sum', axis='lon'):
+    def __init__(self, x_edges=None, method='sum', axis='lon', center=None):
 
         self._x_edges = x_edges
 
         if method not in ['sum', 'mean']:
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
 
-        if axis not in ['lon', 'lat']:
+        if axis not in ['lon', 'lat', 'radial']:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        self.parameters = OrderedDict(method=method, axis=axis)
+        if method == 'radial' and center is None:
+            raise ValueError("Please provide center coordinate for radial profiles")
+
+        self.parameters = OrderedDict(method=method, axis=axis, center=center)
 
     def _get_x_edges(self, image):
         """
@@ -120,13 +123,18 @@ class ImageProfileEstimator(object):
             return self._x_edges
 
         p = self.parameters
-        coordinates = image.coordinates(mode='edges')
+        coordinates = image.geom.get_coord(mode='edges').skycoord
 
         if p['axis'] == 'lat':
             x_edges = coordinates[:, 0].data.lat
         elif p['axis'] == 'lon':
             lon = coordinates[0, :].data.lon
             x_edges = lon.wrap_at('180d')
+        elif p['axis'] == 'radial':
+            rad_step = image.geom.pixel_scales.mean()
+            corners = [0, 0, -1, -1], [0, -1, 0, -1]
+            rad_max = coordinates[corners].separation(p['center']).max()
+            x_edges = Angle(np.arange(0, rad_max.deg, rad_step.deg), unit='deg')
         return x_edges
 
     def _estimate_profile(self, image, image_err, mask):
@@ -168,8 +176,7 @@ class ImageProfileEstimator(object):
         """
         p = self.parameters
 
-        label_image = SkyImage.empty_like(image)
-        coordinates = image.coordinates()
+        coordinates = image.geom.get_coord().skycoord
         x_edges = self._get_x_edges(image)
 
         if p['axis'] == 'lon':
@@ -180,12 +187,15 @@ class ImageProfileEstimator(object):
             lat = coordinates.data.lat
             data = np.digitize(lat.degree, x_edges.deg)
 
+        elif p['axis'] == 'radial':
+            separation = coordinates.separation(p['center'])
+            data = np.digitize(separation.degree, x_edges.deg)
+
         if mask is not None:
             # assign masked values to background
             data[mask.data] = 0
 
-        label_image.data = data
-        return label_image
+        return image.copy(data=data)
 
     def run(self, image, image_err=None, mask=None):
         """
@@ -193,11 +203,11 @@ class ImageProfileEstimator(object):
 
         Parameters
         ----------
-        image : `~gammapy.image.SkyImage`
+        image : `~gammapy.maps.Map`
             Input image to run profile estimator on.
-        image_err : `~gammapy.image.SkyImage`
+        image_err : `~gammapy.maps.Map`
             Input error image to run profile estimator on.
-        mask : `~gammapy.image.SkyImage`
+        mask : `~gammapy.maps.Map`
             Optional mask to exclude regions from the measurement.
 
         Returns
@@ -206,14 +216,9 @@ class ImageProfileEstimator(object):
             Result image profile object.
         """
         p = self.parameters
-        image = image.copy()
 
         if image.unit.is_equivalent('count'):
-            image_err = SkyImage.empty_like(image)
-            image_err.data = np.sqrt(image.data)
-
-        if image_err:
-            image_err = image_err.copy()
+            image_err = image.copy(data=np.sqrt(image.data) )
 
         profile, profile_err = self._estimate_profile(image, image_err, mask)
 
@@ -487,146 +492,3 @@ class ImageProfile(object):
             table['profile_err'] /= norm
 
         return self.__class__(table)
-
-def radial_profile(image, center, radius):
-    """
-    Image radial profile.
-
-    TODO: show example and explain handling of "overflow"
-    and "underflow" bins (see ``radial_profile_label_image`` docstring).
-
-    Calls `numpy.digitize` to compute a label image and then
-    `scipy.ndimage.sum` to do measurements.
-
-    Parameters
-    ----------
-    image : `~gammapy.image.SkyImage`
-        Image
-    center : `~astropy.coordinates.SkyCoord`
-        Center position
-    radius : `~astropy.coordinates.Angle`
-        Offset bin edge array.
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-
-        Table with the following fields that define the binning:
-
-        * ``RADIUS_BIN_ID`` : Integer bin ID (starts at ``1``).
-        * ``RADIUS_MEAN`` : Radial bin center
-        * ``RADIUS_MIN`` : Radial bin minimum edge
-        * ``RADIUS_MAX`` : Radial bin maximum edge
-
-        And the following measurements from the pixels in each bin:
-
-        * ``N_PIX`` : Number of pixels
-        * ``SUM`` : Sum of pixel values
-        * ``MEAN`` : Mean of pixel values, computed as ``SUM / N_PIX``
-
-
-    Examples
-    --------
-
-    Make some example data::
-
-        from astropy.coordinates import Angle
-        from gammapy.image import SkyImage
-        image = SkyImage.empty()
-        image.fill(value=1)
-        center = image.center
-        radius = Angle([0.1, 0.2, 0.4, 0.5, 1.0], 'deg')
-
-    Compute and print a radial profile::
-
-        from gammapy.image import radial_profile
-        table = radial_profile(image, center, radius)
-        table.pprint()
-
-    If your measurement represents counts, you could e.g. use this
-    method to compute errors::
-
-        import numpy as np
-        table['SUM_ERR'] = np.sqrt(table['SUM'])
-        table['MEAN_ERR'] = table['SUM_ERR'] / table['N_PIX']
-
-    If you need to do special measurements or error computation
-    in each bin with access to the pixel values,
-    you could get the label image and then do the measurements yourself::
-
-        labels = radial_profile_label_image(image, center, radius)
-        labels.show()
-    """
-    labels = radial_profile_label_image(image, center, radius)
-
-    # Note: here we could decide to also measure overflow and underflow bins.
-    index = np.arange(1, len(radius))
-    table = _radial_profile_measure(image, labels, index)
-
-    table['RADIUS_BIN_ID'] = index
-    table['RADIUS_MIN'] = radius[:-1]
-    table['RADIUS_MAX'] = radius[1:]
-    table['RADIUS_MEAN'] = 0.5 * (table['RADIUS_MAX'] + table['RADIUS_MIN'])
-
-    meta = dict(
-        type='radial profile',
-        center=center,
-    )
-
-    table.meta.update(meta)
-    return table
-
-
-def radial_profile_label_image(image, center, radius):
-    """
-    Image radial profile label image.
-
-    The ``radius`` array defines ``n_bins = len(radius) - 1`` bins.
-
-    The label image has the following values:
-    * Value ``1`` to ``n_bins`` for pixels in ``(radius[0], radius[-1])``
-    * Value ``0`` for pixels with ``r < radius[0]``
-    * Value ``n_bins`` for pixels with ``r >= radius[-1]``
-
-    Parameters
-    ----------
-    image : `~gammapy.image.SkyImage`
-        Image
-    center : `~astropy.coordinates.SkyCoord`
-        Center position
-    radius : `~astropy.coordinates.Angle`
-        Offset bin edge array.
-
-    Returns
-    -------
-    labels : `~gammapy.image.SkyImage`
-        Label image (1 to max_label; outside pixels have value 0)
-    """
-    radius_image = image.coordinates().separation(center)
-    labels = np.digitize(radius_image.deg, radius.deg)
-
-    return SkyImage(name='labels', data=labels, wcs=image.wcs.copy())
-
-
-def _radial_profile_measure(image, labels, index):
-    """
-    Measurements for radial profile.
-
-    This is a helper function to do measurements.
-
-    TODO: this should call the generic function,
-    nothing radial profile-specific here.
-    """
-    from scipy import ndimage
-
-    # This function takes `SkyImage` objects as inputs
-    # but only operates on their `data`
-    image = image.data
-    labels = labels.data
-
-    table = Table()
-    table['N_PIX'] = ndimage.sum(np.ones_like(image), labels, index=index)
-    table['SUM'] = ndimage.sum(image, labels, index=index)
-    table['MEAN'] = table['SUM'] / table['N_PIX']
-
-    return table
