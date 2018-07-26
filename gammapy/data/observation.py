@@ -13,7 +13,6 @@ from ..irf import EnergyDependentTablePSF, PSF3D
 
 __all__ = [
     'Observation',
-    'ObservationMeta',
     'ObservationIACT',
     'ObservationIACTLinked',
     'ObservationIACTMaker',
@@ -41,21 +40,13 @@ class Observation(object):
         Energy dispersion, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/edisp/index.html
     psf : `~gammapy.irf.PSF3D` or `~gammapy.irf.EnergyDependentMultiGaussPSF` or `~gammapy.irf.PSFKing`
         Tabled Point Spread Function, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/psf/index.html
-    bkg: `~gammapy.irf.Background2D` or `~gammapy.irf.Background3D`
+    bkg : `~gammapy.irf.Background2D` or `~gammapy.irf.Background3D`
         Background rate, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html
-
-    Other Parameters
-    ----------------
-    **kwargs :
-        All other keyword arguments are passed on to the `~gammapy.data.ObservationMeta` constructor and can be
-        accessed via the `meta` class attribute:
-
-        >>> from gammapy.data import Observation
-        >>> myObs = Observation(obs_id=1, events=my_event_list, myMetadata='Best observation ever!')
-        >>> myObs.meta.myMetadata
+    meta : `~collections.OrderedDict`
+        Dictionary to store metadata
 
     """
-    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None, **kwargs):
+    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None, meta=None):
         self.obs_id = obs_id
         self.gti = gti
         self.events = events
@@ -63,7 +54,9 @@ class Observation(object):
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-        self.meta = ObservationMeta(**kwargs)
+        if not meta:
+            meta = OrderedDict()
+        self.meta = meta
 
     def __str__(self):
         """Generate summary info string."""
@@ -83,26 +76,6 @@ class Observation(object):
         """
         obs_checker = ObservationChecker(self)
         return obs_checker.run(checks)
-
-
-class ObservationMeta(object):
-    """Container class for observation metadata
-
-    TODO: Maybe come up with some basic metadata that every observation holds
-          or maybe just add the metadata to the obs.__dict__ ??
-
-    Parameter
-    ---------
-    **kwargs :
-        Arbitrary keyword arguments that will be stored as class attributes:
-
-        >>> from gammapy.data import ObservationMeta
-        >>> myObsMeta = ObservationMeta(myMeta='hands off!', yourMeta='whatever', ourMeta='fine...')
-        >>> myObsMeta.myMeta
-
-    """
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
 
 
 class ObservationIACT(Observation):
@@ -374,20 +347,20 @@ class _ObservationIACTFillerFromDataStore(object):
 
     def fill_target_radec(self):
         lon, lat = self.obs_info['RA_OBJ'], self.obs_info['DEC_OBJ']
-        self.obs.meta.target_radec = SkyCoord(lon, lat, unit='deg', frame='icrs')
+        self.obs.meta['target_radec'] = SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     def fill_observatory_earth_location(self):
-        self.obs.meta.observatory_earth_location = earth_location_from_dict(self.obs_info)
+        self.obs.meta['observatory_earth_location'] = earth_location_from_dict(self.obs_info)
 
     def fill_muoneff(self):
-        self.obs.meta.muoneff = self.obs_info['MUONEFF']
+        self.obs.meta['muoneff'] = self.obs_info['MUONEFF']
 
     def run(self):
         fill_methods = [method for method in dir(self) if method.startswith('fill_')]
         for fill_method in fill_methods:
             try:
                 getattr(self, fill_method)()
-            except KeyError or IndexError:
+            except KeyError:
                 log.warning("{} failed".format(fill_method))
 
 

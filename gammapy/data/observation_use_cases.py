@@ -2,6 +2,7 @@
 -------------------------------------------------------------------------
 """
 
+from collections import OrderedDict
 from gammapy.data import EventList, GTI
 from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D, EnergyDispersion2D, Background3D
 # ObservationIACT is a child class of a more generic Observation class.
@@ -16,8 +17,9 @@ bkg = Background3D.read(filename, hdu='BACKGROUND')
 
 my_events = EventList.read(...)
 my_gti = GTI.read(...)
+metadata = OrderedDict(my_meta='What meta?')
 
-my_obs = ObservationIACT(events=my_events, gti=my_gti, psf=psf, aeff=aeff, edisp=edisp, bkg=bkg)
+my_obs = ObservationIACT(events=my_events, gti=my_gti, psf=psf, aeff=aeff, edisp=edisp, bkg=bkg, meta=metadata)
 
 # now we can modify the objects in myObs or replace them:
 my_obs.events.select_time(time_intervall)
@@ -30,15 +32,6 @@ my_obs.irfs.aeff
 # Looks somehow cleaner to me and maybe in the future we could support multiple IRF in one observation.
 # Each IRF container would carry a GTI object to state its valid time intervals. Something like:
 my_obs.get_irfs(time).aeff
-
-
-""" There is new namespace for metadata with the ObservationMeta class.
------------------------------------------------------------------------
-"""
-
-my_obs = ObservationIACT(events=my_events, my_metadata='Best Obs ever')
-my_obs.meta.my_metadata
-# Not sure if this is 100% necessary, it just helps a bit to keep the namespace cleaner ...
 
 
 """ Creating observations from a DataStore object
