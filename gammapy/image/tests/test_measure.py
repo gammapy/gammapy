@@ -10,22 +10,23 @@ from ...utils.testing import requires_dependency
 from ...image import (measure_containment_radius,
                       measure_image_moments,
                       measure_containment,
-                      measure_curve_of_growth)
+                      measure_curve_of_growth,
+                      _wrapped_coordinates)
 from ...image.models import SkyGaussian
 from ...maps import WcsGeom, WcsNDMap
 
 BINSZ = 0.02
 
 
-@pytest.fixture
-def gaussian_image(scope='session'):
+@pytest.fixture(scope='session')
+def gaussian_image():
     """Generate gaussian test image.
     """
     geom = WcsGeom.create(npix=(201, 201), binsz=BINSZ, coordsys='GAL')
     sigma = 0.2
     gauss = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
     coordinates = geom.get_coord().skycoord
-    l = coordinates.data.lon.wrap_at('180d')
+    l, b = coordinates.data.lon.wrap_at('180d')
     b = coordinates.data.lat
     data = gauss(l.degree, b.degree)
     return WcsNDMap(geom=geom, data=data, unit='cm-2 s-1')
