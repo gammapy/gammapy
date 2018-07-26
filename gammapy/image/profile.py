@@ -79,14 +79,13 @@ class ImageProfileEstimator(object):
     .. code:: python
 
         import matplotlib.pyplot as plt
-        from gammapy.datasets import FermiGalacticCenter
-        from gammapy.image import ImageProfile, ImageProfileEstimator
-        from gammapy.image import SkyImage
+        from gammapy.image import ImageProfileEstimator
+        from gammapy.maps import Map
         from astropy import units as u
 
         # load example data
-        fermi_cts = SkyImage.from_image_hdu(FermiGalacticCenter.counts())
-        fermi_cts.unit = u.count
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/fermi_counts.fits.gz'
+        fermi_cts = Map.read(filename)
 
         # set up profile estimator and run
         p = ImageProfileEstimator(axis='lon', method='sum')
@@ -95,7 +94,6 @@ class ImageProfileEstimator(object):
         # smooth profile and plot
         smoothed = profile.smooth(kernel='gauss')
         smoothed.peek()
-
         plt.show()
 
     """
