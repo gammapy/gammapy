@@ -13,8 +13,7 @@ __all__ = [
     'make_map_counts',
     'make_map_exposure_true_energy',
     'make_map_background_irf',
-    'make_map_background_fov',
-    'MapMaker',
+    'make_map_background_fov'
 ]
 
 log = logging.getLogger(__name__)

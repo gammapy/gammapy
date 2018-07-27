@@ -107,9 +107,10 @@ def test_MapMaker(mode, expected):
     assert mmaker.exposure_map.unit == "m2 s"
     assert_quantity_allclose(mmaker.counts_map.data.sum(), expected)
 
-    maker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
+    etrue_axis = MapAxis.from_bounds(0.5, 50.0, 10, name='energy', unit='TeV', interp='log')
+    geom_etrue = WcsGeom.create(binsz=0.1 * u.deg, skydir=pos_SagA, width=15.0, axes=[etrue_axis])
+    maker = MapMaker(geom, offset_max=6.0 * u.deg, ref_geom_etrue=geom_etrue, cutout_mode=mode)
     obslist = ds.obs_list(obs)
     maps = maker.run(obslist)
     assert maps['exposure_map'].unit == "m2 s"
     assert_quantity_allclose(maps['counts_map'].data.sum(), expected)
-
