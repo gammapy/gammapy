@@ -4,30 +4,28 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.modeling.models import Gaussian2D
-from astropy.coordinates import SkyCoord, Angle
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency
-from ...image import (measure_containment_radius,
-                      measure_image_moments,
-                      measure_containment,
-                      measure_curve_of_growth,
-                      _wrapped_coordinates)
-from ...image.models import SkyGaussian
+from astropy.coordinates import SkyCoord
+from ...utils.testing import assert_quantity_allclose, requires_dependency
 from ...maps import WcsGeom, WcsNDMap
-
-BINSZ = 0.02
+from ...image import (
+    measure_containment_radius,
+    measure_image_moments,
+    measure_containment,
+    measure_curve_of_growth,
+)
 
 
 @pytest.fixture(scope='session')
 def gaussian_image():
     """Generate gaussian test image.
     """
-    geom = WcsGeom.create(npix=(201, 201), binsz=BINSZ, coordsys='GAL')
+    binsz = 0.02
     sigma = 0.2
-    gauss = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
-    coordinates = geom.get_coord().skycoord
-    l, b = coordinates.data.lon.wrap_at('180d')
-    b = coordinates.data.lat
+    geom = WcsGeom.create(npix=(201, 201), binsz=binsz, coordsys='GAL')
+    gauss = Gaussian2D(1. / (2 * np.pi * (sigma / binsz) ** 2), 0, 0, sigma, sigma)
+    coord = geom.get_coord().skycoord
+    l = coord.data.lon.wrap_at('180d')
+    b = coord.data.lat
     data = gauss(l.degree, b.degree)
     return WcsNDMap(geom=geom, data=data, unit='cm-2 s-1')
 
@@ -43,7 +41,7 @@ def test_measure_image_moments(gaussian_image):
         0.2 * u.deg,
         0.2 * u.deg,
         0.2 * u.deg
-        ]
+    ]
 
     for val, ref in zip(moments, reference):
         assert_quantity_allclose(val, ref, atol=1e-12 * val.unit)
