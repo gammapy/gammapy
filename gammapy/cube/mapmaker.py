@@ -31,7 +31,7 @@ class MapMaker(object):
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, ref_geom_ereco=None, ref_geom_etrue=None, offset_max=0.0, cutout_mode="trim"):
+    def __init__(self, ref_geom_ereco, offset_max, ref_geom_etrue=None, cutout_mode="trim"):
         self.offset_max = offset_max
         self.ref_geom_ereco = ref_geom_ereco
         self.ref_geom_etrue = ref_geom_etrue

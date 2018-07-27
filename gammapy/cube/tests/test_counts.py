@@ -7,7 +7,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...maps import MapAxis, WcsGeom, HpxGeom, Map
 from ...data import DataStore, EventList
-from ..new import fill_map_counts
+from ..counts import fill_map_counts
 
 pytest.importorskip('scipy')
 
