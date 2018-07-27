@@ -9,76 +9,78 @@ like the production of background models. In this case, the scarce
 statistic forces the grouping of observations taken under similar
 conditions in order to produce reliable models.
 
-There are 2 classes in Gammapy that handle observation groups:
+Compute groups
+--------------
 
-* `~gammapy.data.ObservationGroupAxis` is a class to define an axis
-  along which to define bins for creating observation groups. The
-  class offers support for dimensionless or
-  `~astropy.units.Quantity`-like parameter axes. In both cases, both,
-  continuous and discrete variables can be used.
+Observation grouping can be done by taking a `astropy.table.Table`
+with observation parameters (with colum ``OBS_ID``, but also e.g.
+``ZENITH`` or ``N_TELS``), and using some grouping method to assign
+an integer ``GROUP_ID`` to each.
 
-* `~gammapy.data.ObservationGroups` is a class that takes a list of
-  axes (`~gammapy.data.ObservationGroupAxis`) and defines groups
-  based on the cartesian product of the bins on each axis. The group
-  definitions are internally stored as a `~astropy.table.Table`
-  object. This class has also methods to group the observations of a
-  given 'ObservationTable' following the defined grouping.
+As an example, let's show how to group by two parameters:
 
-Examples
---------
+- ``ZENITH`` bins with edges ``[0, 30, 40, 50, 90]`` degrees
+- ``N_TELS`` bins with values ``[3, 4]``
 
-Create an `~gammapy.data.ObservationGroups` object with three axes:
+This gives a total of eight groups (with ``GROUP_ID = 0 .. 7``),
+four on the ``ZENITH`` axis and two on the ``N_TELS`` axis.
+
+We use `numpy.digitize` to compute the group index along each axis,
+and then `numpy.ravel_multi_index` to create a single ``OBS_ID`` from
+the two axis group indices.
+
 
 .. code-block:: python
 
-    from astropy.coordinates import Angle
-    from gammapy.data import ObservationGroups, ObservationGroupAxis
-    zenith = Angle([0, 30, 40, 50], 'deg')
-    ntels = [3, 4]
-    obs_groups = ObservationGroups([
-        ObservationGroupAxis('ZENITH', zenith, fmt='edges'),
-        ObservationGroupAxis('N_TELS', ntels, fmt='values'),
-    ])
+    import numpy as np
+    from astropy.table import Table
 
+    table = Table.read('https://github.com/cdeil/HESS-DL3-DR1-preview/raw/master/obs-index.fits.gz')
 
-The axes info is stored:
+    zen_pnt_bins = np.array([0, 30, 40, 50, 90])
+    zen_pnt_idx = np.digitize(table['ZEN_PNT'].data, bins=zen_pnt_bins) - 1
+
+    n_tels = np.array([3, 4])
+    n_tels_idx = np.digitize(table['N_TELS'].data, bins=n_tels) - 1
+
+    group_id = np.ravel_multi_index(
+        multi_index=(zen_pnt_idx, n_tels_idx),
+        dims=(len(zen_pnt_bins) - 1, len(n_tels)),
+    )
+
+    table['GROUP_ID'] = group_id
+
+Note that this is just an example; with a few lines of Python and Numpy,
+you can compute any grouping you like. You can do something simple like
+what we did here, or you could do something very fancy, such as using
+a cluster method from scikit-learn to cluster observations by certain parameters.
+Another option is to compute IRF characteristics (e.g. similar energy threshold)
+for each observation, and then group based on that. Usually grouping is done
+before stacking runs within a given group and you want their IRFs to be similar.
+
+Use groups
+----------
+
+We currently don't use ``GROUP_ID`` in observation tables within Gammapy.
+For now, it's left up to the user to group observations and usually compute
+one set of stacked maps or spectra per group, and then to use those in a joint
+likelihood fit. We might or might not build this grouping functionality into
+Gammapy, e.g. by using ``GROUP_ID`` if present and stacking observations within
+each group in the spectrum or map analysis.
+
+For now, for spectra, it's already possible to group observations like this:
 
 .. code-block:: python
 
-    >>> print(obs_groups.info)
-    ZENITH edges [  0.  30.  40.  50.] deg
-    N_TELS values [3 4]
+    import numpy as np
+    table = "Table with GROUP_ID column, see above"
+    spectra = []
+    for group_id in np.unique(table['GROUP_ID'].data):
+        group_table = table[table['GROUP_ID'] == group_id]
+        obs_id = group_table['OBS_ID']
+        # Make a stacked spectrum for these `group_id`
+        spectra.append(spectrum)
 
-The observation groups are stored as a table (computed once on ``ObservationGroups`` object construction):
+    # Pass list of grouped spectra to SpectrumFit for joint fit
 
-.. code-block:: python
-
-    >>> print(obs_groups.obs_groups_table)
-    GROUP_ID ZENITH_MIN ZENITH_MAX N_TELS
-                deg        deg
-    -------- ---------- ---------- ------
-           0        0.0       30.0      3
-           1        0.0       30.0      4
-           2       30.0       40.0      3
-           3       30.0       40.0      4
-           4       40.0       50.0      3
-           5       40.0       50.0      4
-
-TODO: make this a real example ... use the four Crab runs!
-
-Apply the observation grouping to an observation list::
-
-    >>> obs_table = obs_groups.apply(obs_table)
-    >>> print(obs_table)
-
-This would print an observation table with the format described in
-:ref:`gadf:obs-index` and an extra-column at the beginning specifying the ID
-of the group to which each observation belongs.
-
-Get the observations of a particular group and print them::
-
-    >>> obs_table_group2 = obs_groups.get_group_of_observations(obs_table, 2)
-    >>> print(obs_table_group2)
-
-This would print the observation table corresponding to the group
-with ID 8.
+TODO: make a complete, fully working example how to do a grouped analysis
