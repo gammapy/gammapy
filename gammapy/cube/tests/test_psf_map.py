@@ -82,7 +82,7 @@ def test_psfmap(tmpdir):
 
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
 
-
+@requires_dependency('scipy')
 def test_containment_radius_map(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit='deg')
