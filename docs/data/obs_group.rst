@@ -65,6 +65,22 @@ We currently don't use ``GROUP_ID`` in observation tables within Gammapy.
 For now, it's left up to the user to group observations and usually compute
 one set of stacked maps or spectra per group, and then to use those in a joint
 likelihood fit. We might or might not build this grouping functionality into
-Gammapy, e.g. by applying the grouping 
+Gammapy, e.g. by using ``GROUP_ID`` if present and stacking observations within
+each group in the spectrum or map analysis.
 
-So for now, here
+For now, for spectra, it's already possible to group observations like this:
+
+.. code-block:: python
+
+    import numpy as np
+    table = "Table with GROUP_ID column, see above"
+    spectra = []
+    for group_id in np.unique(table['GROUP_ID'].data):
+        group_table = table[table['GROUP_ID'] == group_id]
+        obs_id = group_table['OBS_ID']
+        # Make a stacked spectrum for these `group_id`
+        spectra.append(spectrum)
+
+    # Pass list of grouped spectra to SpectrumFit for joint fit
+
+TODO: make a complete, fully working example how to do a grouped analysis
