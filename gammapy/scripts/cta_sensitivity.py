@@ -4,11 +4,9 @@ import logging
 import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
-from gammapy.utils.scripts import get_parser, set_up_logging_from_args
 from gammapy.stats import significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
-from gammapy.scripts import CTAPerf
 
 log = logging.getLogger(__name__)
 
