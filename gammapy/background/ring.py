@@ -172,7 +172,7 @@ class AdaptiveRingBackgroundEstimator(object):
         tophat = Tophat2DKernel(theta.value)
         tophat.normalize('peak')
         exposure_on = convolve(exposure_on.data, tophat.array)
-        exposure_on_cube = np.repeat(exposure_on.data[:, :, np.newaxis], len(kernels), axis=2)
+        exposure_on_cube = np.repeat(exposure_on[:, :, np.newaxis], len(kernels), axis=2)
         return exposure_on_cube
 
     def _off_cube(self, counts, exclusion, kernels):
@@ -221,32 +221,44 @@ class AdaptiveRingBackgroundEstimator(object):
             Result sky maps.
         """
         required = ['counts', 'exposure_on', 'exclusion']
-        counts, exposure_on, exclusion = [images[_] for _ in required]
-
-        cubes = OrderedDict()
-
-        kernels = self.kernels(counts)
-
-        cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
-        cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
-        cubes['off'] = self._off_cube(images, kernels)
-        cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
-
-        exposure_off, off = self._reduce_cubes(cubes)
-        alpha = images['exposure_on'].data / exposure_off
-        not_has_exposure = ~(images['exposure_on'].data > 0)
-
-        # set data outside fov to zero
-        for data in [alpha, off, exposure_off]:
-            data[not_has_exposure] = 0
-
-        background = alpha * off
+        counts_map, exposure_on_map, exclusion_map = [images[_] for _ in required]
 
         result = dict()
-        result['exposure_off'] = counts.copy(data=exposure_off)
-        result['off'] = counts.copy(data=off)
-        result['alpha'] = counts.copy(data=alpha)
-        result['background'] = counts.copy(data=background)
+        result['exposure_off'] = exposure_on_map.copy(unit='')
+        result['off'] = exposure_on_map.copy(unit='')
+        result['alpha'] = exposure_on_map.copy(unit='')
+        result['background'] = exposure_on_map.copy(unit='')
+
+        for img, idx in counts_map.iter_by_image():
+            counts = counts_map.get_image_by_idx(idx,copy=False)
+            exposure_on = exposure_on_map.get_image_by_idx(idx,copy=False)
+            exclusion = exclusion_map.get_image_by_idx(idx,copy=False)
+
+            cubes = OrderedDict()
+
+            # For now loop over map axes
+            kernels = self.kernels(counts)
+
+            cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
+            cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
+
+            cubes['off'] = self._off_cube(counts, exclusion, kernels)
+            cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
+
+            exposure_off, off = self._reduce_cubes(cubes)
+            alpha = images['exposure_on'].data / exposure_off
+            not_has_exposure = ~(images['exposure_on'].data > 0)
+
+            # set data outside fov to zero
+            for data in [alpha, off, exposure_off]:
+                data[not_has_exposure] = 0
+
+            background = alpha * off
+
+            result['exposure_off'].data[idx] = exposure_off
+            result['off'].data[idx] = off
+            result['alpha'].data[idx] = alpha
+            result['background'].data[idx] = background
         return result
 
 
