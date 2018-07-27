@@ -152,4 +152,5 @@ is largely independent so that the new developement should bot break user script
 Decision
 ========
 
+This PIG has been approved and a first implementation been performed in PR #1314.
 
