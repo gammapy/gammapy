@@ -10,7 +10,8 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable2D, Background3D
 from ...maps import WcsNDMap, WcsGeom, MapAxis
-from ..new import make_map_separation, make_map_exposure_true_energy, make_map_background_irf, MapMaker
+from ..new import make_map_separation, make_map_exposure_true_energy, make_map_background_irf
+from ..mapmaker import MapMaker
 from ...data import DataStore
 
 pytest.importorskip('scipy')
