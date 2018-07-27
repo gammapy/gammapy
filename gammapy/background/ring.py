@@ -73,16 +73,19 @@ class AdaptiveRingBackgroundEstimator(object):
 
         from astropy import units as u
         from gammapy.background import AdaptiveRingBackgroundEstimator
-        from gammapy.image import SkyImageList
+        from gammapy.maps import WcsNDMap
 
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-        images = SkyImageList.read(filename)
-        images['exposure'].name = 'exposure_on'
-        adaptive_ring_bkg = RingBackgroundEstimator(r_in=0.22 * u.deg,
+        images=dict()
+        images['counts']=WcsNDMap.read(filename, hdu='counts')
+        images['exposure_on']=WcsNDMap.read(filename, hdu='exposure')
+        images['exclusion']=WcsNDMap.read(filename, hdu='exclusion')
+
+        adaptive_ring_bkg = AdaptiveRingBackgroundEstimator(r_in=0.22 * u.deg,
                                                     r_out_max=0.8 * u.deg,
                                                     width=0.1 * u.deg)
         results = adaptive_ring_bkg.run(images)
-        results['background'].show()
+        results['background'].plot()
 
     See Also
     --------
@@ -104,8 +107,8 @@ class AdaptiveRingBackgroundEstimator(object):
 
         Parameters
         ----------
-        image : `~gammapy.image.SkyImage`
-            Sky image specifying the WCS information.
+        image : `~gammapy.maps.WcsNDMap`
+            Map specifying the WCS information.
 
         Returns
         -------
@@ -114,7 +117,7 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         p = self.parameters
 
-        scale = image.wcs_pixel_scale()[0]
+        scale = image.geom.pixel_scales[0].to('deg')
         r_in = p['r_in'].to('deg') / scale
         r_out_max = p['r_out_max'].to('deg') / scale
         width = p['width'].to('deg') / scale
@@ -142,21 +145,20 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         exposure_on = cubes['exposure_on']
         exposure_off = cubes['exposure_off']
-
         alpha_approx = np.where(exposure_off > 0, exposure_on / exposure_off, np.inf)
         return alpha_approx
 
-    def _exposure_off_cube(self, images, kernels):
+    def _exposure_off_cube(self, exposure_on, exclusion, kernels):
         """Compute off exposure cube.
 
         The on exposure is convolved with different
         ring kernels and stacking the data along the third dimension.
         """
-        exposure = images['exposure_on'].data
-        exclusion = images['exclusion'].data
+        exposure = exposure_on.data
+        exclusion = exclusion.data
         return scale_cube(exposure * exclusion, kernels)
 
-    def _exposure_on_cube(self, images, kernels):
+    def _exposure_on_cube(self, exposure_on, kernels):
         """Compute on exposure cube.
 
         Calculated by convolving the on exposure with a tophat
@@ -164,25 +166,22 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         from scipy.ndimage import convolve
 
-        exposure_on = images['exposure_on']
-        scale = exposure_on.wcs_pixel_scale()[0]
+        scale = exposure_on.geom.pixel_scales[0].to('deg')
         theta = self.parameters['theta'] * scale
 
         tophat = Tophat2DKernel(theta.value)
         tophat.normalize('peak')
-        exposure_on = convolve(exposure_on, tophat.array)
-        exposure_on_cube = np.repeat(exposure_on[:, :, np.newaxis], len(kernels), axis=2)
+        exposure_on = convolve(exposure_on.data, tophat.array)
+        exposure_on_cube = np.repeat(exposure_on.data[:, :, np.newaxis], len(kernels), axis=2)
         return exposure_on_cube
 
-    def _off_cube(self, images, kernels):
+    def _off_cube(self, counts, exclusion, kernels):
         """Compute off cube.
 
         Calculated by convolving the raw counts with different ring kernels
         and stacking the data along the third dimension.
         """
-        counts = images['counts'].data
-        exclusion = images['exclusion'].data
-        return scale_cube(counts * exclusion, kernels)
+        return scale_cube(counts.data * exclusion.data, kernels)
 
     def _reduce_cubes(self, cubes):
         """Compute off and off exposure map.
@@ -213,24 +212,23 @@ class AdaptiveRingBackgroundEstimator(object):
 
         Parameters
         ----------
-        images : `SkyImageList`
-            Input sky images.
+        images : dict of `~gammapy.maps.WcsNDMap`
+            Input sky maps.
 
         Returns
         -------
-        result : `SkyImageList`
-            Result sky images.
+        result : dict of `~gammapy.maps.WcsNDMap`
+            Result sky maps.
         """
         required = ['counts', 'exposure_on', 'exclusion']
-        images.check_required(required)
-        wcs = images['counts'].wcs.copy()
+        counts, exposure_on, exclusion = [images[_] for _ in required]
 
         cubes = OrderedDict()
 
-        kernels = self.kernels(images['counts'])
+        kernels = self.kernels(counts)
 
-        cubes['exposure_on'] = self._exposure_on_cube(images, kernels)
-        cubes['exposure_off'] = self._exposure_off_cube(images, kernels)
+        cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
+        cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
         cubes['off'] = self._off_cube(images, kernels)
         cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
 
@@ -244,11 +242,11 @@ class AdaptiveRingBackgroundEstimator(object):
 
         background = alpha * off
 
-        result = SkyImageList()
-        result['exposure_off'] = SkyImage(data=exposure_off, wcs=wcs)
-        result['off'] = SkyImage(data=off, wcs=wcs)
-        result['alpha'] = SkyImage(data=alpha, wcs=wcs)
-        result['background'] = SkyImage(data=background, wcs=wcs)
+        result = dict()
+        result['exposure_off'] = counts.copy(data=exposure_off)
+        result['off'] = counts.copy(data=off)
+        result['alpha'] = counts.copy(data=alpha)
+        result['background'] = counts.copy(data=background)
         return result
 
 
