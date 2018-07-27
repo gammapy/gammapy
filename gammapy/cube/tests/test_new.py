@@ -83,8 +83,8 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     )
 
     assert m.data.shape == (15, 120, 200)
-    assert_allclose(m.data[0, 0, 0], 0.013759879207779322)
-    assert_allclose(m.data.sum(), 1301.0242859188463)
+    assert_allclose(m.data[0, 0, 0], 0.013959366925415072)
+    assert_allclose(m.data.sum(), 1356.2551841113177)
 
     # TODO: Check that `offset_max` is working properly
     # pos = SkyCoord(85.6, 23, unit='deg')
@@ -94,11 +94,11 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
 
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("mode, expected", [("trim", 107214.0), ("strict", 53486.0)])
-def test_MapMaker(mode,expected):
+def test_MapMaker(mode, expected):
     ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
     pos_SagA = SkyCoord(266.41681663, -29.00782497, unit="deg", frame="icrs")
-    energy_axis = MapAxis.from_edges([0.1,0.5,1.5,3.0,10.],name='energy',unit='TeV',interp='log')
-    geom = WcsGeom.create(binsz=0.1*u.deg, skydir=pos_SagA, width=15.0, axes=[energy_axis])
+    energy_axis = MapAxis.from_edges([0.1, 0.5, 1.5, 3.0, 10.], name='energy', unit='TeV', interp='log')
+    geom = WcsGeom.create(binsz=0.1 * u.deg, skydir=pos_SagA, width=15.0, axes=[energy_axis])
     mmaker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
     obs = [110380, 111140]
 
@@ -112,5 +112,4 @@ def test_MapMaker(mode,expected):
     maps = maker.run(obslist)
     assert maps['exposure_map'].unit == "m2 s"
     assert_quantity_allclose(maps['counts_map'].data.sum(), expected)
-
 
