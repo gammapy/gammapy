@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 from ..maps import WcsNDMap
 from astropy.nddata.utils import PartialOverlapError
 from .new import *
@@ -9,17 +10,28 @@ class MapMaker(object):
 
     Parameters
     ----------
-    ref_geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry
+
+    ref_geom_ereco : `~gammapy.maps.WcsGeom`
+        Reference image geometry for the counts and background maps in reco energy
+    ref_geom_etrue : `~gammapy.maps.WcsGeom`
+
+    It is assumed that ref_geom_ereco and ref_geom_etrue have the same wcs but can have different
+    energy binning.
+
+    TODO: 1. Can they have different WCS and we do a reproject?
+    TODO: 2. Presently, the user has to be careful and choose proper binnings in e_true and e_reco, can we
+    TODO : pass the energy bins properly into make_mean_edisp to make things consistent?
+        Reference image geometry for the exposure map in true energy
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+
     cutout_mode : {'trim', 'strict'}, optional
         Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
         Should be left to the default value 'trim'
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, ref_geom_etrue=None, ref_geom_ereco=None, offset_max, cutout_mode="trim"):
+    def __init__(self, ref_geom_ereco=None, ref_geom_etrue=None, offset_max=0.0, cutout_mode="trim"):
         self.offset_max = offset_max
         self.ref_geom_ereco = ref_geom_ereco
         self.ref_geom_etrue = ref_geom_etrue
@@ -34,12 +46,12 @@ class MapMaker(object):
         self.background_map = WcsNDMap(self.ref_geom_ereco)
 
         # We will need this general exclusion mask for the analysis - for counts and bkg
-        self.exclusion_map_etrue = WcsNDMap(self.ref_geom_ereco)
-        self.exclusion_map_etrue.data += 1
-
-        # For the exposure
         self.exclusion_map_ereco = WcsNDMap(self.ref_geom_ereco)
         self.exclusion_map_ereco.data += 1
+
+        # For the exposure
+        self.exclusion_map_etrue = WcsNDMap(self.ref_geom_etrue)
+        self.exclusion_map_etrue.data += 1
 
         self.cutout_mode = cutout_mode
         self.maps={}
@@ -53,6 +65,7 @@ class MapMaker(object):
             Observation
         """
         # First make cutout of the global image
+        log = logging.getLogger(__name__)
         try:
             exclusion_mask_cutout_ereco, cutout_slices_ereco = self.exclusion_map_ereco.make_cutout(
                 obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
