@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from ..maps import WcsNDMap, Map
+from .counts import fill_map_counts
 
 __all__ = [
     'make_map_separation',
