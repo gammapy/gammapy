@@ -102,9 +102,15 @@ class AdaptiveRingBackgroundEstimator(object):
         if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
 
-        self.parameters = OrderedDict(r_in=r_in, r_out_max=r_out_max, width=width,
+        self._parameters = OrderedDict(r_in=r_in, r_out_max=r_out_max, width=width,
                                       stepsize=stepsize, threshold_alpha=threshold_alpha,
                                       method=method, theta=theta)
+
+    @property
+    def parameters(self):
+        """OrderedDict of parameters"""
+        return self._parameters
+
 
     def kernels(self, image):
         """Ring kernels according to the specified method.
@@ -194,7 +200,7 @@ class AdaptiveRingBackgroundEstimator(object):
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
-        threshold = self.parameters['threshold_alpha']
+        threshold = self._parameters['threshold_alpha']
 
         alpha_approx_cube = cubes['alpha_approx']
         off_cube = cubes['off']
@@ -250,8 +256,8 @@ class AdaptiveRingBackgroundEstimator(object):
             cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
 
             exposure_off, off = self._reduce_cubes(cubes)
-            alpha = images['exposure_on'].data / exposure_off
-            not_has_exposure = ~(images['exposure_on'].data > 0)
+            alpha = exposure_on.data / exposure_off
+            not_has_exposure = ~(exposure_on.data > 0)
 
             # set data outside fov to zero
             for data in [alpha, off, exposure_off]:
@@ -311,7 +317,12 @@ class RingBackgroundEstimator(object):
     """
 
     def __init__(self, r_in, width, use_fft_convolution=False):
-        self.parameters = dict(r_in=r_in, width=width, use_fft_convolution=use_fft_convolution)
+        self._parameters = dict(r_in=r_in, width=width, use_fft_convolution=use_fft_convolution)
+
+    @property
+    def parameters(self):
+        """dict of parameters"""
+        return self._parameters
 
     def kernel(self, image):
         """Ring kernel.
