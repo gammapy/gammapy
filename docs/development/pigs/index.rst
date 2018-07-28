@@ -18,6 +18,6 @@ can be found on Github as `pull requests with the "pig" label`_ .
     :maxdepth: 1
 
     pig-001
-
+    pig-002
 
 .. _pull requests with the "pig" label: https://github.com/gammapy/gammapy/issues?q=label%3Apig
