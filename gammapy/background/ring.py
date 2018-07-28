@@ -6,17 +6,12 @@ from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.convolution import convolve_fft, convolve
-import astropy.units as u
-from ..image import SkyImage, SkyImageList
+from astropy.coordinates import Angle
 from ..image.utils import scale_cube
-from ..maps import Map
 
 __all__ = [
     'AdaptiveRingBackgroundEstimator',
     'RingBackgroundEstimator',
-    'ring_r_out',
-    'ring_area_factor',
-    'ring_alpha',
 ]
 
 
@@ -31,6 +26,7 @@ def _convolve_map(map, kernel, use_fft=True):
         input map
     kernel : `~astropy.convolution.Ring2DKernel`
         the kernel
+
     Returns
     -------
     convolved_map : `~gammapy.maps.WcsNDMap`
@@ -45,10 +41,11 @@ def _convolve_map(map, kernel, use_fft=True):
 
     return convolved_map
 
+
 class AdaptiveRingBackgroundEstimator(object):
     """Adaptive ring background algorithm.
 
-    This algorithm extends the standard `RingBackground` method by adapting the
+    This algorithm extends the `RingBackgroundEstimator` method by adapting the
     size of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
     where the area to estimate the background from is limited.
 
@@ -71,23 +68,23 @@ class AdaptiveRingBackgroundEstimator(object):
 
     Examples
     --------
-    Here's an example how to use the `AdaptiveRingBackgroundEstimator`:
+    Example using `AdaptiveRingBackgroundEstimator`::
 
-    .. code:: python
-
-        from astropy import units as u
+        from gammapy.maps import Map
         from gammapy.background import AdaptiveRingBackgroundEstimator
-        from gammapy.maps import WcsNDMap
 
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-        images=dict()
-        images['counts']=WcsNDMap.read(filename, hdu='counts')
-        images['exposure_on']=WcsNDMap.read(filename, hdu='exposure')
-        images['exclusion']=WcsNDMap.read(filename, hdu='exclusion')
+        images = {
+            'counts': Map.read(filename, hdu='counts'),
+            'exposure_on': Map.read(filename, hdu='exposure'),
+            'exclusion': Map.read(filename, hdu='exclusion'),
+        }
 
-        adaptive_ring_bkg = AdaptiveRingBackgroundEstimator(r_in=0.22 * u.deg,
-                                                    r_out_max=0.8 * u.deg,
-                                                    width=0.1 * u.deg)
+        adaptive_ring_bkg = AdaptiveRingBackgroundEstimator(
+            r_in='0.22 deg',
+            r_out_max='0.8 deg',
+            width='0.1 deg',
+        )
         results = adaptive_ring_bkg.run(images)
         results['background'].plot()
 
@@ -96,21 +93,29 @@ class AdaptiveRingBackgroundEstimator(object):
     RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
     """
 
-    def __init__(self, r_in, r_out_max, width, stepsize=0.02 * u.deg,
-                 threshold_alpha=0.1, theta=0.22 * u.deg, method='fixed_width'):
-        # input validation
+    def __init__(self, r_in, r_out_max, width, stepsize='0.02 deg',
+                 threshold_alpha=0.1, theta='0.22 deg', method='fixed_width'):
+
+        stepsize = Angle(stepsize)
+        theta = Angle(theta)
+
         if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
 
-        self._parameters = OrderedDict(r_in=r_in, r_out_max=r_out_max, width=width,
-                                      stepsize=stepsize, threshold_alpha=threshold_alpha,
-                                      method=method, theta=theta)
+        self._parameters = OrderedDict(
+            r_in=Angle(r_in),
+            r_out_max=Angle(r_out_max),
+            width=Angle(width),
+            stepsize=Angle(stepsize),
+            threshold_alpha=threshold_alpha,
+            theta=Angle(theta),
+            method=method,
+        )
 
     @property
     def parameters(self):
         """OrderedDict of parameters"""
         return self._parameters
-
 
     def kernels(self, image):
         """Ring kernels according to the specified method.
@@ -133,22 +138,25 @@ class AdaptiveRingBackgroundEstimator(object):
         width = p['width'].to('deg') / scale
         stepsize = p['stepsize'].to('deg') / scale
 
-        kernels = []
-
         if p['method'] == 'fixed_width':
             r_ins = np.arange(r_in.value, (r_out_max - width).value, stepsize.value)
             widths = [width.value]
         elif p['method'] == 'fixed_r_in':
             widths = np.arange(width.value, (r_out_max - r_in).value, stepsize.value)
             r_ins = [r_in.value]
+        else:
+            raise ValueError('Invalid method: {}'.format(p['method']))
 
+        kernels = []
         for r_in, width in product(r_ins, widths):
             kernel = Ring2DKernel(r_in, width)
             kernel.normalize('peak')
             kernels.append(kernel)
+
         return kernels
 
-    def _alpha_approx_cube(self, cubes):
+    @staticmethod
+    def _alpha_approx_cube(cubes):
         """Compute alpha as on_exposure / off_exposure.
 
         Where off_exposure < 0, alpha is set to infinity.
@@ -158,7 +166,8 @@ class AdaptiveRingBackgroundEstimator(object):
         alpha_approx = np.where(exposure_off > 0, exposure_on / exposure_off, np.inf)
         return alpha_approx
 
-    def _exposure_off_cube(self, exposure_on, exclusion, kernels):
+    @staticmethod
+    def _exposure_off_cube(exposure_on, exclusion, kernels):
         """Compute off exposure cube.
 
         The on exposure is convolved with different
@@ -185,7 +194,8 @@ class AdaptiveRingBackgroundEstimator(object):
         exposure_on_cube = np.repeat(exposure_on[:, :, np.newaxis], len(kernels), axis=2)
         return exposure_on_cube
 
-    def _off_cube(self, counts, exclusion, kernels):
+    @staticmethod
+    def _off_cube(counts, exclusion, kernels):
         """Compute off cube.
 
         Calculated by convolving the raw counts with different ring kernels
@@ -240,13 +250,12 @@ class AdaptiveRingBackgroundEstimator(object):
         result['background'] = exposure_on_map.copy(unit='')
 
         for img, idx in counts_map.iter_by_image():
-            counts = counts_map.get_image_by_idx(idx,copy=False)
-            exposure_on = exposure_on_map.get_image_by_idx(idx,copy=False)
-            exclusion = exclusion_map.get_image_by_idx(idx,copy=False)
+            counts = counts_map.get_image_by_idx(idx, copy=False)
+            exposure_on = exposure_on_map.get_image_by_idx(idx, copy=False)
+            exclusion = exclusion_map.get_image_by_idx(idx, copy=False)
 
             cubes = OrderedDict()
 
-            # For now loop over map axes
             kernels = self.kernels(counts)
 
             cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
@@ -269,15 +278,16 @@ class AdaptiveRingBackgroundEstimator(object):
             result['off'].data[idx] = off
             result['alpha'].data[idx] = alpha
             result['background'].data[idx] = background
+
         return result
 
 
 class RingBackgroundEstimator(object):
     """Ring background method for cartesian coordinates.
 
-    Step 1: apply exclusion mask
-    Step 2: ring-correlate
-    Step 3: apply psi cut
+    - Step 1: apply exclusion mask
+    - Step 2: ring-correlate
+    - Step 3: apply psi cut
 
     TODO: add method to apply the psi cut
 
@@ -288,28 +298,26 @@ class RingBackgroundEstimator(object):
     width : `~astropy.units.Quantity`
         Ring width.
     use_fft_convolution : bool
-        Use fft convolution.
+        Use FFT convolution?
 
 
     Examples
     --------
-    Here's an example how to use the `RingBackgroundEstimator`:
+    Example using `RingBackgroundEstimator`::
 
-    .. code:: python
-
-        from astropy import units as u
+        from gammapy.maps import Map
         from gammapy.background import RingBackgroundEstimator
-        from gammapy.maps import WcsNDMap
 
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-        images=dict()
-        images['counts']=WcsNDMap.read(filename, hdu='counts')
-        images['exposure_on']=WcsNDMap.read(filename, hdu='exposure')
-        images['exclusion']=WcsNDMap.read(filename, hdu='exclusion')
-        ring_bkg = RingBackgroundEstimator(r_in=0.35 * u.deg, width=0.3 * u.deg)
+        images = {
+            'counts': Map.read(filename, hdu='counts'),
+            'exposure_on': Map.read(filename, hdu='exposure'),
+            'exclusion': Map.read(filename, hdu='exclusion'),
+        }
+
+        ring_bkg = RingBackgroundEstimator(r_in='0.35 deg', width='0.3 deg')
         results = ring_bkg.run(images)
         results['background'].plot()
-
 
     See Also
     --------
@@ -317,7 +325,11 @@ class RingBackgroundEstimator(object):
     """
 
     def __init__(self, r_in, width, use_fft_convolution=False):
-        self._parameters = dict(r_in=r_in, width=width, use_fft_convolution=use_fft_convolution)
+        self._parameters = dict(
+            r_in=Angle(r_in),
+            width=Angle(width),
+            use_fft_convolution=use_fft_convolution,
+        )
 
     @property
     def parameters(self):
