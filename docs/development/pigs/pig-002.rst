@@ -134,7 +134,7 @@ Existing code
 =============
 
 Currently, maps and cubes rely on the ``SkyImage`` and ``SkyCube`` classes. There are various scripts and classes existing
-currently in gammapy to produce maps and cubes (mostly developpedby @adonath and @ljouvin).Image  processing can be performed
+currently in gammapy to produce maps and cubes (mostly developped by @adonath and @ljouvin).Image  processing can be performed
 with ``SingleObsImageMaker`` and ``StackedObsImageMaker``, while cube processing can be performed with
 ``SingleObsCubeMaker`` and ``StackedObsCubeMaker``. For images, one can also use the ``IACTBasicImageEstimator``.
 All this code relies on high level class which perform all the analysis sequentially (exposure, background, count maps
@@ -145,12 +145,12 @@ The proposed scheme should be much more modular and allow user to use gammapy as
 and classes if needed. It should limit code duplication. In particular, it uses the more general ``~gammapy.maps`` which
 allows to get rid of the cross dependencies of the image and cube package we have now. 
 
- The existing code will remain in gammapy for the moment, with possibly some bugs fixed. The new code
-is largely independent so that the new developement should bot break user scripts.
-
+The existing code will remain in gammapy for the moment, with possibly some bugs fixed. The new code is largely
+independent so that the new development should bot break user scripts.
 
 Decision
 ========
 
-This PIG has been approved and a first implementation been performed in PR #1314.
+This PIG has been approved and a first implementation been performed in `GH 1314`_.
 
+.. _GH 1314: https://github.com/gammapy/gammapy/pull/1314
