@@ -5,7 +5,7 @@ from collections import OrderedDict
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
-from astropy.convolution import convolve_fft
+from astropy.convolution import convolve_fft, convolve
 import astropy.units as u
 from ..image import SkyImage, SkyImageList
 from ..image.utils import scale_cube
@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-def _convolve_map(map, kernel):
+def _convolve_map(map, kernel, use_fft=True):
     """Convolve input map with kernel.
 
     The same kernel is used for each 2D map along the map axes.
@@ -38,7 +38,11 @@ def _convolve_map(map, kernel):
     """
     convolved_map = map.copy()
     for img, idx in map.iter_by_image():
-        convolved_map.data[idx] = convolve_fft(img, kernel, normalize_kernel=False)#, boundary='fill', fill_value=0)
+        if use_fft:
+            convolved_map.data[idx] = convolve_fft(img, kernel, normalize_kernel=False)
+        else:
+            convolved_map.data[idx] = convolve(img, kernel, normalize_kernel=False)
+
     return convolved_map
 
 class AdaptiveRingBackgroundEstimator(object):
@@ -356,10 +360,10 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = counts.copy(data=counts.data * exclusion.data.astype('float'))
-        result['off'] = _convolve_map(counts_excluded, ring)
+        result['off'] = _convolve_map(counts_excluded, ring, p['use_fft_convolution'])
 
         exposure_on_excluded = exposure_on.copy(data=exposure_on.data * exclusion.data.astype('float'))
-        result['exposure_off'] = _convolve_map(exposure_on_excluded, ring)
+        result['exposure_off'] = _convolve_map(exposure_on_excluded, ring, p['use_fft_convolution'])
 
         with np.errstate(divide='ignore', invalid='ignore'):
             # set pixels, where ring is too small to NaN
