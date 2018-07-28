@@ -2,10 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose
+import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from ...background import (RingBackgroundEstimator, AdaptiveRingBackgroundEstimator,
                            ring_r_out)
-from ...image import SkyImageList, SkyImage
+from ...maps import WcsNDMap
 from ...utils.testing import requires_dependency
 
 
@@ -13,19 +15,20 @@ from ...utils.testing import requires_dependency
 def example_test_images():
     fov = 2.5 * u.deg
 
-    reference_image = SkyImage.empty(nxpix=201, nypix=201, fill=1, binsz=0.05)
+    reference_image = WcsNDMap.create(binsz=0.05, npix=201, unit='')
+    reference_image.data += 1.
+    coords = reference_image.geom.get_coord().skycoord
+    ref_image_center = SkyCoord(reference_image.geom.center_coord[0], reference_image.geom.center_coord[1], unit='deg')
+    mask = (coords.separation(ref_image_center) < fov)
 
-    coords = reference_image.coordinates()
-    mask = (coords.separation(reference_image.center) < fov)
-
-    images = SkyImageList()
-    images['counts'] = SkyImage.empty_like(reference_image, fill=2.)
+    images = dict()
+    images['counts'] = reference_image.copy(data=np.zeros_like(reference_image.data)+2.)
     images['counts'].data *= mask
 
-    images['exposure_on'] = SkyImage.empty_like(reference_image, fill=1.)
+    images['exposure_on'] = reference_image.copy(data=np.zeros_like(reference_image.data)+1.)
     images['exposure_on'].data *= mask
 
-    exclusion = SkyImage.empty_like(reference_image, fill=1.)
+    exclusion = reference_image.copy(data=np.zeros_like(reference_image.data)+1.)
     exclusion.data[90:110, 90:110] = 0
     images['exclusion'] = exclusion
     return images
@@ -56,11 +59,14 @@ class TestAdaptiveRingBackgroundEstimator:
     def setup(self):
         opts = dict(r_in=0.22 * u.deg, r_out_max=0.8 * u.deg, width=0.1 * u.deg)
         self.ring = AdaptiveRingBackgroundEstimator(**opts)
-        self.images = SkyImageList()
+        self.images = dict()
 
-        self.images['counts'] = SkyImage.empty(nxpix=101, nypix=101, fill=1)
-        self.images['exposure_on'] = SkyImage.empty(nxpix=101, nypix=101, fill=1e10)
-        exclusion = SkyImage.empty(nxpix=101, nypix=101, fill=1)
+        self.images['counts'] = WcsNDMap.create(binsz=0.02, npix=101, unit='')
+        self.images['counts'].data += 1.
+        self.images['exposure_on'] = WcsNDMap.create(binsz=0.02, npix=101, unit='')
+        self.images['exposure_on'].data += 1e10
+        exclusion = WcsNDMap.create(binsz=0.02, npix=101, unit='')
+        exclusion.data += 1
         exclusion.data[40:60, 40:60] = 0
         self.images['exclusion'] = exclusion
 

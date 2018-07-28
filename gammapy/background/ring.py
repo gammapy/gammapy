@@ -38,7 +38,7 @@ def _convolve_map(map, kernel):
     """
     convolved_map = map.copy()
     for img, idx in map.iter_by_image():
-        convolved_map.data[idx] = convolve_fft(img, kernel)#, normalize_kernel=True, boundary='fill', fill_value=0)
+        convolved_map.data[idx] = convolve_fft(img, kernel, normalize_kernel=False)#, boundary='fill', fill_value=0)
     return convolved_map
 
 class AdaptiveRingBackgroundEstimator(object):
