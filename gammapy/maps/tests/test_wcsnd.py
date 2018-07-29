@@ -249,6 +249,16 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
         assert_allclose(coords[1], m.interp_by_coord(coords, interp='cubic'))
 
 
+def test_wcsndmap_interp_by_coord_fill_value():
+    # Introduced in https://github.com/gammapy/gammapy/pull/1559/files
+    m = Map.create(npix=(20, 10))
+    m.data += 42
+    # With `fill_value` one should be able to control what gets filled
+    assert_allclose(m.interp_by_coord((99, 0), fill_value=99), 99)
+    # Default is to extrapolate
+    assert_allclose(m.interp_by_coord((99, 0)), 42)
+
+
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsndmap_iter(npix, binsz, coordsys, proj, skydir, axes):
@@ -288,8 +298,7 @@ def test_wcsndmap_reproject(npix, binsz, coordsys, proj, skydir, axes):
         pytest.xfail('Bug in reproject version <= 0.3.1')
 
     if geom.ndim > 3 or geom.npix[0].size > 1:
-        pytest.xfail(
-            "> 3 dimensions or multi-resolution geometries not supported")
+        pytest.xfail("> 3 dimensions or multi-resolution geometries not supported")
 
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj,
                            skydir=skydir, coordsys=coordsys, axes=axes)
@@ -361,6 +370,7 @@ def test_wcsndmap_downsample(npix, binsz, coordsys, proj, skydir, axes):
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
         assert m.unit == m2.unit
 
+
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
@@ -370,6 +380,7 @@ def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
     m2 = m.upsample(2, order=0, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
     assert m.unit == m2.unit
+
 
 def test_coadd_unit():
     geom = WcsGeom.create(npix=(10, 10), binsz=1,

@@ -747,7 +747,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_coord(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None, fill_value=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
@@ -767,6 +767,9 @@ class Map(object):
             (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
             that only 'nearest' and 'linear' methods are supported for
             all map types.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
 
         Returns
         -------
@@ -776,7 +779,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_pix(self, pix, interp=None):
+    def interp_by_pix(self, pix, interp=None, fill_value=None):
         """Interpolate map values at the given pixel coordinates.
 
         Parameters
@@ -796,6 +799,9 @@ class Map(object):
             (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
             that only 'nearest' and 'linear' methods are supported for
             all map types.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
 
         Returns
         -------

@@ -137,15 +137,15 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None, fill_value=None):
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
-            return self.interp_by_pix(pix, interp=interp)
+            return self.interp_by_pix(pix, interp=interp, fill_value=fill_value)
         else:
             return self._interp_by_coord_griddata(coords, interp=interp)
 
-    def interp_by_pix(self, pix, interp=None):
+    def interp_by_pix(self, pix, interp=None, fill_value=None):
         """Interpolate map values at the given pixel coordinates.
         """
         if not self.geom.is_regular:
@@ -154,13 +154,13 @@ class WcsNDMap(WcsMap):
 
         order = interp_to_order(interp)
         if order == 0 or order == 1:
-            return self._interp_by_pix_linear_grid(pix, order=order)
+            return self._interp_by_pix_linear_grid(pix, order=order, fill_value=fill_value)
         elif order == 2 or order == 3:
             return self._interp_by_pix_map_coordinates(pix, order=order)
         else:
             raise ValueError('Invalid interpolation order: {}'.format(order))
 
-    def _interp_by_pix_linear_grid(self, pix, order=1):
+    def _interp_by_pix_linear_grid(self, pix, order=1, fill_value=None):
         # TODO: Cache interpolator
         method_lookup = {0: 'nearest', 1: 'linear'}
         try:
@@ -177,7 +177,7 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data.T
 
-        fn = RegularGridInterpolator(grid_pix, data, fill_value=None,
+        fn = RegularGridInterpolator(grid_pix, data, fill_value=fill_value,
                                      bounds_error=False, method=method)
         return fn(tuple(pix))
 

@@ -89,10 +89,9 @@ def test_sky_diffuse_map():
     lat = -39.8 * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
-    desired = [3348.0417, 460.92587]
+    desired = [3348.0417, 0]
     assert_allclose(val.value, desired)
 
     # TODO: add more tests:
     # - different model `norm` parameter values / units and map units
-    # - evaluate outside the map: why do we above not get 0 or NaN?
     # - make an input map from scratch with known values

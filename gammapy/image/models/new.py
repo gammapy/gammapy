@@ -298,6 +298,6 @@ class SkyDiffuseMap(SkySpatialModel):
             lon=lon.to('deg').value,
             lat=lat.to('deg').value,
         )
-        val = self._map.interp_by_coord(coord)
+        val = self._map.interp_by_coord(coord, fill_value=0)
         # TODO: use map unit? self._map.unit
         return norm * val * u.Unit('sr-1')
