@@ -11,26 +11,18 @@ from ...background import ReflectedRegionsBackgroundEstimator
 from ...image import SkyImage
 
 
-def get_obs_list():
+@pytest.fixture(scope='session')
+def obs_list():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     run_list = [23523, 23526]
-    obs_list = ObservationList([data_store.obs(_) for _ in run_list])
-    return obs_list
-
-
-def get_obs(id):
-    obs_list = get_obs_list()
-    for obs in obs_list:
-        if obs.obs_id == id:
-            return obs
+    return ObservationList([data_store.obs(_) for _ in run_list])
 
 
 @pytest.fixture(scope='session')
 def on_region():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg)
     on_size = 0.3 * u.deg
-    on_region = CircleSkyRegion(pos, on_size)
-    return on_region
+    return CircleSkyRegion(pos, on_size)
 
 
 @pytest.fixture(scope='session')
@@ -39,8 +31,8 @@ def mask():
 
 
 @pytest.fixture(scope='session')
-def stats(on_region, mask):
-    obs = get_obs(23523)
+def stats(on_region, obs_list, mask):
+    obs = obs_list[0]
     bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs)
@@ -49,8 +41,7 @@ def stats(on_region, mask):
 
 
 @pytest.fixture(scope='session')
-def stats_stacked(on_region, mask):
-    obs_list = get_obs_list()
+def stats_stacked(on_region, obs_list, mask):
     bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               exclusion_mask=mask,
                                               obs_list=obs_list)
@@ -58,11 +49,8 @@ def stats_stacked(on_region, mask):
 
     return ObservationStats.stack([
         ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)
-
     ])
 
-
-# TODO: parametrize tests using single and stacked stats!
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
