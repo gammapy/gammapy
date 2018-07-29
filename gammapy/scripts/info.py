@@ -40,7 +40,6 @@ GAMMAPY_ENV_VARIABLES = [
     'GAMMA_CAT',
     'GAMMAPY_FERMI_LAT_DATA',
     'CTADATA',
-    'HGPS_DATA',
 ]
 
 
