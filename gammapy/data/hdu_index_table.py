@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class HDULocation(object):
-    """HDU localisation and loading.
+    """HDU localisation, loading and Gammapy object mapper.
 
     This represents one row in `HDUIndexTable`.
 
@@ -44,23 +44,20 @@ class HDULocation(object):
         print('OBS_ID = {}'.format(self.obs_id), file=file)
         print('HDU_TYPE = {}'.format(self.hdu_type), file=file)
         print('HDU_CLASS = {}'.format(self.hdu_class), file=file)
-        print('BASEDIR = {}'.format(self.base_dir), file=file)
+        print('BASE_DIR = {}'.format(self.base_dir), file=file)
         print('FILE_DIR = {}'.format(self.file_dir), file=file)
         print('FILE_NAME = {}'.format(self.file_name), file=file)
         print('HDU_NAME = {}'.format(self.hdu_name), file=file)
 
     def path(self, abs_path=True):
-        """Full filename path."""
+        """Full filename path.
+
+        Include ``base_dir`` if ``abs_path`` is True.
+        """
         if abs_path:
-            path = make_path(self.base_dir) / self.file_dir / self.file_name
+            return make_path(self.base_dir) / self.file_dir / self.file_name
         else:
-            path = make_path(self.file_dir) / self.file_name
-
-        return path
-
-    def exists(self):
-        """Check if HDU exists."""
-        raise NotImplementedError
+            return make_path(self.file_dir) / self.file_name
 
     def get_hdu(self):
         """Get HDU."""
@@ -75,35 +72,35 @@ class HDULocation(object):
         """
         hdu_class = self.hdu_class
         filename = self.path()
-        hdu_name = self.hdu_name
+        hdu = self.hdu_name
 
         if hdu_class == 'events':
             from ..data import EventList
-            return EventList.read(filename, hdu=hdu_name)
+            return EventList.read(filename, hdu=hdu)
         elif hdu_class == 'gti':
             from ..data import GTI
-            return GTI.read(filename, hdu=hdu_name)
+            return GTI.read(filename, hdu=hdu)
         elif hdu_class == 'aeff_2d':
             from ..irf import EffectiveAreaTable2D
-            return EffectiveAreaTable2D.read(filename, hdu=hdu_name)
+            return EffectiveAreaTable2D.read(filename, hdu=hdu)
         elif hdu_class == 'edisp_2d':
             from ..irf import EnergyDispersion2D
-            return EnergyDispersion2D.read(filename, hdu=hdu_name)
+            return EnergyDispersion2D.read(filename, hdu=hdu)
         elif hdu_class == 'psf_table':
             from ..irf import PSF3D
-            return PSF3D.read(filename, hdu=hdu_name)
+            return PSF3D.read(filename, hdu=hdu)
         elif hdu_class == 'psf_3gauss':
             from ..irf import EnergyDependentMultiGaussPSF
-            return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu_name)
+            return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu)
         elif hdu_class == 'psf_king':
             from ..irf import PSFKing
-            return PSFKing.read(filename, hdu=hdu_name)
+            return PSFKing.read(filename, hdu=hdu)
         elif hdu_class == 'bkg_2d':
             from ..irf import Background2D
-            return Background2D.read(filename, hdu=hdu_name, data_name='bkg')
+            return Background2D.read(filename, hdu=hdu)
         elif hdu_class == 'bkg_3d':
             from ..irf import Background3D
-            return Background3D.read(filename, hdu=hdu_name)
+            return Background3D.read(filename, hdu=hdu)
         else:
             raise ValueError('Invalid hdu_class: {}'.format(hdu_class))
 
@@ -124,10 +121,6 @@ class HDUIndexTable(Table):
     ]
     """Valid values for `HDU_CLASS`."""
 
-    # def __init__(self, base_dir, *args, **kwargs):
-    #     super(HDUIndexTable, self).__init(*args, **kwargs)
-    #     self.base_dir = base_dir
-
     @classmethod
     def read(cls, filename, **kwargs):
         """Read :ref:`gadf:hdu-index`.
@@ -139,15 +132,14 @@ class HDUIndexTable(Table):
         """
         filename = make_path(filename)
         table = super(HDUIndexTable, cls).read(str(filename), **kwargs)
-        # TODO: what is the best way to set BASE_DIR?
-        table.meta['BASE_DIR'] = filename.parent
+        table.meta['BASE_DIR'] = filename.parent.as_posix()
 
         return table
 
     @property
     def base_dir(self):
         """Base directory."""
-        return make_path(self.meta['BASE_DIR'])
+        return make_path(self.meta.get('BASE_DIR', ''))
 
     def hdu_location(self, obs_id, hdu_type=None, hdu_class=None):
         """Create `HDULocation` for a given selection.
@@ -191,9 +183,6 @@ class HDUIndexTable(Table):
         """
         if hdu_type is None and hdu_class is None:
             raise ValueError('You have to specify `hdu_type` or `hdu_class`.')
-
-        # TODO: warn if both hdu_type and hdu_class are passed,
-        # stating that the more specific hdu_class will take precedence.
 
         if hdu_type and hdu_type not in self.VALID_HDU_TYPE:
             msg = 'Invalid hdu_type: {}. '.format(hdu_type)
@@ -247,7 +236,7 @@ class HDUIndexTable(Table):
             obs_id=row['OBS_ID'],
             hdu_type=row['HDU_TYPE'].strip(),
             hdu_class=row['HDU_CLASS'].strip(),
-            base_dir=self.base_dir,
+            base_dir=self.base_dir.as_posix(),
             file_dir=row['FILE_DIR'].strip(),
             file_name=row['FILE_NAME'].strip(),
             hdu_name=row['HDU_NAME'].strip(),
