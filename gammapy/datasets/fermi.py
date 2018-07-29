@@ -84,7 +84,7 @@ class FermiLATDataset(object):
         path = make_path(filename)
         self._path = path.parents[0].resolve()
         with path.open() as fh:
-            self.config = yaml.load(fh)
+            self.config = yaml.safe_load(fh)
 
     @property
     def name(self):
