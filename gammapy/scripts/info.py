@@ -26,7 +26,6 @@ GAMMAPY_DEPENDENCIES = [
     'pytest',
     'sphinx',
 
-    'pandas',
     'healpy',
     'regions',
     'iminuit',
