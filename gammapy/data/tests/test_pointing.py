@@ -41,7 +41,7 @@ class TestPointingInfo:
 
     def test_duration(self):
         duration = self.pointing_info.duration
-        assert duration.sec == 1586.0000000044238
+        assert_allclose(duration.sec, 1586.0000000044238)
 
     def test_radec(self):
         pos = self.pointing_info.radec[0]
