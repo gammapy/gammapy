@@ -14,7 +14,7 @@ Introduction
 `gammapy.datasets` contains function to easily access datasets that are
 relevant for gamma-ray astronomy.
 
-The functions have a naming pattern (following the `sklearn.datasets` lead):
+The functions have a naming pattern (following scikit-learn lead):
 
 * ``load_*`` functions load datasets that are distributed with Gammapy (bundled in the repo)
 * ``fetch_*`` functions fetch datasets from the web (either from ``gammapy-extra`` or other sites)
