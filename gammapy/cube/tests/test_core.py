@@ -95,20 +95,20 @@ class TestSkyCube(object):
     def test_skycoord_to_pixel(self):
         position = SkyCoord(344.75, -5.25, frame='galactic', unit='deg')
         energy = 50 * u.MeV
-        x, y, z = self.sky_cube.wcs_skycoord_to_pixel(position, energy)
-        assert_allclose((x, y, z), (0, 0, 0))
+        pix = np.array(self.sky_cube.wcs_skycoord_to_pixel(position, energy))
+        assert_allclose(pix, (0, 0, 0))
 
     def test_pix2world2pix(self):
         # Test round-tripping
         pix = 2.2, 3.3, 4.4
         world = self.sky_cube.wcs_pixel_to_skycoord(*pix)
-        pix2 = self.sky_cube.wcs_skycoord_to_pixel(*world)
+        pix2 = np.array(self.sky_cube.wcs_skycoord_to_pixel(*world))
         assert_allclose(pix2, pix)
 
         # Check array inputs
         pix = [2.2, 2.2], [3.3, 3.3], [4.4, 4.4]
         world = self.sky_cube.wcs_pixel_to_skycoord(*pix)
-        pix2 = self.sky_cube.wcs_skycoord_to_pixel(*world)
+        pix2 = np.array(self.sky_cube.wcs_skycoord_to_pixel(*world))
         assert_allclose(pix2, pix)
 
     def test_lookup(self):
