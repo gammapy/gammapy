@@ -33,7 +33,7 @@ The following packages are available:
 
     sudo apt-get install \
         python3-pip python3-scipy python3-matplotlib python3-skimage python3-sklearn \
-        python3-pandas python3-h5py python3-yaml ipython3-notebook python3-uncertainties \
+        python3-yaml ipython3-notebook python3-uncertainties \
         python3-astropy python3-click
 
 The following packages have to be installed with pip:

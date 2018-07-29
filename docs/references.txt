@@ -32,6 +32,7 @@
 .. _conda: http://conda.pydata.org/
 .. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.io/en/latest/
+.. _HEALPix: https://en.wikipedia.org/wiki/HEALPix
 .. _PyYAML: https://pypi.org/project/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe

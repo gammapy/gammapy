@@ -64,12 +64,12 @@ plot_html_show_source_link = False
 # We currently want to link to the latest development version of the astropy docs,
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
+intersphinx_mapping.pop('h5py', None)
 intersphinx_mapping['matplotlib'] = ('https://matplotlib.org/', None)
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
 intersphinx_mapping['regions'] = ('http://astropy-regions.readthedocs.io/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
-intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
