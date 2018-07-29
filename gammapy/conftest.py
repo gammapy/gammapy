@@ -17,8 +17,6 @@ TESTED_VERSIONS[packagename] = version.version
 # Declare for which packages version numbers should be displayed
 # when running the tests
 PYTEST_HEADER_MODULES['cython'] = 'cython'
-PYTEST_HEADER_MODULES['skimage'] = 'skimage'
-PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
 PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
 PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
 PYTEST_HEADER_MODULES['astropy'] = 'astropy'

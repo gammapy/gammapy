@@ -74,8 +74,8 @@ Here's some examples for some scientific computing and astronomy packages:
 
     sudo port install \
         py36-pip py36-pytest \
-        py36-scipy py36-matplotlib py36-scikit-image py36-scikit-learn \
-        py36-pandas py36-emcee py36-h5py py36-ipython py36-uncertainties \
+        py36-scipy py36-matplotlib py36-scikit-image \
+        py36-emcee py36-ipython py36-uncertainties \
         py36-healpy py36-cython
 
 To search which software is available in Macports (searches package name and description):
