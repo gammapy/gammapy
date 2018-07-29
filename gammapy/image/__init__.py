@@ -7,6 +7,5 @@ from .measure import *
 from .profile import *
 from .plotting import *
 from .core import *
-from .lists import *
 from .asmooth import *
 
