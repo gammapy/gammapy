@@ -9,8 +9,8 @@ from ...maps import Map
 from ...detect import TSMapEstimator
 
 
-@pytest.fixture
-def input_maps(scope='session'):
+@pytest.fixture(scope='session')
+def input_maps():
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
     maps = {}
     maps['counts'] = Map.read(filename, hdu='counts')

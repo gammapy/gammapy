@@ -480,8 +480,8 @@ class WcsGeom(MapGeom):
     def get_pix(self, idx=None, mode='center'):
         """Get map pix coordinates from the geometry.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         mode : {'center', 'edges'}
             Get center or edge pix coordinates for the spatial axes.
 
@@ -558,8 +558,8 @@ class WcsGeom(MapGeom):
     def get_coord(self, idx=None, flat=False, mode='center'):
         """Get map coordinates from the geometry.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         mode : {'center', 'edges'}
             Get center or edge coordinates for the spatial axes.
 
