@@ -9,7 +9,7 @@ from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
+from ...maps import WcsNDMap
 
 
 @requires_data('gammapy-extra')
@@ -58,7 +58,7 @@ class TestObservationSummary:
         on_size = 0.3 * u.deg
         on_region = CircleSkyRegion(pos, on_size)
 
-        exclusion_mask = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+        exclusion_mask = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
         obs_stats_list = []
         for obs_id in obs_ids:

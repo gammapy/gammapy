@@ -16,7 +16,7 @@ from ...data import DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
+from ...maps import WcsNDMap
 from ..lightcurve import LightCurve, LightCurveEstimator
 
 
@@ -160,11 +160,11 @@ def spec_extraction():
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 
     exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    allsky_mask = SkyImage.read(exclusion_file)
-    exclusion_mask = allsky_mask.cutout(
+    allsky_mask = WcsNDMap.read(exclusion_file)
+    exclusion_mask = allsky_mask.make_cutout(
         position=on_region.center,
-        size=Angle('6 deg'),
-    )
+        width=Angle('6 deg'),
+    )[0]
     bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                                         obs_list=obs_list,
                                                         exclusion_mask=exclusion_mask)
