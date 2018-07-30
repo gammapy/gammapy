@@ -3,6 +3,5 @@
 """
 from .core import *
 from .load import *
-from .fermi import *
 
 
