@@ -77,14 +77,10 @@ class ObservationCTA(object):
         Observation start time
     tstop : `~astropy.units.Quantity`
         Observation stop time
-    telescope_ids : list of int
-        Telescope IDs of participating telescopes
     target_radec : `~astropy.coordinates.SkyCoord`
         Target RA / DEC sky coordinates
     observatory_earth_location : `~astropy.coordinates.EarthLocation`
         Observatory location
-    muoneff : float ?
-        Observation muon efficiency
     meta : `~collections.OrderedDict`
         Dictionary to store metadata
 
@@ -92,7 +88,7 @@ class ObservationCTA(object):
     def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
                  pointing_radec=None, pointing_altaz=None, pointing_zen=None, observation_time_duration=None,
                  observation_live_time_duration=None, observation_dead_time_fraction=None, tstart=None, tstop=None,
-                 telescope_ids=None, target_radec=None, observatory_earth_location=None, muoneff=None, meta=None):
+                 target_radec=None, observatory_earth_location=None, meta=None):
         self.obs_id = obs_id
         self.gti = gti
         self.events = events
@@ -108,10 +104,8 @@ class ObservationCTA(object):
         self.observation_dead_time_fraction = observation_dead_time_fraction
         self.tstart = tstart
         self.tstop = tstop
-        self.telescope_ids = telescope_ids
         self.target_radec = target_radec
         self.observatory_earth_location = observatory_earth_location
-        self.muoneff = muoneff
         if not meta:
             meta = OrderedDict()
         self.meta = meta
@@ -132,44 +126,6 @@ class ObservationCTA(object):
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
         return ss
-
-    # dcfidalgo: I think this method should be moved outside of this class, in some generic PSFMaker ...
-    def make_psf(self, position, energy=None, rad=None):
-        """Make energy-dependent PSF for a given source position.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Position at which to compute the PSF
-        energy : `~astropy.units.Quantity`
-            1-dim energy array for the output PSF.
-            If none is given, the energy array of the PSF from the observation is used.
-        rad : `~astropy.coordinates.Angle`
-            1-dim offset wrt source position array for the output PSF.
-            If none is given, the offset array of the PSF from the observation is used.
-
-        Returns
-        -------
-        psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy dependent psf table
-        """
-        offset = position.separation(self.pointing_radec)
-        energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
-        rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
-
-        if isinstance(self.psf, PSF3D):
-            # PSF3D is a table PSF, so we use the native RAD binning by default
-            # TODO: should handle this via a uniform caller API
-            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
-        else:
-            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset, rad=rad).evaluate(energy)
-
-        arf = self.aeff.data.evaluate(offset=offset, energy=energy)
-        exposure = arf * self.observation_live_time_duration
-
-        psf = EnergyDependentTablePSF(energy=energy, rad=rad,
-                                      exposure=exposure, psf_value=psf_value)
-        return psf
 
     def peek(self):
         """Quick-look plots in a few panels."""
