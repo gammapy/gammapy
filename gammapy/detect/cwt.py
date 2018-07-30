@@ -429,7 +429,7 @@ class CWTData(object):
     def __init__(self, counts, background, n_scale):
         self._counts = np.array(counts.data, dtype=float)
         self._background = np.array(background.data, dtype=float)
-        self._wcs = counts.geom
+        self._geom = counts.geom
 
         shape_2d = self._counts.shape
         self._model = np.zeros(shape_2d)
@@ -445,12 +445,12 @@ class CWTData(object):
     @property
     def counts(self):
         """2D counts input image (`~gammapy.image.SkyImage`)."""
-        return WcsNDMap(copy.deepcopy(self._wcs), self._counts)
+        return WcsNDMap(copy.deepcopy(self._geom), self._counts)
 
     @property
     def background(self):
         """2D background input image (`~gammapy.image.SkyImage`)."""
-        return WcsNDMap(copy.deepcopy(self._wcs), self._background)
+        return WcsNDMap(copy.deepcopy(self._geom), self._background)
 
     @property
     def model(self):
@@ -459,7 +459,7 @@ class CWTData(object):
         Positive version of transform_2d image.
         Primordial initialized by zero array.
         """
-        return WcsNDMap(self._wcs, self._model)
+        return WcsNDMap(self._geom, self._model)
 
     @property
     def approx(self):
@@ -469,7 +469,7 @@ class CWTData(object):
         ``counts - model - background`` with ``kern_approx``
         Primordial initialized by zero array.
         """
-        return WcsNDMap(self._wcs, self._approx)
+        return WcsNDMap(self._geom, self._approx)
 
     @property
     def approx_bkg(self):
@@ -478,7 +478,7 @@ class CWTData(object):
         In the course of iterations updated by convolution of ``background`` with ``kern_approx``.
         Primordial initialized by zero array.
         """
-        return WcsNDMap(self._wcs, self._approx_bkg)
+        return WcsNDMap(self._geom, self._approx_bkg)
 
     @property
     def transform_2d(self):
@@ -487,7 +487,7 @@ class CWTData(object):
         Created from transform_3d by summarize values per 0 axes.
         Primordial initialized by zero array.
         """
-        return WcsNDMap(self._wcs, self._transform_2d)
+        return WcsNDMap(self._geom, self._transform_2d)
 
     @property
     def support_2d(self):
@@ -496,7 +496,7 @@ class CWTData(object):
         Created from support_3d by OR-operation per 0 axis.
         """
         support_2d = (self._support.sum(0) > 0)
-        return WcsNDMap(self._wcs, support_2d)
+        return WcsNDMap(self._geom, support_2d)
 
     @property
     def residual(self):
@@ -505,12 +505,12 @@ class CWTData(object):
         Calculate as ``counts - model - approx``.
         """
         residual = self._counts - (self._model + self._approx)
-        return WcsNDMap(self._wcs, residual)
+        return WcsNDMap(self._geom, residual)
 
     @property
     def model_plus_approx(self):
         """TODO: document what this is."""
-        return WcsNDMap(self._wcs, self._model + self._approx)
+        return WcsNDMap(self._geom, self._model + self._approx)
 
     @property
     def transform_3d(self):
@@ -520,7 +520,7 @@ class CWTData(object):
         iterations updated by convolution of ``counts - total_background`` with kernel
         for each scale (``total_background = model + background + approx``).
         """
-        return SkyCube(name='transform_3d', data=self._transform_3d, wcs=self._wcs)
+        return SkyCube(name='transform_3d', data=self._transform_3d, wcs=self._geom)
 
     @property
     def error(self):
@@ -530,7 +530,7 @@ class CWTData(object):
         In the course of iterations updated by convolution of ``total_background``
         with kernel^2 for each scale.
         """
-        return SkyCube(name='error', data=self._error, wcs=self._wcs)
+        return SkyCube(name='error', data=self._error, wcs=self._geom)
 
     @property
     def support_3d(self):
@@ -538,7 +538,7 @@ class CWTData(object):
 
         Primordial initialized by zero array.
         """
-        return WcsNDMap(self._wcs, self._support)
+        return WcsNDMap(self._geom, self._support)
 
     @property
     def max_scale_image(self):
@@ -548,7 +548,7 @@ class CWTData(object):
         # return kernels.scales[idx_scale_max] * (self._support.sum(0) > 0)
         transform_2d_max = np.max(self._transform_3d, axis=0)
         maximal_image = transform_2d_max * self.support_2d.data
-        return WcsNDMap(self._wcs, maximal_image)
+        return WcsNDMap(self._geom, maximal_image)
 
     def __sub__(self, other):
         data = CWTData(counts=self.counts,
@@ -753,7 +753,7 @@ class CWTData(object):
         overwrite : bool, optional (default False)
             If True, overwrite file with name as filename.
         """
-        header = self._wcs.make_header()
+        header = self._geom.make_header()
         hdu_list = fits.HDUList()
         hdu_list.append(fits.PrimaryHDU())
         hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name='counts'))
