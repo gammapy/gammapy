@@ -24,7 +24,10 @@ class SherpaDataWrapper(Data):
     def __init__(self, gp_data, name='GPData'):
         # sherpa does some magic here: it sets class attributes from constructor
         # arguments so `gp_data` will be available later on the instance.
-        self._data_dummy = np.empty_like(gp_data.e_ref)
+        try:
+            self._data_dummy = np.empty_like(gp_data.e_ref)
+        except AttributeError:
+            self._data_dummy = np.empty_like(gp_data.data)
         BaseData.__init__(self)
 
     def to_fit(self, staterr):

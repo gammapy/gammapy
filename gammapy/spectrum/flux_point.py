@@ -914,7 +914,7 @@ class FluxPointFitter(object):
         """Fit flux point using sherpa"""
         from sherpa.fit import Fit
         from sherpa.data import DataSimulFit
-        from ..utils.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
+        from ..utils.fitting.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
                                     SherpaModelWrapper, SHERPA_OPTMETHODS)
 
         optimizer = self.parameters['optimizer']
