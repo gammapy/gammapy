@@ -82,7 +82,7 @@ class SkyPointSource(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0):
         """Evaluate the model (static function)."""
 
-        wrapval=lon_0 + 180*u.deg
+        wrapval = lon_0 + 180 * u.deg
         lon = Angle(lon).wrap_at(wrapval)
 
         _, grad_lon = np.gradient(lon)
@@ -90,10 +90,10 @@ class SkyPointSource(SkySpatialModel):
         lon_diff = np.abs((lon - lon_0) / grad_lon)
         lat_diff = np.abs((lat - lat_0) / grad_lat)
 
-        lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0)
-        lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0)
+        lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
+        lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
         val = lon_val * lat_val
-        return val * u.Unit('sr-1')
+        return val.to('sr-1')
 
 
 class SkyGaussian(SkySpatialModel):
@@ -189,7 +189,7 @@ class SkyShell(SkySpatialModel):
                 \begin{cases}
                     \sqrt{r_{out}^2 - \theta^2} - \sqrt{r_{in}^2 - \theta^2} &
                                  \text{for } \theta \lt r_{in} \\
-                    \sqrt{r_{out}^2 - \theta^2} & 
+                    \sqrt{r_{out}^2 - \theta^2} &
                                  \text{for } r_{in} \leq \theta \lt r_{out} \\
                     0 & \text{for } \theta > r_{out}
                 \end{cases}
