@@ -4,8 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import CWT, CWTKernels, CWTData
-from ...datasets import load_poisson_stats_image
-from ...image import SkyImage
+from ...maps import Map
 
 
 @requires_dependency('scipy')
@@ -14,10 +13,9 @@ class TestCWT:
     """Test CWT algorithm."""
 
     def setup(self):
-        filename = load_poisson_stats_image(return_filenames=True)
-        image = SkyImage.read(filename)
-        background = SkyImage.read(filename)
-        background.data = np.ones_like(image.data, dtype=float)
+        filename = filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
+        image = Map.read(filename)
+        background = image.copy(data=np.ones(image.data.shape, dtype=float))
 
         self.kernels = CWTKernels(n_scale=2,
                                   min_scale=3.0,
@@ -175,10 +173,9 @@ class TestCWTData:
     """
 
     def setup(self):
-        filename = load_poisson_stats_image(return_filenames=True)
-        image = SkyImage.read(filename)
-        background = SkyImage.read(filename)
-        background.data = np.ones_like(image.data, dtype=float)
+        filename = filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
+        image = Map.read(filename)
+        background = image.copy(data=np.ones(image.data.shape, dtype=float))
 
         self.kernels = CWTKernels(n_scale=2,
                                   min_scale=3.0,
@@ -249,10 +246,10 @@ class TestCWTData:
     def test_io(self, tmpdir):
         filename = str(tmpdir / 'test-cwt.fits')
         self.cwt_data.write(filename=filename, overwrite=True)
-        approx = SkyImage.read(filename, hdu='APPROX')
+        approx = Map.read(filename, hdu='APPROX')
         assert_allclose(approx.data[100, 100], self.cwt_data._approx[100, 100])
         assert_allclose(approx.data[36, 63], self.cwt_data._approx[36, 63])
 
-        transform_2d = SkyImage.read(filename, hdu='TRANSFORM_2D')
+        transform_2d = Map.read(filename, hdu='TRANSFORM_2D')
         assert_allclose(transform_2d.data[100, 100], self.cwt_data.transform_2d.data[100, 100])
         assert_allclose(transform_2d.data[36, 63], self.cwt_data.transform_2d.data[36, 63])

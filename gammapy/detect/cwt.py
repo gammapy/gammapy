@@ -7,8 +7,7 @@ from collections import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
-from ..image import SkyImage
-from ..cube import SkyCube
+from ..maps import WcsNDMap, MapAxis, WcsGeom
 
 __all__ = [
     'CWT',
@@ -409,27 +408,29 @@ class CWTData(object):
 
     Parameters
     ----------
-    counts : `~gammapy.image.SkyImage`
+    counts : `~gammapy.maps.WcsNDMap`
         2D counts image.
-    background : `~gammapy.image.SkyImage`
+    background : `~gammapy.maps.WcsNDMap`
         2D background image.
     n_scale : int
         Number of scales.
 
     Examples
     --------
-    >>> from gammapy.image import SkyImage
+    >>> from gammapy.maps import Map
     >>> from gammapy.detect import CWTData
     >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
-    >>> image = SkyImage.read(filename, hdu='COUNTS')
-    >>> background = SkyImage.read(filename, hdu='BACKGROUND')
+    >>> image = Map.read(filename, hdu='COUNTS')
+    >>> background = Map.read(filename, hdu='BACKGROUND')
     >>> data = CWTData(counts=image, background=background, n_scale=2)
     """
 
     def __init__(self, counts, background, n_scale):
         self._counts = np.array(counts.data, dtype=float)
         self._background = np.array(background.data, dtype=float)
-        self._wcs = counts.wcs
+        self._geom2d = counts.geom.copy()
+        scale_axis = MapAxis(np.arange(n_scale+1))
+        self._geom3d = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[scale_axis])
 
         shape_2d = self._counts.shape
         self._model = np.zeros(shape_2d)
@@ -444,113 +445,111 @@ class CWTData(object):
 
     @property
     def counts(self):
-        """2D counts input image (`~gammapy.image.SkyImage`)."""
-        return SkyImage(name='counts', data=self._counts, wcs=copy.deepcopy(self._wcs))
+        """2D counts input image (`~gammapy.maps.WcsNDMap`)."""
+        return WcsNDMap(self._geom2d, self._counts)
 
     @property
     def background(self):
-        """2D background input image (`~gammapy.image.SkyImage`)."""
-        return SkyImage(name='background', data=self._background, wcs=copy.deepcopy(self._wcs))
+        """2D background input image (`~gammapy.maps.WcsNDMap`)."""
+        return WcsNDMap(self._geom2d, self._background)
 
     @property
     def model(self):
-        """2D model image (`~gammapy.image.SkyImage`).
+        """2D model image (`~gammapy.maps.WcsNDMap`).
 
         Positive version of transform_2d image.
         Primordial initialized by zero array.
         """
-        return SkyImage(name='model', data=self._model, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, self._model)
 
     @property
     def approx(self):
-        """2D approx ??? image (`~gammapy.image.SkyImage`).
+        """2D approx ??? image (`~gammapy.maps.WcsNDMap`).
 
         In the course of iterations updated by convolution of
         ``counts - model - background`` with ``kern_approx``
         Primordial initialized by zero array.
         """
-        return SkyImage(name='approx', data=self._approx, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, self._approx)
 
     @property
     def approx_bkg(self):
-        """2D approx bkg image (`~gammapy.image.SkyImage`).
+        """2D approx bkg image (`~gammapy.maps.WcsNDMap`).
 
         In the course of iterations updated by convolution of ``background`` with ``kern_approx``.
         Primordial initialized by zero array.
         """
-        return SkyImage(name='approx_bkg', data=self._approx_bkg, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, self._approx_bkg)
 
     @property
     def transform_2d(self):
-        """2D transform ??? image (`~gammapy.image.SkyImage`).
+        """2D transform ??? image (`~gammapy.maps.WcsNDMap`).
 
         Created from transform_3d by summarize values per 0 axes.
         Primordial initialized by zero array.
         """
-        return SkyImage(name='transform_2d', data=self._transform_2d, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, self._transform_2d)
 
     @property
     def support_2d(self):
-        """2D cube exclusion mask (`~gammapy.cube.SkyCube`).
+        """2D cube exclusion mask (`~gammapy.maps.WcsNDMap`).
 
         Created from support_3d by OR-operation per 0 axis.
         """
         support_2d = (self._support.sum(0) > 0)
-        return SkyImage(name='support_2d', data=support_2d, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, support_2d)
 
     @property
     def residual(self):
-        """2D residual image (`~gammapy.image.SkyImage`).
+        """2D residual image (`~gammapy.maps.WcsNDMap`).
 
         Calculate as ``counts - model - approx``.
         """
         residual = self._counts - (self._model + self._approx)
-        return SkyImage(name='residual', data=residual, wcs=self._wcs)
+        return WcsNDMap(self._geom2d, residual)
 
     @property
     def model_plus_approx(self):
         """TODO: document what this is."""
-        return SkyImage(name='/model plus approx',
-                        data=self._model + self._approx,
-                        wcs=self._wcs)
+        return WcsNDMap(self._geom2d, self._model + self._approx)
 
     @property
     def transform_3d(self):
-        """3D transform ??? cube (`~gammapy.cube.SkyCube`).
+        """3D transform ??? cube (`~gammapy.maps.WcsNDMap`).
 
         Primordial initialized by zero array. In the course of
         iterations updated by convolution of ``counts - total_background`` with kernel
         for each scale (``total_background = model + background + approx``).
         """
-        return SkyCube(name='transform_3d', data=self._transform_3d, wcs=self._wcs)
+        return WcsNDMap(self._geom3d, self._transform_3d)
 
     @property
     def error(self):
-        """3D error cube (`~gammapy.cube.SkyCube`).
+        """3D error cube (`~gammapy.maps.WcsNDMap`).
 
         Primordial initialized by zero array.
         In the course of iterations updated by convolution of ``total_background``
         with kernel^2 for each scale.
         """
-        return SkyCube(name='error', data=self._error, wcs=self._wcs)
+        return WcsNDMap(self._geom3d, self._error)
 
     @property
     def support_3d(self):
-        """3D support (exclusion) cube (`~gammapy.cube.SkyCube`).
+        """3D support (exclusion) cube (`~gammapy.maps.WcsNDMap`).
 
         Primordial initialized by zero array.
         """
-        return SkyImage(name='support_3d', data=self._support, wcs=self._wcs)
+        return WcsNDMap(self._geom3d, self._support)
 
     @property
     def max_scale_image(self):
-        """Maximum scale image (`~gammapy.image.SkyImage`)."""
+        """Maximum scale image (`~gammapy.maps.WcsNDMap`)."""
         # Previous version:
         # idx_scale_max = np.argmax(self._transform_3d, axis=0)
         # return kernels.scales[idx_scale_max] * (self._support.sum(0) > 0)
         transform_2d_max = np.max(self._transform_3d, axis=0)
-        maximal_image = transform_2d_max * self.support_2d
-        return SkyImage(name='maximal', data=maximal_image, wcs=self._wcs)
+        maximal_image = transform_2d_max * self.support_2d.data
+        return WcsNDMap(self._geom2d, maximal_image)
 
     def __sub__(self, other):
         data = CWTData(counts=self.counts,
@@ -755,7 +754,7 @@ class CWTData(object):
         overwrite : bool, optional (default False)
             If True, overwrite file with name as filename.
         """
-        header = self._wcs.to_header()
+        header = self._geom2d.make_header()
         hdu_list = fits.HDUList()
         hdu_list.append(fits.PrimaryHDU())
         hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name='counts'))
