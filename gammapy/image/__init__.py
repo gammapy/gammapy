@@ -6,6 +6,5 @@ from .utils import *
 from .measure import *
 from .profile import *
 from .plotting import *
-from .core import *
 from .asmooth import *
 
