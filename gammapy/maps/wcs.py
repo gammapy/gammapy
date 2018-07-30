@@ -683,9 +683,6 @@ class WcsGeom(MapGeom):
         return self.__class__(wcs, npix, cdelt=cdelt,
                               axes=copy.deepcopy(self.axes))
 
-    def to_slice(self, slices):
-        raise NotImplementedError
-
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
@@ -697,18 +694,20 @@ class WcsGeom(MapGeom):
         # Note also that pix_to_coord is already called in _get_pix_coords.
         # This should be made more efficient.
         coord = self.get_coord(mode='edges')
+        lon = coord.lon * np.pi / 180.
+        lat = coord.lat * np.pi / 180.
 
         # Compute solid angle using the approximation that it's
         # the product between angular separation of pixel corners.
         # First index is "y", second index is "x"
-        ylo_xlo = coord.lon[..., :-1, :-1], coord.lat[..., :-1, :-1]
-        ylo_xhi = coord.lon[..., :-1, 1:], coord.lat[..., :-1, 1:]
-        yhi_xlo = coord.lon[..., 1:, :-1], coord.lat[..., 1:, :-1]
+        ylo_xlo = lon[..., :-1, :-1], lat[..., :-1, :-1]
+        ylo_xhi = lon[..., :-1, 1:], lat[..., :-1, 1:]
+        yhi_xlo = lon[..., 1:, :-1], lat[..., 1:, :-1]
 
         dx = angular_separation(*(ylo_xlo + ylo_xhi))
         dy = angular_separation(*(ylo_xlo + yhi_xlo))
 
-        return u.Quantity(dx * dy, 'deg2').to('sr')
+        return u.Quantity(dx * dy, 'sr')
 
     def get_region_mask_array(self, region):
         """Return mask of pixels inside region in the the form of boolean array

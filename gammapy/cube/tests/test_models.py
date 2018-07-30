@@ -241,14 +241,14 @@ class TestSkyModelMapEvaluator:
         out = evaluator.compute_dnde()
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1 TeV-1 deg-2'
-        assert_allclose(out.value.mean(), 7.460919e-14)
+        assert_allclose(out.value.mean(), 7.460919e-14, rtol=1e-5)
 
     @staticmethod
     def test_compute_flux(evaluator):
         out = evaluator.compute_flux()
         assert out.shape == (2, 4, 5)
         assert out.unit == 'cm-2 s-1'
-        assert_allclose(out.value.mean(), 1.828206748668197e-14)
+        assert_allclose(out.value.mean(), 1.828206748668197e-14, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(evaluator):
@@ -256,17 +256,17 @@ class TestSkyModelMapEvaluator:
         npred = evaluator.apply_exposure(flux)
         out = evaluator.apply_psf(npred)
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.mean(), 1.2574065e-08)
+        assert_allclose(out.data.mean(), 1.2574065e-08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(evaluator):
         flux = evaluator.compute_flux()
         out = evaluator.apply_edisp(flux.value)
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.mean(), 1.828206748668197e-14)
+        assert_allclose(out.mean(), 1.828206748668197e-14, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 45.02963e-07)
+        assert_allclose(out.sum(), 45.02963e-07, rtol=1e-5)

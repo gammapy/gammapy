@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ..wcs import WcsGeom
@@ -137,16 +138,11 @@ def test_wcsgeom_solid_angle():
     # Check array size
     assert solid_angle.shape == (2, npix, npix)
 
-    # Note: test is valid for small enough bin sizes since
-    # WcsGeom.solid_angle() approximates the true solid angle value
-
     # Test at b = 0 deg
-    solid_lat0 = binsz.to('rad').value * (np.sin(binsz)) * u.sr
-    assert_allclose(solid_angle[0, 5, 5], solid_lat0, rtol=1e-3)
+    assert_quantity_allclose(solid_angle[0, 5, 5], 0.0003046 * u.sr, rtol=1e-3)
 
     # Test at b = 5 deg
-    solid_lat5 = binsz.to('rad').value * (np.sin(5 * binsz) - np.sin(4 * binsz.to('rad').value)) * u.sr
-    assert_allclose(solid_angle[0, 9, 5], solid_lat5, rtol=1e-3)
+    assert_quantity_allclose(solid_angle[0, 9, 5], 0.0003038  * u.sr, rtol=1e-3)
 
 
 def test_wcsgeom_solid_angle_ait():
