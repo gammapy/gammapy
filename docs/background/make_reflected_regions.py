@@ -7,8 +7,7 @@ from gammapy.maps import WcsNDMap
 from gammapy.background import ReflectedRegionsFinder
 
 exclusion_mask = WcsNDMap.create(
-    npix=(801,701), binsz=0.01,
-    coordsys='CEL', skydir=(83.633, 23.014)
+    npix=(801, 701), binsz=0.01, skydir=(83.633, 23.014),
 )
 
 # Exclude a rectangular region

@@ -495,7 +495,7 @@ class WcsNDMap(WcsMap):
         if ax is None:
             ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-        data = self.data
+        data = self.data.astype(float)
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
