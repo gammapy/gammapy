@@ -7,8 +7,6 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.testing import assert_quantity_allclose
-from ...datasets import gammapy_extra
-from ...datasets import FermiGalacticCenter
 from ...irf import TablePSF, EnergyDependentTablePSF
 
 
@@ -73,12 +71,16 @@ def test_TablePSF():
     assert_allclose(actual, desired)
 
 
+@pytest.fixture(scope='session')
+def psf():
+    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
+    return EnergyDependentTablePSF.read(filename)
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_EnergyDependentTablePSF():
+def test_EnergyDependentTablePSF(psf):
     # TODO: test __init__
-    fermi_gc = FermiGalacticCenter()
-    psf = fermi_gc.psf()
 
     # Test cases
     energy = Quantity(1, 'GeV')
@@ -113,9 +115,7 @@ def test_EnergyDependentTablePSF():
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
-def test_EnergyDependentTablePSF_plot():
-    filename = FermiGalacticCenter.filenames()['psf']
-    psf = EnergyDependentTablePSF.read(filename)
+def test_EnergyDependentTablePSF_plot(psf):
     psf.plot_containment_vs_energy()
 
     energy = Quantity(1, 'GeV')
@@ -127,9 +127,7 @@ def test_EnergyDependentTablePSF_plot():
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
-def test_plot():
-    filename = gammapy_extra.filename('test_datasets/unbundled/fermi/psf.fits')
-    psf = EnergyDependentTablePSF.read(filename)
+def test_plot(psf):
     # psf.plot_containment('fermi_psf_containment.pdf')
     # psf.plot_exposure('fermi_psf_exposure.pdf')
     psf.plot_psf_vs_rad()

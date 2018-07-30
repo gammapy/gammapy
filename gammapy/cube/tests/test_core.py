@@ -13,7 +13,6 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
 from ...image import SkyImage
 from ...data import EventList
-from ...datasets import FermiGalacticCenter
 from ...spectrum.models import PowerLaw2
 from .. import SkyCube
 
@@ -63,7 +62,8 @@ def test_empty_like_energy_bounds():
 @requires_dependency('scipy')
 class TestSkyCube(object):
     def setup(self):
-        self.sky_cube = FermiGalacticCenter.diffuse_model()
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
+        self.sky_cube = SkyCube.read(filename, format='fermi-background')
         assert self.sky_cube.data.shape == (30, 21, 61)
 
     def test_init(self):

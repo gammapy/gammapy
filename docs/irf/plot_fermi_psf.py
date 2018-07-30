@@ -1,11 +1,10 @@
 """Plot Fermi PSF."""
 import matplotlib.pyplot as plt
-from gammapy.datasets import FermiGalacticCenter
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import WcsGeom
 from gammapy.cube import PSFKernel
 
-filename = FermiGalacticCenter.filenames()['psf']
+filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
 fermi_psf = EnergyDependentTablePSF.read(filename)
 
 psf = fermi_psf.table_psf_at_energy(energy='1 GeV')
