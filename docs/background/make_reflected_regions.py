@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from gammapy.image import SkyImage
+from gammapy.maps import WcsNDMap
 from gammapy.background import ReflectedRegionsFinder
 
-exclusion_mask = SkyImage.empty(
-    nxpix=801, nypix=701, binsz=0.01,
-    coordsys='CEL', xref=83.633, yref=23.014, fill=1
+exclusion_mask = WcsNDMap.create(
+    npix=(801,701), binsz=0.01,
+    coordsys='CEL', skydir=(83.633, 23.014)
 )
 
 # Exclude a rectangular region
-coords = exclusion_mask.coordinates()
+coords = exclusion_mask.geom.get_coord().skycoord
 mask = (Angle('23d') < coords.dec) & (coords.dec < Angle('24d'))
-exclusion_mask.data *= np.invert(mask)
+exclusion_mask.data = np.invert(mask)
 
 pos = SkyCoord(83.633, 22.014, unit='deg')
 radius = Angle(0.3, 'deg')
