@@ -9,7 +9,7 @@ from astropy.table import Table
 from ..utils.scripts import make_path
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
-from .observations import DataStoreObservation, ObservationList
+from .observations import DataStoreObservationCTA, ObservationList
 
 __all__ = [
     'DataStore',
@@ -152,7 +152,7 @@ class DataStore(object):
         self.obs_table.summary(file=file)
 
     def obs(self, obs_id):
-        """Access a given `~gammapy.data.DataStoreObservation`.
+        """Access a given `~gammapy.data.DataStoreObservationCTA`.
 
         Parameters
         ----------
@@ -161,10 +161,10 @@ class DataStore(object):
 
         Returns
         -------
-        obs : `~gammapy.data.DataStoreObservation`
+        obs : `~gammapy.data.DataStoreObservationCTA`
             Observation container
         """
-        return DataStoreObservation(
+        return DataStoreObservationCTA(
             obs_id=obs_id,
             data_store=self,
         )
@@ -182,7 +182,7 @@ class DataStore(object):
         Returns
         -------
         obs : `~gammapy.data.ObservationList`
-            List of `~gammapy.data.DataStoreObservation`
+            List of `~gammapy.data.DataStoreObservationCTA`
         """
         obslist = ObservationList()
         for _ in obs_id:
