@@ -157,6 +157,27 @@ def test_wcsgeom_solid_angle_ait():
     solid_angle = ait_geom.solid_angle()
     assert np.isnan(solid_angle[0, 0])
 
+def test_wcsgeom_get_coord():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(4, 3), binsz=1,
+                              coordsys='GAL', proj='CAR')
+    coords = geom.get_coord()
+
+
+def test_wcsgeom_get_idx():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(4, 3), binsz=1,
+                          coordsys='GAL', proj='CAR', axes=axes1)
+    idx_center = geom.get_idx()
+
+    for idx in idx_center:
+        assert idx.shape == (2, 3, 4)
+        assert_allclose(idx[0, 0, 0], 0)
+
+    idx_edge = geom._get_pix_coords(mode='edges')
+    for idx, desired in zip(idx_edge, [-0.5, -0.5, 0]):
+        assert idx.shape == (2, 4, 5)
+        assert_allclose(idx[0, 0, 0], desired)
+
+
 
 def test_geom_repr():
     geom = WcsGeom.create(skydir=(0, 0), npix=(10, 4), binsz=50,

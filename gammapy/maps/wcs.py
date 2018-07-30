@@ -134,6 +134,8 @@ class WcsGeom(MapGeom):
         Serialization format convention.  This sets the default format
         that will be used when writing this geometry to a file.
     """
+    _slice_spatial_axes = slice(0, 2)
+    _slice_non_spatial_axes = slice(2, -1)
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
@@ -486,7 +488,7 @@ class WcsGeom(MapGeom):
 
         npix = copy.deepcopy(self.npix)
 
-        if mode == 'edge':
+        if mode == 'edges':
             for pix_num in npix[:2]:
                 pix_num += 1
 
@@ -533,8 +535,8 @@ class WcsGeom(MapGeom):
             pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
 
         if mode == 'edges':
-            for i in range(len(pix)):
-                pix[i] -= 0.5
+            for pix_array in pix[self._slice_spatial_axes]:
+                pix_array -= 0.5
 
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
@@ -542,13 +544,8 @@ class WcsGeom(MapGeom):
             pix[i][~m] = np.nan
         return pix
 
-    #        shape = np.broadcast(*coords).shape
-    #        m = [np.isfinite(c) for c in coords]
-    #        m = np.broadcast_to(np.prod(m),shape)
-    #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
-
-    def get_coord(self, idx=None, flat=False):
-        pix = self._get_pix_coords(idx=idx)
+    def get_coord(self, idx=None, flat=False, mode='center'):
+        pix = self._get_pix_coords(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         if flat:
             coords = tuple([c[np.isfinite(c)] for c in coords])
@@ -699,22 +696,19 @@ class WcsGeom(MapGeom):
         # Note that edge is applied only to spatial coordinates in the following call
         # Note also that pix_to_coord is already called in _get_pix_coords.
         # This should be made more efficient.
-        pix = self._get_pix_coords(mode='edge')
-        coord = self.pix_to_coord(pix)
-        lon = coord[0] * np.pi / 180.
-        lat = coord[1] * np.pi / 180.
+        coord = self.get_coord(mode='edges')
 
         # Compute solid angle using the approximation that it's
         # the product between angular separation of pixel corners.
         # First index is "y", second index is "x"
-        ylo_xlo = lon[..., :-1, :-1], lat[..., :-1, :-1]
-        ylo_xhi = lon[..., :-1, 1:], lat[..., :-1, 1:]
-        yhi_xlo = lon[..., 1:, :-1], lat[..., 1:, :-1]
+        ylo_xlo = coord.lon[..., :-1, :-1], coord.lat[..., :-1, :-1]
+        ylo_xhi = coord.lon[..., :-1, 1:], coord.lat[..., :-1, 1:]
+        yhi_xlo = coord.lon[..., 1:, :-1], coord.lat[..., 1:, :-1]
 
         dx = angular_separation(*(ylo_xlo + ylo_xhi))
         dy = angular_separation(*(ylo_xlo + yhi_xlo))
 
-        return u.Quantity(dx * dy, 'sr')
+        return u.Quantity(dx * dy, 'deg2').to('sr')
 
     def get_region_mask_array(self, region):
         """Return mask of pixels inside region in the the form of boolean array
