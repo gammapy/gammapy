@@ -85,7 +85,7 @@ class ReflectedRegionsFinder(object):
         Minimal distance between to reflected regions
     min_distance_input : `~astropy.coordinates.Angle`, optional
         Minimal distance from input region
-    exclusion_mask : `~gammapy.image.SkyImage`, optional
+    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
 
     Examples
@@ -97,9 +97,9 @@ class ReflectedRegionsFinder(object):
     >>> target_position = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     >>> theta = Angle(0.4, 'deg')
     >>> on_region = CircleSkyRegion(target_position, theta)
-    >>> finder = ReflectedRegionsFinder(min_distance_input='1 rad', region=on_region, center=pointing))
-    >>> regions = finder.run()
-    >>> print(regions[0])
+    >>> finder = ReflectedRegionsFinder(min_distance_input='1 rad', region=on_region, center=pointing)
+    >>> finder.run()
+    >>> print(finder.reflected_regions[0])
     Region: CircleSkyRegion
     center: <SkyCoord (Galactic): (l, b) in deg
         ( 184.9367087, -8.37920222)>
