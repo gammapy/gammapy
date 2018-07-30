@@ -320,7 +320,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
         fig, ax, cbar = self.finder.exclusion_mask.plot(fig=fig, ax=ax)
 
-        wcs = self.finder.exclusion_mask.wcs
+        wcs = self.finder.exclusion_mask.geom.wcs
         on_patch = self.on_region.to_pixel(wcs=wcs).as_patch(color='red')
         ax.add_patch(on_patch)
 

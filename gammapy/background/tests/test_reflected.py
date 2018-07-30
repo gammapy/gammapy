@@ -4,7 +4,7 @@ import pytest
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, assert_quantity_allclose
-from ...image import SkyImage
+from ...maps import WcsNDMap
 from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
 
@@ -54,7 +54,7 @@ def test_find_reflected_regions(mask, on_region):
     assert len(regions) == 16
 
     # Test with too small exclusion
-    small_mask = mask.cutout(pointing, Angle('0.2 deg'))
+    small_mask = mask.make_cutout(pointing, Angle('0.2 deg'))[0]
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions
