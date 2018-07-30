@@ -4,7 +4,6 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import CWT, CWTKernels, CWTData
-from ...datasets import load_poisson_stats_image
 from ...maps import Map
 
 
@@ -14,10 +13,9 @@ class TestCWT:
     """Test CWT algorithm."""
 
     def setup(self):
-        filename = load_poisson_stats_image(return_filenames=True)
+        filename = filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
         image = Map.read(filename)
-        background = Map.read(filename)
-        background.data = np.ones_like(image.data, dtype=float)
+        background = image.copy(data=np.ones(image.data.shape, dtype=float))
 
         self.kernels = CWTKernels(n_scale=2,
                                   min_scale=3.0,
@@ -175,10 +173,9 @@ class TestCWTData:
     """
 
     def setup(self):
-        filename = load_poisson_stats_image(return_filenames=True)
+        filename = filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
         image = Map.read(filename)
-        background = Map.read(filename)
-        background.data = np.ones_like(image.data, dtype=float)
+        background = image.copy(data=np.ones(image.data.shape, dtype=float))
 
         self.kernels = CWTKernels(n_scale=2,
                                   min_scale=3.0,
