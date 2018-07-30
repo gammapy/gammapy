@@ -742,10 +742,6 @@ class WcsGeom(MapGeom):
         pixcoord = PixCoord(idx[0], idx[1])
         return region.contains(pixcoord)
 
-    def copy(self):
-        """Copy wcsgeom object."""
-        return copy.deepcopy(self)
-
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"

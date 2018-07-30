@@ -1429,3 +1429,7 @@ class MapGeom(object):
             kwargs.setdefault(arg, copy.deepcopy(value))
 
         return self.__class__(**kwargs)
+
+    def copy(self):
+        """Deep copy."""
+        return copy.deepcopy(self)
