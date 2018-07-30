@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
+from ...maps import WcsNDMap
 
 
 @pytest.fixture(scope='session')
@@ -27,7 +27,7 @@ def on_region():
 
 @pytest.fixture(scope='session')
 def mask():
-    return SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    return WcsNDMap.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
 
 @pytest.fixture(scope='session')
