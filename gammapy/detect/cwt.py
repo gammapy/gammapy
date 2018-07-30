@@ -428,7 +428,7 @@ class CWTData(object):
     def __init__(self, counts, background, n_scale):
         self._counts = np.array(counts.data, dtype=float)
         self._background = np.array(background.data, dtype=float)
-        self._geom2d = counts.geom
+        self._geom2d = counts.geom.copy()
         scale_axis = MapAxis(np.arange(n_scale+1))
         self._geom3d = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[scale_axis])
 
@@ -446,12 +446,12 @@ class CWTData(object):
     @property
     def counts(self):
         """2D counts input image (`~gammapy.maps.WcsNDMap`)."""
-        return WcsNDMap(copy.deepcopy(self._geom2d), self._counts)
+        return WcsNDMap(self._geom2d, self._counts)
 
     @property
     def background(self):
         """2D background input image (`~gammapy.maps.WcsNDMap`)."""
-        return WcsNDMap(copy.deepcopy(self._geom2d), self._background)
+        return WcsNDMap(self._geom2d, self._background)
 
     @property
     def model(self):
