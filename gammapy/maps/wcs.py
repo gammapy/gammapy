@@ -134,6 +134,8 @@ class WcsGeom(MapGeom):
         Serialization format convention.  This sets the default format
         that will be used when writing this geometry to a file.
     """
+    _slice_spatial_axes = slice(0, 2)
+    _slice_non_spatial_axes = slice(2, -1)
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
@@ -469,14 +471,25 @@ class WcsGeom(MapGeom):
     def get_image_wcs(self, idx):
         raise NotImplementedError
 
-    def get_idx(self, idx=None, local=False, flat=False):
-        pix = self._get_pix_coords(idx=idx, mode='center')
+    def get_idx(self, idx=None, flat=False):
+        pix = self.get_pix(idx=idx, mode='center')
         if flat:
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_coords(self, idx=None, mode='center'):
+    def get_pix(self, idx=None, mode='center'):
+        """Get map pix coordinates from the geometry.
 
+        Paramters
+        ---------
+        mode : {'center', 'edges'}
+            Get center or edge pix coordinates for the spatial axes.
+
+        Returns
+        -------
+        coord : tuple
+            Map pix coordinate tuple.
+        """
         # FIXME: Figure out if there is some way to employ open/sparse
         # vectors
 
@@ -486,7 +499,7 @@ class WcsGeom(MapGeom):
 
         npix = copy.deepcopy(self.npix)
 
-        if mode == 'edge':
+        if mode == 'edges':
             for pix_num in npix[:2]:
                 pix_num += 1
 
@@ -533,8 +546,8 @@ class WcsGeom(MapGeom):
             pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
 
         if mode == 'edges':
-            for i in range(len(pix)):
-                pix[i] -= 0.5
+            for pix_array in pix[self._slice_spatial_axes]:
+                pix_array -= 0.5
 
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
@@ -542,23 +555,27 @@ class WcsGeom(MapGeom):
             pix[i][~m] = np.nan
         return pix
 
-    #        shape = np.broadcast(*coords).shape
-    #        m = [np.isfinite(c) for c in coords]
-    #        m = np.broadcast_to(np.prod(m),shape)
-    #        return tuple([np.ravel(np.broadcast_to(t,shape)[m]) for t in pix])
+    def get_coord(self, idx=None, flat=False, mode='center'):
+        """Get map coordinates from the geometry.
 
-    def get_coord(self, idx=None, flat=False):
-        pix = self._get_pix_coords(idx=idx)
+        Paramters
+        ---------
+        mode : {'center', 'edges'}
+            Get center or edge coordinates for the spatial axes.
+
+        Returns
+        -------
+        coord : `~MapCoord`
+            Map coordinate object.
+        """
+        pix = self.get_pix(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
+
         if flat:
             coords = tuple([c[np.isfinite(c)] for c in coords])
 
-        cdict = OrderedDict([
-            ('lon', coords[0]),
-            ('lat', coords[1]),
-        ])
-        for i, axis in enumerate(self.axes):
-            cdict[axis.name] = coords[i + 2]
+        axes_names = ['lon', 'lat'] + [ax.name for ax in self.axes]
+        cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
 
@@ -686,23 +703,15 @@ class WcsGeom(MapGeom):
         return self.__class__(wcs, npix, cdelt=cdelt,
                               axes=copy.deepcopy(self.axes))
 
-    def to_slice(self, slices):
-        raise NotImplementedError
-
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
         The array has the same dimension as the WcsGeom object.
         To return solid angles for the spatial dimensions only use: WcsGeom.to_image().solid_angle()
         """
-        # TODO: Improve by exposing a mode 'edge' for get_coord
-        # Note that edge is applied only to spatial coordinates in the following call
-        # Note also that pix_to_coord is already called in _get_pix_coords.
-        # This should be made more efficient.
-        pix = self._get_pix_coords(mode='edge')
-        coord = self.pix_to_coord(pix)
-        lon = coord[0] * np.pi / 180.
-        lat = coord[1] * np.pi / 180.
+        coord = self.get_coord(mode='edges')
+        lon = coord.lon * np.pi / 180.
+        lat = coord.lat * np.pi / 180.
 
         # Compute solid angle using the approximation that it's
         # the product between angular separation of pixel corners.

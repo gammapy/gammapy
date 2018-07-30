@@ -83,8 +83,8 @@ def test_make_map_fov_background(bkg_3d, counts_cube):
     )
 
     assert m.data.shape == (15, 120, 200)
-    assert_allclose(m.data[0, 0, 0], 0.013959366925415072)
-    assert_allclose(m.data.sum(), 1356.2551841113177)
+    assert_allclose(m.data[0, 0, 0], 0.013959, rtol=1e-4)
+    assert_allclose(m.data.sum(), 1356.2551, rtol=1e-5)
 
     # TODO: Check that `offset_max` is working properly
     # pos = SkyCoord(85.6, 23, unit='deg')

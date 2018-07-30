@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ..wcs import WcsGeom
@@ -137,16 +138,11 @@ def test_wcsgeom_solid_angle():
     # Check array size
     assert solid_angle.shape == (2, npix, npix)
 
-    # Note: test is valid for small enough bin sizes since
-    # WcsGeom.solid_angle() approximates the true solid angle value
-
     # Test at b = 0 deg
-    solid_lat0 = binsz.to('rad').value * (np.sin(binsz)) * u.sr
-    assert_allclose(solid_angle[0, 5, 5], solid_lat0, rtol=1e-3)
+    assert_quantity_allclose(solid_angle[0, 5, 5], 0.0003046 * u.sr, rtol=1e-3)
 
     # Test at b = 5 deg
-    solid_lat5 = binsz.to('rad').value * (np.sin(5 * binsz) - np.sin(4 * binsz.to('rad').value)) * u.sr
-    assert_allclose(solid_angle[0, 9, 5], solid_lat5, rtol=1e-3)
+    assert_quantity_allclose(solid_angle[0, 9, 5], 0.0003038  * u.sr, rtol=1e-3)
 
 
 def test_wcsgeom_solid_angle_ait():
@@ -156,6 +152,30 @@ def test_wcsgeom_solid_angle_ait():
                               coordsys='GAL', proj='AIT')
     solid_angle = ait_geom.solid_angle()
     assert np.isnan(solid_angle[0, 0])
+
+
+def test_wcsgeom_get_coord():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(4, 3), binsz=1,
+                          coordsys='GAL', proj='CAR')
+    coord = geom.get_coord(mode='edges')
+    assert_allclose(coord.lon[0, 0], 2)
+    assert_allclose(coord.lat[0, 0], -1.5)
+
+
+def test_wcsgeom_get_pix_coords():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(4, 3), binsz=1,
+                          coordsys='GAL', proj='CAR', axes=axes1)
+    idx_center = geom.get_pix(mode='center')
+
+    for idx in idx_center:
+        assert idx.shape == (2, 3, 4)
+        assert_allclose(idx[0, 0, 0], 0)
+
+    idx_edge = geom.get_pix(mode='edges')
+    for idx, desired in zip(idx_edge, [-0.5, -0.5, 0]):
+        assert idx.shape == (2, 4, 5)
+        assert_allclose(idx[0, 0, 0], desired)
+
 
 
 def test_geom_repr():
