@@ -13,7 +13,7 @@ from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstima
 def mask():
     """Example mask for testing."""
     filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    return SkyImage.read(filename, hdu='EXCLUSION')
+    return WcsNDMap.read(filename, hdu='EXCLUSION')
 
 
 @pytest.fixture
