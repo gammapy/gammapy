@@ -429,7 +429,7 @@ class CWTData(object):
         self._counts = np.array(counts.data, dtype=float)
         self._background = np.array(background.data, dtype=float)
         self._geom2d = counts.geom.copy()
-        scale_axis = MapAxis(np.arange(n_scale+1))
+        scale_axis = MapAxis(np.arange(n_scale + 1))
         self._geom3d = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[scale_axis])
 
         shape_2d = self._counts.shape
@@ -603,7 +603,8 @@ class CWTData(object):
             support=self.support_3d,
         )
 
-    def _metrics_info(self, data, name):
+    @staticmethod
+    def _metrics_info(data, name):
         """Compute variance, mean, find max and min values and compute sum for given data.
 
         Parameters
