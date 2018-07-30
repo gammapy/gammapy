@@ -50,7 +50,7 @@ def _compute_distance_image(mask_map):
         dist_map = mask_map.copy(data=mask_map.data * max_value)
         return dist_map
 
-    if np.all(self.data == 0):
+    if np.all(mask_map.data == 0):
         dist_map = mask_map.copy(data=mask_map.data - max_value)
         return dist_map
 
