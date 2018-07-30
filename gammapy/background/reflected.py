@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion
-from ..image import SkyImage
+from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
 __all__ = [
@@ -13,6 +13,55 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
+
+def _compute_distance_image(mask_map):
+
+    """Distance to nearest exclusion region.
+
+    Compute distance image, i.e. the Euclidean (=Cartesian 2D)
+    distance (in pixels) to the nearest exclusion region.
+
+    We need to call distance_transform_edt twice because it only computes
+    dist for pixels outside exclusion regions, so to get the
+    distances for pixels inside we call it on the inverted mask
+    and then combine both distance images into one, using negative
+    distances (note the minus sign) for pixels inside exclusion regions.
+
+    If data consist only of ones, it'll be supposed to be far away
+    from zero pixels, so in capacity of answer it should be return
+    the matrix with the shape as like as data but packed by constant
+    value Max_Value (MAX_VALUE = 1e10).
+
+    If data consist only of zeros, it'll be supposed to be deep inside
+    an exclusion region, so in capacity of answer it should be return
+    the matrix with the shape as like as data but packed by constant
+    value -Max_Value (MAX_VALUE = 1e10).
+
+    Returns
+    -------
+    distance : `~gammapy.maps.WcsNDMap`
+        Map of distance to nearest exclusion region.
+    """
+    from scipy.ndimage import distance_transform_edt
+
+    max_value = 1e10
+
+    if np.all(mask_map.data == 1):
+        dist_map = mask_map.copy(data=mask_map.data * max_value)
+        return dist_map
+
+    if np.all(self.data == 0):
+        dist_map = mask_map.copy(data=mask_map.data - max_value)
+        return dist_map
+
+    distance_outside = distance_transform_edt(mask_map.data)
+
+    invert_mask = np.invert(np.array(mask_map.data, dtype=np.bool))
+    distance_inside = distance_transform_edt(invert_mask)
+
+    distance = np.where(mask_map.data, distance_outside, -distance_inside)
+
+    return mask_map.copy(data=distance)
 
 
 class ReflectedRegionsFinder(object):
@@ -95,19 +144,13 @@ class ReflectedRegionsFinder(object):
         min_size = region.center.separation(center)
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
-        return SkyImage.empty(
-            name='empty exclusion mask',
-            xref=center.galactic.l.value,
-            yref=center.galactic.b.value,
-            binsz=binsz,
-            nxpix=npix,
-            nypix=npix,
-            fill=1,
-        )
+        maskmap = WcsNDMap.create(skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN', unit='')
+        maskmap.data += 1.
+        return maskmap
 
     def setup(self):
         """Compute parameters for reflected regions algorithm."""
-        wcs = self.exclusion_mask.wcs
+        wcs = self.exclusion_mask.geom.wcs
         self._pix_region = self.region.to_pixel(wcs)
         self._pix_center = PixCoord(*self.center.to_pixel(wcs))
         dx = self._pix_region.center.x - self._pix_center.x
@@ -129,7 +172,7 @@ class ReflectedRegionsFinder(object):
         self._max_angle = self._angle + Angle('360deg') - self._min_ang - self.min_distance_input
 
         # Distance image
-        self._distance_image = self.exclusion_mask.distance_image
+        self._distance_image = _compute_distance_image(self.exclusion_mask)
 
     def find_regions(self):
         """Find reflected regions."""
@@ -139,7 +182,7 @@ class ReflectedRegionsFinder(object):
             test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
             test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)
             if not self._is_inside_exclusion(test_reg, self._distance_image):
-                refl_region = test_reg.to_sky(self.exclusion_mask.wcs)
+                refl_region = test_reg.to_sky(self.exclusion_mask.geom.wcs)
                 log.debug('Placing reflected region\n{}'.format(refl_region))
                 reflected_regions.append(refl_region)
                 curr_angle = curr_angle + self._min_ang
@@ -155,7 +198,7 @@ class ReflectedRegionsFinder(object):
         See example here: :ref:'regions_reflected'.
         """
         fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap='gray')
-        wcs = self.exclusion_mask.wcs
+        wcs = self.exclusion_mask.geom.wcs
         on_patch = self.region.to_pixel(wcs=wcs).as_patch(color='red', alpha=0.6)
         ax.add_patch(on_patch)
 
