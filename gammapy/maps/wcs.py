@@ -545,17 +545,26 @@ class WcsGeom(MapGeom):
         return pix
 
     def get_coord(self, idx=None, flat=False, mode='center'):
+        """Get map coordinates from the geometry.
+
+        Paramters
+        ---------
+        mode : {'center', 'edges'}
+            Get center or edge coordinates for the spatial axes.
+
+        Returns
+        -------
+        coord : `~MapCoord`
+            Map coordinate object.
+        """
         pix = self._get_pix_coords(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
+
         if flat:
             coords = tuple([c[np.isfinite(c)] for c in coords])
 
-        cdict = OrderedDict([
-            ('lon', coords[0]),
-            ('lat', coords[1]),
-        ])
-        for i, axis in enumerate(self.axes):
-            cdict[axis.name] = coords[i + 2]
+        axes_names = ['lon', 'lat'] + [ax.name for ax in self.axes]
+        cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
 
