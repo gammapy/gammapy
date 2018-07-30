@@ -33,17 +33,17 @@ class ObservationCTA(object):
     obs_id : int
         Observation ID
     gti : `~gammapy.data.GTI`
-        Good Time Intervals, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/events/gti.html
+        Good Time Intervals
     events : `~gammapy.data.EventList`
-        Event list, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html
+        Event list
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/aeff/index.html
+        Effective area
     edisp : `~gammapy.irf.EnergyDispersion2D`
-        Energy dispersion, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/edisp/index.html
+        Energy dispersion
     psf : `~gammapy.irf.PSF3D` or `~gammapy.irf.EnergyDependentMultiGaussPSF` or `~gammapy.irf.PSFKing`
-        Tabled Point Spread Function, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/psf/index.html
+        Tabled Point Spread Function
     bkg : `~gammapy.irf.Background2D` or `~gammapy.irf.Background3D`
-        Background rate, see: http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html
+        Background rate
     pointing_radec : `~astropy.coordinates.SkyCoord`
         Pointing RA / DEC sky coordinates
     pointing_altaz : `~astropy.coordinates.SkyCoord`
