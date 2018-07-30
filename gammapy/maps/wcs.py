@@ -471,14 +471,25 @@ class WcsGeom(MapGeom):
     def get_image_wcs(self, idx):
         raise NotImplementedError
 
-    def get_idx(self, idx=None, local=False, flat=False):
-        pix = self._get_pix_coords(idx=idx, mode='center')
+    def get_idx(self, idx=None, flat=False):
+        pix = self.get_pix(idx=idx, mode='center')
         if flat:
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_coords(self, idx=None, mode='center'):
+    def get_pix(self, idx=None, mode='center'):
+        """Get map pix coordinates from the geometry.
 
+        Paramters
+        ---------
+        mode : {'center', 'edges'}
+            Get center or edge pix coordinates for the spatial axes.
+
+        Returns
+        -------
+        coord : tuple
+            Map pix coordinate tuple.
+        """
         # FIXME: Figure out if there is some way to employ open/sparse
         # vectors
 
@@ -557,7 +568,7 @@ class WcsGeom(MapGeom):
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self._get_pix_coords(idx=idx, mode=mode)
+        pix = self.get_pix(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
 
         if flat:
@@ -698,10 +709,6 @@ class WcsGeom(MapGeom):
         The array has the same dimension as the WcsGeom object.
         To return solid angles for the spatial dimensions only use: WcsGeom.to_image().solid_angle()
         """
-        # TODO: Improve by exposing a mode 'edge' for get_coord
-        # Note that edge is applied only to spatial coordinates in the following call
-        # Note also that pix_to_coord is already called in _get_pix_coords.
-        # This should be made more efficient.
         coord = self.get_coord(mode='edges')
         lon = coord.lon * np.pi / 180.
         lat = coord.lat * np.pi / 180.
