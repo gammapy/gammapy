@@ -71,8 +71,7 @@ E.g. here's how to find the largest TS value:
 .. code-block:: python
 
     import numpy as np
-	np.nanmax(result['ts'].data)
-
+    np.nanmax(result['ts'].data)
 
 Computation of Li & Ma significance images
 ==========================================
@@ -95,7 +94,6 @@ dataset as above, the corresponding images can be computed using the
 
 The function returns a dictionary, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
-
 
 
 Reference/API
