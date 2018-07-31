@@ -4,7 +4,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ..wcs import WcsGeom
@@ -139,10 +138,11 @@ def test_wcsgeom_solid_angle():
     assert solid_angle.shape == (2, npix, npix)
 
     # Test at b = 0 deg
-    assert_quantity_allclose(solid_angle[0, 5, 5], 0.0003046 * u.sr, rtol=1e-3)
+    assert solid_angle.unit == 'sr'
+    assert_allclose(solid_angle.value[0, 5, 5], 0.0003046, rtol=1e-3)
 
     # Test at b = 5 deg
-    assert_quantity_allclose(solid_angle[0, 9, 5], 0.0003038 * u.sr, rtol=1e-3)
+    assert_allclose(solid_angle.value[0, 9, 5], 0.0003038, rtol=1e-3)
 
 
 def test_wcsgeom_solid_angle_ait():
@@ -162,14 +162,14 @@ def test_wcsgeom_separation():
     separation = geom.separation(position)
 
     assert separation.unit == 'deg'
-    assert separation.data.shape == (10, 10)
-    assert_allclose(separation.data[0, 0], 0.7106291438079875)
+    assert separation.shape == (10, 10)
+    assert_allclose(separation.value[0, 0], 0.7106291438079875)
 
     # Make sure it also works for 2D maps as input
     separation = geom.to_image().separation(position)
     assert separation.unit == 'deg'
-    assert separation.data.shape == (10, 10)
-    assert_allclose(separation.data[0, 0], 0.7106291438079875)
+    assert separation.shape == (10, 10)
+    assert_allclose(separation.value[0, 0], 0.7106291438079875)
 
 
 def test_wcsgeom_get_coord():
