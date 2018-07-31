@@ -3,12 +3,12 @@
 Dark matter profiles
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...utils.modeling import Parameter, ParameterList
-from ...spectrum.utils import integrate_spectrum
-import astropy.units as u
 import six
 import abc
 import numpy as np
+import astropy.units as u
+from ...utils.modeling import Parameter, ParameterList
+from ...spectrum.utils import integrate_spectrum
 
 __all__ = [
     'DMProfile',
