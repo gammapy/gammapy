@@ -19,8 +19,8 @@ Most of the formats defined at :ref:`gadf:iact-irf` are supported.  Otherwise,
 at the moment, there is very little support for Fermi-LAT or other instruments.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as
-part of their spectrum, image or cube analysis to compute exposure and
-effective EDISP and PSF for a given dataset.
+part of their spectrum, image or cube analysis to compute exposure and effective
+EDISP and PSF for a given dataset.
 
 Most (at some point maybe all) classes in `gammapy.irf` have an
 `gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
@@ -28,8 +28,8 @@ Most (at some point maybe all) classes in `gammapy.irf` have an
 Getting Started
 ===============
 
-see :gp-extra-notebook:`cta_1dc_introduction` for an example how to access IACT IRFs.
-
+See :gp-extra-notebook:`cta_1dc_introduction` for an example how to access IACT
+IRFs.
 
 Effective area
 ==============
@@ -57,8 +57,8 @@ Energy Dispersion
 The `~gammapy.irf.EnergyDispersion` class represents an energy migration matrix
 (finite probabilities per pixel) with ``y=log(energy_reco)``.
 
-The `~gammapy.irf.EnergyDispersion2D` class represents a probability
-density with ``y=energy_reco/energy_true`` that can also have a FOV offset dependence.
+The `~gammapy.irf.EnergyDispersion2D` class represents a probability density
+with ``y=energy_reco/energy_true`` that can also have a FOV offset dependence.
 
 .. plot:: irf/plot_edisp.py
 
@@ -66,14 +66,15 @@ density with ``y=energy_reco/energy_true`` that can also have a FOV offset depen
 Using `gammapy.irf`
 ===================
 
-If you'd like to learn more about using `gammapy.irf`, read the following sub-pages:
+If you'd like to learn more about using `gammapy.irf`, read the following
+sub-pages:
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
-   theory
-   aeff
-   edisp
+    theory
+    aeff
+    edisp
 
 Reference/API
 =============

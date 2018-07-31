@@ -27,7 +27,7 @@ analyses.
 There are many other packages out there that implement functionality for dark
 matter analysis, their capabilities are summarized in the following
 
-GammaLib 
+GammaLib
 --------
 
 The `GammaLib 1.3 release`_ contains radial profile spatial models, including
@@ -57,7 +57,7 @@ serialization format
     <parameter free="0" max="360" min="-360" name="RA" scale="1.0" value="128.8272"/>
     <parameter free="0" max="90" min="-90" name="DEC" scale="1.0" value="-45.1762"/>
     </spatialModel>
-    </source> 
+    </source>
 
 The `DMFitFunction`_ is only a spectral model and the spatial component is
 set using a point source. A spatial template can obviously be used. Utilities
@@ -100,7 +100,7 @@ particle model. GamLike can somehow be use to reproduce HESS results (Section
 6.2.2. of the DarkBit paper). But I don't fully understand how.
 
 
-  
+
 Getting Started
 ===============
 
@@ -118,7 +118,7 @@ Reference/API
     :include-all-objects:
 
 
-.. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html 
+.. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html
 .. _Feature request #1520:  https://cta-redmine.irap.omp.eu/issues/1520
 .. _Cirelli et al. 2011: http://iopscience.iop.org/article/10.1088/1475-7516/2011/03/051/pdf
 .. _Cirelli 2014: http://www.marcocirelli.net/otherworks/HDR.pdf
@@ -143,7 +143,7 @@ Reference/API
 
 .. _GAMBIT: https://gambit.hepforge.org/
 
-.. _DarkBit: https://link.springer.com/article/10.1140%2Fepjc%2Fs10052-017-5155-4 
+.. _DarkBit: https://link.springer.com/article/10.1140%2Fepjc%2Fs10052-017-5155-4
 
 
 

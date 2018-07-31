@@ -12,11 +12,11 @@ Introduction
 ============
 
 The `gammapy.cube` sub-package contains functions and classes to make maps
-(counts, exposure, background), as well as to compute an effective PSF
-and energy dispersion for a given set of observations.
+(counts, exposure, background), as well as to compute an effective PSF and
+energy dispersion for a given set of observations.
 
-It also contains classes that represent cube models (sky maps with an energy axis),
-and classes to evaluate and fit those models to data.
+It also contains classes that represent cube models (sky maps with an energy
+axis), and classes to evaluate and fit those models to data.
 
 Getting Started
 ===============

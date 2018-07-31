@@ -21,7 +21,8 @@ Set up
 
 The Gammapy installation instructions are here: :ref:`install`
 
-One quick way to get set up, that works the same on Linux, Mac and Windows is this:
+One quick way to get set up, that works the same on Linux, Mac and Windows is
+this:
 
 * Install Anaconda or Miniconda (see https://www.anaconda.com/download/ )
 * Get the following repository that contains the Gammapy tutorial notebooks::
@@ -51,23 +52,25 @@ If you have any questions, ask for help. See http://gammapy.org/contact.html
 Execute tutorials online
 ------------------------
 
-If you want, you can execute latest version of the collection of notebooks on-line
-accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
+If you want, you can execute latest version of the collection of notebooks
+on-line accessing the `Gammapy Binder
+<http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
 
 Click the "launch binder" link here, or at the top of each notebook below:
 
 .. image:: http://mybinder.org/badge.svg
     :target: http://mybinder.org/repo/gammapy/gammapy-extra
 
-Note that this is a free, temporary notebook server. You cannot upload your data or save
-your work there. For that, install Gammapy on your machine and work there.
+Note that this is a free, temporary notebook server. You cannot upload your data
+or save your work there. For that, install Gammapy on your machine and work
+there.
 
 The basics
 ----------
 
-Gammapy is a Python package built on Numpy and Astropy, and the
-tutorials are Jupyter notebooks. If you're already familar with those,
-you can skip to the next section and start learning about Gammapy.
+Gammapy is a Python package built on Numpy and Astropy, and the tutorials are
+Jupyter notebooks. If you're already familar with those, you can skip to the
+next section and start learning about Gammapy.
 
 To learn the basics, here are a few good resources.
 
@@ -157,13 +160,13 @@ To learn how to work with gamma-ray data with Gammapy:
 Extra topics
 ------------
 .. toctree::
-   :hidden:
+    :hidden:
 
-   notebooks/hgps.ipynb
-   notebooks/source_population_model.ipynb
-   notebooks/background_model.ipynb
-   notebooks/cwt.ipynb
-   notebooks/astro_dark_matter.ipynb
+    notebooks/hgps.ipynb
+    notebooks/source_population_model.ipynb
+    notebooks/background_model.ipynb
+    notebooks/cwt.ipynb
+    notebooks/astro_dark_matter.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -177,9 +180,9 @@ Work in progress
 ----------------
 
 .. toctree::
-   :hidden:
+    :hidden:
 
-   notebooks/source_population_model.ipynb
+    notebooks/source_population_model.ipynb
 
 The following notebooks are work in progress or broken.
 

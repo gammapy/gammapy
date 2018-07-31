@@ -1,6 +1,8 @@
-"""Compute numerical solution for Gaussian with a
-   boundary at the origin. Produces Fig. 10 from
-   the Feldman Cousins paper."""
+"""
+Compute numerical solution for Gaussian with a boundary at the origin.
+
+Produces Fig. 10 from the Feldman & Cousins paper.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
