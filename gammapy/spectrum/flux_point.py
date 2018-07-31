@@ -905,6 +905,7 @@ class FluxPointFitter(object):
             raise NotImplementedError('No handling of upper limits implemented.')
 
         self.parameters = OrderedDict([
+            ('stat', stat),
             ('optimizer', optimizer),
             ('error_estimator', error_estimator),
             ('ul_handling', ul_handling),
@@ -931,7 +932,7 @@ class FluxPointFitter(object):
         models = SherpaModelWrapper(model)
         return Fit(data=data, model=models, stat=stat, method=method)
 
-    def fit(self, data, model):
+    def fit(self, data, model, opts_minuit=None):
         """
         Fit given model to data.
 
@@ -945,27 +946,19 @@ class FluxPointFitter(object):
         best_fit_model : `~gammapy.spectrum.models.SpectralModel`
             Best fit model
         """
-        p = self.parameters
+        from ..utils.fitting import fit_iminuit
         model = model.copy()
 
-        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch', 'levmar']:
-            sherpa_fitter = self._setup_sherpa_fit(data, model)
-            sherpa_fitter.fit()
-        else:
-            raise ValueError('Not a valid optimizer')
+        def total_stat(parameters):
+            model.parameters = parameters
+            return self.stat(data, model)[0]
 
+        parameters, _ = fit_iminuit(parameters=model.parameters,
+                                    function=total_stat,
+                                    opts_minuit=opts_minuit)
+
+        model.parameters = parameters
         return model
-
-    def statval(self, data, model):
-        """
-        Compute statval for given model and data.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        """
-        return self.stat(data, model)
 
     def dof(self, data, model):
         """
@@ -1011,7 +1004,7 @@ class FluxPointFitter(object):
         best_fit_model = self.fit(data, model)
         best_fit_model = self.estimate_errors(data, best_fit_model)
         dof = self.dof(data, best_fit_model)
-        statval = self.statval(data, best_fit_model)[0]
+        statval = self.stat(data, best_fit_model)[0]
 
         return OrderedDict([
             ('best-fit-model', best_fit_model),
