@@ -454,12 +454,12 @@ class SpectrumFit(object):
 
     def _fit_iminuit(self, opts_minuit):
         """Iminuit minimization"""
-        parameters, minuit = fit_iminuit(parameters=self._model.parameters,
-                                         function=self.total_stat,
-                                         opts_minuit=opts_minuit)
+        minuit = fit_iminuit(parameters=self._model.parameters,
+                             function=self.total_stat,
+                             opts_minuit=opts_minuit)
         self._iminuit_fit = minuit
         log.debug(minuit)
-        self._make_fit_result(parameters)
+        self._make_fit_result(self._model.parameters)
 
     def _make_fit_result(self, parameters):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
