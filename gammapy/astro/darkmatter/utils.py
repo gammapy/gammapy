@@ -4,7 +4,6 @@ Utilities to compute J-factor maps
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ...cube import make_map_separation
-from ...maps import WcsNDMap
 import astropy.units as u
 import numpy as np
 
@@ -22,28 +21,18 @@ class JFactory(object):
 
     Parameters
     ----------
-    map_ : `~gammapy.maps.WcsMap`
-        Sky map
+    ref_geom : `~gammapy.maps.WcsGeom`
+        Reference geometry
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map
     """
 
-    def __init__(self, map_, distance, profile):
+    def __init__(self, ref_geom, profile, distance):
+        self.ref_geom = ref_geom
         self.profile = profile
-        self.map_ = map_
         self.distance = distance
-
-    @property
-    def center(self):
-        """Center of the profile"""
-        return self.map_.geom.center_skydir
-
-    def run(self):
-        """Run all steps"""
-        self.compute_differential_jfactor()
-        self.compute_jfactor()
 
     def compute_differential_jfactor(self):
         r"""Compute differential J-Factor
@@ -52,19 +41,16 @@ class JFactory(object):
             \frac{\mathrm d J}{\mathrm d \Omega} = 
            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
 
-
         TODO: Needs to be implemented more efficiently
         """
         angular_dist = make_map_separation(
-            geom=self.map_.geom,
-            position=self.center)
-        rmin = angular_dist.quantity.to('rad').data * self.distance
+            geom=self.ref_geom,
+            position=self.ref_geom.center_skydir)
+        rmin = angular_dist.quantity.to('rad').value * self.distance
         rmax = self.distance
         val = [self.profile.integral(_, rmax) for _ in rmin.flatten()]
         jfact = u.Quantity(val).to('GeV2 cm-5').reshape(rmin.shape)
-        self.diff_jfact = WcsNDMap(data=jfact.value,
-                                   geom=self.map_.geom,
-                                   unit=jfact.unit / u.steradian)
+        return jfact / u.steradian
 
     def compute_jfactor(self):
         r"""Compute astrophysical J-Factor
@@ -75,11 +61,9 @@ class JFactory(object):
            \frac{\mathrm d J}{\mathrm d \Omega^{\prime}} 
 
         """
-        jfact = self.diff_jfact.quantity
-        jfact *= self.map_.geom.to_image().solid_angle()
-
-        self.jfact = WcsNDMap(data=jfact,
-                              geom=self.map_.geom)
+        diff_jfact = self.compute_differential_jfactor()
+        jfact = diff_jfact * self.ref_geom.to_image().solid_angle()
+        return jfact
 
 
 class DMFluxMapMaker(object):
@@ -95,8 +79,8 @@ class DMFluxMapMaker(object):
 
     Parameters
     ----------
-    jfact_map : `~gammapy.maps.WcsNDMap`
-        J-Factor map as computed by `~gammapy.astro.darkmatter.JFactory`
+    jfact : `~astropy.units.Quantity`
+        J-Factor as computed by `~gammapy.astro.darkmatter.JFactory`
     prim_flux : `~gammapy.astro.darkmatter.PrimaryFlux`
         Primary gamma-ray flux
     x_section : `~astropy.units.Quantity`
@@ -109,32 +93,26 @@ class DMFluxMapMaker(object):
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
-    def __init__(self, jfact_map, prim_flux, x_section, energy_range):
-        self.jfact_map = jfact_map
+    def __init__(self, jfact, prim_flux, x_section, energy_range):
+        self.jfact = jfact
         self.prim_flux = prim_flux
         self.x_section = x_section
         self.energy_range = energy_range
         self._flux_map = None
 
     def run(self):
-        """Make the map
+        """Compute DM Flux
 
-        The result is stored in the
-        :func:`~gammapy.astro.darkmatter.DMFluxMapMaker.flux_map` attribute
+        Returns
+        -------
+        flux : `~astropy.units.Quantity`
+            DM Flux
+
         """
         prefactor = (self.x_section / (8 * np.pi * self.prim_flux.mDM ** 2))
         int_flux = self.prim_flux.table_model.integral(
             emin=self.energy_range[0],
             emax=self.energy_range[1],
         )
-        data = self.jfact_map.quantity.copy()
-        data *= prefactor
-        data *= int_flux
-        data = data.to('cm-2 s-1')
-
-        self._fluxmap = WcsNDMap(data=data, geom=self.jfact_map.geom)
-
-    @property
-    def flux_map(self):
-        """Flux map"""
-        return self._fluxmap
+        flux = (self.jfact * prefactor * int_flux).to('cm-2 s-1')
+        return flux
