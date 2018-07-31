@@ -26,10 +26,10 @@ with extra axes, such as e.g. an energy axis.
 .. plot::
     :include-source:
 
-	from gammapy.maps import Map
-	filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
-	image = Map.read(filename, hdu=2)
-	image.plot()
+    from gammapy.maps import Map
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
+    image = Map.read(filename, hdu=2)
+    image.plot()
 
 TODO: Show some gammapy.image functionality, e.g. evaluating a model image or making a profile.
 
