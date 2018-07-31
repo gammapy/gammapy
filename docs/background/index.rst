@@ -1,8 +1,8 @@
 .. _background:
 
-**************************************
-Background estimation (``background``)
-**************************************
+********************************
+background - Background modeling
+********************************
 
 .. currentmodule:: gammapy.background
 

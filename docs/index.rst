@@ -43,21 +43,23 @@ documentation for every function and class in Gammapy.
 .. toctree::
     :maxdepth: 1
 
-    astro/index
-    background/index
-    catalog/index
-    cube/index
     data/index
-    datasets/index
-    detect/index
-    image/index
     irf/index
-    spectrum/index
-    stats/index
-    time/index
-    utils/index
     maps/index
+    image/index
+    cube/index
+    detect/index
+    background/index
+    spectrum/index
+    time/index
+
+    stats/index
+    utils/index
     scripts/index
+
+    datasets/index
+    catalog/index
+    astro/index
 
 .. _gammapy_dev:
 

@@ -2,9 +2,9 @@
 
 .. _maps:
 
-****************************************
-Structures for images / cubes (``maps``)
-****************************************
+***************
+maps - Sky maps
+***************
 
 .. currentmodule:: gammapy.maps
 

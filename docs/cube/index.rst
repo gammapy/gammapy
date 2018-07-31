@@ -2,9 +2,9 @@
 
 .. _cube:
 
-***************************
-3D cube analysis (``cube``)
-***************************
+************************
+cube - Map cube analysis
+************************
 
 .. currentmodule:: gammapy.cube
 
