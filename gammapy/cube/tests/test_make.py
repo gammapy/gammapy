@@ -4,9 +4,9 @@ import pytest
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from ...utils.testing import assert_quantity_allclose, requires_data
-from ...maps import WcsGeom, MapAxis
-from ..new import MapMaker
 from ...data import DataStore
+from ...maps import WcsGeom, MapAxis
+from ..make import MapMaker
 
 pytest.importorskip('scipy')
 
@@ -23,11 +23,13 @@ def test_MapMaker(mode, expected):
 
     for obsid in obs:
         mmaker.process_obs(ds.obs(obsid))
+
     assert mmaker.exposure_map.unit == "m2 s"
     assert_quantity_allclose(mmaker.counts_map.data.sum(), expected)
 
     maker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
     obslist = ds.obs_list(obs)
     maps = maker.run(obslist)
+
     assert maps['exposure_map'].unit == "m2 s"
     assert_quantity_allclose(maps['counts_map'].data.sum(), expected)

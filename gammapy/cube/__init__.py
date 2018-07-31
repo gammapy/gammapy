@@ -6,7 +6,7 @@ from .models import *
 from .counts import *
 from .exposure import *
 from .background import *
-from .fit import *
-from .new import *
 from .psf_kernel import *
 from .psf_map import *
+from .make import *
+from .fit import *
