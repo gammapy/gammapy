@@ -1,10 +1,11 @@
-"""Compute numerical solution for Poisson with
-   background. Produces Fig. 7 from the Feldman
-   Cousins paper."""
+"""
+Compute numerical solution for Poisson with background.
+
+Produces Fig. 7 from the Feldman & Cousins paper.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
-
 from gammapy.stats import (
     fc_construct_acceptance_intervals_pdfs,
     fc_get_limits,

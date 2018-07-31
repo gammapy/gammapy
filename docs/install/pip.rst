@@ -10,7 +10,8 @@ Installation with pip or setup.py
 pip
 ---
 
-To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_) using `pip`_:
+To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_)
+using `pip`_:
 
 .. code-block:: bash
 
@@ -22,10 +23,10 @@ To install the current Gammapy **development** version using `pip`_:
 
    $ python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
-If that doesn't work because the download from PyPI or Github is blocked by your network,
-but you have some other means of copying files onto that machine,
-you can get the tarball (``.tar.gz`` file) from PyPI or ``.zip`` file from Github, and then
-``python -m pip install <filename>``.
+If that doesn't work because the download from PyPI or Github is blocked by your
+network, but you have some other means of copying files onto that machine, you
+can get the tarball (``.tar.gz`` file) from PyPI or ``.zip`` file from Github,
+and then ``python -m pip install <filename>``.
 
 .. _install-setuppy:
 
@@ -54,7 +55,7 @@ Also you have easy access to the Python scripts from the tutorials and examples:
    $ cd docs/tutorials
    $ cd examples
 
-If you want to contribute to Gammapy, but are not familiar with Python or
-git or Astropy yet, please have a look at the
-`Astropy developer documentation <http://docs.astropy.org/en/latest/#developer-documentation>`__.
+If you want to contribute to Gammapy, but are not familiar with Python or git or
+Astropy yet, please have a look at the `Astropy developer documentation
+<http://docs.astropy.org/en/latest/#developer-documentation>`__.
 

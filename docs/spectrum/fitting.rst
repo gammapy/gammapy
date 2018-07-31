@@ -10,7 +10,8 @@ Spectral Fitting
 
 In the following you will see how to fit spectral data in OGIP format. The
 format is described at :ref:`gadf:ogip`. An example dataset is available in the
-`gammapy-extra repo <https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4_pha>`_. For a description of the available fit statstics see :ref:`fit-statistics`.
+``gammapy-extra`` repo. For a description of the available fit statstics see
+:ref:`fit-statistics`.
 
 Getting Started
 ===============
@@ -38,22 +39,21 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
     fit = SpectrumFit(obs_list=obs_list, model=model)
     fit.statistic = 'WStat'
     fit.fit()
-    
+
 You can check the fit results by looking at
 `~gammapy.spectrum.SpectrumFitResult` that is attached to the
 `~gammapy.spectrum.SpectrumFit` for each observation.
-
 
 .. code-block:: python
 
     >>> print(fit.global_result)
 
-    Fit result info 
-    --------------- 
+    Fit result info
+    ---------------
     Best Fit Model: PowerLaw
     index : 2.12+/-0.05
     reference : 1e+09
-    amplitude : (2.08+/-0.00)e-20 
+    amplitude : (2.08+/-0.00)e-20
     --> Units: keV, cm, s
 
     Statistic: 103.596 (wstat)
@@ -87,7 +87,7 @@ example dataset used above. It makes use of the Sherpa `datastack module
     ds.load_pha(phalist)
 
     model = PowLaw1D('powlaw1d.default')
-    model.ampl = 1 
+    model.ampl = 1
     model.ref = 1e9
     model.gamma = 2
 
@@ -103,7 +103,7 @@ example dataset used above. It makes use of the Sherpa `datastack module
 
 This should give the following output
 
-.. code-block:: python
+.. code-block:: text
 
     Datasets              = 1, 2
     Method                = levmar
@@ -115,8 +115,8 @@ This should give the following output
     Probability [Q-value] = 0.0392206
     Reduced statistic     = 1.29494
     Change in statistic   = 114.79
-    powlaw1d.default.gamma   2.11641     
-    powlaw1d.default.ampl   2.08095     
+    powlaw1d.default.gamma   2.11641
+    powlaw1d.default.ampl   2.08095
     Datasets              = 1, 2
     Confidence Method     = covariance
     Iterative Fit Method  = None

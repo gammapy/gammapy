@@ -1,15 +1,13 @@
 """Plot a Galactic plane survey image in two panels."""
-from astropy.coordinates import Angle
 import matplotlib.pyplot as plt
-from gammapy.image import MapPanelPlotter
+from astropy.coordinates import Angle
 from gammapy.maps import Map
-
+from gammapy.image import MapPanelPlotter
 
 filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
 survey_map = Map.read(filename, hdu='counts')
 survey_map.data = survey_map.data.astype('float')
 smoothed_map = survey_map.smooth(radius=Angle(0.2, unit='deg'))
-
 
 fig = plt.figure(figsize=(15, 8))
 xlim = Angle([70, 262], unit='deg')

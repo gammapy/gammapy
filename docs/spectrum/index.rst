@@ -16,10 +16,10 @@ spectral analysis. This includes also simulation tools.
 
 The basic of 1D spectral analysis are explained in `this
 <https://github.com/gammapy/PyGamma15/tree/gh-pages/talks/analysis-classical>`__
-talk. A good reference for the forward-folding on-off likelihood fitting
-methods is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_, in
-publications usually the reference [Piron2001]_ is used.  A standard reference
-for the unfolding method is [Albert2007]_.
+talk. A good reference for the forward-folding on-off likelihood fitting methods
+is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_, in publications
+usually the reference [Piron2001]_ is used.  A standard reference for the
+unfolding method is [Albert2007]_.
 
 Getting Started
 ===============
@@ -65,22 +65,22 @@ It will print the following output to the console:
     Statistic: 46.051 (wstat)
     Fit Range: [  5.99484250e+08   1.00000000e+11] keV
 
-
-
 Using `gammapy.spectrum`
 ========================
 
 For more advanced use cases please go to the tutorial notebooks:
 
-* :gp-extra-notebook:`spectrum_simulation` - simulate and fit 1D spectra using pre-defined or a user-defined model.
-* :gp-extra-notebook:`spectrum_analysis` - spectral analysis starting from event lists and field-of-view IRFs.
+* :gp-extra-notebook:`spectrum_simulation` - simulate and fit 1D spectra using
+  pre-defined or a user-defined model.
+* :gp-extra-notebook:`spectrum_analysis` - spectral analysis starting from event
+  lists and field-of-view IRFs.
 
 The following pages describe ``gammapy.spectrum`` in more detail:
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
-   fitting
+    fitting
 
 Reference/API
 =============

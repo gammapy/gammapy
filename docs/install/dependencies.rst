@@ -5,19 +5,20 @@
 Dependencies
 ============
 
-.. note:: The philosophy of Gammapy is to build on the existing scientific Python stack.
-   This means that you need to install those dependencies to use Gammapy.
+The philosophy of Gammapy is to build on the existing scientific Python stack.
+This means that you need to install those dependencies to use Gammapy.
 
-   We are aware that too many dependencies is an issue for deployment and maintenance.
-   That's why currently Gammapy only has two core dependencies --- Numpy and Astropy.
-   We are considering making Sherpa, Scipy, scikit-image, photutils, reproject and naima
-   core dependencies.
+We are aware that too many dependencies is an issue for deployment and
+maintenance. That's why currently Gammapy only has two core dependencies ---
+Numpy and Astropy. We are considering making Sherpa, Scipy, scikit-image,
+photutils, reproject and naima core dependencies.
 
-   In addition there are about a dozen optional dependencies that are OK to import
-   from Gammapy because they are potentially useful (not all of those are
-   actually currently imported).
+In addition there are about a dozen optional dependencies that are OK to import
+from Gammapy because they are potentially useful (not all of those are actually
+currently imported).
 
-   Before the Gammapy 1.0 release we will re-evaluate and clarify the Gammapy dependencies.
+Before the Gammapy 1.0 release we will re-evaluate and clarify the Gammapy
+dependencies.
 
 The required core dependencies of Gammapy are:
 

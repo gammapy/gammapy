@@ -2,9 +2,9 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.image import colormap_hess, colormap_milagro
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import LinearStretch
+from gammapy.image import colormap_hess, colormap_milagro
 from gammapy.maps import Map
 
 filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz'

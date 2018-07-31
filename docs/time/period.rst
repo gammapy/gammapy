@@ -8,33 +8,38 @@ Period detection and plotting
 Introduction
 ============
 
-`~gammapy.time` provides methods for period detection in time series,
-i.e. light curves of :math:`\gamma`-ray sources.
-The period detection is implemented in the scope of the Lomb-Scargle periodogram,
-a method that detects periods in unevenly sampled time series typical for :math:`\gamma`-ray observations.
-We refer to the `astropy.stats.LombScargle`-class and documentation within
-for an introduction to the Lomb-Scargle algorithm, interpretation and usage [1]_.
+`~gammapy.time` provides methods for period detection in time series, i.e. light
+curves of :math:`\gamma`-ray sources. The period detection is implemented in the
+scope of the Lomb-Scargle periodogram, a method that detects periods in unevenly
+sampled time series typical for :math:`\gamma`-ray observations. We refer to the
+`astropy.stats.LombScargle`-class and documentation within for an introduction
+to the Lomb-Scargle algorithm, interpretation and usage [1]_.
 
-With `~gammapy.time.robust_periodogram`, the analysis is extended to a more general case where
-the unevenly sampled time series is contaminated by outliers, i.e. due to the source's high states.
-This robust periodogram includes the naive Lomb-Scargle implementation as a special case.
+With `~gammapy.time.robust_periodogram`, the analysis is extended to a more
+general case where the unevenly sampled time series is contaminated by outliers,
+i.e. due to the source's high states. This robust periodogram includes the naive
+Lomb-Scargle implementation as a special case.
 
-`~gammapy.time.robust_periodogram` returns the periodogram of the input.
-This is done by fitting a single sinusoidal model to the light curve and
-computing a normalised :math:`\chi^2`-statistic for each period of interest.
-The Lomb-Scargle algorithm uses a naive least square regression and thus, is sensitive to outliers in the light curve.
-Contrary, `~gammapy.time.robust_periodogram` uses different loss functions that account for outliers [2]_.
-The location of the highest periodogram peak is assumed to be the period of an intrinsic periodic behaviour.
+`~gammapy.time.robust_periodogram` returns the periodogram of the input. This is
+done by fitting a single sinusoidal model to the light curve and computing a
+normalised :math:`\chi^2`-statistic for each period of interest. The
+Lomb-Scargle algorithm uses a naive least square regression and thus, is
+sensitive to outliers in the light curve. Contrary,
+`~gammapy.time.robust_periodogram` uses different loss functions that account
+for outliers [2]_. The location of the highest periodogram peak is assumed to be
+the period of an intrinsic periodic behaviour.
 
-The result's significance can be estimated in terms of a false alarm probability (FAP)
-with the respective function of the `astropy.stats.LombScargle`-class.
-It computes the probability of the highest periodogram peak being observed by chance
-if the underlying light curve would consist of Gaussian white-noise only.
+The result's significance can be estimated in terms of a false alarm probability
+(FAP) with the respective function of the `astropy.stats.LombScargle`-class. It
+computes the probability of the highest periodogram peak being observed by
+chance if the underlying light curve would consist of Gaussian white-noise only.
 
-Both, periodogram and light curve can be plotted with `~gammapy.time.plot_periodogram`.
+Both, periodogram and light curve can be plotted with
+`~gammapy.time.plot_periodogram`.
 
-See the `astropy`-docs for more details about the Lomb-Scargle periodogram and its false alarm probability [1]_.
-The loss functions for the robust periodogram are provided by `scipy.optimize.least_squares` [2]_.
+See the `astropy`-docs for more details about the Lomb-Scargle periodogram and
+its false alarm probability [1]_. The loss functions for the robust periodogram
+are provided by `scipy.optimize.least_squares` [2]_.
 
 Getting Started
 ===============
@@ -42,8 +47,9 @@ Getting Started
 Basic Usage
 -----------
 
-`~gammapy.time.robust_periodogram` takes a light curve with data format ``time`` and ``flux`` as input.
-It returns the period grid, the periodogram peaks and the location of the highest periodogram peak.
+`~gammapy.time.robust_periodogram` takes a light curve with data format ``time``
+and ``flux`` as input. It returns the period grid, the periodogram peaks and the
+location of the highest periodogram peak.
 
 .. code-block:: python
 
@@ -55,13 +61,15 @@ It returns the period grid, the periodogram peaks and the location of the highes
     >>> periodogram['best_period']
     0.99
 
-The returned period diverges from the true period of :math:`P = 1`,
-since this period is not contained in the linear period grid automatically computed by `~gammapy.time.robust_periodogram`.
+The returned period diverges from the true period of :math:`P = 1`, since this
+period is not contained in the linear period grid automatically computed by
+`~gammapy.time.robust_periodogram`.
 
 Period Grid
 -----------
 
-The checked periods can be specified optionally by forwarding an array ``periods``.
+The checked periods can be specified optionally by forwarding an array
+``periods``.
 
 .. code-block:: python
 
@@ -70,7 +78,8 @@ The checked periods can be specified optionally by forwarding an array ``periods
     >>> periodogram['best_period']
     1.0
 
-If not given, a linear grid will be computed limited by the length of the light curve and the Nyquist frequency.
+If not given, a linear grid will be computed limited by the length of the light
+curve and the Nyquist frequency.
 
 Measurement Uncertainties
 -------------------------
@@ -89,19 +98,20 @@ They can be forwarded as an array ``flux_err``.
 Loss Function and Loss Scale
 ----------------------------
 
-To obtain a robust periodogram, loss function ``loss`` and loss scale parameter ``scale`` need to be given.
+To obtain a robust periodogram, loss function ``loss`` and loss scale parameter
+``scale`` need to be given.
 
 .. code-block:: python
 
     >>> periodogram = robust_periodogram(time, flux, loss='huber', scale=1)
 
-For available parameters, see [2]_.
-The choice of ``loss`` and ``scale`` depends on the data set and needs to be optimised by the user.
+For available parameters, see [2]_. The choice of ``loss`` and ``scale`` depends
+on the data set and needs to be optimised by the user.
 
-If the loss function ``linear`` is used, `~gammapy.time.robust_periodogram`
-is performed with an ordinary linear least square regression.
-It is then identical to `astropy.stats.LombScargle` and ``scale`` can be set arbitrarily.
-This is the default setting.
+If the loss function ``linear`` is used, `~gammapy.time.robust_periodogram` is
+performed with an ordinary linear least square regression. It is then identical
+to `astropy.stats.LombScargle` and ``scale`` can be set arbitrarily. This is the
+default setting.
 
 .. code-block:: python
 
@@ -112,15 +122,17 @@ This is the default setting.
     >>> np.isclose(periodogram['power'], LSP).all() == True
     True
 
-Also, if ``scale`` is set to infinity, this results in the Lomb-Scargle periodogram for any ``loss``.
-Default settings are recommended if no outliers are expected in the light curve.
+Also, if ``scale`` is set to infinity, this results in the Lomb-Scargle
+periodogram for any ``loss``. Default settings are recommended if no outliers
+are expected in the light curve.
 
 False Alarm Probabilities
 -------------------------
 
-For the determination of peak significance in terms of a false alarm probability, see [1]_ and [7]_.
-Methods for the false alarm probability can be chosen from ``methods`` [3]_.
-The respective modul can be called, for example with the ``Baluev``-method:
+For the determination of peak significance in terms of a false alarm
+probability, see [1]_ and [7]_. Methods for the false alarm probability can be
+chosen from ``methods`` [3]_. The respective modul can be called, for example
+with the ``Baluev``-method:
 
 .. code-block:: python
 
@@ -134,14 +146,16 @@ The respective modul can be called, for example with the ``Baluev``-method:
     >>> fap
     0.0
 
-If other loss functions than ``linear`` are used, using the ``Bootstrap``-method is not recommended,
-because it internally calls `astropy.stats.LombScargle` (linear least square regression) which is not identical to non-linear robust periodogram.
+If other loss functions than ``linear`` are used, using the ``Bootstrap``-method
+is not recommended, because it internally calls `astropy.stats.LombScargle`
+(linear least square regression) which is not identical to non-linear robust
+periodogram.
 
 Plotting
 --------
 
-For plotting, `~gammapy.time.plot_periodogram` can be used.
-It takes the output of `~gammapy.time.robust_periodogram` as input.
+For plotting, `~gammapy.time.plot_periodogram` can be used. It takes the output
+of `~gammapy.time.robust_periodogram` as input.
 
 .. code-block:: python
 
@@ -156,17 +170,18 @@ It takes the output of `~gammapy.time.robust_periodogram` as input.
 Example
 =======
 
-An example of detecting a period with `~gammapy.time.robust_periodogram` is shown in the figure below.
-The code can be found under [4]_.
-The light curve of the X-ray binary LS 5039 is used, observed  in 2005 with H.E.S.S.
-at energies above :math:`0.1 \mathrm{TeV}` [4]_.
-The robust periodogram reveals the period of :math:`P = (3.907 \pm 0.001) \mathrm{d}` in agreement with [5]_ and [6]_.
+An example of detecting a period with `~gammapy.time.robust_periodogram` is
+shown in the figure below. The code can be found under [4]_. The light curve of
+the X-ray binary LS 5039 is used, observed  in 2005 with H.E.S.S. at energies
+above :math:`0.1 \mathrm{TeV}` [4]_. The robust periodogram reveals the period
+of :math:`P = (3.907 \pm 0.001) \mathrm{d}` in agreement with [5]_ and [6]_.
 
 .. gp-extra-image:: time/example_robust_periodogram.png
     :width: 100%
 
-The maximum FAP of the highest periodogram peak is estimated to :math:`4.06e^{-19}` with the :math:`\texttt{Baluev}`-method.
-The other methods return following FAP:
+The maximum FAP of the highest periodogram peak is estimated to
+:math:`4.06e^{-19}` with the :math:`\texttt{Baluev}`-method. The other methods
+return following FAP:
 
 ===========   ===================
 method        FAP
@@ -178,10 +193,11 @@ method        FAP
 `bootstrap`   :math:`0.0`
 ===========   ===================
 
-The plot of the light curve shows no evidence for outliers.
-Thus, :math:`\texttt{linear}` is used as ``loss`` with an arbitrary ``scale`` of :math:`1`.
-As periods, a linear grid is forwarded that is limited by :math:`10 \mathrm{d}` to decrease computation time
-in favour for a higher resolution of :math:`0.001 \mathrm{d}`.
+The plot of the light curve shows no evidence for outliers. Thus,
+:math:`\texttt{linear}` is used as ``loss`` with an arbitrary ``scale`` of
+:math:`1`. As periods, a linear grid is forwarded that is limited by :math:`10
+\mathrm{d}` to decrease computation time in favour for a higher resolution of
+:math:`0.001 \mathrm{d}`.
 
 The periodogram has many spurious peaks, which are due to several factors:
 
@@ -195,9 +211,10 @@ The periodogram has many spurious peaks, which are due to several factors:
    .. gp-extra-image:: time/example_spectral_window_function.png
        :width: 100%
 
-   It shows a prominent peak around one day that arises from the nightly observation cycle.
-   Aliases in the light curve's periodogram, :math:`P_{{alias}}`, are expected to appear at :math:`f_{{true}} + n f_{{window}}`.
-   In terms of periods
+   It shows a prominent peak around one day that arises from the nightly
+   observation cycle. Aliases in the light curve's periodogram,
+   :math:`P_{{alias}}`, are expected to appear at :math:`f_{{true}} + n
+   f_{{window}}`. In terms of periods
 
    .. math::
 
