@@ -130,6 +130,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     fit.fit()
     pars = fit.model.parameters
 
+    assert sky_model is fit.model
     assert sky_model.parameters['lon_0'] is fit.model.parameters['lon_0']
     assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
 

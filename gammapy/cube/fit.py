@@ -93,8 +93,7 @@ class MapFit(object):
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
         """
-        parameters, minuit = fit_iminuit(parameters=self.model.parameters,
-                                         function=self.total_stat,
-                                         opts_minuit=opts_minuit)
-        self.model.parameters = parameters
+        minuit = fit_iminuit(parameters=self.model.parameters,
+                             function=self.total_stat,
+                             opts_minuit=opts_minuit)
         self._minuit = minuit

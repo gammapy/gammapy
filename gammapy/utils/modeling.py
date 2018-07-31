@@ -344,3 +344,8 @@ class ParameterList(object):
     def copy(self):
         """A deep copy"""
         return copy.deepcopy(self)
+
+    def update_values_from_tuple(self, values):
+        """Update parameter values from a tuple of values."""
+        for value, parameter in zip(values, self.parameters):
+            parameter.value = value
