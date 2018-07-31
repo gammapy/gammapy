@@ -16,7 +16,7 @@ __all__ = [
 
 class PhaseCurve(object):
     """Temporal phase curve model.
-    
+
     Phase for a given time is computed as
 
     .. math::
@@ -43,7 +43,7 @@ class PhaseCurve(object):
     f0, f1, f2 : float
         Derivatives of the function phi with time of order 1, 2, 3
         in units of ``s^-1, s^-2 & s^-3``, respectively.
-        
+
 
     Examples
     --------
@@ -76,11 +76,11 @@ class PhaseCurve(object):
 
     def phase(self, time):
         """Evaluate phase for a given time.
-        
+
         Parameters
         ----------
         time : array_like
-        
+
         Returns
         -------
         phase : array_like

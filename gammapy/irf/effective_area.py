@@ -167,7 +167,7 @@ class EffectiveAreaTable(object):
     def from_table(cls, table):
         """Create from `~astropy.table.Table` in ARF format.
 
-        Data format specification: :ref:`gadf:ogip-arf`        
+        Data format specification: :ref:`gadf:ogip-arf`
         """
         energy_lo = table['ENERG_LO'].quantity
         energy_hi = table['ENERG_HI'].quantity
@@ -344,7 +344,7 @@ class EffectiveAreaTable2D(object):
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
     >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
-    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1], 
+    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1],
     >>>                             offset_hi=offset[1:], data= data)
     >>> print(aeff)
     Data array summary info

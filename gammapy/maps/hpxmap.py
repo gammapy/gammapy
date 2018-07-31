@@ -64,9 +64,9 @@ class HpxMap(Map):
             geometry will be created.
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
-        conv : {'fgst-ccube','fgst-template','gadf'}, optional        
+        conv : {'fgst-ccube','fgst-template','gadf'}, optional
             Default FITS format convention that will be used when
-            writing this map to a file.  Default is 'gadf'.            
+            writing this map to a file.  Default is 'gadf'.
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
@@ -102,10 +102,10 @@ class HpxMap(Map):
         ----------
         hdu_list :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
-        hdu : str        
+        hdu : str
             Name or index of the HDU with the map data.  If None then
             the method will try to load map data from the first
-            BinTableHDU in the file.            
+            BinTableHDU in the file.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
 
@@ -140,7 +140,7 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        conv : {'fgst-ccube','fgst-template','gadf',None}, optional        
+        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
             FITS format convention.  If None this will be set to the
             default convention of the map.
 
@@ -248,8 +248,8 @@ class HpxMap(Map):
             The HDU extension name for BANDS table.
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
-            writing pixels with non-zero amplitude.            
-        conv : {'fgst-ccube','fgst-template','gadf',None}, optional        
+            writing pixels with non-zero amplitude.
+        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
             FITS format convention.  If None this will be set to the
             default convention of the map.
 

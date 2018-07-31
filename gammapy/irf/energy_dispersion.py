@@ -401,7 +401,7 @@ class EnergyDispersion(object):
         idx = self.e_true.find_node(e_true)
         pdf = self.data.data[idx]
 
-        # compute sum along reconstructed energy 
+        # compute sum along reconstructed energy
         # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
         temp = np.sum(pdf * self.e_reco.nodes, axis=-1)

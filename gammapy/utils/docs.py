@@ -130,7 +130,7 @@ def modif_nb_links(folder, url_docs, git_commit):
 
 - Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab)
  and then double-click on **{nb_filename}** file.
-- You can also contribute with your own notebooks in this 
+- You can also contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 - **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |

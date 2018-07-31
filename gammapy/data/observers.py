@@ -12,13 +12,13 @@ __all__ = [
 observatory_locations = OrderedDict()
 observatory_locations.__doc__ = """Gamma-ray observatory locations (`~collections.OrderedDict`).
 
-This is an `~collections.OrderedDict` with string keys 
+This is an `~collections.OrderedDict` with string keys
 nd values of type `~astropy.coordinates.EarthLocation`.
 
 Not that with ``EarthLocation`` the orientation of angles is as follows:
 
 - longitude is east for positive values and west for negative values
-- latitude is north for positive values and south for negative values 
+- latitude is north for positive values and south for negative values
 
 Available observatories (alphabetical order):
 
