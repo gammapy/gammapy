@@ -4,7 +4,6 @@ from .. import profiles
 import pytest
 from ....utils.testing import assert_quantity_allclose
 
-
 dm_profiles = [
     profiles.NFWProfile,
     profiles.EinastoProfile,

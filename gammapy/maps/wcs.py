@@ -725,6 +725,22 @@ class WcsGeom(MapGeom):
 
         return u.Quantity(dx * dy, 'sr')
 
+    def separation(self, center):
+        """Compute sky separation wrt a given center.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
+
+        Returns
+        -------
+        separation : `~astropy.coordinates.Angle`
+            Separation angle array (2D)
+        """
+        coord = self.to_image().get_coord()
+        return center.separation(coord.skycoord)
+
     def get_region_mask_array(self, region):
         """Return mask of pixels inside region in the the form of boolean array
 

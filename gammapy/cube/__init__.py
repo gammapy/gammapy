@@ -4,7 +4,9 @@ Sky cubes (3-dimensional: energy, lon, lat).
 """
 from .models import *
 from .counts import *
-from .fit import *
-from .new import *
+from .exposure import *
+from .background import *
 from .psf_kernel import *
 from .psf_map import *
+from .make import *
+from .fit import *
