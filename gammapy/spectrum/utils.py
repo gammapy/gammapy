@@ -4,81 +4,9 @@ import numpy as np
 from astropy.units import Quantity
 
 __all__ = [
-    'LogEnergyAxis',
     'CountsPredictor',
     'integrate_spectrum',
 ]
-
-
-class LogEnergyAxis(object):
-    """
-    Log energy axis.
-
-    Defines a transformation between:
-
-    * ``energy = 10 ** x``
-    * ``x = log10(energy)``
-    * ``pix`` in the range [0, ..., len(x)] via linear interpolation of the ``x`` array,
-      e.g. ``pix=0`` corresponds to ``x[0]``
-      and ``pix=0.3`` is ``0.5 * (0.3 * x[0] + 0.7 * x[1])``
-
-    .. note::
-        The `specutils.Spectrum1DLookupWCS <http://specutils.readthedocs.io/en/latest/api/specutils.wcs.specwcs.Spectrum1DLookupWCS.html>`__
-        class is similar (only that it doesn't include the ``log`` transformation and the API is different.
-        Also see this Astropy feature request: https://github.com/astropy/astropy/issues/2362
-
-    Parameters
-    ----------
-    energy : `~astropy.units.Quantity`
-        Energy array
-    mode : ['center', 'edges']
-        Whether the energy array represents the values at the center or edges of
-        the pixels.
-    """
-
-    def __init__(self, energy, mode='center'):
-        from scipy.interpolate import RegularGridInterpolator
-
-        if mode == 'center':
-            z = np.arange(len(energy))
-        elif mode == 'edges':
-            z = np.arange(len(energy)) - 0.5
-        else:
-            raise ValueError('Not a valid mode.')
-
-        self.mode = mode
-        self._eunit = energy.unit
-
-        log_e = np.log(energy.value)
-        kwargs = dict(bounds_error=False, fill_value=None, method='linear')
-        self._z_to_log_e = RegularGridInterpolator((z,), log_e, **kwargs)
-        self._log_e_to_z = RegularGridInterpolator((log_e,), z, **kwargs)
-
-    def wcs_world2pix(self, energy):
-        """
-        Convert energy to pixel coordinates.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy coordinate.
-        """
-        log_e = np.log(energy.to(self._eunit).value)
-        log_e = np.atleast_1d(log_e)
-        return self._log_e_to_z(log_e)
-
-    def wcs_pix2world(self, z):
-        """
-        Convert pixel to energy coordinates.
-
-        Parameters
-        ----------
-        z : float
-            Pixel coordinate
-        """
-        z = np.atleast_1d(z)
-        log_e = self._z_to_log_e(z)
-        return np.exp(log_e) * self._eunit
 
 
 class CountsPredictor(object):
