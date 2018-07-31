@@ -3,15 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 import astropy.units as u
-from ....utils.testing import assert_quantity_allclose
+from ....utils.testing import assert_quantity_allclose, requires_data
 from ....maps import WcsGeom
 from .. import JFactory, DMFluxMapMaker, profiles, PrimaryFlux
 
 
 @pytest.fixture(scope="session")
 def geom():
-    geom = WcsGeom.create(binsz=0.5, npix=10)
-    return geom
+    return WcsGeom.create(binsz=0.5, npix=10)
 
 
 @pytest.fixture(scope="session")
@@ -25,6 +24,7 @@ def prim_flux():
     return PrimaryFlux(mDM=1 * u.TeV, channel="W")
 
 
+@requires_data('gammapy-extra') 
 def test_dmfluxmapmaker(jfact, prim_flux):
     x_section = 1e-26 * u.Unit("cm3 s-1")
     energy_range = [0.1, 1] * u.TeV

@@ -5,18 +5,16 @@ import pytest
 from ....utils.testing import assert_quantity_allclose
 
 
-@pytest.fixture(scope="session")
-def dm_profiles():
-    return [
-        profiles.NFWProfile,
-        profiles.EinastoProfile,
-        profiles.IsothermalProfile,
-        profiles.BurkertProfile,
-        profiles.MooreProfile,
-    ]
+dm_profiles = [
+    profiles.NFWProfile,
+    profiles.EinastoProfile,
+    profiles.IsothermalProfile,
+    profiles.BurkertProfile,
+    profiles.MooreProfile,
+]
 
 
-@pytest.mark.parametrize("profile", dm_profiles())
+@pytest.mark.parametrize("profile", dm_profiles)
 def test_profiles(profile):
     p = profile()
     p.scale_to_local_density()

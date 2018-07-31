@@ -46,7 +46,7 @@ class JFactory(object):
         angular_dist = make_map_separation(
             geom=self.ref_geom,
             position=self.ref_geom.center_skydir)
-        rmin = angular_dist.quantity.to('rad').data * self.distance
+        rmin = angular_dist.quantity.to('rad').value * self.distance
         rmax = self.distance
         val = [self.profile.integral(_, rmax) for _ in rmin.flatten()]
         jfact = u.Quantity(val).to('GeV2 cm-5').reshape(rmin.shape)
