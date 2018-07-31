@@ -879,7 +879,33 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         name : str, optional
             Name of the sherpa model instance
         """
-        from .sherpa_utils import SherpaExponentialCutoffPowerLaw
+        from sherpa.models import ArithmeticModel, modelCacher1d, Parameter
+        
+        class SherpaExponentialCutoffPowerLaw(ArithmeticModel):
+            def __init__(self, name='ecpl'):
+                self.gamma = Parameter(name, 'gamma', 2, min=-10, max=10)
+                self.ref = Parameter(name, 'ref', 1, frozen=True)
+                self.ampl = Parameter(name, 'ampl', 1, min=0)
+                self.cutoff = Parameter(name, 'cutoff', 1, min=0, units='1/TeV')
+                ArithmeticModel.__init__(self, name, (self.gamma, self.ref,
+                                                      self.ampl, self.cutoff))
+                self._use_caching = True
+                self.cache = 10
+                
+            @modelCacher1d
+            def calc(self, p, x, xhi=None):
+                kev_to_tev = 1e-9 
+                model = ExponentialCutoffPowerLaw(index=p[0],
+                                                  reference=p[1],
+                                                  amplitude=p[2],
+                                                  lambda_=p[3] * kev_to_tev)
+                if xhi is None:
+                    val = model(x)
+                else:
+                    val = model.integral(x, xhi, intervals=True)
+                            
+                return val
+
         model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
 

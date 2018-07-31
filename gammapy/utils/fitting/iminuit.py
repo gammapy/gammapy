@@ -46,9 +46,12 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     minuit.migrad()
 
-    # Copy final results into the parameters object
     parameters.update_values_from_tuple(minuit.args)
-    parameters.covariance = _get_covar(minuit)
+    if minuit.covariance is not None:
+        parameters.covariance = _get_covar(minuit)
+    else:
+        log.warn("No covariance matrix found")
+        parameters.covariance = None
 
     return minuit
 

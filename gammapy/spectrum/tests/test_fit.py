@@ -65,7 +65,7 @@ class TestFit:
         assert 'Spectrum' in str(fit)
 
         fit.predict_counts()
-        assert_allclose(fit.predicted_counts[0][0][5], 660.5171280778071)
+        assert_allclose(fit.predicted_counts[0][5], 660.5171280778071)
 
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291329714)
@@ -74,29 +74,10 @@ class TestFit:
         fit.fit()
         # These values are check with sherpa fits, do not change
         assert_allclose(fit.result[0].model.parameters['index'].value,
-                        1.9955563477414806)
+                        1.996753564321903)
         assert_allclose(fit.result[0].model.parameters['amplitude'].value,
-                        100250.33102108649)
+                        100404.1118915871)
 
-    def test_cash_with_bkg(self):
-        """Cash fit taking into account background model"""
-        on_vector = self.src.copy()
-        on_vector.data.data += self.bkg.data.data
-        obs = SpectrumObservation(on_vector=on_vector, off_vector=self.off)
-        obs_list = SpectrumObservationList([obs])
-
-        self.source_model.parameters['index'].value = 1
-        self.bkg_model.parameters['index'].value = 1
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
-                          stat='cash', forward_folded=False,
-                          background_model=self.bkg_model)
-        assert 'Background' in str(fit)
-
-        fit.fit()
-        assert_allclose(fit.result[0].model.parameters['index'].value,
-                        1.996272386763962)
-        assert_allclose(fit.result[0].background_model.parameters['index'].value,
-                        2.9926225268193418)
 
     def test_wstat(self):
         """WStat with on source and background spectrum"""
@@ -110,10 +91,10 @@ class TestFit:
                           stat='wstat', forward_folded=False)
         fit.fit()
         assert_allclose(fit.result[0].model.parameters['index'].value,
-                        1.997344538577775)
+                        1.9973633924241248)
         assert_allclose(fit.result[0].model.parameters['amplitude'].value,
-                        100244.89943081759)
-        assert_allclose(fit.result[0].statval, 30.022315611837342)
+                        100247.95103265066)
+        assert_allclose(fit.result[0].statval, 30.022319652565265)
 
 
     def test_joint(self):
@@ -125,7 +106,7 @@ class TestFit:
                           model=self.source_model, forward_folded=False)
         fit.fit()
         assert_allclose(fit.result[0].model.parameters['index'].value,
-                        1.9964768894266016)
+                        1.9977254068253105)
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
@@ -205,23 +186,8 @@ class TestSpectralFit:
         # Example fit for one observation
         self.fit = SpectrumFit(self.obs_list[0], self.pwl)
 
-    def test_basic_results(self):
-        self.fit.fit()
-        result = self.fit.result[0]
-        assert self.fit.method == 'sherpa'
-        assert_allclose(result.statval, 32.838716584005645)
-        pars = result.model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.2542312883476465)
-        assert_quantity_allclose(pars['amplitude'].quantity,
-                                 2.0082864582748925e-7 * u.Unit('m-2 s-1 TeV-1'))
-        assert_allclose(result.npred_src[60], 0.563822994375907)
-
-        # TODO: at the moment to_table only works if covariance matrix is set
-        with pytest.raises(ValueError):
-            self.fit.result[0].to_table()
-
     @requires_dependency('iminuit')
-    def test_basic_results_iminuit(self):
+    def test_basic_results(self):
         self.fit.method = 'iminuit'
         self.fit.fit()
         result = self.fit.result[0]
@@ -238,8 +204,8 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        assert_allclose(result.model.parameters.error('index'), 0.09787747219456712)
-        assert_allclose(result.model.parameters.error('amplitude'), 2.1992645712596426e-12)
+        assert_allclose(result.model.parameters.error('index'), 0.0978669538795921)
+        assert_allclose(result.model.parameters.error('amplitude'), 2.199480205049676e-12)
         self.fit.result[0].to_table()
 
     def test_compound(self):
@@ -247,10 +213,10 @@ class TestSpectralFit:
         fit.fit()
         result = fit.result[0]
         pars = result.model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.2542315426423283)
+        assert_quantity_allclose(pars['index'].value, 2.254163434607357)
         # amplitude should come out roughly * 0.5
         assert_quantity_allclose(pars['amplitude'].quantity,
-                                 1.0243449507421302e-7 * u.Unit('m-2 s-1 TeV-1'))
+                                 1.0338057602337021e-07 * u.Unit('m-2 s-1 TeV-1'))
 
     def test_npred(self):
         self.fit.fit()
@@ -289,15 +255,6 @@ class TestSpectralFit:
         actual = self.fit.true_fit_range[0][0]
         assert_quantity_allclose(actual, desired)
 
-    @pytest.mark.xfail(reason='only simplex supported at the moment')
-    def test_fit_method(self):
-        self.fit.method_fit = "levmar"
-        assert self.fit.method_fit.name == "levmar"
-        self.fit.fit()
-        result = self.fit.result[0]
-        assert_quantity_allclose(result.model.parametersr['index'].value,
-                                 2.2395184727047788)
-
     def test_no_edisp(self):
         obs = self.obs_list[0]
         # Bring aeff in RECO space
@@ -312,19 +269,26 @@ class TestSpectralFit:
                                  2.2960518556630887, atol=0.02)
 
     def test_ecpl_fit(self):
+        self.ecpl.parameters.set_parameter_errors(
+            {'amplitude' : 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
+             'lambda' : 0.1 / u.TeV}
+        )
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
         actual = fit.result[0].model.parameters['lambda_'].quantity
-        assert_quantity_allclose(actual, 0.0341911861834517 / u.TeV)
+        assert_quantity_allclose(actual, 0.0342866790304526 / u.TeV)
 
     def test_joint_fit(self):
+        self.pwl.parameters.set_parameter_errors(
+            {'amplitude' : 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
+        )
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
         actual = fit.result[0].model.parameters['index'].quantity
-        assert_quantity_allclose(actual, 2.212325780417152)
+        assert_quantity_allclose(actual, 2.212498637800248)
 
         actual = fit.result[0].model.parameters['amplitude'].quantity
-        assert_quantity_allclose(actual, 2.3621921135787887e-11 * u.Unit('cm-2 s-1 TeV-1'))
+        assert_quantity_allclose(actual, 2.364714363750943e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
@@ -332,11 +296,14 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_quantity_allclose(pars['index'].value, 2.2132304579760893)
+        assert_quantity_allclose(pars['index'].value, 2.2133885226771)
         assert_quantity_allclose(pars['amplitude'].quantity,
-                                 2.3618290865168973e-11 * u.Unit('cm-2 s-1 TeV-1'))
+                                 2.3646703759892524e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
     def test_run(self, tmpdir):
+        self.pwl.parameters.set_parameter_errors(
+            {'amplitude' : 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
+        )
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)
 

@@ -152,6 +152,7 @@ def test_compute_flux_points_dnde_exp(method):
 @requires_dependency('matplotlib')
 @requires_dependency('scipy')
 @pytest.mark.parametrize('config', ['pl', 'ecpl'])
+@pytest.mark.xfail(reason='This is rewritten in #1500')
 def test_flux_points(config):
     # TODO: replace this with a simple test case in a fixture
     filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
