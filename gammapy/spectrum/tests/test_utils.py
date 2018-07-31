@@ -8,23 +8,9 @@ import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import LogEnergyAxis, integrate_spectrum, CountsPredictor
+from ...spectrum import integrate_spectrum, CountsPredictor
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
 from ..models import ExponentialCutoffPowerLaw, PowerLaw, TableModel
-
-
-@requires_dependency('scipy')
-def test_LogEnergyAxis():
-    from scipy.stats import gmean
-    energy = Quantity([1, 10, 100], 'TeV')
-    energy_axis = LogEnergyAxis(energy)
-
-    energy = Quantity(gmean([1, 10]), 'TeV')
-    pix = energy_axis.wcs_world2pix(energy.to('MeV'))
-    assert_allclose(pix, 0.5)
-
-    world = energy_axis.wcs_pix2world(pix)
-    assert_quantity_allclose(world, energy)
 
 
 def test_integrate_spectrum():
