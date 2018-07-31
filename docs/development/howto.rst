@@ -9,57 +9,6 @@ Developer HOWTO
 This page is a collection of notes for Gammapy contributors and maintainers,
 in the form of short "How to" or "Q & A" entries.
 
-
-.. _make_clean:
-
-How to clean up old files
--------------------------
-
-TODO: Gammapy now has a Makefile ... this section should be expanded to a page about setup.py and make.
-
-Many projects have a ``Makefile`` to build and install the software and do all kinds of other tasks.
-In Astropy and Gammapy and most Python projects, there is no ``Makefile``, but the ``setup.py`` file
-and you're supposed to type ``python setup.py <cmd>`` and use ``--help`` and ``--help-commands`` to
-see all the available commands and options.
-
-There's one common task, cleaning up old generated files, that's not done via ``setup.py``.
-The equivalent of ``make clean`` is:
-
-.. code-block:: bash
-
-    $ rm -r build docs/_build docs/api htmlcov docs/notebooks docs/_static/notebooks
-
-These folders only contain generated files and are always safe to delete!
-Most of the time you don't have to delete them, but if you e.g. remove or rename files or functions / classes,
-then you should, because otherwise the old files will still be around and you might get confusing results,
-such as Sphinx warnings or import errors or code that works locally because it uses old things, but fails
-on travis-ci or for other developers.
-
-* The ``build`` folder is where ``python setup.py build`` or ``python setup.py install`` generate files.
-* The ``docs/api`` folder is where ``python setup.py build_docs`` generates [RST]_ files from the docstrings
-  (temporary files part of the HTML documentation generation).
-* The  ``docs/_build`` folder is where ``python setup.py build_docs`` generates the HTML and other Sphinx
-  documentation output files.
-* The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
-* The ``docs/notebooks`` folder is where the source Jupyter notebooks are placed before conversion into Sphinx formatted HTML documents.
-* The ``docs/_static/notebooks`` folder is where raw .ipynb files and .py scripts versions of Jupyter notebooks are placed so they may be downloaded from links in the documentation.
-
-If you use ``python setup.py build_ext --inplace``, then files are generated in the ``gammapy`` source folder.
-Usually that's not a problem, but if you want to clean up those generated files, you can use
-`git clean <http://git-scm.com/docs/git-clean>`__:
-
-.. code-block:: bash
-
-    $ git status
-    # The following command will remove all untracked files!
-    # If you have written code that is not committed yet in a new file it will be gone!
-    # So use with caution!
-    $ git clean -fdx
-
-At least for now we prefer not to add a ``Makefile`` to Gammapy, because that splits the developers into
-those that use ``setup.py`` and those that use ``make``, which can grow into an overall **more** complicated
-system where some things are possible only with ``setup.py`` and others only with ``make``.
-
 .. _dev_import:
 
 Where should I import from?
@@ -95,34 +44,29 @@ modules in ``gammapy/data`` are loaded when imported from other modules in that 
 Functions returning several values
 ----------------------------------
 
-Functions that return more than a single value shouldn't return a list
-or dictionary of values but rather a Python Bunch result object. A Bunch
-is similar to a dict, except that it allows attribute access to the result
-values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
+It is up to the developer to decide how to return multiple things from functions and methods.
+For up to three things, if callers usually will want access to several things,
+using a ``tuple`` or ``collections.namedtuple`` is OK.
+For three or more things, using a Python ``dict`` instead should be preferred.
 
 .. _dev-python2and3:
 
 Python 2 and 3 support
 ----------------------
 
-We support Python 2.7 and 3.4 or later using a single code base.
-This is the strategy adopted by most scientific Python projects and a good starting point to learn about it is
-`here <http://python3porting.com/noconv.html>`__ and
-`here <http://docs.astropy.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
+In Gammapy we currently support Python 2.7, as well as Python 3.5 - 3.7.
+Code should be written in the common subset, using the bundled ``gammapy.extern.six``
+to help smooth over differences where needed.
 
-For developers, it would have been nice to only support Python 3 in Gammapy.
-But the CIAO and Fermi Science tools software are distributed with Python 2.7
-and probably never will be updated to Python 3.
-Plus many potential users will likely keep running on Python 2.7 for many years
-(see e.g. `this survey <http://ipython.org/usersurvey2013.html#python-versions>`__).
+The following import should be at the top of every file in Gammapy, to allow
+us to write code that's closer to Python 3::
 
-The decision to drop Python 2.6 and 3.2 support was made in August 2014 just before the Gammapy 0.1 release,
-based on a few scientific Python user surveys on the web that show that only a small minority are still
-using such an old version, so that it's not worth the developer and maintainer effort to test
-these old versions and to find workarounds for their missing features or bugs.
+    from __future__ import absolute_import, division, print_function, unicode_literals
 
-Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
-weren't available for testing on travis-ci.
+We do plan do drop legacy Python (Python 2.7) support when the Fermi ST and Fermi
+support Python 3.
+
+For further information, see PIG 3 in `GH 1278 <https://github.com/gammapy/gammapy/pull/1278>`__
 
 .. _dev-skip_tests:
 
@@ -165,37 +109,6 @@ To check for broken external links from the Sphinx documentation:
 
    $ python setup.py install
    $ cd docs; make linkcheck
-
-Other codes
------------
-
-These projects are on Github, which is great because
-it has full-text search and git history view:
-
-* https://github.com/gammapy/gammapy
-* https://github.com/gammapy/gammapy-extra
-* https://github.com/astropy/astropy
-* https://github.com/astropy/photutils
-* https://github.com/gammalib/gammalib
-* https://github.com/ctools/ctools
-* https://github.com/sherpa/sherpa
-* https://github.com/zblz/naima
-* https://github.com/woodmd/gammatools
-* https://github.com/fermiPy/fermipy
-* https://github.com/kialio/VHEObserverTools
-* https://github.com/taldcroft/xrayevents
-
-These are unofficial, unmaintained copies on open codes on Github:
-
-* https://github.com/Xarthisius/yt-drone
-* https://github.com/cdeil/Fermi-ScienceTools-mirror
-
-Actually at this point we welcome experimentation, so you can use cool new technologies
-to implement some functionality in Gammapy if you like, e.g.
-
-* `Numba <http://numba.pydata.org/>`__
-* `Bokeh <http://bokeh.pydata.org/en/latest/>`__
-* `Blaze <http://blaze.pydata.org/en/latest/>`__
 
 
 What checks and conversions should I do for inputs?
@@ -274,27 +187,19 @@ and explicit type conversions to 32 bit before writing to file.
 Clobber or overwrite?
 ---------------------
 
-In Gammapy we use on ``overwrite`` bool option for `gammapy.scripts` and functions that
-write to files.
+In Gammapy we consistently use an ``overwrite`` bool option for `gammapy.scripts` and functions that
+write to files. This is in line with Astropy, which had a mix of ``clobber`` and ``overwrite`` in
+the past, and has switched to uniform ``overwrite`` everywhere.
 
-Why not use ``clobber`` instead?
-After all the `FTOOLS`_ always use ``clobber``.
-
-The reason is that ``overwrite`` is clear to everyone, but ``clobber`` is defined by the dictionary
-(e.g. see `here <http://dictionary.reference.com/browse/clobber>`__)
-as "to batter severely; strike heavily. to defeat decisively. to denounce or criticize vigorously."
-and isn't intuitively clear to new users.
-
-Astropy has started the process of changing their APIs to consistently use ``overwrite``
-and deprecated the use of ``clobber``. So we do the same in Gammapy.
+The default value should be ``overwrite=False``, although we note that this decision was very
+controversial, several core developers would prefer to use ``overwrite=True``.
+For discussion on this, see `GH 1396 <https://github.com/gammapy/gammapy/issues/1396>`__.
 
 Pixel coordinate convention
 ---------------------------
 
 All code in Gammapy should follow the Astropy pixel coordinate convention that the center of the first pixel
 has pixel coordinates ``(0, 0)`` (and not ``(1, 1)`` as shown e.g. in ds9).
-It's currently documented `here <http://photutils.readthedocs.io/en/latest/photutils/overview.html#coordinate-conventions>`__
-but I plan to document it in the Astropy docs soon (see `issue 2607 <https://github.com/astropy/astropy/issues/2607>`__).
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
 
@@ -326,27 +231,6 @@ an optional dependency we use for speed, or whether we use the much more establi
 At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
 and Numba is not used yet.
 
-What belongs in Gammapy and what doesn't?
------------------------------------------
-
-The scope of Gammapy is currently not very well defined ... if in doubt whether it makes sense to
-add something, please ask on the mailing list or via a Github issue.
-
-Roughly the scope is high-level science analysis of gamma-ray data, starting with event lists
-after gamma-hadron separation and corresponding IRFs, as well as source and source population modeling.
-
-For lower-level data processing (calibration, event reconstruction, gamma-hadron separation)
-there's `ctapipe`_. There's some functionality (event list processing, PSF or background model building,
-sensitivity computations ...) that could go in either ctapipe or Gammapy and we'll have to try
-and avoid duplication.
-
-SED modeling code belongs in `naima`_.
-
-A lot of code that's not gamma-ray specific belongs in other packages
-(e.g. `Scipy`_, `Astropy`_, other Astropy-affiliated packages, `Sherpa`_).
-We currently have quite a bit of code that should be moved "upstream" or already has been,
-but the Gammapy code hasn't been adapted yet.
-
 Assert convention
 -----------------
 
@@ -366,18 +250,30 @@ it should be used consistently everywhere instead of using the
 dozens of other available asserts from pytest or numpy in various
 places.
 
-In case of assertion on arrays of quantity objects, such as
-`~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
-following method can be used:
-`astropy.tests.helper.assert_quantity_allclose`.
-In this case, use
+For assertions on `~astropy.units.Quantity` objects, you can do this
+to assert on the unit and value separately:
 
 .. code-block:: python
 
-    from astropy.tests.helper import assert_quantity_allclose
+    from numpy.testing import assert_allclose
+    import astropy.units as u
 
-at the top of the file and then just use ``assert_quantity_allclose``
-for the tests.
+    actual = 1 / 3 * u.deg
+    assert actual.unit == 'deg'
+    assert_allclose(actual.value, 0.33333333)
+
+Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
+Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
+so when using it, you have to give the reference value with a precision of
+``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
+
+The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
+because it only requires that the values match after unit conversions.
+This is not so bad, but units in test cases should not change randomly,
+so asserting on unit and value separately establishes more behaviour.
+
+If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
+which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
 
 .. _dev_random:
 
@@ -725,28 +621,6 @@ for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
 ``astropy.table.Table``.
 
 
-Validating H.E.S.S. FITS exporters
-----------------------------------
-
-The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:main-page` format.
-The Gammapy tests contain a mechanism to track changes in these exporters.
-
-
-In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads
-IRF files from different chains and prints the output of the ``__str__`` method to a file. It also creates a YAML file
-holding information about the datastore used for each chain, the observations used, etc.
-
-
-The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
-``__str__`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by
-Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script
-again to ensure the passing of all Gammapy tests.
-
-
-If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to
-manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
-
-
 .. _use-nddata:
 
 Using the NDDataArray
@@ -762,22 +636,6 @@ A usage example can be found in :gp-extra-notebooks:``nddata_demo``.
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator.
 
-
-Write a test for an IPython notebook
-------------------------------------
-
-There is a script called ``test_notebooks.py`` in the gammapy main folder. It
-exectues all notebooks listed in file ``notebook.yaml`` in
-``gammapy-extra/notebooks.yaml`` using
-`runipy <https://github.com/paulgb/runipy>`__. So if you edit an existing
-notebook or make changes to gammapy that break an existing notebook, you have
-to run ``test_notebooks.py`` until all notebooks run without raising an error.
-If you add a new notebook and want it to be under test (which of course is what
-you want) you have to add it to ``gammapy-extra/notebooks/notebooks.yaml``.
-Note that there is also the command ``make test-notebooks`` which is used for
-
-continuous integration on travis CI. It is not recommended to use this locally,
-since it overwrides your gammapy installation (see issue 727).
 
 Sphinx docs build
 -----------------
@@ -916,10 +774,6 @@ so many getters and setters. I don't have a solution for this yet ... for now I'
 
 TODO: make a decision on this and describe the issue / solution here.
 
-Constructor parameters
-++++++++++++++++++++++
-
-TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
 
 Different versions of notebooks in Binder
 -----------------------------------------
