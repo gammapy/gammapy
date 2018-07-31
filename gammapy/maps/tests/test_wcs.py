@@ -142,7 +142,7 @@ def test_wcsgeom_solid_angle():
     assert_quantity_allclose(solid_angle[0, 5, 5], 0.0003046 * u.sr, rtol=1e-3)
 
     # Test at b = 5 deg
-    assert_quantity_allclose(solid_angle[0, 9, 5], 0.0003038  * u.sr, rtol=1e-3)
+    assert_quantity_allclose(solid_angle[0, 9, 5], 0.0003038 * u.sr, rtol=1e-3)
 
 
 def test_wcsgeom_solid_angle_ait():
@@ -152,6 +152,24 @@ def test_wcsgeom_solid_angle_ait():
                               coordsys='GAL', proj='AIT')
     solid_angle = ait_geom.solid_angle()
     assert np.isnan(solid_angle[0, 0])
+
+
+def test_wcsgeom_separation():
+    geom = WcsGeom.create(skydir=(0, 0), npix=10,
+                          binsz=0.1, coordsys='GAL', proj='CAR',
+                          axes=[MapAxis.from_edges([0, 2, 3])])
+    position = SkyCoord(1, 0, unit='deg', frame='galactic').icrs
+    separation = geom.separation(position)
+
+    assert separation.unit == 'deg'
+    assert separation.data.shape == (10, 10)
+    assert_allclose(separation.data[0, 0], 0.7106291438079875)
+
+    # Make sure it also works for 2D maps as input
+    separation = geom.to_image().separation(position)
+    assert separation.unit == 'deg'
+    assert separation.data.shape == (10, 10)
+    assert_allclose(separation.data[0, 0], 0.7106291438079875)
 
 
 def test_wcsgeom_get_coord():
@@ -175,7 +193,6 @@ def test_wcsgeom_get_pix_coords():
     for idx, desired in zip(idx_edge, [-0.5, -0.5, 0]):
         assert idx.shape == (2, 4, 5)
         assert_allclose(idx[0, 0, 0], desired)
-
 
 
 def test_geom_repr():
