@@ -861,10 +861,8 @@ class FluxPointFitter(object):
 
     Parameters
     ----------
-    optimizer : {'simplex', 'moncar', 'gridsearch'}
+    optimizer : {'minuit'}
         Select optimizer
-    error_estimator : {'covar'}
-        Select error estimator
     ul_handling : {'ignore'}
         How to handle flux point upper limits in the fit
 
@@ -891,8 +889,8 @@ class FluxPointFitter(object):
         print(result['best_fit_model'])
     """
 
-    def __init__(self, stat='chi2', optimizer='simplex', error_estimator='covar',
-                 ul_handling='ignore'):
+    def __init__(self, stat='chi2', optimizer='minuit', ul_handling='ignore',
+                 opts_minuit=None):
         if stat == 'chi2':
             self.stat = chi2_flux_points
         elif stat == 'chi2assym':
@@ -905,31 +903,12 @@ class FluxPointFitter(object):
             raise NotImplementedError('No handling of upper limits implemented.')
 
         self.parameters = OrderedDict([
+            ('stat', stat),
             ('optimizer', optimizer),
-            ('error_estimator', error_estimator),
             ('ul_handling', ul_handling),
+            ('opts_minuit', opts_minuit)
         ])
 
-    def _setup_sherpa_fit(self, data, model):
-        """Fit flux point using sherpa"""
-        from sherpa.fit import Fit
-        from sherpa.data import DataSimulFit
-        from ..utils.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
-                                    SherpaModelWrapper, SHERPA_OPTMETHODS)
-
-        optimizer = self.parameters['optimizer']
-
-        if data.sed_type == 'dnde':
-            data = SherpaDataWrapper(data)
-        else:
-            raise NotImplementedError('Only fitting of differential flux points data '
-                                      'is supported.')
-
-        stat = SherpaStatWrapper(self.stat)
-        data = DataSimulFit(name='GPFluxPoints', datasets=[data])
-        method = SHERPA_OPTMETHODS[optimizer]
-        models = SherpaModelWrapper(model)
-        return Fit(data=data, model=models, stat=stat, method=method)
 
     def fit(self, data, model):
         """
@@ -945,27 +924,26 @@ class FluxPointFitter(object):
         best_fit_model : `~gammapy.spectrum.models.SpectralModel`
             Best fit model
         """
+        from ..utils.fitting import fit_iminuit
+
         p = self.parameters
         model = model.copy()
 
-        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch', 'levmar']:
-            sherpa_fitter = self._setup_sherpa_fit(data, model)
-            sherpa_fitter.fit()
+        if p['optimizer'] == 'minuit':
+
+            def total_stat(parameters):
+                model.parameters = parameters
+                return self.stat(data, model)[0]
+
+            minuit = fit_iminuit(
+                parameters=model.parameters,
+                function=total_stat,
+                opts_minuit=p['opts_minuit']
+                )
+            self._minuit = minuit
         else:
-            raise ValueError('Not a valid optimizer')
-
+            raise ValueError('Only the minuit fitting backend is supported.')
         return model
-
-    def statval(self, data, model):
-        """
-        Compute statval for given model and data.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        """
-        return self.stat(data, model)
 
     def dof(self, data, model):
         """
@@ -979,18 +957,6 @@ class FluxPointFitter(object):
         m = len(model.parameters.free)
         n = len(data.table)
         return n - m
-
-    def estimate_errors(self, data, model):
-        """
-        Estimate errors on best fit parameters.
-        """
-        model = model.copy()
-        sherpa_fitter = self._setup_sherpa_fit(data, model)
-        result = sherpa_fitter.est_errors()
-        covariance = result.extra_output
-        covar_axis = model.parameters.free
-        model.parameters.set_parameter_covariance(covariance, covar_axis)
-        return model
 
     def run(self, data, model):
         """
@@ -1009,9 +975,8 @@ class FluxPointFitter(object):
             Dictionary with fit results and debug output.
         """
         best_fit_model = self.fit(data, model)
-        best_fit_model = self.estimate_errors(data, best_fit_model)
         dof = self.dof(data, best_fit_model)
-        statval = self.statval(data, best_fit_model)[0]
+        statval = self.stat(data, best_fit_model)[0]
 
         return OrderedDict([
             ('best-fit-model', best_fit_model),
