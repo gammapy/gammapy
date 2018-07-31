@@ -5,11 +5,10 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.nddata.utils import PartialOverlapError
-from ..maps import WcsNDMap, Map
+from ..maps import WcsNDMap
 from .counts import fill_map_counts
 
 __all__ = [
-    'make_map_separation',
     'make_map_counts',
     'make_map_exposure_true_energy',
     'make_map_background_irf',
@@ -18,35 +17,6 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
-
-
-def make_map_separation(geom, position):
-    """Compute distance of pixels to a given position for the input reference WCSGeom.
-
-    Result is returned as a 2D WcsNDmap
-
-    Parameters
-    ----------
-    geom : `~gammapy.maps.WcsGeom`
-        Reference geometry
-    position : `~astropy.coordinates.SkyCoord`
-        Reference position
-
-    Returns
-    -------
-    separation : `~gammapy.maps.Map`
-        Separation map (2D)
-    """
-    # We use WcsGeom.get_coords which does not provide SkyCoords for the moment
-    # We convert the output to SkyCoords
-    geom = geom.to_image()
-
-    coord = geom.get_coord()
-    separation = position.separation(coord.skycoord)
-
-    m = Map.from_geom(geom)
-    m.quantity = separation
-    return m
 
 
 def make_map_counts(events, ref_geom, pointing, offset_max):
@@ -74,7 +44,7 @@ def make_map_counts(events, ref_geom, pointing, offset_max):
     fill_map_counts(counts_map, events)
 
     # Compute and apply FOV offset mask
-    offset = make_map_separation(ref_geom, pointing).quantity
+    offset = ref_geom.separation(pointing)
     offset_mask = offset >= offset_max
     counts_map.data[:, offset_mask] = 0
 
@@ -102,7 +72,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     expmap : `~gammapy.maps.WcsNDMap`
         Exposure cube (3D) in true energy bins
     """
-    offset = make_map_separation(ref_geom, pointing).quantity
+    offset = ref_geom.separation(pointing)
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
