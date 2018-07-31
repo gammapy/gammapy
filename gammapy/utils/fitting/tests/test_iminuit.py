@@ -15,31 +15,28 @@ def fcn(parameters):
 
 @requires_dependency('iminuit')
 def test_iminuit():
-    pars_in = ParameterList(
+    pars = ParameterList(
         [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
     )
 
-    pars_out, minuit = fit_iminuit(function=fcn, parameters=pars_in)
+    minuit = fit_iminuit(function=fcn, parameters=pars)
 
-    # Input and output parameters are the same objects
-    assert pars_in['x'] is pars_out['x']
-
-    assert_allclose(pars_out['x'].value, 2, rtol=1e-2)
-    assert_allclose(pars_out['y'].value, 3, rtol=1e-2)
-    assert_allclose(pars_out['z'].value, 4, rtol=1e-2)
+    assert_allclose(pars['x'].value, 2, rtol=1e-2)
+    assert_allclose(pars['y'].value, 3, rtol=1e-2)
+    assert_allclose(pars['z'].value, 4, rtol=1e-2)
 
     assert_allclose(minuit.values['x'], 2, rtol=1e-2)
     assert_allclose(minuit.values['y'], 3, rtol=1e-2)
     assert_allclose(minuit.values['z'], 4, rtol=1e-2)
 
     # Test freeze
-    pars_in['x'].frozen = True
-    pars_out, minuit = fit_iminuit(function=fcn, parameters=pars_in)
+    pars['x'].frozen = True
+    minuit = fit_iminuit(function=fcn, parameters=pars)
     assert minuit.list_of_fixed_param() == ['x']
 
     # Test limits
-    pars_in['y'].min = 4
-    pars_out, minuit = fit_iminuit(function=fcn, parameters=pars_in)
+    pars['y'].min = 4
+    minuit = fit_iminuit(function=fcn, parameters=pars)
     states = minuit.get_param_states()
     assert not states[0]['has_limits']
     assert not states[2]['has_limits']
@@ -49,7 +46,7 @@ def test_iminuit():
     assert states[1]['upper_limit'] == 0
 
     # Test stepsize via covariance matrix
-    pars_in.set_parameter_errors({'x': '0.2', 'y': '0.1'})
-    pars_out, minuit = fit_iminuit(function=fcn, parameters=pars_in)
+    pars.set_parameter_errors({'x': '0.2', 'y': '0.1'})
+    minuit = fit_iminuit(function=fcn, parameters=pars)
 
     assert minuit.migrad_ok()
