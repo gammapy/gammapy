@@ -6,10 +6,9 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.nddata.utils import PartialOverlapError
 from ..maps import WcsNDMap
-from .counts import fill_map_counts
+from .counts import make_map_counts
 
 __all__ = [
-    'make_map_counts',
     'make_map_exposure_true_energy',
     'make_map_background_irf',
     'make_map_background_fov',
@@ -17,38 +16,6 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
-
-
-def make_map_counts(events, ref_geom, pointing, offset_max):
-    """Build a WcsNDMap (space - energy) with events from an EventList.
-
-    The energy of the events is used for the non-spatial axis.
-
-    Parameters
-    ----------
-    events : `~gammapy.data.EventList`
-        Event list
-    ref_geom : `~gammapy.maps.WcsGeom`
-        Reference WcsGeom object used to define geometry (space - energy)
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing direction
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
-
-    Returns
-    -------
-    cntmap : `~gammapy.maps.WcsNDMap`
-        Count cube (3D) in true energy bins
-    """
-    counts_map = WcsNDMap(ref_geom)
-    fill_map_counts(counts_map, events)
-
-    # Compute and apply FOV offset mask
-    offset = ref_geom.separation(pointing)
-    offset_mask = offset >= offset_max
-    counts_map.data[:, offset_mask] = 0
-
-    return counts_map
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max):
