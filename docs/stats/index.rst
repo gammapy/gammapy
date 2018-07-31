@@ -1,8 +1,8 @@
 .. _stats:
 
-****************************
-Statistics tools (``stats``)
-****************************
+******************
+stats - Statistics
+******************
 
 .. currentmodule:: gammapy.stats
 

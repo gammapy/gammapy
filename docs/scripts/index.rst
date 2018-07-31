@@ -2,9 +2,9 @@
 
 .. _scripts:
 
-********************************
-Command line tools (``scripts``)
-********************************
+****************************
+scripts - Command line tools
+****************************
 
 .. currentmodule:: gammapy.scripts
 

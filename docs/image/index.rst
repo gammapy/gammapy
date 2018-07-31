@@ -2,9 +2,9 @@
 
 .. _image:
 
-*****************************
-2D image analysis (``image``)
-*****************************
+**************************
+image - Map image analysis
+**************************
 
 .. currentmodule:: gammapy.image
 

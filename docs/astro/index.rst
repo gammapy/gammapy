@@ -1,8 +1,8 @@
 .. _astro:
 
-***********************************
-Astrophysical utilities (``astro``)
-***********************************
+********************
+astro - Astrophysics
+********************
 
 .. currentmodule:: gammapy.astro
 
