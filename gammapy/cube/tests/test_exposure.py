@@ -2,13 +2,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
-from ...utils.testing import requires_data, assert_quantity_allclose
-from ...maps import Map
+from ...utils.testing import requires_data
+from ...maps import WcsGeom, HpxGeom, MapAxis
 from ...irf import EffectiveAreaTable2D
 from ..exposure import make_map_exposure_true_energy
 
 pytest.importorskip('scipy')
+pytest.importorskip('healpy')
 
 
 @pytest.fixture(scope='session')
@@ -18,21 +20,20 @@ def aeff():
 
 
 @pytest.fixture(scope='session')
-def counts_cube():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
-    return Map.read(filename)
+def geom():
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit='TeV')
+    return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
 
 
 @requires_data('gammapy-extra')
-def test_make_map_exposure_true_energy(aeff, counts_cube):
-
+def test_make_map_exposure_true_energy(aeff, geom):
     m = make_map_exposure_true_energy(
-        pointing=SkyCoord(83.633, 21.514, unit='deg'),
+        pointing=SkyCoord(2, 1, unit='deg'),
         livetime='1581.17 s',
         aeff=aeff,
-        geom=counts_cube.geom,
+        geom=geom,
     )
 
-    assert m.data.shape == (15, 120, 200)
+    assert m.data.shape == (2, 3, 4)
     assert m.unit == 'm2 s'
-    assert_quantity_allclose(np.nanmax(m.data), 4.7e8, rtol=100)
+    assert_allclose(m.data.sum(), 3.215819e+09, rtol=1e-5)
