@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from astropy.utils.console import ProgressBar
 from astropy.nddata.utils import PartialOverlapError
+from astropy.coordinates import Angle
 from ..maps import WcsNDMap
 from .counts import make_map_counts
 from .exposure import make_map_exposure_true_energy
@@ -19,7 +21,7 @@ class MapMaker(object):
 
     Parameters
     ----------
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
@@ -29,23 +31,23 @@ class MapMaker(object):
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, ref_geom, offset_max, cutout_mode="trim"):
-        self.offset_max = offset_max
-        self.ref_geom = ref_geom
+    def __init__(self, geom, offset_max, cutout_mode="trim"):
+        self.offset_max = Angle(offset_max)
+        self.geom = geom
 
         # We instantiate the end products of the MakeMaps class
-        self.counts_map = WcsNDMap(self.ref_geom)
+        self.counts_map = WcsNDMap(self.geom)
 
-        self.exposure_map = WcsNDMap(self.ref_geom, unit="m2 s")
+        self.exposure_map = WcsNDMap(self.geom, unit="m2 s")
 
-        self.background_map = WcsNDMap(self.ref_geom)
+        self.background_map = WcsNDMap(self.geom)
 
         # We will need this general exclusion mask for the analysis
-        self.exclusion_map = WcsNDMap(self.ref_geom)
+        self.exclusion_map = WcsNDMap(self.geom)
         self.exclusion_map.data += 1
 
         self.cutout_mode = cutout_mode
-        self.maps={}
+        self.maps = {}
 
     def process_obs(self, obs):
         """Process one observation and add it to the cutout image
@@ -87,7 +89,6 @@ class MapMaker(object):
 
         self._add_cutouts(cutout_slices, counts_obs_map, expo_obs_map, background_obs_map)
 
-
     def _add_cutouts(self, cutout_slices, counts_obs_map, expo_obs_map, acceptance_obs_map):
         """Add current cutout to global maps."""
         self.counts_map.data[cutout_slices] += counts_obs_map.data
@@ -108,15 +109,12 @@ class MapMaker(object):
         -----------
         maps: dict of stacked counts, background and exposure maps.
         """
-
-        from astropy.utils.console import ProgressBar
-
         for obs in ProgressBar(obs_list):
             self.process_obs(obs)
+
         self.maps = {
             'counts_map': self.counts_map,
             'background_map': self.background_map,
             'exposure_map': self.exposure_map
-                }
+        }
         return self.maps
-

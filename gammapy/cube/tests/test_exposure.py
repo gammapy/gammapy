@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import requires_data, assert_quantity_allclose
-from ...maps import WcsNDMap
+from ...maps import Map
 from ...irf import EffectiveAreaTable2D
 from ..exposure import make_map_exposure_true_energy
 
@@ -19,26 +19,19 @@ def aeff():
 
 @pytest.fixture(scope='session')
 def counts_cube():
-    import os
-    filename = os.path.join(
-        os.environ['GAMMAPY_EXTRA'],
-        'datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
-    )
-    return WcsNDMap.read(filename)
+    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
+    return Map.read(filename)
 
 
 @requires_data('gammapy-extra')
 def test_make_map_exposure_true_energy(aeff, counts_cube):
-    pointing = SkyCoord(83.633, 21.514, unit='deg')
-    # livetime = Quantity(1581.17, 's')
-    offset_max = Angle(2.2, 'deg')
 
     m = make_map_exposure_true_energy(
-        pointing,
-        '1581.17 s',
-        aeff,
-        counts_cube.geom,
-        offset_max,
+        pointing=SkyCoord(83.633, 21.514, unit='deg'),
+        livetime='1581.17 s',
+        aeff=aeff,
+        geom=counts_cube.geom,
+        offset_max=Angle('2.2 deg'),
     )
 
     assert m.data.shape == (15, 120, 200)

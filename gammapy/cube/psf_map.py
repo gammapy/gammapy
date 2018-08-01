@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 
-def make_psf_map(psf, pointing, ref_geom, max_offset):
+def make_psf_map(psf, pointing, geom, max_offset):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -25,7 +25,7 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
         the PSF IRF
     pointing : `~astropy.coordinates.SkyCoord`
         the pointing direction
-    ref_geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.MapGeom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
@@ -36,14 +36,14 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy_axis = ref_geom.get_axis_by_name('energy_true')
+    energy_axis = geom.get_axis_by_name('energy_true')
     energy = energy_axis.center * energy_axis.unit
 
-    rad_axis = ref_geom.get_axis_by_name('theta')
+    rad_axis = geom.get_axis_by_name('theta')
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
 
     # Compute separations with pointing position
-    separations = pointing.separation(ref_geom.to_image().get_coord().skycoord)
+    separations = pointing.separation(geom.to_image().get_coord().skycoord)
     valid = np.where(separations < max_offset)
 
     # Compute PSF values
@@ -53,7 +53,7 @@ def make_psf_map(psf, pointing, ref_geom, max_offset):
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))
 
     # Create Map and fill relevant entries
-    psfmap = Map.from_geom(ref_geom, unit='sr-1')
+    psfmap = Map.from_geom(geom, unit='sr-1')
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
 
     return PSFMap(psfmap)

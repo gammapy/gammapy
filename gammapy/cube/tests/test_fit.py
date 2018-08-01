@@ -32,15 +32,13 @@ def exposure(geom):
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
     aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
-    pointing = SkyCoord(1, 0.5, unit='deg', frame='galactic')
-    livetime = 1 * u.hour
     offset_max = 3 * u.deg
 
     exposure_map = make_map_exposure_true_energy(
-        pointing=pointing,
-        livetime=livetime,
+        pointing=SkyCoord(1, 0.5, unit='deg', frame='galactic'),
+        livetime='1 hour',
         aeff=aeff,
-        ref_geom=geom,
+        geom=geom,
         offset_max=offset_max,
     )
     return exposure_map

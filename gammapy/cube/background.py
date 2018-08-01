@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_integration_bins=1):
+def make_map_background_irf(pointing, livetime, bkg, geom, offset_max, n_integration_bins=1):
     """Compute background map from background IRFs.
 
     TODO: Call a method on bkg that returns integral over energy bin directly
@@ -25,7 +25,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_int
         Observation livetime
     bkg : `~gammapy.irf.Background3D`
         Background rate model
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset
@@ -41,9 +41,9 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_int
     # TODO: properly transform FOV to sky coordinates
     # For now we assume the background is radially symmetric
 
-    energy_axis = ref_geom.axes[0]
+    energy_axis = geom.axes[0]
     # Compute offsets of all pixels
-    map_coord = ref_geom.get_coord()
+    map_coord = geom.get_coord()
     # Retrieve energies from map coordinates
     energy_reco = map_coord[energy_axis.name] * energy_axis.unit
     # TODO: go from SkyCoord to FOV coordinates. Here assume symmetric geometry for fov_lon, fov_lat
@@ -59,7 +59,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_int
             n_integration_bins=n_integration_bins,
         )
 
-    d_omega = ref_geom.solid_angle()
+    d_omega = geom.solid_angle()
     data = (data_int * d_omega * livetime).to('').value
 
     # Put exposure outside offset max to zero
@@ -67,7 +67,7 @@ def make_map_background_irf(pointing, livetime, bkg, ref_geom, offset_max, n_int
     offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
     data[:, offset[0, :, :] >= offset_max] = 0
 
-    return WcsNDMap(ref_geom, data=data)
+    return WcsNDMap(geom, data=data)
 
 
 def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
