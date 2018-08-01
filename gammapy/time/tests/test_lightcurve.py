@@ -16,7 +16,6 @@ from ...data import DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...maps import WcsNDMap
 from ..lightcurve import LightCurve, LightCurveEstimator
 
 
@@ -159,15 +158,8 @@ def spec_extraction():
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 
-    exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    allsky_mask = WcsNDMap.read(exclusion_file)
-    exclusion_mask = allsky_mask.make_cutout(
-        position=on_region.center,
-        width=Angle('6 deg'),
-    )[0]
     bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                                        obs_list=obs_list,
-                                                        exclusion_mask=exclusion_mask)
+                                                        obs_list=obs_list)
     bkg_estimator.run()
 
     e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit='TeV')  # fine binning
@@ -263,7 +255,7 @@ def test_lightcurve_adaptative_interval_maker():
         separators=separator)
     assert_allclose(table['significance'] >= 3, True)
     assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-10)
-    assert_allclose(table['alpha'][5], 0.09090909, rtol=1e-5)
+    assert_allclose(table['alpha'][5], 0.0833333, rtol=1e-5)
     assert_allclose(len(table), 71)
     assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-10)
     assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)
