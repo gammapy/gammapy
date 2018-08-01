@@ -32,6 +32,9 @@ class MapMaker(object):
     """
 
     def __init__(self, geom, offset_max, cutout_mode="trim"):
+        if geom.is_image:
+            raise ValueError('MapMaker only works with geom with an energy axis')
+
         self.geom = geom
         self.offset_max = Angle(offset_max)
 
