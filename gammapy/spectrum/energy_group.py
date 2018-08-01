@@ -94,10 +94,6 @@ class SpectrumEnergyGroup(object):
         table['energy_max'] = self.energy_max
         return table
 
-    def contains_energy(self, energy):
-        """Does this group contain a given energy?"""
-        return (self.energy_min <= energy) & (energy < self.energy_max)
-
 
 class SpectrumEnergyGroups(UserList):
     """List of `~gammapy.spectrum.SpectrumEnergyGroup` objects.
@@ -197,14 +193,6 @@ class SpectrumEnergyGroups(UserList):
         energy = [_.energy_min for _ in self]
         energy.append(self[-1].energy_max)
         return Quantity(energy)
-
-    def find_list_idx(self, energy):
-        """Find the list index corresponding to a given energy."""
-        for idx, group in enumerate(self):
-            if group.contains_energy(energy):
-                return idx
-
-        raise IndexError('No group found with energy: {}'.format(energy))
 
 
 class SpectrumEnergyGroupMaker(object):
