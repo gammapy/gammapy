@@ -36,13 +36,13 @@ def extraction():
 class TestSpectrumExtraction:
     @pytest.mark.parametrize("pars, results", [
         (dict(containment_correction=False), dict(n_on=172,
-                                                  sigma=24.98,
+                                                  sigma=24.56,
                                                   aeff=549861.8 * u.m ** 2,
                                                   edisp=0.2595896944765074,
                                                   containment=1,
                                                   )),
         (dict(containment_correction=True), dict(n_on=172,
-                                                 sigma=24.98,
+                                                 sigma=24.56,
                                                  aeff=412731.8 * u.m ** 2,
                                                  edisp=0.2595896944765074,
                                                  containment=0.7645777148101338,
