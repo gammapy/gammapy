@@ -72,9 +72,7 @@ class MapMaker(object):
         offset = exclusion_mask_cutout.geom.separation(obs.pointing_radec)
         offset_mask = offset >= self.offset_max
 
-        counts_obs_map = make_map_counts(
-            obs.events, cutout_geom, obs.pointing_radec, self.offset_max,
-        )
+        counts_obs_map = make_map_counts(obs.events, cutout_geom)
         counts_obs_map.data[:, offset_mask] = 0
 
         expo_obs_map = make_map_exposure_true_energy(
