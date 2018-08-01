@@ -12,7 +12,7 @@ from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstima
 @pytest.fixture
 def mask():
     """Example mask for testing."""
-    pos = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
+    pos = SkyCoord(83.63, 22.01, unit='deg')
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, 'deg'))
     template_map = WcsNDMap.create(skydir=pos, binsz=0.02, width=10.)
     return template_map.make_region_mask(exclusion_region, inside=False)
@@ -21,10 +21,9 @@ def mask():
 @pytest.fixture
 def on_region():
     """Example on_region for testing."""
-    pos = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
+    pos = SkyCoord(83.63, 22.01, unit='deg')
     radius = Angle(0.11, 'deg')
-    region = CircleSkyRegion(pos, radius)
-    return region
+    return CircleSkyRegion(pos, radius)
 
 
 @pytest.fixture
@@ -32,18 +31,19 @@ def obs_list():
     """Example observation list for testing."""
     DATA_DIR = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
     datastore = DataStore.from_dir(DATA_DIR)
-    obs_ids = [23523, 23526]
-    return datastore.obs_list(obs_ids)
+    return datastore.obs_list([23523, 23526])
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_find_reflected_regions(mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit='deg')
-    fregions = ReflectedRegionsFinder(center=pointing,
-                                      region=on_region,
-                                      exclusion_mask=mask,
-                                      min_distance_input=Angle('0 deg'))
+    fregions = ReflectedRegionsFinder(
+        center=pointing,
+        region=on_region,
+        exclusion_mask=mask,
+        min_distance_input='0 deg',
+    )
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 15
@@ -71,33 +71,31 @@ def test_find_reflected_regions(mask, on_region):
 
 
 @pytest.fixture
-def bkg_estimator():
+def bkg_estimator(obs_list, on_region, mask):
     """Example background estimator for testing."""
-    estimator = ReflectedRegionsBackgroundEstimator(obs_list=obs_list(),
-                                                    on_region=on_region(),
-                                                    exclusion_mask=mask())
-    return estimator
+    return ReflectedRegionsBackgroundEstimator(
+        obs_list=obs_list,
+        on_region=on_region,
+        exclusion_mask=mask,
+    )
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestReflectedRegionBackgroundEstimator:
 
-    def setup(self):
-        self.bg_maker = bkg_estimator()
+    @staticmethod
+    def test_run(bkg_estimator):
+        assert 'ReflectedRegionsBackgroundEstimator' in str(bkg_estimator)
+        bkg_estimator.finder.min_distance = Angle('0.2 deg')
+        bkg_estimator.run()
+        assert len(bkg_estimator.result[1].off_region) == 11
+        assert 'Reflected' in str(bkg_estimator.result[1])
 
-    def test_basic(self):
-        assert 'ReflectedRegionsBackgroundEstimator' in str(self.bg_maker)
-
-    def test_run(self):
-        self.bg_maker.finder.min_distance = Angle('0.2 deg')
-        self.bg_maker.run()
-        assert len(self.bg_maker.result[1].off_region) == 11
-        assert 'Reflected' in str(self.bg_maker.result[1])
-
+    @staticmethod
     @requires_dependency('matplotlib')
-    def test_plot(self):
-        self.bg_maker.run()
-        self.bg_maker.plot()
-        self.bg_maker.plot(idx=1)
-        self.bg_maker.plot(idx=[0, 1])
+    def test_plot(bkg_estimator):
+        bkg_estimator.run()
+        bkg_estimator.plot()
+        bkg_estimator.plot(idx=1)
+        bkg_estimator.plot(idx=[0, 1])
