@@ -77,7 +77,7 @@ class MapMaker(object):
 
         expo_obs_map = make_map_exposure_true_energy(
             obs.pointing_radec, obs.observation_live_time_duration,
-            obs.aeff, cutout_geom, self.offset_max,
+            obs.aeff, cutout_geom
         )
         expo_obs_map.data[:, offset_mask] = 0
 

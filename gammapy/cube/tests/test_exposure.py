@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data, assert_quantity_allclose
 from ...maps import Map
 from ...irf import EffectiveAreaTable2D
@@ -31,7 +31,6 @@ def test_make_map_exposure_true_energy(aeff, counts_cube):
         livetime='1581.17 s',
         aeff=aeff,
         geom=counts_cube.geom,
-        offset_max=Angle('2.2 deg'),
     )
 
     assert m.data.shape == (15, 120, 200)

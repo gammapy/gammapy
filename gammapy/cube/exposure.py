@@ -8,8 +8,11 @@ __all__ = [
 ]
 
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, geom, offset_max):
-    """Compute exposure WcsNDMap in true energy (i.e. not convolved by Edisp).
+def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
+    """Compute exposure map.
+
+     This map has a true energy axis, the exposure is not combined
+     with energy dispersion.
 
     Parameters
     ----------
@@ -21,8 +24,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, offset_max):
         Effective area table
     geom : `~gammapy.maps.WcsGeom`
         Reference WcsGeom object used to define geometry (space - energy)
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
 
     Returns
     -------
@@ -43,10 +44,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, offset_max):
     # TODO: call np.atleast_3d ?
     if len(exposure.shape) < 3:
         exposure = np.expand_dims(exposure.value, 0) * exposure.unit
-
-    # Put exposure outside offset max to zero
-    # This might be more generaly dealt with a mask map
-    exposure[:, offset >= offset_max] = 0
 
     data = exposure.to('m2 s')
 
