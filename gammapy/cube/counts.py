@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ..maps import WcsNDMap
+from ..maps import Map
 
 __all__ = [
     'fill_map_counts',
@@ -44,33 +44,21 @@ def fill_map_counts(count_map, event_list):
     count_map.fill_by_coord(coord_dict)
 
 
-def make_map_counts(events, geom, pointing, offset_max):
-    """Build a WcsNDMap (space - energy) with events from an EventList.
-
-    The energy of the events is used for the non-spatial axis.
+def make_map_counts(events, geom):
+    """Make a counts map for a given geometry.
 
     Parameters
     ----------
     events : `~gammapy.data.EventList`
         Event list
-    geom : `~gammapy.maps.WcsGeom`
-        Reference WcsGeom object used to define geometry (space - energy)
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing direction
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
+    geom : `~gammapy.maps.Geom`
+        Map geometry
 
     Returns
     -------
-    cntmap : `~gammapy.maps.WcsNDMap`
-        Count cube (3D) in true energy bins
+    counts_map : `~gammapy.maps.Map`
+        Counts map
     """
-    counts_map = WcsNDMap(geom)
+    counts_map = Map.from_geom(geom)
     fill_map_counts(counts_map, events)
-
-    # Compute and apply FOV offset mask
-    offset = geom.separation(pointing)
-    offset_mask = offset >= offset_max
-    counts_map.data[:, offset_mask] = 0
-
     return counts_map

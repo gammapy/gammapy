@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-def make_map_background_irf(pointing, livetime, bkg, geom, offset_max, n_integration_bins=1):
+def make_map_background_irf(pointing, livetime, bkg, geom, n_integration_bins=1):
     """Compute background map from background IRFs.
 
     TODO: Call a method on bkg that returns integral over energy bin directly
@@ -27,8 +27,6 @@ def make_map_background_irf(pointing, livetime, bkg, geom, offset_max, n_integra
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset
     n_integration_bins : int
             Number of bins used to integrate on each energy range
 
@@ -61,11 +59,6 @@ def make_map_background_irf(pointing, livetime, bkg, geom, offset_max, n_integra
 
     d_omega = geom.solid_angle()
     data = (data_int * d_omega * livetime).to('').value
-
-    # Put exposure outside offset max to zero
-    # This might be more generaly dealt with a mask map
-    offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
-    data[:, offset[0, :, :] >= offset_max] = 0
 
     return WcsNDMap(geom, data=data)
 
