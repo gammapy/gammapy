@@ -80,7 +80,7 @@ class ReflectedRegionsFinder(object):
     center : `~astropy.coordinates.SkyCoord`
         Rotation point
     angle_increment : `~astropy.coordinates.Angle`, optional
-        Rotation angle for each step
+        Rotation angle applied when a region falls in an excluded region.
     min_distance : `~astropy.coordinates.Angle`, optional
         Minimal distance between to reflected regions
     min_distance_input : `~astropy.coordinates.Angle`, optional
@@ -111,7 +111,12 @@ class ReflectedRegionsFinder(object):
                  min_distance_input='0.1 rad', exclusion_mask=None):
         self.region = region
         self.center = center
-        self.angle_increment = Angle(angle_increment)
+
+        if angle_increment < Angle(1,'deg'):
+            self.angle_increment = Angle(angle_increment)
+        else:
+            raise ValueError("ReflectedRegionsFinder: the angle_increment parameter is too small.")
+
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
         self.exclusion_mask = exclusion_mask
