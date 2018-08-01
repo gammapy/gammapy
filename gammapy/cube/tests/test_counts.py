@@ -9,7 +9,6 @@ from ...maps import MapAxis, WcsGeom, HpxGeom, Map
 from ...data import EventList
 from ..counts import fill_map_counts
 
-
 pytest.importorskip('scipy')
 
 # TODO: move these two cases to different test functions?
@@ -37,11 +36,6 @@ def events():
     return EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
 
 
-@pytest.fixture(scope='session')
-def evt_2fhl():
-    return EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
-
-
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize('geom_opts', [geom_cta, geom_cta_time])
 def test_fill_map_counts(geom_opts, events):
@@ -50,9 +44,7 @@ def test_fill_map_counts(geom_opts, events):
 
     fill_map_counts(cntmap, events)
 
-    # Number of entries in the map
-    nmap = cntmap.data.sum()
-    # number of events
+    # Compute expected number of entries in the map
     valid = np.ones_like(events.energy.value)
     for axis in geom.axes:
         if axis.name == 'energy_reco':
@@ -62,26 +54,19 @@ def test_fill_map_counts(geom_opts, events):
             valid = np.logical_and(events.table[axis.name.upper()] >= axis.edges[0], valid)
             valid = np.logical_and(events.table[axis.name.upper()] <= axis.edges[-1], valid)
 
-    nevt = valid.sum()
-    assert nmap == nevt
+    assert cntmap.data.sum() == valid.sum()
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('healpy')
-def test_fill_map_counts_hpx(evt_2fhl):
+def test_fill_map_counts_hpx(events):
     # This tests healpix maps fill with non standard non spatial axis
 
-    axis_zen = MapAxis([0, 45, 180], node_type='edge', name='zenith_angle', unit=u.deg)
-    geom = HpxGeom(256, coordsys='GAL', axes=[axis_zen])
+    axis = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
+    geom = HpxGeom(256, coordsys='GAL', axes=[axis])
     m = Map.from_geom(geom)
 
-    fill_map_counts(m, evt_2fhl)
+    fill_map_counts(m, events)
 
-    nmap_l = np.sum(m.data[0])
-    nmap_h = np.sum(m.data[1])
-
-    nevt_l = np.sum(evt_2fhl.table['ZENITH_ANGLE'] < 45)
-    nevt_h = np.sum(evt_2fhl.table['ZENITH_ANGLE'] > 45)
-
-    assert nmap_l == nevt_l
-    assert nmap_h == nevt_h
+    assert m.data[0].sum() == 66697
+    assert m.data[1].sum() == 29410

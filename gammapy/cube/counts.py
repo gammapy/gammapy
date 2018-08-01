@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def fill_map_counts(count_map, event_list):
+def fill_map_counts(count_map, events):
     """Fill events into a counts map.
 
     The energy of the events is used for a non-spatial axis homogeneous to energy.
@@ -18,26 +18,26 @@ def fill_map_counts(count_map, event_list):
     ----------
     count_map : `~gammapy.maps.Map`
         Map object, will be filled by this function.
-    event_list : `~gammapy.data.EventList`
+    events : `~gammapy.data.EventList`
         Event list
     """
     geom = count_map.geom
 
     # Make a coordinate dictionary; skycoord is always added
-    coord_dict = dict(skycoord=event_list.radec)
+    coord_dict = dict(skycoord=events.radec)
 
     # Now add one coordinate for each extra map axis
     for axis in geom.axes:
         if axis.type == 'energy':
             # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
-            coord_dict[axis.name] = event_list.energy.to(axis.unit)
+            coord_dict[axis.name] = events.energy.to(axis.unit)
         # TODO: add proper extraction for time
         else:
             # We look for other axes name in the table column names (case insensitive)
-            colnames = [_.upper() for _ in event_list.table.colnames]
+            colnames = [_.upper() for _ in events.table.colnames]
             if axis.name.upper() in colnames:
-                column_name = event_list.table.colnames[colnames.index(axis.name.upper())]
-                coord_dict.update({axis.name: event_list.table[column_name].to(axis.unit)})
+                column_name = events.table.colnames[colnames.index(axis.name.upper())]
+                coord_dict.update({axis.name: events.table[column_name].to(axis.unit)})
             else:
                 raise ValueError("Cannot find MapGeom axis {!r} in EventList".format(axis.name))
 
