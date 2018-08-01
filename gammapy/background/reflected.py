@@ -14,8 +14,8 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-def _compute_distance_image(mask_map):
 
+def _compute_distance_image(mask_map):
     """Distance to nearest exclusion region.
 
     Compute distance image, i.e. the Euclidean (=Cartesian 2D)
@@ -110,13 +110,13 @@ class ReflectedRegionsFinder(object):
 
     def __init__(self, region, center,
                  angle_increment='0.1 rad', min_distance='0 rad',
-                 min_distance_input='0.1 rad', max_region_number=None,
+                 min_distance_input='0.1 rad', max_region_number=10000,
                  exclusion_mask=None):
         self.region = region
         self.center = center
 
         self.angle_increment = Angle(angle_increment)
-        if self.angle_increment < Angle(1,'deg'):
+        if self.angle_increment < Angle(1, 'deg'):
             raise ValueError("ReflectedRegionsFinder: the angle_increment parameter is too small.")
 
         self.min_distance = Angle(min_distance)
@@ -193,13 +193,12 @@ class ReflectedRegionsFinder(object):
                 log.debug('Placing reflected region\n{}'.format(refl_region))
                 reflected_regions.append(refl_region)
                 curr_angle = curr_angle + self._min_ang
+                if self.max_region_number <= len(reflected_regions):
+                    break
             else:
                 curr_angle = curr_angle + self.angle_increment
 
         log.debug('Found {} reflected regions'.format(len(reflected_regions)))
-        if self.max_region_number is not None:
-            nreg = min(len(reflected_regions),self.max_region_number)
-            reflected_regions = reflected_regions[:nreg]
         self.reflected_regions = reflected_regions
 
     def plot(self, fig=None, ax=None):
