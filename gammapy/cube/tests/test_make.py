@@ -27,7 +27,7 @@ def geom():
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("mode, expected", [("trim", 107214.0), ("strict", 53486.0)])
 def test_map_maker(mode, expected, data_store, geom):
-    mmaker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
+    mmaker = MapMaker(geom, '6 deg', cutout_mode=mode)
     obs = [110380, 111140]
 
     for obsid in obs:
@@ -36,7 +36,7 @@ def test_map_maker(mode, expected, data_store, geom):
     assert mmaker.exposure_map.unit == "m2 s"
     assert_quantity_allclose(mmaker.counts_map.data.sum(), expected)
 
-    maker = MapMaker(geom, 6.0 * u.deg, cutout_mode=mode)
+    maker = MapMaker(geom, '6 deg', cutout_mode=mode)
     obslist = data_store.obs_list(obs)
     maps = maker.run(obslist)
 
