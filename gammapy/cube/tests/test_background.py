@@ -28,17 +28,11 @@ def counts_cube():
 def test_make_map_fov_background(bkg_3d, counts_cube):
     pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
-    offset_max = Angle(2.2, 'deg')
 
     m = make_map_background_irf(
-        pointing, livetime, bkg_3d, counts_cube.geom, offset_max,
+        pointing, livetime, bkg_3d, counts_cube.geom
     )
 
     assert m.data.shape == (15, 120, 200)
     assert_allclose(m.data[0, 0, 0], 0.013959, rtol=1e-4)
-    assert_allclose(m.data.sum(), 1356.2551, rtol=1e-5)
-
-    # TODO: Check that `offset_max` is working properly
-    # pos = SkyCoord(85.6, 23, unit='deg')
-    # val = bkg_cube.lookup(pos, energy=1 * u.TeV)
-    # assert_allclose(val, 0)
+    assert_allclose(m.data.sum(), 1408.573698, rtol=1e-5)

@@ -83,7 +83,7 @@ class MapMaker(object):
 
         acceptance_obs_map = make_map_background_irf(
             obs.pointing_radec, obs.observation_live_time_duration,
-            obs.bkg, cutout_geom, self.offset_max,
+            obs.bkg, cutout_geom
         )
         acceptance_obs_map.data[:, offset_mask] = 0
 
