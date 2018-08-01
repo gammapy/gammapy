@@ -19,31 +19,36 @@ def obs_list():
     return data_store.obs_list(obs_id)
 
 
-@pytest.fixture(scope='session')
 def geom():
-    skydir = SkyCoord(266.41681663, -29.00782497, unit="deg")
-    energy_axis = MapAxis.from_edges([0.1, 0.5, 1.5, 3.0, 10.],
-                                     name='energy', unit='TeV', interp='log')
-    return WcsGeom.create(binsz=0.1 * u.deg, skydir=skydir, width=15.0, axes=[energy_axis])
+    skydir = SkyCoord(0, -1, unit="deg", frame='galactic')
+    energy_axis = MapAxis.from_edges([0.1, 1, 10], name='energy', unit='TeV', interp='log')
+    return WcsGeom.create(binsz=0.5 * u.deg, skydir=skydir, width=(10, 5),
+                          coordsys='GAL', axes=[energy_axis])
 
 
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars", [
     {
+        'geom': geom(),
         'mode': 'trim',
-        'counts': 107214,
-        'exposure': 9.582158e+13,
-        'background': 107214.016,
+        'counts': 34366,
+        'exposure': 3.99815e+11,
+        'background': 34366,
     },
     {
+        'geom': geom(),
         'mode': 'strict',
-        'counts': 53486,
-        'exposure': 4.794064e+13,
-        'background': 53486,
+        'counts': 21981,
+        'exposure': 2.592941e+11,
+        'background': 21981,
     },
 ])
-def test_map_maker(pars, obs_list, geom):
-    maker = MapMaker(geom, '6 deg', cutout_mode=pars['mode'])
+def test_map_maker(pars, obs_list):
+    maker = MapMaker(
+        geom=pars['geom'],
+        offset_max='2 deg',
+        cutout_mode=pars['mode'],
+    )
     maps = maker.run(obs_list)
 
     counts = maps['counts_map']
