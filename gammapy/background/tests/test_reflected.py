@@ -63,6 +63,12 @@ def test_find_reflected_regions(mask, on_region):
     assert len(regions) == 16
     assert_quantity_allclose(regions[3].center.icrs.ra, Angle('83.674 deg'), rtol=1e-2)
 
+    # Test with maximum number of regions
+    fregions.max_region_number = 5
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 5
+
 
 @pytest.fixture
 def bkg_estimator():

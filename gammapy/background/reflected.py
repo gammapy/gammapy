@@ -115,9 +115,8 @@ class ReflectedRegionsFinder(object):
         self.region = region
         self.center = center
 
-        if angle_increment > Angle(1,'deg'):
-            self.angle_increment = Angle(angle_increment)
-        else:
+        self.angle_increment = Angle(angle_increment)
+        if self.angle_increment < Angle(1,'deg'):
             raise ValueError("ReflectedRegionsFinder: the angle_increment parameter is too small.")
 
         self.min_distance = Angle(min_distance)
