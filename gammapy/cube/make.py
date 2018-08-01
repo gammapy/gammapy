@@ -32,8 +32,8 @@ class MapMaker(object):
     """
 
     def __init__(self, geom, offset_max, cutout_mode="trim"):
-        self.offset_max = Angle(offset_max)
         self.geom = geom
+        self.offset_max = Angle(offset_max)
 
         # We instantiate the end products of the MakeMaps class
         self.counts_map = WcsNDMap(self.geom)
@@ -69,23 +69,30 @@ class MapMaker(object):
 
         cutout_geom = exclusion_mask_cutout.geom
 
+        offset = exclusion_mask_cutout.geom.separation(obs.pointing_radec)
+        offset_mask = offset >= self.offset_max
+
         counts_obs_map = make_map_counts(
             obs.events, cutout_geom, obs.pointing_radec, self.offset_max,
         )
+        counts_obs_map.data[:, offset_mask] = 0
 
         expo_obs_map = make_map_exposure_true_energy(
             obs.pointing_radec, obs.observation_live_time_duration,
             obs.aeff, cutout_geom, self.offset_max,
         )
+        expo_obs_map.data[:, offset_mask] = 0
 
         acceptance_obs_map = make_map_background_irf(
             obs.pointing_radec, obs.observation_live_time_duration,
             obs.bkg, cutout_geom, self.offset_max,
         )
+        acceptance_obs_map.data[:, offset_mask] = 0
 
         background_obs_map = make_map_background_fov(
             acceptance_obs_map, counts_obs_map, exclusion_mask_cutout,
         )
+        background_obs_map.data[:, offset_mask] = 0
 
         self._add_cutouts(cutout_slices, counts_obs_map, expo_obs_map, background_obs_map)
 
