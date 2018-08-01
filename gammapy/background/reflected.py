@@ -85,6 +85,8 @@ class ReflectedRegionsFinder(object):
         Minimal distance between to reflected regions
     min_distance_input : `~astropy.coordinates.Angle`, optional
         Minimal distance from input region
+    max_region_number : int, optional
+        Maximum number of regions to use
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
 
@@ -108,11 +110,12 @@ class ReflectedRegionsFinder(object):
 
     def __init__(self, region, center,
                  angle_increment='0.1 rad', min_distance='0 rad',
-                 min_distance_input='0.1 rad', exclusion_mask=None):
+                 min_distance_input='0.1 rad', max_region_number=None,
+                 exclusion_mask=None):
         self.region = region
         self.center = center
 
-        if angle_increment < Angle(1,'deg'):
+        if angle_increment > Angle(1,'deg'):
             self.angle_increment = Angle(angle_increment)
         else:
             raise ValueError("ReflectedRegionsFinder: the angle_increment parameter is too small.")
@@ -120,7 +123,7 @@ class ReflectedRegionsFinder(object):
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
         self.exclusion_mask = exclusion_mask
-
+        self.max_region_number = max_region_number
         self.reflected_regions = None
 
     def run(self):
@@ -195,6 +198,9 @@ class ReflectedRegionsFinder(object):
                 curr_angle = curr_angle + self.angle_increment
 
         log.debug('Found {} reflected regions'.format(len(reflected_regions)))
+        if self.max_region_number is not None:
+            nreg = min(len(reflected_regions),self.max_region_number)
+            reflected_regions = reflected_regions[:nreg]
         self.reflected_regions = reflected_regions
 
     def plot(self, fig=None, ax=None):
