@@ -19,9 +19,9 @@ def obs_list():
     return data_store.obs_list(obs_id)
 
 
-def geom():
+def geom(ebounds):
     skydir = SkyCoord(0, -1, unit="deg", frame='galactic')
-    energy_axis = MapAxis.from_edges([0.1, 1, 10], name='energy', unit='TeV', interp='log')
+    energy_axis = MapAxis.from_edges(ebounds, name='energy', unit='TeV', interp='log')
     return WcsGeom.create(binsz=0.5 * u.deg, skydir=skydir, width=(10, 5),
                           coordsys='GAL', axes=[energy_axis])
 
@@ -29,14 +29,24 @@ def geom():
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars", [
     {
-        'geom': geom(),
+        # Default, normal test case
+        'geom': geom(ebounds=[0.1, 1, 10]),
         'mode': 'trim',
         'counts': 34366,
         'exposure': 3.99815e+11,
         'background': 34366,
     },
     {
-        'geom': geom(),
+        # Test single energy bin
+        'geom': geom(ebounds=[0.1, 10]),
+        'mode': 'trim',
+        'counts': 34366,
+        'exposure': 1.16866e+11,
+        'background': 34366,
+    },
+    {
+        # Test strict mode
+        'geom': geom(ebounds=[0.1, 1, 10]),
         'mode': 'strict',
         'counts': 21981,
         'exposure': 2.592941e+11,
