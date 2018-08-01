@@ -14,20 +14,21 @@ def fcn(parameters):
     return (x - 2) ** 2 + (y - 3) ** 2 + (z - 4) ** 2, 0
 
 
+# TODO: levmar doesn't work yet; needs array of statval as return in likelihood
+# optimiser='gridsearch' would require very low tolerance asserts, not added for now
+
 @requires_dependency('sherpa')
-@pytest.mark.parametrize('optimizer', ['gridsearch', 'moncar', 'levmar', 'simplex'])
+@pytest.mark.parametrize('optimizer', ['moncar', 'simplex'])
 def test_sherpa(optimizer):
     pars = ParameterList(
         [Parameter('x', 2.2), Parameter('y', 3.4), Parameter('z', 4.5)]
     )
 
-    result = fit_sherpa(function=fcn, parameters=pars)
-    success, pars_best_fit, statval, message, info = result
+    result = fit_sherpa(function=fcn, parameters=pars, optimizer=optimizer)
 
-    assert success
-    assert message == 'Optimization terminated successfully'
-    assert 'nfev' in info
-    assert_allclose(statval, 0, atol=1e-2)
+    assert result['success']
+    assert result['nfev'] > 10
+    assert_allclose(result['statval'], 0, atol=1e-2)
     assert_allclose(pars['x'].value, 2, rtol=1e-2)
     assert_allclose(pars['y'].value, 3, rtol=1e-2)
     assert_allclose(pars['z'].value, 4, rtol=1e-2)
