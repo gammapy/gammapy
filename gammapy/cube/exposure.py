@@ -23,12 +23,12 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area
     geom : `~gammapy.maps.WcsGeom`
-        Reference WcsGeom object used to define geometry (space - energy)
+        Map geometry (must have an energy axis)
 
     Returns
     -------
-    expmap : `~gammapy.maps.WcsNDMap`
-        Exposure cube (3D) in true energy bins
+    map : `~gammapy.maps.WcsNDMap`
+        Exposure map
     """
     offset = geom.separation(pointing)
     energy = geom.axes[0].center * geom.axes[0].unit
