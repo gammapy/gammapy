@@ -23,8 +23,6 @@ log = logging.getLogger(__name__)
 class DataStoreObservation(object):
     """IACT data store observation.
 
-    See :ref:`data_store`
-
     Parameters
     ----------
     obs_id : int
