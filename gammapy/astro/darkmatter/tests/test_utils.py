@@ -13,8 +13,8 @@ def geom():
 
 
 @pytest.fixture(scope="session")
-def jfact():
-    jfactory = JFactory(geom=geom(), profile=profiles.NFWProfile(), distance=8 * u.kpc)
+def jfact(geom):
+    jfactory = JFactory(geom=geom, profile=profiles.NFWProfile(), distance=8 * u.kpc)
     return jfactory.compute_jfactor()
 
 
