@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...maps import MapAxis, WcsGeom, HpxGeom, Map
-from ...data import DataStore, EventList
+from ...data import EventList
 from ..counts import fill_map_counts
 
 
@@ -32,9 +32,9 @@ geom_cta_time = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
 # TODO: change the test event list to something that's created from scratch,
 # using values so that it's possible to make simple assert statements on the
 # map data in the tests below, i.e. have pixels that should receive 0, 1 or 2 counts
-def make_test_event_list():
-    ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/')
-    return ds.obs(110380).events
+@pytest.fixture(scope='session')
+def events():
+    return EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
 
 
 @pytest.fixture(scope='session')
@@ -44,8 +44,7 @@ def evt_2fhl():
 
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize('geom_opts', [geom_cta, geom_cta_time])
-def test_fill_map_counts(geom_opts):
-    events = make_test_event_list()
+def test_fill_map_counts(geom_opts, events):
     geom = WcsGeom.create(**geom_opts)
     cntmap = Map.from_geom(geom)
 

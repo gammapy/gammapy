@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import requires_data
-from ...maps import WcsNDMap
+from ...maps import Map
 from ...irf import Background3D
 from ..background import make_map_background_irf
 
@@ -20,12 +20,8 @@ def bkg_3d():
 
 @pytest.fixture(scope='session')
 def counts_cube():
-    import os
-    filename = os.path.join(
-        os.environ['GAMMAPY_EXTRA'],
-        'datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
-    )
-    return WcsNDMap.read(filename)
+    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
+    return Map.read(filename)
 
 
 @requires_data('gammapy-extra')
