@@ -8,8 +8,6 @@ from regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...maps import WcsNDMap
-
 
 @pytest.fixture(scope='session')
 def obs_list():
@@ -26,24 +24,17 @@ def on_region():
 
 
 @pytest.fixture(scope='session')
-def mask():
-    return WcsNDMap.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-
-
-@pytest.fixture(scope='session')
-def stats(on_region, obs_list, mask):
+def stats(on_region, obs_list):
     obs = obs_list[0]
     bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                              exclusion_mask=mask,
                                               obs_list=obs)
     bg = bge.process(obs)
     return ObservationStats.from_obs(obs, bg)
 
 
 @pytest.fixture(scope='session')
-def stats_stacked(on_region, obs_list, mask):
+def stats_stacked(on_region, obs_list):
     bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                              exclusion_mask=mask,
                                               obs_list=obs_list)
     bge.run()
 
