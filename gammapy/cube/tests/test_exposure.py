@@ -19,7 +19,7 @@ def aeff():
 
 
 def geom(map_type, ebounds):
-    axis = MapAxis.from_edges(ebounds, name="energy", unit='TeV')
+    axis = MapAxis.from_edges(ebounds, name="energy", unit='TeV', interp='log')
     if map_type == 'wcs':
         return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
     elif map_type == 'hpx':
@@ -33,19 +33,19 @@ def geom(map_type, ebounds):
     {
         'geom': geom(map_type='wcs', ebounds=[0.1, 1, 10]),
         'shape': (2, 3, 4),
-        'sum': 85420535.474238,
+        'sum': 54448477.348027,
     },
     {
         'geom': geom(map_type='wcs', ebounds=[0.1, 10]),
         'shape': (1, 3, 4),
-        'sum': 66133814.978884,
+        'sum': 31219048.597406,
     },
     # TODO: make this work for HPX
     # 'HpxGeom' object has no attribute 'separation'
     # {
     #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
-    #     'shape': (1, 3, 4),
-    #     'sum': 66133814.978884,
+    #     'shape': '???',
+    #     'sum': '???',
     # },
 ])
 def test_make_map_exposure_true_energy(aeff, pars):
