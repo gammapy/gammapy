@@ -19,21 +19,30 @@ def aeff():
     return EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
 
 
-@pytest.fixture(scope='session')
-def geom():
-    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit='TeV')
+def geom(ebounds):
+    axis = MapAxis.from_edges(ebounds, name="energy", unit='TeV')
     return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
 
 
 @requires_data('gammapy-extra')
-def test_make_map_exposure_true_energy(aeff, geom):
+@pytest.mark.parametrize("pars", [
+    {
+        'geom': geom(ebounds=[0.1, 1, 10]),
+        'shape': (2, 3, 4),
+        'sum': 85420535.474238,
+    },
+    {
+        'geom': geom(ebounds=[0.1, 10]),
+        'shape': (1, 3, 4),
+        'sum': 66133814.978884,
+    },
+])
+def test_make_map_exposure_true_energy(aeff, pars):
     m = make_map_exposure_true_energy(
         pointing=SkyCoord(2, 1, unit='deg'),
-        livetime='1581.17 s',
-        aeff=aeff,
-        geom=geom,
+        livetime='42 s', aeff=aeff, geom=pars['geom'],
     )
 
-    assert m.data.shape == (2, 3, 4)
+    assert m.data.shape == pars['shape']
     assert m.unit == 'm2 s'
-    assert_allclose(m.data.sum(), 3.215819e+09, rtol=1e-5)
+    assert_allclose(m.data.sum(), pars['sum'])
