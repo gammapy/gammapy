@@ -20,7 +20,7 @@ class JFactory(object):
 
     Parameters
     ----------
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference geometry
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile
@@ -28,8 +28,8 @@ class JFactory(object):
         Distance to convert angular scale of the map
     """
 
-    def __init__(self, ref_geom, profile, distance):
-        self.ref_geom = ref_geom
+    def __init__(self, geom, profile, distance):
+        self.geom = geom
         self.profile = profile
         self.distance = distance
 
@@ -42,7 +42,7 @@ class JFactory(object):
 
         TODO: Needs to be implemented more efficiently
         """
-        separation = self.ref_geom.separation(self.ref_geom.center_skydir)
+        separation = self.geom.separation(self.geom.center_skydir)
         rmin = separation.rad * self.distance
         rmax = self.distance
         val = [self.profile.integral(_, rmax) for _ in rmin.flatten()]
@@ -59,7 +59,7 @@ class JFactory(object):
 
         """
         diff_jfact = self.compute_differential_jfactor()
-        jfact = diff_jfact * self.ref_geom.to_image().solid_angle()
+        jfact = diff_jfact * self.geom.to_image().solid_angle()
         return jfact
 
 

@@ -38,7 +38,7 @@ def exposure(geom):
         pointing=SkyCoord(1, 0.5, unit='deg', frame='galactic'),
         livetime='1 hour',
         aeff=aeff,
-        ref_geom=geom,
+        geom=geom,
         offset_max=offset_max,
     )
     return exposure_map

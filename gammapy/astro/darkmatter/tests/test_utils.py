@@ -14,7 +14,7 @@ def geom():
 
 @pytest.fixture(scope="session")
 def jfact():
-    jfactory = JFactory(ref_geom=geom(), profile=profiles.NFWProfile(), distance=8 * u.kpc)
+    jfactory = JFactory(geom=geom(), profile=profiles.NFWProfile(), distance=8 * u.kpc)
     return jfactory.compute_jfactor()
 
 

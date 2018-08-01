@@ -30,7 +30,7 @@ def test_make_map_exposure_true_energy(aeff, counts_cube):
         pointing=SkyCoord(83.633, 21.514, unit='deg'),
         livetime='1581.17 s',
         aeff=aeff,
-        ref_geom=counts_cube.geom,
+        geom=counts_cube.geom,
         offset_max=Angle('2.2 deg'),
     )
 

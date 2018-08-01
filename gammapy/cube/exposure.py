@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max):
+def make_map_exposure_true_energy(pointing, livetime, aeff, geom, offset_max):
     """Compute exposure WcsNDMap in true energy (i.e. not convolved by Edisp).
 
     Parameters
@@ -19,7 +19,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area table
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference WcsGeom object used to define geometry (space - energy)
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
@@ -29,12 +29,12 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
     expmap : `~gammapy.maps.WcsNDMap`
         Exposure cube (3D) in true energy bins
     """
-    offset = ref_geom.separation(pointing)
+    offset = geom.separation(pointing)
 
     # Retrieve energies from WcsNDMap
     # Note this would require a log_center from the geometry
     # Or even better edges, but WcsNDmap does not really allows it.
-    energy = ref_geom.axes[0].center * ref_geom.axes[0].unit
+    energy = geom.axes[0].center * geom.axes[0].unit
 
     exposure = aeff.data.evaluate(offset=offset, energy=energy)
     exposure *= livetime
@@ -50,4 +50,4 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, ref_geom, offset_max
 
     data = exposure.to('m2 s')
 
-    return WcsNDMap(ref_geom, data)
+    return WcsNDMap(geom, data)

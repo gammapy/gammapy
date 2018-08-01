@@ -21,7 +21,7 @@ class MapMaker(object):
 
     Parameters
     ----------
-    ref_geom : `~gammapy.maps.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
@@ -31,19 +31,19 @@ class MapMaker(object):
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, ref_geom, offset_max, cutout_mode="trim"):
+    def __init__(self, geom, offset_max, cutout_mode="trim"):
         self.offset_max = Angle(offset_max)
-        self.ref_geom = ref_geom
+        self.geom = geom
 
         # We instantiate the end products of the MakeMaps class
-        self.counts_map = WcsNDMap(self.ref_geom)
+        self.counts_map = WcsNDMap(self.geom)
 
-        self.exposure_map = WcsNDMap(self.ref_geom, unit="m2 s")
+        self.exposure_map = WcsNDMap(self.geom, unit="m2 s")
 
-        self.background_map = WcsNDMap(self.ref_geom)
+        self.background_map = WcsNDMap(self.geom)
 
         # We will need this general exclusion mask for the analysis
-        self.exclusion_map = WcsNDMap(self.ref_geom)
+        self.exclusion_map = WcsNDMap(self.geom)
         self.exclusion_map.data += 1
 
         self.cutout_mode = cutout_mode
