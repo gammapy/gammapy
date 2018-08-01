@@ -12,8 +12,10 @@ from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstima
 @pytest.fixture
 def mask():
     """Example mask for testing."""
-    filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    return WcsNDMap.read(filename, hdu='EXCLUSION')
+    pos = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
+    exclusion_region = CircleSkyRegion(pos, Angle(0.3, 'deg'))
+    template_map = WcsNDMap.create(skydir=pos, binsz=0.02, width=10.)
+    return template_map.make_region_mask(exclusion_region, inside=False)
 
 
 @pytest.fixture
