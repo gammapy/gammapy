@@ -27,7 +27,7 @@ finder = ReflectedRegionsFinder(
 )
 finder.run()
 
-fig1=plt.figure(1)
+fig1 = plt.figure(1)
 finder.plot(fig=fig1)
 
 # One can impose a minimal distance between two adjacent regions
@@ -39,7 +39,7 @@ finder = ReflectedRegionsFinder(
     min_distance='0.1 rad'
 )
 finder.run()
-fig2=plt.figure(2)
+fig2 = plt.figure(2)
 finder.plot(fig=fig2)
 
 # One can impose a maximal number of regions to be extracted
@@ -54,6 +54,5 @@ finder = ReflectedRegionsFinder(
 finder.run()
 fig3 = plt.figure(3)
 finder.plot(fig=fig3)
-
 
 plt.show()

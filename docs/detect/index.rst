@@ -97,6 +97,13 @@ dataset as above, the corresponding images can be computed using the
 The function returns a dictionary, that bundles all resulting images such as
 significance, flux and correlated counts and excess images.
 
+Using `gammapy.detect`
+======================
+
+:ref:`tutorials` that show examples using ``gammapy.detect``:
+
+* :gp-extra-notebook:`detect_ts`
+
 Reference/API
 =============
 

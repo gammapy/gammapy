@@ -11,7 +11,7 @@ Reflected regions
 Details on the reflected regions method can be found in [Berge2007]_
 
 The following example illustrates how to create reflected regions for a given
-circular on region and exclusion mask.
+circular on region and exclusion mask using the `~gammapy.background.ReflectedRegionsFinder`.
 
 .. plot:: background/make_reflected_regions.py
     :include-source:

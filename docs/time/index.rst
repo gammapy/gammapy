@@ -97,8 +97,8 @@ Some references (please add what you find useful
 * https://github.com/YSOVAR/YSOVAR
 * https://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
 
-Content
-=======
+Using `gammapy.time`
+====================
 
 .. toctree::
    :maxdepth: 1

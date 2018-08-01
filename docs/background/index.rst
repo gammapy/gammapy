@@ -23,7 +23,7 @@ Getting Started
 TODO: example how to read and use a 2D and A 3D background model
 
 Using `gammapy.background`
---------------------------
+==========================
 
 If you'd like to learn more about using `gammapy.background`, read the following
 sub-pages:
