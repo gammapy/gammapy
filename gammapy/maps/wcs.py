@@ -758,7 +758,8 @@ class WcsGeom(MapGeom):
         regions : list of  `~regions.PixelRegion` or `~regions.SkyRegion` objects
             A list of regions on the sky (defined in pixel or sky coordinates).
         inside : bool
-          Output array is set to True inside the input region if inside is set to True and False outside and conversely.
+            Default ``inside=True`` sets pixels in the region to True.
+            For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
@@ -797,7 +798,6 @@ class WcsGeom(MapGeom):
         mask = np.zeros(idx[0].shape, dtype=bool)
 
         for region in regions:
-            # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
             if isinstance(region, SkyRegion):
                 region = region.to_pixel(self.wcs)
             mask += region.contains(pixcoord)
