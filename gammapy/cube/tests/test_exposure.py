@@ -14,8 +14,8 @@ pytest.importorskip('healpy')
 
 @pytest.fixture(scope='session')
 def aeff():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
-    return EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc//caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
+    return EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
 
 def geom(map_type, ebounds):
@@ -33,12 +33,12 @@ def geom(map_type, ebounds):
     {
         'geom': geom(map_type='wcs', ebounds=[0.1, 1, 10]),
         'shape': (2, 3, 4),
-        'sum': 54448477.348027,
+        'sum': 8.103974e+08,
     },
     {
         'geom': geom(map_type='wcs', ebounds=[0.1, 10]),
         'shape': (1, 3, 4),
-        'sum': 31219048.597406,
+        'sum': 2.387916e+08,
     },
     # TODO: make this work for HPX
     # 'HpxGeom' object has no attribute 'separation'
@@ -51,9 +51,11 @@ def geom(map_type, ebounds):
 def test_make_map_exposure_true_energy(aeff, pars):
     m = make_map_exposure_true_energy(
         pointing=SkyCoord(2, 1, unit='deg'),
-        livetime='42 s', aeff=aeff, geom=pars['geom'],
+        livetime='42 s',
+        aeff=aeff,
+        geom=pars['geom'],
     )
 
     assert m.data.shape == pars['shape']
     assert m.unit == 'm2 s'
-    assert_allclose(m.data.sum(), pars['sum'])
+    assert_allclose(m.data.sum(), pars['sum'], rtol=1e-5)

@@ -28,7 +28,7 @@ def make_map_background_irf(pointing, livetime, bkg, geom, n_integration_bins=1)
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
     n_integration_bins : int
-            Number of bins used to integrate on each energy range
+        Number of bins used to integrate on each energy range
 
     Returns
     -------
