@@ -767,7 +767,23 @@ class WcsGeom(MapGeom):
 
         Example
         -------
+        Example building a mask and storing it in a `~gammapy.maps.WcsNDMap' ::
+            from regions import CircleSkyRegion
+            from astropy.coordinates import SkyCoord, Angle
+            from gammapy.maps import WcsNDMap, WcsGeom
 
+            pos = SkyCoord(0.,0., unit='deg')
+            geom = WcsGeom.create(skydir=pos, npix=100, binsz=0.1)
+
+            pos_region = SkyCoord(3.,3., unit='deg')
+            excluded_region = CircleSkyRegion(pos_region, Angle(0.5, 'deg'))
+
+            # We want to exclude points inside excluded_region
+            mask = geom.region_mask([excluded_region], inside=False)
+
+            # Now we create a map
+            mask_map = WcsNDMap(geom=geom, data=mask)
+            mask_map.plot()
         """
         from regions import PixCoord
 
