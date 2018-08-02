@@ -364,13 +364,6 @@ class SpectralModel(object):
         y = flux * np.power(energy, energy_power)
         return y.to(flux.unit * eunit ** energy_power)
 
-    def to_sherpa(self, name='default'):
-        """Convert to Sherpa model.
-
-        To be implemented by subclasses
-        """
-        raise NotImplementedError('{}'.format(self.__class__.__name__))
-
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.
 
@@ -665,21 +658,6 @@ class PowerLaw(SpectralModel):
 
         return self._parse_uarray(uarray) * unit
 
-    def to_sherpa(self, name='default'):
-        """Convert to `sherpa.models.PowLaw1D`.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the sherpa model instance
-        """
-        import sherpa.models as m
-        model = m.PowLaw1D('powlaw1d.' + name)
-        model.gamma = self.parameters['index'].value
-        model.ref = self.parameters['reference'].quantity.to('keV').value
-        model.ampl = self.parameters['amplitude'].quantity.to('cm-2 s-1 keV-1').value
-        return model
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
@@ -870,52 +848,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
-
-    def to_sherpa(self, name='default'):
-        """Convert to a `~sherpa.models.ArithmeticModel`.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the sherpa model instance
-        """
-        from sherpa.models import ArithmeticModel, modelCacher1d, Parameter
-        
-        class SherpaExponentialCutoffPowerLaw(ArithmeticModel):
-            def __init__(self, name='ecpl'):
-                self.gamma = Parameter(name, 'gamma', 2, min=-10, max=10)
-                self.ref = Parameter(name, 'ref', 1, frozen=True)
-                self.ampl = Parameter(name, 'ampl', 1, min=0)
-                self.cutoff = Parameter(name, 'cutoff', 1, min=0, units='1/TeV')
-                ArithmeticModel.__init__(self, name, (self.gamma, self.ref,
-                                                      self.ampl, self.cutoff))
-                self._use_caching = True
-                self.cache = 10
-                
-            @modelCacher1d
-            def calc(self, p, x, xhi=None):
-                kev_to_tev = 1e-9 
-                model = ExponentialCutoffPowerLaw(index=p[0],
-                                                  reference=p[1],
-                                                  amplitude=p[2],
-                                                  lambda_=p[3] * kev_to_tev)
-                if xhi is None:
-                    val = model(x)
-                else:
-                    val = model.integral(x, xhi, intervals=True)
-                            
-                return val
-
-        model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
-        pars = self.parameters
-
-        model.gamma = pars['index'].value
-        model.ref = pars['reference'].quantity.to('keV').value
-        model.ampl = pars['amplitude'].quantity.to('cm-2 s-1 keV-1').value
-        # Sherpa ExponentialCutoffPowerLaw expects cutoff in 1/TeV
-        model.cutoff = pars['lambda_'].quantity.to('TeV-1').value
-
-        return model
 
     @property
     def e_peak(self):
