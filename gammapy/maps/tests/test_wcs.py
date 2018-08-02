@@ -199,3 +199,10 @@ def test_geom_repr():
     geom = WcsGeom.create(skydir=(0, 0), npix=(10, 4), binsz=50,
                           coordsys='GAL', proj='AIT')
     assert geom.__class__.__name__ in repr(geom)
+
+
+def test_geom_refpix():
+    refpix = (400, 300)
+    geom = WcsGeom.create(skydir=(0, 0), npix=(800, 600),
+                          refpix=refpix, binsz=0.1, coordsys='GAL')
+    assert_allclose(geom.wcs.wcs.crpix, refpix)
