@@ -751,8 +751,6 @@ class WcsGeom(MapGeom):
     def region_mask(self, regions, inside=False):
         """Create a mask from a given list of regions
 
-        TODO: implement list of region for each axis
-
         Parameters
         ----------
         regions : list of  `~regions.PixelRegion` or `~regions.SkyRegion` objects
