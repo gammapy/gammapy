@@ -10,6 +10,8 @@ from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
+from . import SpectrumObservationList, SpectrumObservation
+
 
 __all__ = [
     'FluxPoints',
@@ -596,10 +598,12 @@ class FluxPointEstimator(object):
     """
 
     def __init__(self, obs, groups, model):
-        self.obs = obs
+        self.obs = obs.copy()
         self.groups = groups
         self.model = model
         self.flux_points = None
+
+        self._fit = None
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -607,6 +611,18 @@ class FluxPointEstimator(object):
         s += str(self.groups) + '\n'
         s += str(self.model) + '\n'
         return s
+
+    @property
+    def obs(self):
+        """Observations participating in the fit"""
+        return self._obs
+
+    @obs.setter
+    def obs(self, obs):
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+
+        self._obs = SpectrumObservationList(obs)
 
     def compute_points(self):
         rows = []
@@ -645,7 +661,10 @@ class FluxPointEstimator(object):
     @staticmethod
     def compute_approx_model(global_model, energy_group):
         """
-        Compute approximate model, to be used in the energy bin.
+        Compute approximate model
+        
+        This is the model used for the fit in one energy bin.
+
         TODO: At the moment just the global model with fixed parameters is
         returned
         """
@@ -717,7 +736,7 @@ class FluxPointEstimator(object):
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
-            return np.nan * u.Unit(fit.model.parameters['amplitude'].unit)
+            return np.nan * u.Unit(fit.result[0].model.parameters['amplitude'].unit)
 
     def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
         """
@@ -756,39 +775,51 @@ class FluxPointEstimator(object):
     def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
-        energy_min = energy_group.energy_min
-        energy_max = energy_group.energy_max
+        quality_orig = []
 
-        # Set reference and remove min amplitude
+        for index in range(len(self.obs)):
+            # Set quality bins to only bins in energy_group
+            quality_orig_unit = self.obs[index].on_vector.quality
+            quality_len = len(quality_orig_unit)
+            quality_orig.append(quality_orig_unit)
+            quality = np.zeros(quality_len,dtype=int)
+            for bin in range(quality_len):
+                if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (energy_group.bin_type != 'normal'):
+                    quality[bin] = 1
+            self.obs[index].on_vector.quality = quality
+
+        # Set reference to bin center
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
-        fit = SpectrumFit(self.obs, model)
+        self._fit = SpectrumFit(self.obs, model)
 
-        # TODO: Notice channels contained in energy_group
-        fit.fit_range = energy_min, energy_max
+        for index in range(len(quality_orig)):
+            self.obs[index].on_vector.quality = quality_orig[index]
 
         log.debug(
-            'Calling Sherpa fit for flux point '
-            ' in energy range:\n{}'.format(fit)
+            'Calling SpectrumFit for flux point '
+            ' in energy range:\n{}'.format(self._fit)
         )
 
-        fit.fit()
-        fit.est_errors()
+        self._fit.fit()
+        self._fit.est_errors()
 
         # compute TS value for all observations
-        stat_best_fit = np.sum([res.statval for res in fit.result])
+        stat_best_fit = np.sum([res.statval for res in self._fit.result])
 
-        dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
+        dnde, dnde_err = self._fit.result[0].model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(self._fit, stat_best_fit=stat_best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
-        dnde_errp = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
+        dnde_ul = self.compute_flux_point_ul(self._fit, stat_best_fit=stat_best_fit)
+        dnde_errp = self.compute_flux_point_ul(
+            self._fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(
+            self._fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
-            ('e_min', energy_min),
-            ('e_max', energy_max),
+            ('e_min', energy_group.energy_min),
+            ('e_max', energy_group.energy_max),
             ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
             ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
             ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
