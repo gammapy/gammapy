@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from astropy.units import Quantity
 
 __all__ = [
     'fill_map_counts',
@@ -61,7 +62,7 @@ def fill_map_counts(counts_map, events):
             colnames = [_.upper() for _ in events.table.colnames]
             if axis.name.upper() in colnames:
                 column_name = events.table.colnames[colnames.index(axis.name.upper())]
-                coord_dict.update({axis.name: events.table[column_name].to(axis.unit)})
+                coord_dict.update({axis.name: Quantity(events.table[column_name]).to(axis.unit)})
             else:
                 raise ValueError("Cannot find MapGeom axis {!r} in EventList".format(axis.name))
 

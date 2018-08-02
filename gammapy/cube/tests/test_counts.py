@@ -62,11 +62,16 @@ def test_fill_map_counts(geom_opts, events):
 def test_fill_map_counts_hpx(events):
     # This tests healpix maps fill with non standard non spatial axis
 
-    axis = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
-    geom = HpxGeom(256, coordsys='GAL', axes=[axis])
+    axis_det = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
+    # This test to check entries without units in eventlist table do not fail
+    axis_evt = MapAxis(np.linspace(1,130000,100), node_type='edge', name='event_id', unit='')
+
+    geom = HpxGeom(256, coordsys='GAL', axes=[axis_evt, axis_det])
+
     m = Map.from_geom(geom)
 
     fill_map_counts(m, events)
 
     assert m.data[0].sum() == 66697
     assert m.data[1].sum() == 29410
+
