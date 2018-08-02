@@ -63,7 +63,7 @@ def make_map_background_irf(pointing, livetime, bkg, geom, n_integration_bins=1)
     return WcsNDMap(geom, data=data)
 
 
-def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
+def make_map_background_fov(acceptance_map, counts_map, exclusion_mask=None):
     """Build Normalized background map from a given acceptance map and counts map.
 
     This operation is normally performed on single observation maps.
@@ -86,8 +86,11 @@ def make_map_background_fov(acceptance_map, counts_map, exclusion_mask):
     norm_bkg_map : `~gammapy.maps.WcsNDMap`
         Normalized background
     """
-    # We resize the mask
-    mask = np.resize(np.squeeze(exclusion_mask.data), acceptance_map.data.shape)
+    if exclusion_mask is None:
+        mask = np.ones_like(counts_map, dtype=bool)
+    else:
+        # We resize the mask
+        mask = np.resize(np.squeeze(exclusion_mask.data), acceptance_map.data.shape)
 
     # We multiply the data with the mask to obtain normalization factors in each energy bin
     integ_acceptance = np.sum(acceptance_map.data * mask, axis=(1, 2))

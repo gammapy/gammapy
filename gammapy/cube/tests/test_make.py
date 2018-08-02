@@ -61,14 +61,14 @@ def test_map_maker(pars, obs_list):
     )
     maps = maker.run(obs_list)
 
-    counts = maps['counts_map']
+    counts = maps['counts']
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), pars['counts'], rtol=1e-5)
 
-    exposure = maps['exposure_map']
+    exposure = maps['exposure']
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.sum(), pars['exposure'], rtol=1e-5)
 
-    background = maps['background_map']
+    background = maps['background']
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars['background'], rtol=1e-5)

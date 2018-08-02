@@ -4,20 +4,21 @@ import logging
 from astropy.utils.console import ProgressBar
 from astropy.nddata.utils import PartialOverlapError
 from astropy.coordinates import Angle
-from ..maps import WcsNDMap
-from .counts import make_map_counts
+from ..maps import Map, WcsGeom
+from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy
 from .background import make_map_background_irf, make_map_background_fov
 
 __all__ = [
     'MapMaker',
+    'MapMakerObs',
 ]
 
 log = logging.getLogger(__name__)
 
 
 class MapMaker(object):
-    """Make all basic maps from observations.
+    """Make maps from IACT observations.
 
     Parameters
     ----------
@@ -25,83 +26,37 @@ class MapMaker(object):
         Reference image geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask
     cutout_mode : {'trim', 'strict'}, optional
         Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
         Should be left to the default value 'trim'
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, geom, offset_max, cutout_mode="trim"):
+    def __init__(self, geom, offset_max, exclusion_mask=None, cutout_mode="trim"):
+        if not isinstance(geom, WcsGeom):
+            raise ValueError('MapMaker only works with WcsGeom')
+
         if geom.is_image:
             raise ValueError('MapMaker only works with geom with an energy axis')
 
         self.geom = geom
+
         self.offset_max = Angle(offset_max)
 
-        # We instantiate the end products of the MakeMaps class
-        self.counts_map = WcsNDMap(self.geom)
-
-        self.exposure_map = WcsNDMap(self.geom, unit="m2 s")
-
-        self.background_map = WcsNDMap(self.geom)
-
-        # We will need this general exclusion mask for the analysis
-        self.exclusion_map = WcsNDMap(self.geom)
-        self.exclusion_map.data += 1
-
         self.cutout_mode = cutout_mode
-        self.maps = {}
 
-    def process_obs(self, obs):
-        """Process one observation and add it to the cutout image
+        # Start with zero-filled maps
+        self.maps = {
+            'counts': Map.from_geom(self.geom),
+            'exposure': Map.from_geom(self.geom, unit="m2 s"),
+            'background': Map.from_geom(self.geom),
+        }
 
-        Parameters
-        ----------
-        obs : `~gammapy.data.DataStoreObservation`
-            Observation
-        """
-        # First make cutout of the global image
-        try:
-            exclusion_mask_cutout, cutout_slices = self.exclusion_map.make_cutout(
-                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
-            )
-        except PartialOverlapError:
-            # TODO: can we silently do the right thing here? Discuss
-            log.info("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
-            return
-
-        cutout_geom = exclusion_mask_cutout.geom
-
-        offset = exclusion_mask_cutout.geom.separation(obs.pointing_radec)
-        offset_mask = offset >= self.offset_max
-
-        counts_obs_map = make_map_counts(obs.events, cutout_geom)
-        counts_obs_map.data[:, offset_mask] = 0
-
-        expo_obs_map = make_map_exposure_true_energy(
-            obs.pointing_radec, obs.observation_live_time_duration,
-            obs.aeff, cutout_geom
-        )
-        expo_obs_map.data[:, offset_mask] = 0
-
-        acceptance_obs_map = make_map_background_irf(
-            obs.pointing_radec, obs.observation_live_time_duration,
-            obs.bkg, cutout_geom
-        )
-        acceptance_obs_map.data[:, offset_mask] = 0
-
-        background_obs_map = make_map_background_fov(
-            acceptance_obs_map, counts_obs_map, exclusion_mask_cutout,
-        )
-        background_obs_map.data[:, offset_mask] = 0
-
-        self._add_cutouts(cutout_slices, counts_obs_map, expo_obs_map, background_obs_map)
-
-    def _add_cutouts(self, cutout_slices, counts_obs_map, expo_obs_map, acceptance_obs_map):
-        """Add current cutout to global maps."""
-        self.counts_map.data[cutout_slices] += counts_obs_map.data
-        self.exposure_map.data[cutout_slices] += expo_obs_map.quantity.to(self.exposure_map.unit).value
-        self.background_map.data[cutout_slices] += acceptance_obs_map.data
+        # Some background estimation methods need an exclusion mask.
+        if exclusion_mask is not None:
+            self.maps['exclusion'] = exclusion_mask
 
     def run(self, obs_list):
         """
@@ -118,11 +73,107 @@ class MapMaker(object):
         maps: dict of stacked counts, background and exposure maps.
         """
         for obs in ProgressBar(obs_list):
-            self.process_obs(obs)
+            # First make cutout of the global image
+            try:
+                # TODO: this is a hack. We should make cutout better.
+                # See https://github.com/gammapy/gammapy/issues/1608
+                cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
+                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
+                )
+            except PartialOverlapError:
+                # TODO: can we silently do the right thing here? Discuss
+                log.warning("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
+                continue
 
-        self.maps = {
-            'counts_map': self.counts_map,
-            'background_map': self.background_map,
-            'exposure_map': self.exposure_map
-        }
+            log.info('Processing observation {}'.format(obs.obs_id))
+
+            # Compute field of view mask on the cutout
+            offset = cutout_map.geom.separation(obs.pointing_radec)
+            fov_mask = offset >= self.offset_max
+
+            # Only if there is an exclusion mask, make a cutout
+            exclusion_mask = self.maps.get('exclusion', None)
+            if exclusion_mask is not None:
+                exclusion_mask, _ = exclusion_mask.make_cutout(
+                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
+                )
+
+            map_maker_obs = MapMakerObs(
+                obs=obs,
+                geom=cutout_map.geom,
+                fov_mask=fov_mask,
+                exclusion_mask=exclusion_mask,
+            )
+            maps = map_maker_obs.run()
+
+            # Stack maps from this observation into the total maps
+            self.maps['counts'].data[cutout_slices] += maps['counts'].data
+            self.maps['exposure'].data[cutout_slices] += maps['exposure'].quantity.to(self.maps['exposure'].unit).value
+
+            # TODO: decide how to handle the multiple background maps in the interface
+            self.maps['background'].data[cutout_slices] += maps['background_fov'].data
+
         return self.maps
+
+
+class MapMakerObs(object):
+    """Make maps for a single IACT observation.
+
+    Parameters
+    ----------
+    obs : `~gammapy.data.DataStoreObservation`
+        Observation
+    geom : `~gammapy.maps.WcsGeom`
+        Reference image geometry
+    fov_mask : `~numpy.ndarray`
+        Mask to select pixels in field of view
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask (used by some background estimators)
+    """
+
+    def __init__(self, obs, geom, fov_mask=None, exclusion_mask=None):
+        self.obs = obs
+        self.geom = geom
+        self.fov_mask = fov_mask
+        self.exclusion_mask = exclusion_mask
+
+    def run(self):
+        """tbd
+        """
+        counts = Map.from_geom(self.geom)
+        fill_map_counts(counts, self.obs.events)
+        if self.fov_mask is not None:
+            counts.data[..., self.fov_mask] = 0
+
+        exposure = make_map_exposure_true_energy(
+            pointing=self.obs.pointing_radec,
+            livetime=self.obs.observation_live_time_duration,
+            aeff=self.obs.aeff,
+            geom=self.geom,
+        )
+        if self.fov_mask is not None:
+            exposure.data[..., self.fov_mask] = 0
+
+        background_irf = make_map_background_irf(
+            pointing=self.obs.pointing_radec,
+            livetime=self.obs.observation_live_time_duration,
+            bkg=self.obs.bkg,
+            geom=self.geom,
+        )
+        if self.fov_mask is not None:
+            background_irf.data[..., self.fov_mask] = 0
+
+        background_fov = make_map_background_fov(
+            acceptance_map=background_irf,
+            counts_map=counts,
+            exclusion_mask=self.exclusion_mask,
+        )
+        if self.fov_mask is not None:
+            background_fov.data[..., self.fov_mask] = 0
+
+        return {
+            'counts': counts,
+            'exposure': exposure,
+            'background_irf': background_irf,
+            'background_fov': background_fov,
+        }
