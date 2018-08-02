@@ -763,10 +763,11 @@ class WcsGeom(MapGeom):
         Returns
         -------
         mask_map : `~numpy.ndarray` of boolean type
-            the mask map
+            the mask array
 
         Example
         -------
+
         Example building a mask and storing it in a `~gammapy.maps.WcsNDMap' ::
             from regions import CircleSkyRegion
             from astropy.coordinates import SkyCoord, Angle
@@ -799,7 +800,7 @@ class WcsGeom(MapGeom):
             # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
             if isinstance(region, SkyRegion):
                 region = region.to_pixel(self.wcs)
-            mask = np.logical_or(mask, region.contains(pixcoord))
+            mask += region.contains(pixcoord)
 
         if inside is False:
             np.logical_not(mask, out=mask)

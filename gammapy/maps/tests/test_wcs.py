@@ -214,9 +214,12 @@ def test_region_mask():
     region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'),
                              1.0 * u.deg)
 
-    mask = geom.region_mask([region], inside=True)
+    region_out = CircleSkyRegion(SkyCoord(20, 20, unit='deg', frame='galactic'),
+                             1.0 * u.deg)
+
+    mask = geom.region_mask([region, region_out], inside=True)
     assert mask.dtype == bool
     assert np.sum(mask) == 1
 
-    mask = geom.region_mask([region], inside=False)
+    mask = geom.region_mask([region, region_out], inside=False)
     assert np.sum(mask) == 8
