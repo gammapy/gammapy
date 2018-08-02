@@ -393,22 +393,6 @@ def test_coadd_unit():
     assert_allclose(m1.data, 1.0001)
 
 
-def test_make_region_mask():
-    from regions import CircleSkyRegion
-    geom = WcsGeom.create(npix=(3, 3), binsz=2,
-                          proj='CAR', coordsys='GAL')
-    m = WcsNDMap(geom)
-    region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'),
-                             1.0 * u.deg)
-    maskmap = m.make_region_mask(region)
-
-    assert maskmap.data.dtype == bool
-    assert np.sum(maskmap.data) == 1
-
-    maskmap = m.make_region_mask(region, inside=False)
-    assert np.sum(maskmap.data) == 8
-
-
 @requires_dependency('scipy')
 @pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])
 def test_smooth(kernel):

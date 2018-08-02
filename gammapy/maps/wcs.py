@@ -748,31 +748,68 @@ class WcsGeom(MapGeom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def get_region_mask_array(self, region):
-        """Return mask of pixels inside region in the the form of boolean array
+    def region_mask(self, regions, inside=True):
+        """Create a mask from a given list of regions
 
         Parameters
         ----------
-        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
-            A region on the sky could be defined in pixel or sky coordinates.
+        regions : list of  `~regions.Region`
+            Python list of regions (pixel or sky regions accepted)
+        inside : bool
+            For ``inside=True``, pixels in the region to True (the default).
+            For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
-        mask_array : `~numpy.ndarray` of booleans
-            the array of booleans
+        mask_map : `~numpy.ndarray` of boolean type
+            Boolean region mask
+
+        Examples
+        --------
+        Make an exclusion mask for a circular region:
+
+            from regions import CircleSkyRegion
+            from astropy.coordinates import SkyCoord, Angle
+            from gammapy.maps import WcsNDMap, WcsGeom
+
+            pos = SkyCoord(0, 0, unit='deg')
+            geom = WcsGeom.create(skydir=pos, npix=100, binsz=0.1)
+
+            region = CircleSkyRegion(
+                SkyCoord(3, 2, unit='deg'),
+                Angle(1, 'deg'),
+            )
+            mask = geom.region_mask([region], inside=False)
+
+        Note how we made a list with a single region,
+        since this method expects a list of regions.
+
+        The return ``mask`` is a boolean Numpy array.
+        If you want a map object (e.g. for storing in FITS or plotting),
+        this is how you can make the map::
+
+            mask_map = WcsNDMap(geom=geom, data=mask)
+            mask_map.plot()
         """
         from regions import PixCoord
 
         if not self.is_regular:
             raise NotImplementedError("Region mask is not working yet with multi-resolution maps")
 
-        # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
-        if isinstance(region, SkyRegion):
-            region = region.to_pixel(self.wcs)
-
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
-        return region.contains(pixcoord)
+
+        mask = np.zeros(idx[0].shape, dtype=bool)
+
+        for region in regions:
+            if isinstance(region, SkyRegion):
+                region = region.to_pixel(self.wcs)
+            mask += region.contains(pixcoord)
+
+        if inside is False:
+            np.logical_not(mask, out=mask)
+
+        return mask
 
     def __repr__(self):
         str_ = self.__class__.__name__

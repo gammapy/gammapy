@@ -596,28 +596,6 @@ class WcsNDMap(WcsMap):
 
             plt.show()
 
-    def make_region_mask(self, region, inside=True):
-        """Create a mask of a given region
-
-        TODO: implement list of region for each axis
-
-        Parameters
-        ----------
-        region :  `~regions.PixelRegion` or `~regions.SkyRegion` object
-            A region on the sky could be defined in pixel or sky coordinates.
-        inside : bool
-          Output map is True inside the input region if inside is set to True and False outside and conversely.
-
-        Returns
-        -------
-        mask_map : `~gammapy.maps.WcsNDMap`
-            the mask map
-        """
-        mask = self.geom.get_region_mask_array(region)
-        if inside is False:
-            np.logical_not(mask, out=mask)
-        # TODO : update meta table to include something about the region used for mask creation?
-        return self._init_copy(data=mask.astype('bool'))
 
     def smooth(self, radius, kernel='gauss', **kwargs):
         """
