@@ -748,31 +748,47 @@ class WcsGeom(MapGeom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def get_region_mask_array(self, region):
-        """Return mask of pixels inside region in the the form of boolean array
+    def region_mask(self, regions, inside=False):
+        """Create a mask from a given list of regions
+
+        TODO: implement list of region for each axis
 
         Parameters
         ----------
-        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
-            A region on the sky could be defined in pixel or sky coordinates.
+        regions : list of  `~regions.PixelRegion` or `~regions.SkyRegion` objects
+            A list of regions on the sky (defined in pixel or sky coordinates).
+        inside : bool
+          Output array is set to True inside the input region if inside is set to True and False outside and conversely.
 
         Returns
         -------
-        mask_array : `~numpy.ndarray` of booleans
-            the array of booleans
+        mask_map : `~numpy.ndarray` of boolean type
+            the mask map
+
+        Example
+        -------
+
         """
         from regions import PixCoord
 
         if not self.is_regular:
             raise NotImplementedError("Region mask is not working yet with multi-resolution maps")
 
-        # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
-        if isinstance(region, SkyRegion):
-            region = region.to_pixel(self.wcs)
-
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
-        return region.contains(pixcoord)
+
+        mask = np.zeros(idx[0].shape, dtype=bool)
+
+        for region in regions:
+            # TODO : if Pixel Compound regions are taken into account, rather convert to PixelRegion
+            if isinstance(region, SkyRegion):
+                region = region.to_pixel(self.wcs)
+            mask = np.logical_or(mask, region.contains(pixcoord))
+
+        if inside is False:
+            np.logical_not(mask, out=mask)
+
+        return mask
 
     def __repr__(self):
         str_ = self.__class__.__name__
