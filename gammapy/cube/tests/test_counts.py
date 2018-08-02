@@ -64,7 +64,7 @@ def test_fill_map_counts_hpx(events):
 
     axis_det = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
     # This test to check entries without units in eventlist table do not fail
-    axis_evt = MapAxis(np.linspace(1,130000,100), node_type='edge', name='event_id', unit='')
+    axis_evt = MapAxis((0,100000,150000), node_type='edge', name='event_id', unit='')
 
     geom = HpxGeom(256, coordsys='GAL', axes=[axis_evt, axis_det])
 
