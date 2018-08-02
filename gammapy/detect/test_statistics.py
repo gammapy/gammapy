@@ -289,7 +289,7 @@ class TSMapEstimator(object):
         if 'mask' in maps:
             mask.data &= maps['mask'].data
 
-        if p['method'] == 'root newton':
+        if p['threshold'] or p['method'] == 'root newton':
             flux = self.flux_default(maps, kernel).data
         else:
             flux = None
@@ -357,7 +357,7 @@ class TSMapEstimator(object):
 
         return result
 
-    def __str__(self):
+    def __repr__(self):
         """
         Info string.
         """
@@ -409,10 +409,17 @@ def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
 
     if threshold is not None:
         with np.errstate(invalid='ignore', divide='ignore'):
-            c_1 = f_cash(flux[position], counts_, background_, model)
+            amplitude = flux[position]
+            c_1 = f_cash(amplitude / FLUX_FACTOR, counts_, background_, model)
         # Don't fit if pixel significance is low
         if c_0 - c_1 < threshold:
-            return c_0 - c_1, flux[position] * FLUX_FACTOR, 0
+            result = {}
+            result['ts'] = (c_0 - c_1) * np.sign(amplitude)
+            result['flux'] = amplitude
+            result['niter'] = 0
+            result['flux_err'] = np.nan
+            result['flux_ul'] = np.nan
+            return result
 
     if method == 'root brentq':
         amplitude, niter = _root_amplitude_brentq(counts_, background_, model, rtol=rtol)
