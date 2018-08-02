@@ -34,7 +34,7 @@ def geom(ebounds):
         'mode': 'trim',
         'counts': 34366,
         'exposure': 3.99815e+11,
-        'background': 34366,
+        'background': 187528.89,
     },
     {
         # Test single energy bin
@@ -42,7 +42,7 @@ def geom(ebounds):
         'mode': 'trim',
         'counts': 34366,
         'exposure': 1.16866e+11,
-        'background': 34366,
+        'background': 1988492.8,
     },
     {
         # Test strict mode
@@ -50,7 +50,7 @@ def geom(ebounds):
         'mode': 'strict',
         'counts': 21981,
         'exposure': 2.592941e+11,
-        'background': 21981,
+        'background': 121457.695,
     },
 ])
 def test_map_maker(pars, obs_list):

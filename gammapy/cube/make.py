@@ -161,13 +161,16 @@ class MapMakerObs(object):
         if self.fov_mask is not None:
             background.data[..., self.fov_mask] = 0
 
-        background_scale = _fov_background_norm(
-            acceptance_map=background,
-            counts_map=counts,
-            exclusion_mask=self.exclusion_mask,
-        )
-        if self.fov_mask is not None:
-            background.data *= background_scale[:, None, None]
+        # TODO: decide what background modeling options to support
+        # This is not well tested or documented at the moment,
+        # so for now take this out
+        # background_scale = _fov_background_norm(
+        #     acceptance_map=background,
+        #     counts_map=counts,
+        #     exclusion_mask=self.exclusion_mask,
+        # )
+        # if self.fov_mask is not None:
+        #     background.data *= background_scale[:, None, None]
 
         return {
             'counts': counts,
