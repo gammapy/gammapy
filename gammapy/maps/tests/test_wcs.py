@@ -200,26 +200,25 @@ def test_geom_repr():
                           coordsys='GAL', proj='AIT')
     assert geom.__class__.__name__ in repr(geom)
 
+
 def test_geom_refpix():
     refpix = (400, 300)
     geom = WcsGeom.create(skydir=(0, 0), npix=(800, 600),
                           refpix=refpix, binsz=0.1, coordsys='GAL')
     assert_allclose(geom.wcs.wcs.crpix, refpix)
 
+
 def test_region_mask():
     from regions import CircleSkyRegion
-    geom = WcsGeom.create(npix=(3, 3), binsz=2,
-                          proj='CAR', coordsys='GAL')
+    geom = WcsGeom.create(npix=(3, 3), binsz=2, proj='CAR')
 
-    region = CircleSkyRegion(SkyCoord(0, 0, unit='deg', frame='galactic'),
-                             1.0 * u.deg)
+    r1 = CircleSkyRegion(SkyCoord(0, 0, unit='deg'), 1 * u.deg)
+    r2 = CircleSkyRegion(SkyCoord(20, 20, unit='deg'), 1 * u.deg)
+    regions = [r1, r2]
 
-    region_out = CircleSkyRegion(SkyCoord(20, 20, unit='deg', frame='galactic'),
-                             1.0 * u.deg)
-
-    mask = geom.region_mask([region, region_out], inside=True)
+    mask = geom.region_mask(regions)  # default inside=True
     assert mask.dtype == bool
     assert np.sum(mask) == 1
 
-    mask = geom.region_mask([region, region_out], inside=False)
+    mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask) == 8

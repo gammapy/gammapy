@@ -748,40 +748,46 @@ class WcsGeom(MapGeom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def region_mask(self, regions, inside=False):
+    def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
 
         Parameters
         ----------
-        regions : list of  `~regions.PixelRegion` or `~regions.SkyRegion` objects
-            A list of regions on the sky (defined in pixel or sky coordinates).
+        regions : list of  `~regions.Region`
+            Python list of regions (pixel or sky regions accepted)
         inside : bool
-            Default ``inside=True`` sets pixels in the region to True.
+            For ``inside=True``, pixels in the region to True (the default).
             For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
         mask_map : `~numpy.ndarray` of boolean type
-            the mask array
+            Boolean region mask
 
-        Example
-        -------
+        Examples
+        --------
+        Make an exclusion mask for a circular region:
 
-        Example building a mask and storing it in a `~gammapy.maps.WcsNDMap' ::
             from regions import CircleSkyRegion
             from astropy.coordinates import SkyCoord, Angle
             from gammapy.maps import WcsNDMap, WcsGeom
 
-            pos = SkyCoord(0.,0., unit='deg')
+            pos = SkyCoord(0, 0, unit='deg')
             geom = WcsGeom.create(skydir=pos, npix=100, binsz=0.1)
 
-            pos_region = SkyCoord(3.,3., unit='deg')
-            excluded_region = CircleSkyRegion(pos_region, Angle(0.5, 'deg'))
+            region = CircleSkyRegion(
+                SkyCoord(3, 2, unit='deg'),
+                Angle(1, 'deg'),
+            )
+            mask = geom.region_mask([region], inside=False)
 
-            # We want to exclude points inside excluded_region
-            mask = geom.region_mask([excluded_region], inside=False)
+        Note how we made a list with a single region,
+        since this method expects a list of regions.
 
-            # Now we create a map
+        The return ``mask`` is a boolean Numpy array.
+        If you want a map object (e.g. for storing in FITS or plotting),
+        this is how you can make the map::
+
             mask_map = WcsNDMap(geom=geom, data=mask)
             mask_map.plot()
         """
