@@ -2,10 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from astropy.utils.console import ProgressBar
-from astropy.utils import lazyproperty
 from astropy.nddata.utils import PartialOverlapError
 from astropy.coordinates import Angle
-from ..maps import Map
+from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy
 from .background import make_map_background_irf, make_map_background_fov
@@ -27,18 +26,25 @@ class MapMaker(object):
         Reference image geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask
     cutout_mode : {'trim', 'strict'}, optional
         Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
         Should be left to the default value 'trim'
         unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, geom, offset_max, cutout_mode="trim"):
+    def __init__(self, geom, offset_max, exclusion_mask=None, cutout_mode="trim"):
+        if not isinstance(geom, WcsGeom):
+            raise ValueError('MapMaker only works with WcsGeom')
+
         if geom.is_image:
             raise ValueError('MapMaker only works with geom with an energy axis')
 
         self.geom = geom
+
         self.offset_max = Angle(offset_max)
+
         self.cutout_mode = cutout_mode
 
         # Start with zero-filled maps
@@ -49,10 +55,8 @@ class MapMaker(object):
         }
 
         # Some background estimation methods need an exclusion mask.
-        # So let's make one of those
-        exclusion = Map.from_geom(self.geom)
-        exclusion.data += 1
-        self.maps['exclusion'] = exclusion
+        if exclusion_mask is not None:
+            self.maps['exclusion'] = exclusion_mask
 
     def run(self, obs_list):
         """
@@ -71,7 +75,9 @@ class MapMaker(object):
         for obs in ProgressBar(obs_list):
             # First make cutout of the global image
             try:
-                exclusion, cutout_slices = self.maps['exclusion'].make_cutout(
+                # TODO: this is a hack. We should make cutout better.
+                # See https://github.com/gammapy/gammapy/issues/1608
+                cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
                     obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
                 )
             except PartialOverlapError:
@@ -80,11 +86,23 @@ class MapMaker(object):
                 continue
 
             log.info('Processing observation {}'.format(obs.obs_id))
+
+            # Compute field of view mask on the cutout
+            offset = cutout_map.geom.separation(obs.pointing_radec)
+            fov_mask = offset >= self.offset_max
+
+            # Only if there is an exclusion mask, make a cutout
+            exclusion_mask = self.maps.get('exclusion', None)
+            if exclusion_mask is not None:
+                exclusion_mask, _ = exclusion_mask.make_cutout(
+                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
+                )
+
             map_maker_obs = MapMakerObs(
                 obs=obs,
-                geom=exclusion.geom,
-                offset_max=self.offset_max,
-                exclusion=exclusion,
+                geom=cutout_map.geom,
+                fov_mask=fov_mask,
+                exclusion_mask=exclusion_mask,
             )
             maps = map_maker_obs.run()
 
@@ -107,32 +125,25 @@ class MapMakerObs(object):
         Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum offset angle
-    exclusion : `~gammapy.maps.Map`
-        Exclusion mask
+    fov_mask : `~numpy.ndarray`
+        Mask to select pixels in field of view
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask (used by some background estimators)
     """
 
-    def __init__(self, obs, geom, offset_max, exclusion):
+    def __init__(self, obs, geom, fov_mask=None, exclusion_mask=None):
         self.obs = obs
         self.geom = geom
-        self.offset_max = offset_max
-        self.exclusion = exclusion
-
-    @lazyproperty
-    def offset(self):
-        return self.geom.separation(self.obs.pointing_radec)
-
-    @lazyproperty
-    def offset_mask(self):
-        return self.offset >= self.offset_max
+        self.fov_mask = fov_mask
+        self.exclusion_mask = exclusion_mask
 
     def run(self):
         """tbd
         """
         counts = Map.from_geom(self.geom)
         fill_map_counts(counts, self.obs.events)
-        counts.data[:, self.offset_mask] = 0
+        if self.fov_mask is not None:
+            counts.data[..., self.fov_mask] = 0
 
         exposure = make_map_exposure_true_energy(
             pointing=self.obs.pointing_radec,
@@ -140,7 +151,8 @@ class MapMakerObs(object):
             aeff=self.obs.aeff,
             geom=self.geom,
         )
-        exposure.data[:, self.offset_mask] = 0
+        if self.fov_mask is not None:
+            exposure.data[..., self.fov_mask] = 0
 
         background_irf = make_map_background_irf(
             pointing=self.obs.pointing_radec,
@@ -148,14 +160,16 @@ class MapMakerObs(object):
             bkg=self.obs.bkg,
             geom=self.geom,
         )
-        background_irf.data[:, self.offset_mask] = 0
+        if self.fov_mask is not None:
+            background_irf.data[..., self.fov_mask] = 0
 
         background_fov = make_map_background_fov(
             acceptance_map=background_irf,
             counts_map=counts,
-            exclusion_mask=self.exclusion,
+            exclusion_mask=self.exclusion_mask,
         )
-        background_fov.data[:, self.offset_mask] = 0
+        if self.fov_mask is not None:
+            background_fov.data[..., self.fov_mask] = 0
 
         return {
             'counts': counts,
