@@ -40,18 +40,24 @@ def make_map_background_irf(pointing, livetime, bkg, geom, n_integration_bins=1)
     fov_lon = map_coord.skycoord.separation(pointing)
     fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
 
-    data_int = Quantity(np.zeros_like(fov_lat.value), "s^-1 sr^-1")
-
-    for ie, (e_lo, e_hi) in enumerate(zip(ebounds[:-1], ebounds[1:])):
-        data_int[ie, :, :] = bkg.integrate_on_energy_range(
-            fov_lon=fov_lon[0, :, :],
-            fov_lat=fov_lat[0, :, :],
-            energy_range=[e_lo, e_hi],
-            n_integration_bins=n_integration_bins,
-        )
+    if n_integration_bins == 0:
+        energy_reco = map_coord[energy_axis.name] * energy_axis.unit
+        data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
+        d_energy = np.diff(energy_axis.edges) * energy_axis.unit
+        bkg_de = data * d_energy[:, np.newaxis, np.newaxis]
+    else:
+        bkg_de = Quantity(np.zeros_like(fov_lat.value), "s^-1 sr^-1")
+        for idx in range(len(ebounds) - 1):
+            energy_range = ebounds[idx], ebounds[idx + 1]
+            bkg_de[idx, :, :] = bkg.integrate_on_energy_range(
+                fov_lon=fov_lon[0, :, :],
+                fov_lat=fov_lat[0, :, :],
+                energy_range=energy_range,
+                n_integration_bins=n_integration_bins,
+            )
 
     d_omega = geom.solid_angle()
-    data = (data_int * d_omega * livetime).to('').value
+    data = (bkg_de * d_omega * livetime).to('').value
 
     return WcsNDMap(geom, data=data)
 
