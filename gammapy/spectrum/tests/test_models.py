@@ -211,28 +211,6 @@ def test_models(spectrum):
 
 
 @requires_dependency('matplotlib')
-@requires_dependency('sherpa')
-@pytest.mark.parametrize(
-    "spectrum", TEST_MODELS, ids=[_['name'] for _ in TEST_MODELS]
-)
-def test_to_sherpa(spectrum):
-    model = spectrum['model']
-    try:
-        sherpa_model = model.to_sherpa()
-    except NotImplementedError:
-        pass
-    else:
-        test_e = 1.56 * u.TeV
-        desired = model(test_e)
-        actual = sherpa_model(test_e.to('keV').value) * u.Unit('cm-2 s-1 keV-1')
-        assert_quantity_allclose(actual, desired)
-
-    # test plot
-    energy_range = [1, 10] * u.TeV
-    model.plot(energy_range=energy_range)
-
-
-@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
