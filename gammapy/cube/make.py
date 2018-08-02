@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy
-from .background import make_map_background_irf, make_map_background_fov
+from .background import make_map_background_irf, _fov_background_norm
 
 __all__ = [
     'MapMaker',
@@ -109,9 +109,7 @@ class MapMaker(object):
             # Stack maps from this observation into the total maps
             self.maps['counts'].data[cutout_slices] += maps['counts'].data
             self.maps['exposure'].data[cutout_slices] += maps['exposure'].quantity.to(self.maps['exposure'].unit).value
-
-            # TODO: decide how to handle the multiple background maps in the interface
-            self.maps['background'].data[cutout_slices] += maps['background_fov'].data
+            self.maps['background'].data[cutout_slices] += maps['background'].data
 
         return self.maps
 
@@ -154,26 +152,25 @@ class MapMakerObs(object):
         if self.fov_mask is not None:
             exposure.data[..., self.fov_mask] = 0
 
-        background_irf = make_map_background_irf(
+        background = make_map_background_irf(
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
             bkg=self.obs.bkg,
             geom=self.geom,
         )
         if self.fov_mask is not None:
-            background_irf.data[..., self.fov_mask] = 0
+            background.data[..., self.fov_mask] = 0
 
-        background_fov = make_map_background_fov(
-            acceptance_map=background_irf,
+        background_scale = _fov_background_norm(
+            acceptance_map=background,
             counts_map=counts,
             exclusion_mask=self.exclusion_mask,
         )
         if self.fov_mask is not None:
-            background_fov.data[..., self.fov_mask] = 0
+            background.data *= background_scale[:, None, None]
 
         return {
             'counts': counts,
             'exposure': exposure,
-            'background_irf': background_irf,
-            'background_fov': background_fov,
+            'background': background,
         }
