@@ -373,12 +373,19 @@ class WcsGeom(MapGeom):
         else:
             npix = cast_to_shape(npix, shape, int)
 
-        # FIXME: Need to propagate refpix
+        if refpix is None:
+            refpix = (None, None)
 
         header = _make_image_header(
-            npix[0].flat[0], npix[1].flat[0],
-            binsz[0].flat[0], float(xref), float(yref),
-            proj, coordsys, refpix, refpix,
+            nxpix=npix[0].flat[0],
+            nypix=npix[1].flat[0],
+            binsz=binsz[0].flat[0],
+            xref=float(xref),
+            yref=float(yref),
+            proj=proj,
+            coordsys=coordsys,
+            xrefpix=refpix[0],
+            yrefpix=refpix[1],
         )
         wcs = WCS(header)
         return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
