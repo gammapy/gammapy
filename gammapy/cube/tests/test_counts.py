@@ -94,8 +94,7 @@ def test_fill_map_counts_multiple_energy_axes(events):
     cntmap1 = WcsNDMap.create(binsz=1, npix=10, coordsys='GAL', axes=[axis, axis_mc])
     cntmap2 = WcsNDMap.create(binsz=1, npix=10, coordsys='GAL', axes=[axis_mc, axis_reco])
 
-    col_mc = Column(np.ones(len(events.table)) * u.TeV, name='ENERGY_MC')
-    events.table.add_column(col_mc)
+    events.table['ENERGY_MC'] = 1*u.TeV
 
     # Check that energy_mc entries are placed in the right axis
     fill_map_counts(cntmap1, events)

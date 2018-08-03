@@ -55,7 +55,7 @@ def fill_map_counts(counts_map, events):
     cols = {k.upper(): v for k, v in events.table.columns.items()}
 
     for axis in counts_map.geom.axes:
-        if axis.name.lower() in ['energy', 'energy_reco']:
+        if axis.name.upper() in ['ENERGY', 'ENERGY_RECO']:
             # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
             coord_dict[axis.name] = events.energy.to(axis.unit)
         # TODO: add proper extraction for time

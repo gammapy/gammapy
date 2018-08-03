@@ -85,13 +85,20 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
         the input table PSF
     geom : `~gammapy.maps.MapGeom`
         the target geometry. The PSF kernel will be centered on the spatial centre.
-        the geometry axes should contain an energy MapAxis. The kernel will be
-        duplicated along other axes.
+        the geometry axes should contain an energy MapAxis, named 'energy_true' or 'energy'.
+        The kernel will be duplicated along other axes.
     factor : int
         the oversample factor to compute the PSF
     """
     # Find energy axis in geom
-    energy_axis = geom.get_axis_by_type('energy')
+    try:
+        energy_axis = geom.get_axis_by_name('energy_true')
+    except ValueError:
+        try:
+            energy_axis = geom.get_axis_by_name('energy')
+        except:
+            raise ValueError("Cannot find energy axis name.")
+
     energy_idx = geom.axes.index(energy_axis)
     energy_unit = u.Unit(energy_axis.unit)
 
@@ -185,7 +192,7 @@ class PSFKernel(object):
             the input table PSF
         geom : `~gammapy.maps.WcsGeom`
             the target geometry. The PSF kernel will be centered on the central pixel.
-            the geometry axes should contain an energy MapAxis.
+            the geometry axes should contain an energy MapAxis named 'energy' or 'energy_true'.
         max_radius : `~astropy.coordinates.Angle`
             the maximum radius of the PSF kernel.
         factor : int
