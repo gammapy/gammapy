@@ -5,7 +5,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
-from ...maps import MapAxis, WcsGeom, HpxGeom, Map
+from ...maps import MapAxis, WcsGeom, HpxGeom, Map, WcsNDMap
 from ...data import EventList
 from ..counts import fill_map_counts
 
@@ -74,4 +74,12 @@ def test_fill_map_counts_hpx(events):
 
     assert m.data[0].sum() == 66697
     assert m.data[1].sum() == 29410
+
+@requires_data('gammapy-extra')
+def test_fill_map_counts_keyerror(events):
+    axis = MapAxis([0, 1, 2], node_type='edge', name='nokey', unit='')
+    cntmap = WcsNDMap.create(binsz=0.1, npix=10, axes=[axis])
+    with pytest.raises(KeyError):
+        fill_map_counts(cntmap, events)
+
 

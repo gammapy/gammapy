@@ -61,10 +61,9 @@ def fill_map_counts(counts_map, events):
         # TODO: add proper extraction for time
         else:
             # We look for other axes name in the table column names (case insensitive)
-            colnames = [_.upper() for _ in events.table.colnames]
-            if axis.name.upper() in colnames:
+            try:
                 coord_dict[axis.name] = Quantity(cols[axis.name.upper()]).to(axis.unit)
-            else:
-                raise ValueError("Cannot find MapGeom axis {!r} in EventList".format(axis.name))
+            except KeyError:
+                raise KeyError("No column {} found in EventList".format(axis.name))
 
     counts_map.fill_by_coord(coord_dict)
