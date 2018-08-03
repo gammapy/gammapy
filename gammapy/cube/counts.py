@@ -64,6 +64,6 @@ def fill_map_counts(counts_map, events):
             try:
                 coord_dict[axis.name] = Quantity(cols[axis.name.upper()]).to(axis.unit)
             except KeyError:
-                raise KeyError("No column {} found in EventList".format(axis.name))
+                raise KeyError("Column not found in event list: {!r}".format(axis.name))
 
     counts_map.fill_by_coord(coord_dict)

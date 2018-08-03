@@ -64,7 +64,7 @@ def test_fill_map_counts_hpx(events):
 
     axis_det = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
     # This test to check entries without units in eventlist table do not fail
-    axis_evt = MapAxis((0,100000,150000), node_type='edge', name='event_id', unit='')
+    axis_evt = MapAxis((0, 100000, 150000), node_type='edge', name='event_id')
 
     geom = HpxGeom(256, coordsys='GAL', axes=[axis_evt, axis_det])
 
@@ -75,11 +75,10 @@ def test_fill_map_counts_hpx(events):
     assert m.data[0].sum() == 66697
     assert m.data[1].sum() == 29410
 
+
 @requires_data('gammapy-extra')
 def test_fill_map_counts_keyerror(events):
-    axis = MapAxis([0, 1, 2], node_type='edge', name='nokey', unit='')
+    axis = MapAxis([0, 1, 2], node_type='edge', name='nokey')
     cntmap = WcsNDMap.create(binsz=0.1, npix=10, axes=[axis])
     with pytest.raises(KeyError):
         fill_map_counts(cntmap, events)
-
-
