@@ -37,7 +37,6 @@ class SpectralModel(object):
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
-
     def __repr__(self):
         fmt = '{}()'
         return fmt.format(self.__class__.__name__)
@@ -519,11 +518,14 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV):
+                 reference=1 * u.TeV, name=None):
+        if name is None:
+            name = self.__class__.__name__
+        self.name = name
         self.parameters = ParameterList([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, min=0, frozen=True)
+            Parameter(name, 'index', index),
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, min=0, frozen=True)
         ])
 
     @staticmethod

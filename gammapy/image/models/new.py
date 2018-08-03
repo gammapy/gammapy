@@ -28,7 +28,6 @@ __all__ = [
 class SkySpatialModel(object):
     """SkySpatial model base class.
     """
-
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n\nParameters: \n\n\t'
@@ -116,11 +115,14 @@ class SkyGaussian(SkySpatialModel):
         :math:`\sigma`
     """
 
-    def __init__(self, lon_0, lat_0, sigma):
+    def __init__(self, lon_0, lat_0, sigma, name=None):
+        if name is None:
+            name = self.__class__.__name__
+        self.name = name
         self.parameters = ParameterList([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('sigma', Angle(sigma))
+            Parameter(name, 'lon_0', Longitude(lon_0)),
+            Parameter(name, 'lat_0', Latitude(lat_0)),
+            Parameter(name, 'sigma', Angle(sigma))
         ])
 
     @staticmethod

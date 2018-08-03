@@ -21,6 +21,8 @@ class Parameter(object):
 
     Parameters
     ----------
+    modelname : str
+        The name of the model component containing the parameter.
     name : str
         Name
     value : float or `~astropy.units.Quantity`
@@ -34,10 +36,11 @@ class Parameter(object):
     frozen : bool, optional
         Frozen? (used in fitting)
     """
-    __slots__ = ['_name', '_value', '_unit', '_min', '_max', '_frozen']
+    __slots__ = ['_modelname', '_name', '_value', '_unit', '_min', '_max', '_frozen']
 
-    def __init__(self, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
+    def __init__(self, modelname, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
         self.name = name
+        self.modelname = modelname
 
         if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
             self.quantity = value
@@ -56,6 +59,18 @@ class Parameter(object):
     @name.setter
     def name(self, val):
         self._name = str(val)
+
+    @property
+    def modelname(self):
+        return self._modelname
+
+    @modelname.setter
+    def modelname(self, val):
+        self._modelname = str(val)
+
+    @property
+    def fullname(self):
+        return self._modelname + '.' + self.name
 
     @property
     def value(self):
@@ -114,7 +129,7 @@ class Parameter(object):
 
     def to_dict(self):
         return dict(
-            name=self.name,
+            name=self.fullname,
             value=self.value,
             unit=self.unit,
             min=self.min,
@@ -241,7 +256,7 @@ class ParameterList(object):
     @property
     def names(self):
         """List of parameter names"""
-        return [par.name for par in self.parameters]
+        return [par.fullname for par in self.parameters]
 
     @property
     def _ufloats(self):
@@ -289,9 +304,13 @@ class ParameterList(object):
         errors : dict of `~astropy.units.Quantity`
             Dict of parameter errors.
         """
+        for key in errors.keys():
+            if key not in self.names:
+                raise ValueError("Parameter {} not found in {}".format(key,
+                                                                       self))
         diag = []
         for par in self.parameters:
-            error = errors.get(par.name, 0)
+            error = errors.get(par.fullname, 0)
             error = u.Quantity(error, par.unit).value
             diag.append(error)
         self.covariance = np.diag(diag) ** 2

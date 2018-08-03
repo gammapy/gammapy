@@ -85,19 +85,19 @@ def make_minuit_par_kwargs(parameters):
     """
     kwargs = {}
     for par in parameters.parameters:
-        kwargs[par.name] = par.value
+        kwargs[par.fullname] = par.value
 
         min_ = None if np.isnan(par.min) else par.min
         max_ = None if np.isnan(par.max) else par.max
-        kwargs['limit_{}'.format(par.name)] = (min_, max_)
+        kwargs['limit_{}'.format(par.fullname)] = (min_, max_)
 
         if parameters.covariance is None:
-            kwargs['error_{}'.format(par.name)] = 1
+            kwargs['error_{}'.format(par.fullname)] = 1
         else:
-            kwargs['error_{}'.format(par.name)] = parameters.error(par.name)
+            kwargs['error_{}'.format(par.fullname)] = parameters.error(par.name)
 
         if par.frozen:
-            kwargs['fix_{}'.format(par.name)] = True
+            kwargs['fix_{}'.format(par.fullname)] = True
 
     return kwargs
 
