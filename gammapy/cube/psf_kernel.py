@@ -40,8 +40,7 @@ def _compute_kernel_separations(geom, factor):
     separations = angular_separation(center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg)
 
     # Create map
-    kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes),
-                               unit='')
+    kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes))
     return kernel_map, separations
 
 
@@ -84,21 +83,14 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     table_psf : `~gammapy.irf.EnergyDependentTablePSF`
         the input table PSF
     geom : `~gammapy.maps.MapGeom`
-        the target geometry. The PSF kernel will be centered on the spatial centre.
-        the geometry axes should contain an energy MapAxis, named 'energy_true' or 'energy'.
+        the target geometry.
+        The PSF kernel will be centered on the spatial centre.
+        the geometry axes should contain an "energy" axis.
         The kernel will be duplicated along other axes.
     factor : int
         the oversample factor to compute the PSF
     """
-    # Find energy axis in geom
-    try:
-        energy_axis = geom.get_axis_by_name('energy_true')
-    except ValueError:
-        try:
-            energy_axis = geom.get_axis_by_name('energy')
-        except:
-            raise ValueError("Cannot find energy axis name.")
-
+    energy_axis = geom.get_axis_by_name('energy')
     energy_idx = geom.axes.index(energy_axis)
     energy_unit = u.Unit(energy_axis.unit)
 
@@ -107,6 +99,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
 
     # loop over images
     for img, idx in kernel_map.iter_by_image():
+        # TODO: this is super complex. Find or invent a better way!
         energy = energy_axis.center[idx[energy_idx]] * energy_unit
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
         img += vals.value / vals.sum().value
@@ -192,7 +185,7 @@ class PSFKernel(object):
             the input table PSF
         geom : `~gammapy.maps.WcsGeom`
             the target geometry. The PSF kernel will be centered on the central pixel.
-            the geometry axes should contain an energy MapAxis named 'energy' or 'energy_true'.
+            The geometry axes should contain an axis with name "energy"
         max_radius : `~astropy.coordinates.Angle`
             the maximum radius of the PSF kernel.
         factor : int

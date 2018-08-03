@@ -100,12 +100,3 @@ def test_energy_dependent_psf_kernel():
     some_map_convolved = psf_kernel.apply(some_map)
 
     assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), np.array((0, 1, 1)))
-
-    # Now test behaviour if energy axis is not energy or energy_true
-    energy_reco_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy_reco')
-
-    # Create WcsGeom and map
-    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_reco_axis])
-    some_map = Map.from_geom(geom)
-    with pytest.raises(ValueError):
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)

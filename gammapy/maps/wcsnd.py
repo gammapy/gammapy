@@ -555,7 +555,7 @@ class WcsNDMap(WcsMap):
 
         @interact(
             index=widgets.IntSlider(min=0, max=self.data.shape[0] - 1, step=1, value=1,
-                                    description=self.geom.axes_names[0] + ' slice'),
+                                    description=self.geom.axes[0].name + ' slice'),
             stretch=widgets.RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
                                          description='Plot stretch'),
             ax=fixed(ax),
@@ -571,7 +571,7 @@ class WcsNDMap(WcsMap):
             if ax is None:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-            axes = self.geom.get_axis_by_name(self.geom.axes_names[0])
+            axes = self.geom.axes[0]
 
             data = self.get_image_by_idx([index]).data
             norm = simple_norm(data[np.isfinite(data)], stretch)

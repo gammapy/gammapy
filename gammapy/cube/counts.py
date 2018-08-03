@@ -10,8 +10,12 @@ __all__ = [
 def fill_map_counts(counts_map, events):
     """Fill events into a counts map.
 
-    The energy of the events is used for a non-spatial axis homogeneous to energy.
-    The other non-spatial axis names should have an entry in the column names of the event list.
+    This method handles sky coordinates automatically.
+    For all other map axes, an event list table column with the same name
+    has to be present (case-insensitive compare), or a KeyError will be raised.
+
+    Note that this function is just a thin wrapper around the sky map
+    ``fill_by_coord`` method. For more complex scenarios, use that directly.
 
     Parameters
     ----------
@@ -48,22 +52,15 @@ def fill_map_counts(counts_map, events):
     It works for IACT and Fermi-LAT events, for WCS or HEALPix map geometries,
     and also for extra axes. Especially energy axes are automatically handled correctly.
     """
-    # Make a coordinate dictionary; skycoord is always added
-    coord_dict = dict(skycoord=events.radec)
+    coord = dict(skycoord=events.radec)
 
-    # Now add one coordinate for each extra map axis
     cols = {k.upper(): v for k, v in events.table.columns.items()}
 
     for axis in counts_map.geom.axes:
-        if axis.name.upper() in ['ENERGY', 'ENERGY_RECO']:
-            # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
-            coord_dict[axis.name] = events.energy.to(axis.unit)
-        # TODO: add proper extraction for time
-        else:
-            # We look for other axes name in the table column names (case insensitive)
-            try:
-                coord_dict[axis.name] = Quantity(cols[axis.name.upper()]).to(axis.unit)
-            except KeyError:
-                raise KeyError("Column not found in event list: {!r}".format(axis.name))
+        try:
+            col = cols[axis.name.upper()]
+            coord[axis.name] = Quantity(col).to(axis.unit)
+        except KeyError:
+            raise KeyError("Column not found in event list: {!r}".format(axis.name))
 
-    counts_map.fill_by_coord(coord_dict)
+    counts_map.fill_by_coord(coord)

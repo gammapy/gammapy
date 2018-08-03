@@ -36,7 +36,7 @@ def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
     pointing = SkyCoord(0, 0, unit='deg')
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy_true')
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy')
     rad_axis = MapAxis(nodes=np.linspace(0., 1., 51), unit='deg', name='theta')
 
     geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
@@ -54,7 +54,7 @@ def test_psfmap(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
 
     pointing = SkyCoord(0, 0, unit='deg')
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy_true')
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy')
     rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit='deg', name='theta')
 
     geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
@@ -82,11 +82,12 @@ def test_psfmap(tmpdir):
 
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
 
+
 @requires_dependency('scipy')
 def test_containment_radius_map(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit='deg')
-    energy_axis = MapAxis(nodes=[0.2, 1, 2], unit='TeV', name='energy_true')
+    energy_axis = MapAxis(nodes=[0.2, 1, 2], unit='TeV', name='energy')
     psf_theta_axis = MapAxis(nodes=np.linspace(0., 0.6, 30), unit='deg', name='theta')
     geom = WcsGeom.create(skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis])
 
