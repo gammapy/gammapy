@@ -100,8 +100,8 @@ class TestSkyModel:
     @staticmethod
     def test_parameters(sky_model):
         # Check that model parameters are references to the spatial and spectral parts
-        assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
-        assert sky_model.parameters['amplitude'] is sky_model.spectral_model.parameters['amplitude']
+        assert sky_model.parameters['gaussian.lon_0'] is sky_model.spatial_model.parameters['gaussian.lon_0']
+        assert sky_model.parameters['powerlaw.amplitude'] is sky_model.spectral_model.parameters['powerlaw.amplitude']
 
     @staticmethod
     def test_evaluate_scalar(sky_model):
@@ -136,11 +136,11 @@ class TestCompoundSkyModel:
 
     @staticmethod
     def test_parameters(compound_model):
-        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
-        assert compound_model.parameters.names == parnames
+        assert compound_model.parameters.parameters[0].fullname == 'gaussian.lon_0'
+        assert compound_model.parameters.parameters[-1].fullname == 'powerlaw.reference'
 
         # Check that model parameters are references to the parts
-        assert compound_model.parameters['lon_0'] is compound_model.model1.parameters['lon_0']
+        assert compound_model.parameters['gaussian.lon_0'] is compound_model.model1.parameters['gaussian.lon_0']
 
         # Check that parameter assignment works
         assert compound_model.parameters.parameters[-1].value == 1
@@ -169,11 +169,11 @@ class TestSumSkyModel:
 
     @staticmethod
     def test_parameters(sum_model):
-        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
-        assert sum_model.parameters.names == parnames
+        assert sum_model.parameters.parameters[0].fullname == 'gaussian.lon_0'
+        assert sum_model.parameters.parameters[-1].fullname == 'powerlaw.reference'
 
         # Check that model parameters are references to the parts
-        assert sum_model.parameters['lon_0'] is sum_model.components[0].parameters['lon_0']
+        assert sum_model.parameters['gaussian.lon_0'] is sum_model.components[0].parameters['gaussian.lon_0']
 
         # Check that parameter assignment works
         assert sum_model.parameters.parameters[-1].value == 1

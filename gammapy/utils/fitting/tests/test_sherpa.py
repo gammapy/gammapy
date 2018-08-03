@@ -8,9 +8,9 @@ from ..sherpa import fit_sherpa
 
 
 def fcn(parameters):
-    x = parameters['x'].value
-    y = parameters['y'].value
-    z = parameters['z'].value
+    x = parameters['model.x'].value
+    y = parameters['model.y'].value
+    z = parameters['model.z'].value
     return (x - 2) ** 2 + (y - 3) ** 2 + (z - 4) ** 2, 0
 
 
@@ -21,7 +21,8 @@ def fcn(parameters):
 @pytest.mark.parametrize('optimizer', ['moncar', 'simplex'])
 def test_sherpa(optimizer):
     pars = ParameterList(
-        [Parameter('x', 2.2), Parameter('y', 3.4), Parameter('z', 4.5)]
+        [Parameter('model', 'x', 2.2), Parameter('model', 'y', 3.4),
+         Parameter('model', 'z', 4.5)]
     )
 
     result = fit_sherpa(function=fcn, parameters=pars, optimizer=optimizer)
@@ -29,6 +30,6 @@ def test_sherpa(optimizer):
     assert result['success']
     assert result['nfev'] > 10
     assert_allclose(result['statval'], 0, atol=1e-2)
-    assert_allclose(pars['x'].value, 2, rtol=1e-2)
-    assert_allclose(pars['y'].value, 3, rtol=1e-2)
-    assert_allclose(pars['z'].value, 4, rtol=1e-2)
+    assert_allclose(pars['model.x'].value, 2, rtol=1e-2)
+    assert_allclose(pars['model.y'].value, 3, rtol=1e-2)
+    assert_allclose(pars['model.z'].value, 4, rtol=1e-2)

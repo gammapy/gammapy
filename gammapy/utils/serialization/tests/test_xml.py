@@ -28,7 +28,7 @@ def test_from_xml():
         '''
     source_library = SourceLibrary.from_xml(xml)
     sky_model = source_library.skymodels[0]
-    assert_allclose(sky_model.parameters['lon_0'].value, 187.25)
+    assert_allclose(sky_model.parameters['xml_model.lon_0'].value, 187.25)
 
 
 def test_xml_errors():
@@ -64,49 +64,49 @@ def test_complex():
     assert isinstance(model1.spatial_model, spatial.SkyPointSource)
 
     pars1 = model1.parameters
-    assert pars1['index'].value == 2.1
-    assert pars1['index'].unit == ''
-    assert pars1['index'].max is np.nan
-    assert pars1['index'].min is np.nan
-    assert pars1['index'].frozen is False
+    assert pars1['xml_model.index'].value == 2.1
+    assert pars1['xml_model.index'].unit == ''
+    assert pars1['xml_model.index'].max is np.nan
+    assert pars1['xml_model.index'].min is np.nan
+    assert pars1['xml_model.index'].frozen is False
 
-    assert pars1['lon_0'].value == 0.5
-    assert pars1['lon_0'].unit == 'deg'
-    assert pars1['lon_0'].max == 360
-    assert pars1['lon_0'].min == -360
-    assert pars1['lon_0'].frozen is True
+    assert pars1['xml_model.lon_0'].value == 0.5
+    assert pars1['xml_model.lon_0'].unit == 'deg'
+    assert pars1['xml_model.lon_0'].max == 360
+    assert pars1['xml_model.lon_0'].min == -360
+    assert pars1['xml_model.lon_0'].frozen is True
 
-    assert pars1['lat_0'].value == 1.0
-    assert pars1['lat_0'].unit == 'deg'
-    assert pars1['lat_0'].max == 90
-    assert pars1['lat_0'].min == -90
-    assert pars1['lat_0'].frozen is True
+    assert pars1['xml_model.lat_0'].value == 1.0
+    assert pars1['xml_model.lat_0'].unit == 'deg'
+    assert pars1['xml_model.lat_0'].max == 90
+    assert pars1['xml_model.lat_0'].min == -90
+    assert pars1['xml_model.lat_0'].frozen is True
 
     model2 = sourcelib.skymodels[2]
     assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
     assert isinstance(model2.spatial_model, spatial.SkyGaussian)
 
     pars2 = model2.parameters
-    assert pars2['sigma'].unit == 'deg'
-    assert pars2['lambda_'].value == 0.01
-    assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].min is np.nan
-    assert pars2['lambda_'].max is np.nan
-    assert pars2['index'].value == 2.2
-    assert pars2['index'].unit == ''
-    assert pars2['index'].max is np.nan
-    assert pars2['index'].min is np.nan
+    assert pars2['xml_model.sigma'].unit == 'deg'
+    assert pars2['xml_model.lambda_'].value == 0.01
+    assert pars2['xml_model.lambda_'].unit == 'MeV-1'
+    assert pars2['xml_model.lambda_'].min is np.nan
+    assert pars2['xml_model.lambda_'].max is np.nan
+    assert pars2['xml_model.index'].value == 2.2
+    assert pars2['xml_model.index'].unit == ''
+    assert pars2['xml_model.index'].max is np.nan
+    assert pars2['xml_model.index'].min is np.nan
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)
     pars3 = model3.parameters
-    assert pars3['r_0'].unit == 'deg'
+    assert pars3['xml_model.r_0'].unit == 'deg'
 
     model4 = sourcelib.skymodels[4]
     assert isinstance(model4.spatial_model, spatial.SkyShell)
     pars4 = model4.parameters
-    assert pars4['radius'].unit == 'deg'
-    assert pars4['width'].unit == 'deg'
+    assert pars4['xml_model.radius'].unit == 'deg'
+    assert pars4['xml_model.width'].unit == 'deg'
 
     model5 = sourcelib.skymodels[5]
     assert isinstance(model5.spatial_model, spatial.SkyDiffuseMap)

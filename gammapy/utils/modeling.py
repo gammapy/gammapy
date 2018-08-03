@@ -39,8 +39,8 @@ class Parameter(object):
     __slots__ = ['_modelname', '_name', '_value', '_unit', '_min', '_max', '_frozen']
 
     def __init__(self, modelname, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
-        self.name = name
         self.modelname = modelname
+        self.name = name
 
         if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
             self.quantity = value
@@ -53,20 +53,20 @@ class Parameter(object):
         self.frozen = frozen
 
     @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, val):
-        self._name = str(val)
-
-    @property
     def modelname(self):
         return self._modelname
 
     @modelname.setter
     def modelname(self, val):
         self._modelname = str(val)
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, val):
+        self._name = str(val)
 
     @property
     def fullname(self):
@@ -123,13 +123,14 @@ class Parameter(object):
         self.unit = str(par.unit)
 
     def __repr__(self):
-        ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
+        ss = 'Parameter(modelname={modelname!r}, name={name!r}, value={value!r}, unit={unit!r}, '
         ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
         return ss.format(**self.to_dict())
 
     def to_dict(self):
         return dict(
-            name=self.fullname,
+            modelname=self.modelname,
+            name=self.name,
             value=self.value,
             unit=self.unit,
             min=self.min,
@@ -181,7 +182,7 @@ class ParameterList(object):
     def __getitem__(self, name):
         """Access parameter by name"""
         for par in self.parameters:
-            if name == par.name:
+            if name == par.fullname:
                 return par
 
         raise IndexError('Parameter {} not found for : {}'.format(name, self))
@@ -201,7 +202,7 @@ class ParameterList(object):
             if self.covariance is None:
                 vals['error'] = np.nan
             else:
-                vals['error'] = self.error(parameter.name)
+                vals['error'] = self.error(parameter.fullname)
             result.append(vals)
         return result
 
@@ -209,7 +210,7 @@ class ParameterList(object):
         """
         Serialize parameter list into `~astropy.table.Table`
         """
-        names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
+        names = ['modelname', 'name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
                    'error': '.3e',
                    'min': '.3e',
@@ -224,7 +225,8 @@ class ParameterList(object):
     def from_dict(cls, val):
         pars = list()
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'],
+            pars.append(Parameter(modelname=par['modelname'],
+                                  name=par['name'],
                                   value=float(par['value']),
                                   unit=par['unit'],
                                   min=float(par['min']),
@@ -282,7 +284,7 @@ class ParameterList(object):
         """
         Return list of free parameters names.
         """
-        free_pars = [par.name for par in self.parameters if not par.frozen]
+        free_pars = [par.fullname for par in self.parameters if not par.frozen]
         return free_pars
 
     @property
@@ -330,7 +332,7 @@ class ParameterList(object):
         """
         shape = (len(self.parameters), len(self.parameters))
         covariance_new = np.zeros(shape)
-        idx_lookup = dict([(par.name, idx) for idx, par in enumerate(self.parameters)])
+        idx_lookup = dict([(par.fullname, idx) for idx, par in enumerate(self.parameters)])
 
         # TODO: make use of covariance matrix symmetry
         for i, par in enumerate(covar_axis):
@@ -356,7 +358,7 @@ class ParameterList(object):
             raise ValueError('Covariance matrix not set.')
 
         for i, parameter in enumerate(self.parameters):
-            if parameter.name == parname:
+            if parameter.fullname == parname:
                 return np.sqrt(self.covariance[i, i])
         raise ValueError('Could not find parameter {}'.format(parname))
 

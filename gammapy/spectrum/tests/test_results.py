@@ -18,7 +18,7 @@ class TestSpectrumFitResult:
                                        amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
                                        reference=1 * u.TeV)
         self.npred = self.obs.predicted_counts(self.best_fit_model).data.data.value
-        covar_axis = ['index', 'amplitude']
+        covar_axis = ['powerlaw.index', 'powerlaw.amplitude']
         covar = np.diag([0.1 ** 2, 1e-12 ** 2])
         self.best_fit_model.parameters.set_parameter_covariance(covar, covar_axis)
         self.fit_range = [0.1, 50] * u.TeV
@@ -35,7 +35,7 @@ class TestSpectrumFitResult:
     @requires_dependency('uncertainties')
     def test_basic(self):
         assert 'PowerLaw' in str(self.fit_result)
-        assert 'index' in self.fit_result.to_table().colnames
+        assert 'powerlaw.index' in self.fit_result.to_table().colnames
 
     @requires_dependency('yaml')
     def test_io(self, tmpdir):

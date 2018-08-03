@@ -694,8 +694,8 @@ class FluxPointEstimator(object):
         model = fit.result[0].model.copy()
         # this is a prototype for fast flux point upper limit
         # calculation using brentq
-        amplitude = model.parameters['amplitude'].value / 1E-12
-        amplitude_err = model.parameters.error('amplitude') / 1E-12
+        amplitude = model.parameters[model.name + '.amplitude'].value / 1E-12
+        amplitude_err = model.parameters.error(model.name + '.amplitude') / 1E-12
 
         if negative:
             amplitude_max = amplitude
@@ -705,19 +705,19 @@ class FluxPointEstimator(object):
             amplitude_min = amplitude
 
         def ts_diff(x):
-            model.parameters['amplitude'].value = x * 1E-12
+            model.parameters[model.name + '.amplitude'].value = x * 1E-12
             stat = fit.total_stat(model.parameters)
             return (stat_best_fit + delta_ts) - stat
 
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
-            model.parameters['amplitude'].value = result * 1E-12
-            return model(model.parameters['reference'].quantity)
+            model.parameters[model.name + '.amplitude'].value = result * 1E-12
+            return model(model.parameters[model.name + '.reference'].quantity)
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
-            return np.nan * u.Unit(fit.model.parameters['amplitude'].unit)
+            return np.nan * u.Unit(fit.model.parameters[model.name + '.amplitude'].unit)
 
     def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
         """
@@ -740,14 +740,14 @@ class FluxPointEstimator(object):
         """
         model = fit.result[0].model.copy()
         # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = model.parameters['amplitude'].value
+        amplitude = model.parameters[model.name + '.amplitude'].value
 
         # determine TS value for amplitude zero
-        model.parameters['amplitude'].value = 0
+        model.parameters[model.name + '.amplitude'].value = 0
         stat_null = fit.total_stat(model.parameters)
 
         # set amplitude of fit model to best fit amplitude
-        model.parameters['amplitude'].value = amplitude
+        model.parameters[model.name + '.amplitude'].value = amplitude
 
         # compute sqrt TS
         ts = np.abs(stat_null - stat_best_fit)
@@ -760,7 +760,7 @@ class FluxPointEstimator(object):
         energy_max = energy_group.energy_max
 
         # Set reference and remove min amplitude
-        model.parameters['reference'].value = energy_ref.to('TeV').value
+        model.parameters[model.name + '.reference'].value = energy_ref.to('TeV').value
 
         fit = SpectrumFit(self.obs, model)
 

@@ -28,6 +28,10 @@ __all__ = [
 class SkySpatialModel(object):
     """SkySpatial model base class.
     """
+    @property
+    def name(self):
+        return self._name
+
     def __str__(self):
         ss = self.__class__.__name__
         ss += '\n\nParameters: \n\n\t'
@@ -69,12 +73,16 @@ class SkyPointSource(SkySpatialModel):
         :math:`lon_0`
     lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
+    name : str
+        model name
     """
 
-    def __init__(self, lon_0, lat_0):
+
+    def __init__(self, lon_0, lat_0, name='pointsource'):
+        self._name = str(name)
         self.parameters = ParameterList([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0))
+            Parameter(name, 'lon_0', Longitude(lon_0)),
+            Parameter(name, 'lat_0', Latitude(lat_0))
         ])
 
     @staticmethod
@@ -113,12 +121,12 @@ class SkyGaussian(SkySpatialModel):
         :math:`lat_0`
     sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
+    name : str
+        model name
     """
 
-    def __init__(self, lon_0, lat_0, sigma, name=None):
-        if name is None:
-            name = self.__class__.__name__
-        self.name = name
+    def __init__(self, lon_0, lat_0, sigma, name='gaussian'):
+        self._name = str(name)
         self.parameters = ParameterList([
             Parameter(name, 'lon_0', Longitude(lon_0)),
             Parameter(name, 'lat_0', Latitude(lat_0)),
@@ -160,13 +168,16 @@ class SkyDisk(SkySpatialModel):
         :math:`lat_0`
     r_0 : `~astropy.coordinates.Angle`
         :math:`r_0`
+    name : str
+        model name
     """
 
-    def __init__(self, lon_0, lat_0, r_0):
+    def __init__(self, lon_0, lat_0, r_0, name='disk'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('r_0', Angle(r_0))
+            Parameter(name, 'lon_0', Longitude(lon_0)),
+            Parameter(name, 'lat_0', Latitude(lat_0)),
+            Parameter(name, 'r_0', Angle(r_0))
         ])
 
     @staticmethod
@@ -211,14 +222,17 @@ class SkyShell(SkySpatialModel):
         Inner radius, :math:`r_{in}`
     width : `~astropy.coordinates.Angle`
         Shell width
+    name : str
+        model name
     """
 
-    def __init__(self, lon_0, lat_0, radius, width):
+    def __init__(self, lon_0, lat_0, radius, width, name='shell'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('radius', Angle(radius)),
-            Parameter('width', Angle(width))
+            Parameter(name, 'lon_0', Longitude(lon_0)),
+            Parameter(name, 'lat_0', Latitude(lat_0)),
+            Parameter(name, 'radius', Angle(radius)),
+            Parameter(name, 'width', Angle(width))
         ])
 
     @staticmethod
@@ -246,11 +260,14 @@ class SkyDiffuseConstant(SkySpatialModel):
     ----------
     value : `~astropy.units.Quantity`
         Value
+    name : str
+        model name
     """
 
-    def __init__(self, value=1):
+    def __init__(self, value=1, name='constant'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('value', value),
+            Parameter(name, 'value', value),
         ])
 
     @staticmethod
@@ -274,12 +291,15 @@ class SkyDiffuseMap(SkySpatialModel):
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
+    name : str
+        model name
     """
 
-    def __init__(self, map, norm=1, meta=None):
+    def __init__(self, map, norm=1, meta=None, name='map'):
+        self._name = str(name)
         self._map = map
         self.parameters = ParameterList([
-            Parameter('norm', norm),
+            Parameter(name, 'norm', norm),
         ])
         self.meta = dict() if meta is None else meta
 

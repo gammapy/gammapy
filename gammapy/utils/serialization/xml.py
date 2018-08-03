@@ -213,17 +213,17 @@ def xml_to_model(xml, which):
         # Special case models for which the XML definition does not map one to
         # one to the gammapy model definition
         if type_ == 'PowerLaw':
-            model.parameters['index'].value *= -1
-            model.parameters['index'].min = np.nan
-            model.parameters['index'].max = np.nan
+            model.parameters['xml_model.index'].value *= -1
+            model.parameters['xml_model.index'].min = np.nan
+            model.parameters['xml_model.index'].max = np.nan
         if type_ == 'ExponentialCutoffPowerLaw':
-            model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
-            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
-            model.parameters['lambda_'].min = np.nan
-            model.parameters['lambda_'].max = np.nan
-            model.parameters['index'].value *= -1
-            model.parameters['index'].min = np.nan
-            model.parameters['index'].max = np.nan
+            model.parameters['xml_model.lambda_'].value = 1 / model.parameters['xml_model.lambda_'].value
+            model.parameters['xml_model.lambda_'].unit = model.parameters['xml_model.lambda_'].unit + '-1'
+            model.parameters['xml_model.lambda_'].min = np.nan
+            model.parameters['xml_model.lambda_'].max = np.nan
+            model.parameters['xml_model.index'].value *= -1
+            model.parameters['xml_model.index'].min = np.nan
+            model.parameters['xml_model.index'].max = np.nan
 
     return model
 
@@ -248,6 +248,7 @@ def xml_to_parameter_list(xml, which, type_):
         frozen = bool(1 - int(par['@free']))
 
         parameters.append(Parameter(
+            modelname='xml_model',
             name=name,
             value=value,
             unit=unit,

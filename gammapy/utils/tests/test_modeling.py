@@ -7,8 +7,10 @@ from ..modeling import Parameter, ParameterList
 
 
 def test_parameter_init():
-    par = Parameter('spam', 42, 'deg')
+    par = Parameter('model', 'spam', 42, 'deg')
     assert par.name == 'spam'
+    assert par.modelname == 'model'
+    assert par.fullname == 'model.spam'
     assert par.value == 42
     assert par.unit == 'deg'
     assert par.min is np.nan
@@ -17,19 +19,19 @@ def test_parameter_init():
 
 
 def test_parameter_repr():
-    par = Parameter('spam', 42, 'deg')
-    assert repr(par).startswith('Parameter(name=')
+    par = Parameter('model', 'spam', 42, 'deg')
+    assert repr(par).startswith('Parameter(modelname=')
 
 
 def test_parameter_list():
     pars = ParameterList([
-        Parameter('spam', 42, 'deg'),
-        Parameter('ham', 99, 'TeV'),
+        Parameter('model', 'spam', 42, 'deg'),
+        Parameter('model', 'ham', 99, 'TeV'),
     ])
     # This applies a unit transformation
     pars.set_parameter_errors({
-        'ham': '10000 GeV',
+        'model.ham': '10000 GeV',
     })
     assert_allclose(pars.covariance, [[0, 0], [0, 100]])
-    assert_allclose(pars.error('spam'), 0)
-    assert_allclose(pars.error('ham'), 10)
+    assert_allclose(pars.error('model.spam'), 0)
+    assert_allclose(pars.error('model.ham'), 10)

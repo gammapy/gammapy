@@ -94,7 +94,7 @@ def make_minuit_par_kwargs(parameters):
         if parameters.covariance is None:
             kwargs['error_{}'.format(par.fullname)] = 1
         else:
-            kwargs['error_{}'.format(par.fullname)] = parameters.error(par.name)
+            kwargs['error_{}'.format(par.fullname)] = parameters.error(par.fullname)
 
         if par.frozen:
             kwargs['fix_{}'.format(par.fullname)] = True
