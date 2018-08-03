@@ -2,12 +2,14 @@
 """iminuit fitting functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 
 __all__ = [
     'fit_iminuit',
 ]
 
+log = logging.getLogger(__name__)
 
 def fit_iminuit(parameters, function, opts_minuit=None):
     """iminuit optimization
@@ -50,7 +52,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     if minuit.covariance is not None:
         parameters.covariance = _get_covar(minuit)
     else:
-        log.warn("No covariance matrix found")
+        log.warning("No covariance matrix found")
         parameters.covariance = None
 
     return minuit
