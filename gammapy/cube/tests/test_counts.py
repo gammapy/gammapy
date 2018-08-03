@@ -2,83 +2,69 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
-from astropy.coordinates import SkyCoord
+from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
-from ...maps import MapAxis, WcsGeom, HpxGeom, Map, WcsNDMap
+from astropy.table import Table
+from ...utils.testing import requires_dependency
+from ...maps import MapAxis, HpxGeom, Map, WcsNDMap
 from ...data import EventList
 from ..counts import fill_map_counts
 
 pytest.importorskip('scipy')
 
-# TODO: move these two cases to different test functions?
-# Would allow to change the asserts in `test_fill_map_counts` to something much more specific / useful, no?
-axis_energy_reco = MapAxis(np.logspace(-1., 1.5, 10), interp='log', node_type='edge',
-                           name='energy', unit='TeV')
 
-# initial time of run 110380 from cta 1DC
-times = np.linspace(664504199, 664504199 + 1900., 10)
-axis_time = MapAxis(times, node_type='edge', name='time', unit='s')
-
-pos_cta = SkyCoord(0.0, 0.0, frame='galactic', unit='deg')
-
-geom_cta = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
-            'skydir': pos_cta, 'axes': [axis_energy_reco]}
-geom_cta_time = {'binsz': 0.02, 'coordsys': 'GAL', 'width': 15 * u.deg,
-                 'skydir': pos_cta, 'axes': [axis_energy_reco, axis_time]}
-
-
-# TODO: change the test event list to something that's created from scratch,
-# using values so that it's possible to make simple assert statements on the
-# map data in the tests below, i.e. have pixels that should receive 0, 1 or 2 counts
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def events():
-    return EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
+    t = Table()
+    t['EVENT_ID'] = np.array([1, 5], dtype=np.uint16)
+    t['RA'] = [5, 11] * u.deg
+    t['DEC'] = [0, 0] * u.deg
+    t['ENERGY'] = [10, 12] * u.TeV
+    t['TIME'] = [3, 4] * u.s
+    return EventList(t)
 
 
-@requires_data('gammapy-extra')
-@pytest.mark.parametrize('geom_opts', [geom_cta, geom_cta_time])
-def test_fill_map_counts(geom_opts, events):
-    geom = WcsGeom.create(**geom_opts)
-    cntmap = Map.from_geom(geom)
+def test_fill_map_counts_wcs(events):
+    # 2D map
+    m = Map.create(npix=(2, 1), binsz=10)
+    fill_map_counts(m, events)
+    assert_allclose(m.data, [[1, 0]])
 
-    fill_map_counts(cntmap, events)
-
-    # Compute expected number of entries in the map
-    valid = np.ones_like(events.energy.value)
-    for axis in geom.axes:
-        if axis.name == 'energy_reco':
-            valid = np.logical_and(events.energy.value >= axis.edges[0], valid)
-            valid = np.logical_and(events.energy.value <= axis.edges[-1], valid)
-        else:
-            valid = np.logical_and(events.table[axis.name.upper()] >= axis.edges[0], valid)
-            valid = np.logical_and(events.table[axis.name.upper()] <= axis.edges[-1], valid)
-
-    assert cntmap.data.sum() == valid.sum()
+    # 3D with energy axis
+    axis = MapAxis.from_edges([9, 11, 13], name='energy', unit='TeV')
+    m = Map.create(npix=(2, 1), binsz=10, axes=[axis])
+    fill_map_counts(m, events)
+    assert m.data.sum() == 1
+    assert_allclose(m.data[0, 0, 0], 1)
 
 
-@requires_data('gammapy-extra')
 @requires_dependency('healpy')
 def test_fill_map_counts_hpx(events):
-    # This tests healpix maps fill with non standard non spatial axis
-
-    axis_det = MapAxis([-2, 1, 5], node_type='edge', name='detx', unit='deg')
-    # This test to check entries without units in eventlist table do not fail
-    axis_evt = MapAxis((0, 100000, 150000), node_type='edge', name='event_id')
-
-    geom = HpxGeom(256, coordsys='GAL', axes=[axis_evt, axis_det])
-
-    m = Map.from_geom(geom)
-
+    # 2D map
+    m = Map.from_geom(HpxGeom(1))
     fill_map_counts(m, events)
+    assert m.data[4] == 2
 
-    assert m.data[0].sum() == 66697
-    assert m.data[1].sum() == 29410
+    # 3D with energy axis
+    axis = MapAxis.from_edges([9, 11, 13], name='energy', unit='TeV')
+    m = Map.from_geom(HpxGeom(1, axes=[axis]))
+    fill_map_counts(m, events)
+    assert m.data[0, 4] == 1
+    assert m.data[1, 4] == 1
 
 
-@requires_data('gammapy-extra')
 def test_fill_map_counts_keyerror(events):
-    axis = MapAxis([0, 1, 2], node_type='edge', name='nokey')
-    cntmap = WcsNDMap.create(binsz=0.1, npix=10, axes=[axis])
+    axis = MapAxis([0, 1, 2], name='nokey')
+    m = WcsNDMap.create(binsz=0.1, npix=10, axes=[axis])
     with pytest.raises(KeyError):
-        fill_map_counts(cntmap, events)
+        fill_map_counts(m, events)
+
+
+def test_fill_map_counts_uint_column(events):
+    # Check that unsigned int column works.
+    # Regression test for https://github.com/gammapy/gammapy/issues/1620
+    axis = MapAxis.from_edges([0, 3, 6], name='event_id')
+    m = Map.create(npix=(2, 1), binsz=10, axes=[axis])
+    fill_map_counts(m, events)
+    assert m.data.sum() == 1
+    assert_allclose(m.data[0, 0, 0], 1)
