@@ -766,7 +766,7 @@ class WcsGeom(MapGeom):
 
         Examples
         --------
-        Make an exclusion mask for a circular region:
+        Make an exclusion mask for a circular region::
 
             from regions import CircleSkyRegion
             from astropy.coordinates import SkyCoord, Angle
