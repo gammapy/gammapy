@@ -5,7 +5,7 @@ import copy
 import astropy.units as u
 import operator
 from astropy.utils import lazyproperty
-from ..utils.modeling import ParameterList
+from ..utils.modeling import ParameterList, Parameter
 from ..utils.scripts import make_path
 from ..maps import Map
 
@@ -15,6 +15,7 @@ __all__ = [
     'CompoundSkyModel',
     'SumSkyModel',
     'MapEvaluator',
+    'SkyMap3d',
 ]
 
 
@@ -437,3 +438,49 @@ class MapEvaluator(object):
         if self.background:
             npred.data += self.background.data
         return npred.data
+
+
+class SkyMap3d(object):
+    """Cube sky map template model.
+
+    Parameters
+    ----------
+    map : `~gammapy.map.Map`
+        Map template
+    norm : `~astropy.units.Quantity`
+        Norm parameter (multiplied with map values)
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
+    """
+
+    def __init__(self, map, norm=1, meta=None):
+        self._map = map
+        self.parameters = ParameterList([
+            Parameter('norm', norm),
+        ])
+        self.meta = dict() if meta is None else meta
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read spatial template model from FITS image.
+
+
+        Parameters
+        ----------
+        filename : str
+            FITS image filename.
+        """
+        template = Map.read(filename, **kwargs)
+        return cls(template)
+
+    def evaluate(self, lon, lat, energy):
+        coord = dict(
+            lon=lon.to('deg').value,
+            lat=lat.to('deg').value,
+            energy=energy.value,
+        )
+        print(coord)
+        val = self._map.interp_by_coord(coord, fill_value=0)
+        norm = self.parameters['norm'].value
+        # TODO: use map unit? self._map.unit
+        return norm * val * u.Unit('sr-1')

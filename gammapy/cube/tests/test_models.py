@@ -8,6 +8,7 @@ from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
+from ...cube.models import SkyMap3d
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
@@ -270,3 +271,27 @@ class TestSkyModelMapEvaluator:
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 45.02963e-07, rtol=1e-5)
+
+
+@requires_dependency('scipy')
+def test_sky_map_3d():
+    axis = MapAxis.from_edges([0.1,10,1000], name="energy", unit='TeV', interp='log')
+    m = Map.create(npix=(4,3), binsz=2, axes=[axis])
+    m.data += 42
+    model = SkyMap3d(m)
+
+    #TODO: check why energy interpolation is not working properly
+    # Check pixel inside map
+    val = model.evaluate(0 * u.deg, 0*u.deg, 1 *u.TeV)
+    assert val.unit == 'sr-1'
+    assert_allclose(val.value, 42)
+
+    # Check pixel outside map (spatially)
+
+    # Check pixel outside energy range
+
+
+    # TODO: add more tests:
+    # - different model `norm` parameter values / units and map units
+    # - make an input map from scratch with known values
+
