@@ -52,6 +52,8 @@ def fill_map_counts(counts_map, events):
     coord_dict = dict(skycoord=events.radec)
 
     # Now add one coordinate for each extra map axis
+    cols = {k.upper(): v for k, v in events.table.columns.items()}
+
     for axis in counts_map.geom.axes:
         if axis.type == 'energy':
             # This axis is the energy. We treat it differently because axis.name could be e.g. 'energy_reco'
@@ -61,8 +63,7 @@ def fill_map_counts(counts_map, events):
             # We look for other axes name in the table column names (case insensitive)
             colnames = [_.upper() for _ in events.table.colnames]
             if axis.name.upper() in colnames:
-                column_name = events.table.colnames[colnames.index(axis.name.upper())]
-                coord_dict.update({axis.name: Quantity(events.table[column_name]).to(axis.unit)})
+                coord_dict[axis.name] = Quantity(cols[axis.name.upper()]).to(axis.unit)
             else:
                 raise ValueError("Cannot find MapGeom axis {!r} in EventList".format(axis.name))
 
