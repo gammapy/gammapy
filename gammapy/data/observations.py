@@ -46,14 +46,6 @@ class ObservationCTA(object):
         Background rate
     pointing_radec : `~astropy.coordinates.SkyCoord`
         Pointing RA / DEC sky coordinates
-    pointing_altaz : `~astropy.coordinates.SkyCoord`
-        Pointing ALT / AZ sky coordinates
-    pointing_zen : `~astropy.coordinates.SkyCoord`
-        Pointing zenith angle sky
-    observation_time_duration : `~astropy.units.Quantity`
-        Observation time duration in seconds
-
-        The wall time, including dead-time.
     observation_live_time_duration : `~astropy.units.Quantity`
         Live-time duration in seconds
 
@@ -73,22 +65,13 @@ class ObservationCTA(object):
 
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
-    tstart : `~astropy.units.Quantity`
-        Observation start time
-    tstop : `~astropy.units.Quantity`
-        Observation stop time
-    target_radec : `~astropy.coordinates.SkyCoord`
-        Target RA / DEC sky coordinates
-    observatory_earth_location : `~astropy.coordinates.EarthLocation`
-        Observatory location
     meta : `~collections.OrderedDict`
         Dictionary to store metadata
 
     """
     def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
-                 pointing_radec=None, pointing_altaz=None, pointing_zen=None, observation_time_duration=None,
-                 observation_live_time_duration=None, observation_dead_time_fraction=None, tstart=None, tstop=None,
-                 target_radec=None, observatory_earth_location=None, meta=None):
+                 pointing_radec=None, observation_live_time_duration=None, observation_dead_time_fraction=None,
+                 meta=None):
         self.obs_id = obs_id
         self.gti = gti
         self.events = events
@@ -97,15 +80,8 @@ class ObservationCTA(object):
         self.psf = psf
         self.bkg = bkg
         self.pointing_radec = pointing_radec
-        self.pointing_altaz = pointing_altaz
-        self.pointing_zen = pointing_zen
-        self.observation_time_duration = observation_time_duration
         self.observation_live_time_duration = observation_live_time_duration
         self.observation_dead_time_fraction = observation_dead_time_fraction
-        self.tstart = tstart
-        self.tstop = tstop
-        self.target_radec = target_radec
-        self.observatory_earth_location = observatory_earth_location
         if not meta:
             meta = OrderedDict()
         self.meta = meta
@@ -113,11 +89,11 @@ class ObservationCTA(object):
     def __str__(self):
         """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd if self.tstart else 'None')
+        ss += '- Start time: {:.2f}\n'.format(np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None')
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
             self.pointing_radec.ra if self.pointing_radec else 'None',
             self.pointing_radec.dec if self.pointing_radec else 'None')
-        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
+        ss += '- Observation duration: {}\n'.format(self.gti.time_sum if self.gti else 'None')
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
         return ss
