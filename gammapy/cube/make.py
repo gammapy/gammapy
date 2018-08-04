@@ -58,27 +58,36 @@ class MapMaker(object):
         if exclusion_mask is not None:
             self.maps['exclusion'] = exclusion_mask
 
-    def run(self, obs_list):
+    def run(self, obs_list, selection=None):
         """
         Run MapMaker for a list of observations to create
         stacked counts, exposure and background maps
 
         Parameters
         --------------
-        obs_list: `~gammapy.data.ObservationList`
+        obs_list : `~gammapy.data.ObservationList`
             List of observations
+        selection : list
+            List of str, selecting which maps to make.
+            Available: 'counts', 'exposure', 'background'
+            By default, all maps are made.
 
         Returns
         -----------
         maps: dict of stacked counts, background and exposure maps.
         """
+        if selection is None:
+            selection = {'counts', 'exposure', 'background'}
+
         for obs in ProgressBar(obs_list):
             # First make cutout of the global image
             try:
                 # TODO: this is a hack. We should make cutout better.
                 # See https://github.com/gammapy/gammapy/issues/1608
+                # We should always make a per-obs map that covers the
+                # full observation, so that ba
                 cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
-                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
+                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
                 )
             except PartialOverlapError:
                 # TODO: can we silently do the right thing here? Discuss
@@ -95,7 +104,7 @@ class MapMaker(object):
             exclusion_mask = self.maps.get('exclusion', None)
             if exclusion_mask is not None:
                 exclusion_mask, _ = exclusion_mask.make_cutout(
-                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode
+                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
                 )
 
             map_maker_obs = MapMakerObs(
@@ -104,12 +113,18 @@ class MapMaker(object):
                 fov_mask=fov_mask,
                 exclusion_mask=exclusion_mask,
             )
-            maps = map_maker_obs.run()
 
-            # Stack maps from this observation into the total maps
-            self.maps['counts'].data[cutout_slices] += maps['counts'].data
-            self.maps['exposure'].data[cutout_slices] += maps['exposure'].quantity.to(self.maps['exposure'].unit).value
-            self.maps['background'].data[cutout_slices] += maps['background'].data
+            if 'counts' in selection:
+                counts = map_maker_obs.make_counts()
+                self.maps['counts'].data[cutout_slices] += counts.data
+
+            if 'exposure' in selection:
+                exposure = map_maker_obs.make_exposure()
+                self.maps['exposure'].data[cutout_slices] += exposure.quantity.to(self.maps['exposure'].unit).value
+
+            if 'background' in selection:
+                background = map_maker_obs.make_background()
+                self.maps['background'].data[cutout_slices] += background.data
 
         return self.maps
 
@@ -136,13 +151,24 @@ class MapMakerObs(object):
         self.exclusion_mask = exclusion_mask
 
     def run(self):
-        """tbd
+        """Make maps.
+
+        Returns dict with keys "counts", "exposure" and "background".
         """
+        return {
+            'counts': self.make_counts(),
+            'exposure': self.make_exposure(),
+            'background': self.make_background(),
+        }
+
+    def make_counts(self):
         counts = Map.from_geom(self.geom)
         fill_map_counts(counts, self.obs.events)
         if self.fov_mask is not None:
             counts.data[..., self.fov_mask] = 0
+        return counts
 
+    def make_exposure(self):
         exposure = make_map_exposure_true_energy(
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
@@ -151,7 +177,9 @@ class MapMakerObs(object):
         )
         if self.fov_mask is not None:
             exposure.data[..., self.fov_mask] = 0
+        return exposure
 
+    def make_background(self):
         background = make_map_background_irf(
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
@@ -171,9 +199,4 @@ class MapMakerObs(object):
         # )
         # if self.fov_mask is not None:
         #     background.data *= background_scale[:, None, None]
-
-        return {
-            'counts': counts,
-            'exposure': exposure,
-            'background': background,
-        }
+        return background
