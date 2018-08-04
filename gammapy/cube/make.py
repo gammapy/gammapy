@@ -47,12 +47,7 @@ class MapMaker(object):
 
         self.cutout_mode = cutout_mode
 
-        # Start with zero-filled maps
-        self.maps = {
-            'counts': Map.from_geom(self.geom),
-            'exposure': Map.from_geom(self.geom, unit="m2 s"),
-            'background': Map.from_geom(self.geom),
-        }
+        self.maps = {}
 
         # Some background estimation methods need an exclusion mask.
         if exclusion_mask is not None:
@@ -107,24 +102,31 @@ class MapMaker(object):
                     obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
                 )
 
+            # Make maps for this observation
             map_maker_obs = MapMakerObs(
                 obs=obs,
                 geom=cutout_map.geom,
                 fov_mask=fov_mask,
                 exclusion_mask=exclusion_mask,
             )
+            maps_obs = map_maker_obs.run(selection)
 
+            # Stack observation maps to total
             if 'counts' in selection:
-                counts = map_maker_obs.make_counts()
-                self.maps['counts'].data[cutout_slices] += counts.data
+                if 'counts' not in self.maps:
+                    self.maps['counts'] = Map.from_geom(self.geom)
+                self.maps['counts'].data[cutout_slices] += maps_obs['counts'].data
 
             if 'exposure' in selection:
-                exposure = map_maker_obs.make_exposure()
-                self.maps['exposure'].data[cutout_slices] += exposure.quantity.to(self.maps['exposure'].unit).value
+                if 'exposure' not in self.maps:
+                    self.maps['exposure'] = Map.from_geom(self.geom, unit="m2 s")
+                self.maps['exposure'].data[cutout_slices] += maps_obs['exposure'].quantity.to(
+                    self.maps['exposure'].unit).value
 
             if 'background' in selection:
-                background = map_maker_obs.make_background()
-                self.maps['background'].data[cutout_slices] += background.data
+                if 'background' not in self.maps:
+                    self.maps['background'] = Map.from_geom(self.geom)
+                self.maps['background'].data[cutout_slices] += maps_obs['background'].data
 
         return self.maps
 
@@ -149,26 +151,42 @@ class MapMakerObs(object):
         self.geom = geom
         self.fov_mask = fov_mask
         self.exclusion_mask = exclusion_mask
+        self.maps = {}
 
-    def run(self):
+    def run(self, selection=None):
         """Make maps.
 
         Returns dict with keys "counts", "exposure" and "background".
-        """
-        return {
-            'counts': self.make_counts(),
-            'exposure': self.make_exposure(),
-            'background': self.make_background(),
-        }
 
-    def make_counts(self):
+        Parameters
+        ----------
+        selection : list
+            List of str, selecting which maps to make.
+            Available: 'counts', 'exposure', 'background'
+            By default, all maps are made.
+        """
+        if selection is None:
+            selection = {'counts', 'exposure', 'background'}
+
+        if 'counts' in selection:
+            self.maps['counts'] = self._make_counts()
+
+        if 'exposure' in selection:
+            self.maps['exposure'] = self._make_exposure()
+
+        if 'background' in selection:
+            self.maps['background'] = self._make_background()
+
+        return self.maps
+
+    def _make_counts(self):
         counts = Map.from_geom(self.geom)
         fill_map_counts(counts, self.obs.events)
         if self.fov_mask is not None:
             counts.data[..., self.fov_mask] = 0
         return counts
 
-    def make_exposure(self):
+    def _make_exposure(self):
         exposure = make_map_exposure_true_energy(
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
@@ -179,7 +197,7 @@ class MapMakerObs(object):
             exposure.data[..., self.fov_mask] = 0
         return exposure
 
-    def make_background(self):
+    def _make_background(self):
         background = make_map_background_irf(
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
