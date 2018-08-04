@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
+from collections import OrderedDict
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
@@ -13,11 +14,89 @@ from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
 
 __all__ = [
+    'ObservationCTA',
     'DataStoreObservation',
     'ObservationList',
 ]
 
 log = logging.getLogger(__name__)
+
+
+class ObservationCTA(object):
+    """Container class for an CTA observation
+
+    Parameters follow loosely the "Required columns" here:
+    http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/obs_index/index.html#required-columns
+
+    Parameters
+    ----------
+    obs_id : int
+        Observation ID
+    gti : `~gammapy.data.GTI`
+        Good Time Intervals
+    events : `~gammapy.data.EventList`
+        Event list
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`
+        Effective area
+    edisp : `~gammapy.irf.EnergyDispersion2D`
+        Energy dispersion
+    psf : `~gammapy.irf.PSF3D` or `~gammapy.irf.EnergyDependentMultiGaussPSF` or `~gammapy.irf.PSFKing`
+        Tabled Point Spread Function
+    bkg : `~gammapy.irf.Background2D` or `~gammapy.irf.Background3D`
+        Background rate
+    pointing_radec : `~astropy.coordinates.SkyCoord`
+        Pointing RA / DEC sky coordinates
+    observation_live_time_duration : `~astropy.units.Quantity`
+        Live-time duration in seconds
+
+        The dead-time-corrected observation time.
+
+        Computed as ``t_live = t_observation * (1 - f_dead)``
+        where ``f_dead`` is the dead-time fraction.
+    observation_dead_time_fraction : `float`
+        Dead-time fraction
+
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector did not record events:
+        https://en.wikipedia.org/wiki/Dead_time
+        https://adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+    meta : `~collections.OrderedDict`
+        Dictionary to store metadata
+
+    """
+    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
+                 pointing_radec=None, observation_live_time_duration=None, observation_dead_time_fraction=None,
+                 meta=None):
+        self.obs_id = obs_id
+        self.gti = gti
+        self.events = events
+        self.aeff = aeff
+        self.edisp = edisp
+        self.psf = psf
+        self.bkg = bkg
+        self.pointing_radec = pointing_radec
+        self.observation_live_time_duration = observation_live_time_duration
+        self.observation_dead_time_fraction = observation_dead_time_fraction
+        if not meta:
+            meta = OrderedDict()
+        self.meta = meta
+
+    def __str__(self):
+        """Generate summary info string."""
+        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
+        ss += '- Start time: {:.2f}\n'.format(np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None')
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
+            self.pointing_radec.ra if self.pointing_radec else 'None',
+            self.pointing_radec.dec if self.pointing_radec else 'None')
+        ss += '- Observation duration: {}\n'.format(self.gti.time_sum if self.gti else 'None')
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+
+        return ss
 
 
 class DataStoreObservation(object):
