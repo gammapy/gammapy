@@ -10,6 +10,8 @@ from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
+from . import SpectrumObservationList, SpectrumObservation
+
 
 __all__ = [
     'FluxPoints',
@@ -608,6 +610,18 @@ class FluxPointEstimator(object):
         s += str(self.model) + '\n'
         return s
 
+    @property
+    def obs(self):
+        """Observations participating in the fit"""
+        return self._obs
+
+    @obs.setter
+    def obs(self, obs):
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+
+        self._obs = SpectrumObservationList(obs)
+
     def compute_points(self):
         rows = []
         for group in self.groups:
@@ -759,10 +773,26 @@ class FluxPointEstimator(object):
         energy_min = energy_group.energy_min
         energy_max = energy_group.energy_max
 
+        quality_orig = []
+
+        for index in range(len(self.obs)):
+            # Set quality bins to only bins in energy_group
+            quality_orig_unit = self.obs[index].on_vector.quality
+            quality_len = len(quality_orig_unit)
+            quality_orig.append(quality_orig_unit)
+            quality = np.zeros(quality_len,dtype=int)
+            for bin in range(quality_len):
+                if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (energy_group.bin_type != 'normal'):
+                    quality[bin] = 1
+            self.obs[index].on_vector.quality = quality
+
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
         fit = SpectrumFit(self.obs, model)
+
+        for index in range(len(quality_orig)):
+            self.obs[index].on_vector.quality = quality_orig[index]
 
         # TODO: Notice channels contained in energy_group
         fit.fit_range = energy_min, energy_max

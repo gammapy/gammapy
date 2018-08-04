@@ -38,8 +38,8 @@ class SpectrumFit(object):
     forward_folded : bool, default: True
         Fold ``model`` with the IRFs given in ``obs_list``
     fit_range : tuple of `~astropy.units.Quantity`
-        Fit range, will be convolved with observation thresholds. If you want to
-        control which bins are taken into account in the fit for each
+        The intersection between the fit range and the observation thresholds will be used.
+        If you want to control which bins are taken into account in the fit for each
         observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
     method : {'iminuit'}
         Optimization backend for the fit
@@ -180,9 +180,9 @@ class SpectrumFit(object):
             except AttributeError:
                 quality = np.zeros(obs.e_reco.nbins)
 
-            convolved = np.logical_and(1 - quality, 1 - valid_range)
+            intersection = np.logical_and(1 - quality, 1 - valid_range)
 
-            self._bins_in_fit_range.append(convolved)
+            self._bins_in_fit_range.append(intersection)
 
     def predict_counts(self):
         """Predict counts for all observations.
