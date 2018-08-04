@@ -794,9 +794,6 @@ class FluxPointEstimator(object):
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
 
-        # TODO: Notice channels contained in energy_group
-        fit.fit_range = energy_min, energy_max
-
         log.debug(
             'Calling Sherpa fit for flux point '
             ' in energy range:\n{}'.format(fit)
