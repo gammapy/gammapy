@@ -73,13 +73,18 @@ class MapMaker(object):
         """
         selection = _check_selection(selection)
 
+        # Initialise zero-filled maps
+        for name in selection:
+            unit = 'm2 s' if name == 'exposure' else ''
+            self.maps[name] = Map.from_geom(self.geom, unit=unit)
+
         for obs in ProgressBar(obs_list):
             self._process_obs(obs, selection)
 
         return self.maps
 
     def _process_obs(self, obs, selection):
-        # First make cutout of the global image
+        # Compute cutout geometry and slices to stack results back later
         try:
             # TODO: this is a hack. We should make cutout better.
             # See https://github.com/gammapy/gammapy/issues/1608
@@ -115,21 +120,9 @@ class MapMaker(object):
         ).run(selection)
 
         # Stack observation maps to total
-        if 'counts' in selection:
-            if 'counts' not in self.maps:
-                self.maps['counts'] = Map.from_geom(self.geom)
-            self.maps['counts'].data[cutout_slices] += maps_obs['counts'].data
-
-        if 'exposure' in selection:
-            if 'exposure' not in self.maps:
-                self.maps['exposure'] = Map.from_geom(self.geom, unit="m2 s")
-            self.maps['exposure'].data[cutout_slices] += maps_obs['exposure'].quantity.to(
-                self.maps['exposure'].unit).value
-
-        if 'background' in selection:
-            if 'background' not in self.maps:
-                self.maps['background'] = Map.from_geom(self.geom)
-            self.maps['background'].data[cutout_slices] += maps_obs['background'].data
+        for name in selection:
+            data = maps_obs[name].quantity.to(self.maps[name].unit).value
+            self.maps[name].data[cutout_slices] += data
 
 
 class MapMakerObs(object):
@@ -153,11 +146,6 @@ class MapMakerObs(object):
         self.fov_mask = fov_mask
         self.exclusion_mask = exclusion_mask
         self.maps = {}
-        self._methods = {
-            'counts': self._make_counts,
-            'exposure': self._make_exposure,
-            'background': self._make_background,
-        }
 
     def run(self, selection=None):
         """Make maps.
@@ -174,7 +162,7 @@ class MapMakerObs(object):
         selection = _check_selection(selection)
 
         for name in selection:
-            self.maps[name] = self._methods[name]()
+            getattr(self, '_make_' + name)()
 
         return self.maps
 
@@ -183,7 +171,7 @@ class MapMakerObs(object):
         fill_map_counts(counts, self.obs.events)
         if self.fov_mask is not None:
             counts.data[..., self.fov_mask] = 0
-        return counts
+        self.maps['counts'] = counts
 
     def _make_exposure(self):
         exposure = make_map_exposure_true_energy(
@@ -194,7 +182,7 @@ class MapMakerObs(object):
         )
         if self.fov_mask is not None:
             exposure.data[..., self.fov_mask] = 0
-        return exposure
+        self.maps['exposure'] = exposure
 
     def _make_background(self):
         background = make_map_background_irf(
@@ -216,7 +204,7 @@ class MapMakerObs(object):
         # )
         # if self.fov_mask is not None:
         #     background.data *= background_scale[:, None, None]
-        return background
+        self.maps['background'] = background
 
 
 def _check_selection(selection):
