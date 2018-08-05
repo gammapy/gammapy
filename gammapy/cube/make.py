@@ -74,60 +74,62 @@ class MapMaker(object):
         selection = _check_selection(selection)
 
         for obs in ProgressBar(obs_list):
-            # First make cutout of the global image
-            try:
-                # TODO: this is a hack. We should make cutout better.
-                # See https://github.com/gammapy/gammapy/issues/1608
-                # We should always make a per-obs map that covers the
-                # full observation, so that ba
-                cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
-                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
-                )
-            except PartialOverlapError:
-                # TODO: can we silently do the right thing here? Discuss
-                log.warning("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
-                continue
-
-            log.info('Processing observation {}'.format(obs.obs_id))
-
-            # Compute field of view mask on the cutout
-            offset = cutout_map.geom.separation(obs.pointing_radec)
-            fov_mask = offset >= self.offset_max
-
-            # Only if there is an exclusion mask, make a cutout
-            exclusion_mask = self.maps.get('exclusion', None)
-            if exclusion_mask is not None:
-                exclusion_mask, _ = exclusion_mask.make_cutout(
-                    obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
-                )
-
-            # Make maps for this observation
-            map_maker_obs = MapMakerObs(
-                obs=obs,
-                geom=cutout_map.geom,
-                fov_mask=fov_mask,
-                exclusion_mask=exclusion_mask,
-            )
-            maps_obs = map_maker_obs.run(selection)
-
-            # Stack observation maps to total
-            if 'counts' in selection:
-                if 'counts' not in self.maps:
-                    self.maps['counts'] = Map.from_geom(self.geom)
-                self.maps['counts'].data[cutout_slices] += maps_obs['counts'].data
-
-            if 'exposure' in selection:
-                if 'exposure' not in self.maps:
-                    self.maps['exposure'] = Map.from_geom(self.geom, unit="m2 s")
-                self.maps['exposure'].data[cutout_slices] += maps_obs['exposure'].quantity.to(
-                    self.maps['exposure'].unit).value
-
-            if 'background' in selection:
-                if 'background' not in self.maps:
-                    self.maps['background'] = Map.from_geom(self.geom)
-                self.maps['background'].data[cutout_slices] += maps_obs['background'].data
+            self._process_obs(obs, selection)
 
         return self.maps
+
+    def _process_obs(self, obs, selection):
+        # First make cutout of the global image
+        try:
+            # TODO: this is a hack. We should make cutout better.
+            # See https://github.com/gammapy/gammapy/issues/1608
+            # We should always make a per-obs map that covers the
+            # full observation, so that ba
+            cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
+                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
+            )
+        except PartialOverlapError:
+            # TODO: can we silently do the right thing here? Discuss
+            log.warning("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
+            return
+
+        log.info('Processing observation {}'.format(obs.obs_id))
+
+        # Compute field of view mask on the cutout
+        offset = cutout_map.geom.separation(obs.pointing_radec)
+        fov_mask = offset >= self.offset_max
+
+        # Only if there is an exclusion mask, make a cutout
+        exclusion_mask = self.maps.get('exclusion', None)
+        if exclusion_mask is not None:
+            exclusion_mask, _ = exclusion_mask.make_cutout(
+                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
+            )
+
+        # Make maps for this observation
+        maps_obs = MapMakerObs(
+            obs=obs,
+            geom=cutout_map.geom,
+            fov_mask=fov_mask,
+            exclusion_mask=exclusion_mask,
+        ).run(selection)
+
+        # Stack observation maps to total
+        if 'counts' in selection:
+            if 'counts' not in self.maps:
+                self.maps['counts'] = Map.from_geom(self.geom)
+            self.maps['counts'].data[cutout_slices] += maps_obs['counts'].data
+
+        if 'exposure' in selection:
+            if 'exposure' not in self.maps:
+                self.maps['exposure'] = Map.from_geom(self.geom, unit="m2 s")
+            self.maps['exposure'].data[cutout_slices] += maps_obs['exposure'].quantity.to(
+                self.maps['exposure'].unit).value
+
+        if 'background' in selection:
+            if 'background' not in self.maps:
+                self.maps['background'] = Map.from_geom(self.geom)
+            self.maps['background'].data[cutout_slices] += maps_obs['background'].data
 
 
 class MapMakerObs(object):
