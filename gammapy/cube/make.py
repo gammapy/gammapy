@@ -71,8 +71,7 @@ class MapMaker(object):
         -----------
         maps: dict of stacked counts, background and exposure maps.
         """
-        if selection is None:
-            selection = {'counts', 'exposure', 'background'}
+        selection = _check_selection(selection)
 
         for obs in ProgressBar(obs_list):
             # First make cutout of the global image
@@ -152,6 +151,11 @@ class MapMakerObs(object):
         self.fov_mask = fov_mask
         self.exclusion_mask = exclusion_mask
         self.maps = {}
+        self._methods = {
+            'counts': self._make_counts,
+            'exposure': self._make_exposure,
+            'background': self._make_background,
+        }
 
     def run(self, selection=None):
         """Make maps.
@@ -165,17 +169,10 @@ class MapMakerObs(object):
             Available: 'counts', 'exposure', 'background'
             By default, all maps are made.
         """
-        if selection is None:
-            selection = {'counts', 'exposure', 'background'}
+        selection = _check_selection(selection)
 
-        if 'counts' in selection:
-            self.maps['counts'] = self._make_counts()
-
-        if 'exposure' in selection:
-            self.maps['exposure'] = self._make_exposure()
-
-        if 'background' in selection:
-            self.maps['background'] = self._make_background()
+        for name in selection:
+            self.maps[name] = self._methods[name]()
 
         return self.maps
 
@@ -218,3 +215,20 @@ class MapMakerObs(object):
         # if self.fov_mask is not None:
         #     background.data *= background_scale[:, None, None]
         return background
+
+
+def _check_selection(selection):
+    """Handle default and validation of selection"""
+    available = ['counts', 'exposure', 'background']
+
+    if selection is None:
+        selection = available
+
+    if not isinstance(selection, list):
+        raise TypeError('Selection must be a list of str')
+
+    for name in selection:
+        if name not in available:
+            raise ValueError('Selection not available: {!r}'.format(name))
+
+    return selection
