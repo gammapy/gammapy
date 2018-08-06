@@ -5,6 +5,7 @@ from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_equal
 from astropy.coordinates import SkyCoord
+import astropy.units as u
 from astropy.units import Unit, Quantity
 from ..base import Map
 from ..geom import MapAxis
@@ -192,3 +193,28 @@ def test_map_unit_read_write(map_type, unit):
 def test_map_repr(map_type, unit):
     m = Map.create(binsz=0.1, width=10.0, map_type=map_type, unit=unit)
     assert m.__class__.__name__ in repr(m)
+
+
+def test_map_properties():
+    # Test default values and types of all map properties,
+    # as well as the behaviour for the property get and set.
+
+    m = Map.create(npix=(3, 2))
+
+    assert isinstance(m.geom, WcsGeom)
+    m.geom = m.geom
+    assert isinstance(m.geom, WcsGeom)
+
+    assert isinstance(m.unit, u.CompositeUnit)
+    assert m.unit == ''
+    m.unit = 'cm-2 s-1'
+    assert m.unit.to_string() == '1 / (cm2 s)'
+
+    assert isinstance(m.data, np.ndarray)
+    assert m.data.dtype == np.float32
+    assert m.data.shape == (2, 3)
+    assert_equal(m.data, 0)
+
+    assert isinstance(m.meta, OrderedDict)
+    m.meta = {'spam': 42}
+    assert isinstance(m.meta, OrderedDict)
