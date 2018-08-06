@@ -39,7 +39,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     if len(exposure.shape) < 3:
         exposure = np.expand_dims(exposure.value, 0) * exposure.unit
 
-    exposure *= livetime
-    data = exposure.to('m2 s')
+    exposure = (exposure * livetime).to('m2 s')
 
-    return WcsNDMap(geom, data)
+    return WcsNDMap(geom, exposure.value, unit=exposure.unit)
