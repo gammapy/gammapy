@@ -298,3 +298,9 @@ def test_sky_diffuse_cube():
 def test_sky_map_3d_read():
     model = SkyDiffuseCube.read('$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits')
     assert model.map.unit == 'cm-2 s-1 MeV-1 sr-1'
+
+    # Check pixel inside map
+    val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
+    assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
+    assert val.shape == (1,)
+    assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
