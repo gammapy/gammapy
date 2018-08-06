@@ -93,11 +93,11 @@ class Map(object):
     @property
     def unit(self):
         """Map unit (`~astropy.units.Unit`)"""
-        return Unit(self._unit)
+        return self._unit
 
     @unit.setter
     def unit(self, val):
-        self._unit = Unit(val).to_string()
+        self._unit = Unit(val)
 
     @property
     def meta(self):

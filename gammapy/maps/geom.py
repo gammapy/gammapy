@@ -78,7 +78,7 @@ def make_axes_cols(axes, axis_names=None):
 
         for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
             array = np.ravel(v[i])
-            unit = ax.unit.to_string()
+            unit = ax.unit.to_string('fits')
             cols.append(fits.Column(colname, 'E', array=array, unit=unit))
 
     return cols
