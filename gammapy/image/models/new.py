@@ -258,24 +258,25 @@ class SkyDiffuseConstant(SkySpatialModel):
 
 
 class SkyDiffuseMap(SkySpatialModel):
-    """Spatial sky map template model.
+    """Spatial sky map template model (2D).
 
-    At the moment only support 2D maps.
-    TODO: support maps with an energy axis here or in a separate class?
-    TODO: should we cache some interpolator object for efficiency?
+    This is for a 2D image.
+    The map unit is assumed to be ``sr-1``.
+    Use `~gammapy.cube.SkyDiffuseCube` for 3D cubes with an energy axis.
 
     Parameters
     ----------
     map : `~gammapy.map.Map`
         Map template
-    norm : `~astropy.units.Quantity`
+    norm : float
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
 
     def __init__(self, map, norm=1, meta=None):
-        self._map = map
+        self.map = map
+        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
         self.parameters = ParameterList([
             Parameter('norm', norm),
         ])
@@ -290,14 +291,14 @@ class SkyDiffuseMap(SkySpatialModel):
         filename : str
             FITS image filename.
         """
-        template = Map.read(filename, **kwargs)
-        return cls(template)
+        m = Map.read(filename, **kwargs)
+        return cls(m)
 
     def evaluate(self, lon, lat, norm):
+        """Evaluate model."""
         coord = dict(
             lon=lon.to('deg').value,
             lat=lat.to('deg').value,
         )
-        val = self._map.interp_by_coord(coord, fill_value=0)
-        # TODO: use map unit? self._map.unit
+        val = self.map.interp_by_coord(coord, **self._interp_opts)
         return norm * val * u.Unit('sr-1')

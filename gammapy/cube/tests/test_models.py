@@ -8,7 +8,7 @@ from ...utils.testing import requires_dependency
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
-from ...cube.models import SkyMap3d
+from ...cube.models import SkyDiffuseCube
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import (
@@ -274,24 +274,27 @@ class TestSkyModelMapEvaluator:
 
 
 @requires_dependency('scipy')
-def test_sky_map_3d():
-    axis = MapAxis.from_edges([0.1,10,1000], name="energy", unit='TeV', interp='log')
-    m = Map.create(npix=(4,3), binsz=2, axes=[axis])
+def test_sky_diffuse_cube():
+    axis = MapAxis.from_nodes([1, 100], name='energy', unit='TeV', interp='log')
+    m = Map.create(npix=(4, 3), binsz=2, axes=[axis])
     m.data += 42
-    model = SkyMap3d(m)
+    model = SkyDiffuseCube(m)
 
-    #TODO: check why energy interpolation is not working properly
     # Check pixel inside map
-    val = model.evaluate(0 * u.deg, 0*u.deg, 1 *u.TeV)
-    assert val.unit == 'sr-1'
+    val = model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
+    assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
+    assert val.shape == (1,)
     assert_allclose(val.value, 42)
 
     # Check pixel outside map (spatially)
+    val = model.evaluate(100 * u.deg, 0 * u.deg, 10 * u.TeV)
+    assert_allclose(val.value, 0)
 
     # Check pixel outside energy range
+    val = model.evaluate(0 * u.deg, 0 * u.deg, 200 * u.TeV)
+    assert_allclose(val.value, 0)
 
 
-    # TODO: add more tests:
-    # - different model `norm` parameter values / units and map units
-    # - make an input map from scratch with known values
-
+def test_sky_map_3d_read():
+    model = SkyDiffuseCube.read('$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits')
+    assert model.map.unit == 'cm-2 s-1 MeV-1 sr-1'

@@ -15,7 +15,7 @@ __all__ = [
     'CompoundSkyModel',
     'SumSkyModel',
     'MapEvaluator',
-    'SkyMap3d',
+    'SkyDiffuseCube',
 ]
 
 
@@ -275,7 +275,7 @@ class SumSkyModel(object):
         idx = 0
         for component in self.components:
             n_par = len(component.parameters.parameters)
-            component.parameters.parameters = parameters.parameters[idx:idx+n_par]
+            component.parameters.parameters = parameters.parameters[idx:idx + n_par]
             idx += n_par
 
     def evaluate(self, lon, lat, energy):
@@ -440,47 +440,62 @@ class MapEvaluator(object):
         return npred.data
 
 
-class SkyMap3d(object):
-    """Cube sky map template model.
+class SkyDiffuseCube(object):
+    """Cube sky map template model (3D).
+
+    This is for a 3D map with an energy axis.
+    The map unit is assumed to be ``cm-2 s-1 MeV-1 sr-1``.
+    Use `~gammapy.image.models.SkyDiffuseMap` for 2D maps.
 
     Parameters
     ----------
     map : `~gammapy.map.Map`
         Map template
-    norm : `~astropy.units.Quantity`
+    norm : float
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
 
     def __init__(self, map, norm=1, meta=None):
-        self._map = map
+        if len(map.geom.axes) != 1:
+            raise ValueError('Need a map with an energy axis')
+
+        axis = map.geom.axes[0]
+        if axis.name != 'energy':
+            raise ValueError('Need a map with axis of name "energy"')
+
+        if axis.node_type != 'center':
+            raise ValueError('Need a map with energy axis node_type="center"')
+
+        self.map = map
+        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
         self.parameters = ParameterList([
             Parameter('norm', norm),
         ])
-        self.meta = dict() if meta is None else meta
+        self.meta = {} if meta is None else meta
 
     @classmethod
     def read(cls, filename, **kwargs):
-        """Read spatial template model from FITS image.
-
+        """Read map from FITS file.
 
         Parameters
         ----------
         filename : str
             FITS image filename.
         """
-        template = Map.read(filename, **kwargs)
-        return cls(template)
+        m = Map.read(filename, **kwargs)
+        if m.unit == '':
+            m.unit = 'cm-2 s-1 MeV-1 sr-1'
+        return cls(m)
 
     def evaluate(self, lon, lat, energy):
+        """Evaluate model."""
         coord = dict(
             lon=lon.to('deg').value,
             lat=lat.to('deg').value,
-            energy=energy.value,
+            energy=energy.to(self.map.geom.axes[0].unit).value,
         )
-        print(coord)
-        val = self._map.interp_by_coord(coord, fill_value=0)
+        val = self.map.interp_by_coord(coord, **self._interp_opts)
         norm = self.parameters['norm'].value
-        # TODO: use map unit? self._map.unit
-        return norm * val * u.Unit('sr-1')
+        return norm * val * u.Unit('cm-2 s-1 MeV-1 sr-1')
