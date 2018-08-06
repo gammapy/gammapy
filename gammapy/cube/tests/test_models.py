@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
@@ -195,6 +195,57 @@ class TestSumSkyModel:
 
 
 @requires_dependency('scipy')
+class TestSkyDiffuseCube:
+
+    @staticmethod
+    @pytest.fixture()
+    def model():
+        axis = MapAxis.from_nodes([0.1, 100], name='energy', unit='TeV', interp='log')
+        m = Map.create(npix=(4, 3), binsz=2, axes=[axis])
+        m.data += 42
+        return SkyDiffuseCube(m)
+
+    @staticmethod
+    def test_evaluate_scalar(model):
+        # Check pixel inside map
+        val = model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
+        assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
+        assert val.shape == (1, 1, 1)
+        assert_allclose(val.value, 42)
+
+        # Check pixel outside map (spatially)
+        val = model.evaluate(100 * u.deg, 0 * u.deg, 10 * u.TeV)
+        assert_allclose(val.value, 0)
+
+        # Check pixel outside energy range
+        val = model.evaluate(0 * u.deg, 0 * u.deg, 200 * u.TeV)
+        assert_allclose(val.value, 0)
+
+    @staticmethod
+    def test_evaluate_array(model):
+        lon = 1 * u.deg * np.ones(shape=(3, 4))
+        lat = 2 * u.deg * np.ones(shape=(3, 4))
+        energy = [1, 1, 1, 1, 1] * u.TeV
+
+        q = model.evaluate(lon, lat, energy)
+
+        assert q.shape == (5, 3, 4)
+        assert_allclose(q.value.mean(), 42)
+
+    @staticmethod
+    @requires_data('gammapy-extra')
+    def test_read():
+        model = SkyDiffuseCube.read('$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits')
+        assert model.map.unit == 'cm-2 s-1 MeV-1 sr-1'
+
+        # Check pixel inside map
+        val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
+        assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
+        assert val.shape == (1, 1, 1)
+        assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
+
+
+@requires_dependency('scipy')
 class TestSkyModelMapEvaluator:
 
     @staticmethod
@@ -271,36 +322,3 @@ class TestSkyModelMapEvaluator:
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 45.02963e-07, rtol=1e-5)
-
-
-@requires_dependency('scipy')
-def test_sky_diffuse_cube():
-    axis = MapAxis.from_nodes([1, 100], name='energy', unit='TeV', interp='log')
-    m = Map.create(npix=(4, 3), binsz=2, axes=[axis])
-    m.data += 42
-    model = SkyDiffuseCube(m)
-
-    # Check pixel inside map
-    val = model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
-    assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
-    assert val.shape == (1,)
-    assert_allclose(val.value, 42)
-
-    # Check pixel outside map (spatially)
-    val = model.evaluate(100 * u.deg, 0 * u.deg, 10 * u.TeV)
-    assert_allclose(val.value, 0)
-
-    # Check pixel outside energy range
-    val = model.evaluate(0 * u.deg, 0 * u.deg, 200 * u.TeV)
-    assert_allclose(val.value, 0)
-
-
-def test_sky_map_3d_read():
-    model = SkyDiffuseCube.read('$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits')
-    assert model.map.unit == 'cm-2 s-1 MeV-1 sr-1'
-
-    # Check pixel inside map
-    val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
-    assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
-    assert val.shape == (1,)
-    assert_allclose(val.value, 1.396424e-12, rtol=1e-5)

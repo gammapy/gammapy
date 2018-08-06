@@ -296,9 +296,9 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
-        coord = dict(
-            lon=lon.to('deg').value,
-            lat=lat.to('deg').value,
-        )
+        coord = {
+            'lon': lon.to('deg').value,
+            'lat': lat.to('deg').value,
+        }
         val = self.map.interp_by_coord(coord, **self._interp_opts)
         return norm * val * u.Unit('sr-1')

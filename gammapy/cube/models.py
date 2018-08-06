@@ -14,8 +14,8 @@ __all__ = [
     'SkyModel',
     'CompoundSkyModel',
     'SumSkyModel',
-    'MapEvaluator',
     'SkyDiffuseCube',
+    'MapEvaluator',
 ]
 
 
@@ -285,6 +285,70 @@ class SumSkyModel(object):
         return out
 
 
+class SkyDiffuseCube(object):
+    """Cube sky map template model (3D).
+
+    This is for a 3D map with an energy axis.
+    The map unit is assumed to be ``cm-2 s-1 MeV-1 sr-1``.
+    Use `~gammapy.image.models.SkyDiffuseMap` for 2D maps.
+
+    Parameters
+    ----------
+    map : `~gammapy.map.Map`
+        Map template
+    norm : float
+        Norm parameter (multiplied with map values)
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
+    """
+
+    def __init__(self, map, norm=1, meta=None):
+        if len(map.geom.axes) != 1:
+            raise ValueError('Need a map with an energy axis')
+
+        axis = map.geom.axes[0]
+        if axis.name != 'energy':
+            raise ValueError('Need a map with axis of name "energy"')
+
+        if axis.node_type != 'center':
+            raise ValueError('Need a map with energy axis node_type="center"')
+
+        self.map = map
+        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
+        self.parameters = ParameterList([
+            Parameter('norm', norm),
+        ])
+        self.meta = {} if meta is None else meta
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read map from FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            FITS image filename.
+        """
+        m = Map.read(filename, **kwargs)
+        if m.unit == '':
+            m.unit = 'cm-2 s-1 MeV-1 sr-1'
+        return cls(m)
+
+    def evaluate(self, lon, lat, energy):
+        """Evaluate model."""
+        energy = np.atleast_1d(energy)[:, np.newaxis, np.newaxis]
+        energy = energy.to(self.map.geom.axes[0].unit).value
+
+        coord = {
+            'lon': lon.to('deg').value,
+            'lat': lat.to('deg').value,
+            'energy': energy,
+        }
+        val = self.map.interp_by_coord(coord, **self._interp_opts)
+        norm = self.parameters['norm'].value
+        return norm * val * u.Unit('cm-2 s-1 MeV-1 sr-1')
+
+
 class MapEvaluator(object):
     """Sky model evaluation on maps.
 
@@ -438,64 +502,3 @@ class MapEvaluator(object):
         if self.background:
             npred.data += self.background.data
         return npred.data
-
-
-class SkyDiffuseCube(object):
-    """Cube sky map template model (3D).
-
-    This is for a 3D map with an energy axis.
-    The map unit is assumed to be ``cm-2 s-1 MeV-1 sr-1``.
-    Use `~gammapy.image.models.SkyDiffuseMap` for 2D maps.
-
-    Parameters
-    ----------
-    map : `~gammapy.map.Map`
-        Map template
-    norm : float
-        Norm parameter (multiplied with map values)
-    meta : dict, optional
-        Meta information, meta['filename'] will be used for serialization
-    """
-
-    def __init__(self, map, norm=1, meta=None):
-        if len(map.geom.axes) != 1:
-            raise ValueError('Need a map with an energy axis')
-
-        axis = map.geom.axes[0]
-        if axis.name != 'energy':
-            raise ValueError('Need a map with axis of name "energy"')
-
-        if axis.node_type != 'center':
-            raise ValueError('Need a map with energy axis node_type="center"')
-
-        self.map = map
-        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
-        self.parameters = ParameterList([
-            Parameter('norm', norm),
-        ])
-        self.meta = {} if meta is None else meta
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read map from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            FITS image filename.
-        """
-        m = Map.read(filename, **kwargs)
-        if m.unit == '':
-            m.unit = 'cm-2 s-1 MeV-1 sr-1'
-        return cls(m)
-
-    def evaluate(self, lon, lat, energy):
-        """Evaluate model."""
-        coord = dict(
-            lon=lon.to('deg').value,
-            lat=lat.to('deg').value,
-            energy=energy.to(self.map.geom.axes[0].unit).value,
-        )
-        val = self.map.interp_by_coord(coord, **self._interp_opts)
-        norm = self.parameters['norm'].value
-        return norm * val * u.Unit('cm-2 s-1 MeV-1 sr-1')
