@@ -31,7 +31,6 @@ class PrimaryFlux(object):
     """
 
     def __init__(self, mDM, channel):
-        self._table = None
         self.mDM = mDM
         self.channel = channel
 
@@ -39,11 +38,12 @@ class PrimaryFlux(object):
     def table(self):
         """Lookup table"""
         filename = '$GAMMAPY_EXTRA/datasets/dark_matter_spectra/AtProduction_gammas.dat'
-        self._table = Table.read(str(make_path(filename)),
-                                 format='ascii.fast_basic',
-                                 guess=False,
-                                 delimiter=' ')
-        return self._table
+        return Table.read(
+            str(make_path(filename)),
+            format='ascii.fast_basic',
+            guess=False,
+            delimiter=' ',
+        )
 
     @property
     def mDM(self):

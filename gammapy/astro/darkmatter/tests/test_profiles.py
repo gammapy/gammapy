@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .. import profiles
 import pytest
 from ....utils.testing import assert_quantity_allclose
+from .. import profiles
 
 dm_profiles = [
     profiles.NFWProfile,

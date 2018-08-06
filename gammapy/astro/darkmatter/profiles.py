@@ -3,10 +3,10 @@
 Dark matter profiles
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import six
 import abc
 import numpy as np
 import astropy.units as u
+from ...extern import six
 from ...utils.modeling import Parameter, ParameterList
 from ...spectrum.utils import integrate_spectrum
 
