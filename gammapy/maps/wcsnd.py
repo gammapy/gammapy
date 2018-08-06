@@ -199,20 +199,13 @@ class WcsNDMap(WcsMap):
 
         return vals
 
-    def interp_image(self, coords, order=1):
-        if self.geom.ndim == 2:
-            raise ValueError('Operation only supported for maps with one or more '
-                             'non-spatial dimensions.')
-        elif self.geom.ndim == 3:
-            return self._interp_image_cube(coords, order)
-        else:
-            raise NotImplementedError
-
-    def _interp_image_cube(self, coords, order=1):
-        """Interpolate an image plane of a cube."""
-        # TODO: consider re-writing to support maps with > 3 dimensions
-
+    # Currently used by reproject.
+    # TODO: Consider replacing with `interp_by_coord`.
+    def _interp_image(self, coords, order=1):
         from scipy.interpolate import interp1d
+
+        if self.geom.ndim != 3:
+            raise ValueError('Only support geometry with ndim=3 at the moment')
 
         axis = self.geom.axes[0]
         idx = axis.coord_to_idx_interp(coords[0])
@@ -227,8 +220,6 @@ class WcsNDMap(WcsMap):
         else:
             kind = order
             fill_value = None
-
-        # TODO: Cache interpolating function?
 
         fn = interp1d(pix_vals, data, copy=False, axis=0,
                       kind=kind, fill_value=fill_value)
@@ -293,7 +284,7 @@ class WcsNDMap(WcsMap):
                 img = self.data[idx[::-1]]
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
-                img = self.interp_image(coords, order=order).data
+                img = self._interp_image(coords, order=order).data
 
             # FIXME: This is a temporary solution for handling maps
             # with undefined pixels
@@ -340,7 +331,7 @@ class WcsNDMap(WcsMap):
                 img = self.data[idx[::-1]]
             else:
                 coords = axes_pix_to_coord(geom.axes, idx)
-                img = self.interp_image(coords, order=order).data
+                img = self._interp_image(coords, order=order).data
 
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices

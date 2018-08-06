@@ -128,8 +128,6 @@ def test_wcs_nd_map_data_transpose_issue(tmpdir):
     # and then filled via an in-place Numpy array operation
     m.data += data
     assert_equal(m.data, data)
-    # This is done e.g. in `m.interp_image` or probably also other operations,
-    # sometimes they operate on `m.data` in-place.
 
     # Data should be unmodified after write / read to normal image format
     filename = str(tmpdir / 'normal.fits.gz')
