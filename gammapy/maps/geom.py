@@ -911,6 +911,12 @@ class MapGeom(object):
 
     @property
     @abc.abstractmethod
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        pass
+
+    @property
+    @abc.abstractmethod
     def is_allsky(self):
         pass
 

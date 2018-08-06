@@ -199,7 +199,7 @@ def test_map_properties():
     # Test default values and types of all map properties,
     # as well as the behaviour for the property get and set.
 
-    m = Map.create(npix=(3, 2))
+    m = Map.create(npix=(2, 1))
 
     assert isinstance(m.geom, WcsGeom)
     m.geom = m.geom
@@ -210,11 +210,35 @@ def test_map_properties():
     m.unit = 'cm-2 s-1'
     assert m.unit.to_string() == '1 / (cm2 s)'
 
-    assert isinstance(m.data, np.ndarray)
-    assert m.data.dtype == np.float32
-    assert m.data.shape == (2, 3)
-    assert_equal(m.data, 0)
-
     assert isinstance(m.meta, OrderedDict)
     m.meta = {'spam': 42}
     assert isinstance(m.meta, OrderedDict)
+
+    # The rest of the tests are for the `data` property
+
+    assert isinstance(m.data, np.ndarray)
+    assert m.data.dtype == np.float32
+    assert m.data.shape == (1, 2)
+    assert_equal(m.data, 0)
+
+    # Assigning an array of matching shape stores it away
+    data = np.ones((1, 2))
+    m.data = data
+    assert m.data is data
+
+    # In-place modification += should work as expected
+    m.data = np.array([[42, 43]])
+    data = m.data
+    m.data += 1
+    assert m.data is data
+    assert_equal(m.data, [[43, 44]])
+
+    # Assigning to a slice of the map data should work as expected
+    data = m.data
+    m.data[:, :1] = 99
+    assert m.data is data
+    assert_equal(m.data, [[99, 44]])
+
+    # Assigning something that doesn't match raises an appropriate error
+    with pytest.raises(ValueError):
+        m.data = np.ones((1, 3))

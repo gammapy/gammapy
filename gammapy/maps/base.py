@@ -43,13 +43,9 @@ class Map(object):
     """
 
     def __init__(self, geom, data, meta=None, unit=''):
-        self._geom = geom
-        if isinstance(data, Quantity):
-            self._data = data.value
-            self.unit = data.unit
-        else:
-            self._data = data
-            self.unit = unit
+        self.geom = geom
+        self.data = data
+        self.unit = unit
 
         if meta is None:
             self.meta = {}
@@ -76,7 +72,6 @@ class Map(object):
 
     @geom.setter
     def geom(self, val):
-        # TODO: add checks? E.g. shape like below?
         self._geom = val
 
     @property
@@ -86,8 +81,13 @@ class Map(object):
 
     @data.setter
     def data(self, val):
-        if val.shape != self._data.shape:
-            raise ValueError('Wrong shape.')
+        if val.shape != self.geom.data_shape:
+            raise ValueError('Shape {!r} does not match map data shape {!r}'
+                             ''.format(val.shape, self.geom.data_shape))
+
+        if isinstance(val, u.Quantity):
+            raise TypeError('No Quantity allowed in map data. Set data and unit separately.')
+
         self._data = val
 
     @property
@@ -116,9 +116,6 @@ class Map(object):
     @quantity.setter
     def quantity(self, val):
         val = Quantity(val)
-        if val.shape != self.data.shape:
-            raise ValueError('Wrong shape.')
-
         self.data = val.value
         self.unit = val.unit
 

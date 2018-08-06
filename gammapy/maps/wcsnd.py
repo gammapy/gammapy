@@ -45,16 +45,10 @@ class WcsNDMap(WcsMap):
     def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
         # TODO: Figure out how to mask pixels for integer data types
 
-        # Shape in WCS or FITS order is `shape`, in Numpy axis order is `shape_np`
-        shape = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])] +
-                      [ax.nbin for ax in geom.axes])
-        shape_np = shape[::-1]
+        data_shape = geom.data_shape
 
         if data is None:
-            data = self._make_default_data(geom, shape_np, dtype)
-        elif data.shape != shape_np:
-            raise ValueError('Wrong shape for input data array. Expected {} '
-                             'but got {}'.format(shape_np, data.shape))
+            data = self._make_default_data(geom, data_shape, dtype)
 
         super(WcsNDMap, self).__init__(geom, data, meta, unit)
 

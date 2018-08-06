@@ -173,6 +173,13 @@ class WcsGeom(MapGeom):
                                                   self.wcs)
 
     @property
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
+        ax_shape = [ax.nbin for ax in self.axes]
+        return tuple(npix_shape + ax_shape)[::-1]
+
+    @property
     def wcs(self):
         """WCS projection object."""
         return self._wcs
