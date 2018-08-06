@@ -403,9 +403,9 @@ class TestFluxPointFitter:
         model = PowerLaw(index=2.3, amplitude='1e-12 cm-2 s-1 TeV-1', reference='1 TeV')
         result = fitter.run(self.flux_points, model)
 
-        index = result['best-fit-model'].parameters['index']
+        index = result['best-fit-model'].parameters['powerlaw.index']
         assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1e-3)
-        amplitude = result['best-fit-model'].parameters['amplitude']
+        amplitude = result['best-fit-model'].parameters['powerlaw.amplitude']
         assert_quantity_allclose(amplitude.quantity, 2.1616E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1e-3)
         assert_allclose(result['statval'], 25.2059, rtol=1e-3)
         assert_allclose(result['dof'], 22)

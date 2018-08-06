@@ -259,7 +259,7 @@ def test_pwl_index_2_error():
     pars['amplitude'] = 1e-12 * u.Unit('TeV-1 cm-2 s-1')
     pars['reference'] = 1 * u.Unit('TeV')
     pars['index'] = 2 * u.Unit('')
-    errs['amplitude'] = 0.1e-12 * u.Unit('TeV-1 cm-2 s-1')
+    errs['powerlaw.amplitude'] = 0.1e-12 * u.Unit('TeV-1 cm-2 s-1')
 
     pwl = PowerLaw(**pars)
     pwl.parameters.set_parameter_errors(errs)

@@ -101,17 +101,17 @@ def counts(sky_model, exposure, background, psf, edisp):
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
 def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
-    sky_model.parameters['lon_0'].value = 0.5
-    sky_model.parameters['lat_0'].value = 0.5
-    sky_model.parameters['index'].value = 2
-    sky_model.parameters['sigma'].frozen = True
+    sky_model.parameters['gaussian.lon_0'].value = 0.5
+    sky_model.parameters['gaussian.lat_0'].value = 0.5
+    sky_model.parameters['powerlaw.index'].value = 2
+    sky_model.parameters['gaussian.sigma'].frozen = True
 
     sky_model.parameters.set_parameter_errors({
-        'lon_0': '0.01 deg',
-        'lat_0': '0.01 deg',
-        'sigma': '0.02 deg',
-        'index': 0.1,
-        'amplitude': '1e-13 cm-2 s-1 TeV-1',
+        'gaussian.lon_0': '0.01 deg',
+        'gaussian.lat_0': '0.01 deg',
+        'gaussian.sigma': '0.02 deg',
+        'powerlaw.index': 0.1,
+        'powerlaw.amplitude': '1e-13 cm-2 s-1 TeV-1',
     })
 
     fit = MapFit(
@@ -126,17 +126,17 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     pars = fit.model.parameters
 
     assert sky_model is fit.model
-    assert sky_model.parameters['lon_0'] is fit.model.parameters['lon_0']
-    assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+    assert sky_model.parameters['gaussian.lon_0'] is fit.model.parameters['gaussian.lon_0']
+    assert sky_model.parameters['gaussian.lon_0'] is sky_model.spatial_model.parameters['gaussian.lon_0']
 
-    assert_allclose(pars['lon_0'].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error('lon_0'), 0.005895, rtol=1e-2)
+    assert_allclose(pars['gaussian.lon_0'].value, 0.2, rtol=1e-2)
+    assert_allclose(pars.error('gaussian.lon_0'), 0.005895, rtol=1e-2)
 
-    assert_allclose(pars['index'].value, 3, rtol=1e-2)
-    assert_allclose(pars.error('index'), 0.05614, rtol=1e-2)
+    assert_allclose(pars['powerlaw.index'].value, 3, rtol=1e-2)
+    assert_allclose(pars.error('powerlaw.index'), 0.05614, rtol=1e-2)
 
-    assert_allclose(pars['amplitude'].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error('amplitude'), 3.936e-13, rtol=1e-2)
+    assert_allclose(pars['powerlaw.amplitude'].value, 1e-11, rtol=1e-2)
+    assert_allclose(pars.error('powerlaw.amplitude'), 3.936e-13, rtol=1e-2)
 
     stat = np.sum(fit.stat, dtype='float64')
     stat_expected = 3840.0605649268496

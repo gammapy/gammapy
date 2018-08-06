@@ -430,7 +430,7 @@ class SpectrumFit(object):
 
         # create tuples of combinations
         d = self._model.parameters.to_dict()
-        parameter_names = [l['name'] for l in d['parameters'] if not l['frozen']]
+        parameter_names = [l['modelname'] + '.' + l['name'] for l in d['parameters'] if not l['frozen']]
         self.covar_axis = parameter_names
         parameter_combinations = list(product(parameter_names, repeat=2))
 

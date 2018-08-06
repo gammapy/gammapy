@@ -21,6 +21,8 @@ class Parameter(object):
 
     Parameters
     ----------
+    modelname : str
+        The name of the model component containing the parameter.
     name : str
         Name
     value : float or `~astropy.units.Quantity`
@@ -34,9 +36,10 @@ class Parameter(object):
     frozen : bool, optional
         Frozen? (used in fitting)
     """
-    __slots__ = ['_name', '_value', '_unit', '_min', '_max', '_frozen']
+    __slots__ = ['_modelname', '_name', '_value', '_unit', '_min', '_max', '_frozen']
 
-    def __init__(self, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
+    def __init__(self, modelname, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
+        self.modelname = modelname
         self.name = name
 
         if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
@@ -50,12 +53,24 @@ class Parameter(object):
         self.frozen = frozen
 
     @property
+    def modelname(self):
+        return self._modelname
+
+    @modelname.setter
+    def modelname(self, val):
+        self._modelname = str(val)
+
+    @property
     def name(self):
         return self._name
 
     @name.setter
     def name(self, val):
         self._name = str(val)
+
+    @property
+    def fullname(self):
+        return self._modelname + '.' + self.name
 
     @property
     def value(self):
@@ -108,12 +123,13 @@ class Parameter(object):
         self.unit = str(par.unit)
 
     def __repr__(self):
-        ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
+        ss = 'Parameter(modelname={modelname!r}, name={name!r}, value={value!r}, unit={unit!r}, '
         ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
         return ss.format(**self.to_dict())
 
     def to_dict(self):
         return dict(
+            modelname=self.modelname,
             name=self.name,
             value=self.value,
             unit=self.unit,
@@ -166,7 +182,7 @@ class ParameterList(object):
     def __getitem__(self, name):
         """Access parameter by name"""
         for par in self.parameters:
-            if name == par.name:
+            if name == par.fullname:
                 return par
 
         raise IndexError('Parameter {} not found for : {}'.format(name, self))
@@ -186,7 +202,7 @@ class ParameterList(object):
             if self.covariance is None:
                 vals['error'] = np.nan
             else:
-                vals['error'] = self.error(parameter.name)
+                vals['error'] = self.error(parameter.fullname)
             result.append(vals)
         return result
 
@@ -194,7 +210,7 @@ class ParameterList(object):
         """
         Serialize parameter list into `~astropy.table.Table`
         """
-        names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
+        names = ['modelname', 'name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
                    'error': '.3e',
                    'min': '.3e',
@@ -209,7 +225,8 @@ class ParameterList(object):
     def from_dict(cls, val):
         pars = list()
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'],
+            pars.append(Parameter(modelname=par['modelname'],
+                                  name=par['name'],
                                   value=float(par['value']),
                                   unit=par['unit'],
                                   min=float(par['min']),
@@ -241,7 +258,7 @@ class ParameterList(object):
     @property
     def names(self):
         """List of parameter names"""
-        return [par.name for par in self.parameters]
+        return [par.fullname for par in self.parameters]
 
     @property
     def _ufloats(self):
@@ -267,7 +284,7 @@ class ParameterList(object):
         """
         Return list of free parameters names.
         """
-        free_pars = [par.name for par in self.parameters if not par.frozen]
+        free_pars = [par.fullname for par in self.parameters if not par.frozen]
         return free_pars
 
     @property
@@ -289,9 +306,13 @@ class ParameterList(object):
         errors : dict of `~astropy.units.Quantity`
             Dict of parameter errors.
         """
+        for key in errors.keys():
+            if key not in self.names:
+                raise ValueError("Parameter {} not found in {}".format(key,
+                                                                       self))
         diag = []
         for par in self.parameters:
-            error = errors.get(par.name, 0)
+            error = errors.get(par.fullname, 0)
             error = u.Quantity(error, par.unit).value
             diag.append(error)
         self.covariance = np.diag(diag) ** 2
@@ -311,7 +332,7 @@ class ParameterList(object):
         """
         shape = (len(self.parameters), len(self.parameters))
         covariance_new = np.zeros(shape)
-        idx_lookup = dict([(par.name, idx) for idx, par in enumerate(self.parameters)])
+        idx_lookup = dict([(par.fullname, idx) for idx, par in enumerate(self.parameters)])
 
         # TODO: make use of covariance matrix symmetry
         for i, par in enumerate(covar_axis):
@@ -337,7 +358,7 @@ class ParameterList(object):
             raise ValueError('Covariance matrix not set.')
 
         for i, parameter in enumerate(self.parameters):
-            if parameter.name == parname:
+            if parameter.fullname == parname:
                 return np.sqrt(self.covariance[i, i])
         raise ValueError('Could not find parameter {}'.format(parname))
 

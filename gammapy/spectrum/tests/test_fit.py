@@ -69,12 +69,12 @@ class TestFit:
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291, rtol=1e-5)
 
-        self.source_model.parameters['index'].value = 1.12
+        self.source_model.parameters['powerlaw.index'].value = 1.12
         fit.fit()
         # These values are check with sherpa fits, do not change
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.995525, rtol=1e-3)
-        assert_allclose(pars['amplitude'].value, 100245.9, rtol=1e-3)
+        assert_allclose(pars['powerlaw.index'].value, 1.995525, rtol=1e-3)
+        assert_allclose(pars['powerlaw.amplitude'].value, 100245.9, rtol=1e-3)
 
     def test_wstat(self):
         """WStat with on source and background spectrum"""
@@ -88,8 +88,8 @@ class TestFit:
                           stat='wstat', forward_folded=False)
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.997342, rtol=1e-3)
-        assert_allclose(pars['amplitude'].value, 100245.187067, rtol=1e-3)
+        assert_allclose(pars['powerlaw.index'].value, 1.997342, rtol=1e-3)
+        assert_allclose(pars['powerlaw.amplitude'].value, 100245.187067, rtol=1e-3)
         assert_allclose(fit.result[0].statval, 30.022316, rtol=1e-3)
 
     def test_joint(self):
@@ -101,7 +101,7 @@ class TestFit:
                           model=self.source_model, forward_folded=False)
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.996456, rtol=1e-3)
+        assert_allclose(pars['powerlaw.index'].value, 1.996456, rtol=1e-3)
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
@@ -138,9 +138,10 @@ class TestFit:
         fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
                           forward_folded=False)
         fit.fit()
-        true_idx = fit.result[0].model.parameters['index'].value
+        true_idx = fit.result[0].model.parameters['powerlaw.index'].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_1d(model=fit.result[0].model, parname='index',
+        profile = fit.likelihood_1d(model=fit.result[0].model,
+                                    parname='powerlaw.index',
                                     parvals=scan_idx)
         argmin = np.argmin(profile)
         actual = scan_idx[argmin]
@@ -153,7 +154,7 @@ class TestFit:
                           forward_folded=False)
 
         scan_idx = np.linspace(1, 3, 20)
-        fit.plot_likelihood_1d(model=self.source_model, parname='index',
+        fit.plot_likelihood_1d(model=self.source_model, parname='powerlaw.index',
                                parvals=scan_idx)
         # TODO: add assert, see issue 294
 
@@ -188,9 +189,9 @@ class TestSpectralFit:
         result = self.fit.result[0]
         assert_allclose(result.statval, 32.8387, rtol=1e-4)
         pars = result.model.parameters
-        assert_allclose(pars['index'].value, 2.25423, rtol=1e-2)
-        assert pars['amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
-        assert_allclose(pars['amplitude'].value, 2.008654e-11, rtol=1e-2)
+        assert_allclose(pars['powerlaw.index'].value, 2.25423, rtol=1e-2)
+        assert pars['powerlaw.amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
+        assert_allclose(pars['powerlaw.amplitude'].value, 2.008654e-11, rtol=1e-2)
         assert_allclose(result.npred_src[60], 0.5638139, rtol=1e-3)
         self.fit.result[0].to_table()
 
@@ -198,8 +199,8 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        assert_allclose(result.model.parameters.error('index'), 0.097866953, rtol=1e-3)
-        assert_allclose(result.model.parameters.error('amplitude'), 2.1994e-12, rtol=1e-3)
+        assert_allclose(result.model.parameters.error('powerlaw.index'), 0.097866953, rtol=1e-3)
+        assert_allclose(result.model.parameters.error('powerlaw.amplitude'), 2.1994e-12, rtol=1e-3)
         self.fit.result[0].to_table()
 
     def test_compound(self):
@@ -207,10 +208,10 @@ class TestSpectralFit:
         fit.fit()
         result = fit.result[0]
         pars = result.model.parameters
-        assert_allclose(pars['index'].value, 2.254163, rtol=1e-3)
+        assert_allclose(pars['powerlaw.index'].value, 2.254163, rtol=1e-3)
         # amplitude should come out roughly * 0.5
-        assert pars['amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
-        assert_allclose(pars['amplitude'].value, 1.030963e-11, rtol=1e-3)
+        assert pars['powerlaw.amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
+        assert_allclose(pars['powerlaw.amplitude'].value, 1.030963e-11, rtol=1e-3)
 
     def test_npred(self):
         self.fit.fit()
@@ -259,29 +260,29 @@ class TestSpectralFit:
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.fit()
-        assert_allclose(fit.result[0].model.parameters['index'].value, 2.296, atol=0.02)
+        assert_allclose(fit.result[0].model.parameters['powerlaw.index'].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
         self.ecpl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-             'lambda': 0.1 / u.TeV}
+            {'expcutoffpowerlaw.amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
+             'expcutoffpowerlaw.lambda_': 0.1 / u.TeV}
         )
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
-        actual = fit.result[0].model.parameters['lambda_'].quantity
+        actual = fit.result[0].model.parameters['expcutoffpowerlaw.lambda_'].quantity
         assert actual.unit == 'TeV-1'
         assert_allclose(actual.value, 0.034241, rtol=1e-3)
 
     def test_joint_fit(self):
         self.pwl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
+            {'powerlaw.amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
         )
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
-        actual = fit.result[0].model.parameters['index'].value
+        actual = fit.result[0].model.parameters['powerlaw.index'].value
         assert_allclose(actual, 2.21225, rtol=1e-3)
 
-        actual = fit.result[0].model.parameters['amplitude'].quantity
+        actual = fit.result[0].model.parameters['powerlaw.amplitude'].quantity
         assert actual.unit == 'cm-2 s-1 TeV-1'
         assert_allclose(actual.value, 2.361871e-11, rtol=1e-3)
 
@@ -291,13 +292,13 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 2.21338, rtol=1e-3)
-        assert u.Unit(pars['amplitude'].unit) == 'cm-2 s-1 TeV-1'
-        assert_allclose(pars['amplitude'].value, 2.361827e-11, rtol=1e-3)
+        assert_allclose(pars['powerlaw.index'].value, 2.21338, rtol=1e-3)
+        assert u.Unit(pars['powerlaw.amplitude'].unit) == 'cm-2 s-1 TeV-1'
+        assert_allclose(pars['powerlaw.amplitude'].value, 2.361827e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
         self.pwl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
+            {'powerlaw.amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
         )
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)

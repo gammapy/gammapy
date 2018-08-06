@@ -37,6 +37,9 @@ class SpectralModel(object):
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
+    @property
+    def name(self):
+        return self._name
 
     def __repr__(self):
         fmt = '{}()'
@@ -104,9 +107,9 @@ class SpectralModel(object):
 
     def _convert_energy(self, energy):
         try:
-            energy = energy.to(self.parameters['reference'].unit)
+            energy = energy.to(self.parameters[self.name + '.reference'].unit)
         except IndexError:
-            energy = energy.to(self.parameters['emin'].unit)
+            energy = energy.to(self.parameters[self.name + '.emin'].unit)
         return energy
 
     def evaluate_error(self, energy):
@@ -432,10 +435,13 @@ class ConstantModel(SpectralModel):
     ----------
     const : `~astropy.units.Quantity`
         :math:`k`
+    name : str
+        model name
     """
-    def __init__(self, const):
+    def __init__(self, const, name='constant'):
+        self._name = str(name)
         self.parameters = ParameterList([
-            Parameter('const', const)
+            Parameter(name, 'const', const)
         ])
 
     @staticmethod
@@ -501,6 +507,8 @@ class PowerLaw(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+    name : str
+        model name
 
 
     Examples
@@ -519,11 +527,12 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV):
+                 reference=1 * u.TeV, name='powerlaw'):
+        self._name = str(name)
         self.parameters = ParameterList([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, min=0, frozen=True)
+            Parameter(name, 'index', index),
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, min=0, frozen=True)
         ])
 
     @staticmethod
@@ -548,17 +557,20 @@ class PowerLaw(SpectralModel):
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
+        index = pars.parameters[0]
+        amplitude = pars.parameters[1]
+        reference = pars.parameters[2] 
 
-        if np.isclose(pars['index'].value, 1):
+        if np.isclose(index.value, 1):
             e_unit = emin.unit
-            prefactor = pars['amplitude'].quantity * pars['reference'].quantity.to(e_unit)
+            prefactor = amplitude.quantity * reference.quantity.to(e_unit)
             upper = np.log(emax.to(e_unit).value)
             lower = np.log(emin.value)
         else:
-            val = -1 * pars['index'].value + 1
-            prefactor = pars['amplitude'].quantity * pars['reference'].quantity / val
-            upper = np.power((emax / pars['reference'].quantity), val)
-            lower = np.power((emin / pars['reference'].quantity), val)
+            val = -1 * index.value + 1
+            prefactor = amplitude.quantity * reference.quantity / val
+            upper = np.power((emax / reference.quantity), val)
+            lower = np.power((emin / reference.quantity), val)
 
         return prefactor * (upper - lower)
 
@@ -611,17 +623,20 @@ class PowerLaw(SpectralModel):
             Lower and upper bound of integration range.
         """
         pars = self.parameters
-        val = -1 * pars['index'].value + 2
+        index = pars.parameters[0]
+        amplitude = pars.parameters[1]
+        reference = pars.parameters[2] 
+        val = -1 * index.value + 2
 
         if np.isclose(val, 0):
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
-            temp = pars['amplitude'].quantity * pars['reference'].quantity ** 2
+            temp = amplitude.quantity * reference.quantity ** 2
             return temp * np.log(emax / emin)
         else:
-            prefactor = pars['amplitude'].quantity * pars['reference'].quantity ** 2 / val
-            upper = (emax / pars['reference'].quantity) ** val
-            lower = (emin / pars['reference'].quantity) ** val
+            prefactor = amplitude.quantity * reference.quantity ** 2 / val
+            upper = (emax / reference.quantity) ** val
+            lower = (emin / reference.quantity) ** val
             return prefactor * (upper - lower)
 
     def energy_flux_error(self, emin, emax, **kwargs):
@@ -667,8 +682,12 @@ class PowerLaw(SpectralModel):
             Function value of the spectral model.
         """
         p = self.parameters
-        base = value / p['amplitude'].quantity
-        return p['reference'].quantity * np.power(base, - 1. / p['index'].value)
+        index = p.parameters[0]
+        amplitude = p.parameters[1]
+        reference = p.parameters[2]
+
+        base = value / amplitude.quantity
+        return reference.quantity * np.power(base, - 1. / index.value)
 
 
 class PowerLaw2(SpectralModel):
@@ -691,6 +710,8 @@ class PowerLaw2(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
+    name : str
+        model name
 
     Examples
     --------
@@ -707,12 +728,13 @@ class PowerLaw2(SpectralModel):
     """
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
-                 emin=0.1 * u.TeV, emax=100 * u.TeV):
+                 emin=0.1 * u.TeV, emax=100 * u.TeV, name='powerlaw2'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude),
-            Parameter('index', index),
-            Parameter('emin', emin, frozen=True),
-            Parameter('emax', emax, frozen=True)
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'index', index),
+            Parameter(name, 'emin', emin, frozen=True),
+            Parameter(name, 'emax', emax, frozen=True)
         ])
 
     @staticmethod
@@ -739,16 +761,20 @@ class PowerLaw2(SpectralModel):
             Lower and upper bound of integration range.
         """
         pars = self.parameters
+        amplitude = pars.parameters[0]
+        index = pars.parameters[1]
+        emin_ = pars.parameters[2]
+        emax_ = pars.parameters[3]
 
-        temp1 = np.power(emax, -pars['index'].value + 1)
-        temp2 = np.power(emin, -pars['index'].value + 1)
+        temp1 = np.power(emax, -index.value + 1)
+        temp2 = np.power(emin, -index.value + 1)
         top = temp1 - temp2
 
-        temp1 = np.power(pars['emax'].quantity, -pars['index'].value + 1)
-        temp2 = np.power(pars['emin'].quantity, -pars['index'].value + 1)
+        temp1 = np.power(emax_.quantity, -index.value + 1)
+        temp2 = np.power(emin_.quantity, -index.value + 1)
         bottom = temp1 - temp2
 
-        return pars['amplitude'].quantity * top / bottom
+        return amplitude.quantity * top / bottom
 
     def integral_error(self, emin, emax, **kwargs):
         r"""Integrate power law analytically with error propagation.
@@ -789,11 +815,14 @@ class PowerLaw2(SpectralModel):
             Function value of the spectral model.
         """
         p = self.parameters
-        index = p['index'].value
+        amplitude = p.parameters[0]
+        index = p.parameters[1].value
+        emin = p.parameters[2]
+        emax = p.parameters[3]
         top = -index + 1
-        bottom = (p['emax'].quantity.to('TeV').value ** (-index + 1) -
-                  p['emin'].quantity.to('TeV').value ** (-index + 1))
-        term = (bottom / top) * (value / p['amplitude'].quantity).to('1 / TeV')
+        bottom = (emax.quantity.to('TeV').value ** (-index + 1) -
+                  emin.quantity.to('TeV').value ** (-index + 1))
+        term = (bottom / top) * (value / amplitude.quantity).to('1 / TeV')
         return np.power(term.value, -1. / index) * u.TeV
 
 
@@ -814,6 +843,8 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`E_0`
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
+    name : str
+        model name
 
     Examples
     --------
@@ -830,12 +861,14 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     """
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, lambda_=0.1 / u.TeV):
+                 reference=1 * u.TeV, lambda_=0.1 / u.TeV,
+                 name='expcutoffpowerlaw'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('lambda_', lambda_)
+            Parameter(name, 'index', index),
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, frozen=True),
+            Parameter(name, 'lambda_', lambda_)
         ])
 
     @staticmethod
@@ -861,9 +894,9 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
         """
         p = self.parameters
-        reference = p['reference'].quantity
-        index = p['index'].quantity
-        lambda_ = p['lambda_'].quantity
+        index = p.parameters[0].quantity
+        reference = p.parameters[2].quantity
+        lambda_ = p.parameters[3].quantity
         if index >= 2:
             return np.nan * reference.unit
         else:
@@ -890,6 +923,8 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+    name : str
+        model name
 
     Examples
     --------
@@ -906,12 +941,13 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     """
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, ecut=10 * u.TeV):
+                 reference=1 * u.TeV, ecut=10 * u.TeV, name='expcutoffpowerlaw3fgl'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('ecut', ecut)
+            Parameter(name, 'index', index),
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, frozen=True),
+            Parameter(name, 'ecut', ecut)
         ])
 
     @staticmethod
@@ -948,6 +984,8 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+    name : str
+        model name
 
     Examples
     --------
@@ -964,14 +1002,15 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     """
 
     def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, ecut=10 * u.TeV):
+                 reference=1 * u.TeV, ecut=10 * u.TeV, name='plsuperexpcutoff3fgl'):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('ecut', ecut),
-            Parameter('index_1', index_1),
-            Parameter('index_2', index_2),
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, frozen=True),
+            Parameter(name, 'ecut', ecut),
+            Parameter(name, 'index_1', index_1),
+            Parameter(name, 'index_2', index_2),
         ])
 
     @staticmethod
@@ -1017,6 +1056,8 @@ class LogParabola(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+    name : str
+        model name
 
     Examples
     --------
@@ -1033,12 +1074,13 @@ class LogParabola(SpectralModel):
     """
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
-                 alpha=2, beta=1):
+                 alpha=2, beta=1, name='logpar'):
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('alpha', alpha),
-            Parameter('beta', beta)
+            Parameter(name, 'amplitude', amplitude),
+            Parameter(name, 'reference', reference, frozen=True),
+            Parameter(name, 'alpha', alpha),
+            Parameter(name, 'beta', beta)
         ])
 
     @classmethod
@@ -1075,9 +1117,9 @@ class LogParabola(SpectralModel):
 
         """
         p = self.parameters
-        reference = p['reference'].quantity
-        alpha = p['alpha'].quantity
-        beta = p['beta'].quantity
+        reference = p.parameters[1].quantity
+        alpha = p.parameters[2].quantity
+        beta = p.parameters[3].quantity
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
@@ -1105,12 +1147,16 @@ class TableModel(SpectralModel):
         interpolation can be done linearly or in logarithm
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
+    name : str
+        model name
     """
 
-    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
+    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None,
+                 name='tablemodel'):
         from scipy.interpolate import interp1d
+        self._name = name
         self.parameters = ParameterList([
-            Parameter('scale', scale, min=0, unit='')
+            Parameter(name, 'scale', scale, min=0, unit='')
         ])
         self.energy = energy
         self.values = values
@@ -1279,7 +1325,7 @@ class TableModel(SpectralModel):
         emin, emax = energy_range
         energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
 
-        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['scale'].quantity
+        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters[self.name + '.scale'].quantity
         if self.scale_logy:
             y = np.power(10, y)
 
@@ -1465,7 +1511,8 @@ class AbsorbedSpectralModel(SpectralModel):
     """
 
     def __init__(self, spectral_model, absorption,
-                 parameter, parameter_name='redshift'):
+                 parameter, parameter_name='redshift', name='absorbed'):
+        self._name = name
         self.spectral_model = spectral_model
         self.absorption = absorption
         self.parameter = parameter
@@ -1479,7 +1526,7 @@ class AbsorbedSpectralModel(SpectralModel):
         # Add parameter to the list
         min_ = self.absorption.data.axes[0].lo[0]
         max_ = self.absorption.data.axes[0].lo[-1]
-        par = Parameter(parameter_name, parameter,
+        par = Parameter(name, parameter_name, parameter,
                         min=min_, max=max_,
                         frozen=True)
         param_list.append(par)

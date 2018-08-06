@@ -64,14 +64,15 @@ class PhaseCurve(object):
     0.49059393580053845
     """
 
-    def __init__(self, table, time_0, phase_0, f0, f1, f2):
+    def __init__(self, table, time_0, phase_0, f0, f1, f2, name='phase_curve'):
+        self.name = name
         self.table = table
         self.parameters = ParameterList([
-            Parameter('time_0', time_0),
-            Parameter('phase_0', phase_0),
-            Parameter('f0', f0),
-            Parameter('f1', f1),
-            Parameter('f2', f2)]
+            Parameter(name, 'time_0', time_0),
+            Parameter(name, 'phase_0', phase_0),
+            Parameter(name, 'f0', f0),
+            Parameter(name, 'f1', f1),
+            Parameter(name, 'f2', f2)]
         )
 
     def phase(self, time):
@@ -86,11 +87,11 @@ class PhaseCurve(object):
         phase : array_like
         """
         pars = self.parameters
-        time_0 = pars['time_0'].value
-        phase_0 = pars['phase_0'].value
-        f0 = pars['f0'].value
-        f1 = pars['f1'].value
-        f2 = pars['f2'].value
+        time_0 = pars.parameters[0].value
+        phase_0 = pars.parameters[1].value
+        f0 = pars.parameters[2].value
+        f1 = pars.parameters[3].value
+        f2 = pars.parameters[4].value
 
         t = (time - time_0) * u.day.to(u.second)
         phase = self._evaluate_phase(t, phase_0, f0, f1, f2)

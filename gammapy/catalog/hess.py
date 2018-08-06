@@ -85,11 +85,11 @@ class SourceCatalogObjectHGPSComponent(object):
             lat_0=d['GLAT'],
             sigma=d['Size'],
         )
-        model.parameters.set_parameter_errors(dict(
-            lon_0=d['GLON_Err'],
-            lat_0=d['GLAT_Err'],
-            sigma=d['Size_Err'],
-        ))
+        model.parameters.set_parameter_errors({
+            'gaussian.lon_0' : d['GLON_Err'],
+            'gaussian.lat_0' : d['GLAT_Err'],
+            'gaussian.sigma' : d['Size_Err'],
+        })
         return model
 
     @property
@@ -102,9 +102,9 @@ class SourceCatalogObjectHGPSComponent(object):
             emin='1 TeV',
             emax='1e5 TeV',
         )
-        model.parameters.set_parameter_errors(dict(
-            amplitude=d['Flux_Map_Err'],
-        ))
+        model.parameters.set_parameter_errors({
+            'powerlaw2.amplitude' : d['Flux_Map_Err'],
+        })
         return model
 
     @property
@@ -440,17 +440,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars['index'] = data['Index_Spec_PL']
             pars['amplitude'] = data['Flux_Spec_PL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_PL_Pivot']
-            errs['amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
-            errs['index'] = data['Index_Spec_PL_Err'] * u.dimensionless_unscaled
+            errs['powerlaw.amplitude'] = data['Flux_Spec_PL_Diff_Pivot_Err']
+            errs['powerlaw.index'] = data['Index_Spec_PL_Err'] * u.dimensionless_unscaled
             model = PowerLaw(**pars)
         elif spec_type == 'ecpl':
             pars['index'] = data['Index_Spec_ECPL']
             pars['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot']
             pars['reference'] = data['Energy_Spec_ECPL_Pivot']
             pars['lambda_'] = data['Lambda_Spec_ECPL']
-            errs['index'] = data['Index_Spec_ECPL_Err'] * u.dimensionless_unscaled
-            errs['amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot_Err']
-            errs['lambda_'] = data['Lambda_Spec_ECPL_Err']
+            errs['expcutoffpowerlaw.index'] = data['Index_Spec_ECPL_Err'] * u.dimensionless_unscaled
+            errs['expcutoffpowerlaw.amplitude'] = data['Flux_Spec_ECPL_Diff_Pivot_Err']
+            errs['expcutoffpowerlaw.lambda_'] = data['Lambda_Spec_ECPL_Err']
             model = ExponentialCutoffPowerLaw(**pars)
         else:
             raise ValueError('Invalid spectral model: {}'.format(spec_type))

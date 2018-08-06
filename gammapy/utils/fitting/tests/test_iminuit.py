@@ -7,35 +7,37 @@ from .. import fit_iminuit
 
 
 def fcn(parameters):
-    x = parameters['x'].value
-    y = parameters['y'].value
-    z = parameters['z'].value
+    x = parameters['model.x'].value
+    y = parameters['model.y'].value
+    z = parameters['model.z'].value
     return (x - 2) ** 2 + (y - 3) ** 2 + (z - 4) ** 2
 
 
 @requires_dependency('iminuit')
 def test_iminuit():
     pars = ParameterList(
-        [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
+        [Parameter('model', 'x', 2.1),
+         Parameter('model', 'y', 3.1),
+         Parameter('model', 'z', 4.1)]
     )
 
     minuit = fit_iminuit(function=fcn, parameters=pars)
 
-    assert_allclose(pars['x'].value, 2, rtol=1e-2)
-    assert_allclose(pars['y'].value, 3, rtol=1e-2)
-    assert_allclose(pars['z'].value, 4, rtol=1e-2)
+    assert_allclose(pars['model.x'].value, 2, rtol=1e-2)
+    assert_allclose(pars['model.y'].value, 3, rtol=1e-2)
+    assert_allclose(pars['model.z'].value, 4, rtol=1e-2)
 
-    assert_allclose(minuit.values['x'], 2, rtol=1e-2)
-    assert_allclose(minuit.values['y'], 3, rtol=1e-2)
-    assert_allclose(minuit.values['z'], 4, rtol=1e-2)
+    assert_allclose(minuit.values['model.x'], 2, rtol=1e-2)
+    assert_allclose(minuit.values['model.y'], 3, rtol=1e-2)
+    assert_allclose(minuit.values['model.z'], 4, rtol=1e-2)
 
     # Test freeze
-    pars['x'].frozen = True
+    pars['model.x'].frozen = True
     minuit = fit_iminuit(function=fcn, parameters=pars)
-    assert minuit.list_of_fixed_param() == ['x']
+    assert minuit.list_of_fixed_param() == ['model.x']
 
     # Test limits
-    pars['y'].min = 4
+    pars['model.y'].min = 4
     minuit = fit_iminuit(function=fcn, parameters=pars)
     states = minuit.get_param_states()
     assert not states[0]['has_limits']
@@ -46,7 +48,7 @@ def test_iminuit():
     assert states[1]['upper_limit'] == 0
 
     # Test stepsize via covariance matrix
-    pars.set_parameter_errors({'x': '0.2', 'y': '0.1'})
+    pars.set_parameter_errors({'model.x': '0.2', 'model.y': '0.1'})
     minuit = fit_iminuit(function=fcn, parameters=pars)
 
     assert minuit.migrad_ok()

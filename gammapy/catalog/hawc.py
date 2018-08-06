@@ -105,9 +105,9 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         label = 'spec{}_'.format(idx)
 
         pars['amplitude'] = data[label + 'dnde']
-        errs['amplitude'] = data[label + 'dnde_err']
+        errs['powerlaw.amplitude'] = data[label + 'dnde_err']
         pars['index'] = data[label + 'index'] * u.Unit('')
-        errs['index'] = data[label + 'index_err'] * u.Unit('')
+        errs['powerlaw.index'] = data[label + 'index_err'] * u.Unit('')
         pars['reference'] = 7 * u.TeV
 
         model = PowerLaw(**pars)

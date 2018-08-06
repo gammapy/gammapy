@@ -145,7 +145,8 @@ class SpectrumFitResult(object):
         """
         t = Table()
         t['model'] = [self.model.__class__.__name__]
-        for par_name, value in self.model.parameters._ufloats.items():
+        for par_name, value in zip(self.model.parameters.names,
+                                   self.model.parameters._ufloats.values()):
             val = value.n
             err = value.s
 
