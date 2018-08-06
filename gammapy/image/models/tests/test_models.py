@@ -16,8 +16,8 @@ from ..new import (
 
 def test_sky_point_source():
     model = SkyPointSource(
-        lon_0 = '2.5 deg',
-        lat_0 = '2.5 deg'
+        lon_0='2.5 deg',
+        lat_0='2.5 deg'
     )
     lat, lon = np.mgrid[0:6, 0:6] * u.deg
     val = model(lon, lat)
@@ -82,16 +82,11 @@ def test_sky_diffuse_constant():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_sky_diffuse_map():
-    filename = ('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18'
-                '/Templates/RXJ1713_2016_250GeV.fits')
+    filename = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits'
     model = SkyDiffuseMap.read(filename)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
-    desired = [3348.0417, 0]
+    desired = [3269.178107, 0]
     assert_allclose(val.value, desired)
-
-    # TODO: add more tests:
-    # - different model `norm` parameter values / units and map units
-    # - make an input map from scratch with known values
