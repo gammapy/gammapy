@@ -951,7 +951,7 @@ class Map(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        geom = self.geom.__class__.__name__[:3]
+        geom = self.geom.__class__.__name__
         str_ += "\tgeom      : {} \n ".format(geom)
         str_ += "\tunit      : {} \n".format(self.unit)
         str_ += "\tdata shape: {}\n".format(self.data.shape)
