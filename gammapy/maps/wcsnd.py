@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.nddata import Cutout2D
-import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
@@ -596,7 +594,6 @@ class WcsNDMap(WcsMap):
 
             plt.show()
 
-
     def smooth(self, radius, kernel='gauss', **kwargs):
         """
         Smooth the image (works on a 2D image and returns a copy).
@@ -659,7 +656,6 @@ class WcsNDMap(WcsMap):
             a square region is extracted. For more options see also `~astropy.nddata.utils.Cutout2D`.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-
         copy : bool, optional
                If False (default), then the cutout data will be a view into the original data  array.
                If True, then the cutout data will hold a copy of the original data array.
@@ -670,7 +666,6 @@ class WcsNDMap(WcsMap):
             The cutout map itself
         cutout_slices : Tuple of slice objects (with dimension 1 less than that of the non-spatial axes of the map)
         """
-
         idx = (0,) * len(self.geom.axes)
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,

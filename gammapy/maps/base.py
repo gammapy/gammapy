@@ -113,10 +113,9 @@ class Map(object):
     def create(**kwargs):
         """Create an empty map object.
 
-        This method accepts generic options
-        listed below as well as options for `~HpxMap` and `~WcsMap`
-        objects (see `~HpxMap.create` and `~WcsMap.create` for WCS-
-        and HPX-specific options).
+        This method accepts generic options listed below, as well as options
+        for `HpxMap` and `WcsMap` objects. For WCS-specific options, see
+        `WcsMap.create` and for HPX-specific options, see `HpxMap.create`.
 
         Parameters
         ----------
@@ -142,7 +141,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Empty map object.
         """
         from .hpxmap import HpxMap
@@ -179,7 +178,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : `~Map`
+        map_out : `Map`
             Map object
         """
         filename = str(make_path(filename))
@@ -188,11 +187,11 @@ class Map(object):
 
     @staticmethod
     def from_geom(geom, meta=None, map_type='auto', unit=''):
-        """Generate an empty map from a `~Geom` instance.
+        """Generate an empty map from a `Geom` instance.
 
         Parameters
         ----------
-        geom : `~MapGeom`
+        geom : `MapGeom`
             Map geometry.
 
         meta : `~collections.OrderedDict`
@@ -209,7 +208,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : `~Map`
+        map_out : `Map`
             Map object
 
         """
@@ -229,6 +228,8 @@ class Map(object):
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+        """Create from `astropy.io.fits.HDUList`.
+        """
         if map_type == 'auto':
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
@@ -383,7 +384,7 @@ class Map(object):
 
         Parameters
         ----------
-        map_in : `~Map`
+        map_in : `Map`
             Input map.
         """
         if not self.unit.is_equivalent(map_in.unit):
@@ -401,7 +402,7 @@ class Map(object):
 
         Parameters
         ----------
-        geom : `~MapGeom`
+        geom : `MapGeom`
             Geometry of projection.
         mode : {'interp', 'exact'}
             Method for reprojection.  'interp' method interpolates at pixel
@@ -412,7 +413,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Reprojected map.
         """
         if geom.ndim == 2 and self.geom.ndim > 2:
@@ -447,7 +448,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Padded map.
 
         """
@@ -466,7 +467,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Cropped map.
 
         """
@@ -474,7 +475,7 @@ class Map(object):
 
     @abc.abstractmethod
     def downsample(self, factor, preserve_counts=True):
-        """Downsample the spatial dimension of the map by a given factor.
+        """Downsample the spatial dimension by a given factor.
 
         Parameters
         ----------
@@ -487,14 +488,14 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Downsampled map.
         """
         pass
 
     @abc.abstractmethod
     def upsample(self, factor, order=0, preserve_counts=True):
-        """Upsample the spatial dimension of the map by a given factor.
+        """Upsample the spatial dimension by a given factor.
 
         Parameters
         ----------
@@ -509,7 +510,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Upsampled map.
 
         """
@@ -532,7 +533,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : '~Map'
+        map_out : `Map`
             Sliced map object.
         """
         geom = self.geom.slice_by_idx(slices)
@@ -558,33 +559,33 @@ class Map(object):
         Examples
         --------
 
-        .. code:: python
+        ::
 
-                import numpy as np
-                from gammapy.maps import Map, MapAxis
-                from astropy.coordinates import SkyCoord
-                from astropy import units as u
+            import numpy as np
+            from gammapy.maps import Map, MapAxis
+            from astropy.coordinates import SkyCoord
+            from astropy import units as u
 
-                # Define map axes
-                energy_axis = MapAxis.from_edges(
-                    np.logspace(-1., 1., 4), unit='TeV', name='energy',
-                )
+            # Define map axes
+            energy_axis = MapAxis.from_edges(
+                np.logspace(-1., 1., 4), unit='TeV', name='energy',
+            )
 
-                time_axis = MapAxis.from_edges(
-                    np.linspace(0., 10, 20), unit='h', name='time',
-                )
+            time_axis = MapAxis.from_edges(
+                np.linspace(0., 10, 20), unit='h', name='time',
+            )
 
-                # Define map center
-                skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+            # Define map center
+            skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
 
-                # Create map
-                m_wcs = Map.create(
-                    map_type='wcs',
-                    binsz=0.02,
-                    skydir=skydir,
-                    width=10.0,
-                    axes=[energy_axis, time_axis],
-                )
+            # Create map
+            m_wcs = Map.create(
+                map_type='wcs',
+                binsz=0.02,
+                skydir=skydir,
+                width=10.0,
+                axes=[energy_axis, time_axis],
+            )
 
             # Get image by coord tuple
             image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
@@ -601,7 +602,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : '~Map'
+        map_out : `Map`
             Map with spatial dimensions only.
         """
         if isinstance(coords, tuple):
@@ -633,7 +634,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : '~Map'
+        map_out : `Map`
             Map with spatial dimensions only.
         """
         idx = self.geom.pix_to_idx(pix)
@@ -656,7 +657,7 @@ class Map(object):
 
         Returns
         -------
-        map_out : '~Map'
+        map_out : `Map`
             Map with spatial dimensions only.
         """
         if len(idx) != len(self.geom.axes):
@@ -678,8 +679,7 @@ class Map(object):
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -753,8 +753,7 @@ class Map(object):
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -817,8 +816,7 @@ class Map(object):
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -874,8 +872,7 @@ class Map(object):
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -937,7 +934,6 @@ class Map(object):
         if 'geom' in kwargs:
             raise ValueError("Can't copy and change geometry of the map.")
         return self._init_copy(**kwargs)
-
 
     def __repr__(self):
         str_ = self.__class__.__name__

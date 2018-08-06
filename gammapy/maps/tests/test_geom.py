@@ -4,8 +4,7 @@ import pytest
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord, Angle
-from regions import CircleSkyRegion
+from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoord
 
 pytest.importorskip('scipy')

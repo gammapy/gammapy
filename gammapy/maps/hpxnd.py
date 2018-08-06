@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
@@ -470,7 +469,6 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Should we remove/deprecate this method?
 
-        import healpy as hp
         order = nside_to_order(nside)
         new_hpx = self.geom.to_ud_graded(order)
         map_out = self._init_copy(geom=new_hpx, data=None)
