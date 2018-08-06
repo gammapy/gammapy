@@ -43,18 +43,14 @@ class Map(object):
     """
 
     def __init__(self, geom, data, meta=None, unit=''):
-        self._geom = geom
-        if isinstance(data, Quantity):
-            self._data = data.value
-            self._unit = data.unit.to_string()
-        else:
-            self._data = data
-            self._unit = Unit(unit).to_string()
+        self.geom = geom
+        self.data = data
+        self.unit = unit
 
         if meta is None:
-            self._meta = OrderedDict()
+            self.meta = {}
         else:
-            self._meta = OrderedDict(meta)
+            self.meta = meta
 
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self.
@@ -70,44 +66,58 @@ class Map(object):
         return self.__class__(**kwargs)
 
     @property
+    def geom(self):
+        """Map geometry (`~gammapy.maps.MapGeom`)"""
+        return self._geom
+
+    @geom.setter
+    def geom(self, val):
+        self._geom = val
+
+    @property
     def data(self):
         """Data array (`~numpy.ndarray`)"""
         return self._data
 
-    @property
-    def quantity(self):
-        """Map data times unit (`~astropy.units.Quantity`)"""
-        return self._data * Unit(self._unit)
+    @data.setter
+    def data(self, val):
+        if val.shape != self.geom.data_shape:
+            raise ValueError('Shape {!r} does not match map data shape {!r}'
+                             ''.format(val.shape, self.geom.data_shape))
+
+        if isinstance(val, u.Quantity):
+            raise TypeError('No Quantity allowed in map data. Set data and unit separately.')
+
+        self._data = val
 
     @property
     def unit(self):
         """Map unit (`~astropy.units.Unit`)"""
-        return Unit(self._unit)
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = Unit(val)
 
     @property
     def meta(self):
         """Map meta (`~OrderedDict`)"""
         return self._meta
 
-    @data.setter
-    def data(self, val):
-        if val.shape != self.data.shape:
-            raise ValueError('Wrong shape.')
-        self._data = val
+    @meta.setter
+    def meta(self, val):
+        self._meta = OrderedDict(val)
+
+    @property
+    def quantity(self):
+        """Map data times unit (`~astropy.units.Quantity`)"""
+        return self.data * self.unit
 
     @quantity.setter
     def quantity(self, val):
-        if val.shape != self.data.shape:
-            raise ValueError('Wrong shape.')
-
         val = Quantity(val)
-        self._data = val.value
-        self._unit = val.unit.to_string()
-
-    @property
-    def geom(self):
-        """Map geometry (`~gammapy.maps.MapGeom`)"""
-        return self._geom
+        self.data = val.value
+        self.unit = val.unit
 
     @staticmethod
     def create(**kwargs):
@@ -938,7 +948,7 @@ class Map(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        geom = self.geom.__class__.__name__[:3]
+        geom = self.geom.__class__.__name__
         str_ += "\tgeom      : {} \n ".format(geom)
         str_ += "\tunit      : {} \n".format(self.unit)
         str_ += "\tdata shape: {}\n".format(self.data.shape)

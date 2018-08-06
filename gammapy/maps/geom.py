@@ -78,7 +78,7 @@ def make_axes_cols(axes, axis_names=None):
 
         for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
             array = np.ravel(v[i])
-            unit = ax.unit.to_string()
+            unit = ax.unit.to_string('fits')
             cols.append(fits.Column(colname, 'E', array=array, unit=unit))
 
     return cols
@@ -908,6 +908,12 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
 @six.add_metaclass(MapGeomMeta)
 class MapGeom(object):
     """Base class for WCS and HEALPix geometries."""
+
+    @property
+    @abc.abstractmethod
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        pass
 
     @property
     @abc.abstractmethod

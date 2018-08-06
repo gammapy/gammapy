@@ -606,6 +606,13 @@ class HpxGeom(MapGeom):
                                    [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
         self._center_pix = self.coord_to_pix(self._center_coord)
 
+    @property
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        npix_shape = [np.max(self.npix)]
+        ax_shape = [ax.nbin for ax in self.axes]
+        return tuple(npix_shape + ax_shape)[::-1]
+
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
 
@@ -1747,7 +1754,6 @@ class HpxGeom(MapGeom):
         axes = [_.name for _ in self.axes]
         str_ += "\taxes      : {}\n".format(", ".join(axes))
         return str_
-
 
 
 class HpxToWcsMapping(object):
