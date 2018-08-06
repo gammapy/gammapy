@@ -320,15 +320,15 @@ class HpxNDMap(HpxMap):
 
         import healpy as hp
 
-        c = MapCoord.create(coords)
-        coords_ctr = list(coords[:2])
+        coords = MapCoord.create(coords)
+        coords_ctr = [coords.lon, coords.lat]
         coords_ctr += [ax.pix_to_coord(t)
                        for ax, t in zip(self.geom.axes, idxs)]
         idx_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
         idx_ctr = self.geom.global_to_local(idx_ctr)
 
-        theta = np.array(np.pi / 2. - np.radians(c.lat), ndmin=1)
-        phi = np.array(np.radians(c.lon), ndmin=1)
+        theta = np.array(np.pi / 2. - np.radians(coords.lat), ndmin=1)
+        phi = np.array(np.radians(coords.lon), ndmin=1)
 
         m = ~np.isfinite(theta)
         theta[m] = 0.0
