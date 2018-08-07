@@ -2,6 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
+from astropy.table import Column
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
@@ -82,3 +84,20 @@ def test_fill_map_counts_keyerror(events):
     cntmap = WcsNDMap.create(binsz=0.1, npix=10, axes=[axis])
     with pytest.raises(KeyError):
         fill_map_counts(cntmap, events)
+
+@requires_data('gammapy-extra')
+def test_fill_map_counts_multiple_energy_axes(events):
+    axis_mc = MapAxis([0, 2, 4], name='energy_mc', unit='TeV')
+    axis_reco = MapAxis([0.001, 1000.], name='energy_reco', unit='TeV')
+    axis = MapAxis([0.001, 1000.], name='energy', unit='TeV')
+
+    cntmap1 = WcsNDMap.create(binsz=1, npix=10, coordsys='GAL', axes=[axis, axis_mc])
+    cntmap2 = WcsNDMap.create(binsz=1, npix=10, coordsys='GAL', axes=[axis_mc, axis_reco])
+
+    events.table['ENERGY_MC'] = 1*u.TeV
+
+    # Check that energy_mc entries are placed in the right axis
+    fill_map_counts(cntmap1, events)
+    assert_allclose(cntmap1.data.sum(axis=(1, 2, 3)), [105592, 0])
+    fill_map_counts(cntmap2, events)
+    assert_allclose(cntmap2.data.sum(axis=(0, 2, 3)), [105592, 0])
