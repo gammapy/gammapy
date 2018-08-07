@@ -10,8 +10,7 @@ This means that you need to install those dependencies to use Gammapy.
 
 We are aware that too many dependencies is an issue for deployment and
 maintenance. That's why currently Gammapy only has two core dependencies ---
-Numpy and Astropy. We are considering making Sherpa, Scipy, scikit-image,
-photutils, reproject and naima core dependencies.
+Numpy and Astropy. We are considering making Scipy and reproject and PyYAML core dependencies.
 
 In addition there are about a dozen optional dependencies that are OK to import
 from Gammapy because they are potentially useful (not all of those are actually
@@ -27,24 +26,15 @@ The required core dependencies of Gammapy are:
 * `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as `astropy.regions`.
 * `click`_ for making command line tools
 
-We're currently using
+Optional dependencies of Gammapy:
 
 * `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
-
-Currently optional dependencies that are being considered as core dependencies:
-
-* `Sherpa`_ for modeling / fitting
 * `scipy library`_ for numerical methods
-* `scikit-image`_ for some image processing tasks
-* `photutils`_ for image photometry
 * `reproject`_ for image reprojection
-* `naima`_ for SED modeling
-
-Allowed optional dependencies:
-
-* `matplotlib`_ for plotting
-* `uncertainties`_ for linear error propagation
 * `iminuit`_ for fitting by optimization
+* `uncertainties`_ for linear error propagation
+* `photutils`_ for image photometry
+* `matplotlib`_ for plotting
 * `emcee`_ for fitting by MCMC sampling
 * `healpy`_ for `HEALPIX`_ data handling
-* `nbsphinx`_ for transformation of Jupyter notebooks into fixed-text documentation
+* `naima`_ for SED modeling

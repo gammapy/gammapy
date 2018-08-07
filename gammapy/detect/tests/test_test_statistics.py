@@ -20,7 +20,6 @@ def input_maps():
 
 
 @requires_dependency('scipy')
-@requires_dependency('skimage')
 @requires_data('gammapy-extra')
 def test_compute_ts_map(input_maps):
     """Minimal test of compute_ts_image"""
@@ -37,7 +36,6 @@ def test_compute_ts_map(input_maps):
     assert_allclose(result['flux_ul'].data[99, 99], 1.10e-09, rtol=1e-2)
 
 @requires_dependency('scipy')
-@requires_dependency('skimage')
 @requires_data('gammapy-extra')
 def test_compute_ts_map_downsampled(input_maps):
     """Minimal test of compute_ts_image"""

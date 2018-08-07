@@ -6,11 +6,11 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
+from ..extern.skimage import block_reduce
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .utils import interp_to_order
-from .wcsmap import WcsGeom
-from .wcsmap import WcsMap
+from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 
 __all__ = [
@@ -432,7 +432,6 @@ class WcsNDMap(WcsMap):
         return self._init_copy(geom=geom, data=data)
 
     def downsample(self, factor, preserve_counts=True):
-        from skimage.measure import block_reduce
         geom = self.geom.downsample(factor)
         block_size = tuple([factor, factor] + [1] * (self.geom.ndim - 2))
         data = block_reduce(self.data, block_size[::-1], np.nansum)

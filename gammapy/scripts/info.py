@@ -31,7 +31,6 @@ GAMMAPY_DEPENDENCIES = [
     'iminuit',
     'naima',
     'photutils',
-    'skimage',
     'uncertainties',
 ]
 

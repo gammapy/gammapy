@@ -38,7 +38,7 @@ if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION pytest
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL pytest-xdist; fi
 if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == development ]]; then $PIP_INSTALL git+http://github.com/astropy/astropy.git#egg=astropy; fi
 if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == stable ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION astropy; fi
-if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy scikit-image pandas; fi
+if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy pandas; fi
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL uncertainties; fi
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
 if [[ $SETUP_CMD == build_docs* ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION Sphinx matplotlib scipy; fi

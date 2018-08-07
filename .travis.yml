@@ -27,11 +27,11 @@ env:
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
 
-        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties scikit-image pandas naima photutils sherpa libgfortran regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties scikit-image pandas naima photutils sherpa regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties scikit-image pandas naima photutils regions reproject pandoc ipython iminuit'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties scikit-image pandas naima photutils pygments sherpa libgfortran regions reproject pandoc ipython'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties scikit-image pandas naima photutils sherpa libgfortran runipy regions reproject pandoc ipython'
+        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima photutils sherpa libgfortran regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima photutils sherpa regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima photutils regions reproject pandoc ipython iminuit'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima photutils pygments sherpa libgfortran regions reproject pandoc ipython'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima photutils sherpa libgfortran runipy regions reproject pandoc ipython'
 
         - PIP_DEPENDENCIES='nbsphinx==0.2.17 sphinx-click sphinx_rtd_theme'
 
