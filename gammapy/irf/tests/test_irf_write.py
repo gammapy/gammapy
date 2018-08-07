@@ -62,25 +62,26 @@ class TestIRFWrite:
         assert self.aeff.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
         assert self.edisp.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
         assert self.bkg.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
-        assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE1']][0]
-                     * u.Unit(self.aeff.to_fits().header['TUNIT1']),
+
+        hdu = self.aeff.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
                      self.aeff.data.axes[0].lo)
-        assert_equal(self.aeff.to_fits().data[self.aeff.to_fits().header['TTYPE5']][0].T
-                     * u.Unit(self.aeff.to_fits().header['TUNIT5']),
+        hdu = self.aeff.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE5']][0].T * u.Unit(hdu.header['TUNIT5']),
                      self.aeff.data.data)
 
-        assert_equal(self.edisp.to_fits().data[self.edisp.to_fits().header['TTYPE1']][0]
-                     * u.Unit(self.edisp.to_fits().header['TUNIT1']),
+        hdu = self.edisp.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
                      self.edisp.data.axes[0].lo)
-        assert_equal(self.edisp.to_fits().data[self.edisp.to_fits().header['TTYPE7']][0].T
-                     * u.Unit(self.edisp.to_fits().header['TUNIT7']),
+        hdu =self.edisp.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE7']][0].T * u.Unit(hdu.header['TUNIT7']),
                      self.edisp.data.data)
 
-        assert_equal(self.bkg.to_fits().data[self.bkg.to_fits().header['TTYPE1']][0]
-                     * u.Unit(self.bkg.to_fits().header['TUNIT1']),
+        hdu = self.bkg.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
                      self.bkg.data.axes[1].lo)
-        assert_equal(self.bkg.to_fits().data[self.bkg.to_fits().header['TTYPE7']][0]
-                     * u.Unit(self.bkg.to_fits().header['TUNIT7']),
+        hdu = self.bkg.to_fits()
+        assert_equal(hdu.data[hdu.header['TTYPE7']][0] * u.Unit(hdu.header['TUNIT7']),
                      self.bkg.data.data)
 
     def test_writeread(self, tmpdir):
