@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
 

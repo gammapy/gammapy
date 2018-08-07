@@ -236,10 +236,10 @@ class SensitivityEstimator(object):
         fig.canvas.set_window_title("Sensitivity")
         ax = ax or plt.gca()
 
-        ax.plot(self.energy.value, self.diff_sens.value, color='red',
-                label=r"        $\sigma$=" + str(self.sigma) + " T=" + \
-                      str(self.livetime.to('h').value) + "h \n" + r"$\alpha$=" + str(self.alpha) + \
-                      r" Syst$_{BKG}$=" + str(self.bkg_sys * 100) + "%" + r" $\gamma_{min}$=" + str(self.gamma_min))
+        label = r"        $\sigma$=" + str(self.sigma) + " T=" + \
+                str(self.livetime.to('h').value) + "h \n" + r"$\alpha$=" + str(self.alpha) + \
+                r" Syst$_{BKG}$=" + str(self.bkg_sys * 100) + "%" + r" $\gamma_{min}$=" + str(self.gamma_min)
+        ax.plot(self.energy.value, self.diff_sens.value, color='red', label=label)
 
         ax.set_xscale('log')
         ax.set_yscale('log')

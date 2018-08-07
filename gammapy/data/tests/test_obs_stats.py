@@ -9,6 +9,7 @@ from ...data import DataStore, ObservationList, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
 
+
 @pytest.fixture(scope='session')
 def obs_list():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')

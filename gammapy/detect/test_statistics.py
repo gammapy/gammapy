@@ -3,18 +3,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import contextlib
-from time import time
 import warnings
 from collections import OrderedDict
 from functools import partial
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 import numpy as np
-from astropy.convolution import Model2DKernel, Gaussian2DKernel, CustomKernel, Kernel2D
-from astropy.convolution.kernels import _round_up_to_odd_integer
-from astropy.io import fits
+from astropy.convolution import CustomKernel, Kernel2D
 from ..utils.array import shape_2N, symmetric_crop_pad_width
-from ..irf import multi_gauss_psf_kernel
-from ..image.models import SkyShell
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython,
                                       _x_best_leastsq)
@@ -271,7 +266,7 @@ class TSMapEstimator(object):
                 maps[name] = maps[name].pad(pad_width)
                 preserve_counts = name in ['counts', 'background', 'exclusion']
                 maps[name] = maps[name].downsample(downsampling_factor,
-                                            preserve_counts=preserve_counts)
+                                                   preserve_counts=preserve_counts)
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -320,8 +315,7 @@ class TSMapEstimator(object):
             ul_method=ul_method,
             ul_sigma=p['ul_sigma'],
             rtol=p['rtol']
-            )
-
+        )
 
         x, y = np.where(mask.data)
         positions = list(zip(x, y))
@@ -352,7 +346,7 @@ class TSMapEstimator(object):
                     factor=downsampling_factor,
                     preserve_counts=False,
                     order=order
-                    )
+                )
                 result[name] = result[name].crop(crop_width=pad_width)
 
         return result
@@ -367,7 +361,6 @@ class TSMapEstimator(object):
         for key in p:
             info += '\t{key:13s}: {value}\n'.format(key=key, value=p[key])
         return info
-
 
 
 def _ts_value(position, counts, exposure, background, c_0, kernel, flux,

@@ -12,7 +12,6 @@ from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
 
-
 __all__ = [
     'FluxPoints',
     # 'FluxPointProfiles',
@@ -780,9 +779,10 @@ class FluxPointEstimator(object):
             quality_orig_unit = self.obs[index].on_vector.quality
             quality_len = len(quality_orig_unit)
             quality_orig.append(quality_orig_unit)
-            quality = np.zeros(quality_len,dtype=int)
+            quality = np.zeros(quality_len, dtype=int)
             for bin in range(quality_len):
-                if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (energy_group.bin_type != 'normal'):
+                if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (
+                        energy_group.bin_type != 'normal'):
                     quality[bin] = 1
             self.obs[index].on_vector.quality = quality
 
@@ -936,7 +936,6 @@ class FluxPointFitter(object):
             ('opts_minuit', opts_minuit)
         ])
 
-
     def fit(self, data, model):
         """
         Fit given model to data.
@@ -966,7 +965,7 @@ class FluxPointFitter(object):
                 parameters=model.parameters,
                 function=total_stat,
                 opts_minuit=p['opts_minuit']
-                )
+            )
             self._minuit = minuit
         else:
             raise ValueError('Only the minuit fitting backend is supported.')

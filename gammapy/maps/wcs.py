@@ -656,8 +656,7 @@ class WcsGeom(MapGeom):
                 if i < 2:
                     np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
                 else:
-                    np.putmask(idxs[i], (idx < 0) | (
-                            idx >= self.axes[i - 2].nbin), -1)
+                    np.putmask(idxs[i], (idx < 0) | (idx >= self.axes[i - 2].nbin), -1)
 
         return idxs
 

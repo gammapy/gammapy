@@ -4,7 +4,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 from ...utils.testing import requires_dependency
-from ...utils.random import get_random_state
 from ... import stats
 
 
@@ -33,12 +32,11 @@ def reference_values():
 
     Produced using sherpa stats module in dev/sherpa/stats/compare_wstat.py
     """
-    ref_vals = dict(
+    return dict(
         wstat=[1.19504844, 0.625311794002, 4.25810886127, 0.0603765381044,
                11.7285002468, 0.206014834301, 1.084611, 2.72972381792,
                4.60602990838, 7.51658734973]
     )
-    return ref_vals
 
 
 @pytest.mark.xfail(reason='sherpa implementation changed')
@@ -49,7 +47,6 @@ def test_cstat(test_data):
     data = test_data['n_on']
     model = test_data['mu_sig']
     staterror = test_data['staterror']
-    off_vec = test_data['n_off']
     desired, fvec = sherpa_stat.calc_stat(data, model, staterror=staterror)
 
     statsvec = stats.cstat(n_on=data, mu_on=model)
@@ -65,7 +62,6 @@ def test_cash(test_data):
     data = test_data['n_on']
     model = test_data['mu_sig']
     staterror = test_data['staterror']
-    off_vec = test_data['n_off']
     desired, fvec = sherpa_stat.calc_stat(data, model, staterror=staterror)
 
     statsvec = stats.cash(n_on=data, mu_on=model)
@@ -74,19 +70,19 @@ def test_cash(test_data):
 
 
 def test_wstat(test_data, reference_values):
-    statsvec = stats.wstat(n_on=test_data['n_on'],
-                           mu_sig=test_data['mu_sig'],
-                           n_off=test_data['n_off'],
-                           alpha=test_data['alpha'],
-                           extra_terms=True)
+    statsvec = stats.wstat(
+        n_on=test_data['n_on'],
+        mu_sig=test_data['mu_sig'],
+        n_off=test_data['n_off'],
+        alpha=test_data['alpha'],
+        extra_terms=True,
+    )
 
     assert_allclose(statsvec, reference_values['wstat'])
 
 
 def test_wstat_corner_cases():
     """test WSTAT formulae for corner cases"""
-
-    # n_on = 0
     n_on = 0
     n_off = 5
     mu_sig = 2.3
@@ -125,5 +121,4 @@ def test_wstat_corner_cases():
     assert_allclose(actual, desired)
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
-    desired = 0
-    assert_allclose(actual, desired)
+    assert_allclose(actual, 0)

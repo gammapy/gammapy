@@ -37,7 +37,6 @@ class HpxNDMap(HpxMap):
     """
 
     def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
-
         data_shape = geom.data_shape
 
         if data is None:
@@ -140,7 +139,6 @@ class HpxNDMap(HpxMap):
 
     def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
                width_pix=None, hpx2wcs=None):
-
         from .wcsnd import WcsNDMap
 
         if sum_bands and self.geom.nside.size > 1:
@@ -294,7 +292,6 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def interp_by_coord(self, coords, interp=1):
-
         order = interp_to_order(interp)
         if order == 1:
             return self._interp_by_coord(coords, order)
@@ -312,7 +309,6 @@ class HpxNDMap(HpxMap):
         return self.data.T[idx]
 
     def _get_interp_weights(self, coords, idxs):
-
         import healpy as hp
 
         coords = MapCoord.create(coords)
@@ -462,7 +458,6 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def to_ud_graded(self, nside, preserve_counts=False):
-
         # FIXME: Should we remove/deprecate this method?
 
         order = nside_to_order(nside)
@@ -600,8 +595,7 @@ class HpxNDMap(HpxMap):
             dist = np.max(np.abs(idx[0][0] - idx[0]))
 
             # Split pixels that wrap around the edges of the projection
-            if (dist > wcs.npix[0] / 1.5):
-
+            if dist > wcs.npix[0] / 1.5:
                 lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
                 lon0 = lon - 1E-4
                 lon1 = lon + 1E-4
@@ -618,7 +612,6 @@ class HpxNDMap(HpxMap):
                 patches.append(Polygon(np.vstack((pix1[0], pix1[1])).T, True))
                 data.append(self.data[i])
                 data.append(self.data[i])
-
             else:
                 polygon = Polygon(np.vstack((idx[0], idx[1])).T, True)
                 patches.append(polygon)

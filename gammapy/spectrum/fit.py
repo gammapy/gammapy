@@ -263,7 +263,7 @@ class SpectrumFit(object):
         Returns
         ------
         statsval : tuple of `~numpy.ndarray`
-            Statval 
+            Statval
         """
         stats_func = getattr(stats, self.stat)
 
