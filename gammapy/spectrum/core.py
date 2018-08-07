@@ -245,7 +245,7 @@ class CountsSpectrum(object):
         split_indices = np.arange(parameter, len(retval.data.data), parameter)
         counts_grp = np.split(retval.data.data, split_indices)
         counts_rebinned = np.sum(counts_grp, axis=1)
-        retval.data.data = counts_rebinned 
+        retval.data.data = counts_rebinned
 
         return retval
 
@@ -301,7 +301,7 @@ class PHACountsSpectrum(CountsSpectrum):
         self.livetime = livetime
         self.offset = offset
         self.meta = meta or dict()
-        
+
     @property
     def quality(self):
         """Bins in safe energy range (1 = bad, 0 = good)"""
@@ -401,7 +401,7 @@ class PHACountsSpectrum(CountsSpectrum):
                 retval.meta.backscal = retval.backscal[0] * np.ones(retval.energy.nbins)
 
         # average areascal
-        areascal_grp = np.split(retval.areascal, split_indices) 
+        areascal_grp = np.split(retval.areascal, split_indices)
         retval.areascal = np.mean(areascal_grp, axis=1)
 
         return retval

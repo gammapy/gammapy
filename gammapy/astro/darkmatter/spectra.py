@@ -62,7 +62,7 @@ class PrimaryFlux(object):
         """Allowed annihilation channels
 
         TODO: Introduce a dict with simpler channel names
-        TODO: Make allowed_channels a class property        
+        TODO: Make allowed_channels a class property
         """
         return self.table.colnames[2:]
 

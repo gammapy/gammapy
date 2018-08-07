@@ -149,7 +149,7 @@ TEST_MODELS.append(dict(
     name='compound4',
     model= TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
     val_at_2TeV= 0.9 * TEST_MODELS[0]['val_at_2TeV'],
-    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'), 
+    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'),
     eflux_1_10TeV=2.6322140512045697 * u.Unit('TeV cm-2 s-1'),
 ))
 

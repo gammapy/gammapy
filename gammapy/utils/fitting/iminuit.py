@@ -63,7 +63,7 @@ def _make_parnames(parameters):
     """Create list with unambigious parameter names"""
     parnames = list()
     for par_idx, par in enumerate(parameters.parameters):
-        parname_ = 'par_{:03d}_{}'.format(par_idx, par.name) 
+        parname_ = 'par_{:03d}_{}'.format(par_idx, par.name)
         parnames.append(parname_)
     return parnames
 

@@ -31,7 +31,7 @@ hegra = {
 }
 
 # MAGIC publication: 2015JHEAp...5...30A
-# note that in the paper the beta of the LogParabola is given as negative in  
+# note that in the paper the beta of the LogParabola is given as negative in
 # Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
 # Also MAGIC uses log10 in the LogParabola expression, gammapy uses ln, hence
 # the conversion factor

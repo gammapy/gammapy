@@ -79,7 +79,7 @@ class TestSpectrumSimulation:
         rate_model.parameters['amplitude'].value = 1
         sim = SpectrumSimulation(source_model=rate_model,
                                  livetime=4*u.h,
-                                 e_true=e_true 
+                                 e_true=e_true
                                 )
         sim.simulate_obs(seed=23, obs_id=23)
         assert sim.obs.on_vector.total_counts == 10509

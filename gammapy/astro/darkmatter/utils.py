@@ -37,7 +37,7 @@ class JFactory(object):
         r"""Compute differential J-Factor
 
         .. math ::
-            \frac{\mathrm d J}{\mathrm d \Omega} = 
+            \frac{\mathrm d J}{\mathrm d \Omega} =
            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
 
         TODO: Needs to be implemented more efficiently
@@ -53,9 +53,9 @@ class JFactory(object):
         r"""Compute astrophysical J-Factor
 
         .. math ::
-            J(\Delta\Omega) = 
+            J(\Delta\Omega) =
            \int_{\Delta\Omega} \mathrm d \Omega^{\prime}
-           \frac{\mathrm d J}{\mathrm d \Omega^{\prime}} 
+           \frac{\mathrm d J}{\mathrm d \Omega^{\prime}}
 
         """
         diff_jfact = self.compute_differential_jfactor()

@@ -31,7 +31,7 @@ spectral_model_1 = PowerLaw(
 )
 
 spectral_model_2 = PowerLaw(
-    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV", 
+    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV",
 )
 
 sky_model_1 = SkyModel(spatial_model=spatial_model_1, spectral_model=spectral_model_1)

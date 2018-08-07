@@ -95,14 +95,14 @@ class SpectrumExtraction(object):
 
     def process(self, obs, bkg):
         """Process one observation.
-        
+
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
-        
+
         Returns
         -------
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`

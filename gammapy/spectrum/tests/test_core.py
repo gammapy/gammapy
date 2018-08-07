@@ -63,7 +63,7 @@ class TestCountsSpectrum:
             rebinned_spec = self.spec.rebin(4)
 
         actual = rebinned_spec.data.evaluate(energy=[2, 3, 5] * u.TeV)
-        desired = [0, 7, 20] 
+        desired = [0, 7, 20]
         assert (actual == desired).all()
 
 

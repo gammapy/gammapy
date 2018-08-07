@@ -194,7 +194,7 @@ class CompoundSkyModel(object):
         self.model2 = model2
         self.operator = operator
         self._parameters = ParameterList(
-            self.model1.parameters.parameters + 
+            self.model1.parameters.parameters +
             self.model2.parameters.parameters
         )
 
