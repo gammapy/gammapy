@@ -42,8 +42,9 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     # This means `errordef=1` in the Minuit interface is correct
     opts_minuit.setdefault('errordef', 1)
 
+    parnames = _make_parnames(parameters)
     minuit = Minuit(minuit_func.fcn,
-                    forced_parameters=parameters.names,
+                    forced_parameters=parnames,
                     **opts_minuit)
 
     minuit.migrad()
@@ -56,6 +57,15 @@ def fit_iminuit(parameters, function, opts_minuit=None):
         parameters.covariance = None
 
     return minuit
+
+
+def _make_parnames(parameters):
+    """Create list with unambigious parameter names"""
+    parnames = list()
+    for par_idx, par in enumerate(parameters.parameters):
+        parname_ = 'par_{:03d}_{}'.format(par_idx, par.name) 
+        parnames.append(parname_)
+    return parnames
 
 
 class MinuitFunction(object):
@@ -84,20 +94,21 @@ def make_minuit_par_kwargs(parameters):
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
     kwargs = {}
-    for par in parameters.parameters:
-        kwargs[par.name] = par.value
+    parnames = _make_parnames(parameters)
+    for parname_, par in zip(parnames, parameters.parameters):
+        kwargs[parname_] = par.value
 
         min_ = None if np.isnan(par.min) else par.min
         max_ = None if np.isnan(par.max) else par.max
-        kwargs['limit_{}'.format(par.name)] = (min_, max_)
+        kwargs['limit_{}'.format(parname_)] = (min_, max_)
 
         if parameters.covariance is None:
-            kwargs['error_{}'.format(par.name)] = 1
+            kwargs['error_{}'.format(parname_)] = 1
         else:
-            kwargs['error_{}'.format(par.name)] = parameters.error(par.name)
+            kwargs['error_{}'.format(parname_)] = np.sqrt(self.covariance[par_idx, par_idx])
 
         if par.frozen:
-            kwargs['fix_{}'.format(par.name)] = True
+            kwargs['fix_{}'.format(parname_)] = True
 
     return kwargs
 
