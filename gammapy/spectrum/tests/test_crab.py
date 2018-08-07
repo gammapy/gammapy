@@ -30,18 +30,18 @@ CRAB_SPECTRA = [
         flux=u.Quantity(2.267957713046026e-11, 'cm-2 s-1'),
         index=2.529860258102417,
     ),
-	dict(
-		name='magic_lp',
-		dnde=u.Quantity(5.5451060834144166e-12, 'cm-2 s-1 TeV-1'),
-		flux=u.Quantity(2.028222279117e-11, 'cm-2 s-1'),
-		index=2.614495440236207,
-	),
-	dict(
-		name='magic_ecpl',
-		dnde=u.Quantity(5.88494595619e-12, 'cm-2 s-1 TeV-1'),
-		flux=u.Quantity(2.070767119534948e-11, 'cm-2 s-1'),
-		index=2.5433349999859405,
-	),
+    dict(
+        name='magic_lp',
+        dnde=u.Quantity(5.5451060834144166e-12, 'cm-2 s-1 TeV-1'),
+        flux=u.Quantity(2.028222279117e-11, 'cm-2 s-1'),
+        index=2.614495440236207,
+    ),
+    dict(
+        name='magic_ecpl',
+        dnde=u.Quantity(5.88494595619e-12, 'cm-2 s-1 TeV-1'),
+        flux=u.Quantity(2.070767119534948e-11, 'cm-2 s-1'),
+        index=2.5433349999859405,
+    ),
 
 ]
 
