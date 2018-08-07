@@ -122,21 +122,6 @@ class Parameter(object):
             frozen=self.frozen,
         )
 
-    def to_sherpa(self, modelname='Default'):
-        """Convert to sherpa parameter"""
-        from sherpa.models import Parameter
-        min_ = np.finfo(np.float32).min if np.isnan(self.min) else self.min
-        max_ = np.finfo(np.float32).max if np.isnan(self.max) else self.max
-        return Parameter(
-            modelname=modelname,
-            name=self.name,
-            val=self.value,
-            units=self.unit,
-            min=min_,
-            max=max_,
-            frozen=self.frozen,
-        )
-
 
 class ParameterList(object):
     """List of `~gammapy.spectrum.models.Parameter`
