@@ -36,7 +36,7 @@ def make_psf_map(psf, pointing, geom, max_offset):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name('energy_true')
+    energy_axis = geom.get_axis_by_name('energy')
     energy = energy_axis.center * energy_axis.unit
 
     rad_axis = geom.get_axis_by_name('theta')
@@ -81,7 +81,7 @@ class PSFMap(object):
         from astropy.coordinates import SkyCoord
 
         # Define energy axis. Note that the name is fixed.
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy_true')
+        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
         # Define rad axis. Again note the axis name
         rads = np.linspace(0., 0.5, 100) * u.deg
         rad_axis = MapAxis.from_edges(rads, unit='deg', name='theta')
@@ -110,7 +110,7 @@ class PSFMap(object):
     """
 
     def __init__(self, psf_map):
-        if psf_map.geom.axes[1].name.upper() != 'ENERGY_TRUE':
+        if psf_map.geom.axes[1].name.upper() != 'ENERGY':
             raise ValueError("Incorrect energy axis position in input Map")
 
         if psf_map.geom.axes[0].name.upper() != 'THETA':

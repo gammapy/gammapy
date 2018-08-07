@@ -363,14 +363,6 @@ class MapAxis(object):
         self._node_type = node_type
         self._unit = u.Unit('' if unit is None else unit)
 
-        # Set axis type from its unit
-        if self._unit.is_equivalent("eV"):
-            self._type = 'energy'
-        elif self._unit.is_equivalent("s"):
-            self._type = 'time'
-        else:
-            self._type = 'any'
-
         # Set pixel coordinate of first node
         if node_type == 'edge':
             self._pix_offset = -0.5
@@ -432,11 +424,6 @@ class MapAxis(object):
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
-
-    @property
-    def type(self):
-        """Return coordinate axis type."""
-        return self._type
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
@@ -614,7 +601,6 @@ class MapAxis(object):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tname     : {}\n".format(self.name)
-        str_ += "\ttype     : {}\n".format(self.type)
         str_ += "\tunit     : {}\n".format(self.unit)
         str_ += "\tnbins    : {}\n".format(self.nbin)
         str_ += "\tnode type: {}\n".format(self.node_type)
@@ -1373,56 +1359,23 @@ class MapGeom(object):
         """Whether the geom is equivalent to an image without extra dimensions."""
         if self.axes is None:
             return True
-        is_image = len(self.axes) == 0
-        return is_image
-
-    @property
-    def axes_names(self):
-        """Returns list of axes names"""
-        return [_.name for _ in self.axes]
+        return len(self.axes) == 0
 
     def get_axis_by_name(self, name):
-        """Return axis with corresponding name
+        """Get an axis by name (case in-sensitive).
 
         Parameters
         ----------
         name : str
-           the name of the requested axis
+           Name of the requested axis
 
         Returns
         -------
         axis : `~gammapy.maps.MapAxis`
-            the corresponding axis
-
+            Axis
         """
-
-        # TODO : we implictly assume all axes have different names. This should be enforced at MapGeom creation.
-        for i, axis in enumerate(self.axes):
-            if axis.name.upper() == name.upper():
-                return axis
-        raise ValueError("Cannot find axis named {}".format(name))
-
-    def get_axis_by_type(self, type):
-        """Returns axis of given type.
-
-        Parameters
-        ----------
-        type : str in {'energy', 'time', 'any'}
-           the name of the requested type of axis
-
-        Returns
-        -------
-        axes : `~gammapy.maps.MapAxis`
-            the corresponding  axis
-        """
-        valid_types = ('energy', 'time', 'any')
-        if type not in valid_types:
-            raise ValueError("Invalid axis type {}. Should be {}.".format(type, valid_types))
-
-        for i, axis in enumerate(self.axes):
-            if axis.type == type:
-                return axis
-        raise ValueError("Cannot find type {}".format(type))
+        axes = {axis.name.upper(): axis for axis in self.axes}
+        return axes[name.upper()]
 
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self.
