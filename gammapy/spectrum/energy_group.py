@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 from copy import deepcopy
 import numpy as np
+import logging
 from ..extern.six.moves import UserList
 import astropy.units as u
 from astropy.units import Quantity
@@ -30,6 +31,7 @@ __all__ = [
     'SpectrumEnergyGroupMaker',
 ]
 
+log = logging.getLogger(__name__) 
 
 class SpectrumEnergyGroup(object):
     """Spectrum energy group.
@@ -204,7 +206,12 @@ class SpectrumEnergyGroups(UserList):
             if group.contains_energy(energy):
                 return idx
 
-        raise IndexError('No group found with energy: {}'.format(energy))
+        # energy is below groups 
+        if energy < self[0].energy_min: 
+            return -1
+        # energy is above
+        if energy >= self[-1].energy_max: 
+            return -2
 
 
 class SpectrumEnergyGroupMaker(object):
@@ -269,56 +276,64 @@ class SpectrumEnergyGroupMaker(object):
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
-        ebounds_obs = self.obs.e_reco
-        groups = []
+        ebounds_src = self.obs.e_reco
+        bin_edges_src = np.arange(len(ebounds_src))
+        
+        temp = np.interp(ebounds, ebounds_src, bin_edges_src)
+        bin_edges = np.round(temp, decimals=0).astype(np.int)
 
-        # Calculate all differences between `ebounds` and `ebounds_obs`
-        # Find the indices where the sign changes
-        energy_binning_offset = ebounds - 1 * u.MeV
-        diff = energy_binning_offset[:, np.newaxis] - ebounds_obs.lower_bounds
-        lower_indices = np.argmin(np.sign(diff), axis=1)
-        # Make sure the last bin is not the first bin.
-        if lower_indices[-1] == 0:
-            lower_indices[-1] = ebounds_obs.nbins
+        # Check for duplicates
+        duplicates_removed = list()
+        for _ in bin_edges:
+            if _ not in duplicates_removed:
+                duplicates_removed.append(_)
 
-        energy_group_idx = 0
+        if len(duplicates_removed) != len(bin_edges):
+            warn_str = "Input binning\n{}\n contains bins that are finer than the"
+            warn_str += " target binning\n{}\nor outside the valid range"
+            log.warn(warn_str.format(ebounds, ebounds_src)) 
+        bin_edges = duplicates_removed
 
-        if lower_indices[0] > 0:
-            # Create underflow group
+        # Create normal bins
+        groups = list()
+        for idx in np.arange(len(bin_edges) - 1):
             group = SpectrumEnergyGroup(
-                energy_group_idx=energy_group_idx,
-                bin_idx_min=0,
-                bin_idx_max=lower_indices[0] - 1,
-                bin_type='underflow',
-                energy_min=ebounds_obs.lower_bounds[0],
-                energy_max=ebounds_obs.upper_bounds[lower_indices[0] - 1],
-            )
-            groups.append(group)
-            energy_group_idx += 1
-
-        # Create normal groups (could be none)
-        for index in range(len(ebounds) - 1):
-            group = SpectrumEnergyGroup(
-                energy_group_idx=energy_group_idx,
-                bin_idx_min=lower_indices[index],
-                bin_idx_max=lower_indices[index + 1] - 1,
+                energy_group_idx=-1,
+                bin_idx_min=bin_edges[idx],
+                bin_idx_max=bin_edges[idx+1] - 1,
                 bin_type='normal',
-                energy_min=ebounds_obs.lower_bounds[lower_indices[index]],
-                energy_max=ebounds_obs.upper_bounds[lower_indices[index + 1] - 1],
+                energy_min=ebounds_src[bin_edges[idx]],
+                energy_max=ebounds_src[bin_edges[idx+1]],
             )
             groups.append(group)
-            energy_group_idx += 1
 
-        maxbin = lower_indices[-1]
-        if maxbin < ebounds_obs.nbins:
-            # Create overflow group
-            group = SpectrumEnergyGroup(
-                energy_group_idx=energy_group_idx,
-                bin_idx_min=maxbin,
-                bin_idx_max=ebounds_obs.nbins - 1,
+        # Add underflow bin
+        start_edge = groups[0].bin_idx_min
+        if  start_edge != 0:
+            underflow = SpectrumEnergyGroup(
+                energy_group_idx=-1,
+                bin_idx_min=0,
+                bin_idx_max=start_edge - 1,
+                bin_type='underflow',
+                energy_min=ebounds_src[0],
+                energy_max=ebounds_src[start_edge],
+            )
+            groups.insert(0, underflow)
+
+        # Add overflow bin
+        end_edge = groups[-1].bin_idx_max
+        if  end_edge != ebounds_src.nbins - 1:
+            overflow = SpectrumEnergyGroup(
+                energy_group_idx=-1,
+                bin_idx_min=end_edge + 1,
+                bin_idx_max=ebounds_src.nbins - 1,
                 bin_type='overflow',
-                energy_min=ebounds_obs.lower_bounds[maxbin],
-                energy_max=ebounds_obs.upper_bounds[-1])
-            groups.append(group)
+                energy_min=ebounds_src[end_edge + 1],
+                energy_max=ebounds_src[-1],
+            )
+            groups.append(overflow)
 
-        self.groups = SpectrumEnergyGroups(groups)
+        # Set energy_group_idx
+        for group_idx, group in enumerate(groups):
+            group.energy_group_idx = group_idx
+        self.groups = SpectrumEnergyGroups(groups) 
