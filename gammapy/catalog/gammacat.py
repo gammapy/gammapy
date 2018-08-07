@@ -17,7 +17,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel, SourceLibrary
+from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -445,8 +445,8 @@ class SourceCatalogGammaCat(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-    def to_source_library(self):
-        """Convert to a `~gammapy.utils.modeling.SourceLibrary`.
+    def to_sky_models(self):
+        """Convert to a `~gammapy.utils.modeling.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """
@@ -460,7 +460,7 @@ class SourceCatalogGammaCat(SourceCatalog):
                 log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
                 continue
 
-        return SourceLibrary(source_list)
+        return SkyModels(source_list)
 
 
 class GammaCatDataCollection(object):

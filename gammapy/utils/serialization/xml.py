@@ -16,18 +16,18 @@ from ..modeling import Parameter, ParameterList
 from ...maps import Map
 from ...image import models as spatial
 from ...spectrum import models as spectral
-from ...cube.models import SourceLibrary, SkyModel
+from ...cube.models import SkyModels, SkyModel
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     'UnknownModelError',
     'UnknownParameterError',
-    'xml_to_source_library',
+    'xml_to_sky_models',
     'xml_to_skymodel',
     'xml_to_model',
     'xml_to_parameter_list',
-    'source_library_to_xml',
+    'sky_models_to_xml',
 ]
 
 # TODO: Move to a separate file ?
@@ -146,7 +146,7 @@ class UnknownParameterError(ValueError):
     """Error when encountering unknown parameters."""
 
 
-def xml_to_source_library(xml):
+def xml_to_sky_models(xml):
     """
     Convert XML to `~gammapy.cube.models.SkyModelList`
     """
@@ -157,7 +157,7 @@ def xml_to_source_library(xml):
         skymodel = xml_to_skymodel(xml_skymodel)
         if skymodel is not None:
             skymodels.append(skymodel)
-    return SourceLibrary(skymodels)
+    return SkyModels(skymodels)
 
 
 def xml_to_skymodel(xml):
@@ -259,9 +259,9 @@ def xml_to_parameter_list(xml, which, type_):
     return ParameterList(parameters)
 
 
-def source_library_to_xml(sourcelib):
+def sky_models_to_xml(sourcelib):
     """
-    Convert `~gammapy.cube.models.SourceLibrary` to XML
+    Convert `~gammapy.cube.models.SkyModels` to XML
     """
     xml = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml += '<source_library title="source library">\n'

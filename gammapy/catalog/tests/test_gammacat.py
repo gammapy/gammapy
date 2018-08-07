@@ -80,8 +80,8 @@ class TestSourceCatalogGammaCat:
             cat.table.sort(sort_key)
             assert cat[name].name == name
 
-    def test_to_source_library(self, gammacat):
-        sources = gammacat.to_source_library()
+    def test_to_sky_models(self, gammacat):
+        sources = gammacat.to_sky_models()
         source = sources.skymodels[0]
 
         assert len(sources.skymodels) == 74

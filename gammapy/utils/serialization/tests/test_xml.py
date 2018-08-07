@@ -6,8 +6,8 @@ from numpy.testing import assert_allclose
 from ...testing import requires_data, requires_dependency
 from ....spectrum import models as spectral
 from ....image import models as spatial
-from ....cube.models import SourceLibrary
-from ...serialization import xml_to_source_library, UnknownModelError
+from ....cube.models import SkyModels
+from ...serialization import xml_to_sky_models, UnknownModelError
 
 
 def test_from_xml():
@@ -26,8 +26,8 @@ def test_from_xml():
             </source>
         </source_library>
         '''
-    source_library = SourceLibrary.from_xml(xml)
-    sky_model = source_library.skymodels[0]
+    sky_models = SkyModels.from_xml(xml)
+    sky_model = sky_models.skymodels[0]
     assert_allclose(sky_model.parameters['lon_0'].value, 187.25)
 
 
@@ -42,7 +42,7 @@ def test_xml_errors():
     xml += '</source_library>'
 
     with pytest.raises(UnknownModelError):
-        xml_to_source_library(xml)
+        xml_to_sky_models(xml)
 
     # TODO: Think about a more elaborate XML validation scheme
 
@@ -51,7 +51,7 @@ def test_xml_errors():
 @requires_dependency('scipy')
 def test_complex():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/examples.xml'
-    sourcelib = SourceLibrary.read(filename)
+    sourcelib = SkyModels.read(filename)
 
     assert len(sourcelib.skymodels) == 7
 
@@ -124,10 +124,10 @@ def test_complex():
 ])
 def test_models(filename, tmpdir):
     outfile = tmpdir / 'models_out.xml'
-    sourcelib = SourceLibrary.read(filename)
+    sourcelib = SkyModels.read(filename)
     sourcelib.to_xml(outfile)
 
-    sourcelib_roundtrip = SourceLibrary.from_xml(outfile)
+    sourcelib_roundtrip = SkyModels.from_xml(outfile)
 
     for model, model_roundtrip in zip(sourcelib.skymodels,
                                       sourcelib_roundtrip.skymodels):
@@ -136,9 +136,9 @@ def test_models(filename, tmpdir):
 
 @pytest.mark.xfail(reason='Need to improve XML read')
 @requires_data('gammapy-extra')
-def test_source_library_old_xml_file():
+def test_sky_models_old_xml_file():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/shell.xml'
-    sources = SourceLibrary.read(filename)
+    sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 2
 
@@ -152,9 +152,9 @@ def test_source_library_old_xml_file():
 
 @pytest.mark.xfail(reason='Need to improve XML read')
 @requires_data('gammapy-extra')
-def test_source_library_new_xml_file():
+def test_sky_models_new_xml_file():
     filename = '$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml'
-    sources = SourceLibrary.read(filename)
+    sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 47
 
