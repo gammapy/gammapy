@@ -30,6 +30,7 @@ def test_parameter_list():
     pars.set_parameter_errors({
         'ham': '10000 GeV',
     })
-    assert_allclose(pars.covariance, [[0, 0], [0, 100]])
-    assert_allclose(pars.error('spam'), 0)
-    assert_allclose(pars.error('ham'), 10)
+    pars.set_error(0, 0.1)
+    assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
+    assert_allclose(pars.error('spam'), 0.1)
+    assert_allclose(pars.error(1), 10)

@@ -163,13 +163,21 @@ class ParameterList(object):
         ss += '\n\nCovariance: \n{}'.format(self.covariance)
         return ss
 
-    def __getitem__(self, name):
-        """Access parameter by name"""
-        for par in self.parameters:
-            if name == par.name:
-                return par
+    def _get_idx(self, val):
+        """Convert parameter name or index to index"""
+        if isinstance(val, six.string_types):
+            for idx, par in enumerate(self.parameters):
+                if val == par.name:
+                    return idx
+            raise IndexError('Parameter {} not found for : {}'.format(val, self))
 
-        raise IndexError('Parameter {} not found for : {}'.format(name, self))
+        else:
+            return val
+
+    def __getitem__(self, name):
+        """Access parameter by name or index"""
+        idx = self._get_idx(name)
+        return self.parameters[idx]
 
     def to_dict(self):
         retval = dict(parameters=list(), covariance=None)
@@ -289,6 +297,7 @@ class ParameterList(object):
         errors : dict of `~astropy.units.Quantity`
             Dict of parameter errors.
         """
+        # TODO: Mark as deprecated
         diag = []
         for par in self.parameters:
             error = errors.get(par.name, 0)
@@ -330,16 +339,33 @@ class ParameterList(object):
 
         Parameters
         ----------
-        parname : str
-            Parameter
+        parname : str, int
+            Parameter name or index
         """
         if self.covariance is None:
             raise ValueError('Covariance matrix not set.')
 
-        for i, parameter in enumerate(self.parameters):
-            if parameter.name == parname:
-                return np.sqrt(self.covariance[i, i])
-        raise ValueError('Could not find parameter {}'.format(parname))
+        idx = self._get_idx(parname)
+        return np.sqrt(self.covariance[idx, idx])
+
+    # TODO: this is a temporary solution until we have a better way
+    # to handle covariance matrices via a class
+    def set_error(self, parname, err):
+        """
+        Return error on a given parameter
+
+        Parameters
+        ----------
+        parname : str, int
+            Parameter name or index
+        """
+        if self.covariance is None:
+            shape = (len(self.parameters), len(self.parameters))
+            self.covariance = np.zeros(shape) 
+
+        idx = self._get_idx(parname)
+        err = u.Quantity(err, self[idx].unit).value
+        self.covariance[idx, idx] = err ** 2
 
     def copy(self):
         """A deep copy"""

@@ -124,6 +124,7 @@ class SkyModel(object):
 
     @parameters.setter
     def parameters(self, parameters):
+        self._parameters = parameters
         idx = len(self.spatial_model.parameters.parameters)
         self._spatial_model.parameters.parameters = parameters.parameters[:idx]
         self._spectral_model.parameters.parameters = parameters.parameters[idx:]
@@ -192,18 +193,19 @@ class CompoundSkyModel(object):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-
-    # TODO: Think about how to deal with covariance matrix
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
-        return ParameterList(
-            self.model1.parameters.parameters +
+        self._parameters = ParameterList(
+            self.model1.parameters.parameters + 
             self.model2.parameters.parameters
         )
 
+    @property
+    def parameters(self):
+        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
+        return self._parameters
+
     @parameters.setter
     def parameters(self, parameters):
+        self._parameters = parameters
         idx = len(self.model1.parameters.parameters)
         self.model1.parameters.parameters = parameters.parameters[:idx]
         self.model2.parameters.parameters = parameters.parameters[idx:]

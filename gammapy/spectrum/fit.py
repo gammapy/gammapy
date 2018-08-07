@@ -429,9 +429,14 @@ class SpectrumFit(object):
         # parameter names
 
         # create tuples of combinations
-        d = self._model.parameters.to_dict()
-        parameter_names = [l['name'] for l in d['parameters'] if not l['frozen']]
-        self.covar_axis = parameter_names
+        parameter_names = list()
+        parameter_names_minuit = self._iminuit_fit.parameters
+        for par, parname in zip(self._model.parameters.parameters,
+                                parameter_names_minuit):
+            if not par.frozen:
+                parameter_names.append(parname)
+
+        self.covar_axis = self._model.parameters.free
         parameter_combinations = list(product(parameter_names, repeat=2))
 
         if self._iminuit_fit.covariance:
