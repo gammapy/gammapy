@@ -44,12 +44,6 @@ class TestSpectrumEnergyGroup:
         assert_equal(table["energy_group_idx"], 3)
         assert_equal(table["bin_type"], "normal")
 
-    def test_contains_energy(self, group):
-        energy = [99, 100, 199, 200] * u.TeV
-        actual = group.contains_energy(energy)
-        expected = [False, True, True, False]
-        assert_equal(actual, expected)
-
 
 class TestSpectrumEnergyGroups:
     @pytest.fixture()
@@ -100,14 +94,6 @@ class TestSpectrumEnergyGroups:
         expected = [100, 210, 260, 270, 300] * u.TeV
         assert_allclose(actual, expected)
         assert actual.unit == "TeV"
-
-    def test_find_list_idx(self, groups):
-        assert groups.find_list_idx(energy=100 * u.TeV) == 0  # On the edge
-        assert groups.find_list_idx(energy=270 * u.TeV) == 3  # On the edge
-        assert groups.find_list_idx(energy=271 * u.TeV) == 3  # inside a bin
-
-        assert groups.find_list_idx(energy=99 * u.TeV) == -1  # too low
-        assert groups.find_list_idx(energy=300 * u.TeV) == -2  # too high
 
 
 class TestSpectrumEnergyGroupMaker:

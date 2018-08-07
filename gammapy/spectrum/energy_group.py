@@ -96,10 +96,6 @@ class SpectrumEnergyGroup(object):
         table['energy_max'] = self.energy_max
         return table
 
-    def contains_energy(self, energy):
-        """Does this group contain a given energy?"""
-        return (self.energy_min <= energy) & (energy < self.energy_max)
-
 
 class SpectrumEnergyGroups(UserList):
     """List of `~gammapy.spectrum.SpectrumEnergyGroup` objects.
@@ -200,19 +196,6 @@ class SpectrumEnergyGroups(UserList):
         energy.append(self[-1].energy_max)
         return Quantity(energy)
 
-    def find_list_idx(self, energy):
-        """Find the list index corresponding to a given energy."""
-        for idx, group in enumerate(self):
-            if group.contains_energy(energy):
-                return idx
-
-        # energy is below groups 
-        if energy < self[0].energy_min: 
-            return -1
-        # energy is above
-        if energy >= self[-1].energy_max: 
-            return -2
-
 
 class SpectrumEnergyGroupMaker(object):
     """Energy bin groups for spectral analysis.
@@ -283,16 +266,13 @@ class SpectrumEnergyGroupMaker(object):
         bin_edges = np.round(temp, decimals=0).astype(np.int)
 
         # Check for duplicates
-        duplicates_removed = list()
-        for _ in bin_edges:
-            if _ not in duplicates_removed:
-                duplicates_removed.append(_)
-
+        duplicates_removed = set(bin_edges)
         if len(duplicates_removed) != len(bin_edges):
             warn_str = "Input binning\n{}\n contains bins that are finer than the"
-            warn_str += " target binning\n{}\nor outside the valid range"
+            warn_str += " target binning\n{}\n or outside the valid range"
             log.warn(warn_str.format(ebounds, ebounds_src)) 
-        bin_edges = duplicates_removed
+        bin_edges = list(duplicates_removed)
+        bin_edges.sort()
 
         # Create normal bins
         groups = list()
