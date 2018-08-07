@@ -404,12 +404,12 @@ def test_smooth(kernel):
     assert_allclose(actual, desired)
 
 @pytest.mark.parametrize('mode', ['partial', 'strict', 'trim'])
-def test_make_cutout():
+def test_make_cutout(mode):
     pos = SkyCoord(0, 0, unit='deg', frame='galactic')
     geom = WcsGeom.create(npix=(10, 10), binsz=1, skydir=pos,
                           proj='CAR', coordsys='GAL', axes=axes2)
     m = WcsNDMap(geom, data=np.ones((3, 2, 10, 10)), unit='m2')
-    cutout, _ = m.make_cutout(position=pos, width=(2.0, 3.0) * u.deg)
+    cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode)
     actual = cutout.data.sum()
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)

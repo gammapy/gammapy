@@ -93,7 +93,7 @@ class MapMaker(object):
         # Only if there is an exclusion mask, make a cutout
         exclusion_mask = self.maps.get('exclusion', None)
         if exclusion_mask is not None:
-            exclusion_mask, _ = exclusion_mask.cutout(
+            exclusion_mask = exclusion_mask.cutout(
                 position=obs.pointing_radec,
                 width=2 * self.offset_max,
                 mode='trim',
