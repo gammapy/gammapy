@@ -253,7 +253,6 @@ class SkyDiffuseConstant(SkySpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, value):
-        # TODO: try fitting this -> probably the interface doesn't work?!
         return value
 
 
