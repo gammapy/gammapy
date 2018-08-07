@@ -121,6 +121,7 @@ Notebooks
 For a quick introduction to Gammapy, go here:
 
 - `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
+- `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
 
 Interested to do a first analysis of simulated CTA data?
 
@@ -129,7 +130,6 @@ Interested to do a first analysis of simulated CTA data?
 
 3-dimensional cube analysis:
 
-- `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ | *data_fermi_lat.ipynb*
