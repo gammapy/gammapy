@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..significance import significance_to_probability_normal
 from ..poisson import (
     background,
     background_error,
@@ -11,7 +10,6 @@ from ..poisson import (
     excess_error,
     significance,
     significance_on_off,
-    excess_matching_significance,
     excess_matching_significance_on_off,
     excess_ul_helene,
 )

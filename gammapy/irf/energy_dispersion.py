@@ -444,7 +444,7 @@ class EnergyDispersion(object):
             Instance name
         """
         from sherpa.astro.data import DataRMF
-        from sherpa.utils import SherpaInt, SherpaUInt, SherpaFloat
+        from sherpa.utils import SherpaUInt, SherpaFloat
 
         # Need to modify RMF data
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727

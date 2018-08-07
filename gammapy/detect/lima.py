@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 import logging
 import numpy as np
-from ..maps import WcsNDMap
 from ..stats import significance, significance_on_off
 
 __all__ = [

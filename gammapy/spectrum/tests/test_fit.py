@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import pytest
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
@@ -83,7 +82,7 @@ class TestFit:
         obs = SpectrumObservation(on_vector=on_vector, off_vector=self.off)
         obs_list = SpectrumObservationList([obs])
 
-        self.source_model.parameters.index = 1.12 * u.Unit('')
+        self.source_model.parameters.index = 1.12
         fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
                           stat='wstat', forward_folded=False)
         fit.fit()
@@ -167,12 +166,14 @@ class TestSpectralFit:
     def setup(self):
         self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
 
-        self.pwl = models.PowerLaw(index=2 * u.Unit(''),
-                                   amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-                                   reference=1 * u.TeV)
+        self.pwl = models.PowerLaw(
+            index=2,
+            amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1 * u.TeV,
+        )
 
         self.ecpl = models.ExponentialCutoffPowerLaw(
-            index=2 * u.Unit(''),
+            index=2,
             amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
@@ -262,10 +263,10 @@ class TestSpectralFit:
         assert_allclose(fit.result[0].model.parameters['index'].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
-        self.ecpl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-             'lambda': 0.1 / u.TeV}
-        )
+        self.ecpl.parameters.set_parameter_errors({
+            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            'lambda': 0.1 / u.TeV
+        })
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
         actual = fit.result[0].model.parameters['lambda_'].quantity
@@ -273,9 +274,9 @@ class TestSpectralFit:
         assert_allclose(actual.value, 0.034241, rtol=1e-3)
 
     def test_joint_fit(self):
-        self.pwl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
-        )
+        self.pwl.parameters.set_parameter_errors({
+            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')
+        })
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
         actual = fit.result[0].model.parameters['index'].value
@@ -296,9 +297,9 @@ class TestSpectralFit:
         assert_allclose(pars['amplitude'].value, 2.361827e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
-        self.pwl.parameters.set_parameter_errors(
-            {'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')}
-        )
+        self.pwl.parameters.set_parameter_errors({
+            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')
+        })
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)
 

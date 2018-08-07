@@ -35,11 +35,11 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     x1 = x / radius
     y1 = y / radius
     g1 = np.exp(-0.5 * (x1 ** 2 + y1 ** 2))
-    g1 = g1 / (2 * np.pi * radius ** 2)  # g1.sum()
+    g1 = g1 / (2 * np.pi * radius ** 2)
     x1 = x1 / scale_step
     y1 = y1 / scale_step
     g2 = np.exp(-0.5 * (x1 ** 2 + y1 ** 2))
-    g2 = g2 / (2 * np.pi * radius ** 2 * scale_step ** 2)  # g2.sum()
+    g2 = g2 / (2 * np.pi * radius ** 2 * scale_step ** 2)
     return g1 - g2
 
 
