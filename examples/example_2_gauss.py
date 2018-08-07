@@ -1,25 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
-from gammapy.irf import (
-    EffectiveAreaTable2D,
-    EnergyDispersion2D,
-    EnergyDependentMultiGaussPSF,
-    Background3D,
-)
-from gammapy.maps import WcsGeom, MapAxis, WcsNDMap, Map
+from astropy.coordinates import SkyCoord
+from gammapy.irf import EffectiveAreaTable2D
+from gammapy.maps import WcsGeom, MapAxis, WcsNDMap
 from gammapy.spectrum.models import PowerLaw
 from gammapy.image.models import SkyGaussian
 from gammapy.utils.random import get_random_state
-from gammapy.cube import (
-    make_map_exposure_true_energy,
-    SkyModel,
-    MapFit,
-    MapEvaluator,
-    SourceLibrary,
-    PSFKernel,
-)
+from gammapy.cube import make_map_exposure_true_energy, MapFit, MapEvaluator
+from gammapy.cube.models import SkyModel
 
 filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
 aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
@@ -64,7 +53,7 @@ pointing = SkyCoord(0.2, 0.5, unit="deg", frame="galactic")
 livetime = 20 * u.hour
 
 exposure_map = make_map_exposure_true_energy(
-    pointing=pointing, livetime=livetime, aeff=aeff, geom=geom
+    pointing=pointing, livetime=livetime, aeff=aeff, geom=geom,
 )
 
 evaluator = MapEvaluator(model=compound_model, exposure=exposure_map)

@@ -14,7 +14,7 @@ from ...spectrum.models import PowerLaw
 from ..fit import MapEvaluator
 from ..models import (
     SkyModel,
-    SourceLibrary,
+    SkyModels,
     CompoundSkyModel,
     SumSkyModel,
 )
@@ -68,12 +68,12 @@ def evaluator(sky_model, exposure, background, psf, edisp):
     return MapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
 
 
-class TestSourceLibrary:
+class TestSkyModels:
     def setup(self):
-        self.source_library = SourceLibrary([sky_model(), sky_model()])
+        self.sky_models = SkyModels([sky_model(), sky_model()])
 
     def test_to_compound_model(self):
-        model = self.source_library.to_compound_model()
+        model = self.sky_models.to_compound_model()
         assert isinstance(model, CompoundSkyModel)
         pars = model.parameters.parameters
         assert len(pars) == 12
@@ -81,7 +81,7 @@ class TestSourceLibrary:
         assert pars[-1].name == 'reference'
 
     def test_to_sum_model(self):
-        model = self.source_library.to_sum_model()
+        model = self.sky_models.to_sum_model()
         assert isinstance(model, SumSkyModel)
         pars = model.parameters.parameters
         assert len(pars) == 12

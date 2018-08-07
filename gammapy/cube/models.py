@@ -9,7 +9,7 @@ from ..utils.scripts import make_path
 from ..maps import Map
 
 __all__ = [
-    'SourceLibrary',
+    'SkyModels',
     'SkyModel',
     'CompoundSkyModel',
     'SumSkyModel',
@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-class SourceLibrary(object):
+class SkyModels(object):
     """Collection of `~gammapy.cube.models.SkyModel`
 
     Parameters
@@ -28,11 +28,11 @@ class SourceLibrary(object):
     Examples
     --------
 
-    Read a SourceLibrary from an XML file::
+    Read from an XML file::
 
-        from gammapy.cube import SourceLibrary
+        from gammapy.cube import SkyModels
         filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
-        sourcelib = SourceLibrary.from_xml(filename)
+        sourcelib = SkyModels.from_xml(filename)
     """
 
     def __init__(self, skymodels):
@@ -40,13 +40,13 @@ class SourceLibrary(object):
 
     @classmethod
     def from_xml(cls, xml):
-        """Read SourceLibrary from XML string"""
-        from ..utils.serialization import xml_to_source_library
-        return xml_to_source_library(xml)
+        """Read from XML string."""
+        from ..utils.serialization import xml_to_sky_models
+        return xml_to_sky_models(xml)
 
     @classmethod
     def read(cls, filename):
-        """Read SourceLibrary from XML file
+        """Read from XML file.
 
         The XML definition of some models is uncompatible with the models
         currently implemented in gammapy. Therefore the following modifications
@@ -63,9 +63,9 @@ class SourceLibrary(object):
         return cls.from_xml(xml)
 
     def to_xml(self, filename):
-        """Write SourceLibrary to XML file"""
-        from ..utils.serialization import source_library_to_xml
-        xml = source_library_to_xml(self)
+        """Write to XML file."""
+        from ..utils.serialization import sky_models_to_xml
+        xml = sky_models_to_xml(self)
         filename = make_path(filename)
         with filename.open('w') as output:
             output.write(xml)
