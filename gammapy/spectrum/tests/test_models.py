@@ -35,7 +35,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='powerlaw',
         model=PowerLaw(
@@ -47,7 +46,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(3.6, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(9.210340371976184, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='powerlaw2',
         model=PowerLaw2(
@@ -60,7 +58,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='ecpl',
         model=ExponentialCutoffPowerLaw(
@@ -69,13 +66,11 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
         ),
-
         val_at_2TeV=u.Quantity(1.080321705479446, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(3.765838739678921, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(9.901735870666526, 'TeV cm-2 s-1'),
         e_peak=4 * u.TeV
     ),
-
     dict(
         name='ecpl_3fgl',
         model=ExponentialCutoffPowerLaw3FGL(
@@ -84,12 +79,10 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             ecut=10 * u.TeV
         ),
-
         val_at_2TeV=u.Quantity(0.7349563611124971, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.6034046173089, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(5.340285560055799, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='logpar',
         model=LogParabola(
@@ -98,7 +91,6 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             beta=0.5 * u.Unit('')
         ),
-
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
@@ -112,7 +104,6 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             beta=1.151292546497023 * u.Unit('')
         ),
-
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
@@ -139,7 +130,7 @@ TEST_MODELS.append(dict(
 
 TEST_MODELS.append(dict(
     name='compound3',
-    model= TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
+    model=TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
     val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 2,
     integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 2,
     eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 2,
@@ -147,16 +138,16 @@ TEST_MODELS.append(dict(
 
 TEST_MODELS.append(dict(
     name='compound4',
-    model= TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
-    val_at_2TeV= 0.9 * TEST_MODELS[0]['val_at_2TeV'],
+    model=TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
+    val_at_2TeV=0.9 * TEST_MODELS[0]['val_at_2TeV'],
     integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'),
     eflux_1_10TeV=2.6322140512045697 * u.Unit('TeV cm-2 s-1'),
 ))
 
 TEST_MODELS.append(dict(
     name='compound5',
-    model= TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
-    val_at_2TeV= 0.5 * TEST_MODELS[0]['val_at_2TeV'],
+    model=TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
+    val_at_2TeV=0.5 * TEST_MODELS[0]['val_at_2TeV'],
     integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 0.5,
     eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 0.5,
 ))

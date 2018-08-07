@@ -433,6 +433,7 @@ class ConstantModel(SpectralModel):
     const : `~astropy.units.Quantity`
         :math:`k`
     """
+
     def __init__(self, const):
         self.parameters = ParameterList([
             Parameter('const', const)
@@ -449,6 +450,7 @@ class CompoundSpectralModel(SpectralModel):
     `~gammapy.spectrum.models.SpectralModel`
 
     """
+
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
@@ -1081,7 +1083,6 @@ class LogParabola(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
-
 class TableModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
@@ -1210,8 +1211,8 @@ class TableModel(SpectralModel):
         """
         filename = str(make_path(filename))
         vals = np.loadtxt(filename)
-        energy = vals[:,0] * u.MeV
-        values = vals[:,1] * u.Unit('MeV-1 s-1 cm-2')
+        energy = vals[:, 0] * u.MeV
+        values = vals[:, 1] * u.Unit('MeV-1 s-1 cm-2')
 
         return cls(energy=energy, values=values, scale_logy=False, **kwargs)
 
@@ -1232,7 +1233,7 @@ class TableModel(SpectralModel):
             values = np.zeros(len(energy), dtype=float)
             # mask for energy range
             mask = (energy >= self.lo_threshold) & (
-                energy <= self.hi_threshold)
+                    energy <= self.hi_threshold)
             # apply interpolation for masked values
             values[mask] = self.interpy(np.log10(energy[mask].to('eV').value))
             # Get rid of negative values (due to interpolation)

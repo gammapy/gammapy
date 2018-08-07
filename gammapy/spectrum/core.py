@@ -225,7 +225,7 @@ class CountsSpectrum(object):
 
         Parameters
         ----------
-        parameter, int
+        parameter : int
             Number of bins to merge
 
         Returns
@@ -463,9 +463,9 @@ class PHACountsSpectrum(CountsSpectrum):
         emax = ebounds['E_MAX'].quantity
 
         # Check if column are present in the header
-        quality=None
-        areascal=None
-        backscal=None
+        quality = None
+        areascal = None
+        backscal = None
         if 'QUALITY' in counts_table.colnames:
             quality = counts_table['QUALITY'].data
         if 'AREASCAL' in counts_table.colnames:
@@ -480,8 +480,8 @@ class PHACountsSpectrum(CountsSpectrum):
             energy_hi=emax,
             quality=quality,
             areascal=areascal,
-            livetime = counts_table.meta['EXPOSURE'] * u.s,
-            obs_id = counts_table.meta['OBS_ID']
+            livetime=counts_table.meta['EXPOSURE'] * u.s,
+            obs_id=counts_table.meta['OBS_ID']
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs['is_bkg'] = True
@@ -608,7 +608,7 @@ class PHACountsSpectrumList(list):
             kwargs['quality'] = row['QUALITY']
             kwargs['livetime'] = hdulist[1].header['EXPOSURE'] * u.s
             kwargs['obs_id'] = row['SPEC_NUM']
-            spec = PHACountsSpectrum( **kwargs)
+            spec = PHACountsSpectrum(**kwargs)
             speclist.append(spec)
 
         return speclist
