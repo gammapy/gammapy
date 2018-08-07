@@ -317,8 +317,7 @@ class ParameterList(object):
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
     def error(self, parname):
-        """
-        Return error on a given parameter
+        """Get parameter error.
 
         Parameters
         ----------
@@ -334,21 +333,25 @@ class ParameterList(object):
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
     def set_error(self, parname, err):
-        """
-        Return error on a given parameter
+        """Set parameter error.
 
         Parameters
         ----------
         parname : str, int
             Parameter name or index
+        err : float or Quantity
+            Parameter error
         """
-        if self.covariance is None:
-            shape = (len(self.parameters), len(self.parameters))
-            self.covariance = np.zeros(shape) 
+        self._init_covar()
 
         idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
+
+    def _init_covar(self):
+        if self.covariance is None:
+            shape = (len(self.parameters), len(self.parameters))
+            self.covariance = np.zeros(shape)
 
     def copy(self):
         """A deep copy"""
