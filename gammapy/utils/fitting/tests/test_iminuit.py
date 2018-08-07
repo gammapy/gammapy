@@ -25,14 +25,14 @@ def test_iminuit():
     assert_allclose(pars['y'].value, 3, rtol=1e-2)
     assert_allclose(pars['z'].value, 4, rtol=1e-2)
 
-    assert_allclose(minuit.values['x'], 2, rtol=1e-2)
-    assert_allclose(minuit.values['y'], 3, rtol=1e-2)
-    assert_allclose(minuit.values['z'], 4, rtol=1e-2)
+    assert_allclose(minuit.values['par_000_x'], 2, rtol=1e-2)
+    assert_allclose(minuit.values['par_001_y'], 3, rtol=1e-2)
+    assert_allclose(minuit.values['par_002_z'], 4, rtol=1e-2)
 
     # Test freeze
     pars['x'].frozen = True
     minuit = fit_iminuit(function=fcn, parameters=pars)
-    assert minuit.list_of_fixed_param() == ['x']
+    assert minuit.list_of_fixed_param() == ['par_000_x']
 
     # Test limits
     pars['y'].min = 4

@@ -163,20 +163,20 @@ class ParameterList(object):
         ss += '\n\nCovariance: \n{}'.format(self.covariance)
         return ss
 
-    def _name_to_idx(self, name):
-        """Convert parameter name to index if str is given"""
-        if isinstance(name, six.string_types):
+    def _get_idx(self, val):
+        """Convert parameter name or index to index"""
+        if isinstance(val, six.string_types):
             for idx, par in enumerate(self.parameters):
-                if name == par.name:
+                if val == par.name:
                     return idx
-            raise IndexError('Parameter {} not found for : {}'.format(name, self))
+            raise IndexError('Parameter {} not found for : {}'.format(val, self))
 
         else:
-            return name
+            return val
 
     def __getitem__(self, name):
         """Access parameter by name or index"""
-        idx = self._name_to_idx(name)
+        idx = self._get_idx(name)
         return self.parameters[idx]
 
     def to_dict(self):
@@ -345,7 +345,7 @@ class ParameterList(object):
         if self.covariance is None:
             raise ValueError('Covariance matrix not set.')
 
-        idx = self._name_to_idx(parname)
+        idx = self._get_idx(parname)
         return np.sqrt(self.covariance[idx, idx])
 
     # TODO: this is a temporary solution until we have a better way
@@ -363,7 +363,7 @@ class ParameterList(object):
             shape = (len(self.parameters), len(self.parameters))
             self.covariance = np.zeros(shape) 
 
-        idx = self._name_to_idx(parname)
+        idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
 
