@@ -56,7 +56,7 @@ def test_find_reflected_regions(mask, on_region):
     assert len(regions) == 16
 
     # Test with too small exclusion
-    small_mask = mask.make_cutout(pointing, Angle('0.2 deg'))[0]
+    small_mask = mask.cutout(pointing, Angle('0.2 deg'))
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions

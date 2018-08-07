@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data
 from ...data import DataStore
-from ...maps import WcsGeom, MapAxis
+from ...maps import WcsGeom, MapAxis, Map
 from ..make import MapMaker
 
 pytest.importorskip('scipy')
@@ -31,7 +31,6 @@ def geom(ebounds):
     {
         # Default, normal test case
         'geom': geom(ebounds=[0.1, 1, 10]),
-        'mode': 'trim',
         'counts': 34366,
         'exposure': 3.99815e+11,
         'background': 187528.89,
@@ -39,25 +38,24 @@ def geom(ebounds):
     {
         # Test single energy bin
         'geom': geom(ebounds=[0.1, 10]),
-        'mode': 'trim',
         'counts': 34366,
         'exposure': 1.16866e+11,
         'background': 1988492.8,
     },
     {
-        # Test strict mode
-        'geom': geom(ebounds=[0.1, 1, 10]),
-        'mode': 'strict',
-        'counts': 21981,
-        'exposure': 2.592941e+11,
-        'background': 121457.695,
+        # Test single energy bin
+        'geom': geom(ebounds=[0.1, 10]),
+        'exclusion_mask': Map.from_geom(geom(ebounds=[0.1, 10])),
+        'counts': 34366,
+        'exposure': 1.16866e+11,
+        'background': 1988492.8,
     },
+
 ])
 def test_map_maker(pars, obs_list):
     maker = MapMaker(
         geom=pars['geom'],
         offset_max='2 deg',
-        cutout_mode=pars['mode'],
     )
     maps = maker.run(obs_list)
 
