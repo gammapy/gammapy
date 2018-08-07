@@ -87,7 +87,7 @@ def sky_model():
 @pytest.fixture
 def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
-        sky_model=sky_model,
+        model=sky_model,
         exposure=exposure,
         background=background,
         psf=psf,
