@@ -31,7 +31,6 @@ def geom(ebounds):
     {
         # Default, normal test case
         'geom': geom(ebounds=[0.1, 1, 10]),
-        'mode': 'trim',
         'counts': 34366,
         'exposure': 3.99815e+11,
         'background': 187528.89,
@@ -39,25 +38,15 @@ def geom(ebounds):
     {
         # Test single energy bin
         'geom': geom(ebounds=[0.1, 10]),
-        'mode': 'trim',
         'counts': 34366,
         'exposure': 1.16866e+11,
         'background': 1988492.8,
-    },
-    {
-        # Test strict mode
-        'geom': geom(ebounds=[0.1, 1, 10]),
-        'mode': 'strict',
-        'counts': 21981,
-        'exposure': 2.592941e+11,
-        'background': 121457.695,
     },
 ])
 def test_map_maker(pars, obs_list):
     maker = MapMaker(
         geom=pars['geom'],
         offset_max='2 deg',
-        cutout_mode=pars['mode'],
     )
     maps = maker.run(obs_list)
 

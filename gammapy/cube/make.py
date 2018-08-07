@@ -28,13 +28,9 @@ class MapMaker(object):
         Maximum offset angle
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
-    cutout_mode : {'trim', 'strict'}, optional
-        Options for making cutouts, see :func: `~gammapy.maps.WcsNDMap.make_cutout`
-        Should be left to the default value 'trim'
-        unless you want only fully contained observations to be added to the map
     """
 
-    def __init__(self, geom, offset_max, exclusion_mask=None, cutout_mode="trim"):
+    def __init__(self, geom, offset_max, exclusion_mask=None):
         if not isinstance(geom, WcsGeom):
             raise ValueError('MapMaker only works with WcsGeom')
 
@@ -42,11 +38,7 @@ class MapMaker(object):
             raise ValueError('MapMaker only works with geom with an energy axis')
 
         self.geom = geom
-
         self.offset_max = Angle(offset_max)
-
-        self.cutout_mode = cutout_mode
-
         self.maps = {}
 
         # Some background estimation methods need an exclusion mask.
@@ -85,30 +77,26 @@ class MapMaker(object):
 
     def _process_obs(self, obs, selection):
         # Compute cutout geometry and slices to stack results back later
-        try:
-            # TODO: this is a hack. We should make cutout better.
-            # See https://github.com/gammapy/gammapy/issues/1608
-            # We should always make a per-obs map that covers the
-            # full observation, so that ba
-            cutout_map, cutout_slices = Map.from_geom(self.geom).make_cutout(
-                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
+        cutout_map = Map.from_geom(self.geom).cutout(
+                position=obs.pointing_radec,
+                width=2 * self.offset_max,
+                mode='trim',
             )
-        except PartialOverlapError:
-            # TODO: can we silently do the right thing here? Discuss
-            log.warning("Observation {} not fully contained in target image. Skipping it.".format(obs.obs_id))
-            return
 
         log.info('Processing observation {}'.format(obs.obs_id))
 
         # Compute field of view mask on the cutout
-        offset = cutout_map.geom.separation(obs.pointing_radec)
+        coords = cutout_map.geom.get_coord()
+        offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
         # Only if there is an exclusion mask, make a cutout
         exclusion_mask = self.maps.get('exclusion', None)
         if exclusion_mask is not None:
-            exclusion_mask, _ = exclusion_mask.make_cutout(
-                obs.pointing_radec, 2 * self.offset_max, mode=self.cutout_mode,
+            exclusion_mask, _ = exclusion_mask.cutout(
+                position=obs.pointing_radec,
+                width=2 * self.offset_max,
+                mode='trim',
             )
 
         # Make maps for this observation
@@ -122,7 +110,7 @@ class MapMaker(object):
         # Stack observation maps to total
         for name in selection:
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
-            self.maps[name].data[cutout_slices] += data
+            self.maps[name].fill_by_coord(coords, data)
 
 
 class MapMakerObs(object):
