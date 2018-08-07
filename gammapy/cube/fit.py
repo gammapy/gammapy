@@ -45,7 +45,7 @@ class MapFit(object):
         self._minuit = None
 
         self.evaluator = MapEvaluator(
-            sky_model=self.model,
+            model=self.model,
             exposure=self.exposure,
             background=self.background,
             psf=self.psf,

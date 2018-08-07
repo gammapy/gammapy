@@ -370,7 +370,7 @@ class MapEvaluator(object):
 
     Parameters
     ----------
-    sky_model : `~gammapy.cube.models.SkyModel`
+    model : `~gammapy.cube.models.SkyModel`
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
@@ -382,8 +382,8 @@ class MapEvaluator(object):
         Energy dispersion
     """
 
-    def __init__(self, sky_model=None, exposure=None, background=None, psf=None, edisp=None):
-        self.sky_model = sky_model
+    def __init__(self, model=None, exposure=None, background=None, psf=None, edisp=None):
+        self.model = model
         self.exposure = exposure
         self.background = background
         self.psf = psf
@@ -456,7 +456,7 @@ class MapEvaluator(object):
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
         coord = (self.lon, self.lat, self.energy_center)
-        dnde = self.sky_model.evaluate(*coord)
+        dnde = self.model.evaluate(*coord)
         return dnde
 
     def compute_flux(self):
