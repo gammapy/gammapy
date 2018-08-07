@@ -95,7 +95,8 @@ def make_minuit_par_kwargs(parameters):
     """
     kwargs = {}
     parnames = _make_parnames(parameters)
-    for parname_, par in zip(parnames, parameters.parameters):
+    for idx, parname_, in enumerate(parnames):
+        par = parameters[idx]
         kwargs[parname_] = par.value
 
         min_ = None if np.isnan(par.min) else par.min
@@ -105,7 +106,7 @@ def make_minuit_par_kwargs(parameters):
         if parameters.covariance is None:
             kwargs['error_{}'.format(parname_)] = 1
         else:
-            kwargs['error_{}'.format(parname_)] = np.sqrt(self.covariance[par_idx, par_idx])
+            kwargs['error_{}'.format(parname_)] = parameters.error(idx)
 
         if par.frozen:
             kwargs['fix_{}'.format(parname_)] = True
