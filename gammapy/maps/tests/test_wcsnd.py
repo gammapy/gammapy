@@ -403,7 +403,7 @@ def test_smooth(kernel):
     actual = smoothed.data.sum()
     assert_allclose(actual, desired)
 
-
+@pytest.mark.parametrize('mode', ['partial', 'strict', 'trim'])
 def test_make_cutout():
     pos = SkyCoord(0, 0, unit='deg', frame='galactic')
     geom = WcsGeom.create(npix=(10, 10), binsz=1, skydir=pos,
