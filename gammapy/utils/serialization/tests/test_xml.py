@@ -4,9 +4,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ...testing import requires_data, requires_dependency
-from ....cube import SourceLibrary
 from ....spectrum import models as spectral
 from ....image import models as spatial
+from ....cube.models import SourceLibrary
 from ...serialization import xml_to_source_library, UnknownModelError
 
 
