@@ -83,7 +83,7 @@ astronomy packages:
 
     sudo port install \
         py36-pip py36-pytest \
-        py36-scipy py36-matplotlib py36-scikit-image \
+        py36-scipy py36-matplotlib \
         py36-emcee py36-ipython py36-uncertainties \
         py36-healpy py36-cython
 

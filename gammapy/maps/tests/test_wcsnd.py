@@ -354,7 +354,6 @@ def test_wcsndmap_crop(npix, binsz, coordsys, proj, skydir, axes):
     m.crop(1)
 
 
-@requires_dependency('skimage')
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsndmap_downsample(npix, binsz, coordsys, proj, skydir, axes):
