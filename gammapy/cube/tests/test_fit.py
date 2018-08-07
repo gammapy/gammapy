@@ -11,8 +11,8 @@ from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
+from ..models import SkyModel
 from .. import (
-    SkyModel,
     MapEvaluator,
     MapFit,
     make_map_exposure_true_energy,

@@ -11,12 +11,12 @@ from ...cube.psf_kernel import PSFKernel
 from ...cube.models import SkyDiffuseCube
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
+from ..fit import MapEvaluator
 from ..models import (
     SkyModel,
     SourceLibrary,
     CompoundSkyModel,
     SumSkyModel,
-    MapEvaluator,
 )
 
 
