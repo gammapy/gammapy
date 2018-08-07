@@ -9,12 +9,12 @@ from ..utils.time import time_ref_from_dict
 from ..utils.modeling import Parameter, ParameterList
 
 __all__ = [
-    'PhaseCurve',
-    'LightCurve',
+    'PhaseCurveTableModel',
+    'LightCurveTableModel',
 ]
 
 
-class PhaseCurve(object):
+class PhaseCurveTableModel(object):
     """Temporal phase curve model.
 
     Phase for a given time is computed as
@@ -51,10 +51,10 @@ class PhaseCurve(object):
 
         from astropy.table import Table
         from gammapy.utils.scripts import make_path
-        from gammapy.time.models import PhaseCurve
+        from gammapy.time.models import PhaseCurveTableModel
         filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
-        phase_curve = PhaseCurve(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
+        phase_curve = PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
     Use it to compute a phase and evaluate the phase curve model for a given time:
 
@@ -121,7 +121,7 @@ class PhaseCurve(object):
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
 
 
-class LightCurve(object):
+class LightCurveTableModel(object):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
@@ -141,7 +141,7 @@ class LightCurve(object):
     An obvious issue is that `gammapy.time.LightCurve` has the same name,
     which has a good potential to confuse users.
     Another poitn is the API for time, i.e. when to take floats or time objects.
-    We plan to discuss this `LightCurve` and the `PhaseCurve` model classes soon.
+    We plan to discuss this `LightCurve` and the `PhaseCurveTableModel` model classes soon.
 
     Parameters
     ----------
@@ -152,9 +152,9 @@ class LightCurve(object):
     --------
     Read an example light curve object:
 
-    >>> from gammapy.time.models import LightCurve
+    >>> from gammapy.time.models import LightCurveTableModel
     >>> path = '$GAMMAPY_EXTRA/test_datasets/models/light_curve/lightcrv_PKSB1222+216.fits'
-    >>> light_curve = LightCurve.read(path)
+    >>> light_curve = LightCurveTableModel.read(path)
 
     Show basic information about the lightcurve:
 
@@ -179,7 +179,7 @@ class LightCurve(object):
         self.table = table
 
     def __str__(self):
-        ss = 'LightCurve model summary:\n'
+        ss = 'LightCurveTableModel model summary:\n'
         ss += 'Start time: {} MJD\n'.format(self._time[0].mjd)
         ss += 'End time: {} MJD\n'.format(self._time[-1].mjd)
         ss += 'Norm min: {}\n'.format(self.table['NORM'].min())
