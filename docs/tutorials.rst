@@ -132,6 +132,7 @@ Interested to do a first analysis of simulated CTA data?
 - `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
+- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ | *data_fermi_lat.ipynb*
 
 2-dimensional sky image analysis:
 
@@ -151,11 +152,6 @@ Interested to do a first analysis of simulated CTA data?
 Time-related analysis:
 
 - `Light curve estimation with Gammapy <notebooks/light_curve.html>`__ | *light_curve.ipynb*
-
-To learn how to work with gamma-ray data with Gammapy:
-
-- For IACT data, see the ``cta_1dc_introduction`` notebook mentioned above.
-- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ (Fermi-LAT data example) | *data_fermi_lat.ipynb*
 
 Extra topics
 ------------
