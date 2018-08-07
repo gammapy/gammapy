@@ -628,7 +628,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=data)
 
-    def make_cutout(self, position, width, mode="strict", copy=True):
+    def cutout(self, position, width, mode='partial', copy=True):
         """
         Create a cutout of a WcsNDMap around a given position.
 
@@ -665,4 +665,4 @@ class WcsNDMap(WcsMap):
         if copy:
             data = data.copy()
 
-        return self._init_copy(geom=geom, data=data), cutout_slices
+        return self._init_copy(geom=geom, data=data)
