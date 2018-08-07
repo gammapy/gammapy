@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from astropy.utils.console import ProgressBar
-from astropy.nddata.utils import PartialOverlapError
+from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
@@ -71,7 +71,11 @@ class MapMaker(object):
             self.maps[name] = Map.from_geom(self.geom, unit=unit)
 
         for obs in ProgressBar(obs_list):
-            self._process_obs(obs, selection)
+            try:
+                self._process_obs(obs, selection)
+            except NoOverlapError:
+                log.info('Skipping observation {}, not contained in map.'.format(obs.obs_id))
+                continue
 
         return self.maps
 
