@@ -208,10 +208,10 @@ class ParameterList(object):
                                   min=float(par['min']),
                                   max=float(par['max']),
                                   frozen=par['frozen']))
-            try:
-                covariance = np.array(val['covariance'])
-            except KeyError:
-                covariance = None
+        try:
+            covariance = np.array(val['covariance'])
+        except KeyError:
+            covariance = None
 
         return cls(parameters=pars, covariance=covariance)
 
@@ -271,8 +271,7 @@ class ParameterList(object):
         frozen_pars = [par.name for par in self.parameters if par.frozen]
         return frozen_pars
 
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
+    # TODO: deprecate or remove this?
     def set_parameter_errors(self, errors):
         """
         Set uncorrelated parameters errors.
@@ -282,7 +281,6 @@ class ParameterList(object):
         errors : dict of `~astropy.units.Quantity`
             Dict of parameter errors.
         """
-        # TODO: Mark as deprecated
         diag = []
         for par in self.parameters:
             error = errors.get(par.name, 0)
