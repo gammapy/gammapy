@@ -7,6 +7,7 @@ __all__ = [
     'sky_to_fov'
 ]
 
+
 def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     """Make a transformation from field-of-view coordinates to sky coordinates.
 
@@ -30,12 +31,12 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     """
 
     # compute cartesian coordinates
-    x = np.cos(np.deg2rad(lat))*np.cos(np.deg2rad(lon))
-    y = np.cos(np.deg2rad(lat))*np.sin(np.deg2rad(lon))
+    x = np.cos(np.deg2rad(lat)) * np.cos(np.deg2rad(lon))
+    y = np.cos(np.deg2rad(lat)) * np.sin(np.deg2rad(lon))
     z = np.sin(np.deg2rad(lat))
 
     # make sure vector is properly normalised
-    assert np.allclose(x**2+y**2+z**2, 1)
+    assert np.allclose(x ** 2 + y ** 2 + z ** 2, 1)
 
     # switch coordinates due to axis convention
     x_ = -z
@@ -45,18 +46,19 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     # transform
     lat_pnt = np.deg2rad(90 - lat_pnt)
     lon_pnt = -np.deg2rad(lon_pnt)
-    x_t = x_*np.cos(lat_pnt)*np.cos(lon_pnt) - y_*np.sin(lon_pnt) + z_*np.sin(lat_pnt)*np.cos(lon_pnt)
-    y_t = x_*np.sin(lon_pnt)*np.cos(lat_pnt) + y_*np.cos(lon_pnt) + z_*np.sin(lon_pnt)*np.sin(lat_pnt)
-    z_t = -x_*np.sin(lat_pnt) + z_*np.cos(lat_pnt)
+    x_t = x_ * np.cos(lat_pnt) * np.cos(lon_pnt) - y_ * np.sin(lon_pnt) + z_ * np.sin(lat_pnt) * np.cos(lon_pnt)
+    y_t = x_ * np.sin(lon_pnt) * np.cos(lat_pnt) + y_ * np.cos(lon_pnt) + z_ * np.sin(lon_pnt) * np.sin(lat_pnt)
+    z_t = -x_ * np.sin(lat_pnt) + z_ * np.cos(lat_pnt)
 
     # compute new lon, lat
-    lon_t = -np.rad2deg(np.arctan2(y_t,x_t))
+    lon_t = -np.rad2deg(np.arctan2(y_t, x_t))
     lat_t = np.rad2deg(np.arcsin(z_t))
 
     # shift lon by 360 degrees if negative
     lon_t = np.where(lon_t < 0, lon_t + 360, lon_t)
 
     return lon_t, lat_t
+
 
 def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     """Make a transformation from sky coordinates to field-of-view coordinates.
@@ -83,19 +85,19 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     lon_ = -lon
 
     # compute cartesian coordinates
-    x = np.cos(np.deg2rad(lat))*np.cos(np.deg2rad(lon_))
-    y = np.cos(np.deg2rad(lat))*np.sin(np.deg2rad(lon_))
+    x = np.cos(np.deg2rad(lat)) * np.cos(np.deg2rad(lon_))
+    y = np.cos(np.deg2rad(lat)) * np.sin(np.deg2rad(lon_))
     z = np.sin(np.deg2rad(lat))
 
     # make sure vector is properly normalised
-    assert np.allclose(x**2+y**2+z**2, 1)
+    assert np.allclose(x ** 2 + y ** 2 + z ** 2, 1)
 
     # transform
     lat_pnt = np.deg2rad(90 - lat_pnt)
     lon_pnt = -np.deg2rad(lon_pnt)
-    x_t = x*np.cos(lat_pnt)*np.cos(lon_pnt) + y*np.sin(lon_pnt)*np.cos(lat_pnt) - z*np.sin(lat_pnt)
-    y_t = -x*np.sin(lon_pnt) + y*np.cos(lon_pnt)
-    z_t = x*np.sin(lat_pnt)*np.cos(lon_pnt) + y*np.sin(lat_pnt)*np.sin(lon_pnt) + z*np.cos(lat_pnt)
+    x_t = x * np.cos(lat_pnt) * np.cos(lon_pnt) + y * np.sin(lon_pnt) * np.cos(lat_pnt) - z * np.sin(lat_pnt)
+    y_t = -x * np.sin(lon_pnt) + y * np.cos(lon_pnt)
+    z_t = x * np.sin(lat_pnt) * np.cos(lon_pnt) + y * np.sin(lat_pnt) * np.sin(lon_pnt) + z * np.cos(lat_pnt)
 
     # switch coordinates due to axis convention
     x_ = z_t
@@ -103,7 +105,7 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     z_ = -x_t
 
     # compute new lon, lat
-    lon_t = np.rad2deg(np.arctan2(y_,x_))
+    lon_t = np.rad2deg(np.arctan2(y_, x_))
     lat_t = np.rad2deg(np.arcsin(z_))
 
     return lon_t, lat_t

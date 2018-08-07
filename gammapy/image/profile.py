@@ -216,7 +216,7 @@ class ImageProfileEstimator(object):
         p = self.parameters
 
         if image.unit.is_equivalent('count'):
-            image_err = image.copy(data=np.sqrt(image.data) )
+            image_err = image.copy(data=np.sqrt(image.data))
 
         profile, profile_err = self._estimate_profile(image, image_err, mask)
 

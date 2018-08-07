@@ -254,7 +254,7 @@ class MultiGauss2D(object):
            normalized function
         """
         sum = self.integral
-        if sum!=0:
+        if sum != 0:
             self.norms /= sum
         return self
 

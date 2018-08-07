@@ -669,7 +669,6 @@ class HpxGeom(MapGeom):
             A tuple of pixel index vectors with global HEALPIX pixel
             indices.
         """
-
         if self._ipix is None:
             return idx_local
 
@@ -691,18 +690,14 @@ class HpxGeom(MapGeom):
         Parameters
         ----------
         idx_global : tuple
-            A tuple of pixel indices with global HEALPix pixel
-            indices.
-
+            A tuple of pixel indices with global HEALPix pixel indices.
         ravel : bool
             Return a raveled index.
 
         Returns
         -------
         idx_local : tuple
-            A tuple of pixel indices with local HEALPIX pixel
-            indices.
-
+            A tuple of pixel indices with local HEALPIX pixel indices.
         """
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
@@ -743,7 +738,7 @@ class HpxGeom(MapGeom):
 
         Parameters
         ----------
-        idx_global: `~numpy.ndarray`
+        idx_global : `~numpy.ndarray`
             An array of global (all-sky) pixel indices.  If this is a
             tuple, list, or array of integers it will be interpreted
             as a global (raveled) index.  If this argument is a tuple
@@ -835,7 +830,6 @@ class HpxGeom(MapGeom):
         return coords
 
     def pix_to_idx(self, pix, clip=False):
-
         # FIXME: Look for better method to clip HPX indices
         idx = list(pix_tuple_to_idx(pix, copy=True))
         idx_local = self.global_to_local(idx)
@@ -856,7 +850,6 @@ class HpxGeom(MapGeom):
         return tuple(idx)
 
     def to_slice(self, slices, drop_axes=True):
-
         if len(slices) == 0 and self.ndim == 2:
             return copy.deepcopy(self)
 
@@ -1022,7 +1015,6 @@ class HpxGeom(MapGeom):
         -------
         geom : `~HpxGeom`
             A HEALPix geometry object.
-
         """
         if np.any(self.order < 0):
             raise ValueError(
@@ -1055,7 +1047,6 @@ class HpxGeom(MapGeom):
                               region=self.region, conv=self.conv, axes=axes)
 
     def _get_neighbors(self, idx):
-
         import healpy as hp
 
         nside = self._get_nside(idx)
@@ -1119,7 +1110,6 @@ class HpxGeom(MapGeom):
                               axes=copy.deepcopy(self.axes))
 
     def upsample(self, factor):
-
         if not is_power2(factor):
             raise ValueError('Upsample factor must be a power of 2.')
 
@@ -1141,7 +1131,6 @@ class HpxGeom(MapGeom):
                               axes=copy.deepcopy(self.axes))
 
     def downsample(self, factor):
-
         if not is_power2(factor):
             raise ValueError('Downsample factor must be a power of 2.')
 
@@ -1353,7 +1342,7 @@ class HpxGeom(MapGeom):
 
         # if HPX region is not defined then geometry is defined by
         # the set of all pixels in the table
-        if not 'HPX_REG' in hdu.header:
+        if 'HPX_REG' not in hdu.header:
             pix = (hdu.data.field('PIX'), hdu.data.field('CHANNEL'))
         else:
             pix = None
@@ -1362,7 +1351,6 @@ class HpxGeom(MapGeom):
 
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
-
         header = fits.Header()
         conv = kwargs.get('conv', HPX_FITS_CONVENTIONS[self.conv])
 
@@ -1514,8 +1502,7 @@ class HpxGeom(MapGeom):
         return ilist
 
     def _get_ref_dir(self):
-        """Compute the reference direction for this geometry.
-        """
+        """Compute the reference direction for this geometry."""
         import healpy as hp
         frame = coordsys_to_frame(self.coordsys)
 
@@ -1530,7 +1517,6 @@ class HpxGeom(MapGeom):
         return get_hpxregion_dir(self.region, self.coordsys)
 
     def _get_region_size(self):
-
         import healpy as hp
 
         if self.region is None:
@@ -1546,7 +1532,6 @@ class HpxGeom(MapGeom):
         return get_hpxregion_size(self.region)
 
     def _get_nside(self, idx):
-
         if self.nside.size > 1:
             return self.nside[idx[1:]]
         else:
@@ -1578,7 +1563,6 @@ class HpxGeom(MapGeom):
         -------
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
-
         """
         skydir = self.center_skydir.copy()
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
@@ -1875,6 +1859,7 @@ class HpxToWcsMapping(object):
             ipix = index_map.data
             mult_val = mult_map.data
             npix = mult_map.counts.shape
+
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True,
@@ -1892,7 +1877,6 @@ class HpxToWcsMapping(object):
         fill_nan : bool
             Fill pixels outside the HPX geometry with NaN.
         """
-
         # FIXME: Do we want to flatten mapping arrays?
 
         shape = tuple([t.flat[0] for t in self._npix])

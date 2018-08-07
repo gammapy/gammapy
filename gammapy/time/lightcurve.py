@@ -339,8 +339,8 @@ class LightCurve(object):
             x = x.datetime
             # TODO: In astropy version >3.1 the TimeDelta.to_datetime() method
             # should start working, for now i will use num2timedelta.
-            xn, xp = np.asarray(num2timedelta(xn.to('d').value)), \
-                np.asarray(num2timedelta(xp.to('d').value))
+            xn = np.asarray(num2timedelta(xn.to('d').value))
+            xp = np.asarray(num2timedelta(xp.to('d').value))
         elif time_format == 'mjd':
             x = x.mjd
             xn, xp = xn.to('d').value, xp.to('d').value
@@ -409,7 +409,6 @@ class LightCurveEstimator(object):
         --------
         extract intervals for light curve :
             intervals = list(zip(table['t_start'], table['t_stop']))
-
         """
         rows = []
         time_start = Time(100000, format="mjd")
@@ -453,7 +452,6 @@ class LightCurveEstimator(object):
             List of on events
         off : `~gammapy.data.EventList`
             List of on events
-
         """
         spec = self.obs_spec[t_index]
         # get ON and OFF evt list
@@ -510,7 +508,7 @@ class LightCurveEstimator(object):
         for x in in_list('end', time_holder[istart:i + 1]):
             if tmp == 0:
                 alpha += (1 - obs_properties['deadtime'][n]) * (
-                         float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2) * \
+                        float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2) * \
                          obs_properties['A_off'][n + tmp]
                 time += (1 - obs_properties['deadtime'][n]) * (
                         float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2)
@@ -521,14 +519,14 @@ class LightCurveEstimator(object):
                         float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
                          obs_properties['A_off'][n + tmp]
                 time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                            float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                        float(time_holder[x][0]) - float(time_holder[xm1][0]))
                 xm1 = x + 1
                 tmp += 1
         alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
-                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
+                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
                  obs_properties['A_off'][n + tmp]
         time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
+                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
         alpha = time / alpha
         return alpha
 

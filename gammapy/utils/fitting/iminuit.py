@@ -11,6 +11,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 def fit_iminuit(parameters, function, opts_minuit=None):
     """iminuit optimization
 

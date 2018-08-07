@@ -73,7 +73,7 @@ class TestIRFWrite:
         hdu = self.edisp.to_fits()
         assert_equal(hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
                      self.edisp.data.axes[0].lo)
-        hdu =self.edisp.to_fits()
+        hdu = self.edisp.to_fits()
         assert_equal(hdu.data[hdu.header['TTYPE7']][0].T * u.Unit(hdu.header['TUNIT7']),
                      self.edisp.data.data)
 
