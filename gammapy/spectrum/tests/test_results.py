@@ -18,9 +18,8 @@ class TestSpectrumFitResult:
                                        amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
                                        reference=1 * u.TeV)
         self.npred = self.obs.predicted_counts(self.best_fit_model).data.data.value
-        covar_axis = ['index', 'amplitude']
-        covar = np.diag([0.1 ** 2, 1e-12 ** 2])
-        self.best_fit_model.parameters.set_parameter_covariance(covar, covar_axis)
+        covar = np.diag([0.1 ** 2, 1e-12 ** 2, 0])
+        self.best_fit_model.parameters.covariance = covar
         self.fit_range = [0.1, 50] * u.TeV
         self.fit_result = SpectrumFitResult(
             model=self.best_fit_model,
