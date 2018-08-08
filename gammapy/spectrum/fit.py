@@ -21,8 +21,7 @@ log = logging.getLogger(__name__)
 class SpectrumFit(object):
     """Orchestrate a 1D counts spectrum fit.
 
-    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` and
-    :func:`~gammapy.spectrum.SpectrumFit.est_errors` methods, the fit results
+    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` the fit results
     are available in :func:`~gammapy.spectrum.SpectrumFit.result`. For usage
     examples see :ref:`spectral_fitting`
 
@@ -43,20 +42,16 @@ class SpectrumFit(object):
         observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
     method : {'iminuit'}
         Optimization backend for the fit
-    error_method : {'covar', 'conf', 'HESSE', 'MINOS'}
-        Method of the error estimation depending on the backend.
-        TODO: Not implemented yet. For now 'covar'/'HESSE' are used by default.
     """
 
     def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
-                 fit_range=None, method='iminuit', error_method=None):
+                 fit_range=None, method='iminuit'):
         self.obs_list = obs_list
         self._model = model
         self.stat = stat
         self.forward_folded = forward_folded
         self.fit_range = fit_range
         self.method = method
-        self.error_method = error_method
 
         self._predicted_counts = None
         self._statval = None
@@ -75,7 +70,6 @@ class SpectrumFit(object):
         ss += '\nForward Folded {}'.format(self.forward_folded)
         ss += '\nFit range {}'.format(self.fit_range)
         ss += '\nBackend {}'.format(self.method)
-        ss += '\nError Method {}'.format(self.error_method)
 
         return ss
 
@@ -412,43 +406,6 @@ class SpectrumFit(object):
 
         self._result = results
 
-    def est_errors(self):
-        """Estimate parameter errors."""
-        if self.method == 'iminuit':
-            self._est_errors_iminuit()
-        else:
-            raise NotImplementedError('{}'.format(self.method))
-
-        for res in self.result:
-            res.covar_axis = self.covar_axis
-            res.covariance = self.covariance
-            res.model.parameters.set_parameter_covariance(self.covariance, self.covar_axis)
-
-    def _est_errors_iminuit(self):
-        # The iminuit covariance is a dict indexed by tuples containing combinations of
-        # parameter names
-
-        # create tuples of combinations
-        parameter_names = list()
-        parameter_names_minuit = self._iminuit_fit.parameters
-        for par, parname in zip(self._model.parameters.parameters,
-                                parameter_names_minuit):
-            if not par.frozen:
-                parameter_names.append(parname)
-
-        self.covar_axis = self._model.parameters.free
-        parameter_combinations = list(product(parameter_names, repeat=2))
-
-        if self._iminuit_fit.covariance:
-            iminuit_covariance = self._iminuit_fit.covariance
-            cov = np.array([iminuit_covariance[c] for c in parameter_combinations])
-        else:
-            # fit did not converge
-            cov = np.repeat(np.nan, len(parameter_combinations))
-
-        cov = cov.reshape(len(parameter_names), -1)
-        self.covariance = cov
-
     def run(self, outdir=None):
         """Run all steps and write result to disk.
 
@@ -460,7 +417,6 @@ class SpectrumFit(object):
         log.info('Running {}'.format(self))
 
         self.fit()
-        self.est_errors()
 
         if outdir is not None:
             self._write_result(outdir)
