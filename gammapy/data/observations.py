@@ -68,6 +68,29 @@ class ObservationCTA(object):
     meta : `~collections.OrderedDict`
         Dictionary to store metadata
 
+    Examples
+    --------
+    Create an observation from the CTA 1DC:
+
+    >>> from gammapy.data import ObservationCTA, EventList, GTI
+    >>> from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D, EnergyDispersion2D, Background3D
+    >>>
+    >>> data_file = '$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits'
+    >>> cal_file = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
+    >>>
+    >>> kwargs = dict(events = EventList.read(data_file),
+    >>>               gti = GTI.read(data_file),
+    >>>               psf = EnergyDependentMultiGaussPSF.read(cal_file, hdu='Point Spread Function'),
+    >>>               aeff = EffectiveAreaTable2D.read(cal_file),
+    >>>               edisp = EnergyDispersion2D.read(cal_file, hdu='Energy Dispersion'),
+    >>>               bkg = Background3D.read(cal_file),
+    >>>               pointing_radec = EventList.read(data_file).pointing_radec,
+    >>>               observation_live_time_duration = EventList.read(data_file).observation_live_time_duration,
+    >>>               observation_dead_time_fraction = EventList.read(data_file).observation_dead_time_fraction,
+    >>>          )
+    >>>
+    >>> obs = ObservationCTA(obs_id=110380, **kwargs)
+
     """
     def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
                  pointing_radec=None, observation_live_time_duration=None, observation_dead_time_fraction=None,
@@ -89,7 +112,7 @@ class ObservationCTA(object):
     def __str__(self):
         """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None')
+        ss += '- Start time: {}\n'.format(np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None')
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
             self.pointing_radec.ra if self.pointing_radec else 'None',
             self.pointing_radec.dec if self.pointing_radec else 'None')
