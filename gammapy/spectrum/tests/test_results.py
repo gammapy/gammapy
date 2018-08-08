@@ -89,5 +89,6 @@ class TestSpectrumResult:
         assert_quantity_allclose(res_err, [0.1, 0.1, 0.1, np.nan])
 
     @requires_dependency("matplotlib")
+    @requires_dependency("uncertainties")
     def test_plot(self, spectrum_result):
         spectrum_result.plot(energy_range=[1, 10] * u.TeV)
