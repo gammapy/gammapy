@@ -128,7 +128,7 @@ def test_EffectiveAreaTable2d_write():
     offset_hi = offset[1:]
     data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
 
-    aeff = EffectiveAreaTable2D(energy_lo=energy_lo,energy_hi=energy_hi,
+    aeff = EffectiveAreaTable2D(energy_lo=energy_lo, energy_hi=energy_hi,
                                 offset_lo=offset_lo, offset_hi=offset_hi,
                                 data=data)
     hdu = aeff.to_fits()

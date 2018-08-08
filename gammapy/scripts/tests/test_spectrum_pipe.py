@@ -17,7 +17,7 @@ def get_config():
         reference=1 * u.TeV,
     )
     model.parameters.set_parameter_errors({
-        'amplitude' : 1e-12 * u.Unit('cm-2 s-1 TeV-1')
+        'amplitude': 1e-12 * u.Unit('cm-2 s-1 TeV-1')
     })
     fp_binning = EnergyBounds.equal_log_spacing(1, 50, 4, 'TeV')
     return dict(

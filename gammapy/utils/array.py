@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility functions to deal with arrays and quantities.
-"""
+"""Utility functions to deal with arrays and quantities."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..extern import six
 import numpy as np
@@ -11,6 +10,7 @@ __all__ = ['array_stats_str',
            'symmetric_crop_pad_width']
 
 all_integer_types = six.integer_types + (np.integer,)
+
 
 def array_stats_str(x, label=''):
     """Make a string summarising some stats for an array.
@@ -95,8 +95,7 @@ def symmetric_crop_pad_width(shape, new_shape):
     shape : tuple
         Old shape
     new_shape : tuple or str
-        New shape.
-
+        New shape
     """
     xdiff = abs(shape[1] - new_shape[1])
     ydiff = abs(shape[0] - new_shape[0])
@@ -107,7 +106,7 @@ def symmetric_crop_pad_width(shape, new_shape):
 
     ywidth = (ydiff // 2, ydiff // 2)
     xwidth = (xdiff // 2, xdiff // 2)
-    return (ywidth, xwidth)
+    return ywidth, xwidth
 
 
 def _is_int(val):

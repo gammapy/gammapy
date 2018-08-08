@@ -113,7 +113,7 @@ TEST_MODELS = [
     dict(
         name='constant',
         model=ConstantModel(
-            const = 4 / u.cm ** 2 / u.s / u.TeV,
+            const=4 / u.cm ** 2 / u.s / u.TeV,
         ),
         val_at_2TeV=u.Quantity(4, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(35.9999999999999, 'cm-2 s-1'),
