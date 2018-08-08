@@ -192,7 +192,7 @@ class TestSpectralFit:
         assert_allclose(pars['index'].value, 2.25423, rtol=1e-2)
         assert pars['amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
         assert_allclose(pars['amplitude'].value, 2.008654e-11, rtol=1e-2)
-        assert_allclose(result.npred_src[60], 0.5638139, rtol=1e-3)
+        assert_allclose(result.npred[60], 0.5638139, rtol=1e-3)
         self.fit.result[0].to_table()
 
     def test_basic_errors(self):
@@ -216,7 +216,7 @@ class TestSpectralFit:
     def test_npred(self):
         self.fit.fit()
         actual = self.fit.obs_list[0].predicted_counts(self.fit.result[0].model).data.data.value
-        desired = self.fit.result[0].npred_src
+        desired = self.fit.result[0].npred
         assert_allclose(actual, desired)
 
     def test_stats(self):

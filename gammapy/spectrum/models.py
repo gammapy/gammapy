@@ -103,11 +103,12 @@ class SpectralModel(object):
         return values, errors
 
     def _convert_energy(self, energy):
-        try:
-            energy = energy.to(self.parameters['reference'].unit)
-        except IndexError:
-            energy = energy.to(self.parameters['emin'].unit)
-        return energy
+        if 'reference' in self.parameters.names:
+           return energy.to(self.parameters['reference'].unit)
+        elif 'emin' in self.parameters.names:
+            return energy.to(self.parameters['emin'].unit)
+        else:
+            return energy
 
     def evaluate_error(self, energy):
         """Evaluate spectral model with error propagation.
@@ -442,7 +443,7 @@ class ConstantModel(SpectralModel):
     @staticmethod
     def evaluate(energy, const):
         """Evaluate the model (static function)."""
-        return const
+        return np.ones(len(np.atleast_1d(energy))) * const
 
 
 class CompoundSpectralModel(SpectralModel):

@@ -343,7 +343,7 @@ class TestFluxPoints:
 
     def test_drop_ul(self, flux_points):
         flux_points = flux_points.drop_ul()
-        assert not np.any(flux_points._is_ul)
+        assert not np.any(flux_points.is_ul)
 
     def test_stack(self, flux_points):
         stacked = FluxPoints.stack([flux_points, flux_points])

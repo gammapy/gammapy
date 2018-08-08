@@ -7,7 +7,8 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
-                      TableModel, AbsorbedSpectralModel, Absorption)
+                      TableModel, AbsorbedSpectralModel, Absorption,
+                      ConstantModel)
 
 
 def table_model():
@@ -109,6 +110,15 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
         e_peak=0.74082 * u.TeV
     ),
+    dict(
+        name='constant',
+        model=ConstantModel(
+            const = 4 / u.cm ** 2 / u.s / u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(4, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(35.9999999999999, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(198.00000000000006, 'TeV cm-2 s-1'),
+    ),
 ]
 
 # Add compound models
@@ -186,7 +196,7 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum['e_peak'], rtol=1E-2)
 
     # inverse for TableModel is not implemented
-    if not isinstance(model, TableModel):
+    if not (isinstance(model, TableModel) or isinstance(model, ConstantModel)):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
 
     model.to_dict()
