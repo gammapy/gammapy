@@ -648,7 +648,6 @@ class WcsNDMap(WcsMap):
         -------
         cutout : `~gammapy.maps.WcsNDMap`
             The cutout map itself
-        cutout_slices : Tuple of slice objects (with dimension 1 less than that of the non-spatial axes of the map)
         """
         idx = (0,) * len(self.geom.axes)
 
