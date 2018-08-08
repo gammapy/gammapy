@@ -8,7 +8,7 @@ import numpy as np
 
 __all__ = [
     'JFactory',
-    'DMFluxMapMaker',
+    'compute_dm_flux',
 ]
 
 
@@ -63,7 +63,7 @@ class JFactory(object):
         return jfact
 
 
-class DMFluxMapMaker(object):
+def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
     r"""Create dark matter flux maps
 
     The gamma-ray flux is computed as follows
@@ -81,35 +81,23 @@ class DMFluxMapMaker(object):
     prim_flux : `~gammapy.astro.darkmatter.PrimaryFlux`
         Primary gamma-ray flux
     x_section : `~astropy.units.Quantity`
-        Velocity averaged annihilation cross section, $\langle \sigma\nu\rangle$
+        Velocity averaged annihilation cross section, :math:`$\langle \sigma\nu\rangle$`
     energy_range : tuple of `~astropy.units.Quantity`
         Energy range for the map
+
+    Returns
+    -------
+    flux : `~astropy.units.Quantity`
+        DM Flux
 
     References
     ----------
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
-
-    def __init__(self, jfact, prim_flux, x_section, energy_range):
-        self.jfact = jfact
-        self.prim_flux = prim_flux
-        self.x_section = x_section
-        self.energy_range = energy_range
-        self._flux_map = None
-
-    def run(self):
-        """Compute DM Flux
-
-        Returns
-        -------
-        flux : `~astropy.units.Quantity`
-            DM Flux
-
-        """
-        prefactor = (self.x_section / (8 * np.pi * self.prim_flux.mDM ** 2))
-        int_flux = self.prim_flux.table_model.integral(
-            emin=self.energy_range[0],
-            emax=self.energy_range[1],
-        )
-        flux = (self.jfact * prefactor * int_flux).to('cm-2 s-1')
-        return flux
+    prefactor = (x_section / (8 * np.pi * prim_flux.mDM ** 2))
+    int_flux = prim_flux.table_model.integral(
+        emin=energy_range[0],
+        emax=energy_range[1],
+    )
+    flux = (jfact * prefactor * int_flux).to('cm-2 s-1')
+    return flux
