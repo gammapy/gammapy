@@ -46,7 +46,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     return WcsNDMap(geom, exposure.value, unit=exposure.unit)
 
-def make_map_exposure_reco_energy(exposure_map, spectrum, edisp=None):
+def make_map_exposure_reco_energy(exposure_map, spectrum=None, edisp=None):
     """Create an exposure map in reco energy from an exposure map in true energy.
 
     Exposure in true energy is weighted with an input spectrum and redistributed in
