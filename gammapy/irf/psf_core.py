@@ -19,28 +19,12 @@ import json
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
-from ..utils.gauss import Gauss2DPDF, MultiGauss2D
+from ..utils.gauss import MultiGauss2D
 
 __all__ = [
-    'GaussPSF',
     'HESSMultiGaussPSF',
     'multi_gauss_psf_kernel',
 ]
-
-
-class GaussPSF(Gauss2DPDF):
-    """Extension of Gauss2D PDF by PSF-specific functionality."""
-
-    def to_hess(self):
-        return {'A_1': self.norm, 'sigma_1': self.sigma}
-
-    def to_sherpa(self, binsz):
-        """Generate gauss2d parameters for Sherpa such
-        that the integral is 1"""
-        d = {}
-        d['ampl'] = binsz ** 2 * self.norm
-        d['fwhm'] = gaussian_sigma_to_fwhm / binsz * self.sigma
-        return {'psf1': d}
 
 
 class HESSMultiGaussPSF(object):
