@@ -116,6 +116,24 @@ class MapMaker(object):
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
             self.maps[name].fill_by_coord(coords, data)
 
+    def make_images(self, spectrum):
+        """Create 2D maps by summing over energy axis.
+
+        Returns
+        -------
+        images : dict of `~gammapy.maps.Map`
+            the dictionary of images
+        """
+        images = dict()
+        for name, map in self.maps.items():
+            if name == 'exposure':
+                weights =
+                res = Map.from_geom(map.geom.to_image())
+                for img, idx in map.iter_by_image():
+                    res.data += img*
+            images[name] = map.sum_over_axes()
+
+        return images
 
 class MapMakerObs(object):
     """Make maps for a single IACT observation.
