@@ -290,32 +290,6 @@ class ParameterList(object):
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
-    def set_parameter_covariance(self, covariance, covar_axis):
-        """
-        Set full correlated parameters errors.
-
-        Parameters
-        ----------
-        covariance : array-like
-            Covariance matrix
-        covar_axis : list
-            List of strings defining the parameter order in covariance
-        """
-        shape = (len(self.parameters), len(self.parameters))
-        covariance_new = np.zeros(shape)
-        idx_lookup = dict([(par.name, idx) for idx, par in enumerate(self.parameters)])
-
-        # TODO: make use of covariance matrix symmetry
-        for i, par in enumerate(covar_axis):
-            i_new = idx_lookup[par]
-            for j, par_other in enumerate(covar_axis):
-                j_new = idx_lookup[par_other]
-                covariance_new[i_new, j_new] = covariance[i, j]
-
-        self.covariance = covariance_new
-
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
     def error(self, parname):
         """Get parameter error.
 
