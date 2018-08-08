@@ -6,7 +6,7 @@ from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
-from .exposure import make_map_exposure_true_energy
+from .exposure import make_map_exposure_true_energy, make_map_exposure_reco_energy
 from .background import make_map_background_irf, _fov_background_norm
 
 __all__ = [
@@ -116,8 +116,18 @@ class MapMaker(object):
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
             self.maps[name].fill_by_coord(coords, data)
 
-    def make_images(self, spectrum):
+    def make_images(self, spectrum=None, edisp=None):
         """Create 2D maps by summing over energy axis.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.spectrum.models.SpectralModel`, default is None
+            Spectral model to use to weight exposure in true energy
+            If None is passed, a power law of photon index -2 is assumed.
+        edisp : `~gammapy.irf.EnergyDispersion`, default is None.
+            Energy Dispersion response to redistribute true energies to reco energies
+            If no energy dispersion is passed, a diagonal one is assumed with identical true and reco
+            energy bins. This is the default behaviour.
 
         Returns
         -------
@@ -127,10 +137,8 @@ class MapMaker(object):
         images = dict()
         for name, map in self.maps.items():
             if name == 'exposure':
-                weights =
-                res = Map.from_geom(map.geom.to_image())
-                for img, idx in map.iter_by_image():
-                    res.data += img*
+                expo_reco = make_map_exposure_reco_energy(map, spectrum, edisp)
+                images[name] = expo_reco.sum_over_axes()
             images[name] = map.sum_over_axes()
 
         return images

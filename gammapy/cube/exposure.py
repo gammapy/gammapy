@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..maps import WcsNDMap
+from ..irf import EnergyDispersion
+from ..spectrum.models import PowerLaw
+from ..maps import WcsNDMap, MapAxis, Map
 
 __all__ = [
     'make_map_exposure_true_energy',
+    'make_map_exposure_reco_energy',
 ]
 
 
@@ -42,3 +45,59 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     exposure = (exposure * livetime).to('m2 s')
 
     return WcsNDMap(geom, exposure.value, unit=exposure.unit)
+
+def make_map_exposure_reco_energy(exposure_map, spectrum, edisp=None):
+    """Create an exposure map in reco energy from an exposure map in true energy.
+
+    Exposure in true energy is weighted with an input spectrum and redistributed in
+    reco energy with the input energy dispersion.
+
+    Parameters
+    ----------
+    exposure_map : `~gammapy.maps.Map`
+        Input exposure map in true energy. unit should have dimension of m2s
+    spectrum : `~gammapy.spectrum.models.SpectralModel`, default is None
+        Spectral model to use to weight exposure in true energy
+        If None is passed, a power law of photon index -2 is assumed.
+    edisp : `~gammapy.irf.EnergyDispersion`, default is None.
+        Energy Dispersion response to redistribute true energies to reco energies
+        If no energy dispersion is passed, a diagonal one is assumed with identical true and reco
+        energy bins. This is the default behaviour.
+
+    Returns
+    -------
+    exposure_image : `~gammapy.maps.Map`
+        Resulting image in reco energy. The unit is the same as the input map.
+    """
+    expo_map = exposure_map.copy()
+    etrue_axis = expo_map.geom.get_axis_by_name("energy")
+    etrue_center = etrue_axis.center * etrue_axis.unit
+    etrue_edges = etrue_axis.edges * etrue_axis.unit
+    binsize = np.diff(etrue_edges)
+
+    if spectrum is None:
+        spectrum = PowerLaw(index=2.0)
+    weights = spectrum(etrue_center)*binsize
+    weights /= weights.sum()
+
+    for img, idx in expo_map.iter_by_image():
+        img *= weights[idx].value
+
+    if edisp is None:
+        edisp = EnergyDispersion.from_diagonal_matrix(etrue_edges, etrue_edges)
+
+    # Here we do the convolution with the edisp matrix
+    a = np.rollaxis(expo_map.data, 0, 3)
+    b = np.dot(a, edisp.pdf_matrix)
+    expo_ereco_data = np.rollaxis(b, 2, 0)
+
+    # Create output image by replacing true energy with reco energy axes in initial geom
+    geom_2D = expo_map.geom.to_image()
+    ereco_axis = MapAxis(edisp.e_reco.bins, unit=edisp.e_reco.unit, name="energy")
+
+    new_axes = [ereco_axis if axis == etrue_axis else axis for axis in expo_map.geom.axes]
+    geom_ereco = geom_2D.to_cube(axes=new_axes)
+
+    ereco_expo_map = Map.from_geom(geom=geom_ereco, unit=expo_map.unit)
+    ereco_expo_map.data = expo_ereco_data
+    return ereco_expo_map
