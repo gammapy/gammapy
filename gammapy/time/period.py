@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([None]), loss='linear', scale=1):
+def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', scale=1):
     """
     Compute a light curve's period.
 
@@ -39,10 +39,10 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
         Time array of the light curve
     flux : `~numpy.ndarray`
         Flux array of the light curve
-    flux_err : `~numpy.ndarray` (optional, default=None)
+    flux_err : `~numpy.ndarray`
         Flux error array of the light curve.
         Is set to 1 if not given.
-    periods : `~numpy.ndarray` (optional, default=None)
+    periods : `~numpy.ndarray`
         Period grid on which the periodogram is performed.
         If not given, a linear grid will be computed limited by the length of the light curve and the Nyquist frequency.
     loss : `str` (optional, default='linear')
@@ -65,12 +65,11 @@ def robust_periodogram(time, flux, flux_err=np.array([None]), periods=np.array([
     .. [2] Thieler et at. (2016), "RobPer: An R Package to Calculate Periodograms for Light Curves Based on Robust Regression",
        see `here <https://www.jstatsoft.org/article/view/v069i09>`__
     """
-    # set flux errors
-    if flux_err.any() == None:
+    if flux_err is None:
         flux_err = np.ones_like(flux)
 
     # set up period grid
-    if periods.any() == None:
+    if periods is None:
         periods = _period_grid(time)
 
     # compute periodogram
@@ -114,15 +113,14 @@ def _model(beta0, x, period, t, y, dy):
 
 def _noise(mu, t, y, dy):
     """
-    Computes the residuals of the noise-only model
+    Residuals of the noise-only model.
     """
-
     return (mu * np.ones(len(t)) - y) / dy
 
 
 def _robust_regression(time, flux, flux_err, periods, loss, scale):
     """
-    Computes the periodogram peaks for a given loss function and scale
+    Periodogram peaks for a given loss function and scale.
     """
     from scipy.optimize import least_squares
 
