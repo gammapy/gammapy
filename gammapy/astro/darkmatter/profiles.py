@@ -115,7 +115,7 @@ class EinastoProfile(DMProfile):
     r_s : `~astropy.units.Quantity`
         Scale radius, :math:`r_s`
     alpha : `~astropy.units.Quantity`
-        math:`\alpha`
+        :math:`\alpha`
     rho_s : `~astropy.units.Quantity`
         Characteristic density, :math:`\rho_s`
 
@@ -160,7 +160,7 @@ class IsothermalProfile(DMProfile):
 
     References
     ----------
-    * `1991MNRAS.249..523B <http://adsabs.harvard.edu/full/1991MNRAS.249..523>`_
+    * `1991MNRAS.249..523B <http://adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -229,7 +229,7 @@ class MooreProfile(DMProfile):
 
     References
     ----------
-    * `http://adsabs.harvard.edu/abs/2004astro.ph..2267D <http://adsabs.harvard.edu/abs/2004astro.ph..2267D>`_
+    * `2004MNRAS.353..624D <http://adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc

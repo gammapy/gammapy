@@ -30,34 +30,34 @@ class PrimaryFlux(object):
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
     channel_registry = {
-        'eL' : 'eL',
-        'eR' : 'eR',
-        'e' : 'e',
-        'muL' : '\\[Mu]L',
-        'muR' : '\\[Mu]R',
-        'mu' : '\\[Mu]',
-        'tauL' : '\\[Tau]L',
-        'tauR' : '\\[Tau]R',
-        'tau' : '\\[Tau]',
-        'q' : 'q',
-        'c' : 'c',
-        'b' : 'b',
-        't' : 't',
-        'WL' : 'WL',
-        'WT' : 'WT',
-        'W' : 'W',
-        'ZL' : 'ZL',
-        'ZT' : 'ZT',
-        'Z' : 'Z',
-        'g' : 'g',
-        'gamma' : '\\[Gamma]',
-        'h' : 'h',
-        'nu_e' : '\\[Nu]e',
-        'nu_mu' : '\\[Nu]\\[Mu]',
-        'nu_tau' : '\\[Nu]\\[Tau]',
-        'V->e' : 'V->e',
-        'V->mu' : 'V->\\[Mu]',
-        'V->tau' : 'V->\\[Tau]',
+        'eL': 'eL',
+        'eR': 'eR',
+        'e': 'e',
+        'muL': '\\[Mu]L',
+        'muR': '\\[Mu]R',
+        'mu': '\\[Mu]',
+        'tauL': '\\[Tau]L',
+        'tauR': '\\[Tau]R',
+        'tau': '\\[Tau]',
+        'q': 'q',
+        'c': 'c',
+        'b': 'b',
+        't': 't',
+        'WL': 'WL',
+        'WT': 'WT',
+        'W': 'W',
+        'ZL': 'ZL',
+        'ZT': 'ZT',
+        'Z': 'Z',
+        'g': 'g',
+        'gamma': '\\[Gamma]',
+        'h': 'h',
+        'nu_e': '\\[Nu]e',
+        'nu_mu': '\\[Nu]\\[Mu]',
+        'nu_tau': '\\[Nu]\\[Tau]',
+        'V->e': 'V->e',
+        'V->mu': 'V->\\[Mu]',
+        'V->tau': 'V->\\[Tau]',
     }
 
     def __init__(self, mDM, channel):
@@ -89,8 +89,7 @@ class PrimaryFlux(object):
 
     @property
     def allowed_channels(self):
-        """Allowed annihilation channels
-        """
+        """Allowed annihilation channels"""
         return list(self.channel_registry.keys())
 
     @property

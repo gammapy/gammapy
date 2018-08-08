@@ -3,8 +3,8 @@
 Utilities to compute J-factor maps
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 
 __all__ = [
     'JFactory',
@@ -15,8 +15,8 @@ __all__ = [
 class JFactory(object):
     """Compute J-Factor maps
 
-    All J-Factors are computed for annihilation. The assumend dark matter
-    profiles will be centered on the center of the map
+    All J-Factors are computed for annihilation. The assumed dark matter
+    profiles will be centered on the center of the map.
 
     Parameters
     ----------
@@ -39,9 +39,8 @@ class JFactory(object):
         .. math ::
             \frac{\mathrm d J}{\mathrm d \Omega} =
            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
-
-        TODO: Needs to be implemented more efficiently
         """
+        # TODO: Needs to be implemented more efficiently
         separation = self.geom.separation(self.geom.center_skydir)
         rmin = separation.rad * self.distance
         rmax = self.distance
@@ -56,11 +55,9 @@ class JFactory(object):
             J(\Delta\Omega) =
            \int_{\Delta\Omega} \mathrm d \Omega^{\prime}
            \frac{\mathrm d J}{\mathrm d \Omega^{\prime}}
-
         """
         diff_jfact = self.compute_differential_jfactor()
-        jfact = diff_jfact * self.geom.to_image().solid_angle()
-        return jfact
+        return diff_jfact * self.geom.to_image().solid_angle()
 
 
 def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
@@ -99,5 +96,4 @@ def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
         emin=energy_range[0],
         emax=energy_range[1],
     )
-    flux = (jfact * prefactor * int_flux).to('cm-2 s-1')
-    return flux
+    return (jfact * prefactor * int_flux).to('cm-2 s-1')
