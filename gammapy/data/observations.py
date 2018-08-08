@@ -359,6 +359,31 @@ class DataStoreObservation(object):
 
         return messages
 
+    def to_observation_cta(self):
+        """
+        Convert a `~gammapy.data.DataStoreObservation` to an `~gammapy.data.ObservationCTA`
+
+        Returns
+        -------
+        obs : `~gammapy.data.ObservationCTA`
+            An observation container that stores all class attributes in memory
+
+        """
+        # maps the ObservationCTA class attributes to the DataStoreObservation properties
+        obs_cta_kwargs = {'obs_id': 'obs_id', 'gti': 'gti', 'events': 'events', 'aeff': 'aeff', 'edisp': 'edisp',
+                          'psf': 'psf', 'bkg': 'bkg', 'pointing_radec': 'pointing_radec',
+                          'observation_live_time_duration': 'observation_live_time_duration',
+                          'observation_dead_time_fraction': 'observation_dead_time_fraction'}
+
+        for obs_cta_kwarg, ds_obs_prop in obs_cta_kwargs.items():
+            try:
+                obs_cta_kwargs[obs_cta_kwarg] = getattr(self, ds_obs_prop)
+            except Exception as exception:
+                log.warning(exception)
+                obs_cta_kwargs[obs_cta_kwarg] = None
+
+        return ObservationCTA(**obs_cta_kwargs)
+
 
 class ObservationList(UserList):
     """List of `~gammapy.data.DataStoreObservation`.
