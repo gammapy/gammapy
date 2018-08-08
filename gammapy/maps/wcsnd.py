@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import Angle
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
@@ -636,7 +637,7 @@ class WcsNDMap(WcsMap):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lat, lon) in that specific order.
+            Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
             For more options see also `~astropy.nddata.utils.Cutout2D`.
         mode : {'trim', 'partial', 'strict'}
@@ -651,6 +652,10 @@ class WcsNDMap(WcsMap):
             The cutout map itself
         """
         idx = (0,) * len(self.geom.axes)
+
+        width = Angle(width)
+        if width.size == 2:
+            width = width[::-1]
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)
