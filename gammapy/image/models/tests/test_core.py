@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from ....utils.testing import requires_dependency, requires_data
-from ..new import (
+from ..core import (
     SkyPointSource,
     SkyGaussian,
     SkyDisk,
