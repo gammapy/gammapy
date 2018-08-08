@@ -526,14 +526,6 @@ def excess_matching_significance(mu_bkg, significance, method='lima'):
         raise ValueError('Invalid method: {}'.format(method))
 
 
-def _excess_matching_significance_simple(mu_bkg, significance):
-    raise NotImplementedError
-
-
-def _excess_matching_significance_lima(mu_bkg, significance):
-    raise NotImplementedError
-
-
 def excess_matching_significance_on_off(n_off, alpha, significance, method='lima'):
     r"""Compute sensitivity of an on-off observation.
 
@@ -586,6 +578,10 @@ def excess_matching_significance_on_off(n_off, alpha, significance, method='lima
         raise ValueError('Invalid method: {}'.format(method))
 
 
+def _excess_matching_significance_simple(mu_bkg, significance):
+    return significance * np.sqrt(mu_bkg)
+
+
 def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
     # TODO: can these equations be simplified?
     significance2 = significance ** 2
@@ -593,6 +589,36 @@ def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
     temp = significance2 + 2 * n_off * alpha
     n_on = 0.5 * (temp + significance * np.sqrt(np.abs(determinant)))
     return n_on - background(n_off, alpha)
+
+
+# This is mostly a copy & paste from _excess_matching_significance_on_off_lima
+# TODO: simplify this, or avoid code duplication?
+# Looking at the formula for significance_lima_on_off, I don't think
+# it can be analytically inverted because the n_on appears inside and outside the log
+# So probably root finding is still needed here.
+def _excess_matching_significance_lima(mu_bkg, significance):
+    from scipy.optimize import fsolve
+
+    # Significance not well-defined for n_on < 0
+    # Return Nan if given significance can't be reached
+    s0 = _significance_lima(n_on=1e-5, mu_bkg=mu_bkg)
+    if s0 >= significance:
+        return np.nan
+
+    def target_significance(n_on):
+        if n_on >= 0:
+            return _significance_lima(n_on, mu_bkg) - significance
+        else:
+            # This high value is to tell the optimiser to stay n_on >= 0
+            return 1e10
+
+    excess_guess = _excess_matching_significance_simple(mu_bkg, significance)
+    n_on_guess = excess_guess + mu_bkg
+
+    # solver options to control robustness / accuracy / speed
+    opts = dict(factor=0.1)
+    n_on = fsolve(target_significance, n_on_guess, **opts)
+    return n_on - mu_bkg
 
 
 def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
@@ -620,4 +646,5 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
     return n_on - background(n_off, alpha)
 
 
+_excess_matching_significance_lima = np.vectorize(_excess_matching_significance_lima)
 _excess_matching_significance_on_off_lima = np.vectorize(_excess_matching_significance_on_off_lima)
