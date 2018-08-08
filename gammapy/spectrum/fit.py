@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import copy
@@ -8,7 +9,6 @@ from ..utils.fitting import fit_iminuit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
-from itertools import product
 
 
 __all__ = [

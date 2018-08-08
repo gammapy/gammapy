@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.units import Quantity, Unit
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
-from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
+from astropy.stats import gaussian_fwhm_to_sigma
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds

@@ -101,6 +101,7 @@ class MapFit(object):
                              opts_minuit=opts_minuit)
         self._minuit = minuit
 
+
 class MapEvaluator(object):
     """Sky model evaluation on maps.
 

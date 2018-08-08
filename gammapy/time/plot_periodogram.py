@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 
-def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best_period=None, fap=None):
+def plot_periodogram(time, flux, periods, power, flux_err=None, best_period=None, fap=None):
     """
     Plot a light curve and its periodogram.
 
@@ -38,8 +38,7 @@ def plot_periodogram(time, flux, periods, power, flux_err=np.array([None]), best
     """
     import matplotlib.pyplot as plt
 
-    # set flux errors
-    if flux_err.any() == None:
+    if flux_err is None:
         flux_err = np.zeros_like(flux)
 
     # set up the figure & axes for plotting
