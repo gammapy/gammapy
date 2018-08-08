@@ -78,14 +78,9 @@ flake8:
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
-	--ignore=_astropy_init.py -f colorized \
+	--ignore=_astropy_init.py,gammapy/extern \
 	-d E1103,E0611,E1101 \
-	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
-
-# TODO: fix or silence all the issue (and check which codes we really want to ignore if any)
-# TODO: figure out how exclude works (see https://github.com/PyCQA/pydocstyle/issues/175):
-# Should exclude: gammapy/version.py, gammapy/extern
-#	       --match-dir='[^gammapy/extern]' \
+	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})' -f colorized
 
 pydocstyle:
 	pydocstyle $(PROJECT) \
