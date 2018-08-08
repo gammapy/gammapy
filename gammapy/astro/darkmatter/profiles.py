@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Dark matter profiles
-"""
+"""Dark matter profiles."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
@@ -22,15 +20,15 @@ __all__ = [
 
 @six.add_metaclass(abc.ABCMeta)
 class DMProfile(object):
-    """DMProfile model base class.
-    """
+    """DMProfile model base class."""
+
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm ** 3)
     """Local dark matter density as given in refenrece 2"""
     DISTANCE_GC = 8.33 * u.kpc
     """Distance to the Galactic Center as given in reference 2"""
 
     def __call__(self, radius):
-        """Call evaluate method of derived classes"""
+        """Call evaluate method of derived classes."""
         kwargs = dict()
         for par in self.parameters.parameters:
             kwargs[par.name] = par.quantity
@@ -38,14 +36,13 @@ class DMProfile(object):
         return self.evaluate(radius, **kwargs)
 
     def scale_to_local_density(self):
-        """Scale to local density"""
+        """Scale to local density."""
         scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to('').value
         self.parameters['rho_s'].value *= scale
 
     def _eval_squared(self, radius):
-        """Helper function to return squared density"""
-        val = self(radius)
-        return val ** 2
+        """Squared density at given radius."""
+        return self(radius) ** 2
 
     def integral(self, rmin, rmax, **kwargs):
         r"""Integrate squared dark matter profile numerically.
@@ -85,6 +82,7 @@ class NFWProfile(DMProfile):
     * `1997ApJ...490..493 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
 
@@ -124,6 +122,7 @@ class EinastoProfile(DMProfile):
     * `1965TrAlm...5...87E <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
     """Default scale radius as given in reference 2"""
     DEFAULT_ALPHA = 0.17
@@ -163,6 +162,7 @@ class IsothermalProfile(DMProfile):
     * `1991MNRAS.249..523B <http://adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
     """Default scale radius as given in reference 2"""
 
@@ -197,6 +197,7 @@ class BurkertProfile(DMProfile):
     * `1995ApJ...447L..25B <http://adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
     """Default scale radius as given in reference 2"""
 
@@ -232,6 +233,7 @@ class MooreProfile(DMProfile):
     * `2004MNRAS.353..624D <http://adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
     """Default scale radius as given in reference 2"""
 

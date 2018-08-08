@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Utilities to compute J-factor maps
-"""
+"""Utilities to compute J-factor maps."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
@@ -13,7 +11,7 @@ __all__ = [
 
 
 class JFactory(object):
-    """Compute J-Factor maps
+    """Compute J-Factor maps.
 
     All J-Factors are computed for annihilation. The assumed dark matter
     profiles will be centered on the center of the map.
@@ -34,7 +32,7 @@ class JFactory(object):
         self.distance = distance
 
     def compute_differential_jfactor(self):
-        r"""Compute differential J-Factor
+        r"""Compute differential J-Factor.
 
         .. math ::
             \frac{\mathrm d J}{\mathrm d \Omega} =
@@ -49,7 +47,7 @@ class JFactory(object):
         return jfact / u.steradian
 
     def compute_jfactor(self):
-        r"""Compute astrophysical J-Factor
+        r"""Compute astrophysical J-Factor.
 
         .. math ::
             J(\Delta\Omega) =
@@ -61,9 +59,9 @@ class JFactory(object):
 
 
 def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
-    r"""Create dark matter flux maps
+    r"""Create dark matter flux maps.
 
-    The gamma-ray flux is computed as follows
+    The gamma-ray flux is computed as follows:
 
     .. math::
 

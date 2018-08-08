@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Dark matter spectra
-"""
+"""Dark matter spectra."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
@@ -16,9 +14,9 @@ __all__ = [
 
 
 class PrimaryFlux(object):
-    """DM-annihilation gamma-ray spectra
+    """DM-annihilation gamma-ray spectra.
 
-    Based on the precompute models by `Cirelli et al.
+    Based on the precomputed models by `Cirelli et al.
     <http://www.marcocirelli.net/PPPC4DMID.html>`_. All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
@@ -29,6 +27,7 @@ class PrimaryFlux(object):
     ----------
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+
     channel_registry = {
         'eL': 'eL',
         'eR': 'eR',
@@ -66,7 +65,7 @@ class PrimaryFlux(object):
 
     @lazyproperty
     def table(self):
-        """Lookup table"""
+        """Lookup table (`~astropy.table.Table`)."""
         filename = '$GAMMAPY_EXTRA/datasets/dark_matter_spectra/AtProduction_gammas.dat'
         return Table.read(
             str(make_path(filename)),
@@ -77,7 +76,7 @@ class PrimaryFlux(object):
 
     @property
     def mDM(self):
-        """Dark matter mass"""
+        """Dark matter mass."""
         return self._mDM
 
     @mDM.setter
@@ -89,12 +88,12 @@ class PrimaryFlux(object):
 
     @property
     def allowed_channels(self):
-        """Allowed annihilation channels"""
+        """List of allowed annihilation channels."""
         return list(self.channel_registry.keys())
 
     @property
     def channel(self):
-        """Annihilation channel"""
+        """Annihilation channel (str)."""
         return self._channel
 
     @channel.setter
@@ -108,8 +107,7 @@ class PrimaryFlux(object):
 
     @property
     def table_model(self):
-        """`~gammapy.spectrum.models.TableModel`
-        """
+        """Spectrum as `~gammapy.spectrum.models.TableModel`."""
         subtable = self.table[self.table['mDM'] == self.mDM.value]
         energies = (10 ** subtable['Log[10,x]']) * self.mDM
         channel_name = self.channel_registry[self.channel]
