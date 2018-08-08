@@ -24,6 +24,10 @@ The spectral models in `gammapy.astro.darkmatter.PrimaryFlux` are based on
 annihilation channels). These models are most commonly used in VHE dark matter
 analyses.
 
+
+Other packages
+==============
+
 There are many other packages out there that implement functionality for dark
 matter analysis, their capabilities are summarized in the following
 
@@ -100,11 +104,12 @@ particle model. GamLike can somehow be use to reproduce HESS results (Section
 6.2.2. of the DarkBit paper). But I don't fully understand how.
 
 
+Using `gammapy.spectrum`
+========================
 
-Getting Started
-===============
+For use cases please go to the tutorial notebooks:
 
-TODO
+* :gp-extra-notebook:`astro_dark_matter`
 
 Reference/API
 =============

@@ -4,7 +4,7 @@ import pytest
 import astropy.units as u
 from ....utils.testing import assert_quantity_allclose, requires_data, requires_dependency
 from ....maps import WcsGeom
-from .. import JFactory, DMFluxMapMaker, profiles, PrimaryFlux
+from .. import JFactory, profiles, PrimaryFlux, compute_dm_flux
 
 
 @pytest.fixture(scope="session")
@@ -28,10 +28,9 @@ def prim_flux():
 def test_dmfluxmapmaker(jfact, prim_flux):
     x_section = 1e-26 * u.Unit("cm3 s-1")
     energy_range = [0.1, 1] * u.TeV
-    dmfmm = DMFluxMapMaker(
+    flux = compute_dm_flux(
         jfact=jfact, prim_flux=prim_flux, x_section=x_section, energy_range=energy_range
     )
-    flux = dmfmm.run()
 
     actual = flux[5, 5]
     desired = 6.503327e-13 / u.cm ** 2 / u.s
