@@ -7,7 +7,7 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy import units as u
 from ...utils.testing import requires_dependency, requires_data
-from ...irf import EnergyDependentMultiGaussPSF
+from ...irf.psf_gauss import EnergyDependentMultiGaussPSF
 
 
 def make_test_psf(energy_bins=15, theta_bins=12):
