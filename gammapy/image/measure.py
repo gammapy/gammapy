@@ -159,4 +159,3 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
 def _wrapped_coordinates(image):
     coords = image.geom.get_coord().skycoord
     return coords.data.lon.wrap_at('180d'), coords.data.lat
-

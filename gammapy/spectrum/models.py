@@ -104,7 +104,7 @@ class SpectralModel(object):
 
     def _convert_energy(self, energy):
         if 'reference' in self.parameters.names:
-           return energy.to(self.parameters['reference'].unit)
+            return energy.to(self.parameters['reference'].unit)
         elif 'emin' in self.parameters.names:
             return energy.to(self.parameters['emin'].unit)
         else:
