@@ -29,6 +29,36 @@ class PrimaryFlux(object):
     ----------
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
+    channel_registry = {
+        'eL' : 'eL',
+        'eR' : 'eR',
+        'e' : 'e',
+        'muL' : '\\[Mu]L',
+        'muR' : '\\[Mu]R',
+        'mu' : '\\[Mu]',
+        'tauL' : '\\[Tau]L',
+        'tauR' : '\\[Tau]R',
+        'tau' : '\\[Tau]',
+        'q' : 'q',
+        'c' : 'c',
+        'b' : 'b',
+        't' : 't',
+        'WL' : 'WL',
+        'WT' : 'WT',
+        'W' : 'W',
+        'ZL' : 'ZL',
+        'ZT' : 'ZT',
+        'Z' : 'Z',
+        'g' : 'g',
+        'gamma' : '\\[Gamma]',
+        'h' : 'h',
+        'nu_e' : '\\[Nu]e',
+        'nu_mu' : '\\[Nu]\\[Mu]',
+        'nu_tau' : '\\[Nu]\\[Tau]',
+        'V->e' : 'V->e',
+        'V->mu' : 'V->\\[Mu]',
+        'V->tau' : 'V->\\[Tau]',
+    }
 
     def __init__(self, mDM, channel):
         self.mDM = mDM
@@ -60,11 +90,8 @@ class PrimaryFlux(object):
     @property
     def allowed_channels(self):
         """Allowed annihilation channels
-
-        TODO: Introduce a dict with simpler channel names
-        TODO: Make allowed_channels a class property
         """
-        return self.table.colnames[2:]
+        return self.channel_registry.keys()
 
     @property
     def channel(self):
@@ -86,7 +113,8 @@ class PrimaryFlux(object):
         """
         subtable = self.table[self.table['mDM'] == self.mDM.value]
         energies = (10 ** subtable['Log[10,x]']) * self.mDM
-        dN_dlogx = subtable[self.channel]
+        channel_name = self.channel_registry[self.channel]
+        dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
 
         return TableModel(
