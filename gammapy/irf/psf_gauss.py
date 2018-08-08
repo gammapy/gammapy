@@ -492,9 +492,6 @@ class HESSMultiGaussPSF(object):
         fh.close()
         return pars
 
-    def __str__(self):
-        return json.dumps(self.pars, sort_keys=True, indent=4)
-
     def n_gauss(self):
         """Count number of Gaussians."""
         return len([_ for _ in self.pars.keys() if 'sigma' in _])
@@ -508,50 +505,6 @@ class HESSMultiGaussPSF(object):
             sigma = self.pars['sigma_{}'.format(ii)]
             total += A * np.exp(-theta2 / (2 * sigma ** 2))
         return self.pars['scale'] * total
-
-    def to_sherpa(self, binsz):
-        """Convert parameters to Sherpa format.
-
-        @param binsz: Bin size (deg)
-        @return: dict of Sherpa parameters
-
-        Note: Sherpa uses the following function
-        f(x,y) = f(r) = A exp[-f(r/F)^2]
-        f = 2.7725887 = 4log2 relates the full-width
-        at half-maximum F to the Gaussian sigma.
-
-        Note: The sigma parameters in this class are in
-        deg, but in Sherpa we use pix, so we convert here.
-
-        For further explanations on how to convert 1D to 2D Gaussian,
-        see the docstring of GCTAResponse::psf_dummy in GammaLib
-
-        Input is unnormalized anyways, so we don't care about absolute
-        PSF normalization here, Sherpa automatically renormalizes. -> Check!"""
-        pars = {}
-        # scale = self.pars['scale']
-        for ii in range(1, self.n_gauss() + 1):
-            d = {}
-            A = self.pars['A_{}'.format(ii)]
-            sigma = self.pars['sigma_{}'.format(ii)]
-            d['ampl'] = A
-            d['fwhm'] = gaussian_sigma_to_fwhm * sigma / binsz
-            name = 'psf{}'.format(ii)
-            pars[name] = d
-        return pars
-
-    def to_file(self, filename, binsz, fmt='json'):
-        """Convert parameters to Sherpa format and write them to a JSON file.
-        """
-        if fmt == 'json':
-            pars = self.to_sherpa(binsz)
-            json.dump(pars, open(filename, 'w'),
-                      sort_keys=True, indent=4)
-        elif fmt == 'ascii':
-            fh = open(filename, 'w')
-            for name, value in self.pars.items():
-                fh.write('{} {}\n'.format(name, value))
-            fh.close()
 
     def to_MultiGauss2D(self, normalize=True):
         """Use this to compute containment angles and fractions.
@@ -570,14 +523,6 @@ class HESSMultiGaussPSF(object):
         if normalize:
             m.normalize()
         return m
-
-    def containment_radius(self, containment_fraction):
-        """Convolve this PSF with a Gaussian source of width sigma,
-        then compute the containment angle of that distribution.
-        """
-        m = self.to_MultiGauss2D(normalize=True)
-        theta = m.containment_radius(containment_fraction)
-        return theta
 
 
 def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs):
