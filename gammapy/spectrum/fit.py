@@ -390,7 +390,7 @@ class SpectrumFit(object):
             fit_range = self.true_fit_range[idx]
             statval = np.sum(self.statval[idx])
             stat_per_bin = self.statval[idx]
-            npred_src = copy.deepcopy(self.predicted_counts[idx])
+            npred = copy.deepcopy(self.predicted_counts[idx])
 
             results.append(SpectrumFitResult(
                 model=model,
@@ -398,7 +398,7 @@ class SpectrumFit(object):
                 statname=statname,
                 statval=statval,
                 stat_per_bin=stat_per_bin,
-                npred_src=npred_src,
+                npred=npred,
                 obs=obs
             ))
 

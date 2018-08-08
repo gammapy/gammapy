@@ -230,7 +230,7 @@ class FluxPoints(object):
         >>> print(flux_points.drop_ul())
         FluxPoints(sed_type="flux", n_points=19)
         """
-        table_drop_ul = self.table[~self._is_ul]
+        table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
 
     def to_sed_type(self, sed_type, method='log_center', model=None, pwl_approx=False):
@@ -431,7 +431,7 @@ class FluxPoints(object):
         return y_err
 
     @property
-    def _is_ul(self):
+    def is_ul(self):
         try:
             return self.table['is_ul'].data.astype('bool')
         except KeyError:
@@ -516,7 +516,7 @@ class FluxPoints(object):
         x = self.e_ref.to(energy_unit)
 
         # get errors and ul
-        is_ul = self._is_ul
+        is_ul = self.is_ul
         x_err_all = self.get_energy_err(sed_type)
         y_err_all = self.get_flux_err(sed_type)
 
