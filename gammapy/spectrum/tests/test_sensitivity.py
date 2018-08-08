@@ -6,7 +6,7 @@ import astropy.units as u
 from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.stats import significance_on_off
 from ...irf.io import CTAPerf
-from ..cta_sensitivity import SensitivityEstimator
+from ..sensitivity import SensitivityEstimator
 
 
 @requires_dependency('scipy')
@@ -63,6 +63,7 @@ def test_cta_min_gamma():
         [1.223534e-10, 4.272442e-13, 9.047706e-12],
         rtol=0.01,
     )
+
 
 # TODO: fix this test
 @pytest.mark.xfail
