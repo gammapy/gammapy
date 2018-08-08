@@ -139,7 +139,8 @@ class MapMaker(object):
             if name == 'exposure':
                 expo_reco = make_map_exposure_reco_energy(map, spectrum, edisp)
                 images[name] = expo_reco.sum_over_axes()
-            images[name] = map.sum_over_axes()
+            else:
+                images[name] = map.sum_over_axes()
 
         return images
 
