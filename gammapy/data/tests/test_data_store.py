@@ -21,9 +21,7 @@ def test_datastore_hd_hap(data_store):
     assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
     assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
     assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
-    assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_analytical.EnergyDependentMultiGaussPSF'>"
-    # TODO: no background model available yet
-    # assert str(type(obs.bkg)) == ""
+    assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_gauss.EnergyDependentMultiGaussPSF'>"
 
 
 @requires_dependency('scipy')
@@ -36,17 +34,10 @@ def test_datastore_pa():
     filename = str(obs.location(hdu_type='bkg').path(abs_path=False))
     assert filename == 'background/bgmodel_alt7_az0.fits.gz'
 
-    # assert str(type((obs.events))) == "<class 'gammapy.data.event_list.EventList'>"
-    # TODO: GTI is not listed in PA HDU index table.
-    # For now maybe add a workaround to find it in the same file as the events HDU?
-    # assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
     assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
     assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_king.PSFKing'>"
-
-    # TODO: Background model loading doesn't work yet
-    # ValueError: Expecting X axis in first 2 places, not (DETX_LO, DETX_HI)
-    # assert str(type(obs.bkg)) == ""
+    assert str(type(obs.bkg)) == "<class 'gammapy.irf.background.Background3D'>"
 
 
 @requires_data('gammapy-extra')
@@ -64,7 +55,7 @@ def test_datastore_obslist(data_store):
     assert obslist[0].obs_id == 23523
 
     with pytest.raises(ValueError):
-        obslist = data_store.obs_list([11111, 23592])
+        data_store.obs_list([11111, 23592])
 
     obslist = data_store.obs_list([11111, 23523], skip_missing=True)
     assert obslist[0].obs_id == 23523
