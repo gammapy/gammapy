@@ -5,8 +5,10 @@ from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
-from ..irf import EffectiveAreaTable2D, EffectiveAreaTable, Background3D
-from ..irf import EnergyDispersion2D, EnergyDependentMultiGaussPSF
+from .effective_area import EffectiveAreaTable2D, EffectiveAreaTable
+from .background import Background3D
+from .energy_dispersion import EnergyDispersion2D
+from .psf_analytical import EnergyDependentMultiGaussPSF
 
 __all__ = [
     'CTAIrf',

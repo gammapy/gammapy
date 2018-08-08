@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose, assert_almost_equal
 import astropy.units as u
 from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.stats import significance_on_off
-from ..cta_irf import CTAPerf
+from ...irf.io import CTAPerf
 from ..cta_sensitivity import SensitivityEstimator
 
 
