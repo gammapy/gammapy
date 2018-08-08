@@ -8,7 +8,7 @@ from ..utils.energy import EnergyBounds
 from .effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 from .background import Background3D
 from .energy_dispersion import EnergyDispersion2D
-from .psf_analytical import EnergyDependentMultiGaussPSF
+from .psf_gauss import EnergyDependentMultiGaussPSF
 
 __all__ = [
     'CTAIrf',
