@@ -81,7 +81,7 @@ def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
     prim_flux : `~gammapy.astro.darkmatter.PrimaryFlux`
         Primary gamma-ray flux
     x_section : `~astropy.units.Quantity`
-        Velocity averaged annihilation cross section, :math:`$\langle \sigma\nu\rangle$`
+        Velocity averaged annihilation cross section, :math:`\langle \sigma\nu\rangle`
     energy_range : tuple of `~astropy.units.Quantity`
         Energy range for the map
 

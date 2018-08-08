@@ -91,7 +91,7 @@ class PrimaryFlux(object):
     def allowed_channels(self):
         """Allowed annihilation channels
         """
-        return self.channel_registry.keys()
+        return list(self.channel_registry.keys())
 
     @property
     def channel(self):
