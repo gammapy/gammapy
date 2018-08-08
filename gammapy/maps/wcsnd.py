@@ -659,9 +659,11 @@ class WcsNDMap(WcsMap):
         else:
             width = Angle(width)
 
-        # We revert the order to omply with astripy.cutout2D ordering
+        # We revert the order to comply with astropy.cutout2D ordering
         if width.size == 2:
             width = width[::-1]
+        elif width.size > 2:
+            raise ValueError("WcsNDMap.cutout: to many entries in width argument")
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)

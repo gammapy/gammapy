@@ -446,3 +446,9 @@ def test_make_cutout(mode):
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)
     assert_allclose(cutout.geom.width, [[2.0], [3.0]])
+
+    cutout = m.cutout(position=pos, width=('2.0 deg', '3.0 deg') , mode=mode)
+    assert_allclose(cutout.geom.width, [[2.0], [3.0]])
+
+    with pytest.raises(u.UnitsError):
+        cutout = m.cutout(position=pos, width=(2.0, 3.0) , mode=mode)
