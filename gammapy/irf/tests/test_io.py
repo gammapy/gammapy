@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
 from ...utils.testing import assert_quantity_allclose
-from ..cta_irf import CTAIrf, CTAPerf
+from ..io import CTAIrf, CTAPerf
 
 
 @requires_dependency('scipy')
