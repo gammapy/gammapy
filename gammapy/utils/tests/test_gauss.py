@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
-from ....utils.testing import requires_dependency
-from ....maps import WcsNDMap
-from ....image import measure_image_moments
+from ..testing import requires_dependency
+from ...maps import WcsNDMap
+from ...image import measure_image_moments
 from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 BINSZ = 0.02

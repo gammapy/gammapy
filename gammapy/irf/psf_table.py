@@ -5,7 +5,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from ..image.models.gauss import Gauss2DPDF
+from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
