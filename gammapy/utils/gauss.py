@@ -1,14 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Multi-Gaussian distribution utitities (Gammapy internal)."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-
-# TODO: not sure if we want to expose these as part of the public Gammapy API
-# For now keeping as-is, but hiding from the docs by uncommenting here.
-#     'Gauss2DPDF',
-#     'MultiGauss2D',
-#     'gaussian_sum_moments',
-__all__ = [
-]
 
 __doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
 
@@ -409,7 +402,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     with zero covariance matrix:
 
     >>> import numpy as np
-    >>> from gammapy.image.models.gauss import gaussian_sum_moments
+    >>> from gammapy.utils.gauss import gaussian_sum_moments
     >>> cov_matrix = np.zeros((12, 12))
     >>> F = [100, 200, 300]
     >>> sigma = [15, 10, 5]

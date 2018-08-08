@@ -1,6 +1,3 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Morphology models.
-"""
-from .gauss import *
+"""Spatial 2D image models."""
 from .new import *
