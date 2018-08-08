@@ -58,24 +58,27 @@ def test_integrate_spectrum_uncertainties():
     assert_allclose(unumpy.std_devs(val), unumpy.std_devs(ref))
 
 
-@pytest.mark.xfail(reason='Spectral models cannot handle ufuncs properly')
 @requires_dependency('uncertainties')
 def test_integrate_spectrum_ecpl():
     """
     Test ecpl integration. Regression test for
     https://github.com/gammapy/gammapy/issues/687
     """
-    from uncertainties import unumpy
-    amplitude = unumpy.uarray(1e-12, 1e-13)
-    index = unumpy.uarray(2.3, 0.2)
-    reference = 1
-    lambda_ = 0.1
-    ecpl = ExponentialCutoffPowerLaw(index, amplitude, reference, lambda_)
-    emin, emax = 1, 1e10
-    val = ecpl.integral(emin, emax)
+    ecpl = ExponentialCutoffPowerLaw(
+        index=2.3,
+        amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=1 * u.TeV,
+        lambda_=0.1 / u.TeV,
+    )
+    ecpl.parameters.set_parameter_errors({
+        'index': 0.2,
+        'amplitude': 1e-13 * u.Unit('cm-2 s-1 TeV-1'),
+    })
+    emin, emax = 1 * u.TeV, 1e10 * u.TeV
+    res = ecpl.integral_error(emin, emax)
 
-    assert_allclose(unumpy.nominal_values(val), 5.956578235358054e-13)
-    assert_allclose(unumpy.std_devs(val), 9.278302514378108e-14)
+    assert res.unit == 'cm-2 s-1'
+    assert_allclose(res.value, [5.95657824e-13, 9.27830251e-14], rtol=1e-5)
 
 
 def get_test_cases():
