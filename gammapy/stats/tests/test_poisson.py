@@ -10,6 +10,7 @@ from ..poisson import (
     excess_error,
     significance,
     significance_on_off,
+    excess_matching_significance,
     excess_matching_significance_on_off,
     excess_ul_helene,
 )
@@ -75,9 +76,28 @@ def test_significance_on_off(p):
     assert_allclose(s, p['s'], atol=1e-5)
 
 
-@pytest.mark.xfail()
+# TODO: tests should be improved to also cover edge cases,
+# similarly to the tests we have for excess_matching_significance_on_off
 def test_excess_matching_significance():
-    raise NotImplementedError
+    actual = excess_matching_significance(mu_bkg=100, significance=5, method='simple')
+    assert_allclose(actual, 50)
+
+    actual = excess_matching_significance(mu_bkg=100, significance=5, method='lima')
+    assert_allclose(actual, 54.012755, atol=1e-3)
+
+    # Negative significance should work
+    excess = excess_matching_significance(mu_bkg=100, significance=-5, method='simple')
+    assert_allclose(excess, -50, atol=1e-3)
+    excess = excess_matching_significance(mu_bkg=100, significance=-5, method='lima')
+    assert_allclose(excess, -45.631273, atol=1e-3)
+
+    # Cases that can't be achieved with n_on >= 0 should return NaN
+    excess = excess_matching_significance(mu_bkg=1, significance=-2)
+    assert np.isnan(excess)
+
+    # Arrays should work
+    excess = excess_matching_significance(mu_bkg=[1, 2], significance=5)
+    assert_allclose(excess, [8.327276, 10.550546], atol=1e-3)
 
 
 def test_excess_matching_significance_on_off():
