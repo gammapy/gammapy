@@ -4,12 +4,13 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
+from .wcs import _check_width
 from .utils import interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
@@ -653,18 +654,16 @@ class WcsNDMap(WcsMap):
         """
         idx = (0,) * len(self.geom.axes)
 
-        # We want a simple Angle
-        if isinstance(width,tuple):
-            width = Angle([_ for _ in width])
-        else:
-            width = Angle(width)
+        width = _check_width(width)
 
         # We revert the order to comply with astropy.cutout2D ordering
-        if width.size == 2:
+        if len(width) == 2:
             width = width[::-1]
-        elif width.size > 2:
+        else:
             raise ValueError("WcsNDMap.cutout: to many entries in width argument")
 
+        width = width*u.deg
+        print(width)
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)
 
