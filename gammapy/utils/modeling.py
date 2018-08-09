@@ -371,9 +371,22 @@ class ParameterList(object):
         """
         idx = self._get_idx(parname)
         par = self[idx]
+        ratio = scale / par.scale
         par.scale = scale
-        par.factor /= scale
+        par.factor = par.factor / ratio
 
         if self.covariance is not None:
             self.covariance[idx,] /= scale
             self.covariance[:,idx] /= scale
+
+    def scale_parameters_to_unity(self):
+        """Scale all parameters
+
+        This methods scales all parameters such that the factor is of order
+        unity
+        """
+        for par in self.parameters:
+            temp = int(np.log10(par.value))
+            scale = 10 ** temp
+            print(par.name, scale)
+            self.scale_parameter(par.name, scale)

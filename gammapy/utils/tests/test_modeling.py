@@ -39,3 +39,9 @@ def test_parameter_list():
     assert_allclose(pars['ham'].scale, 10)
     assert_allclose(pars['ham'].factor, 9.9)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 1]])
+
+    pars.scale_parameters_to_unity()
+    assert_allclose(pars['spam'].factor, 4.2)
+    assert_allclose(pars['spam'].scale, 10)
+    assert_allclose(pars['ham'].scale, 10)
+    assert_allclose(pars['ham'].factor, 9.9)
