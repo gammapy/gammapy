@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import warnings
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
@@ -279,6 +280,8 @@ class PSFKernel(object):
         else:
             convolved_map = map
 
-        for img, idx in map.iter_by_image():
-            convolved_map.data[idx] = convolve_fft(img, self.psf_kernel_map.data[idx])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=FutureWarning)
+            for img, idx in map.iter_by_image():
+                convolved_map.data[idx] = convolve_fft(img, self.psf_kernel_map.data[idx])
         return convolved_map
