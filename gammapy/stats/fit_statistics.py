@@ -9,7 +9,6 @@ import numpy as np
 
 __all__ = [
     'cash', 'cstat', 'wstat', 'get_wstat_mu_bkg', 'get_wstat_gof_terms',
-    'lstat', 'pgstat',
     'chi2', 'chi2constvar', 'chi2datavar',
     'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
 ]
@@ -220,22 +219,6 @@ def get_wstat_gof_terms(n_on, n_off):
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
-
-
-def lstat():
-    r"""L statistic, for Poisson data with Poisson background (Bayesian).
-
-    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    raise NotImplementedError
-
-
-def pgstat():
-    r"""PG statistic, for Poisson data with Gaussian background.
-
-    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    raise NotImplementedError
 
 
 def chi2(N_S, B, S, sigma2):
