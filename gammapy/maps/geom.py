@@ -211,7 +211,7 @@ def pix_tuple_to_idx(pix, copy=False):
     """
     idx = []
     for p in pix:
-        p = np.array(p, copy=copy, ndmin=1)
+        p = np.array(p, ndmin=1)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
@@ -627,25 +627,22 @@ class MapCoord(object):
     coordsys : {'CEL', 'GAL', None}
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
-    copy : bool
-        Make copies of the input arrays?
-        If False then this object will store views.
     match_by_name : bool
         Match coordinates to axes by name?
         If false coordinates will be matched by index.
     """
 
-    def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
+    def __init__(self, data, coordsys=None, match_by_name=True):
 
         if 'lon' not in data or 'lat' not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        self._data = OrderedDict([
-            (k, np.array(v, ndmin=1, copy=copy))
+        data = OrderedDict([
+            (k, np.atleast_1d(np.asanyarray(v)))
             for k, v in data.items()
         ])
-        vals = np.broadcast_arrays(*self._data.values())
-        self._data = OrderedDict(zip(self._data.keys(), vals))
+        vals = np.broadcast_arrays(*data.values())
+        self._data = OrderedDict(zip(data.keys(), vals))
         self._coordsys = coordsys
         self._match_by_name = match_by_name
 
@@ -700,7 +697,7 @@ class MapCoord(object):
                         frame=coordsys_to_frame(self.coordsys))
 
     @classmethod
-    def _from_lonlat(cls, coords, coordsys=None, copy=False):
+    def _from_lonlat(cls, coords, coordsys=None):
         """Create a `~MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
@@ -723,11 +720,11 @@ class MapCoord(object):
         else:
             raise ValueError('Unrecognized input type.')
 
-        return cls(coords_dict, coordsys=coordsys, copy=copy,
+        return cls(coords_dict, coordsys=coordsys,
                    match_by_name=False)
 
     @classmethod
-    def _from_skycoord(cls, coords, coordsys=None, copy=False):
+    def _from_skycoord(cls, coords, coordsys=None):
         """Create from vector of `~astropy.coordinates.SkyCoord`.
 
         Parameters
@@ -743,10 +740,10 @@ class MapCoord(object):
         skycoord = coords[0]
         if skycoord.frame.name in ['icrs', 'fk5']:
             coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys='CEL', copy=copy)
+            coords = cls._from_lonlat(coords, coordsys='CEL')
         elif skycoord.frame.name in ['galactic']:
             coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys='GAL', copy=copy)
+            coords = cls._from_lonlat(coords, coordsys='GAL')
         else:
             raise ValueError(
                 'Unrecognized coordinate frame: {}'.format(skycoord.frame.name))
@@ -757,12 +754,12 @@ class MapCoord(object):
             return coords.to_coordsys(coordsys)
 
     @classmethod
-    def _from_tuple(cls, coords, coordsys=None, copy=False):
+    def _from_tuple(cls, coords, coordsys=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
-            return cls._from_lonlat(coords, coordsys=coordsys, copy=copy)
+            return cls._from_lonlat(coords, coordsys=coordsys)
         elif isinstance(coords[0], SkyCoord):
-            return cls._from_skycoord(coords, coordsys=coordsys, copy=copy)
+            return cls._from_skycoord(coords, coordsys=coordsys)
         else:
             raise TypeError('Type not supported: {}'.format(type(coords)))
 
@@ -770,7 +767,7 @@ class MapCoord(object):
     def _from_dict(cls, coords, coordsys=None, copy=False):
         """Create from a dictionary of coordinate vectors."""
         if 'lon' in coords and 'lat' in coords:
-            return cls(coords, coordsys=coordsys, copy=copy)
+            return cls(coords, coordsys=coordsys)
         elif 'skycoord' in coords:
             coords_dict = OrderedDict()
             lon, lat, frame = skycoord_to_lonlat(
@@ -781,7 +778,7 @@ class MapCoord(object):
                 if k == 'skycoord':
                     continue
                 coords_dict[k] = v
-            return cls(coords_dict, coordsys=coordsys, copy=copy)
+            return cls(coords_dict, coordsys=coordsys)
         else:
             raise ValueError("Dictionary must contain axes named 'lon'/'lat'"
                              "or 'skycoord'.")
@@ -826,11 +823,11 @@ class MapCoord(object):
             else:
                 return data.to_coordsys(coordsys)
         elif isinstance(data, dict):
-            return cls._from_dict(data, coordsys=coordsys, copy=copy)
+            return cls._from_dict(data, coordsys=coordsys)
         elif isinstance(data, (list, tuple)):
-            return cls._from_tuple(data, coordsys=coordsys, copy=copy)
+            return cls._from_tuple(data, coordsys=coordsys)
         elif isinstance(data, SkyCoord):
-            return cls._from_skycoord((data,), coordsys=coordsys, copy=copy)
+            return cls._from_skycoord((data,), coordsys=coordsys)
         else:
             raise TypeError('Unsupported input type: {}'.format(type(data)))
 
