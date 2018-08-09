@@ -144,33 +144,20 @@ class WcsGeom(MapGeom):
         self._conv = conv
         self._axes = make_axes(axes, conv)
 
-        self._shape = tuple([ax.nbin for ax in self._axes])
         if cdelt is None:
-            cdelt = (np.abs(self.wcs.wcs.cdelt[0]),
-                     np.abs(self.wcs.wcs.cdelt[1]))
+            cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
 
         # Shape to use for WCS transformations
         wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
-        if np.sum(wcs_shape) > 1 and wcs_shape != self._shape:
+        if np.sum(wcs_shape) > 1 and wcs_shape != self.shape:
             raise ValueError
 
         self._npix = cast_to_shape(npix, wcs_shape, int)
         self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
+
         # By convention CRPIX is indexed from 1
         if crpix is None:
-            self._crpix = (1.0 + (self._npix[0] - 1.0) / 2.,
-                           1.0 + (self._npix[1] - 1.0) / 2.)
-        self._width = (self._cdelt[0] * self._npix[0],
-                       self._cdelt[1] * self._npix[1])
-
-        # FIXME: Determine center coord from CRVAL
-        self._center_pix = tuple([(self._npix[0].flat[0] - 1.0) / 2.,
-                                  (self._npix[1].flat[0] - 1.0) / 2.] +
-                                 [(float(ax.nbin) - 1.0) / 2. for ax in self.axes])
-        self._center_coord = self.pix_to_coord(self._center_pix)
-        self._center_skydir = SkyCoord.from_pixel(self._center_pix[0],
-                                                  self._center_pix[1],
-                                                  self.wcs)
+            self._crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.)
 
     @property
     def data_shape(self):
@@ -218,7 +205,8 @@ class WcsGeom(MapGeom):
     @property
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
-        return self._width
+        return (self._cdelt[0] * self._npix[0],
+                self._cdelt[1] * self._npix[1])
 
     @property
     def pixel_area(self):
@@ -244,7 +232,7 @@ class WcsGeom(MapGeom):
     @property
     def shape(self):
         """Shape of non-spatial axes."""
-        return self._shape
+        return tuple([ax.nbin for ax in self._axes])
 
     @property
     def ndim(self):
@@ -258,7 +246,7 @@ class WcsGeom(MapGeom):
         -------
         coord : tuple
         """
-        return self._center_coord
+        return self.pix_to_coord(self.center_pix)
 
     @property
     def center_pix(self):
@@ -268,7 +256,9 @@ class WcsGeom(MapGeom):
         -------
         pix : tuple
         """
-        return self._center_pix
+        center_spatial = tuple((np.array(self.npix) - 1.) / 2)
+        center_non_spatial = tuple([(ax.nbin - 1.) / 2. for ax in self.axes])
+        return center_spatial + center_non_spatial
 
     @property
     def center_skydir(self):
@@ -278,7 +268,11 @@ class WcsGeom(MapGeom):
         -------
         pix : `~astropy.coordinates.SkyCoord`
         """
-        return self._center_skydir
+        return SkyCoord.from_pixel(
+            self.center_pix[0],
+            self.center_pix[1],
+            self.wcs
+            )
 
     @property
     def pixel_scales(self):
@@ -600,7 +594,7 @@ class WcsGeom(MapGeom):
 
         c = self.coord_to_tuple(coords)
         # Variable Bin Size
-        if self.axes and self.npix[0].size > 1:
+        if not self.is_regular:
             bins = [ax.coord_to_pix(c[i + 2])
                     for i, ax in enumerate(self.axes)]
             idxs = [np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
@@ -619,7 +613,7 @@ class WcsGeom(MapGeom):
 
     def pix_to_coord(self, pix):
         # Variable Bin Size
-        if self.axes and self.npix[0].size > 1:
+        if not self.is_regular:
             idxs = pix_tuple_to_idx([pix[2 + i] for i, ax
                                      in enumerate(self.axes)])
             vals = [ax.pix_to_coord(pix[2 + i])
