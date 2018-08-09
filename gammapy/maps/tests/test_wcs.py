@@ -224,29 +224,29 @@ def test_region_mask():
     assert np.sum(mask) == 8
 
 
-valid_width_inputs = [
+@pytest.mark.parametrize(('width', 'out'), [
     (10, (10, 10)),
-    (10*u.deg, (10,10)),
-    ((10,), (10, 10)),
+    ((10 * u.deg).to('rad'), (10, 10)),
     ((10, 5), (10, 5)),
-    (Angle([10., 5.], 'deg'), (10., 5.)),
-    ((10. * u.deg, 5. * u.deg), (10., 5.)),
-    ((10., 5.) * u.deg, (10., 5.)),
-]
+    (('10 deg', '5 deg'), (10, 5)),
+    (Angle([10, 5], 'deg'), (10, 5)),
+    ((10 * u.deg, 5 * u.deg), (10, 5)),
+    ((10, 5) * u.deg, (10, 5)),
+    ([10, 5], (10, 5)),
+    (['10 deg', '5 deg'], (10, 5)),
+    (np.array([10, 5]), (10, 5)),
+])
+def test_check_width(width, out):
+    width = _check_width(width)
+    assert isinstance(width, tuple)
+    assert isinstance(width[0], float)
+    assert isinstance(width[1], float)
+    assert width == out
 
-@pytest.mark.parametrize(('width', 'results'), valid_width_inputs)
-def test_check_widths(width, results):
-    width_checked = _check_width(width)
-    assert width_checked == results
-    g = WcsGeom.create(width=width, binsz=1.)
-    assert g.npix[0][0] == results[0]
-    assert g.npix[1][0] == results[1]
+    geom = WcsGeom.create(width=width, binsz=1.)
+    assert tuple(geom.npix) == out
 
-invalid_width_inputs = [
-    [10,5], ['10 deg', '5 deg'], np.array([10, 5])
-]
 
-@pytest.mark.parametrize(('width'), invalid_width_inputs)
-def test_incorrect_width(width):
-    with pytest.raises((ValueError, TypeError)):
-        g = WcsGeom.create(width=width, binsz=1.)
+def test_check_width_bad_input():
+    with pytest.raises(IndexError):
+        _check_width(width=(10,))
