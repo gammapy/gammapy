@@ -641,7 +641,7 @@ class MapCoord(object):
             (k, np.atleast_1d(np.asanyarray(v)))
             for k, v in data.items()
         ])
-        vals = np.broadcast_arrays(*data.values())
+        vals = np.broadcast_arrays(*data.values(), subok=True)
         self._data = OrderedDict(zip(data.keys(), vals))
         self._coordsys = coordsys
         self._match_by_name = match_by_name

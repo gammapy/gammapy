@@ -4,6 +4,7 @@ import pytest
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoord
 
@@ -184,6 +185,14 @@ def test_mapcoords_create():
     assert_allclose(coords[1], lat)
     assert_allclose(coords[2], lon)
     assert coords.ndim == 3
+
+    # Quantities
+    coords = MapCoord.create(OrderedDict([('energy', energy * u.TeV),
+                                          ('lat', lat * u.deg), ('lon', lon * u.deg)]))
+
+    assert coords['energy'].unit == 'TeV'
+    assert coords['lon'].unit == 'deg'
+    assert coords['lat'].unit == 'deg'
 
 
 def test_mapcoords_to_coordsys():
