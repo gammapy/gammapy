@@ -37,6 +37,25 @@ def test_data_store_observation(data_store):
     assert_skycoord_allclose(obs.target_radec, c)
 
 
+@requires_data('gammapy-extra')
+def test_data_store_observation_to_observation_cta(data_store):
+    from gammapy.data import EventList, GTI, ObservationCTA
+    from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D, EnergyDependentMultiGaussPSF
+
+    obs = data_store.obs(23523).to_observation_cta()
+
+    assert type(obs) == ObservationCTA
+    assert type(obs.obs_id) == int
+    assert type(obs.gti) == GTI
+    assert type(obs.events) == EventList
+    assert type(obs.aeff) == EffectiveAreaTable2D
+    assert type(obs.edisp) == EnergyDispersion2D
+    assert type(obs.psf) == EnergyDependentMultiGaussPSF
+    assert type(obs.pointing_radec) == SkyCoord
+    assert type(obs.observation_live_time_duration) == Quantity
+    assert type(obs.observation_dead_time_fraction) == np.float64
+
+
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars,result", [
