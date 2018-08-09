@@ -79,13 +79,14 @@ flake8:
 pylint:
 	pylint -E $(PROJECT)/ \
 	--ignore=_astropy_init.py,gammapy/extern \
-	-d E1103,E0611,E1101 \
+	-d E0611,E1101,E1103 \
 	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})' -f colorized
 
 pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
-	--add-ignore=D410,D104,D102,D100,D200
+	--add-ignore=D100,D102,D104,D105,D200,D410 \
+	--add-ignore=D301 # TODO: re-activate and fix this one
 
 # TODO: add test and code quality checks for `examples`
 
