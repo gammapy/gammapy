@@ -223,7 +223,7 @@ class ParameterList(object):
         pars = list()
         for par in val['parameters']:
             pars.append(Parameter(name=par['name'],
-                                  value=float(par['value']),
+                                  factor=float(par['value']),
                                   unit=par['unit'],
                                   min=float(par['min']),
                                   max=float(par['max']),

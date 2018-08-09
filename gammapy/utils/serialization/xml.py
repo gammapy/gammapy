@@ -242,14 +242,16 @@ def xml_to_parameter_list(xml, which, type_):
             msg = "Parameter '{}' not registered for {} model {}"
             raise UnknownParameterError(msg.format(par['@name'], which, type_))
 
-        value = float(par['@value']) * float(par['@scale'])
+        factor = float(par['@value'])
+        scale = float(par['@scale'])
         min_ = float(par.get('@min', 'nan'))
         max_ = float(par.get('@max', 'nan'))
         frozen = bool(1 - int(par['@free']))
 
         parameters.append(Parameter(
             name=name,
-            value=value,
+            factor=factor,
+            scale=scale,
             unit=unit,
             min=min_,
             max=max_,
