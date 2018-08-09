@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar velocity distribution models"""
+"""Pulsar velocity distribution models."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
@@ -33,6 +33,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     sigma : float
         Velocity parameter (km s^-1)
     """
+
     amplitude = Parameter()
     sigma = Parameter()
 
@@ -42,7 +43,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
 
     @staticmethod
     def evaluate(v, amplitude, sigma):
-        """One dimensional Faucher-Guigere & Kaspi 2006 velocity model function"""
+        """One dimensional velocity model function."""
         term1 = np.sqrt(2 / np.pi) * v ** 2 / sigma ** 3
         term2 = np.exp(-v ** 2 / (2 * sigma ** 2))
         return term1 * term2
@@ -69,6 +70,7 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
     w : float
         See model formula
     """
+
     amplitude = Parameter()
     sigma_1 = Parameter()
     sigma_2 = Parameter()
@@ -104,6 +106,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     v_0 : float
         Velocity parameter (km s^-1)
     """
+
     amplitude = Parameter()
     v_0 = Parameter()
 
