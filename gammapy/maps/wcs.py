@@ -2,10 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
+from numpy import isscalar
 from collections import OrderedDict
 from astropy.wcs import WCS
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
+from astropy.units import Quantity
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle
 from astropy.wcs.utils import proj_plane_pixel_scales
@@ -20,6 +22,28 @@ from .geom import find_and_read_bands
 __all__ = [
     'WcsGeom',
 ]
+
+def _check_width(width):
+    """Convert input width as tuple of float to pass to WcsGeom.create"""
+    if isinstance(width, (Angle,Quantity)):
+        if width.size>1:
+            return tuple([_.to('deg').value for _ in width])
+        else:
+            return width.to('deg').value
+    elif isscalar(width):
+        return width
+    elif isinstance(width,(list,tuple)):
+        if isscalar(width[0]):
+            # assume degrees in input
+            return tuple(width)
+        elif isinstance(width[0],(list,tuple)):
+            return tuple([_check_width(_) for _ in width])
+        elif isinstance(width[0], (Angle,Quantity)):
+            return tuple([_.to('deg').value for _ in width])
+        else:
+            raise TypeError("Unsupported input for width")
+    else:
+        raise TypeError("Unsupported input for width")
 
 
 def cast_to_shape(param, shape, dtype):
@@ -366,6 +390,7 @@ class WcsGeom(MapGeom):
             width = (360., 180.)
 
         if npix is None:
+            width = _check_width(width)
             width = cast_to_shape(width, shape, float)
             npix = (np.rint(width[0] / binsz[0]).astype(int),
                     np.rint(width[1] / binsz[1]).astype(int),)
