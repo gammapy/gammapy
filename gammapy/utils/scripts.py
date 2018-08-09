@@ -2,7 +2,6 @@
 """Utils to create scripts and command-line tools"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
-import argparse
 from collections import OrderedDict
 import importlib
 import os
@@ -12,8 +11,6 @@ from os.path import expandvars
 from ..extern.pathlib import Path
 
 __all__ = [
-    'GammapyFormatter',
-    'get_parser',
     'get_installed_scripts',
     'get_all_main_functions',
     'set_up_logging_from_args',
@@ -22,29 +19,6 @@ __all__ = [
     'make_path',
     'recursive_merge_dicts',
 ]
-
-
-class GammapyFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                       argparse.RawTextHelpFormatter):
-    """ArgumentParser formatter_class argument.
-
-    Examples
-    --------
-    >>> from gammapy.utils.scripts import argparse, GammapyFormatter
-    >>> parser = argparse.ArgumentParser(description=__doc__,
-    ...                                  formatter_class=GammapyFormatter)
-    """
-    pass
-
-
-def get_parser(function=None, description='N/A'):
-    """Make an ArgumentParser how we like it.
-    """
-    if function:
-        description = function.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
-    return parser
 
 
 def get_installed_scripts():
