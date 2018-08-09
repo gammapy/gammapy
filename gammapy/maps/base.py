@@ -621,7 +621,6 @@ class Map(object):
 
         idx = []
         for axis, value in zip(self.geom.axes, coords.values()):
-            value = u.Quantity(value).to(axis.unit).value
             idx.append(axis.coord_to_idx(value))
 
         return self.get_image_by_idx(idx, copy=copy)
