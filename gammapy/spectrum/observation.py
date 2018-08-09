@@ -50,8 +50,7 @@ class SpectrumStats(ObservationStats):
 class SpectrumObservation(object):
     """1D spectral analysis storage class.
 
-    This container holds the ingredients for 1D region based spectral analysis
-    TODO: describe PHA, ARF, etc.
+    This container holds the ingredients for 1D region based spectral analysis.
 
     Meta data is stored in the ``on_vector`` attribute.
     This reflects the OGIP convention.
@@ -70,6 +69,7 @@ class SpectrumObservation(object):
     Examples
     --------
     ::
+
         from gammapy.spectrum import SpectrumObservation
         filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
         obs = SpectrumObservation.read(filename)

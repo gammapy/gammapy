@@ -151,7 +151,7 @@ class SpectrumSimulation(object):
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
         on_counts = rand.poisson(self.npred_source.data.data.value)
@@ -175,7 +175,7 @@ class SpectrumSimulation(object):
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
         bkg_counts = rand.poisson(self.npred_background.data.data.value)
@@ -195,7 +195,6 @@ class SpectrumSimulation(object):
         self.off_vector = off_vector
 
     def _get_meta(self):
-        """Meta info added to simulated counts spectra."""
-        meta = OrderedDict()
-        meta['CREATOR'] = self.__class__.__name__
-        return meta
+        return OrderedDict([
+            ('CREATOR', self.__class__.__name__),
+        ])

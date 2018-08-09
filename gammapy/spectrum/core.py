@@ -300,7 +300,7 @@ class PHACountsSpectrum(CountsSpectrum):
         self.obs_id = obs_id
         self.livetime = livetime
         self.offset = offset
-        self.meta = meta or dict()
+        self.meta = meta or OrderedDict()
 
     @property
     def quality(self):
