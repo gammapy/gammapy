@@ -70,26 +70,8 @@ class ObservationCTA(object):
 
     Examples
     --------
-    Create an observation from the CTA 1DC:
-
-    >>> from gammapy.data import ObservationCTA, EventList, GTI
-    >>> from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D, EnergyDispersion2D, Background3D
-    >>>
-    >>> data_file = '$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits'
-    >>> cal_file = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-    >>>
-    >>> kwargs = dict(events = EventList.read(data_file),
-    >>>               gti = GTI.read(data_file),
-    >>>               psf = EnergyDependentMultiGaussPSF.read(cal_file, hdu='Point Spread Function'),
-    >>>               aeff = EffectiveAreaTable2D.read(cal_file),
-    >>>               edisp = EnergyDispersion2D.read(cal_file, hdu='Energy Dispersion'),
-    >>>               bkg = Background3D.read(cal_file),
-    >>>               pointing_radec = EventList.read(data_file).pointing_radec,
-    >>>               observation_live_time_duration = EventList.read(data_file).observation_live_time_duration,
-    >>>               observation_dead_time_fraction = EventList.read(data_file).observation_dead_time_fraction,
-    >>>          )
-    >>>
-    >>> obs = ObservationCTA(obs_id=110380, **kwargs)
+    A minimal working example of how to create an observation from CTA's 1DC is given in
+    examples/example_observation_cta.py
 
     """
     def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
