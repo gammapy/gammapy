@@ -596,30 +596,160 @@ putting this in ``docs/conf.py`` can also help sometimes::
     warnings.showwarning = warn_with_traceback
 
 
-Object summary info string
---------------------------
+Object text repr, str and info
+------------------------------
 
-If you want to add a method to provide some basic information about a class instance,
-you should use the Python ``__str__`` method.
+In Python, by default objects don't have a good string representation. This
+section explains how Python repr, str and print work, and gives guidelines for
+writing ``__repr__``, ``__str__`` and ``info`` methods on Gammapy classes.
 
-.. code-block:: python
+Let's use this as an example::
 
-    class Spam(object):
-        def __init__(self, ham):
-            self.ham = ham
+    class Person(object):
+        def __init__(self, name='Anna', age=8):
+            self.name = name
+            self.age = age
+
+The default ``repr`` and ``str`` are this::
+
+    >>> repr(p)
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> p.__repr__()
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> str(p)
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> p.__str__()
+
+Users will see that. If they just give an object in the Python REPL, the
+``repr`` is shown. If they print the object, the ``str`` is shown. In both cases
+without the quotes seen above.
+
+    >>> p = Person()
+    >>> p
+    <__main__.Person at 0x105fd0cf8>
+    >>> print(p)
+    <__main__.Person object at 0x105fe3b70>
+
+There are ways to make this better and avoid writing boilerplate code,
+specifically `attrs <http://www.attrs.org/>`__ and `dataclasses
+<https://docs.python.org/3/library/dataclasses.html>`__. We might use those in
+the future in Gammapy, but for now, we don't.
+
+If you want a better repr or str for a given object, you have to add
+``__repr__`` and / or ``__str__`` methods when writing the class. Note that you
+don't have to do that, it's mainly useful for objects users interact with a lot.
+For classes that are mainly used internally, developers can e.g. just do this to
+see the attributes printed nicely::
+
+    >>> p.__dict__
+    {'name': 'Anna', 'age': 8}
+
+
+Here's an example how to write ``__repr__``::
+
+    def __repr__(self):
+        return '{}(name={!r}, age={!r})'.format(
+            self.__class__.__name__, self.name, self.age
+        )
+
+Note how we use `{!r}` in the format string to fill in the ``repr`` of the
+object being formatted, and how we used ``self.__class__.__name__`` to avoid
+duplicating the class name (easier to refactor code, and shows sub-class name if
+repr is inherited).
+
+This will give a nice string representation. The same one for ``repr`` and
+``str``, you don't have to write ``__str__``::
+
+    >>> p = Person(name='Anna', age=8)
+    >>> p
+    Person(name='Anna', age=8)
+    >>> print(p)
+    Person(name='Anna', age=8)
+
+The string representation is usually used for more informal or longer printout.
+Here's an example::
+
+    def __str__(self):
+        return (
+            "Hi, my name is {} and I'm {} years old.\n"
+            "I live in Heidelberg."
+        ).format(self.name, self.age)
+
+If you need text representation that is configurable, i.e. tables arguments what
+to show, you should add a method called ``info``. To avoid code duplication, you
+should then call ``info`` from ``__str__``. Example::
+
+    class Person(object):
+        def __init__(self, name='Anna', age=8):
+            self.name = name
+            self.age = age
+
+        def __repr__(self):
+            return '{}(name={!r}, age={!r})'.format(
+                self.__class__.__name__, self.name, self.age
+            )
 
         def __str__(self):
-            ss = 'Summary Info about class Spam\n'
-            ss += '{:.2f}'.format(self.ham)
-            return ss
+            return self.info(add_location=False)
 
-If you want to add configurable info output, please provide a method ``summary``,
-like :func:`here <gammapy.catalog.SourceCatalogObjectHGPS.summary>`.
-In this case the ``__str__`` method should be a call to ``summary`` with default
-parameters. Do not use an ``info`` method, since this would lead to conflicts
-for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
-``astropy.table.Table``.
+        def info(self, add_location=True):
+            s = ("Hi, my name is {} and I'm {} years old."
+                ).format(self.name, self.age)
+            if add_location:
+                s += "\nI live in Heidelberg"
+            return s
 
+This pattern of returning a string from ``info`` has some pros and cons.
+It's easy to get the string, and do what you like with it, e.g. combine
+it with other text, or store it in a list and write it to file later.
+The main con is that users have to call ``print(p.info())`` to see a
+nice printed version of the string instead of ``\n``::
+
+    >>> p = Person()
+    >>> p.info()
+    "Hi, my name is Anna and I'm 8 years old.\nI live in Heidelberg"
+    >>> print(p.info())
+    Hi, my name is Anna and I'm 8 years old.
+    I live in Heidelberg
+
+To make ``info`` print by default, and be re-usable from ``__str__`` and make it
+possible to get a string (without having to monkey-patch ``sys.stdout``), would
+require adding this ``show`` option and if-else at the end of every ``info``
+method::
+
+    def __str__(self):
+        return self.info(add_location=False, show=False)
+
+    def info(self, add_location=True, show=True):
+        s = ("Hi, my name is {} and I'm {} years old."
+             ).format(self.name, self.age)
+        if add_location:
+            s += "\nI live in Heidelberg"
+
+        if show:
+            print(s)
+        else:
+            return s
+
+To summarise: start without adding and code for text representation. If there's a
+useful short text representation, you can add a ``__repr__``. If really useful,
+add a ``__str__``. If you need it configurable, add an ``info`` and call
+``info`` from ``str``. If ``repr`` and ``str`` are similar, it's not really
+useful: delete the ``__str__`` and only keep the ``__repr__``.
+
+It is common to have bugs in ``__repr__``, ``__str__`` and ``info`` that are not
+tested. E.g. a ``NameError`` or ``AttributeError`` because some attribute name
+changed, and updating the repr / str / info was forgotten. So tests should be added
+that execute these methods once. You can write the reference string in the output,
+but that is not required (and actually very hard for cases where you have floats
+or Numpy arrays or str, where formatting differs across Python or Numpy version.
+Example what to put as a test::
+
+    def test_person_txt():
+        p = Person()
+        assert repr(p).startswith('Person')
+        assert str(p).startswith('Hi')
+        assert p.info(add_location=True).endswith('Heidelberg')
 
 .. _use-nddata:
 
