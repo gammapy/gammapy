@@ -366,7 +366,7 @@ class DataStoreObservation(object):
 
     def to_observation_cta(self):
         """
-        Convert a `~gammapy.data.DataStoreObservation` to an `~gammapy.data.ObservationCTA`
+        Convert to `~gammapy.data.ObservationCTA`
 
         Returns
         -------
