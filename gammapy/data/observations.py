@@ -68,7 +68,13 @@ class ObservationCTA(object):
     meta : `~collections.OrderedDict`
         Dictionary to store metadata
 
+    Examples
+    --------
+    A minimal working example of how to create an observation from CTA's 1DC is given in
+    examples/example_observation_cta.py
+
     """
+
     def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
                  pointing_radec=None, observation_live_time_duration=None, observation_dead_time_fraction=None,
                  meta=None):
@@ -82,17 +88,18 @@ class ObservationCTA(object):
         self.pointing_radec = pointing_radec
         self.observation_live_time_duration = observation_live_time_duration
         self.observation_dead_time_fraction = observation_dead_time_fraction
-        if not meta:
-            meta = OrderedDict()
-        self.meta = meta
+        self.meta = meta or OrderedDict()
 
     def __str__(self):
         """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None')
+
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
             self.pointing_radec.ra if self.pointing_radec else 'None',
             self.pointing_radec.dec if self.pointing_radec else 'None')
+
+        tstart = np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None'
+        ss += '- Start time: {}\n'.format(tstart)
         ss += '- Observation duration: {}\n'.format(self.gti.time_sum if self.gti else 'None')
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
@@ -358,6 +365,40 @@ class DataStoreObservation(object):
             messages.append('LO_THRES >= HI_THRES in psf meta data')
 
         return messages
+
+    def to_observation_cta(self):
+        """Convert to `~gammapy.data.ObservationCTA`.
+
+        This loads all observation-related info from disk
+        and stores it in the in-memory ``ObservationCTA``.
+
+        Returns
+        -------
+        obs : `~gammapy.data.ObservationCTA`
+            Observation
+        """
+        # maps the ObservationCTA class attributes to the DataStoreObservation properties
+        props = {
+            'obs_id': 'obs_id',
+            'gti': 'gti',
+            'events': 'events',
+            'aeff': 'aeff',
+            'edisp': 'edisp',
+            'psf': 'psf',
+            'bkg': 'bkg',
+            'pointing_radec': 'pointing_radec',
+            'observation_live_time_duration': 'observation_live_time_duration',
+            'observation_dead_time_fraction': 'observation_dead_time_fraction',
+        }
+
+        for obs_cta_kwarg, ds_obs_prop in props.items():
+            try:
+                props[obs_cta_kwarg] = getattr(self, ds_obs_prop)
+            except Exception as exception:
+                log.warning(exception)
+                props[obs_cta_kwarg] = None
+
+        return ObservationCTA(**props)
 
 
 class ObservationList(UserList):
