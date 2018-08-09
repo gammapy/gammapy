@@ -381,6 +381,9 @@ class WcsGeom(MapGeom):
             raise ValueError(
                 'Invalid type for skydir: {}'.format(type(skydir)))
 
+        if width is not None:
+            width = _check_width(width)
+
         shape = max([get_shape(t) for t in [npix, binsz, width]])
         binsz = cast_to_shape(binsz, shape, float)
 
@@ -389,7 +392,6 @@ class WcsGeom(MapGeom):
             width = (360., 180.)
 
         if npix is None:
-            width = _check_width(width)
             width = cast_to_shape(width, shape, float)
             npix = (np.rint(width[0] / binsz[0]).astype(int),
                     np.rint(width[1] / binsz[1]).astype(int),)

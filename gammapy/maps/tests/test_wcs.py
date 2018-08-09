@@ -230,15 +230,18 @@ valid_width_inputs = [
     ((10,), (10, 10)),
     ([10, 5], (10, 5)),
     ((10, 5), (10, 5)),
-    (Angle([10, 5], 'deg'), (10, 5)),
-    ((10 * u.deg, 5 * u.deg), (10, 5)),
-    ((10, 5) * u.deg, (10, 5)),
+    (Angle([10., 5.], 'deg'), (10., 5.)),
+    ((10. * u.deg, 5. * u.deg), (10., 5.)),
+    ((10., 5.) * u.deg, (10., 5.)),
 ]
 
 @pytest.mark.parametrize(('width', 'results'), valid_width_inputs)
 def test_check_widths(width, results):
     width_checked = _check_width(width)
     assert width_checked == results
+    g = WcsGeom.create(width=width, binsz=1.)
+    assert g.npix[0][0] == results[0]
+    assert g.npix[1][0] == results[1]
 
 invalid_width_inputs = [
     '10 deg', ('10 deg', '5 deg'), np.array([10, 5])
