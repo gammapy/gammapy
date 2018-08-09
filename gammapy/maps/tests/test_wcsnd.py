@@ -192,6 +192,22 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(coords[0], m.get_by_coord(map_coords))
 
 
+def test_set_get_by_coord_quantities():
+    ax = MapAxis(np.logspace(0., 3., 3), interp='log', name='energy', unit='TeV')
+    geom = WcsGeom.create(binsz=0.1, npix=(3, 4), axes=[ax])
+    m = WcsNDMap(geom)
+    coords_dict = {
+        'lon': 0 * u.deg,
+        'lat': 0 * u.deg,
+        'energy': 1000 * u.GeV
+    }
+
+    m.set_by_coord(coords_dict, 42)
+
+    coords_dict['energy'] = 1 * u.TeV
+    assert_allclose(42, m.get_by_coord(coords_dict))
+
+
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsndmap_fill_by_coord(npix, binsz, coordsys, proj, skydir, axes):
