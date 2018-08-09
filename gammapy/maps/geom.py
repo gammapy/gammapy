@@ -637,6 +637,9 @@ class MapCoord(object):
         if 'lon' not in data or 'lat' not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
+        if issubclass(data['lon'].__class__, u.Quantity) or issubclass(data['lat'].__class__, u.Quantity):
+            raise ValueError('No quantities supported.')
+
         data = OrderedDict([
             (k, np.atleast_1d(np.asanyarray(v)))
             for k, v in data.items()
@@ -764,7 +767,7 @@ class MapCoord(object):
             raise TypeError('Type not supported: {}'.format(type(coords)))
 
     @classmethod
-    def _from_dict(cls, coords, coordsys=None, copy=False):
+    def _from_dict(cls, coords, coordsys=None):
         """Create from a dictionary of coordinate vectors."""
         if 'lon' in coords and 'lat' in coords:
             return cls(coords, coordsys=coordsys)
@@ -784,7 +787,7 @@ class MapCoord(object):
                              "or 'skycoord'.")
 
     @classmethod
-    def create(cls, data, coordsys=None, copy=False):
+    def create(cls, data, coordsys=None):
         """Create a new `~MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
@@ -795,12 +798,9 @@ class MapCoord(object):
         data : `tuple`, `dict`, `~MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
         coordsys : {'CEL', 'GAL', None}, optional
-            Set the coordinate system for longitude and latitude.  If
+            Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
-        copy : bool
-            Make copies of the input coordinate arrays.  If False this
-            object will store views.
 
         Examples
         --------

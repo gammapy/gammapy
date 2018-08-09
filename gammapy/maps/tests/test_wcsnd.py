@@ -197,8 +197,8 @@ def test_set_get_by_coord_quantities():
     geom = WcsGeom.create(binsz=0.1, npix=(3, 4), axes=[ax])
     m = WcsNDMap(geom)
     coords_dict = {
-        'lon': 0 * u.deg,
-        'lat': 0 * u.deg,
+        'lon': 0,
+        'lat': 0,
         'energy': 1000 * u.GeV
     }
 
@@ -261,6 +261,22 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(coords[1], m.interp_by_coord(coords, interp=1))
     if geom.is_regular and not geom.is_allsky:
         assert_allclose(coords[1], m.interp_by_coord(coords, interp='cubic'))
+
+
+def test_interp_by_coord_quantities():
+    ax = MapAxis(np.logspace(0., 3., 3), interp='log', name='energy', unit='TeV')
+    geom = WcsGeom.create(binsz=0.1, npix=(3, 3), axes=[ax])
+    m = WcsNDMap(geom)
+    coords_dict = {
+        'lon': 0,
+        'lat': 0,
+        'energy': 1000 * u.GeV
+    }
+
+    m.set_by_coord(coords_dict, 42)
+
+    coords_dict['energy'] = 1 * u.TeV
+    assert_allclose(42, m.interp_by_coord(coords_dict, interp='nearest'))
 
 
 def test_wcsndmap_interp_by_coord_fill_value():

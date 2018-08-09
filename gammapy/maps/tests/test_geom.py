@@ -176,8 +176,7 @@ def test_mapcoords_create():
     assert coords.ndim == 3
 
     # 3D OrderedDict w/ vectors
-    coords = MapCoord.create(OrderedDict([('energy', energy),
-                                          ('lat', lat), ('lon', lon)]))
+    coords = MapCoord.create(dict(energy=energy, lat=lat, lon=lon))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords['energy'], energy)
@@ -187,12 +186,8 @@ def test_mapcoords_create():
     assert coords.ndim == 3
 
     # Quantities
-    coords = MapCoord.create(OrderedDict([('energy', energy * u.TeV),
-                                          ('lat', lat * u.deg), ('lon', lon * u.deg)]))
-
+    coords = MapCoord.create(dict(energy=energy * u.TeV, lat=lat, lon=lon))
     assert coords['energy'].unit == 'TeV'
-    assert coords['lon'].unit == 'deg'
-    assert coords['lat'].unit == 'deg'
 
 
 def test_mapcoords_to_coordsys():
