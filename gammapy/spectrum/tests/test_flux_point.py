@@ -233,7 +233,7 @@ class FluxPointTester:
         assert 'FluxPointEstimator' in str(self.fpe)
 
     def test_approx_model(self):
-        approx_model = self.fpe.compute_approx_model(
+        approx_model = self.fpe._get_spectral_model(
             self.config['model'], self.fpe.groups[3]
         )
         assert approx_model.parameters['index'].frozen is True

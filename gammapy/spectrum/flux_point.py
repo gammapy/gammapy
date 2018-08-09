@@ -641,10 +641,7 @@ class FluxPointEstimator(object):
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
 
-        model = self.compute_approx_model(
-            global_model=self.model,
-            energy_group=energy_group,
-        )
+        model = self._get_spectral_model(self.model)
 
         # Put at log center of the bin
         energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
@@ -656,17 +653,12 @@ class FluxPointEstimator(object):
         )
 
     @staticmethod
-    def compute_approx_model(global_model, energy_group):
-        """
-        Compute approximate model, to be used in the energy bin.
-        TODO: At the moment just the global model with fixed parameters is
-        returned
-        """
-        approx_model = global_model.copy()
-        for par in approx_model.parameters.parameters:
+    def _get_spectral_model(global_model):
+        model = global_model.copy()
+        for par in model.parameters.parameters:
             if par.name != 'amplitude':
                 par.frozen = True
-        return approx_model
+        return model
 
     def compute_flux_point_ul(self, fit, stat_best_fit, delta_ts=4, negative=False):
         """
