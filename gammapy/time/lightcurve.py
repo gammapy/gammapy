@@ -83,20 +83,12 @@ class LightCurve(object):
 
     @property
     def time_mid(self):
-        """Time bin center (`~astropy.time.Time`).
-
-        ::
-            time_mid = time_min + 0.5 * time_delta
-        """
+        """Time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
 
     @property
     def time_delta(self):
-        """Time bin width (`~astropy.time.TimeDelta`).
-
-        ::
-            time_delta = time_max - time_min
-        """
+        """Time bin width (`~astropy.time.TimeDelta`)."""
         return self.time_max - self.time_min
 
     @classmethod
@@ -407,7 +399,8 @@ class LightCurveEstimator(object):
 
         Examples
         --------
-        extract intervals for light curve :
+        To extract intervals for light curve::
+
             intervals = list(zip(table['t_start'], table['t_stop']))
         """
         rows = []

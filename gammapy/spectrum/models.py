@@ -207,7 +207,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
