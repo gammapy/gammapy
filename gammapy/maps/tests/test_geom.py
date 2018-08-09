@@ -176,7 +176,9 @@ def test_mapcoords_create():
     assert coords.ndim == 3
 
     # 3D OrderedDict w/ vectors
-    coords = MapCoord.create(dict(energy=energy, lat=lat, lon=lon))
+    coords = MapCoord.create(OrderedDict([
+        ('energy', energy), ('lat', lat), ('lon', lon)
+    ]))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords['energy'], energy)
