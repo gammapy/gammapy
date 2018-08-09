@@ -433,7 +433,7 @@ class WcsNDMap(WcsMap):
 
     def downsample(self, factor, preserve_counts=True):
         geom = self.geom.downsample(factor)
-        block_size = tuple([factor, factor] + [1] * (self.geom.ndim - 2))
+        block_size = (factor, factor) + (1,) * len(self.geom.axes)
         data = block_reduce(self.data, block_size[::-1], np.nansum)
         if not preserve_counts:
             data /= factor ** 2

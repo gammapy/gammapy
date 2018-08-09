@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle
-import astropy.wcs.utils
+from astropy.wcs.utils import proj_plane_pixel_scales
 import astropy.units as u
 from regions import SkyRegion
 from ..utils.scripts import make_path
@@ -236,7 +236,7 @@ class WcsGeom(MapGeom):
 
     @property
     def ndim(self):
-        return len(self._axes) + 2
+        return len(self.data_shape)
 
     @property
     def center_coord(self):
@@ -256,9 +256,7 @@ class WcsGeom(MapGeom):
         -------
         pix : tuple
         """
-        center_spatial = tuple((np.array(self.npix) - 1.) / 2)
-        center_non_spatial = tuple([(ax.nbin - 1.) / 2. for ax in self.axes])
-        return center_spatial + center_non_spatial
+        return tuple((np.array(self.data_shape) - 1.) / 2)[::-1]
 
     @property
     def center_skydir(self):
@@ -286,7 +284,7 @@ class WcsGeom(MapGeom):
         -------
         angle: `~astropy.coordinates.Angle`
         """
-        return Angle(astropy.wcs.utils.proj_plane_pixel_scales(self.wcs), 'deg')
+        return Angle(proj_plane_pixel_scales(self.wcs), 'deg')
 
     @classmethod
     def create(cls, npix=None, binsz=0.5, proj='CAR', coordsys='CEL', refpix=None,
@@ -604,8 +602,7 @@ class WcsGeom(MapGeom):
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
             pix = list(pix) + bins
         else:
-            pix = self._wcs.wcs_world2pix(np.array(coords.lon, ndmin=1, copy=False),
-                                          np.array(coords.lat, ndmin=1, copy=False), 0)
+            pix = self._wcs.wcs_world2pix(coords.lon, coords.lat,  0)
             for i, ax in enumerate(self.axes):
                 pix += [ax.coord_to_pix(c[i + 2])]
 
@@ -799,7 +796,7 @@ class WcsGeom(MapGeom):
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
 
-        mask = np.zeros(idx[0].shape, dtype=bool)
+        mask = np.zeros(self.data_shape, dtype=bool)
 
         for region in regions:
             if isinstance(region, SkyRegion):
@@ -817,7 +814,7 @@ class WcsGeom(MapGeom):
         str_ += "\tnpix      : {npix[0][0]} x {npix[1][0]} pix\n".format(npix=self.npix)
         str_ += "\tcoordsys  : {}\n".format(self.coordsys)
         str_ += "\tprojection: {}\n".format(self.projection)
-        lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
+        lon, lat = float(self.center_skydir.data.lon.deg), float(self.center_skydir.data.lat.deg)
         str_ += "\tcenter    : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
         str_ += ("\twidth     : {width[0][0]:.1f} x {width[1][0]:.1f} "
                  "deg\n".format(width=self.width))

@@ -281,7 +281,7 @@ def coord_to_pix(edges, coord, interp='lin'):
 
     interp_fn = interp1d(
         fn(edges),
-        np.arange(len(edges)).astype(float),
+        np.arange(len(edges), dtype=float),
         fill_value='extrapolate',
     )
 
@@ -311,7 +311,7 @@ def pix_to_coord(edges, pix, interp='lin'):
         raise ValueError('Invalid interp: {}'.format(interp))
 
     interp_fn = interp1d(
-        np.arange(len(edges)).astype(float),
+        np.arange(len(edges), dtype=float),
         fn0(edges),
         fill_value='extrapolate',
     )
