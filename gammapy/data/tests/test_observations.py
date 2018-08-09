@@ -7,7 +7,8 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 import astropy.units as u
 from astropy.time import Time
-from ...data import DataStore, ObservationList
+from ...data import DataStore, ObservationList, EventList, GTI, ObservationCTA
+from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, EnergyDependentMultiGaussPSF
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.testing import assert_quantity_allclose, assert_time_allclose, assert_skycoord_allclose
 from ...utils.energy import Energy
@@ -39,9 +40,7 @@ def test_data_store_observation(data_store):
 
 @requires_data('gammapy-extra')
 def test_data_store_observation_to_observation_cta(data_store):
-    from gammapy.data import EventList, GTI, ObservationCTA
-    from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D, EnergyDependentMultiGaussPSF
-
+    """Test the DataStoreObservation.to_observation_cta conversion method"""
     obs = data_store.obs(23523).to_observation_cta()
 
     assert type(obs) == ObservationCTA
