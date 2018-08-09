@@ -688,7 +688,7 @@ class FluxPointEstimator(object):
 
         Examples
         --------
-        To compute ~95% confidence upper limits (or 2 sigma) you can use:
+        To compute ~95% confidence upper limits (or 2 sigma) you can use::
 
             from scipy.stats import chi2, norm
 
@@ -696,12 +696,10 @@ class FluxPointEstimator(object):
             cl = 1 - 2 * norm.sf(sigma) # using two sided p-value
             delta_ts = chi2.isf(1 - cl, df=1)
 
-
         Returns
         -------
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
-
         """
         from scipy.optimize import brentq
         model = fit.result[0].model.copy()

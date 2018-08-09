@@ -352,9 +352,6 @@ class TSMapEstimator(object):
         return result
 
     def __repr__(self):
-        """
-        Info string.
-        """
         p = self.parameters
         info = self.__class__.__name__
         info += '\n\nParameters:\n\n'
