@@ -25,10 +25,10 @@ class Parameter(object):
         Name
     factor : float or `~astropy.units.Quantity`
         Factor
-    unit : str, optional
-        Unit
     scale : float, optional
         Scale
+    unit : str, optional
+        Unit
     min : float, optional
         Minimum (sometimes used in fitting)
     max : float, optional
@@ -36,14 +36,14 @@ class Parameter(object):
     frozen : bool, optional
         Frozen? (used in fitting)
     """
-    __slots__ = ['_name', '_factor', '_unit', '_scale', '_min', '_max', '_frozen']
+    __slots__ = ['_name', '_factor', '_scale', '_unit', '_min', '_max', '_frozen']
 
     def __init__(self, name, factor, unit='', scale=1, min=np.nan, max=np.nan,
                  frozen=False):
         self.name = name
 
         if isinstance(factor, u.Quantity) or isinstance(factor, six.string_types):
-                self.quantity = value
+            self.quantity = value
         else:
             self.factor = factor
             self.unit = unit
@@ -70,20 +70,20 @@ class Parameter(object):
         self._factor = float(val)
 
     @property
-    def unit(self):
-        return self._unit
-
-    @unit.setter
-    def unit(self, val):
-        self._unit = str(val)
-
-    @property
     def scale(self):
         return self._scale
 
     @scale.setter
     def scale(self, val):
         self._scale = float(val)
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = str(val)
 
     @property
     def min(self):
@@ -115,8 +115,7 @@ class Parameter(object):
 
     @value.setter
     def value(self, val):
-        self._factor = float(val)
-        self._scale = 1
+        self._factor = float(val) / self._scale
 
     @property
     def quantity(self):
@@ -125,8 +124,7 @@ class Parameter(object):
     @quantity.setter
     def quantity(self, par):
         par = u.Quantity(par)
-        self.factor = par.value
-        self.scale = 1
+        self.value = par.value
         self.unit = str(par.unit)
 
     def __repr__(self):
