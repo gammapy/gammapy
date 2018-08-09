@@ -22,29 +22,23 @@ __all__ = [
     'WcsGeom',
 ]
 
+
 def _check_width(width):
-    """Convert input width as tuple of float to pass to WcsGeom.create.
+    """Check and normalise width argument.
 
-       Always returns a 2 float tuple
+    Always returns tuple (lon, lat) as float in degrees.
     """
-
-    if isinstance(width, Quantity):
-        if width.size>1:
-            return tuple([_.to('deg').value for _ in width])
-        else:
-            return (width.to('deg').value, width.to('deg').value)
-    if isinstance(width, (tuple, Quantity)):
-        if len(width) == 1:
-            return (Angle(width[0],'deg').deg,
-                    Angle(width[0],'deg').deg)
-        else:
-            return (Angle(width[0], 'deg').deg,
-                    Angle(width[1], 'deg').deg)
-    elif np.isscalar(width):
-        return (Angle(width,'deg').deg,
-                Angle(width,'deg').deg)
+    if isinstance(width, tuple):
+        lon = Angle(width[0], 'deg').deg
+        lat = Angle(width[1], 'deg').deg
+        return lon, lat
     else:
-        raise TypeError('Unsupported width: {!r}'.format(width))
+        angle = Angle(width, 'deg').deg
+        if np.isscalar(angle):
+            return angle, angle
+        else:
+            return tuple(angle)
+
 
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""
@@ -294,7 +288,7 @@ class WcsGeom(MapGeom):
             self.center_pix[0],
             self.center_pix[1],
             self.wcs
-            )
+        )
 
     @property
     def pixel_scales(self):
@@ -629,7 +623,7 @@ class WcsGeom(MapGeom):
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
             pix = list(pix) + bins
         else:
-            pix = self._wcs.wcs_world2pix(coords.lon, coords.lat,  0)
+            pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
             for i, ax in enumerate(self.axes):
                 pix += [ax.coord_to_pix(c[i + 2])]
 

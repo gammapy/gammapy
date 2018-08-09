@@ -656,7 +656,7 @@ class WcsNDMap(WcsMap):
         width = _check_width(width)
 
         # We revert the order to comply with astropy.cutout2D ordering
-        width = width[::-1]*u.deg
+        width = width[::-1] * u.deg
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)
