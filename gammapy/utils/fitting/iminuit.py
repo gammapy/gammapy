@@ -33,6 +33,8 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
+    # parameters.optimiser_rescale_parameters()
+
     minuit_func = MinuitFunction(function, parameters)
 
     if opts_minuit is None:
@@ -47,12 +49,11 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     minuit = Minuit(minuit_func.fcn,
                     forced_parameters=parnames,
                     **opts_minuit)
-
     minuit.migrad()
 
-    parameters.update_values_from_tuple(minuit.args)
+    parameters.optimiser_set_factors(minuit.args)
     if minuit.covariance is not None:
-        parameters.covariance = _get_covar(minuit)
+        parameters.optimiser_set_covariance(_get_covar(minuit))
     else:
         log.warning("No covariance matrix found")
         parameters.covariance = None
@@ -62,11 +63,10 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
 def _make_parnames(parameters):
     """Create list with unambigious parameter names"""
-    parnames = list()
-    for par_idx, par in enumerate(parameters.parameters):
-        parname_ = 'par_{:03d}_{}'.format(par_idx, par.name)
-        parnames.append(parname_)
-    return parnames
+    return [
+        'par_{:03d}_{}'.format(idx, par.name)
+        for idx, par in enumerate(parameters.parameters)
+    ]
 
 
 class MinuitFunction(object):
@@ -84,8 +84,8 @@ class MinuitFunction(object):
         self.function = function
         self.parameters = parameters
 
-    def fcn(self, *values):
-        self.parameters.update_values_from_tuple(values)
+    def fcn(self, *factors):
+        self.parameters.optimiser_set_factors(factors)
         return self.function(self.parameters)
 
 
@@ -98,7 +98,7 @@ def make_minuit_par_kwargs(parameters):
     parnames = _make_parnames(parameters)
     for idx, parname_, in enumerate(parnames):
         par = parameters[idx]
-        kwargs[parname_] = par.value
+        kwargs[parname_] = par.factor
 
         min_ = None if np.isnan(par.min) else par.min
         max_ = None if np.isnan(par.max) else par.max

@@ -8,6 +8,8 @@ from ..modeling import Parameter, ParameterList
 def test_parameter_init():
     par = Parameter('spam', 42, 'deg')
     assert par.name == 'spam'
+    assert par.factor == 42
+    assert par.scale == 1
     assert par.value == 42
     assert par.unit == 'deg'
     assert par.min is np.nan
@@ -34,21 +36,15 @@ def test_parameter_list():
     assert_allclose(pars.error('spam'), 0.1)
     assert_allclose(pars.error(1), 10)
 
-    pars.scale_parameter('ham', 10)
-    assert_allclose(pars['ham'].value, 99)
-    assert_allclose(pars['ham'].scale, 10)
-    assert_allclose(pars['ham'].factor, 9.9)
-    assert_allclose(pars.covariance, [[1e-2, 0], [0, 1]])
+    # pars.scale_parameter('ham', 10)
+    # assert_allclose(pars['ham'].value, 99)
+    # assert_allclose(pars['ham'].scale, 10)
+    # assert_allclose(pars['ham'].factor, 9.9)
+    # assert_allclose(pars.covariance, [[1e-2, 0], [0, 1]])
 
-    pars.scale_parameters_to_unity()
-    assert_allclose(pars['spam'].scale, 10)
-    assert_allclose(pars['spam'].factor, 4.2)
-    assert_allclose(pars['ham'].scale, 10)
-    assert_allclose(pars['ham'].factor, 9.9)
-
-    pars.scale_parameters_to_1()
+    pars.optimiser_rescale_parameters()
+    assert_allclose(pars['spam'].factor, 1)
+    assert_allclose(pars['spam'].scale, 42)
+    assert_allclose(pars['ham'].factor, 1)
+    assert_allclose(pars['ham'].scale, 99)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
-    assert_allclose(pars['spam'].scale, 1)
-    assert_allclose(pars['spam'].factor, 42)
-    assert_allclose(pars['ham'].scale, 1)
-    assert_allclose(pars['ham'].factor, 99)

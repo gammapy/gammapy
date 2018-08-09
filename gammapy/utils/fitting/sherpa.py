@@ -30,8 +30,8 @@ class SherpaFunction(object):
         self.function = function
         self.parameters = parameters
 
-    def fcn(self, values):
-        self.parameters.update_values_from_tuple(values)
+    def fcn(self, factors):
+        self.parameters.optimiser_set_factors(factors)
         return self.function(self.parameters)
 
 
@@ -55,6 +55,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
         Parameter list with best-fit values
     """
     optimizer = get_sherpa_optimiser(optimizer)
+    # parameters.optimiser_rescale_parameters()
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
@@ -71,7 +72,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
 
     result = {
         'success': result[0],
-        'values': result[1],
+        'factors': result[1],
         'statval': result[2],
         'message': result[3],
         'info': result[4],  # that's a dict, content varies based on optimiser
@@ -80,6 +81,6 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
     result['nfev'] = result['info']['nfev']
 
     # Copy final results into the parameters object
-    parameters.update_values_from_tuple(result['values'])
+    parameters.optimiser_set_factors(result['factors'])
 
     return result

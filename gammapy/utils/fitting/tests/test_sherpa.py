@@ -29,6 +29,7 @@ def test_sherpa(optimizer):
     assert result['success']
     assert result['nfev'] > 10
     assert_allclose(result['statval'], 0, atol=1e-2)
+    assert_allclose(result['factors'], [2, 3, 4], rtol=1e-2)
     assert_allclose(pars['x'].value, 2, rtol=1e-2)
     assert_allclose(pars['y'].value, 3, rtol=1e-2)
     assert_allclose(pars['z'].value, 4, rtol=1e-2)

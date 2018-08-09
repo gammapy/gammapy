@@ -26,7 +26,7 @@ class Parameter(object):
     factor : float or `~astropy.units.Quantity`
         Factor
     scale : float, optional
-        Scale
+        Scale (sometimes used in fitting)
     unit : str, optional
         Unit
     min : float, optional
@@ -55,6 +55,7 @@ class Parameter(object):
 
     @property
     def name(self):
+        """Name (str)."""
         return self._name
 
     @name.setter
@@ -63,6 +64,7 @@ class Parameter(object):
 
     @property
     def factor(self):
+        """Factor (float)."""
         return self._factor
 
     @factor.setter
@@ -71,6 +73,7 @@ class Parameter(object):
 
     @property
     def scale(self):
+        """Scale (float)."""
         return self._scale
 
     @scale.setter
@@ -79,6 +82,7 @@ class Parameter(object):
 
     @property
     def unit(self):
+        """Unit (str)."""
         return self._unit
 
     @unit.setter
@@ -87,6 +91,7 @@ class Parameter(object):
 
     @property
     def min(self):
+        """Minimum (float)."""
         return self._min
 
     @min.setter
@@ -95,6 +100,7 @@ class Parameter(object):
 
     @property
     def max(self):
+        """Maximum (float)."""
         return self._max
 
     @max.setter
@@ -103,6 +109,7 @@ class Parameter(object):
 
     @property
     def frozen(self):
+        """Frozen? (used in fitting) (bool)."""
         return self._frozen
 
     @frozen.setter
@@ -111,6 +118,7 @@ class Parameter(object):
 
     @property
     def value(self):
+        """Value = factor x scale (float)."""
         return self._factor * self._scale
 
     @value.setter
@@ -119,13 +127,14 @@ class Parameter(object):
 
     @property
     def quantity(self):
+        """Value times unit (`~astropy.units.Quantity`)."""
         return self.value * u.Unit(self.unit)
 
     @quantity.setter
-    def quantity(self, par):
-        par = u.Quantity(par)
-        self.value = par.value
-        self.unit = str(par.unit)
+    def quantity(self, val):
+        val = u.Quantity(val)
+        self.value = val.value
+        self.unit = str(val.unit)
 
     def __repr__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
@@ -185,7 +194,7 @@ class ParameterList(object):
         return self.parameters[idx]
 
     def to_dict(self):
-        retval = dict(parameters=list(), covariance=None)
+        retval = dict(parameters=[], covariance=None)
         for par in self.parameters:
             retval['parameters'].append(par.to_dict())
         if self.covariance is not None:
@@ -220,7 +229,7 @@ class ParameterList(object):
 
     @classmethod
     def from_dict(cls, val):
-        pars = list()
+        pars = []
         for par in val['parameters']:
             pars.append(Parameter(name=par['name'],
                                   factor=float(par['value']),
@@ -351,50 +360,28 @@ class ParameterList(object):
         """A deep copy"""
         return copy.deepcopy(self)
 
-    def update_values_from_tuple(self, values):
-        """Update parameter values from a tuple of values."""
-        for value, parameter in zip(values, self.parameters):
-            parameter.value = value
+    def optimiser_set_factors(self, factors):
+        """Set factor of all parameters.
 
-    def scale_parameter(self, parname, scale):
-        """Scale parameter
-
-        This method updates the ``scale`` of a given parameter and makes sure
-        that the covariance matrix (if set) is scaled accordingly
-
-        Parameters
-        ----------
-        parname : str, int
-            Parameter name or index
-        scale : float 
-            Parameter scale
+        Used in the optimiser interface.
         """
-        idx = self._get_idx(parname)
-        par = self[idx]
-        ratio = scale / par.scale
-        par.scale = scale
-        par.factor = par.factor / ratio
+        for factor, parameter in zip(factors, self.parameters):
+            parameter.factor = factor
 
-        if self.covariance is not None:
-            self.covariance[idx,] /= ratio
-            self.covariance[:,idx] /= ratio
+    def optimiser_set_covariance(self, matrix):
+        """Set covariance from factor covariance matrix.
 
-    def scale_parameters_to_unity(self):
-        """Scale all parameters
+        Used in the optimiser interface.
+        """
+        scales = np.array([par.scale for par in self.parameters])
+        scale_matrix = scales[:, np.newaxis] * scales
+        self.covariance = scale_matrix * matrix
 
-        This methods scales all parameters such that the factor is of order
-        unity
+    def optimiser_rescale_parameters(self):
+        """Re-scale all parameters.
+
+        Updates parameter attributes as ``factor, scale = 1, value``,
+        which preserves the parameter ``value = factor * scale``.
         """
         for par in self.parameters:
-            temp = int(np.log10(par.value))
-            scale = 10 ** temp
-            print(par.name, scale)
-            self.scale_parameter(par.name, scale)
-
-    def scale_parameters_to_1(self):
-        """Scale all parameters
-
-        This methods scales all parameters such that ``scale=1``
-        """
-        for par in self.parameters:
-            self.scale_parameter(par.name, 1)
+            par.factor, par.scale = 1, par.value
