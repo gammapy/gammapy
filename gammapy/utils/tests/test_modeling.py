@@ -22,11 +22,20 @@ def test_parameter_init():
     assert par.scale == 1
     assert par.unit == 'deg'
 
+    with pytest.raises(TypeError):
+        Parameter(1, 2)
+
+    p = Parameter('spam', 42)
+    with pytest.raises(TypeError):
+        p.factor = '99'
+    with pytest.raises(TypeError):
+        p.scale = '99'
+
+
 def test_parameter_value():
     par = Parameter('spam', 42, 'deg', 10)
 
     value = par.value
-    assert isinstance(value, float)
     assert value == 420
 
     par.value = 70

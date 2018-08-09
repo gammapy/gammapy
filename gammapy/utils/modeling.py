@@ -8,6 +8,7 @@ import copy
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table, Column, vstack
+from .array import check_type
 
 __all__ = [
     'Parameter',
@@ -60,7 +61,7 @@ class Parameter(object):
 
     @name.setter
     def name(self, val):
-        self._name = str(val)
+        self._name = check_type(val, 'str')
 
     @property
     def factor(self):
@@ -69,7 +70,7 @@ class Parameter(object):
 
     @factor.setter
     def factor(self, val):
-        self._factor = float(val)
+        self._factor = check_type(val, 'number')
 
     @property
     def scale(self):
@@ -78,7 +79,7 @@ class Parameter(object):
 
     @scale.setter
     def scale(self, val):
-        self._scale = float(val)
+        self._scale = check_type(val, 'number')
 
     @property
     def unit(self):
@@ -87,7 +88,7 @@ class Parameter(object):
 
     @unit.setter
     def unit(self, val):
-        self._unit = str(val)
+        self._unit = check_type(val, 'str')
 
     @property
     def min(self):
@@ -114,7 +115,7 @@ class Parameter(object):
 
     @frozen.setter
     def frozen(self, val):
-        self._frozen = bool(val)
+        self._frozen = check_type(val, 'bool')
 
     @property
     def value(self):
