@@ -248,6 +248,5 @@ invalid_width_inputs = [
 
 @pytest.mark.parametrize(('width'), invalid_width_inputs)
 def test_incorrect_width(width):
-#    print(_check_width(width))
     with pytest.raises((ValueError, TypeError)):
         g = WcsGeom.create(width=width, binsz=1.)
