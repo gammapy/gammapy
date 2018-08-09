@@ -355,3 +355,25 @@ class ParameterList(object):
         """Update parameter values from a tuple of values."""
         for value, parameter in zip(values, self.parameters):
             parameter.value = value
+
+    def scale_parameter(self, parname, scale):
+        """Scale parameter
+
+        This method updates the ``scale`` of a given parameter and makes sure
+        that the covariance matrix (if set) is scaled accordingly
+
+        Parameters
+        ----------
+        parname : str, int
+            Parameter name or index
+        scale : float 
+            Parameter scale
+        """
+        idx = self._get_idx(parname)
+        par = self[idx]
+        par.scale = scale
+        par.factor /= scale
+
+        if self.covariance is not None:
+            self.covariance[idx,] /= scale
+            self.covariance[:,idx] /= scale
