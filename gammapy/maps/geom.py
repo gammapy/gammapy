@@ -373,10 +373,7 @@ class MapAxis(object):
         else:
             raise ValueError('Invalid node type: {}'.format(node_type))
 
-        pix = np.arange(nbin, dtype=float)
-        self._center = self.pix_to_coord(pix)
-        pix = np.arange(nbin + 1, dtype=float) - 0.5
-        self._bin_edges = self.pix_to_coord(pix)
+        self._nbin = nbin
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -403,17 +400,19 @@ class MapAxis(object):
     @property
     def edges(self):
         """Return array of bin edges."""
-        return self._bin_edges
+        pix = np.arange(self.nbin + 1, dtype=float) - 0.5
+        return self.pix_to_coord(pix)
 
     @property
     def center(self):
         """Return array of bin centers."""
-        return self._center
+        pix = np.arange(self.nbin, dtype=float)
+        return self.pix_to_coord(pix)
 
     @property
     def nbin(self):
         """Return number of bins."""
-        return len(self._bin_edges) - 1
+        return self._nbin
 
     @property
     def node_type(self):
@@ -527,7 +526,7 @@ class MapAxis(object):
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
-        return pix_to_coord(self._nodes, pix, interp=self._interp)
+        return  pix_to_coord(self._nodes, pix, interp=self._interp)
 
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.
@@ -542,6 +541,7 @@ class MapAxis(object):
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
+        coord = u.Quantity(coord, self.unit).value
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -562,6 +562,7 @@ class MapAxis(object):
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
+        coord = u.Quantity(coord, self.unit).value
         return coord_to_idx(self.edges, coord, clip)
 
     def coord_to_idx_interp(self, coord):
@@ -572,6 +573,7 @@ class MapAxis(object):
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
         """
+        coord = u.Quantity(coord, self.unit).value
         return (coord_to_idx(self.center[:-1], coord, clip=True),
                 coord_to_idx(self.center[:-1], coord, clip=True) + 1,)
 
