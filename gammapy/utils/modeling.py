@@ -41,13 +41,13 @@ class Parameter(object):
     def __init__(self, name, factor, unit='', scale=1, min=np.nan, max=np.nan,
                  frozen=False):
         self.name = name
+        self.scale = scale
 
         if isinstance(factor, u.Quantity) or isinstance(factor, six.string_types):
-            self.quantity = value
+            self.quantity = factor
         else:
             self.factor = factor
             self.unit = unit
-            self.scale = scale
 
         self.min = min
         self.max = max
@@ -376,8 +376,8 @@ class ParameterList(object):
         par.factor = par.factor / ratio
 
         if self.covariance is not None:
-            self.covariance[idx,] /= scale
-            self.covariance[:,idx] /= scale
+            self.covariance[idx,] /= ratio
+            self.covariance[:,idx] /= ratio
 
     def scale_parameters_to_unity(self):
         """Scale all parameters
@@ -390,3 +390,11 @@ class ParameterList(object):
             scale = 10 ** temp
             print(par.name, scale)
             self.scale_parameter(par.name, scale)
+
+    def scale_parameters_to_1(self):
+        """Scale all parameters
+
+        This methods scales all parameters such that ``scale=1``
+        """
+        for par in self.parameters:
+            self.scale_parameter(par.name, 1)
