@@ -49,7 +49,6 @@ class NDDataArray(object):
         self._regular_grid_interp = None
 
     def __str__(self):
-        """String representation"""
         ss = 'NDDataArray summary info\n'
         for axis in self.axes:
             ss += array_stats_str(axis.nodes, axis.name)

@@ -280,7 +280,6 @@ class ReflectedRegionsBackgroundEstimator(object):
         self.result = None
 
     def __str__(self):
-        """String representation of the class."""
         s = self.__class__.__name__
         s += '\n{}'.format(self.on_region)
         s += '\n{}'.format(self.obs_list)

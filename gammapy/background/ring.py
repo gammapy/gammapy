@@ -404,16 +404,11 @@ class RingBackgroundEstimator(object):
 
         return result
 
-    def info(self):
-        """Print summary info about the parameters."""
-        print(str(self))
-
     def __str__(self):
-        """String representation of the class."""
-        info = "RingBackground parameters: \n"
-        info += 'r_in : {}\n'.format(self.parameters['r_in'])
-        info += 'width: {}\n'.format(self.parameters['width'])
-        return info
+        s = "RingBackground parameters: \n"
+        s += 'r_in : {}\n'.format(self.parameters['r_in'])
+        s += 'width: {}\n'.format(self.parameters['width'])
+        return s
 
 
 def ring_r_out(theta, r_in, area_factor):

@@ -82,12 +82,6 @@ class SourceCatalogObject(object):
 
         return out
 
-    def info(self):
-        """
-        Print summary info about the object.
-        """
-        print(self)
-
     @property
     def position(self):
         """Source position (`~astropy.coordinates.SkyCoord`)."""
@@ -125,14 +119,9 @@ class SourceCatalog(object):
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        """Info string."""
-        ss = self.description
-        ss += ' with {} objects.'.format(len(self.table))
-        return ss
-
-    def info(self):
-        """Print info string."""
-        print(self)
+        s = self.description
+        s += ' with {} objects.'.format(len(self.table))
+        return s
 
     @lazyproperty
     def _name_to_index_cache(self):

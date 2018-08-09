@@ -91,7 +91,6 @@ class ObservationCTA(object):
         self.meta = meta or OrderedDict()
 
     def __str__(self):
-        """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
 
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
@@ -128,7 +127,6 @@ class DataStoreObservation(object):
         self.data_store = data_store
 
     def __str__(self):
-        """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
         ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd)
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)

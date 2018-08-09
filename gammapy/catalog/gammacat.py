@@ -484,8 +484,7 @@ class GammaCatDataCollection(object):
         data_index = json.load(path.read_text())
         return cls(data_index=data_index)
 
-    def info(self):
-        """Print some info."""
+    def __str__(self):
         ss = 'version = {}'.format(self.data_index['info']['version'])
         return ss
 

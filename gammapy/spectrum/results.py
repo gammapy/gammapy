@@ -159,19 +159,15 @@ class SpectrumFitResult(object):
         return t
 
     def __str__(self):
-        info = "\nFit result info \n"
-        info += "--------------- \n"
-        info += "Model: {} \n".format(self.model)
+        s = "\nFit result info \n"
+        s += "--------------- \n"
+        s += "Model: {} \n".format(self.model)
         if self.statval is not None:
-            info += "\nStatistic: {0:.3f} ({1})".format(self.statval, self.statname)
+            s += "\nStatistic: {0:.3f} ({1})".format(self.statval, self.statname)
         if self.fit_range is not None:
-            info += "\nFit Range: {}".format(self.fit_range)
-        info += "\n"
-        return info
-
-    def info(self):
-        """Print summary info."""
-        print(str(self))
+            s += "\nFit Range: {}".format(self.fit_range)
+        s += "\n"
+        return s
 
     def butterfly(self, energy=None, flux_unit="TeV-1 cm-2 s-1"):
         """Compute butterfly table.

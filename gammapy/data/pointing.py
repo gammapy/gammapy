@@ -54,7 +54,6 @@ class PointingInfo(object):
         return cls(table=table)
 
     def __str__(self):
-        """Basic info."""
         ss = 'Pointing info:\n\n'
         ss += 'Location:     {}\n'.format(self.location.geodetic)
         m = self.table.meta
