@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
-from numpy import isscalar
 from collections import OrderedDict
 from astropy.wcs import WCS
 from astropy.io import fits
@@ -29,15 +28,15 @@ def _check_width(width):
         if width.size>1:
             return tuple([_.to('deg').value for _ in width])
         else:
-            return width.to('deg').value
-    elif isscalar(width):
-        return width
+            return (width.to('deg').value, width.to('deg').value)
+    elif np.isscalar(width):
+        return (float(width), float(width))
     elif isinstance(width,(list,tuple)):
-        if isscalar(width[0]):
-            # assume degrees in input
-            return tuple(width)
-        elif isinstance(width[0],(list,tuple)):
-            return tuple([_check_width(_) for _ in width])
+        if np.isscalar(width[0]):
+            if len(width)==1:
+                return (float(width[0]),float(width[0]))
+            else:
+                return tuple(width)
         elif isinstance(width[0], (Angle,Quantity)):
             return tuple([_.to('deg').value for _ in width])
         else:

@@ -4,9 +4,10 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
+from astropy.units import Quantity
 import astropy.units as u
-from ..wcs import WcsGeom
+from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis
 
 pytest.importorskip('scipy')
@@ -221,3 +222,30 @@ def test_region_mask():
 
     mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask) == 8
+
+
+valid_width_inputs = [
+    (10, (10, 10)),
+    (10*u.deg, (10,10)),
+    ((10,), (10, 10)),
+    ([10, 5], (10, 5)),
+    ((10, 5), (10, 5)),
+    (Angle([10, 5], 'deg'), (10, 5)),
+    ((10 * u.deg, 5 * u.deg), (10, 5)),
+    ((10, 5) * u.deg, (10, 5)),
+]
+
+@pytest.mark.parametrize(('width', 'results'), valid_width_inputs)
+def test_check_widths(width, results):
+    width_checked = _check_width(width)
+    assert width_checked == results
+
+invalid_width_inputs = [
+    '10 deg', ('10 deg', '5 deg'), np.array([10, 5])
+]
+
+@pytest.mark.parametrize(('width'), invalid_width_inputs)
+def test_incorrect_width(width):
+#    print(_check_width(width))
+    with pytest.raises((ValueError, TypeError)):
+        g = WcsGeom.create(width=width, binsz=1.)
