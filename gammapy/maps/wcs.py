@@ -23,27 +23,28 @@ __all__ = [
 ]
 
 def _check_width(width):
-    """Convert input width as tuple of float to pass to WcsGeom.create"""
-    if isinstance(width, (Angle,Quantity)):
+    """Convert input width as tuple of float to pass to WcsGeom.create.
+
+       Always returns a 2 float tuple
+    """
+
+    if isinstance(width, Quantity):
         if width.size>1:
             return tuple([_.to('deg').value for _ in width])
         else:
             return (width.to('deg').value, width.to('deg').value)
-    elif np.isscalar(width):
-        return (float(width), float(width))
-    elif isinstance(width,(list,tuple)):
-        if np.isscalar(width[0]):
-            if len(width)==1:
-                return (float(width[0]),float(width[0]))
-            else:
-                return tuple(width)
-        elif isinstance(width[0], (Angle,Quantity)):
-            return tuple([_.to('deg').value for _ in width])
+    if isinstance(width, (tuple, Quantity)):
+        if len(width) == 1:
+            return (Angle(width[0],'deg').deg,
+                    Angle(width[0],'deg').deg)
         else:
-            raise TypeError("Unsupported input for width")
+            return (Angle(width[0], 'deg').deg,
+                    Angle(width[1], 'deg').deg)
+    elif np.isscalar(width):
+        return (Angle(width,'deg').deg,
+                Angle(width,'deg').deg)
     else:
-        raise TypeError("Unsupported input for width")
-
+        raise TypeError('Unsupported width: {!r}'.format(width))
 
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""

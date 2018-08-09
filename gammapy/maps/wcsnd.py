@@ -637,10 +637,9 @@ class WcsNDMap(WcsMap):
         ----------
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple or list of `~astropy.coordinates.Angle`
+        width : tuple of `~astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-            For more options see also `~astropy.nddata.utils.Cutout2D`.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
         copy : bool, optional
@@ -657,13 +656,8 @@ class WcsNDMap(WcsMap):
         width = _check_width(width)
 
         # We revert the order to comply with astropy.cutout2D ordering
-        if len(width) == 2:
-            width = width[::-1]
-        else:
-            raise ValueError("WcsNDMap.cutout: to many entries in width argument")
+        width = width[::-1]*u.deg
 
-        width = width*u.deg
-        print(width)
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)
 

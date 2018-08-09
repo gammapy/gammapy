@@ -228,7 +228,6 @@ valid_width_inputs = [
     (10, (10, 10)),
     (10*u.deg, (10,10)),
     ((10,), (10, 10)),
-    ([10, 5], (10, 5)),
     ((10, 5), (10, 5)),
     (Angle([10., 5.], 'deg'), (10., 5.)),
     ((10. * u.deg, 5. * u.deg), (10., 5.)),
@@ -244,7 +243,7 @@ def test_check_widths(width, results):
     assert g.npix[1][0] == results[1]
 
 invalid_width_inputs = [
-    '10 deg', ('10 deg', '5 deg'), np.array([10, 5])
+    [10,5], ['10 deg', '5 deg'], np.array([10, 5])
 ]
 
 @pytest.mark.parametrize(('width'), invalid_width_inputs)
