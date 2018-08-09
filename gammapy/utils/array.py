@@ -9,8 +9,6 @@ __all__ = ['array_stats_str',
            'shape_divisible_by',
            'symmetric_crop_pad_width']
 
-all_integer_types = six.integer_types + (np.integer,)
-
 
 def array_stats_str(x, label=''):
     """Make a string summarising some stats for an array.
@@ -109,5 +107,42 @@ def symmetric_crop_pad_width(shape, new_shape):
     return ywidth, xwidth
 
 
+def check_type(val, category):
+    if category == 'str':
+        return _check_str(val)
+    elif category == 'number':
+        return _check_number(val)
+    elif category == 'bool':
+        return _check_bool(val)
+    else:
+        raise ValueError('Invalid category: {}'.format(category))
+
+
+def _check_str(val):
+    if isinstance(val, six.string_types):
+        return val
+    else:
+        raise TypeError('Expected a string. Got: {!r}'.format(val))
+
+
+def _check_number(val):
+    if _is_float(val) or _is_int(val):
+        return val
+    raise TypeError('Expected a number. Got: {!r}'.format(val))
+
+
 def _is_int(val):
-    return isinstance(val, all_integer_types)
+    int_types = six.integer_types + (np.integer,)
+    return isinstance(val, int_types)
+
+
+def _is_float(val):
+    float_types = (float, np.floating)
+    return isinstance(val, float_types)
+
+
+def _check_bool(val):
+    if isinstance(val, bool):
+        return val
+    else:
+        raise TypeError('Expected a bool. Got: {!r}'.format(val))

@@ -8,6 +8,7 @@ import copy
 from ..extern import six
 from astropy import units as u
 from astropy.table import Table, Column, vstack
+from .array import check_type
 
 __all__ = [
     'Parameter',
@@ -23,8 +24,10 @@ class Parameter(object):
     ----------
     name : str
         Name
-    value : float or `~astropy.units.Quantity`
-        Value
+    factor : float or `~astropy.units.Quantity`
+        Factor
+    scale : float, optional
+        Scale (sometimes used in fitting)
     unit : str, optional
         Unit
     min : float, optional
@@ -34,15 +37,17 @@ class Parameter(object):
     frozen : bool, optional
         Frozen? (used in fitting)
     """
-    __slots__ = ['_name', '_value', '_unit', '_min', '_max', '_frozen']
+    __slots__ = ['_name', '_factor', '_scale', '_unit', '_min', '_max', '_frozen']
 
-    def __init__(self, name, value, unit='', min=np.nan, max=np.nan, frozen=False):
+    def __init__(self, name, factor, unit='', scale=1, min=np.nan, max=np.nan,
+                 frozen=False):
         self.name = name
+        self.scale = scale
 
-        if isinstance(value, u.Quantity) or isinstance(value, six.string_types):
-            self.quantity = value
+        if isinstance(factor, u.Quantity) or isinstance(factor, six.string_types):
+            self.quantity = factor
         else:
-            self.value = value
+            self.factor = factor
             self.unit = unit
 
         self.min = min
@@ -51,30 +56,43 @@ class Parameter(object):
 
     @property
     def name(self):
+        """Name (str)."""
         return self._name
 
     @name.setter
     def name(self, val):
-        self._name = str(val)
+        self._name = check_type(val, 'str')
 
     @property
-    def value(self):
-        return self._value
+    def factor(self):
+        """Factor (float)."""
+        return self._factor
 
-    @value.setter
-    def value(self, val):
-        self._value = float(val)
+    @factor.setter
+    def factor(self, val):
+        self._factor = check_type(val, 'number')
+
+    @property
+    def scale(self):
+        """Scale (float)."""
+        return self._scale
+
+    @scale.setter
+    def scale(self, val):
+        self._scale = check_type(val, 'number')
 
     @property
     def unit(self):
+        """Unit (str)."""
         return self._unit
 
     @unit.setter
     def unit(self, val):
-        self._unit = str(val)
+        self._unit = check_type(val, 'str')
 
     @property
     def min(self):
+        """Minimum (float)."""
         return self._min
 
     @min.setter
@@ -83,6 +101,7 @@ class Parameter(object):
 
     @property
     def max(self):
+        """Maximum (float)."""
         return self._max
 
     @max.setter
@@ -91,21 +110,32 @@ class Parameter(object):
 
     @property
     def frozen(self):
+        """Frozen? (used in fitting) (bool)."""
         return self._frozen
 
     @frozen.setter
     def frozen(self, val):
-        self._frozen = bool(val)
+        self._frozen = check_type(val, 'bool')
+
+    @property
+    def value(self):
+        """Value = factor x scale (float)."""
+        return self._factor * self._scale
+
+    @value.setter
+    def value(self, val):
+        self._factor = float(val) / self._scale
 
     @property
     def quantity(self):
+        """Value times unit (`~astropy.units.Quantity`)."""
         return self.value * u.Unit(self.unit)
 
     @quantity.setter
-    def quantity(self, par):
-        par = u.Quantity(par)
-        self.value = par.value
-        self.unit = str(par.unit)
+    def quantity(self, val):
+        val = u.Quantity(val)
+        self.value = val.value
+        self.unit = str(val.unit)
 
     def __repr__(self):
         ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
@@ -165,7 +195,7 @@ class ParameterList(object):
         return self.parameters[idx]
 
     def to_dict(self):
-        retval = dict(parameters=list(), covariance=None)
+        retval = dict(parameters=[], covariance=None)
         for par in self.parameters:
             retval['parameters'].append(par.to_dict())
         if self.covariance is not None:
@@ -200,10 +230,10 @@ class ParameterList(object):
 
     @classmethod
     def from_dict(cls, val):
-        pars = list()
+        pars = []
         for par in val['parameters']:
             pars.append(Parameter(name=par['name'],
-                                  value=float(par['value']),
+                                  factor=float(par['value']),
                                   unit=par['unit'],
                                   min=float(par['min']),
                                   max=float(par['max']),
@@ -331,7 +361,28 @@ class ParameterList(object):
         """A deep copy"""
         return copy.deepcopy(self)
 
-    def update_values_from_tuple(self, values):
-        """Update parameter values from a tuple of values."""
-        for value, parameter in zip(values, self.parameters):
-            parameter.value = value
+    def optimiser_set_factors(self, factors):
+        """Set factor of all parameters.
+
+        Used in the optimiser interface.
+        """
+        for factor, parameter in zip(factors, self.parameters):
+            parameter.factor = factor
+
+    def optimiser_set_covariance(self, matrix):
+        """Set covariance from factor covariance matrix.
+
+        Used in the optimiser interface.
+        """
+        scales = np.array([par.scale for par in self.parameters])
+        scale_matrix = scales[:, np.newaxis] * scales
+        self.covariance = scale_matrix * matrix
+
+    def optimiser_rescale_parameters(self):
+        """Re-scale all parameters.
+
+        Updates parameter attributes as ``factor, scale = 1, value``,
+        which preserves the parameter ``value = factor * scale``.
+        """
+        for par in self.parameters:
+            par.factor, par.scale = 1, par.value
