@@ -11,9 +11,9 @@ __all__ = ["SpectrumFitResult", "SpectrumResult"]
 
 
 class SpectrumFitResult(object):
-    """Result of a `~gammapy.spectrum.SpectrumFit`
+    """Result of a `~gammapy.spectrum.SpectrumFit`.
 
-    All fit results should be accessed via this class
+    All fit results should be accessed via this class.
 
     Parameters
     ----------
@@ -43,9 +43,8 @@ class SpectrumFitResult(object):
         "obs",
     ]
 
-    def __init__( self, model, fit_range=None, statname=None, statval=None,
-                 stat_per_bin=None, npred=None, obs=None,):
-
+    def __init__(self, model, fit_range=None, statname=None, statval=None,
+                 stat_per_bin=None, npred=None, obs=None):
         self.model = model
         self.fit_range = fit_range
         self.statname = statname
@@ -56,7 +55,7 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        """Create cls from YAML file
+        """Create from YAML file.
 
         Parameters
         ----------
@@ -68,7 +67,7 @@ class SpectrumFitResult(object):
         return cls.from_dict(val)
 
     def to_yaml(self, filename, mode="w"):
-        """Write YAML file
+        """Write to YAML file.
 
         Parameters
         ----------
@@ -86,7 +85,7 @@ class SpectrumFitResult(object):
             outfile.write(val)
 
     def to_dict(self):
-        """Convert to dict"""
+        """Convert to dict."""
         val = dict()
         val["model"] = self.model.to_dict()
         if self.fit_range is not None:
@@ -104,6 +103,7 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_dict(cls, val):
+        """Create from dict."""
         modeldict = val["model"]
         model = models.SpectralModel.from_dict(modeldict)
         try:
@@ -116,12 +116,13 @@ class SpectrumFitResult(object):
 
     # TODO: rather add this to ParameterList?
     def to_table(self, energy_unit="TeV", flux_unit="cm-2 s-1 TeV-1", **kwargs):
-        """Convert to `~astropy.table.Table`
+        """Convert to `~astropy.table.Table`.
 
         Produce overview table containing the most important parameters
         """
         t = Table()
         t["model"] = [self.model.__class__.__name__]
+
         for par_name, value in self.model.parameters._ufloats.items():
             val = value.n
             err = value.s
@@ -158,9 +159,6 @@ class SpectrumFitResult(object):
         return t
 
     def __str__(self):
-        """
-        Summary info string.
-        """
         info = "\nFit result info \n"
         info += "--------------- \n"
         info += "Model: {} \n".format(self.model)
@@ -172,14 +170,11 @@ class SpectrumFitResult(object):
         return info
 
     def info(self):
-        """
-        Print summary info.
-        """
+        """Print summary info."""
         print(str(self))
 
     def butterfly(self, energy=None, flux_unit="TeV-1 cm-2 s-1"):
-        """
-        Compute butterfly table.
+        """Compute butterfly table.
 
         Parameters
         ----------
@@ -209,26 +204,24 @@ class SpectrumFitResult(object):
 
     @property
     def expected_source_counts(self):
-        """`~gammapy.spectrum.CountsSpectrum` of predicted source counts
-        """
+        """Predicted source counts (`~gammapy.spectrum.CountsSpectrum`)."""
         energy = self.obs.on_vector.energy
         data = self.npred
         return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
 
+    # TODO: is this the quantity, and sign, we want for residuals?
     @property
     def residuals(self):
-        """Residuals
-
-        Prediced on counts - expected on counts
+        """Residuals (predicted source - excess).
         """
         resspec = self.expected_source_counts.copy()
         resspec.data.data -= self.obs.excess_vector.data.data
         return resspec
 
     def plot(self, **kwargs):
-        """Standard debug plot.
+        """Plot counts and residuals in two panels.
 
-        Plot ON counts in comparison to model.
+        Calls ``plot_counts`` and ``plot_residuals``.
         """
         ax0, ax1 = get_plot_axis(**kwargs)
 
@@ -270,9 +263,9 @@ class SpectrumFitResult(object):
 
 
 class SpectrumResult(object):
-    """Class holding all results of a spectral analysis
+    """Spectrum analysis results.
 
-    Best fit model, flux points
+    Contains best fit model and flux points.
 
     Parameters
     ----------
@@ -288,23 +281,23 @@ class SpectrumResult(object):
 
     @property
     def flux_point_residuals(self):
-        """Residuals
+        """Residuals.
 
         Defined as ``(points - model) / model``
 
         Returns
         -------
-        residuals : np.array
+        residuals : `numpy.ndarray`
             Residuals
-        residuals_err : np.array
+        residuals_err : `numpy.ndarray`
             Residuals error
         """
         e_ref = self.points.table["e_ref"].quantity
         points = self.points.table["dnde"].quantity
         points_err = self.points.get_flux_err()
 
-        # Deal with asymetric errors
-        if type(points_err) == tuple:
+        # Deal with asymmetric errors
+        if isinstance(points_err, tuple):
             points_err = np.sqrt(points_err[0] * points_err[1])
 
         model_val = self.model(e_ref)
@@ -318,19 +311,19 @@ class SpectrumResult(object):
         return residuals, residuals_err
 
     def plot(
-        self,
-        energy_range,
-        energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
-        energy_power=0,
-        fit_kwargs=dict(),
-        butterfly_kwargs=dict(),
-        point_kwargs=dict(),
-        fig_kwargs=dict(),
+            self,
+            energy_range,
+            energy_unit="TeV",
+            flux_unit="cm-2 s-1 TeV-1",
+            energy_power=0,
+            fit_kwargs=dict(),
+            butterfly_kwargs=dict(),
+            point_kwargs=dict(),
+            fig_kwargs=dict(),
     ):
-        """Plot spectrum
+        """Plot spectrum.
 
-        Plot best fit model, flux points and residuals
+        Plot best fit model, flux points and residuals.
 
         Parameters
         ----------
@@ -379,7 +372,7 @@ class SpectrumResult(object):
         return ax0, ax1
 
     def _plot_residuals(self, ax=None, energy_unit="TeV", **kwargs):
-        """Plot residuals
+        """Plot residuals.
 
         Parameters
         ----------
@@ -413,7 +406,7 @@ class SpectrumResult(object):
 
 
 def get_plot_axis(**kwargs):
-    """Axis setup used for standard plots
+    """Axis setup used for standard plots.
 
     kwargs are forwarded to plt.figure()
 
