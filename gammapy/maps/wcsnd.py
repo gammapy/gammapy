@@ -651,7 +651,7 @@ class WcsNDMap(WcsMap):
         from ..cube.psf_kernel import PSFKernel
 
         conv_function = fftconvolve if use_fft else convolve
-        convolved_data = np.empty_like(self.data)
+        convolved_data = np.empty(self.data.shape, dtype=np.float32)
         if use_fft:
             kwargs.setdefault('mode', 'same')
 
