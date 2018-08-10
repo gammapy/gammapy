@@ -78,13 +78,10 @@ def test_psf_kernel_convolve():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_energy_dependent_psf_kernel():
-    # Define energy axis
     energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
-
-    # Create WcsGeom and map
     geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
-    some_map = Map.from_geom(geom)
-    some_map.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
+    m = Map.from_geom(geom)
+    m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
     # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
     filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
@@ -95,6 +92,6 @@ def test_energy_dependent_psf_kernel():
 
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 
-    some_map_convolved = some_map.convolve(psf_kernel)
+    mc = m.convolve(psf_kernel)
 
-    assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
+    assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
