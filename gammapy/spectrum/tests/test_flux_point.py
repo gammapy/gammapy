@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
-import pytest
 from astropy.table import Table
 import astropy.units as u
 from ...catalog.fermi import SourceCatalog3FGL
@@ -13,7 +12,7 @@ from ..results import SpectrumResult
 from ..fit import SpectrumFit
 from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroupMaker
-from ..models import PowerLaw, SpectralModel, ExponentialCutoffPowerLaw
+from ..models import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFitter, FluxPointEstimator
 
 FLUX_POINTS_FILES = [
@@ -153,6 +152,7 @@ def obs():
     obs = SpectrumObservation.read(filename)
     return obs
 
+
 @pytest.fixture(scope='session')
 def model():
     model = PowerLaw()
@@ -160,6 +160,7 @@ def model():
     fit.fit()
     fit.est_errors()
     return fit.result[0].model
+
 
 @pytest.fixture(scope='session')
 def seg():
@@ -190,30 +191,25 @@ class TestFluxPointEstimator:
         fit_range = self.fpe.fit.true_fit_range[0]
         assert_quantity_allclose(fit_range[0], group.energy_min)
         assert_quantity_allclose(fit_range[1], group.energy_max)
-        
+
     def test_values(self):
         self.fpe.compute_points()
         flux_points = self.fpe.flux_points
 
         actual = flux_points.table['dnde'][0]
-        desired = 4.988216856148768e-11
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, 4.988e-11, rtol=1e-2)
 
         actual = flux_points.table['dnde_err'][0]
-        desired = 6.238263521179057e-12
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, 6.2382e-12, rtol=1e-2)
 
         actual = flux_points.table['dnde_ul'][0]
-        desired = 6.329808685878984e-11
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, 6.3298e-11, rtol=1e-2)
 
         actual = flux_points.table['dnde_errn'][0]
-        desired = 5.931500787551099e-12
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, 5.9315e-12, rtol=1e-2)
 
         actual = flux_points.table['dnde_errp'][0]
-        desired = 6.593114386768349e-12
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, 6.5931e-12, rtol=1e-2)
 
     def test_spectrum_result(self):
         # TODO: Don't run this again
@@ -224,12 +220,10 @@ class TestFluxPointEstimator:
         )
 
         actual = result.flux_point_residuals[0][0]
-        desired = -0.3217634756774566
-        assert_allclose(actual, desired)
+        assert_allclose(actual, -0.32176, rtol=1e-2)
 
         actual = result.flux_point_residuals[1][0]
-        desired = 0.08519973138393112
-        assert_allclose(actual, desired)
+        assert_allclose(actual, 0.08519, rtol=1e-2)
 
         result.plot(energy_range=[1, 10] * u.TeV)
 
@@ -272,7 +266,7 @@ class TestFluxPoints:
             pass
         elif flux_points.sed_type == 'flux':
             actual = flux_points.e_min
-            desired = 299530.9757217623 * u.MeV
+            desired = 299530.97 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
     def test_e_max(self, flux_points):
@@ -280,7 +274,7 @@ class TestFluxPoints:
             pass
         elif flux_points.sed_type == 'flux':
             actual = flux_points.e_max
-            desired = 399430.975721694 * u.MeV
+            desired = 399430.975 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
     def test_write_fits(self, tmpdir, flux_points):
