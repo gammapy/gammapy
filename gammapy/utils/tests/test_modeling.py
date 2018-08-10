@@ -87,6 +87,13 @@ def test_parameters_basics(pars):
     assert_allclose(pars.error(1), 10)
 
 
+def test_parameters_to_table(pars):
+    pars.set_error('ham', 1e-10 / 3)
+    table = pars.to_table()
+    assert len(table) == 2
+    assert len(table.columns) == 6
+
+
 def test_parameters_covariance_to_table(pars):
     with pytest.raises(ValueError):
         pars.covariance_to_table()

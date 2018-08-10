@@ -5,7 +5,7 @@ import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
-from astropy.table import Table
+from astropy.table import Table, Column
 from .array import check_type
 
 __all__ = [
@@ -228,40 +228,37 @@ class Parameters(object):
             retval['covariance'] = self.covariance.tolist()
         return retval
 
-    def to_list_of_dict(self):
-        result = []
-        for parameter in self.parameters:
-            vals = parameter.to_dict()
-            if self.covariance is None:
-                vals['error'] = np.nan
-            else:
-                vals['error'] = self.error(parameter.name)
-            result.append(vals)
-        return result
-
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
-        formats = {'value': '.3e',
-                   'error': '.3e',
-                   'min': '.3e',
-                   'max': '.3e'}
-        table = Table(self.to_list_of_dict(), names=names)
+        t = Table()
+        t['name'] = [p.name for p in self.parameters]
+        t['value'] = [p.value for p in self.parameters]
+        if self.covariance is None:
+            t['error'] = np.nan
+        else:
+            t['error'] = [self.error(idx) for idx in range(len(self.parameters))]
 
-        for name in formats:
-            table[name].format = formats[name]
-        return table
+        t['unit'] = [p.unit for p in self.parameters]
+        t['min'] = [p.min for p in self.parameters]
+        t['max'] = [p.max for p in self.parameters]
+
+        for name in ['value', 'error', 'min', 'max']:
+            t[name].format = '.3e'
+
+        return t
 
     @classmethod
     def from_dict(cls, val):
         pars = []
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'],
-                                  factor=float(par['value']),
-                                  unit=par['unit'],
-                                  min=float(par['min']),
-                                  max=float(par['max']),
-                                  frozen=par['frozen']))
+            pars.append(Parameter(
+                name=par['name'],
+                factor=float(par['value']),
+                unit=par['unit'],
+                min=float(par['min']),
+                max=float(par['max']),
+                frozen=par['frozen'],
+            ))
         try:
             covariance = np.array(val['covariance'])
         except KeyError:
