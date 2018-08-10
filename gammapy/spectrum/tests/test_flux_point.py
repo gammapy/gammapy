@@ -147,135 +147,89 @@ def test_compute_flux_points_dnde_exp(method):
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
-@requires_data('gammapy-extra')
-@requires_dependency('sherpa')
-@requires_dependency('matplotlib')
-@requires_dependency('scipy')
-@pytest.mark.parametrize('config', ['pl', 'ecpl'])
-@pytest.mark.xfail(reason='This is rewritten in #1500')
-def test_flux_points(config):
-    # TODO: replace this with a simple test case in a fixture
+@pytest.fixture(scope='session')
+def obs():
     filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
     obs = SpectrumObservation.read(filename)
+    return obs
+
+@pytest.fixture(scope='session')
+def model():
+    model = PowerLaw()
+    fit = SpectrumFit(obs(), model)
+    fit.fit()
+    fit.est_errors()
+    return fit.result[0].model
+
+@pytest.fixture(scope='session')
+def seg():
     ebounds = [0.3, 1, 30] * u.TeV
-    seg = SpectrumEnergyGroupMaker(obs=obs)
-    seg.compute_groups_fixed(ebounds=ebounds)
-
-    if config == 'pl':
-        config = dict(
-            model=PowerLaw(
-                index=Quantity(2, ''),
-                amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
-                reference=Quantity(1, 'TeV')
-            ),
-            obs=obs,
-            seg=seg,
-            dnde=6.523663e-11,
-            dnde_err=1.12954e-11,
-            dnde_errn=1.076992e-7,
-            dnde_errp=1.188907e-7,
-            dnde_ul=9.023994e-11,
-            res=-0.1126,
-            res_err=0.1536,
-        )
-    elif config == 'ecpl':
-        config = dict(
-            model=ExponentialCutoffPowerLaw(
-                index=Quantity(2, ''),
-                amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
-                reference=Quantity(1, 'TeV'),
-                lambda_=Quantity(0.1, 'TeV-1')
-            ),
-            obs=obs,
-            seg=seg,
-            dnde=6.171423e-11,
-            dnde_err=1.068601e-11,
-            dnde_errn=1.018883e-7,
-            dnde_errp=1.124765e-7,
-            dnde_ul=8.53686e-11,
-            res=-0.057955,
-            res_err=0.1634,
-        )
-
-    tester = FluxPointTester(config)
-    tester.test_all()
+    segm = SpectrumEnergyGroupMaker(obs=obs())
+    segm.compute_groups_fixed(ebounds=ebounds)
+    return segm.groups
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_dependency('scipy')
-class FluxPointTester:
-    def __init__(self, config):
-        self.config = config
-        self.rtol = 0.005
-        self.setup()
-
+class TestFluxPointEstimator:
     def setup(self):
-        fit = SpectrumFit(self.config['obs'], self.config['model'])
-        fit.fit()
-        fit.est_errors()
-        self.best_fit_model = fit.result[0].model
         self.fpe = FluxPointEstimator(
-            obs=self.config['obs'],
-            groups=self.config['seg'].groups,
-            model=self.best_fit_model,
+            obs=obs(),
+            model=model(),
+            groups=seg()
         )
-        self.fpe.compute_points()
-
-    def test_all(self):
-        self.test_basic()
-        self.test_approx_model()
-        self.test_values()
-        self.test_spectrum_result()
 
     def test_basic(self):
         assert 'FluxPointEstimator' in str(self.fpe)
 
-    def test_approx_model(self):
-        approx_model = self.fpe._get_spectral_model(
-            self.config['model'], self.fpe.groups[3]
-        )
-        assert approx_model.parameters['index'].frozen is True
-        assert approx_model.parameters['amplitude'].frozen is False
-        assert approx_model.parameters['reference'].frozen is True
-
+    def test_energy_range(self):
+        group = self.fpe.groups[1]
+        point = self.fpe.compute_flux_point(group)
+        fit_range = self.fpe.fit.true_fit_range[0]
+        assert_quantity_allclose(fit_range[0], group.energy_min)
+        assert_quantity_allclose(fit_range[1], group.energy_max)
+        
     def test_values(self):
+        self.fpe.compute_points()
         flux_points = self.fpe.flux_points
 
         actual = flux_points.table['dnde'][0]
-        desired = self.config['dnde']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 4.988216856148768e-11
+        assert_allclose(actual, desired, rtol=1e-2)
 
         actual = flux_points.table['dnde_err'][0]
-        desired = self.config['dnde_err']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 6.238263521179057e-12
+        assert_allclose(actual, desired, rtol=1e-2)
 
         actual = flux_points.table['dnde_ul'][0]
-        desired = self.config['dnde_ul']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 6.329808685878984e-11
+        assert_allclose(actual, desired, rtol=1e-2)
 
         actual = flux_points.table['dnde_errn'][0]
-        desired = self.config['dnde_errn']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 5.931500787551099e-12
+        assert_allclose(actual, desired, rtol=1e-2)
 
         actual = flux_points.table['dnde_errp'][0]
-        desired = self.config['dnde_errp']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 6.593114386768349e-12
+        assert_allclose(actual, desired, rtol=1e-2)
 
     def test_spectrum_result(self):
+        # TODO: Don't run this again
+        self.fpe.compute_points()
         result = SpectrumResult(
-            model=self.best_fit_model,
+            model=self.fpe.model,
             points=self.fpe.flux_points,
         )
 
         actual = result.flux_point_residuals[0][0]
-        desired = self.config['res']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = -0.3217634756774566
+        assert_allclose(actual, desired)
 
         actual = result.flux_point_residuals[1][0]
-        desired = self.config['res_err']
-        assert_allclose(actual, desired, rtol=self.rtol)
+        desired = 0.08519973138393112
+        assert_allclose(actual, desired)
 
         result.plot(energy_range=[1, 10] * u.TeV)
 

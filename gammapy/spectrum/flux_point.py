@@ -601,6 +601,7 @@ class FluxPointEstimator(object):
         self.groups = groups
         self.model = model
         self.flux_points = None
+        self._fit = None
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -608,6 +609,11 @@ class FluxPointEstimator(object):
         s += str(self.groups) + '\n'
         s += str(self.model) + '\n'
         return s
+
+    @property
+    def fit(self):
+        """Instance of `~gammapy.spectrum.SpectrumFit`"""
+        return self._fit
 
     @property
     def obs(self):
@@ -779,28 +785,28 @@ class FluxPointEstimator(object):
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
-        fit = SpectrumFit(self.obs, model)
+        self._fit = SpectrumFit(self.obs, model)
 
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
 
         log.debug(
             'Calling Sherpa fit for flux point '
-            ' in energy range:\n{}'.format(fit)
+            ' in energy range:\n{}'.format(self.fit)
         )
 
-        fit.fit()
-        fit.est_errors()
+        self.fit.fit()
+        self.fit.est_errors()
 
         # compute TS value for all observations
-        stat_best_fit = np.sum([res.statval for res in fit.result])
+        stat_best_fit = np.sum([res.statval for res in self.fit.result])
 
-        dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
+        dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
-        dnde_errp = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
+        dnde_ul = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit)
+        dnde_errp = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
