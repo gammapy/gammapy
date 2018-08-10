@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Model parameter handling
-"""
+"""Model parameter classes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
-from astropy.table import Table, Column
+from astropy.table import Table
 from .array import check_type
 
 __all__ = [
@@ -171,6 +169,15 @@ class Parameters(object):
         self._parameters = parameters
         self.covariance = covariance
 
+    def _init_covar(self):
+        if self.covariance is None:
+            shape = (len(self.parameters), len(self.parameters))
+            self.covariance = np.zeros(shape)
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
+
     @property
     def parameters(self):
         """List of `Parameter`."""
@@ -180,6 +187,11 @@ class Parameters(object):
     @parameters.setter
     def parameters(self, vals):
         self._parameters = vals
+
+    @property
+    def names(self):
+        """List of parameter names"""
+        return [par.name for par in self.parameters]
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -268,11 +280,6 @@ class Parameters(object):
         return table
 
     @property
-    def names(self):
-        """List of parameter names"""
-        return [par.name for par in self.parameters]
-
-    @property
     def _ufloats(self):
         """
         Return dict of ufloats with covariance
@@ -342,15 +349,6 @@ class Parameters(object):
         idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
-
-    def _init_covar(self):
-        if self.covariance is None:
-            shape = (len(self.parameters), len(self.parameters))
-            self.covariance = np.zeros(shape)
-
-    def copy(self):
-        """A deep copy"""
-        return copy.deepcopy(self)
 
     def optimiser_set_factors(self, factors):
         """Set factor of all parameters.
