@@ -31,8 +31,8 @@ class TestEnergyDispersion:
         edisp = EnergyDispersion.from_diagonal_matrix(e_true)
 
         assert edisp.pdf_matrix.shape == (3, 3)
-        assert_equal(edisp.pdf_matrix[0][0], 0)
-        assert_equal(edisp.pdf_matrix[2][0], 1)
+        assert_equal(edisp.pdf_matrix[0][0], 1)
+        assert_equal(edisp.pdf_matrix[2][0], 0)
 
         assert edisp.e_reco.bins.unit == 'TeV'
         assert_allclose(edisp.e_reco.bins.value, e_true.value)

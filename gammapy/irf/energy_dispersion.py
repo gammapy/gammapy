@@ -180,15 +180,20 @@ class EnergyDispersion(object):
         if e_reco is None:
             e_reco = e_true
 
-        data = np.flipud(np.eye(len(e_reco) - 1))
+        e_true_center = 0.5 * (e_true[1:] + e_true[:-1])
+        Etrue, Ereco_lo = np.meshgrid(e_true_center, e_reco[:-1])
+        Etrue, Ereco_hi = np.meshgrid(e_true_center, e_reco[1:])
+
+        data = np.logical_and(Etrue >= Ereco_lo, Etrue < Ereco_hi)
+        data = np.transpose(data).astype('float')
 
         return cls(
-            e_true_lo=e_true[:-1],
-            e_true_hi=e_true[1:],
-            e_reco_lo=e_reco[:-1],
-            e_reco_hi=e_reco[1:],
-            data=data,
-        )
+                e_true_lo=e_true[:-1],
+                e_true_hi=e_true[1:],
+                e_reco_lo=e_reco[:-1],
+                e_reco_hi=e_reco[1:],
+                data=data,
+            )
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
