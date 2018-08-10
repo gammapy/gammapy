@@ -5,7 +5,8 @@ import numpy as np
 from collections import OrderedDict
 from astropy.wcs import WCS
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
+from astropy.units import Quantity
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle
 from astropy.wcs.utils import proj_plane_pixel_scales
@@ -20,6 +21,23 @@ from .geom import find_and_read_bands
 __all__ = [
     'WcsGeom',
 ]
+
+
+def _check_width(width):
+    """Check and normalise width argument.
+
+    Always returns tuple (lon, lat) as float in degrees.
+    """
+    if isinstance(width, tuple):
+        lon = Angle(width[0], 'deg').deg
+        lat = Angle(width[1], 'deg').deg
+        return lon, lat
+    else:
+        angle = Angle(width, 'deg').deg
+        if np.isscalar(angle):
+            return angle, angle
+        else:
+            return tuple(angle)
 
 
 def cast_to_shape(param, shape, dtype):
@@ -270,7 +288,7 @@ class WcsGeom(MapGeom):
             self.center_pix[0],
             self.center_pix[1],
             self.wcs
-            )
+        )
 
     @property
     def pixel_scales(self):
@@ -357,6 +375,9 @@ class WcsGeom(MapGeom):
         else:
             raise ValueError(
                 'Invalid type for skydir: {}'.format(type(skydir)))
+
+        if width is not None:
+            width = _check_width(width)
 
         shape = max([get_shape(t) for t in [npix, binsz, width]])
         binsz = cast_to_shape(binsz, shape, float)
@@ -602,7 +623,7 @@ class WcsGeom(MapGeom):
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
             pix = list(pix) + bins
         else:
-            pix = self._wcs.wcs_world2pix(coords.lon, coords.lat,  0)
+            pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
             for i, ax in enumerate(self.axes):
                 pix += [ax.coord_to_pix(c[i + 2])]
 

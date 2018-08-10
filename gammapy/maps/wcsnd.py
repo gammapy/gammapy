@@ -4,11 +4,13 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
+from .wcs import _check_width
 from .utils import interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
@@ -636,8 +638,8 @@ class WcsNDMap(WcsMap):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lon, lat). If only one value is passed,
-            a square region is extracted. For more options see also `~astropy.nddata.utils.Cutout2D`.
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
         copy : bool, optional
@@ -648,9 +650,13 @@ class WcsNDMap(WcsMap):
         -------
         cutout : `~gammapy.maps.WcsNDMap`
             The cutout map itself
-        cutout_slices : Tuple of slice objects (with dimension 1 less than that of the non-spatial axes of the map)
         """
         idx = (0,) * len(self.geom.axes)
+
+        width = _check_width(width)
+
+        # We revert the order to comply with astropy.cutout2D ordering
+        width = width[::-1] * u.deg
 
         cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
                             position=position, size=width, mode=mode)
