@@ -8,6 +8,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
+from ..utils.fitting import fit_iminuit
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
@@ -946,8 +947,6 @@ class FluxPointFitter(object):
         best_fit_model : `~gammapy.spectrum.models.SpectralModel`
             Best fit model
         """
-        from ..utils.fitting import fit_iminuit
-
         p = self.parameters
         model = model.copy()
 
