@@ -652,12 +652,14 @@ class WcsNDMap(WcsMap):
 
         conv_function = fftconvolve if use_fft else convolve
         convolved_data = np.empty_like(self.data)
+        if use_fft:
+            kwargs.setdefault('mode', 'same')
 
         if isinstance(kernel, PSFKernel):
              kernel = kernel._psf_kernel_map.data
 
         for img, idx in self.iter_by_image():
-            idx = None if kernel.ndim == 2 else idx
+            idx = Ellipsis if kernel.ndim == 2 else idx
             convolved_data[idx] = conv_function(img, kernel[idx], **kwargs)
 
         return self._init_copy(data=convolved_data)

@@ -66,7 +66,7 @@ def test_psf_kernel_convolve():
     # is kernel maximum at the center?
     assert kernel.psf_kernel_map.data[30, 30] == np.max(kernel.psf_kernel_map.data)
 
-    conv_map = kernel.apply(testmap)
+    conv_map = testmap.convolve(kernel)
 
     # Is convolved map normalization OK
     assert_allclose(conv_map.data.sum(), 2.0, atol=1e-3)
@@ -95,6 +95,6 @@ def test_energy_dependent_psf_kernel():
 
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 
-    some_map_convolved = psf_kernel.apply(some_map)
+    some_map_convolved = some_map.convolve(psf_kernel)
 
     assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), np.array((0, 1, 1)))

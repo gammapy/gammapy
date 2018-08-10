@@ -148,7 +148,7 @@ class PSFKernel(object):
         psf_kernel = PSFKernel.from_table_psf(table_psf,geom, max_radius=1*u.deg)
 
         # Do the convolution
-        some_map_convolved = psf_kernel.apply(some_map)
+        some_map_convolved = some_map.convolve(psf_kernel)
 
         some_map_convolved.get_image_by_coord(dict(energy=0.6*u.TeV)).plot()
     """
@@ -252,36 +252,3 @@ class PSFKernel(object):
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
-
-    def apply(self, map, copy=True):
-        """Apply the kernel to an input Map.
-
-        Parameters
-        ----------
-        map : `~gammapy.maps.WcsNDMap`
-            the model map to be convolved with the PSFKernel.
-            It should have the same MapGeom than the current PSFKernel.
-        copy : bool
-            If set to True returns new map otherwise performs in-place convolution
-        Returns
-        -------
-        convolved_map : `~gammapy.maps.Map`
-            the convolved map
-        """
-        # check that kernel and map pixel sizes are consistent
-        s1 = map.geom.pixel_scales
-        s2 = self._psf_kernel_map.geom.pixel_scales
-
-        if (s1 - s2).max() > Angle('0.001 deg'):
-            raise ValueError('Map and kernel pixel scales are inconsistent')
-
-        if copy:
-            convolved_map = Map.from_geom(geom=map.geom, unit=map.unit, meta=map.meta)
-        else:
-            convolved_map = map
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=FutureWarning)
-            for img, idx in map.iter_by_image():
-                convolved_map.data[idx] = convolve_fft(img, self.psf_kernel_map.data[idx])
-        return convolved_map
