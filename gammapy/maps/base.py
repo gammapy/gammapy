@@ -6,13 +6,13 @@ import inspect
 import json
 import numpy as np
 from collections import OrderedDict
-from ..extern import six
-from ..utils.scripts import make_path
 from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from astropy.units import Quantity, Unit
 from .geom import pix_tuple_to_idx, MapCoord
+from ..extern import six
+from ..utils.scripts import make_path
+
 
 __all__ = [
     'Map',
@@ -97,7 +97,7 @@ class Map(object):
 
     @unit.setter
     def unit(self, val):
-        self._unit = Unit(val)
+        self._unit = u.Unit(val)
 
     @property
     def meta(self):
@@ -115,7 +115,7 @@ class Map(object):
 
     @quantity.setter
     def quantity(self, val):
-        val = Quantity(val)
+        val = u.Quantity(val)
         self.data = val.value
         self.unit = val.unit
 
@@ -404,7 +404,7 @@ class Map(object):
         # data vectors directly
         idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coord()
-        vals = Quantity(map_in.get_by_idx(idx), map_in.unit)
+        vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
     def reproject(self, geom, order=1, mode='interp'):
