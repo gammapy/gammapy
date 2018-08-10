@@ -17,7 +17,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function
@@ -26,7 +26,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with best-fit values
     minuit : `~iminuit.Minuit`
         Minuit object
@@ -74,7 +74,7 @@ class MinuitFunction(object):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function

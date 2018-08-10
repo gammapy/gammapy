@@ -8,7 +8,7 @@ from astropy.table import Table
 import astropy.units as u
 from ...catalog.fermi import SourceCatalog3FGL
 from ...utils.testing import requires_dependency, requires_data, assert_quantity_allclose
-from ...utils.modeling import ParameterList
+from ...utils.modeling import Parameters
 from ..results import SpectrumResult
 from ..fit import SpectrumFit
 from ..observation import SpectrumObservation
@@ -25,7 +25,7 @@ FLUX_POINTS_FILES = [
 
 
 class LWTestModel(SpectralModel):
-    parameters = ParameterList([])
+    parameters = Parameters([])
 
     @staticmethod
     def evaluate(x):
@@ -39,7 +39,7 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    parameters = ParameterList([])
+    parameters = Parameters([])
 
     @staticmethod
     def evaluate(x):
@@ -53,7 +53,7 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    parameters = ParameterList([])
+    parameters = Parameters([])
 
     @staticmethod
     def evaluate(x):

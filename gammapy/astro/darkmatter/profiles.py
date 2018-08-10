@@ -5,7 +5,7 @@ import abc
 import numpy as np
 import astropy.units as u
 from ...extern import six
-from ...utils.modeling import Parameter, ParameterList
+from ...utils.modeling import Parameter, Parameters
 from ...spectrum.utils import integrate_spectrum
 
 __all__ = [
@@ -88,7 +88,7 @@ class NFWProfile(DMProfile):
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('rho_s', u.Quantity(rho_s))
         ])
@@ -132,7 +132,7 @@ class EinastoProfile(DMProfile):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('alpha', u.Quantity(alpha)),
             Parameter('rho_s', u.Quantity(rho_s))
@@ -169,7 +169,7 @@ class IsothermalProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('rho_s', u.Quantity(rho_s))
         ])
@@ -204,7 +204,7 @@ class BurkertProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('rho_s', u.Quantity(rho_s))
         ])
@@ -240,7 +240,7 @@ class MooreProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('r_s', u.Quantity(r_s)),
             Parameter('rho_s', u.Quantity(rho_s))
         ])

@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import astropy.units as u
 from ...extern import xmltodict
-from ..modeling import Parameter, ParameterList
+from ..modeling import Parameter, Parameters
 from ...maps import Map
 from ...image import models as spatial
 from ...spectrum import models as spectral
@@ -26,7 +26,7 @@ __all__ = [
     'xml_to_sky_models',
     'xml_to_skymodel',
     'xml_to_model',
-    'xml_to_parameter_list',
+    'xml_to_parameters',
     'sky_models_to_xml',
 ]
 
@@ -189,7 +189,7 @@ def xml_to_model(xml, which):
         msg = "{} model '{}' not registered"
         raise UnknownModelError(msg.format(which, type_))
 
-    parameters = xml_to_parameter_list(xml['parameter'], which, type_)
+    parameters = xml_to_parameters(xml['parameter'], which, type_)
 
     if type_ in ['MapCubeFunction', 'DiffuseMapCube', 'DiffuseMap', 'SpatialMap']:
         filename = xml['@file']
@@ -228,13 +228,9 @@ def xml_to_model(xml, which):
     return model
 
 
-def xml_to_parameter_list(xml, which, type_):
-    """
-    Convert XML to `~gammapy.utils.modeling.ParameterList`
-
-    TODO: Introduce scale argument to `~gammapy.utils.modeling.Parameter`.
-    """
-    parameters = list()
+def xml_to_parameters(xml, which, type_):
+    """Convert XML to `~gammapy.utils.modeling.Parameters`."""
+    parameters = []
     for par in np.atleast_1d(xml):
         try:
             name, unit = model_registry[which][type_]['parameters'][par['@name']]
@@ -258,7 +254,7 @@ def xml_to_parameter_list(xml, which, type_):
             frozen=frozen,
         ))
 
-    return ParameterList(parameters)
+    return Parameters(parameters)
 
 
 def sky_models_to_xml(sourcelib):
@@ -314,15 +310,13 @@ def model_to_xml(model, which):
     if xml_type in ['MapCubeFunction', 'FileFunction']:
         xml += 'file="{}" '.format(model.meta['filename'])
     xml += 'type="{}">\n'.format(xml_type)
-    xml += parameter_list_to_xml(model.parameters, which)
+    xml += parameters_to_xml(model.parameters, which)
     xml += indent + '</{}>\n'.format(tag)
     return xml
 
 
-def parameter_list_to_xml(parameters, which):
-    """
-    Convert `~gammapy.utils.modeling.ParameterList` to XML
-    """
+def parameters_to_xml(parameters, which):
+    """Convert `~gammapy.utils.modeling.Parameters` to XML."""
     indent = 12 * ' '
     xml = ''
     val = '<parameter free="{}" max="{}" min="{}" name="{}" scale="1.0" value="{}">'

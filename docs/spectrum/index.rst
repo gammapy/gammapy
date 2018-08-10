@@ -53,7 +53,7 @@ It will print the following output to the console:
     Fit result info
     ---------------
     Model: PowerLaw
-    ParameterList
+    Parameters
     Parameter(name='index', value=2.1473880540790522, unit=Unit(dimensionless), min=0, max=None, frozen=False)
     Parameter(name='amplitude', value=2.7914083679020973e-11, unit=Unit("1 / (cm2 s TeV)"), min=0, max=None, frozen=False)
     Parameter(name='reference', value=1.0, unit=Unit("TeV"), min=None, max=None, frozen=True)

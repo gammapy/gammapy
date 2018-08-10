@@ -114,7 +114,7 @@ class SpectrumFitResult(object):
 
         return cls(model=model, fit_range=energy_range)
 
-    # TODO: rather add this to ParameterList?
+    # TODO: rather add this to Parameters?
     def to_table(self, energy_unit="TeV", flux_unit="cm-2 s-1 TeV-1", **kwargs):
         """Convert to `~astropy.table.Table`.
 
