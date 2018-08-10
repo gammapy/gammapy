@@ -33,9 +33,8 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
-    # TODO activate!
-    # if parameters.covariance is None:
-    #     parameters.scale()
+    if parameters.covariance is None:
+        parameters.scale()
 
     minuit_func = MinuitFunction(function, parameters)
 
