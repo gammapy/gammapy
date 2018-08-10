@@ -97,4 +97,4 @@ def test_energy_dependent_psf_kernel():
 
     some_map_convolved = some_map.convolve(psf_kernel)
 
-    assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), np.array((0, 1, 1)))
+    assert_allclose(some_map_convolved.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
