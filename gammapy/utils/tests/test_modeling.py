@@ -87,14 +87,6 @@ def test_parameters_basics(pars):
     assert_allclose(pars.error(1), 10)
 
 
-def test_parametrs_rescale(pars):
-    pars.optimiser_rescale_parameters()
-    assert_allclose(pars['spam'].factor, 1)
-    assert_allclose(pars['spam'].scale, 42)
-    assert_allclose(pars['ham'].factor, 1)
-    assert_allclose(pars['ham'].scale, 99)
-
-
 def test_parameters_covariance_to_table(pars):
     with pytest.raises(ValueError):
         pars.covariance_to_table()
@@ -102,3 +94,46 @@ def test_parameters_covariance_to_table(pars):
     pars.set_error('ham', 10)
     table = pars.covariance_to_table()
     assert_allclose(table['ham'][1], 100)
+
+
+def test_parameters_set_parameter_factors(pars):
+    pars.set_parameter_factors([77, 78])
+    assert_allclose(pars['spam'].factor, 77)
+    assert_allclose(pars['spam'].scale, 1)
+    assert_allclose(pars['ham'].factor, 78)
+    assert_allclose(pars['ham'].scale, 1)
+
+
+def _test_parameters_set_covariance_factors(pars):
+    cov_factor = [[3, 4], [7, 8]]
+    pars.set_covariance_factors(cov_factor)
+
+    assert isinstance(pars.covariance, np.ndarray)
+    cov_value = [[0, 0], [0, 0]]
+    assert_allclose(pars.covariance, cov_value)
+
+
+def test_parameters_scale():
+    pars = Parameters([
+        Parameter('', factor=10, scale=5),
+        Parameter('', factor=10, scale=50),
+        Parameter('', factor=100, scale=5),
+    ])
+
+    pars.scale()  # default: 'scale10'
+
+    assert_allclose(pars[0].factor, 5)
+    assert_allclose(pars[0].scale, 10)
+    assert_allclose(pars[1].factor, 5)
+    assert_allclose(pars[1].scale, 100)
+    assert_allclose(pars[2].factor, 5)
+    assert_allclose(pars[2].scale, 100)
+
+    pars.scale('factor1')
+
+    assert_allclose(pars[0].factor, 1)
+    assert_allclose(pars[0].scale, 50)
+    assert_allclose(pars[1].factor, 1)
+    assert_allclose(pars[1].scale, 500)
+    assert_allclose(pars[2].factor, 1)
+    assert_allclose(pars[2].scale, 500)

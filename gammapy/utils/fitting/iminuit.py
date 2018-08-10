@@ -33,7 +33,9 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
-    # parameters.optimiser_rescale_parameters()
+    # TODO activate!
+    # if parameters.covariance is None:
+    #     parameters.scale()
 
     minuit_func = MinuitFunction(function, parameters)
 
@@ -51,9 +53,9 @@ def fit_iminuit(parameters, function, opts_minuit=None):
                     **opts_minuit)
     minuit.migrad()
 
-    parameters.optimiser_set_factors(minuit.args)
+    parameters.set_parameter_factors(minuit.args)
     if minuit.covariance is not None:
-        parameters.optimiser_set_covariance(_get_covar(minuit))
+        parameters.set_covariance_factors(_get_covar(minuit))
     else:
         log.warning("No covariance matrix found")
         parameters.covariance = None
@@ -85,7 +87,7 @@ class MinuitFunction(object):
         self.parameters = parameters
 
     def fcn(self, *factors):
-        self.parameters.optimiser_set_factors(factors)
+        self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters)
 
 

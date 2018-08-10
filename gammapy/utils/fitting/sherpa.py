@@ -31,7 +31,7 @@ class SherpaFunction(object):
         self.parameters = parameters
 
     def fcn(self, factors):
-        self.parameters.optimiser_set_factors(factors)
+        self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters)
 
 
@@ -55,7 +55,10 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
         Parameter list with best-fit values
     """
     optimizer = get_sherpa_optimiser(optimizer)
-    # parameters.optimiser_rescale_parameters()
+
+    # TODO activate!
+    # if parameters.covariance is None:
+    #     parameters.scale()
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
@@ -81,6 +84,6 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
     result['nfev'] = result['info']['nfev']
 
     # Copy final results into the parameters object
-    parameters.optimiser_set_factors(result['factors'])
+    parameters.set_parameter_factors(result['factors'])
 
     return result

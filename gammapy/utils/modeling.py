@@ -136,14 +136,18 @@ class Parameter(object):
         self.unit = str(val.unit)
 
     def __repr__(self):
-        ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
-        ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
-        return ss.format(**self.to_dict())
+        return (
+            'Parameter(name={name!r}, value={value!r}, '
+            'factor={factor!r}, scale={scale!r}, unit={unit!r}, '
+            'min={min!r}, max={max!r}, frozen={frozen!r})'
+        ).format(**self.to_dict())
 
     def to_dict(self):
         return dict(
             name=self.name,
             value=self.value,
+            factor=self.factor,
+            scale=self.scale,
             unit=self.unit.to_string('fits'),
             min=self.min,
             max=self.max,
@@ -236,9 +240,7 @@ class Parameters(object):
         return result
 
     def to_table(self):
-        """
-        Serialize parameter list into `~astropy.table.Table`
-        """
+        """Convert parameter attributes to `~astropy.table.Table`."""
         names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
         formats = {'value': '.3e',
                    'error': '.3e',
@@ -350,7 +352,7 @@ class Parameters(object):
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
 
-    def optimiser_set_factors(self, factors):
+    def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
         Used in the optimiser interface.
@@ -358,7 +360,7 @@ class Parameters(object):
         for factor, parameter in zip(factors, self.parameters):
             parameter.factor = factor
 
-    def optimiser_set_covariance(self, matrix):
+    def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
         Used in the optimiser interface.
@@ -367,11 +369,32 @@ class Parameters(object):
         scale_matrix = scales[:, np.newaxis] * scales
         self.covariance = scale_matrix * matrix
 
-    def optimiser_rescale_parameters(self):
-        """Re-scale all parameters.
+    def scale(self, method='scale10'):
+        """Re-scale the parameters.
 
-        Updates parameter attributes as ``factor, scale = 1, value``,
-        which preserves the parameter ``value = factor * scale``.
+        By re-scale, we mean to change ``factor`` and ``scale``,
+        keeping the ``value = factor x scale`` the same.
+
+        You can call this method before fitting.
+
+        Available methods:
+
+        * ``scale10`` sets ``scale`` to power of 10,
+          so that factor is in the range 0.1 to 1
+        * ``factor1`` sets ``factor, scale = 1, value``
+
+        Parameters
+        ----------
+        method : {'factor1', 'scale10'}
+            Method to apply
         """
         for par in self.parameters:
-            par.factor, par.scale = 1, par.value
+            if method == 'scale10':
+                value = par.value
+                scale = np.power(10, int(np.log10(value)))
+                par.factor = value / scale
+                par.scale = scale
+            elif method == 'factor1':
+                par.factor, par.scale = 1, par.value
+            else:
+                raise ValueError('Invalid method: {}'.format(method))
