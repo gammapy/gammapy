@@ -26,26 +26,27 @@ class TestEnergyDispersion:
             bias=self.bias,
         )
 
-    def test_from_diagonal_matrix(self):
+    def test_from_diagonal_response(self):
         e_true = [0.5, 1, 2, 4, 6] * u.TeV
         e_reco = [2, 4, 6] * u.TeV
 
-        edisp = EnergyDispersion.from_diagonal_matrix(e_true, e_reco)
+        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
 
         assert edisp.pdf_matrix.shape == (4, 2)
-        expected = np.array(   [[0, 0],
-                                [0, 0],
-                                [1, 0],
-                                [0, 1]]
-                             )
+        expected = [[0, 0],
+                    [0, 0],
+                    [1, 0],
+                    [0, 1]]
+
         assert_equal(edisp.pdf_matrix, expected)
 
         # Test square matrix
-        edisp = EnergyDispersion.from_diagonal_matrix(e_true)
+        edisp = EnergyDispersion.from_diagonal_response(e_true)
         assert_allclose(edisp.e_reco.bins.value, e_true.value)
         assert edisp.e_reco.bins.unit == 'TeV'
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
+        assert edisp.pdf_matrix.sum() == 4
 
     def test_str(self):
         assert 'EnergyDispersion' in str(self.edisp)
