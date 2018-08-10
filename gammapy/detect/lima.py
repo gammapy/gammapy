@@ -39,20 +39,18 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     --------
     gammapy.stats.significance
     """
-    from scipy.ndimage import convolve
-
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
 
     kernel.normalize('peak')
     conv_opt = dict(mode='constant', cval=np.nan)
 
-    counts_conv = convolve(counts.data, kernel.array, **conv_opt)
-    background_conv = convolve(background.data, kernel.array, **conv_opt)
+    counts_conv = counts.convolve(kernel.array, use_fft=False, **conv_opt).data
+    background_conv = background.convolve(kernel.array, use_fft=False, **conv_opt).data
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    # TODO: we should make coopies of the geom to make them independent objects
+    # TODO: we should make copies of the geom to make them independent objects
     images = {
         'significance': counts.copy(data=significance_conv),
         'counts': counts.copy(data=counts_conv),
@@ -104,8 +102,8 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     kernel.normalize('peak')
     conv_opt = dict(mode='constant', cval=np.nan)
 
-    n_on_conv = convolve(n_on.data, kernel.array, **conv_opt)
-    a_on_conv = convolve(a_on.data, kernel.array, **conv_opt)
+    n_on_conv = n_on.convolve(kernel.array, use_fft=False, **conv_opt).data
+    a_on_conv = a_on.convolve(kernel.array, use_fft=False, **conv_opt).data
     alpha_conv = a_on_conv / a_off.data
     background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv

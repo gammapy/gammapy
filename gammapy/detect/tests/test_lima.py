@@ -26,6 +26,9 @@ def test_compute_lima_image():
 
     assert_allclose(result_lima['significance'].data[100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima['flux'].data[100, 100], 4.10000e-10, atol=3e-12)
+    assert_allclose(result_lima['significance'].data[1, 1], np.nan, atol=1e-3)
+    assert_allclose(result_lima['flux'].data[1, 1], np.nan, atol=3e-12)
+
 
 
 @requires_dependency('scipy')

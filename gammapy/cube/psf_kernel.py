@@ -5,7 +5,6 @@ import warnings
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
-from astropy.convolution import convolve_fft
 from ..utils.gauss import Gauss2DPDF
 from ..maps import Map, WcsGeom
 from ..irf import TablePSF
