@@ -6,7 +6,7 @@ from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
-from .exposure import make_map_exposure_true_energy, weighted_exposure
+from .exposure import make_map_exposure_true_energy, weighted_exposure_image
 from .background import make_map_background_irf, _fov_background_norm
 
 __all__ = [
@@ -135,8 +135,7 @@ class MapMaker(object):
         images = dict()
         for name, map in self.maps.items():
             if name == 'exposure':
-                expo = weighted_exposure(map, spectrum)
-                images[name] = expo.sum_over_axes()
+                images[name] = weighted_exposure_image(map, spectrum)
             else:
                 images[name] = map.sum_over_axes()
 

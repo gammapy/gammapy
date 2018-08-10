@@ -7,7 +7,7 @@ from ..maps import WcsNDMap, MapAxis, Map
 
 __all__ = [
     'make_map_exposure_true_energy',
-    'weighted_exposure',
+    'weighted_exposure_image',
 ]
 
 
@@ -46,7 +46,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     return WcsNDMap(geom, exposure.value, unit=exposure.unit)
 
-def weighted_exposure(exposure_map, spectrum=None):
+def weighted_exposure_image(exposure_map, spectrum=None):
     """Create an exposure map in reco energy from an exposure map in true energy.
 
     Exposure in true energy is weighted with an input spectrum and redistributed in
@@ -66,17 +66,17 @@ def weighted_exposure(exposure_map, spectrum=None):
         Resulting weighted image. The unit is the same as the input map.
     """
     expo_map = exposure_map.copy()
-    etrue_axis = expo_map.geom.get_axis_by_name("energy")
-    etrue_center = etrue_axis.center * etrue_axis.unit
-    etrue_edges = etrue_axis.edges * etrue_axis.unit
-    binsize = np.diff(etrue_edges)
+    energy_axis = expo_map.geom.get_axis_by_name("energy")
+    energy_center = energy_axis.center * energy_axis.unit
+    energy_edges = energy_axis.edges * energy_axis.unit
+    binsize = np.diff(energy_edges)
 
     if spectrum is None:
         spectrum = PowerLaw(index=2.0)
-    weights = spectrum(etrue_center)*binsize
+    weights = spectrum(energy_center)*binsize
     weights /= weights.sum()
 
     for img, idx in expo_map.iter_by_image():
         img *= weights[idx].value
 
-    return expo_map
+    return expo_map.sum_over_axes()
