@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude
 from ...extern import six
-from ...utils.modeling import Parameter, ParameterList
+from ...utils.modeling import Parameter, Parameters
 from ...maps import Map
 
 __all__ = [
@@ -70,7 +70,7 @@ class SkyPointSource(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('lon_0', Longitude(lon_0)),
             Parameter('lat_0', Latitude(lat_0))
         ])
@@ -114,7 +114,7 @@ class SkyGaussian(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, sigma):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('lon_0', Longitude(lon_0)),
             Parameter('lat_0', Latitude(lat_0)),
             Parameter('sigma', Angle(sigma))
@@ -158,7 +158,7 @@ class SkyDisk(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, r_0):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('lon_0', Longitude(lon_0)),
             Parameter('lat_0', Latitude(lat_0)),
             Parameter('r_0', Angle(r_0))
@@ -209,7 +209,7 @@ class SkyShell(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, radius, width):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('lon_0', Longitude(lon_0)),
             Parameter('lat_0', Latitude(lat_0)),
             Parameter('radius', Angle(radius)),
@@ -244,7 +244,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     """
 
     def __init__(self, value=1):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('value', value),
         ])
 
@@ -273,7 +273,7 @@ class SkyDiffuseMap(SkySpatialModel):
     def __init__(self, map, norm=1, meta=None):
         self.map = map
         self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('norm', norm),
         ])
         self.meta = dict() if meta is None else meta

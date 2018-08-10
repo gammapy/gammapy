@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from ...modeling import ParameterList, Parameter
+from ...modeling import Parameters, Parameter
 from ...testing import requires_dependency
 from .. import fit_iminuit
 
@@ -15,7 +15,7 @@ def fcn(parameters):
 
 @requires_dependency('iminuit')
 def test_iminuit():
-    pars = ParameterList(
+    pars = Parameters(
         [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
     )
 

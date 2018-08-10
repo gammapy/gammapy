@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy import units as u
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
-from ..utils.modeling import ParameterList
+from ..utils.modeling import Parameters
 
 __all__ = [
     'CrabSpectrum',
@@ -58,7 +58,7 @@ class MeyerCrabModel(SpectralModel):
     coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708])
 
     def __init__(self):
-        self.parameters = ParameterList([])
+        self.parameters = Parameters([])
 
     @staticmethod
     def evaluate(energy):

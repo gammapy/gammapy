@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ...extern import six
-from ..modeling import Parameter, ParameterList
+from ..modeling import Parameter, Parameters
 
 
 def test_parameter_init():
@@ -68,8 +68,8 @@ def test_parameter_to_dict():
     assert isinstance(d['unit'], six.string_types)
 
 
-def test_parameter_list():
-    pars = ParameterList([
+def test_parameters():
+    pars = Parameters([
         Parameter('spam', 42, 'deg'),
         Parameter('ham', 99, 'TeV'),
     ])

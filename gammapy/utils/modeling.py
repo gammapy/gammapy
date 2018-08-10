@@ -12,7 +12,7 @@ from .array import check_type
 
 __all__ = [
     'Parameter',
-    'ParameterList',
+    'Parameters',
 ]
 
 
@@ -153,7 +153,7 @@ class Parameter(object):
         )
 
 
-class ParameterList(object):
+class Parameters(object):
     """List of `~gammapy.spectrum.models.Parameter`
 
     Holds covariance matrix

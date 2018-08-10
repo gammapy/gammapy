@@ -11,7 +11,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
-from ..utils.modeling import Parameter, ParameterList
+from ..utils.modeling import Parameter, Parameters
 
 __all__ = [
     'SpectralModel',
@@ -33,7 +33,7 @@ class SpectralModel(object):
     """Spectral model base class.
 
     Derived classes should store their parameters as
-    `~gammapy.utils.modeling.ParameterList`
+    `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
@@ -236,7 +236,7 @@ class SpectralModel(object):
     def from_dict(cls, val):
         """Create from dict."""
         classname = val.pop('name')
-        parameters = ParameterList.from_dict(val)
+        parameters = Parameters.from_dict(val)
         model = globals()[classname]()
         model.parameters = parameters
         model.parameters.covariance = parameters.covariance
@@ -436,7 +436,7 @@ class ConstantModel(SpectralModel):
     """
 
     def __init__(self, const):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('const', const)
         ])
 
@@ -461,7 +461,7 @@ class CompoundSpectralModel(SpectralModel):
     @property
     def parameters(self):
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
-        return ParameterList(val)
+        return Parameters(val)
 
     @parameters.setter
     def parameters(self, parameters):
@@ -523,7 +523,7 @@ class PowerLaw(SpectralModel):
 
     def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, min=0, frozen=True)
@@ -711,7 +711,7 @@ class PowerLaw2(SpectralModel):
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
                  emin=0.1 * u.TeV, emax=100 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('index', index),
             Parameter('emin', emin, frozen=True),
@@ -834,7 +834,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, lambda_=0.1 / u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
@@ -910,7 +910,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, ecut=10 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
@@ -969,7 +969,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, ecut=10 * u.TeV):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut),
@@ -1037,7 +1037,7 @@ class LogParabola(SpectralModel):
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
                  alpha=2, beta=1):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('alpha', alpha),
@@ -1111,7 +1111,7 @@ class TableModel(SpectralModel):
 
     def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
         from scipy.interpolate import interp1d
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('scale', scale, min=0, unit='')
         ])
         self.energy = energy
@@ -1486,7 +1486,7 @@ class AbsorbedSpectralModel(SpectralModel):
                         frozen=True)
         param_list.append(par)
 
-        self.parameters = ParameterList(param_list)
+        self.parameters = Parameters(param_list)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""

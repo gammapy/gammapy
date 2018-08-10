@@ -20,7 +20,7 @@ class SherpaFunction(object):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function
@@ -40,7 +40,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameter list with starting values.
     function : callable
         Likelihood function
@@ -51,7 +51,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameter list with best-fit values
     """
     optimizer = get_sherpa_optimiser(optimizer)

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from numpy.testing import assert_allclose
 from ...testing import requires_dependency
-from ...modeling import Parameter, ParameterList
+from ...modeling import Parameter, Parameters
 from ..sherpa import fit_sherpa
 
 
@@ -20,7 +20,7 @@ def fcn(parameters):
 @requires_dependency('sherpa')
 @pytest.mark.parametrize('optimizer', ['moncar', 'simplex'])
 def test_sherpa(optimizer):
-    pars = ParameterList(
+    pars = Parameters(
         [Parameter('x', 2.2), Parameter('y', 3.4), Parameter('z', 4.5)]
     )
 

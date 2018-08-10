@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import astropy.units as u
 import operator
-from ..utils.modeling import ParameterList, Parameter
+from ..utils.modeling import Parameters, Parameter
 from ..utils.scripts import make_path
 from ..maps import Map
 
@@ -83,7 +83,7 @@ class SkyModel(object):
     """Sky model component.
 
     This model represents a factorised sky model.
-    It has a `~gammapy.utils.modeling.ParameterList`
+    It has a `~gammapy.utils.modeling.Parameters`
     combining the spatial and spectral parameters.
 
     TODO: add possibility to have a temporal model component also.
@@ -102,7 +102,7 @@ class SkyModel(object):
         self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
-        self._parameters = ParameterList(
+        self._parameters = Parameters(
             spatial_model.parameters.parameters +
             spectral_model.parameters.parameters
         )
@@ -119,7 +119,7 @@ class SkyModel(object):
 
     @property
     def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
+        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
 
     @parameters.setter
@@ -193,14 +193,14 @@ class CompoundSkyModel(object):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        self._parameters = ParameterList(
+        self._parameters = Parameters(
             self.model1.parameters.parameters +
             self.model2.parameters.parameters
         )
 
     @property
     def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.ParameterList`)"""
+        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
 
     @parameters.setter
@@ -260,7 +260,7 @@ class SumSkyModel(object):
         for model in self.components:
             for p in model.parameters.parameters:
                 pars.append(p)
-        self._parameters = ParameterList(pars)
+        self._parameters = Parameters(pars)
 
     @property
     def parameters(self):
@@ -315,7 +315,7 @@ class SkyDiffuseCube(object):
 
         self.map = map
         self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('norm', norm),
         ])
         self.meta = {} if meta is None else meta

@@ -282,7 +282,7 @@ class SpectrumFit(object):
 
         Parameters
         ----------
-        parameters : `~gammapy.utils.fitting.ParameterList`
+        parameters : `~gammapy.utils.fitting.Parameters`
             Model parameters
         """
         self._model.parameters = parameters
@@ -374,7 +374,7 @@ class SpectrumFit(object):
 
         Parameters
         ----------
-        parameters : `~gammapy.utils.modeling.ParameterList`
+        parameters : `~gammapy.utils.modeling.Parameters`
             Best fit parameters
         """
         from . import SpectrumFitResult
