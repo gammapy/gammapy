@@ -182,17 +182,18 @@ class EnergyDispersion(object):
 
         Examples
         --------
+        If ``e_true`` equals ``e_reco``, you get a diagonal matrix::
 
-        >>> e_true = [0.5, 1, 2, 4, 6] * u.TeV
-        >>> e_reco = [2, 4, 6] * u.TeV
-        >>> edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
-        >>> edisp.plot_matrix()
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true)
+            edisp.plot_matrix()
 
-        For a square matrix where e_true = e_reco
-        >>> e_true = [0.5, 1, 2, 4, 6] * u.TeV
-        >>> edisp = EnergyDispersion.from_diagonal_response(e_true)
-        >>> edisp.plot_matrix()
+        Example with different energy binnings::
 
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            e_reco = [2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+            edisp.plot_matrix()
         """
         if e_reco is None:
             e_reco = e_true
