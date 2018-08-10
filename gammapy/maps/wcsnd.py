@@ -635,7 +635,7 @@ class WcsNDMap(WcsMap):
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional it must match the map in the number of
-        dimensions and the correspoding kernel is selected for every image plane.
+        dimensions and the corresponding kernel is selected for every image plane.
 
         Parameters
         ----------
@@ -662,7 +662,7 @@ class WcsNDMap(WcsMap):
             kwargs.setdefault('mode', 'same')
 
         if isinstance(kernel, PSFKernel):
-             kernel = kernel._psf_kernel_map.data
+            kernel = kernel.psf_kernel_map.data
 
         for img, idx in self.iter_by_image():
             idx = Ellipsis if kernel.ndim == 2 else idx
@@ -670,10 +670,9 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=convolved_data)
 
-
     def cutout(self, position, width, mode='trim', copy=True):
         """
-        Create a cutout of a WcsNDMap around a given position.
+        Create a cutout around a given position.
 
         Parameters
         ----------
@@ -693,20 +692,21 @@ class WcsNDMap(WcsMap):
         cutout : `~gammapy.maps.WcsNDMap`
             The cutout map itself
         """
-        idx = (0,) * len(self.geom.axes)
-
         width = _check_width(width)
-
-        # We revert the order to comply with astropy.cutout2D ordering
-        width = width[::-1] * u.deg
-
-        cutout2d = Cutout2D(data=self.data[idx], wcs=self.geom.wcs,
-                            position=position, size=width, mode=mode)
+        idx = (0,) * len(self.geom.axes)
+        c2d = Cutout2D(
+            data=self.data[idx],
+            wcs=self.geom.wcs,
+            position=position,
+            # Cutout2D takes size with order (lat, lon)
+            size=width[::-1] * u.deg,
+            mode=mode,
+        )
 
         # Create the slices with the non-spatial axis
-        cutout_slices = Ellipsis, cutout2d.slices_original[0], cutout2d.slices_original[1]
+        cutout_slices = Ellipsis, c2d.slices_original[0], c2d.slices_original[1]
 
-        geom = WcsGeom(cutout2d.wcs, cutout2d.shape[::-1], axes=self.geom.axes)
+        geom = WcsGeom(c2d.wcs, c2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
 
         if copy:
