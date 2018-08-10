@@ -50,3 +50,13 @@ def test_compute_ts_map_downsampled(input_maps):
     assert_allclose(result['flux'].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result['flux_err'].data[99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result['flux_ul'].data[99, 99], 1.10e-09, rtol=1e-2)
+
+@requires_data('gammapy-extra')
+def test_large_kernel(input_maps):
+    """Minimal test of compute_ts_image"""
+    kernel = Gaussian2DKernel(100)
+    ts_estimator = TSMapEstimator()
+
+    with pytest.raises(ValueError) as err:
+        result = ts_estimator.run(input_maps, kernel=kernel)
+        assert 'Kernel shape larger' in str(err.value)

@@ -258,6 +258,10 @@ class TSMapEstimator(object):
         """
         p = self.parameters
 
+        if (np.array(kernel.shape) > np.array(maps['counts'].data.shape)).any():
+            raise ValueError('Kernel shape larger than map shape, please adjust'
+                             ' size of the kernel')
+
         if downsampling_factor:
             shape = maps['counts'].data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
