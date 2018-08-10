@@ -320,11 +320,11 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_edisp(flux.value)
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 7.312833e-13, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 3.007569e-14, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 3.007569e-14, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 4.914477e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.15636e-07, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 1.15636e-07, rtol=1e-5)
