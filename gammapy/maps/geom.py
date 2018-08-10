@@ -125,7 +125,8 @@ def find_and_read_bands(hdu, header=None):
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
             unit = header.get('CUNIT%i' % (3 + i), '')
-
+        if unit is None:
+            unit = ''
         if len(cols) == 2:
             xmin = np.unique(hdu.data.field(cols[0]))
             xmax = np.unique(hdu.data.field(cols[1]))
@@ -351,17 +352,17 @@ class MapAxis(object):
     unit : str
         String specifying the data units.
     """
-
+    __slots__ = ['_name', '_nodes', '_node_type', '_interp', '_pix_offset', '_nbin', '_unit']
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
     def __init__(self, nodes, interp='lin', name='',
                  node_type='edge', unit=''):
-        self._name = name
-        self._interp = interp
+        self.name = name
+        self.unit = unit
         self._nodes = nodes
         self._node_type = node_type
-        self._unit = u.Unit('' if unit is None else unit)
+        self._interp = interp
 
         # Set pixel coordinate of first node
         if node_type == 'edge':
@@ -423,6 +424,10 @@ class MapAxis(object):
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = u.Unit(val)
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
