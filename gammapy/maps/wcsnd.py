@@ -629,17 +629,21 @@ class WcsNDMap(WcsMap):
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
-        Convolve map with given kernel.
+        Convolve map with a kernel.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the correspoding kernel is selected for every image plane.
 
         Parameters
         ----------
-        kernel : `PSFKernel` or `np.ndarray`
+        kernel : `PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
-            Use `~scipy.signal.fftconvolve` or `~scipy.ndimage.convolve`.
+            Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.
         kwargs : dict
-            Keyword arguments passed to `~scipy.signal.fftconvolve` or
-            `~scipy.ndimage.convolve`.
+            Keyword arguments passed to `scipy.signal.fftconvolve` or
+            `scipy.ndimage.convolve`.
 
         Returns
         -------
