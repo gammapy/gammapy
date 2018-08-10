@@ -164,11 +164,9 @@ class TSMapEstimator(object):
         flux_approx : `WcsNDMap`
             Approximate flux map.
         """
-        from scipy.signal import fftconvolve
         flux = (maps['counts'].data - maps['background'].data) / maps['exposure'].data
-        flux = fftconvolve(flux, kernel.array, mode='same')
-        flux /= np.sum(kernel.array ** 2)
-        return maps['counts'].copy(data=flux)
+        flux = maps['counts'].copy(data=flux / np.sum(kernel.array ** 2))
+        return flux.convolve(kernel.array)
 
     @staticmethod
     def mask_default(maps, kernel):

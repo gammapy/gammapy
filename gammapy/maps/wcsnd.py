@@ -629,6 +629,48 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=data)
 
+    def convolve(self, kernel, use_fft=True, **kwargs):
+        """
+        Convolve map with a kernel.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the correspoding kernel is selected for every image plane.
+
+        Parameters
+        ----------
+        kernel : `PSFKernel` or `numpy.ndarray`
+            Convolution kernel.
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.
+        kwargs : dict
+            Keyword arguments passed to `scipy.signal.fftconvolve` or
+            `scipy.ndimage.convolve`.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Convolved map.
+        """
+        from scipy.signal import fftconvolve
+        from scipy.ndimage import convolve
+        from ..cube.psf_kernel import PSFKernel
+
+        conv_function = fftconvolve if use_fft else convolve
+        convolved_data = np.empty(self.data.shape, dtype=np.float32)
+        if use_fft:
+            kwargs.setdefault('mode', 'same')
+
+        if isinstance(kernel, PSFKernel):
+             kernel = kernel._psf_kernel_map.data
+
+        for img, idx in self.iter_by_image():
+            idx = Ellipsis if kernel.ndim == 2 else idx
+            convolved_data[idx] = conv_function(img, kernel[idx], **kwargs)
+
+        return self._init_copy(data=convolved_data)
+
+
     def cutout(self, position, width, mode='trim', copy=True):
         """
         Create a cutout of a WcsNDMap around a given position.

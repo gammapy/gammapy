@@ -5,7 +5,6 @@ from collections import OrderedDict
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
-from astropy.convolution import convolve_fft, convolve
 from astropy.coordinates import Angle
 from ..image.utils import scale_cube
 
@@ -13,33 +12,6 @@ __all__ = [
     'AdaptiveRingBackgroundEstimator',
     'RingBackgroundEstimator',
 ]
-
-
-def _convolve_map(map, kernel, use_fft=True):
-    """Convolve input map with kernel.
-
-    The same kernel is used for each 2D map along the map axes.
-
-    Parameters
-    ----------
-    map : `~gammapy.maps.WcsNDMap`
-        input map
-    kernel : `~astropy.convolution.Ring2DKernel`
-        the kernel
-
-    Returns
-    -------
-    convolved_map : `~gammapy.maps.WcsNDMap`
-        output map
-    """
-    convolved_map = map.copy()
-    for img, idx in map.iter_by_image():
-        if use_fft:
-            convolved_map.data[idx] = convolve_fft(img, kernel, normalize_kernel=False)
-        else:
-            convolved_map.data[idx] = convolve(img, kernel, normalize_kernel=False)
-
-    return convolved_map
 
 
 class AdaptiveRingBackgroundEstimator(object):
@@ -183,15 +155,13 @@ class AdaptiveRingBackgroundEstimator(object):
         Calculated by convolving the on exposure with a tophat
         of radius theta, and stacking all images along the third dimension.
         """
-        from scipy.ndimage import convolve
-
         scale = exposure_on.geom.pixel_scales[0].to('deg')
         theta = self.parameters['theta'] * scale
 
         tophat = Tophat2DKernel(theta.value)
         tophat.normalize('peak')
-        exposure_on = convolve(exposure_on.data, tophat.array)
-        exposure_on_cube = np.repeat(exposure_on[:, :, np.newaxis], len(kernels), axis=2)
+        exposure_on = exposure_on.convolve(tophat.array)
+        exposure_on_cube = np.repeat(exposure_on.data[:, :, np.newaxis], len(kernels), axis=2)
         return exposure_on_cube
 
     @staticmethod
@@ -383,10 +353,10 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = counts.copy(data=counts.data * exclusion.data.astype('float'))
-        result['off'] = _convolve_map(counts_excluded, ring, p['use_fft_convolution'])
+        result['off'] = counts_excluded.convolve(ring.array, use_fft=p['use_fft_convolution'])
 
         exposure_on_excluded = exposure_on.copy(data=exposure_on.data * exclusion.data.astype('float'))
-        result['exposure_off'] = _convolve_map(exposure_on_excluded, ring, p['use_fft_convolution'])
+        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, use_fft=p['use_fft_convolution'])
 
         with np.errstate(divide='ignore', invalid='ignore'):
             # set pixels, where ring is too small to NaN

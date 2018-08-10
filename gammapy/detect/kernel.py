@@ -159,12 +159,10 @@ class KernelBackgroundEstimator(object):
         Estimate background by convolving the excluded counts image with
         the background kernel and renormalizing the image.
         """
-        from scipy.ndimage import convolve
-        vals = convolve(counts.data * exclusion.data, self.kernel_bkg, mode='constant')
-        norm = convolve(exclusion.data, self.kernel_bkg, mode='constant')
-        bkg = Map.from_geom(counts.geom)
-        bkg.data = vals / norm
-        return bkg
+        counts_excluded = counts.copy(data=counts.data * exclusion.data)
+        vals = counts_excluded.convolve(self.kernel_bkg)
+        norm = exclusion.convolve(self.kernel_bkg)
+        return counts.copy(data=vals.data / norm.data)
 
     @staticmethod
     def _is_converged(result, result_previous):
