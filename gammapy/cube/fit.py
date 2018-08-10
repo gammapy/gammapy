@@ -227,20 +227,19 @@ class MapEvaluator(object):
 
         For now just divide flux cube by exposure
         """
-        npred_ = (flux * self.exposure.quantity).to('')
         npred = Map.from_geom(self.geom, unit='')
-        npred.data = npred_.value
+        npred.data = (flux * self.exposure.quantity).to('').value
         return npred
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
         return self.psf.apply(npred)
 
-    def apply_edisp(self, npred):
-        """Convolve npred cube with edisp"""
-        a = np.rollaxis(npred, 0, 3)
-        npred1 = np.dot(a, self.edisp.pdf_matrix)
-        return np.rollaxis(npred1, 2, 0)
+    def apply_edisp(self, data):
+        """Convolve map data with energy dispersion."""
+        data = np.rollaxis(data, 0, 3)
+        data = np.dot(data, self.edisp.pdf_matrix)
+        return np.rollaxis(data, 2, 0)
 
     def compute_npred(self):
         """Evaluate model predicted counts.

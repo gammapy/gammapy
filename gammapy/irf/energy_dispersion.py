@@ -165,22 +165,45 @@ class EnergyDispersion(object):
         return edisp.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
 
     @classmethod
-    def from_diagonal_matrix(cls, e_true, e_reco=None):
-        """Create from diagonal unit matrix.
+    def from_diagonal_response(cls, e_true, e_reco=None):
+        """Create energy dispersion from a diagonal response, i.e. perfect energy resolution
 
-        This is useful for testing.
-        Or in cases where code always applies an edisp,
+        This creates the matrix corresponding to a perfect energy response.
+        It contains ones where the e_true center is inside the e_reco bin.
+        It is a square diagonal matrix if e_true = e_reco.
+
+        This is useful in cases where code always applies an edisp,
         but you don't want it to do anything.
 
         Parameters
         ----------
         e_true, e_reco : `~astropy.units.Quantity`
             Energy bounds for true and reconstructed energy axis
+
+        Examples
+        --------
+        If ``e_true`` equals ``e_reco``, you get a diagonal matrix::
+
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true)
+            edisp.plot_matrix()
+
+        Example with different energy binnings::
+
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            e_reco = [2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+            edisp.plot_matrix()
         """
         if e_reco is None:
             e_reco = e_true
 
-        data = np.flipud(np.eye(len(e_reco) - 1))
+        e_true_center = 0.5 * (e_true[1:] + e_true[:-1])
+        etrue_2d, ereco_lo_2d = np.meshgrid(e_true_center, e_reco[:-1])
+        etrue_2d, ereco_hi_2d = np.meshgrid(e_true_center, e_reco[1:])
+
+        data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
+        data = np.transpose(data).astype('float')
 
         return cls(
             e_true_lo=e_true[:-1],
