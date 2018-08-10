@@ -51,7 +51,7 @@ def background(geom):
 @pytest.fixture(scope='session')
 def edisp(geom):
     e_true = geom.get_axis_by_name('energy').edges
-    return EnergyDispersion.from_diagonal_matrix(e_true=e_true)
+    return EnergyDispersion.from_diagonal_response(e_true=e_true)
 
 
 @pytest.fixture(scope='session')

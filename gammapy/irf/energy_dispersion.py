@@ -182,7 +182,7 @@ class EnergyDispersion(object):
 
         Examples
         --------
-        
+
         >>> e_true = [0.5, 1, 2, 4, 6] * u.TeV
         >>> e_reco = [2, 4, 6] * u.TeV
         >>> edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
