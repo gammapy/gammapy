@@ -61,6 +61,12 @@ def test_parameter_repr():
     assert repr(par).startswith('Parameter(name=')
 
 
+def test_parameter_to_dict():
+    par = Parameter('spam', 42, 'deg')
+    d = par.to_dict()
+    assert isinstance(d['unit'], str)
+
+
 def test_parameter_list():
     pars = ParameterList([
         Parameter('spam', 42, 'deg'),
