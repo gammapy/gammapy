@@ -377,7 +377,7 @@ class Parameters(object):
         Available methods:
 
         * ``scale10`` sets ``scale`` to power of 10,
-          so that factor is in the range 0.1 to 1
+          so that factor is in the range 1 to 10
         * ``factor1`` sets ``factor, scale = 1, value``
 
         Parameters
@@ -388,7 +388,7 @@ class Parameters(object):
         for par in self.parameters:
             if method == 'scale10':
                 value = par.value
-                scale = np.power(10, int(np.log10(value)))
+                scale = 10 ** int(np.log10(value))
                 par.factor = value / scale
                 par.scale = scale
             elif method == 'factor1':
