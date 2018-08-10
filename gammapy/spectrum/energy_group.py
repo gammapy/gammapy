@@ -251,7 +251,7 @@ class SpectrumEnergyGroupMaker(object):
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
-        ebounds_src = self.obs.e_reco
+        ebounds_src = self.obs.e_reco.to(ebounds.unit)
         bin_edges_src = np.arange(len(ebounds_src))
 
         temp = np.interp(ebounds, ebounds_src, bin_edges_src)
@@ -277,6 +277,11 @@ class SpectrumEnergyGroupMaker(object):
                 energy_max=ebounds_src[bin_edges[idx + 1]],
             )
             groups.append(group)
+
+        if groups == []:
+            err_str = "Input binning\n{}\n has no overlap with"
+            err_str += " target binning\n{}"
+            raise ValueError(err_str.format(ebounds, ebounds_src))
 
         # Add underflow bin
         start_edge = groups[0].bin_idx_min
