@@ -127,7 +127,10 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
-    @pytest.mark.parametrize("ebounds", [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV])
+    @pytest.mark.parametrize("ebounds", [
+        [1.8, 4.8, 7.2] * u.TeV,
+        [2, 5, 7] * u.TeV,
+        [2000, 5000, 7000] * u.GeV])
     def test_compute_groups_fixed_edges(self, obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
@@ -168,3 +171,9 @@ class TestSpectrumEnergyGroupMaker:
         ])
 
         assert groups == expected
+
+    def test_compute_groups_fixed_outside_range(self, obs):
+        ebounds = [20, 30, 40] * u.TeV
+        seg = SpectrumEnergyGroupMaker(obs=obs)
+        with pytest.raises(ValueError):
+            seg.compute_groups_fixed(ebounds=ebounds)
