@@ -68,11 +68,15 @@ def test_parameter_to_dict():
     assert isinstance(d['unit'], six.string_types)
 
 
-def test_parameters():
-    pars = Parameters([
+@pytest.fixture()
+def pars():
+    return Parameters([
         Parameter('spam', 42, 'deg'),
         Parameter('ham', 99, 'TeV'),
     ])
+
+
+def test_parameters_basics(pars):
     # This applies a unit transformation
     pars.set_parameter_errors({
         'ham': '10000 GeV',
@@ -82,9 +86,19 @@ def test_parameters():
     assert_allclose(pars.error('spam'), 0.1)
     assert_allclose(pars.error(1), 10)
 
+
+def test_parametrs_rescale(pars):
     pars.optimiser_rescale_parameters()
     assert_allclose(pars['spam'].factor, 1)
     assert_allclose(pars['spam'].scale, 42)
     assert_allclose(pars['ham'].factor, 1)
     assert_allclose(pars['ham'].scale, 99)
-    assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
+
+
+def test_parameters_covariance_to_table(pars):
+    with pytest.raises(ValueError):
+        pars.covariance_to_table()
+
+    pars.set_error('ham', 10)
+    table = pars.covariance_to_table()
+    assert_allclose(table['ham'][1], 100)

@@ -7,7 +7,7 @@ import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
-from astropy.table import Table, Column, vstack
+from astropy.table import Table, Column
 from .array import check_type
 
 __all__ = [
@@ -168,8 +168,18 @@ class Parameters(object):
     """
 
     def __init__(self, parameters, covariance=None):
-        self.parameters = parameters
+        self._parameters = parameters
         self.covariance = covariance
+
+    @property
+    def parameters(self):
+        """List of `Parameter`."""
+        return self._parameters
+
+    # TODO: replace this with a better API to update parameters
+    @parameters.setter
+    def parameters(self, vals):
+        self._parameters = vals
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -245,21 +255,17 @@ class Parameters(object):
 
         return cls(parameters=pars, covariance=covariance)
 
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
     def covariance_to_table(self):
-        """
-        Serialize parameter covariance into `~astropy.table.Table`
-        """
-        t = Table(self.covariance, names=self.names)[self.free]
-        for name in t.colnames:
-            t[name].format = '.3'
+        """Convert covariance matrix to `~astropy.table.Table`."""
+        if self.covariance is None:
+            raise ValueError('No covariance available')
 
-        col = Column(name='name/name', data=self.names)
-        t.add_column(col, index=0)
-
-        rows = [row for row in t if row['name/name'] in self.free]
-        return vstack(rows)
+        table = Table()
+        table['name'] = self.names
+        for idx, par in enumerate(self.parameters):
+            vals = self.covariance[idx]
+            table[par.name] = vals
+        return table
 
     @property
     def names(self):
@@ -283,23 +289,8 @@ class Parameters(object):
         upars = {}
         for par, upar in zip(self.parameters, uarray):
             upars[par.name] = upar
+
         return upars
-
-    @property
-    def free(self):
-        """
-        Return list of free parameters names.
-        """
-        free_pars = [par.name for par in self.parameters if not par.frozen]
-        return free_pars
-
-    @property
-    def frozen(self):
-        """
-        Return list of frozen parameters names.
-        """
-        frozen_pars = [par.name for par in self.parameters if par.frozen]
-        return frozen_pars
 
     # TODO: deprecate or remove this?
     def set_parameter_errors(self, errors):

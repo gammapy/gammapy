@@ -967,22 +967,8 @@ class FluxPointFitter(object):
             raise ValueError('Only the minuit fitting backend is supported.')
         return model
 
-    def dof(self, data, model):
-        """
-        Degrees of freedom.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        """
-        m = len(model.parameters.free)
-        n = len(data.table)
-        return n - m
-
     def run(self, data, model):
-        """
-        Run all fitting adn extra information steps.
+        """Run all fitting and extra information steps.
 
         Parameters
         ----------
@@ -997,8 +983,12 @@ class FluxPointFitter(object):
             Dictionary with fit results and debug output.
         """
         best_fit_model = self.fit(data, model)
-        dof = self.dof(data, best_fit_model)
         statval = self.stat(data, best_fit_model)[0]
+
+        # Compute degrees of freedom
+        n = len(data.table)
+        m = sum(1 for par in best_fit_model.parameters if not par.frozen)
+        dof = n - m
 
         return OrderedDict([
             ('best-fit-model', best_fit_model),
