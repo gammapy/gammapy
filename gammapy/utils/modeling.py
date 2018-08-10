@@ -28,7 +28,7 @@ class Parameter(object):
         Factor
     scale : float, optional
         Scale (sometimes used in fitting)
-    unit : str, optional
+    unit : `~astropy.units.Unit` or str, optional
         Unit
     min : float, optional
         Minimum (sometimes used in fitting)
@@ -83,12 +83,12 @@ class Parameter(object):
 
     @property
     def unit(self):
-        """Unit (str)."""
+        """Unit (`~astropy.units.Unit`)."""
         return self._unit
 
     @unit.setter
     def unit(self, val):
-        self._unit = check_type(val, 'str')
+        self._unit = u.Unit(val)
 
     @property
     def min(self):
@@ -146,7 +146,7 @@ class Parameter(object):
         return dict(
             name=self.name,
             value=self.value,
-            unit=self.unit,
+            unit=self.unit.to_string('fits'),
             min=self.min,
             max=self.max,
             frozen=self.frozen,

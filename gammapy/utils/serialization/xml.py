@@ -218,7 +218,7 @@ def xml_to_model(xml, which):
             model.parameters['index'].max = np.nan
         if type_ == 'ExponentialCutoffPowerLaw':
             model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
-            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit + '-1'
+            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit.to_string('fits') + '-1'
             model.parameters['lambda_'].min = np.nan
             model.parameters['lambda_'].max = np.nan
             model.parameters['index'].value *= -1

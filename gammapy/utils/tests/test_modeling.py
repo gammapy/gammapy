@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from ...extern import six
 from ..modeling import Parameter, ParameterList
 
 
@@ -61,6 +62,12 @@ def test_parameter_repr():
     assert repr(par).startswith('Parameter(name=')
 
 
+def test_parameter_to_dict():
+    par = Parameter('spam', 42, 'deg')
+    d = par.to_dict()
+    assert isinstance(d['unit'], six.string_types)
+
+
 def test_parameter_list():
     pars = ParameterList([
         Parameter('spam', 42, 'deg'),
@@ -74,12 +81,6 @@ def test_parameter_list():
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
     assert_allclose(pars.error('spam'), 0.1)
     assert_allclose(pars.error(1), 10)
-
-    # pars.scale_parameter('ham', 10)
-    # assert_allclose(pars['ham'].value, 99)
-    # assert_allclose(pars['ham'].scale, 10)
-    # assert_allclose(pars['ham'].factor, 9.9)
-    # assert_allclose(pars.covariance, [[1e-2, 0], [0, 1]])
 
     pars.optimiser_rescale_parameters()
     assert_allclose(pars['spam'].factor, 1)

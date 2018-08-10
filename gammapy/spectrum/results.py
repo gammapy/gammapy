@@ -92,7 +92,7 @@ class SpectrumFitResult(object):
             val["fit_range"] = dict(
                 min=self.fit_range[0].value,
                 max=self.fit_range[1].value,
-                unit=str(self.fit_range.unit),
+                unit=self.fit_range.unit.to_string('fits'),
             )
         if self.statval is not None:
             val["statval"] = float(self.statval)
