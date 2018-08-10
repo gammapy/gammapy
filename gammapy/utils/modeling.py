@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Model parameter handling
-"""
+"""Model parameter classes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
-from astropy.table import Table, Column, vstack
+from astropy.table import Table, Column
 from .array import check_type
 
 __all__ = [
@@ -138,14 +136,18 @@ class Parameter(object):
         self.unit = str(val.unit)
 
     def __repr__(self):
-        ss = 'Parameter(name={name!r}, value={value!r}, unit={unit!r}, '
-        ss += 'min={min!r}, max={max!r}, frozen={frozen!r})'
-        return ss.format(**self.to_dict())
+        return (
+            'Parameter(name={name!r}, value={value!r}, '
+            'factor={factor!r}, scale={scale!r}, unit={unit!r}, '
+            'min={min!r}, max={max!r}, frozen={frozen!r})'
+        ).format(**self.to_dict())
 
     def to_dict(self):
         return dict(
             name=self.name,
             value=self.value,
+            factor=self.factor,
+            scale=self.scale,
             unit=self.unit.to_string('fits'),
             min=self.min,
             max=self.max,
@@ -168,8 +170,32 @@ class Parameters(object):
     """
 
     def __init__(self, parameters, covariance=None):
-        self.parameters = parameters
+        self._parameters = parameters
         self.covariance = covariance
+
+    def _init_covar(self):
+        if self.covariance is None:
+            shape = (len(self.parameters), len(self.parameters))
+            self.covariance = np.zeros(shape)
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
+
+    @property
+    def parameters(self):
+        """List of `Parameter`."""
+        return self._parameters
+
+    # TODO: replace this with a better API to update parameters
+    @parameters.setter
+    def parameters(self, vals):
+        self._parameters = vals
+
+    @property
+    def names(self):
+        """List of parameter names"""
+        return [par.name for par in self.parameters]
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -202,42 +228,37 @@ class Parameters(object):
             retval['covariance'] = self.covariance.tolist()
         return retval
 
-    def to_list_of_dict(self):
-        result = []
-        for parameter in self.parameters:
-            vals = parameter.to_dict()
-            if self.covariance is None:
-                vals['error'] = np.nan
-            else:
-                vals['error'] = self.error(parameter.name)
-            result.append(vals)
-        return result
-
     def to_table(self):
-        """
-        Serialize parameter list into `~astropy.table.Table`
-        """
-        names = ['name', 'value', 'error', 'unit', 'min', 'max', 'frozen']
-        formats = {'value': '.3e',
-                   'error': '.3e',
-                   'min': '.3e',
-                   'max': '.3e'}
-        table = Table(self.to_list_of_dict(), names=names)
+        """Convert parameter attributes to `~astropy.table.Table`."""
+        t = Table()
+        t['name'] = [p.name for p in self.parameters]
+        t['value'] = [p.value for p in self.parameters]
+        if self.covariance is None:
+            t['error'] = np.nan
+        else:
+            t['error'] = [self.error(idx) for idx in range(len(self.parameters))]
 
-        for name in formats:
-            table[name].format = formats[name]
-        return table
+        t['unit'] = [p.unit for p in self.parameters]
+        t['min'] = [p.min for p in self.parameters]
+        t['max'] = [p.max for p in self.parameters]
+
+        for name in ['value', 'error', 'min', 'max']:
+            t[name].format = '.3e'
+
+        return t
 
     @classmethod
     def from_dict(cls, val):
         pars = []
         for par in val['parameters']:
-            pars.append(Parameter(name=par['name'],
-                                  factor=float(par['value']),
-                                  unit=par['unit'],
-                                  min=float(par['min']),
-                                  max=float(par['max']),
-                                  frozen=par['frozen']))
+            pars.append(Parameter(
+                name=par['name'],
+                factor=float(par['value']),
+                unit=par['unit'],
+                min=float(par['min']),
+                max=float(par['max']),
+                frozen=par['frozen'],
+            ))
         try:
             covariance = np.array(val['covariance'])
         except KeyError:
@@ -245,26 +266,17 @@ class Parameters(object):
 
         return cls(parameters=pars, covariance=covariance)
 
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
     def covariance_to_table(self):
-        """
-        Serialize parameter covariance into `~astropy.table.Table`
-        """
-        t = Table(self.covariance, names=self.names)[self.free]
-        for name in t.colnames:
-            t[name].format = '.3'
+        """Convert covariance matrix to `~astropy.table.Table`."""
+        if self.covariance is None:
+            raise ValueError('No covariance available')
 
-        col = Column(name='name/name', data=self.names)
-        t.add_column(col, index=0)
-
-        rows = [row for row in t if row['name/name'] in self.free]
-        return vstack(rows)
-
-    @property
-    def names(self):
-        """List of parameter names"""
-        return [par.name for par in self.parameters]
+        table = Table()
+        table['name'] = self.names
+        for idx, par in enumerate(self.parameters):
+            vals = self.covariance[idx]
+            table[par.name] = vals
+        return table
 
     @property
     def _ufloats(self):
@@ -283,23 +295,8 @@ class Parameters(object):
         upars = {}
         for par, upar in zip(self.parameters, uarray):
             upars[par.name] = upar
+
         return upars
-
-    @property
-    def free(self):
-        """
-        Return list of free parameters names.
-        """
-        free_pars = [par.name for par in self.parameters if not par.frozen]
-        return free_pars
-
-    @property
-    def frozen(self):
-        """
-        Return list of frozen parameters names.
-        """
-        frozen_pars = [par.name for par in self.parameters if par.frozen]
-        return frozen_pars
 
     # TODO: deprecate or remove this?
     def set_parameter_errors(self, errors):
@@ -352,16 +349,7 @@ class Parameters(object):
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
 
-    def _init_covar(self):
-        if self.covariance is None:
-            shape = (len(self.parameters), len(self.parameters))
-            self.covariance = np.zeros(shape)
-
-    def copy(self):
-        """A deep copy"""
-        return copy.deepcopy(self)
-
-    def optimiser_set_factors(self, factors):
+    def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
         Used in the optimiser interface.
@@ -369,7 +357,7 @@ class Parameters(object):
         for factor, parameter in zip(factors, self.parameters):
             parameter.factor = factor
 
-    def optimiser_set_covariance(self, matrix):
+    def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
         Used in the optimiser interface.
@@ -378,11 +366,32 @@ class Parameters(object):
         scale_matrix = scales[:, np.newaxis] * scales
         self.covariance = scale_matrix * matrix
 
-    def optimiser_rescale_parameters(self):
-        """Re-scale all parameters.
+    def scale(self, method='scale10'):
+        """Re-scale the parameters.
 
-        Updates parameter attributes as ``factor, scale = 1, value``,
-        which preserves the parameter ``value = factor * scale``.
+        By re-scale, we mean to change ``factor`` and ``scale``,
+        keeping the ``value = factor x scale`` the same.
+
+        You can call this method before fitting.
+
+        Available methods:
+
+        * ``scale10`` sets ``scale`` to power of 10,
+          so that factor is in the range 1 to 10
+        * ``factor1`` sets ``factor, scale = 1, value``
+
+        Parameters
+        ----------
+        method : {'factor1', 'scale10'}
+            Method to apply
         """
         for par in self.parameters:
-            par.factor, par.scale = 1, par.value
+            if method == 'scale10':
+                value = par.value
+                scale = 10 ** int(np.log10(value))
+                par.factor = value / scale
+                par.scale = scale
+            elif method == 'factor1':
+                par.factor, par.scale = 1, par.value
+            else:
+                raise ValueError('Invalid method: {}'.format(method))

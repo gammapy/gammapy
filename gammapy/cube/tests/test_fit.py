@@ -106,14 +106,6 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
     sky_model.parameters['index'].value = 2
     sky_model.parameters['sigma'].frozen = True
 
-    sky_model.parameters.set_parameter_errors({
-        'lon_0': '0.01 deg',
-        'lat_0': '0.01 deg',
-        'sigma': '0.02 deg',
-        'index': 0.1,
-        'amplitude': '1e-13 cm-2 s-1 TeV-1',
-    })
-
     fit = MapFit(
         model=sky_model,
         counts=counts,

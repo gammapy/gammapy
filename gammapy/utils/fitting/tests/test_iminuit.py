@@ -32,11 +32,13 @@ def test_iminuit():
     # Test freeze
     pars['x'].frozen = True
     minuit = fit_iminuit(function=fcn, parameters=pars)
+    assert minuit.migrad_ok()
     assert minuit.list_of_fixed_param() == ['par_000_x']
 
     # Test limits
     pars['y'].min = 4
     minuit = fit_iminuit(function=fcn, parameters=pars)
+    assert minuit.migrad_ok()
     states = minuit.get_param_states()
     assert not states[0]['has_limits']
     assert not states[2]['has_limits']
@@ -45,8 +47,3 @@ def test_iminuit():
     assert states[1]['lower_limit'] == 4
     assert states[1]['upper_limit'] == 0
 
-    # Test stepsize via covariance matrix
-    pars.set_parameter_errors({'x': '0.2', 'y': '0.1'})
-    minuit = fit_iminuit(function=fcn, parameters=pars)
-
-    assert minuit.migrad_ok()

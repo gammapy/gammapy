@@ -168,13 +168,13 @@ class TestSpectralFit:
 
         self.pwl = models.PowerLaw(
             index=2,
-            amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
             reference=1 * u.TeV,
         )
 
         self.ecpl = models.ExponentialCutoffPowerLaw(
             index=2,
-            amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
         )
@@ -204,14 +204,15 @@ class TestSpectralFit:
         self.fit.result[0].to_table()
 
     def test_compound(self):
-        fit = SpectrumFit(self.obs_list[0], self.pwl * 2)
+        model = self.pwl * 2
+        fit = SpectrumFit(self.obs_list[0], model)
         fit.fit()
         result = fit.result[0]
         pars = result.model.parameters
-        assert_allclose(pars['index'].value, 2.254163, rtol=1e-3)
-        # amplitude should come out roughly * 0.5
-        assert pars['amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
-        assert_allclose(pars['amplitude'].value, 1.030963e-11, rtol=1e-3)
+        assert_allclose(pars['index'].value, 2.254578, rtol=1e-3)
+        p = pars['amplitude']
+        assert p.unit == u.Unit('cm-2 s-1 TeV-1')
+        assert_allclose(p.value, 3.169233e-12, rtol=1e-3)
 
     def test_npred(self):
         self.fit.fit()
@@ -263,20 +264,13 @@ class TestSpectralFit:
         assert_allclose(fit.result[0].model.parameters['index'].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
-        self.ecpl.parameters.set_parameter_errors({
-            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-            'lambda': 0.1 / u.TeV
-        })
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
         actual = fit.result[0].model.parameters['lambda_'].quantity
         assert actual.unit == 'TeV-1'
-        assert_allclose(actual.value, 0.034241, rtol=1e-3)
+        assert_allclose(actual.value, 0.034179, rtol=1e-3)
 
     def test_joint_fit(self):
-        self.pwl.parameters.set_parameter_errors({
-            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')
-        })
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
         actual = fit.result[0].model.parameters['index'].value
@@ -297,9 +291,6 @@ class TestSpectralFit:
         assert_allclose(pars['amplitude'].value, 2.361827e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
-        self.pwl.parameters.set_parameter_errors({
-            'amplitude': 1e-11 * u.Unit('cm-2 s-1 TeV-1')
-        })
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)
 
