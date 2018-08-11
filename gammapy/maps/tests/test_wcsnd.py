@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ...utils.testing import requires_dependency
 from ..utils import fill_poisson
+from ..cube import PSFKernel
 from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
@@ -446,3 +447,49 @@ def test_make_cutout(mode):
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)
     assert_allclose(cutout.geom.width, [[2.0], [3.0]])
+
+
+@requires_dependency('scipy')
+def test_convolve_2d():
+    sigma = 0.5 * u.deg
+    binsz = 0.05 * u.deg
+
+    testmap = WcsNDMap.create(binsz=binsz, width=5 * u.deg)
+    testmap.fill_by_coord(([1], [1]), weights=np.array([2]))
+
+    kernel = PSFKernel.from_gauss(testmap.geom, sigma, max_radius=1.5 * u.deg)
+
+    # is kernel size OK?
+    assert kernel.psf_kernel_map.geom.npix[0] == 61
+    # is kernel maximum at the center?
+    assert kernel.psf_kernel_map.data[30, 30] == np.max(kernel.psf_kernel_map.data)
+
+    conv_map = testmap.convolve(kernel)
+
+    # Is convolved map normalization OK
+    assert_allclose(conv_map.data.sum(), 2.0, atol=1e-3)
+
+    # Is the maximum in the convolved map at the right position?
+    assert conv_map.get_by_coord([1, 1]) == np.max(conv_map.data)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_convolve_nd():
+    energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
+    m = Map.from_geom(geom)
+    m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
+
+    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+
+    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
+
+    assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
+
+    mc = m.convolve(psf_kernel)
+
+    assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
