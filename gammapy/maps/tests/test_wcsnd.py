@@ -6,9 +6,10 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 import astropy.units as u
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
+from ...cube import PSFKernel
+from ...irf import EnergyDependentMultiGaussPSF
 from ..utils import fill_poisson
-from ..cube import PSFKernel
 from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..base import Map
 from ..wcs import WcsGeom
@@ -493,3 +494,15 @@ def test_convolve_nd():
     mc = m.convolve(psf_kernel)
 
     assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
+
+
+@requires_dependency('scipy')
+def test_convolve_pixel_scale_error():
+    m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg)
+    kgeom = WcsGeom.create(binsz=0.04 * u.deg, width=0.5 * u.deg)
+
+    kernel = PSFKernel.from_gauss(kgeom, sigma=0.1 * u.deg, max_radius=1.5 * u.deg)
+
+    with pytest.raises(ValueError) as err:
+        conv_map = m.convolve(kernel)
+        assert 'Kernel shape larger' in str(err.value)
