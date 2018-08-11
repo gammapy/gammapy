@@ -268,7 +268,7 @@ class TestSpectralFit:
         fit.fit()
         actual = fit.result[0].model.parameters['lambda_'].quantity
         assert actual.unit == 'TeV-1'
-        assert_allclose(actual.value, 0.034179, rtol=1e-3)
+        assert_allclose(actual.value, 0.034231, rtol=1e-2)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
