@@ -41,28 +41,19 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     """
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
-
     kernel.normalize('peak')
-    conv_opt = dict(mode='constant', cval=np.nan)
-
-    counts_conv = counts.convolve(kernel.array, use_fft=False, **conv_opt).data
-    background_conv = background.convolve(kernel.array, use_fft=False, **conv_opt).data
+    
+    counts_conv = counts.convolve(kernel.array).data
+    background_conv = background.convolve(kernel.array).data
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    # TODO: we should make copies of the geom to make them independent objects
     images = {
         'significance': counts.copy(data=significance_conv),
         'counts': counts.copy(data=counts_conv),
         'background': counts.copy(data=background_conv),
         'excess': counts.copy(data=excess_conv),
     }
-
-    # TODO: should we be doing this here?
-    # Wouldn't it be better to let users decide if they want this,
-    # and have it easily accessible as an attribute or method?
-    _add_other_images(images, exposure, kernel, conv_opt)
-
     return images
 
 
@@ -94,20 +85,18 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     --------
     gammapy.stats.significance_on_off
     """
-    from scipy.ndimage import convolve
-
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
-
     kernel.normalize('peak')
-    conv_opt = dict(mode='constant', cval=np.nan)
-
-    n_on_conv = n_on.convolve(kernel.array, use_fft=False, **conv_opt).data
-    a_on_conv = a_on.convolve(kernel.array, use_fft=False, **conv_opt).data
+    
+    n_on_conv = n_on.convolve(kernel.array).data
+    a_on_conv = a_on.convolve(kernel.array).data
     alpha_conv = a_on_conv / a_off.data
+    
+    significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
+    
     background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
-    significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
 
     images = {
         'significance': n_on.copy(data=significance_conv),
@@ -116,22 +105,4 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
         'excess': n_on.copy(data=excess_conv),
         'alpha': n_on.copy(data=alpha_conv),
     }
-
-    # TODO: should we be doing this here?
-    # Wouldn't it be better to let users decide if they want this,
-    # and have it easily accessible as an attribute or method?
-    _add_other_images(images, exposure, kernel, conv_opt)
-
     return images
-
-
-def _add_other_images(images, exposure, kernel, conv_opt):
-    if not exposure:
-        return
-
-    from scipy.ndimage import convolve
-    kernel.normalize('integral')
-    exposure_conv = convolve(exposure.data, kernel.array, **conv_opt)
-    flux = images['excess'].data / exposure_conv
-    # TODO: we should make coopies of the geom to make them independent objects
-    images['flux'] = images['excess'].copy(data=flux)
