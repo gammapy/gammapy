@@ -6,7 +6,7 @@ from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
-from .exposure import make_map_exposure_true_energy
+from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from .background import make_map_background_irf, _fov_background_norm
 
 __all__ = [
@@ -82,10 +82,10 @@ class MapMaker(object):
     def _process_obs(self, obs, selection):
         # Compute cutout geometry and slices to stack results back later
         cutout_map = Map.from_geom(self.geom).cutout(
-                position=obs.pointing_radec,
-                width=2 * self.offset_max,
-                mode='trim',
-            )
+            position=obs.pointing_radec,
+            width=2 * self.offset_max,
+            mode='trim',
+        )
 
         log.info('Processing observation {}'.format(obs.obs_id))
 
@@ -115,6 +115,32 @@ class MapMaker(object):
         for name in selection:
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
             self.maps[name].fill_by_coord(coords, data)
+
+    def make_images(self, spectrum=None):
+        """Create 2D images by summing over the energy axis.
+
+        Exposure is weighted with an assumed spectrum,
+        resulting in a weighted mean exposure image.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+
+        Returns
+        -------
+        images : dict of `~gammapy.maps.Map`
+            2D images
+        """
+        images = {}
+        for name, map in self.maps.items():
+            if name == 'exposure':
+                map = _map_spectrum_weight(map, spectrum)
+
+            images[name] = map.sum_over_axes()
+
+        return images
 
 
 class MapMakerObs(object):

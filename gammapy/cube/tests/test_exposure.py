@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data
-from ...maps import WcsGeom, HpxGeom, MapAxis
+from ...maps import WcsGeom, HpxGeom, MapAxis, WcsNDMap
 from ...irf import EffectiveAreaTable2D
-from ..exposure import make_map_exposure_true_energy
+from ..exposure import make_map_exposure_true_energy, _map_spectrum_weight
+from ...spectrum.models import ConstantModel
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -59,3 +61,16 @@ def test_make_map_exposure_true_energy(aeff, pars):
     assert m.data.shape == pars['shape']
     assert m.unit == 'm2 s'
     assert_allclose(m.data.sum(), pars['sum'], rtol=1e-5)
+
+
+def test_map_spectrum_weight():
+    axis = MapAxis.from_edges([0.1, 10, 1000], unit='TeV', name='energy')
+    expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit='m2 s')
+    expo_map.data += 1
+    spectrum = ConstantModel(42)
+
+    weighted_expo = _map_spectrum_weight(expo_map, spectrum)
+
+    assert weighted_expo.data.shape == (2, 10, 10)
+    assert weighted_expo.unit == 'm2 s'
+    assert_allclose(weighted_expo.data.sum(), 100)
