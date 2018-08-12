@@ -25,9 +25,7 @@ def test_compute_lima_image():
     )
 
     assert_allclose(result_lima['significance'].data[100, 100], 30.814916, atol=1e-3)
-    assert_allclose(result_lima['flux'].data[100, 100], 4.10000e-10, atol=3e-12)
-    assert_allclose(result_lima['significance'].data[1, 1], np.nan, atol=1e-3)
-    assert_allclose(result_lima['flux'].data[1, 1], np.nan, atol=3e-12)
+    assert_allclose(result_lima['significance'].data[1, 1], 0.164, atol=1e-3)
 
 
 
@@ -45,13 +43,16 @@ def test_compute_lima_on_off_image():
     significance = Map.read(filename, hdu='SIGNIFICANCE')
 
     kernel = Tophat2DKernel(5)
-
     results = compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel)
 
     # Reproduce safe significance threshold from HESS software
     results['significance'].data[results['n_on'].data < 5] = 0
 
+    # crop the image at the boundaries, because the reference image
+    # is cut out from a large map, there is no way to reproduce the
+    # result with regular boundary handling
+    actual = results['significance'].crop(kernel.shape).data
+    desired = significance.crop(kernel.shape).data
+    
     # Set boundary to NaN in reference image
-    s = significance.data.copy()
-    s[np.isnan(results['significance'].data)] = np.nan
-    assert_allclose(results['significance'].data, s, atol=1e-5)
+    assert_allclose(actual, desired, atol=1e-5)
