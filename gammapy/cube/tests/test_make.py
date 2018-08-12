@@ -33,6 +33,7 @@ def geom(ebounds):
         'geom': geom(ebounds=[0.1, 1, 10]),
         'counts': 34366,
         'exposure': 3.99815e+11,
+        'exposure_image': 7.921993e+10,
         'background': 187528.89,
     },
     {
@@ -40,6 +41,7 @@ def geom(ebounds):
         'geom': geom(ebounds=[0.1, 10]),
         'counts': 34366,
         'exposure': 1.16866e+11,
+        'exposure_image': 1.16866e+11,
         'background': 1988492.8,
     },
     {
@@ -48,6 +50,7 @@ def geom(ebounds):
         'exclusion_mask': Map.from_geom(geom(ebounds=[0.1, 10])),
         'counts': 34366,
         'exposure': 1.16866e+11,
+        'exposure_image': 1.16866e+11,
         'background': 1988492.8,
     },
 
@@ -57,6 +60,7 @@ def test_map_maker(pars, obs_list):
         geom=pars['geom'],
         offset_max='2 deg',
     )
+
     maps = maker.run(obs_list)
 
     counts = maps['counts']
@@ -68,5 +72,19 @@ def test_map_maker(pars, obs_list):
     assert_allclose(exposure.data.sum(), pars['exposure'], rtol=1e-5)
 
     background = maps['background']
+    assert background.unit == ""
+    assert_allclose(background.data.sum(), pars['background'], rtol=1e-5)
+
+    images = maker.make_images()
+
+    counts = images['counts']
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), pars['counts'], rtol=1e-5)
+
+    exposure = images['exposure']
+    assert exposure.unit == "m2 s"
+    assert_allclose(exposure.data.sum(), pars['exposure_image'], rtol=1e-5)
+
+    background = images['background']
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars['background'], rtol=1e-5)

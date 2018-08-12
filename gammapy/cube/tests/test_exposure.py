@@ -7,8 +7,9 @@ from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data
 from ...maps import WcsGeom, HpxGeom, MapAxis, WcsNDMap
 from ...irf import EffectiveAreaTable2D
-from ..exposure import make_map_exposure_true_energy, weighted_exposure_image
+from ..exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from ...spectrum.models import ConstantModel
+
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
 
@@ -61,12 +62,15 @@ def test_make_map_exposure_true_energy(aeff, pars):
     assert m.unit == 'm2 s'
     assert_allclose(m.data.sum(), pars['sum'], rtol=1e-5)
 
-def test_weighted_exposure_image():
-    # Create fake exposure Map
-    expo_map = WcsNDMap.create(npix=10, binsz=1., axes=[MapAxis(np.logspace(-1.,1.,11), unit='TeV', name='energy')],
-                        unit='m2s')
-    expo_map.data += 1.
 
-    cst_model = ConstantModel(2.)
-    weighted_expo = weighted_exposure_image(expo_map,cst_model)
+def test_map_spectrum_weight():
+    axis = MapAxis.from_edges([0.1, 10, 1000], unit='TeV', name='energy')
+    expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit='m2 s')
+    expo_map.data += 1
+    spectrum = ConstantModel(42)
+
+    weighted_expo = _map_spectrum_weight(expo_map, spectrum)
+
+    assert weighted_expo.data.shape == (2, 10, 10)
+    assert weighted_expo.unit == 'm2 s'
     assert_allclose(weighted_expo.data.sum(), 100)

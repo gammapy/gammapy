@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..irf import EnergyDispersion
 from ..spectrum.models import PowerLaw
-from ..maps import WcsNDMap, MapAxis, Map
+from ..maps import WcsNDMap
 
 __all__ = [
     'make_map_exposure_true_energy',
-    'weighted_exposure_image',
 ]
 
 
@@ -46,37 +44,44 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     return WcsNDMap(geom, exposure.value, unit=exposure.unit)
 
-def weighted_exposure_image(exposure_map, spectrum=None):
-    """Create an exposure map in reco energy from an exposure map in true energy.
 
-    Exposure in true energy is weighted with an input spectrum and redistributed in
-    reco energy with the input energy dispersion.
+def _map_spectrum_weight(map, spectrum=None):
+    """Weight a map with a spectrum.
+
+    This requires map to have an "energy" axis.
+    The weights are normalised so that they sum to 1.
+    The mean and unit of the output image is the same as of the input cube.
+
+    At the moment this is used to get a weighted exposure image.
 
     Parameters
     ----------
-    exposure_map : `~gammapy.maps.Map`
-        Input exposure map in true energy. unit should have dimension of m2s
-    spectrum : `~gammapy.spectrum.models.SpectralModel`, default is None
-        Spectral model to use to weight exposure in true energy
-        If None is passed, a power law of photon index -2 is assumed.
+    map : `~gammapy.maps.Map`
+        Input map with an "energy" axis.
+    spectrum : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model to compute the weights.
+        Default is power-law with spectral index of 2.
 
     Returns
     -------
-    exposure_image : `~gammapy.maps.Map`
-        Resulting weighted image. The unit is the same as the input map.
+    map_weighted : `~gammapy.maps.Map`
+        Weighted image
     """
-    expo_map = exposure_map.copy()
-    energy_axis = expo_map.geom.get_axis_by_name("energy")
-    energy_center = energy_axis.center * energy_axis.unit
-    energy_edges = energy_axis.edges * energy_axis.unit
-    binsize = np.diff(energy_edges)
-
     if spectrum is None:
         spectrum = PowerLaw(index=2.0)
-    weights = spectrum(energy_center)*binsize
+
+    # Compute weights vector
+    # Should we change to call spectrum.integrate ?
+    energy_axis = map.geom.get_axis_by_name("energy")
+    energy_center = energy_axis.center * energy_axis.unit
+    energy_edges = energy_axis.edges * energy_axis.unit
+    energy_width = np.diff(energy_edges)
+    weights = spectrum(energy_center) * energy_width
     weights /= weights.sum()
 
-    for img, idx in expo_map.iter_by_image():
+    # Make new map with weights applied
+    map_weighted = map.copy()
+    for img, idx in map_weighted.iter_by_image():
         img *= weights[idx].value
 
-    return expo_map.sum_over_axes()
+    return map_weighted
