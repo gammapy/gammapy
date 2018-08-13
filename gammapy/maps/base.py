@@ -948,10 +948,12 @@ class Map(object):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         geom = self.geom.__class__.__name__
-        str_ += "\tgeom      : {} \n ".format(geom)
-        str_ += "\tunit      : {} \n".format(self.unit)
-        str_ += "\tdata shape: {}\n".format(self.data.shape)
-        str_ += "\tdata mean : {:.1e} {}\n".format(np.nanmean(self.data), self.unit)
-        str_ += "\tdata min  : {:.1e} {}\n".format(np.nanmin(self.data), self.unit)
-        str_ += "\tdata max  : {:.1e} {}\n".format(np.nanmax(self.data), self.unit)
+        str_ += "\tgeom  : {} \n ".format(geom)
+        axes = ['skycoord'] if self.geom.is_hpx else ['lon', 'lat']
+        axes = axes + [_.name for _ in self.geom.axes]
+        str_ += "\taxes  : {}\n".format(", ".join(axes))
+        str_ += "\tshape : {}\n".format(self.geom.data_shape[::-1])
+        str_ += "\tndim  : {}\n".format(self.geom.ndim)
+        str_ += "\tunit  : {!r} \n".format(str(self.unit))
+        str_ += "\tdtype : {} \n".format(self.data.dtype)
         return str_
