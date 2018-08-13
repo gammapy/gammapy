@@ -49,9 +49,9 @@ def cash(n_on, mu_on):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
-    stat[mu_on == 0] == 0
+        stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
