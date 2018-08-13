@@ -101,7 +101,9 @@ class IRFStacker(object):
 
             aefftedisp += edisp_data.transpose() * aefft_current
 
-        stacked_edisp = np.nan_to_num(aefftedisp / aefft)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            stacked_edisp = np.nan_to_num(aefftedisp / aefft)
+
         self.stacked_edisp = EnergyDispersion(
             e_true_lo=self.list_edisp[0].e_true.lo,
             e_true_hi=self.list_edisp[0].e_true.hi,

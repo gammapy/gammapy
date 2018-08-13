@@ -51,7 +51,7 @@ def cash(n_on, mu_on):
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide='ignore'):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
-    stat[~np.isfinite(stat)] == 0
+    stat[mu_on == 0] == 0
     return stat
 
 
@@ -157,14 +157,14 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     term1 = mu_sig + (1 + alpha) * mu_bkg
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):
         term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
     # Handle n_on == 0
     condition = (n_on == 0)
     term2 = np.where(condition, 0, term2_)
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):
         term3_ = - n_off * np.log(mu_bkg)
     # Handle n_off == 0
     condition = (n_off == 0)
@@ -204,7 +204,7 @@ def get_wstat_gof_terms(n_on, n_off):
     term = np.zeros(len(n_on))
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):
         term1 = - n_on * (1 - np.log(n_on))
         term2 = - n_off * (1 - np.log(n_off))
 
