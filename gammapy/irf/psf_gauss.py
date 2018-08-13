@@ -396,17 +396,16 @@ class EnergyDependentMultiGaussPSF(object):
         """
         # Convert energies to log center
         energies = self.energy
-
         # Defaults and input handling
-        if theta:
-            theta = Angle(theta)
-        else:
+        if theta is None:
             theta = Angle(0, 'deg')
-
-        if rad:
-            rad = Angle(rad).to('deg')
         else:
+            theta = Angle(theta)
+
+        if rad is None:
             rad = Angle(np.arange(0, 1.5, 0.005), 'deg')
+        else:
+            rad = Angle(rad).to('deg')
 
         psf_value = Quantity(np.zeros((energies.size, rad.size)), 'deg^-2')
 

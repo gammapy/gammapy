@@ -320,8 +320,12 @@ class DataStoreObservation(object):
             Energy dependent psf table
         """
         offset = position.separation(self.pointing_radec)
-        energy = energy or self.psf.to_energy_dependent_table_psf(theta=offset).energy
-        rad = rad or self.psf.to_energy_dependent_table_psf(theta=offset).rad
+
+        if energy is None:
+            energy = self.psf.to_energy_dependent_table_psf(theta=offset).energy
+
+        if rad is None:
+            rad = self.psf.to_energy_dependent_table_psf(theta=offset).rad
 
         if isinstance(self.psf, PSF3D):
             # PSF3D is a table PSF, so we use the native RAD binning by default
@@ -435,8 +439,11 @@ class ObservationList(UserList):
         """
         psf = self[0].make_psf(position, energy, rad)
 
-        rad = rad or psf.rad
-        energy = energy or psf.energy
+        if rad is None:
+            rad = psf.rad
+        if energy is None:
+            energy = psf.energy
+
         exposure = psf.exposure
         psf_value = psf.psf_value.T * psf.exposure
 
