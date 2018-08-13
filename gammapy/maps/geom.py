@@ -607,13 +607,22 @@ class MapAxis(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\tname     : {}\n".format(self.name)
-        str_ += "\tunit     : {}\n".format(self.unit)
-        str_ += "\tnbins    : {}\n".format(self.nbin)
-        str_ += "\tnode type: {}\n".format(self.node_type)
-        str_ += "\tedge min : {:.1e} {}\n".format(self.edges.min(), self.unit)
-        str_ += "\tedge max : {:.1e} {}\n".format(self.edges.max(), self.unit)
-        str_ += "\tinterp   : {}\n".format(self._interp)
+        line_format = '\t{key:<10s} : {value:<10s}\n'
+
+        repr_dict = OrderedDict()
+        repr_dict['name'] = self.name
+        repr_dict['unit'] = '{!r}'.format(str(self.unit))
+        repr_dict['nbins'] = str(self.nbin)
+        repr_dict['node type'] = self.node_type
+
+        vals = self.edges if self.node_type == 'edge' else self.center
+        repr_dict['{} min'.format(self.node_type)] = '{:.1e} {}'.format(vals.min(), str(self.unit))
+        repr_dict['{} max'.format(self.node_type)] = '{:.1e} {}'.format(vals.max(), str(self.unit))
+
+        repr_dict['interp'] = self._interp
+
+        for key, value in repr_dict.items():
+            str_ += line_format.format(key=key, value=value)
         return str_
 
 
@@ -884,10 +893,10 @@ class MapCoord(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\taxes    : {}\n".format(list(self._data.keys()))
-        str_ += "\tshape   : {}\n".format(self.shape)
-        str_ += "\tndim    : {}\n".format(self.ndim)
-        str_ += "\tcoordsys: {}\n".format(self.coordsys)
+        str_ += "\taxes     : {}\n".format(', '.join(self._data.keys()))
+        str_ += "\tshape    : {}\n".format(self.shape[::-1])
+        str_ += "\tndim     : {}\n".format(self.ndim)
+        str_ += "\tcoordsys : {}\n".format(self.coordsys)
         return str_
 
 

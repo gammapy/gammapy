@@ -566,7 +566,7 @@ class HpxGeom(MapGeom):
         arrays.  This option is only compatible with partial-sky maps
         with an analytic geometry (e.g. DISK).
     """
-
+    is_hpx = True
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
                  axes=None, conv='gadf', sparse=False):
 
@@ -1727,16 +1727,16 @@ class HpxGeom(MapGeom):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\tnpix      : {npix[0]} pix\n".format(npix=self.npix)
-        str_ += "\tnside     : {nside[0]}\n".format(nside=self.nside)
-        str_ += "\tnested    : {}\n".format(self.nest)
-        str_ += "\tcoordsys  : {}\n".format(self.coordsys)
-        str_ += "\tprojection: {}\n".format(self.projection)
+        axes = ['skycoord'] + [_.name for _ in self.axes]
+        str_ += "\taxes       : {}\n".format(", ".join(axes))
+        str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
+        str_ += "\tndim       : {}\n".format(self.ndim)
+        str_ += "\tnside      : {nside[0]}\n".format(nside=self.nside)
+        str_ += "\tnested     : {}\n".format(self.nest)
+        str_ += "\tcoordsys   : {}\n".format(self.coordsys)
+        str_ += "\tprojection : {}\n".format(self.projection)
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
-        str_ += "\tcenter    : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
-        str_ += "\tndim      : {}\n".format(self.ndim)
-        axes = [_.name for _ in self.axes]
-        str_ += "\taxes      : {}\n".format(", ".join(axes))
+        str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
         return str_
 
 
