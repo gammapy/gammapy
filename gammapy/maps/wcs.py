@@ -154,7 +154,7 @@ class WcsGeom(MapGeom):
     """
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, -1)
-
+    is_hpx = False
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv='gadf'):
         self._wcs = wcs
         self._coordsys = get_coordys(wcs)
@@ -832,16 +832,16 @@ class WcsGeom(MapGeom):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\tnpix      : {npix[0][0]} x {npix[1][0]} pix\n".format(npix=self.npix)
-        str_ += "\tcoordsys  : {}\n".format(self.coordsys)
-        str_ += "\tprojection: {}\n".format(self.projection)
+        axes = ['lon', 'lat'] + [_.name for _ in self.axes]
+        str_ += "\taxes       : {}\n".format(", ".join(axes))
+        str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
+        str_ += "\tndim       : {}\n".format(self.ndim)
+        str_ += "\tcoordsys   : {}\n".format(self.coordsys)
+        str_ += "\tprojection : {}\n".format(self.projection)
         lon, lat = float(self.center_skydir.data.lon.deg), float(self.center_skydir.data.lat.deg)
-        str_ += "\tcenter    : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
-        str_ += ("\twidth     : {width[0][0]:.1f} x {width[1][0]:.1f} "
+        str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
+        str_ += ("\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f} "
                  "deg\n".format(width=self.width))
-        str_ += "\tndim      : {}\n".format(self.ndim)
-        axes = [_.name for _ in self.axes]
-        str_ += "\taxes      : {}\n".format(", ".join(axes))
         return str_
 
 
