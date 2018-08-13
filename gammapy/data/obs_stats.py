@@ -59,8 +59,14 @@ class ObservationStats(Stats):
             self.alpha_obs = a_on / a_off
         else:
             self.alpha_obs = 0
-        self.gamma_rate = gamma_rate or self.excess / livetime
-        self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
+
+        if gamma_rate is None:
+            gamma_rate = self.excess / livetime
+        self.gamma_rate = gamma_rate
+
+        if bg_rate is None:
+            bg_rate =  self.alpha_obs * n_off / livetime
+        self.bg_rate = bg_rate
 
     @classmethod
     def from_obs(cls, obs, bg_estimate):

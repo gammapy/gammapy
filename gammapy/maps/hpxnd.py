@@ -380,7 +380,7 @@ class HpxNDMap(HpxMap):
 
             wts[pix[0] == -1] = 0.0
             wt[~np.isfinite(wt)] = 0.0
-            val += np.nansum(wts * wt * self.data.T[pix[:1] + pix_i], axis=0)
+            val += np.nansum(wts * wt * self.data.T[tuple(pix[:1] + pix_i)], axis=0)
 
         return val
 

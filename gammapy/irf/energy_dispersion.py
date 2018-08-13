@@ -836,7 +836,8 @@ class EnergyDispersion2D(object):
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
 
         # Compute normalized cumulative sum to prepare integration
-        tmp = np.nan_to_num(np.cumsum(vals) / np.sum(vals))
+        with np.errstate(invalid='ignore'):
+            tmp = np.nan_to_num(np.cumsum(vals) / np.sum(vals))
 
         # Determine positions (bin indices) of e_reco bounds in migration array
         pos_mig = np.digitize(migra_e_reco, mig_array) - 1

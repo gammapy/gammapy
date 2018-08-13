@@ -219,6 +219,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     slice2 = [slice(None)] * y.ndim
     slice1[axis] = slice(None, -1)
     slice2[axis] = slice(1, None)
+    slice1, slice2 = tuple(slice1), tuple(slice2)
 
     # arrays with uncertainties contain objects
     if y.dtype == 'O':

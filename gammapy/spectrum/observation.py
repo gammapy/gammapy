@@ -846,8 +846,9 @@ class SpectrumObservationStacker(object):
             bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
             alpha_sum += (obs.alpha * obs.off_vector.counts_in_safe_range).sum()
 
-        stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
-        alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+        with np.errstate(divide='ignore', invalid='ignore'):
+            stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
+            alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
