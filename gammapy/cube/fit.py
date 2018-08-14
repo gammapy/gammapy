@@ -29,17 +29,20 @@ class MapFit(object):
         Exposure cube
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
+    background : `~gammapy.maps.WcsNDMap`
+        Exclusion mask.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     """
 
-    def __init__(self, model, counts, exposure, background=None, psf=None, edisp=None):
+    def __init__(self, model, counts, exposure, background=None, exclusion_mask=None, psf=None, edisp=None):
         self.model = model
         self.counts = counts
         self.exposure = exposure
         self.background = background
+        self.exclusion_mask = exclusion_mask
         self.psf = psf
         self.edisp = edisp
 
@@ -47,9 +50,15 @@ class MapFit(object):
         self._stat = None
         self._minuit = None
 
+        # applying the exclusion mask to the exposure is currently the fastest
+        # way of applying a mask for fitting
+        if exclusion_mask:
+            data = exposure.data * (1 - exclusion_mask.data.astype(int))
+            exposure = exposure.copy(data=data)
+
         self.evaluator = MapEvaluator(
             model=self.model,
-            exposure=self.exposure,
+            exposure=exposure,
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
