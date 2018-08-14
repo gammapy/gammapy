@@ -16,7 +16,6 @@ from ..models import (
     SkyModel,
     SkyModels,
     CompoundSkyModel,
-    SumSkyModel,
 )
 
 
@@ -74,20 +73,39 @@ class TestSkyModels:
         self.sky_models = SkyModels([sky_model(), sky_model()])
 
     def test_to_compound_model(self):
-        model = self.sky_models.to_compound_model()
+        sky_models = self.sky_models
+        model = sky_models.to_compound_model()
         assert isinstance(model, CompoundSkyModel)
         pars = model.parameters.parameters
         assert len(pars) == 12
         assert pars[0].name == 'lon_0'
         assert pars[-1].name == 'reference'
 
-    def test_to_sum_model(self):
-        model = self.sky_models.to_sum_model()
-        assert isinstance(model, SumSkyModel)
-        pars = model.parameters.parameters
-        assert len(pars) == 12
-        assert pars[0].name == 'lon_0'
-        assert pars[-1].name == 'reference'
+    def test_parameters(self):
+        sky_models = self.sky_models
+        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
+        assert sky_models.parameters.names == parnames
+
+        # Check that model parameters are references to the parts
+        assert sky_models.parameters['lon_0'] is sky_models.skymodels[0].parameters['lon_0']
+
+        # Check that parameter assignment works
+        assert sky_models.parameters.parameters[-1].value == 1
+        sky_models.parameters = sky_models.parameters.copy()
+        assert sky_models.parameters.parameters[-1].value == 1
+
+    def test_evaluate(self):
+        sky_models = self.sky_models
+        lon = 3 * u.deg * np.ones(shape=(3, 4))
+        lat = 4 * u.deg * np.ones(shape=(3, 4))
+        energy = [1, 1, 1, 1, 1] * u.TeV
+
+        q = sky_models.evaluate(lon, lat, energy)
+
+        assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
+        assert q.shape == (5, 3, 4)
+        assert_allclose(q.value, 3.536776513153229e-13)
+
 
 
 class TestSkyModel:
@@ -156,39 +174,6 @@ class TestCompoundSkyModel:
         energy = [1, 1, 1, 1, 1] * u.TeV
 
         q = compound_model.evaluate(lon, lat, energy)
-
-        assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
-        assert q.shape == (5, 3, 4)
-        assert_allclose(q.value, 3.536776513153229e-13)
-
-
-class TestSumSkyModel:
-
-    @staticmethod
-    @pytest.fixture()
-    def sum_model(sky_model):
-        return SumSkyModel([sky_model, sky_model])
-
-    @staticmethod
-    def test_parameters(sum_model):
-        parnames = ['lon_0', 'lat_0', 'sigma', 'index', 'amplitude', 'reference'] * 2
-        assert sum_model.parameters.names == parnames
-
-        # Check that model parameters are references to the parts
-        assert sum_model.parameters['lon_0'] is sum_model.components[0].parameters['lon_0']
-
-        # Check that parameter assignment works
-        assert sum_model.parameters.parameters[-1].value == 1
-        sum_model.parameters = sum_model.parameters.copy()
-        assert sum_model.parameters.parameters[-1].value == 1
-
-    @staticmethod
-    def test_evaluate(sum_model):
-        lon = 3 * u.deg * np.ones(shape=(3, 4))
-        lat = 4 * u.deg * np.ones(shape=(3, 4))
-        energy = [1, 1, 1, 1, 1] * u.TeV
-
-        q = sum_model.evaluate(lon, lat, energy)
 
         assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert q.shape == (5, 3, 4)
