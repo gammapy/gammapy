@@ -70,9 +70,7 @@ def test_run(kbe, images):
 
 @requires_data('gammapy-extra')
 def test_run_without_defaults(kbe, images):
-    images.pop('exclusion')
-    images.pop('background')
-    result = kbe.run(images)
+    result = kbe.run({'counts': images['counts']})
     mask, background = result['exclusion'].data, result['background'].data
 
     assert_allclose(mask.sum(), 89)
