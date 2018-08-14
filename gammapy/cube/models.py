@@ -44,6 +44,7 @@ class SkyModels(object):
                 pars.append(p)
         self._parameters = Parameters(pars)
 
+
     @property
     def parameters(self):
         """Concatenated parameters.
