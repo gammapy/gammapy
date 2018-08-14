@@ -66,3 +66,15 @@ def test_run(kbe, images):
     assert_allclose(mask.sum(), 89)
     assert_allclose(background, 42 * np.ones((10, 10)))
     assert len(kbe.images_stack) == 4
+
+
+@requires_data('gammapy-extra')
+def test_run_without_defaults(kbe, images):
+    images.pop('exclusion')
+    images.pop('background')
+    result = kbe.run(images)
+    mask, background = result['exclusion'].data, result['background'].data
+
+    assert_allclose(mask.sum(), 89)
+    assert_allclose(background, 42 * np.ones((10, 10)))
+    assert len(kbe.images_stack) == 4
