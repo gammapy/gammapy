@@ -328,26 +328,27 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
 
-    if method == 'simple':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_simple(n_on, mu_bkg)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        if method == 'simple':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_simple(n_on, mu_bkg)
+            else:
+                return _significance_simple_on_off(n_on, n_off, alpha)
+        elif method == 'lima':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_lima(n_on, mu_bkg)
+            else:
+                return _significance_lima_on_off(n_on, n_off, alpha)
+        elif method == 'direct':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_direct(n_on, mu_bkg)
+            else:
+                return _significance_direct_on_off(n_on, n_off, alpha)
         else:
-            return _significance_simple_on_off(n_on, n_off, alpha)
-    elif method == 'lima':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_lima(n_on, mu_bkg)
-        else:
-            return _significance_lima_on_off(n_on, n_off, alpha)
-    elif method == 'direct':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_direct(n_on, mu_bkg)
-        else:
-            return _significance_direct_on_off(n_on, n_off, alpha)
-    else:
-        raise ValueError('Invalid method: {}'.format(method))
+            raise ValueError('Invalid method: {}'.format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):

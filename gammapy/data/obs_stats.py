@@ -220,8 +220,8 @@ class ObservationStats(Stats):
         ss += 'Alpha: {:.3f}\n'.format(self.alpha)
         ss += 'Bkg events in On region: {:.2f}\n'.format(self.background)
         ss += 'Excess: {:.2f}\n'.format(self.excess)
-        ss += 'Excess / Background: {:.2f}\n'.format(np.divide(self.excess,
-                                                               self.background))
+        with np.errstate(invalid='ignore', divide='ignore'):
+            ss += 'Excess / Background: {:.2f}\n'.format(self.excess / self.background)
         ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
         ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
         ss += 'Sigma: {:.2f}\n'.format(self.sigma)
