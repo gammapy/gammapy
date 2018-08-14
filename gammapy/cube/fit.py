@@ -29,7 +29,7 @@ class MapFit(object):
         Exposure cube
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
-    background : `~gammapy.maps.WcsNDMap`
+    exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
