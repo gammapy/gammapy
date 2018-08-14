@@ -87,7 +87,7 @@ class KernelBackgroundEstimator(object):
         # initial mask, if not present
         if 'exclusion' not in images:
             exclusion = Map.from_geom(images['counts'].geom)
-            exclusion += 1
+            exclusion.data += 1
             images['exclusion'] = exclusion
 
         # initial background estimate, if not present
