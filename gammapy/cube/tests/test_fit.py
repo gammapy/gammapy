@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
@@ -39,7 +40,6 @@ def exposure(geom):
         geom=geom,
     )
     return exposure_map
-
 
 @pytest.fixture(scope='session')
 def background(geom):
@@ -85,6 +85,15 @@ def sky_model():
 
 
 @pytest.fixture
+def exclusion_mask(geom, sky_model):
+    p = sky_model.spatial_model.parameters
+    center = SkyCoord(p['lon_0'].value, p['lat_0'].value, frame='galactic', unit='deg')
+    circle = CircleSkyRegion(center=center, radius=1 * u.deg)
+    data = geom.region_mask([circle], inside=False)
+    return WcsNDMap(geom=geom, data=data)
+
+
+@pytest.fixture
 def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
         model=sky_model,
@@ -100,7 +109,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 @requires_dependency('scipy')
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
-def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
+def test_cube_fit(sky_model, counts, exposure, psf, background, exclusion_mask, edisp):
     sky_model.parameters['lon_0'].value = 0.5
     sky_model.parameters['lat_0'].value = 0.5
     sky_model.parameters['index'].value = 2
@@ -111,6 +120,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, edisp):
         counts=counts,
         exposure=exposure,
         background=background,
+        exclusion_mask=exclusion_mask,
         psf=psf,
         edisp=edisp,
     )
