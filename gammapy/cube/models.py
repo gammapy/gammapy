@@ -12,7 +12,6 @@ __all__ = [
     'SkyModels',
     'SkyModel',
     'CompoundSkyModel',
-    'SumSkyModel',
     'SkyDiffuseCube',
 ]
 
@@ -43,7 +42,6 @@ class SkyModels(object):
             for p in skymodel.parameters:
                 pars.append(p)
         self._parameters = Parameters(pars)
-
 
     @property
     def parameters(self):

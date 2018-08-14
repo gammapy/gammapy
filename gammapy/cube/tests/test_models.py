@@ -107,7 +107,6 @@ class TestSkyModels:
         assert_allclose(q.value, 3.536776513153229e-13)
 
 
-
 class TestSkyModel:
     @staticmethod
     def test_repr(sky_model):
