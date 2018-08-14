@@ -38,6 +38,28 @@ class SkyModels(object):
     def __init__(self, skymodels):
         self.skymodels = skymodels
 
+        pars = []
+        for skymodel in skymodels:
+            for p in skymodel.parameters:
+                pars.append(p)
+        self._parameters = Parameters(pars)
+
+    @property
+    def parameters(self):
+        """Concatenated parameters.
+
+        Currently no way to distinguish spectral and spatial.
+        """
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        idx = 0
+        for skymodel in self.skymodels:
+            n_par = len(skymodel.parameters.parameters)
+            skymodel.parameters.parameters = parameters.parameters[idx:idx + n_par]
+            idx += n_par
+
     @classmethod
     def from_xml(cls, xml):
         """Read from XML string."""
@@ -74,9 +96,11 @@ class SkyModels(object):
         """Return `~gammapy.cube.models.CompoundSkyModel`"""
         return np.sum([m for m in self.skymodels])
 
-    def to_sum_model(self):
-        """Return `~gammapy.cube.models.SumSkyModel`"""
-        return SumSkyModel(self.skymodels)
+    def evaluate(self, lon, lat, energy):
+        out = self.skymodels[0].evaluate(lon, lat, energy)
+        for skymodel in self.skymodels[1:]:
+            out += skymodel.evaluate(lon, lat, energy)
+        return out
 
 
 class SkyModel(object):
@@ -239,50 +263,6 @@ class CompoundSkyModel(object):
         val2 = self.model2.evaluate(lon, lat, energy)
 
         return self.operator(val1, val2)
-
-
-class SumSkyModel(object):
-    """Sum of independent `SkyModel` components.
-
-    Not sure if we want this class, or only a + operator on SkyModel.
-    If we keep it, then probably SkyModel should become an ABC
-    and the current SkyModel renamed to SkyModelFactorised or something like that?
-
-    Parameters
-    ----------
-    components : list
-        List of SkyModel objects
-    """
-
-    def __init__(self, components):
-        self.components = components
-        pars = []
-        for model in self.components:
-            for p in model.parameters.parameters:
-                pars.append(p)
-        self._parameters = Parameters(pars)
-
-    @property
-    def parameters(self):
-        """Concatenated parameters.
-
-        Currently no way to distinguish spectral and spatial.
-        """
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        idx = 0
-        for component in self.components:
-            n_par = len(component.parameters.parameters)
-            component.parameters.parameters = parameters.parameters[idx:idx + n_par]
-            idx += n_par
-
-    def evaluate(self, lon, lat, energy):
-        out = self.components[0].evaluate(lon, lat, energy)
-        for component in self.components[1:]:
-            out += component.evaluate(lon, lat, energy)
-        return out
 
 
 class SkyDiffuseCube(object):
