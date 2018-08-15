@@ -154,6 +154,34 @@ class Parameter(object):
             frozen=self.frozen,
         )
 
+    def autoscale(self, method='scale10'):
+        """Autoscale the parameters.
+
+        Set ``factor`` and ``scale`` according to ``method``
+
+        Available methods:
+
+        * ``scale10`` sets ``scale`` to power of 10,
+          so that factor is in the range 1 to 10
+        * ``factor1`` sets ``factor, scale = 1, value``
+
+        Parameters
+        ----------
+        method : {'factor1', 'scale10'}
+            Method to apply
+        """
+        if method == 'scale10':
+            value = self.value
+            if value != 0:
+                power = int(np.log10(np.absolute(value)))
+                scale = 10 ** power
+                self.factor = value / scale
+                self.scale = scale
+        elif method == 'factor1':
+            self.factor, self.scale = 1, self.value
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
 
 class Parameters(object):
     """List of `~gammapy.spectrum.models.Parameter`
@@ -164,14 +192,18 @@ class Parameters(object):
     ----------
     parameters : list of `Parameter`
         List of parameters
-    covariance : `~numpy.ndarray`
+    covariance : `~numpy.ndarray`, optional
         Parameters covariance matrix.
         Order of values as specified by `parameters`.
+    apply_autoscale : bool, optional
+        Flag for optimizers, if True parameters are autoscaled before the fit,
+        see `~gammapy.utils.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters, covariance=None):
+    def __init__(self, parameters, covariance=None, apply_autoscale=True):
         self._parameters = parameters
         self.covariance = covariance
+        self.apply_autoscale = apply_autoscale
 
     def _init_covar(self):
         if self.covariance is None:
@@ -366,19 +398,11 @@ class Parameters(object):
         scale_matrix = scales[:, np.newaxis] * scales
         self.covariance = scale_matrix * matrix
 
-    def scale(self, method='scale10'):
-        """Re-scale the parameters.
+    def autoscale(self, method='scale10'):
+        """Autoscale all parameters.
 
-        By re-scale, we mean to change ``factor`` and ``scale``,
-        keeping the ``value = factor x scale`` the same.
-
-        You can call this method before fitting.
-
-        Available methods:
-
-        * ``scale10`` sets ``scale`` to power of 10,
-          so that factor is in the range 1 to 10
-        * ``factor1`` sets ``factor, scale = 1, value``
+        see :func:`~gammapy.utils.modelling.Parameter.autoscale`
+        
 
         Parameters
         ----------
@@ -386,12 +410,4 @@ class Parameters(object):
             Method to apply
         """
         for par in self.parameters:
-            if method == 'scale10':
-                value = par.value
-                scale = 10 ** int(np.log10(value))
-                par.factor = value / scale
-                par.scale = scale
-            elif method == 'factor1':
-                par.factor, par.scale = 1, par.value
-            else:
-                raise ValueError('Invalid method: {}'.format(method))
+            par.autoscale(method)

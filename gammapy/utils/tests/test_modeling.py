@@ -125,9 +125,11 @@ def test_parameters_scale():
         Parameter('', factor=10, scale=5),
         Parameter('', factor=10, scale=50),
         Parameter('', factor=100, scale=5),
+        Parameter('', factor=-10, scale=1),
+        Parameter('', factor=0, scale=1),
     ])
 
-    pars.scale()  # default: 'scale10'
+    pars.autoscale()  # default: 'scale10'
 
     assert_allclose(pars[0].factor, 5)
     assert_allclose(pars[0].scale, 10)
@@ -135,8 +137,12 @@ def test_parameters_scale():
     assert_allclose(pars[1].scale, 100)
     assert_allclose(pars[2].factor, 5)
     assert_allclose(pars[2].scale, 100)
+    assert_allclose(pars[3].factor, -1)
+    assert_allclose(pars[3].scale, 10)
+    assert_allclose(pars[4].factor, 0)
+    assert_allclose(pars[4].scale, 1)
 
-    pars.scale('factor1')
+    pars.autoscale('factor1')
 
     assert_allclose(pars[0].factor, 1)
     assert_allclose(pars[0].scale, 50)
@@ -144,3 +150,7 @@ def test_parameters_scale():
     assert_allclose(pars[1].scale, 500)
     assert_allclose(pars[2].factor, 1)
     assert_allclose(pars[2].scale, 500)
+    assert_allclose(pars[3].factor, 1)
+    assert_allclose(pars[3].scale, -10)
+    assert_allclose(pars[4].factor, 1)
+    assert_allclose(pars[4].scale, 0)

@@ -57,7 +57,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
     optimizer = get_sherpa_optimiser(optimizer)
 
     if parameters.covariance is None:
-        parameters.scale()
+        parameters.autoscale()
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
