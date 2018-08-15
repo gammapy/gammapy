@@ -1,25 +1,81 @@
 .. _gammapy_0p8_release:
 
-0.8 (unreleased)
+0.8 (2018-08-15)
 ----------------
 
 Summary
 +++++++
 
-For plans and progress for Gammapy 0.8, see https://github.com/gammapy/gammapy/milestones/0.8
+- Released on August 15, 2018 (`Gammapy 0.8 on PyPI <https://pypi.org/project/gammapy/0.8>`__)
+- 23 contributors (5 new)
+- 6 months of work (from Feb 28, 2018 to Aug 15, 2018)
+- 252 pull requests (not all listed below)
+
+**What's new?**
+
+This release contains a big change: the new ``gammapy.maps`` is used for all
+map-based analysis (2D images and 3D cubes with an energy axis). The old
+``SkyImage`` and ``SkyCube`` classes have been removed. All code and
+documentation has been updated to use ``gammapy.maps``. To learn about the new
+maps classes, see the ``intro_maps`` tutorial at :ref:`tutorials` and the
+:ref:`gammapy.maps <maps>` documentation page.
+
+Gammapy v0.8 also contains a first version of new classes for modeling and fitting of 3D cubes.
+The classes in `gammapy.cube.models` (3D cube models), `gammapy.image.models` (2D image models)
+and `gammapy.spectrum.models` (1D spectrum models) are now all written using a simple modeling
+system in `gammapy.utils.modeling` (the ``Parameter`` and ``Parameters`` class) and can be
+fit with iminuit using `gammapy.utils.fitting`. Development of these models, and
+adding additional optional parameter optimisation and error estimation backends (e.g. Sherpa or emcee) is work in progress.
+
+The ``analysis_3d`` notebook shows how to run a 3D analysis for IACT data using the
+``MapMaker`` and ``MapFit`` classes. The ``simulate_3d`` shows how to simulate and fit
+a source using CTA instrument response functions. The simulation is done on a binned
+3D cube, not via unbinned event sampling. The ``data_fermi_lat`` tutorial shows how to
+analyse high-energy Fermi-LAT data with events, exposure and PSF pre-computed using the
+Fermi science tools. You can find these tutorials and more at :ref:`tutorials`.
+
+
+TODO: Mention `gammapy.astro.darkmatter` and :ref:`astro-darkmatter`
+
+TODO: number of optional dependencies reduced: scikit-image and pandas no longer used.
+
+This release also contains a large number of small improvements and bug fixes to the existing code,
+listed below in the changelog.
+
+We are continuing to develop Gammapy at high speed, significant improvements on
+maps and modeling, but also on the data and IRF classes are planned for the coming
+months and the v0.9 release in fall 2019. We apologise if you are already using Gammapy
+for science studies and papers and have to update your scripts and notebooks to work with
+the new Gammapy version. If possible, just stick with a given stable version of Gammapy.
+If you need or want to update to a newer version, let us know if you have any issues or questions.
+We're happy to help!
+
 
 **Contributors:**
 
+- Andrew Chen (new)
 - Atreyee Sinha
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi
 - Christoph Deil
 - Cosimo Nigro
+- David Fidalgo (new)
+- Fabio Acero
 - Gabriel Emery (new)
+- Hubert Siejkowski (new)
+- Jean-Philippe Lenain
 - Johannes King
 - José Enrique Ruiz
+- Kai Brügge
 - Lars Mohrmann
+- Laura Vega Garcia (new)
+- Léa Jouvin
 - Matthew Wood
+- Matthias Wegen
 - Oscar Blanch
 - Régis Terrier
+- Roberta Zanin
 
 
 Pull requests
@@ -28,6 +84,15 @@ Pull requests
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
+
+- [#1696] Add paramter auto scale (Johannes Kind and Christoph Deil)
+- [#1695] Add WCSNDMap convolve method (Axel Donath)
+- [#1685] Add quantity support to map coordinates (Axel Donath)
+- [#1681] Add make_images method in MapMaker (Axel Donath)
+- [#1675] Add gammapy.stats.excess_matching_significance (Christoph Deil)
+- [#1660] Fix spectrum energy grouping, use nearest neighbor method (Johannes King)
+- [#1658] Bundle skimage block_reduce in gammapy.extern (Christoph Deil)
+- [#1634] Add SkyDiffuseCube model for 3D maps (Roberta Zanin and Christoph Deil)
 
 - [#1378] Change 3D model evaluation from SkyCube to Map (Christoph Deil)
 - [#1377] Add more SkySpatialModel subclasses (Johannes King)
@@ -61,7 +126,7 @@ Summary
 +++++++
 
 - Released on Feb 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.org/project/gammapy/0.7>`__)
-- 24 contributors (15 new)
+- 25 contributors (16 new)
 - 10 months of work (from April 28, 2017 to Feb 28, 2018)
 - 178 pull requests (not all listed below)
 
@@ -93,10 +158,6 @@ Documentation:
   see e.g. here: `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__
 - A page was created to collect the information for CTA members how to get started with Gammapy
   and with contact / support channels: http://gammapy.org/cta.html
-- The first public FITS test data release from H.E.S.S. is in the collaboration review phase,
-  we expect it to become available in March and update many of the Gammapy tutorials to use
-  this nice example dataset (in addition to the simulated CTA first data challenge dataset
-  and the Fermi-LAT dataset matching the 3FHL catalog we are using already).
 
 Gammapy Python package:
 
@@ -165,6 +226,7 @@ Organisation:
 - Régis Terrier
 - Roberta Zanin (new)
 - Rubén López-Coto (new)
+- Thomas Armstrong (new)
 - Thomas Vuillaume (new)
 - Yves Gallant (new)
 
