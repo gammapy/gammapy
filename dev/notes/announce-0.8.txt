@@ -1,0 +1,35 @@
+Title: Gammapy 0.8 release
+
+
+Dear colleagues,
+
+we are happy to announce the release of Gammapy 0.8.
+
+Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy and Astropy.
+It is a prototype for the Cherenkov Telescope Array (CTA) science tools,
+and can also be used to analyse data from existing gamma-ray telescopes.
+
+This release contains a big change: the new gammapy.maps is used for all
+map-based analysis (2D images and 3D cubes with an energy axis). It also
+contains a first version of new classes for modeling and fitting of 3D cubes.
+Please see the tutorial notebooks to learn about the new maps and modeling.
+If you have any issues or questions, please get in touch!
+
+You can find a "what's new" summary and changelog for Gammapy 0.8 here:
+http://docs.gammapy.org/dev/changelog.html#gammapy-0p8-release
+
+If you use conda or pip, you can upgrade to this latest stable version using:
+
+    conda install -c conda-forge gammapy
+    pip install gammapy --upgrade
+
+To learn more about Gammapy:
+
+* http://gammapy.org/ (project information, contacts, news)
+* http://docs.gammapy.org/stable/ (documentation)
+* http://docs.gammapy.org/stable/tutorials.html (tutorials; best place to get started)
+
+If you have any questions or issues, please see let us know!
+( see http://gammapy.org/contact.html )
+
+Christoph for the Gammapy team
