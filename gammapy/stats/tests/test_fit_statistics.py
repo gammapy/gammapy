@@ -11,17 +11,39 @@ from ... import stats
 def test_data():
     """Test data for fit statistics tests"""
     test_data = dict(
-        mu_sig=np.array([0.59752422, 9.13666449, 12.98288095, 5.56974565,
-                         13.52509804, 11.81725635, 0.47963765, 11.17708176,
-                         5.18504894, 8.30202394]),
+        mu_sig=np.array(
+            [
+                0.59752422,
+                9.13666449,
+                12.98288095,
+                5.56974565,
+                13.52509804,
+                11.81725635,
+                0.47963765,
+                11.17708176,
+                5.18504894,
+                8.30202394,
+            ]
+        ),
         n_on=np.array([0, 13, 7, 5, 11, 16, 0, 9, 3, 12]),
         n_off=np.array([0, 7, 4, 0, 18, 7, 1, 5, 12, 25]),
-        alpha=np.array([0.83746243, 0.17003354, 0.26034507, 0.69197751,
-                        0.89557033, 0.34068848, 0.0646732, 0.86411967,
-                        0.29087245, 0.74108241])
+        alpha=np.array(
+            [
+                0.83746243,
+                0.17003354,
+                0.26034507,
+                0.69197751,
+                0.89557033,
+                0.34068848,
+                0.0646732,
+                0.86411967,
+                0.29087245,
+                0.74108241,
+            ]
+        ),
     )
 
-    test_data['staterror'] = np.sqrt(test_data['n_on'])
+    test_data["staterror"] = np.sqrt(test_data["n_on"])
 
     return test_data
 
@@ -33,52 +55,67 @@ def reference_values():
     Produced using sherpa stats module in dev/sherpa/stats/compare_wstat.py
     """
     return dict(
-        wstat=[1.19504844, 0.625311794002, 4.25810886127, 0.0603765381044,
-               11.7285002468, 0.206014834301, 1.084611, 2.72972381792,
-               4.60602990838, 7.51658734973]
+        wstat=[
+            1.19504844,
+            0.625311794002,
+            4.25810886127,
+            0.0603765381044,
+            11.7285002468,
+            0.206014834301,
+            1.084611,
+            2.72972381792,
+            4.60602990838,
+            7.51658734973,
+        ],
+        cash=[
+            1.19504844,
+            -39.24635098872072,
+            -9.925081055136996,
+            -6.034002586236575,
+            -30.249839537105466,
+            -55.39143500383233,
+            0.9592753,
+            -21.095413867175516,
+            0.49542219758430406,
+            -34.19193611846045,
+        ],
+        cstat=[
+            1.19504844,
+            1.4423323052792387,
+            3.3176610316373925,
+            0.06037653810442922,
+            0.5038564644586838,
+            1.3314041078406706,
+            0.9592753,
+            0.4546285248764317,
+            1.0870959295929628,
+            1.4458234764515652,
+        ],
     )
-
-
-@pytest.mark.xfail(reason='sherpa implementation changed')
-@requires_dependency('sherpa')
-def test_cstat(test_data):
-    import sherpa.stats as ss
-    sherpa_stat = ss.CStat()
-    data = test_data['n_on']
-    model = test_data['mu_sig']
-    staterror = test_data['staterror']
-    desired, fvec = sherpa_stat.calc_stat(data, model, staterror=staterror)
-
-    statsvec = stats.cstat(n_on=data, mu_on=model)
-    actual = np.sum(statsvec)
-    assert_allclose(actual, desired)
-
-
-@pytest.mark.xfail(reason='sherpa implementation changed')
-@requires_dependency('sherpa')
-def test_cash(test_data):
-    import sherpa.stats as ss
-    sherpa_stat = ss.Cash()
-    data = test_data['n_on']
-    model = test_data['mu_sig']
-    staterror = test_data['staterror']
-    desired, fvec = sherpa_stat.calc_stat(data, model, staterror=staterror)
-
-    statsvec = stats.cash(n_on=data, mu_on=model)
-    actual = np.sum(statsvec)
-    assert_allclose(actual, desired)
 
 
 def test_wstat(test_data, reference_values):
     statsvec = stats.wstat(
-        n_on=test_data['n_on'],
-        mu_sig=test_data['mu_sig'],
-        n_off=test_data['n_off'],
-        alpha=test_data['alpha'],
+        n_on=test_data["n_on"],
+        mu_sig=test_data["mu_sig"],
+        n_off=test_data["n_off"],
+        alpha=test_data["alpha"],
         extra_terms=True,
     )
 
-    assert_allclose(statsvec, reference_values['wstat'])
+    assert_allclose(statsvec, reference_values["wstat"])
+
+
+@requires_dependency("sherpa")
+def test_cash(test_data, reference_values):
+    statsvec = stats.cash(n_on=test_data["n_on"], mu_on=test_data["mu_sig"])
+    assert_allclose(statsvec, reference_values["cash"])
+
+
+@requires_dependency("sherpa")
+def test_cstat(test_data, reference_values):
+    statsvec = stats.cstat(n_on=test_data["n_on"], mu_on=test_data["mu_sig"])
+    assert_allclose(statsvec, reference_values["cstat"])
 
 
 def test_wstat_corner_cases():
