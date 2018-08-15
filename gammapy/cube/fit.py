@@ -29,32 +29,27 @@ class MapFit(object):
         Exposure cube
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask.
+    mask : `~gammapy.maps.WcsNDMap`
+        Mask to apply for the fit. All the pixels that contain 1 or True are included
+        in the fit, all others are ignored.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     """
 
-    def __init__(self, model, counts, exposure, background=None, exclusion_mask=None, psf=None, edisp=None):
+    def __init__(self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None):
         self.model = model
         self.counts = counts
         self.exposure = exposure
         self.background = background
-        self.exclusion_mask = exclusion_mask
+        self.mask = mask
         self.psf = psf
         self.edisp = edisp
 
         self._npred = None
         self._stat = None
         self._minuit = None
-
-        # applying the exclusion mask to the exposure is currently the fastest
-        # way of applying a mask for fitting
-        if exclusion_mask:
-            data = exposure.data * (1 - exclusion_mask.data.astype(int))
-            exposure = exposure.copy(data=data)
 
         self.evaluator = MapEvaluator(
             model=self.model,
@@ -95,7 +90,12 @@ class MapFit(object):
         self.model.parameters = parameters
         self.compute_npred()
         self.compute_stat()
-        return np.sum(self.stat, dtype=np.float64)
+
+        if self.mask:
+            stat = self.stat[self.mask.data]
+        else:
+            stat = self.stat
+        return np.sum(stat, dtype=np.float64)
 
     def fit(self, opts_minuit=None):
         """Run the fit

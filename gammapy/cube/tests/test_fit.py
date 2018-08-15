@@ -85,11 +85,11 @@ def sky_model():
 
 
 @pytest.fixture
-def exclusion_mask(geom, sky_model):
+def mask(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p['lon_0'].value, p['lat_0'].value, frame='galactic', unit='deg')
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
-    data = geom.region_mask([circle], inside=False)
+    data = geom.region_mask([circle])
     return WcsNDMap(geom=geom, data=data)
 
 
@@ -109,7 +109,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 @requires_dependency('scipy')
 @requires_dependency('iminuit')
 @requires_data('gammapy-extra')
-def test_cube_fit(sky_model, counts, exposure, psf, background, exclusion_mask, edisp):
+def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
     sky_model.parameters['lon_0'].value = 0.5
     sky_model.parameters['lat_0'].value = 0.5
     sky_model.parameters['index'].value = 2
@@ -120,7 +120,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, exclusion_mask, 
         counts=counts,
         exposure=exposure,
         background=background,
-        exclusion_mask=exclusion_mask,
+        mask=mask,
         psf=psf,
         edisp=edisp,
     )
