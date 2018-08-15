@@ -33,9 +33,6 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
-    if parameters.covariance is None:
-        parameters.scale()
-
     minuit_func = MinuitFunction(function, parameters)
 
     if opts_minuit is None:
@@ -105,10 +102,7 @@ def make_minuit_par_kwargs(parameters):
         max_ = None if np.isnan(par.max) else par.max
         kwargs['limit_{}'.format(parname_)] = (min_, max_)
 
-        if parameters.covariance is None:
-            kwargs['error_{}'.format(parname_)] = 1
-        else:
-            kwargs['error_{}'.format(parname_)] = parameters.error(idx)
+        kwargs['error_{}'.format(parname_)] = 1
 
         if par.frozen:
             kwargs['fix_{}'.format(parname_)] = True
