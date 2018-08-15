@@ -29,17 +29,21 @@ class MapFit(object):
         Exposure cube
     background : `~gammapy.maps.WcsNDMap`
         Background Cube
+    mask : `~gammapy.maps.WcsNDMap`
+        Mask to apply for the fit. All the pixels that contain 1 or True are included
+        in the fit, all others are ignored.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     """
 
-    def __init__(self, model, counts, exposure, background=None, psf=None, edisp=None):
+    def __init__(self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None):
         self.model = model
         self.counts = counts
         self.exposure = exposure
         self.background = background
+        self.mask = mask
         self.psf = psf
         self.edisp = edisp
 
@@ -49,7 +53,7 @@ class MapFit(object):
 
         self.evaluator = MapEvaluator(
             model=self.model,
-            exposure=self.exposure,
+            exposure=exposure,
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
@@ -86,7 +90,12 @@ class MapFit(object):
         self.model.parameters = parameters
         self.compute_npred()
         self.compute_stat()
-        return np.sum(self.stat, dtype=np.float64)
+
+        if self.mask:
+            stat = self.stat[self.mask.data]
+        else:
+            stat = self.stat
+        return np.sum(stat, dtype=np.float64)
 
     def fit(self, opts_minuit=None):
         """Run the fit
