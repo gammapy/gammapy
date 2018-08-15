@@ -172,9 +172,11 @@ class Parameter(object):
         """
         if method == 'scale10':
             value = self.value
-            scale = 10 ** int(np.log10(value))
-            self.factor = value / scale
-            self.scale = scale
+            if value != 0:
+                power = int(np.log10(np.absolute(value)))
+                scale = 10 ** power
+                self.factor = value / scale
+                self.scale = scale
         elif method == 'factor1':
             self.factor, self.scale = 1, self.value
         else:
