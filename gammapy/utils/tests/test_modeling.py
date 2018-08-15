@@ -127,7 +127,7 @@ def test_parameters_scale():
         Parameter('', factor=100, scale=5),
     ])
 
-    pars.scale()  # default: 'scale10'
+    pars.autoscale()  # default: 'scale10'
 
     assert_allclose(pars[0].factor, 5)
     assert_allclose(pars[0].scale, 10)
@@ -136,7 +136,7 @@ def test_parameters_scale():
     assert_allclose(pars[2].factor, 5)
     assert_allclose(pars[2].scale, 100)
 
-    pars.scale('factor1')
+    pars.autoscale('factor1')
 
     assert_allclose(pars[0].factor, 1)
     assert_allclose(pars[0].scale, 50)
