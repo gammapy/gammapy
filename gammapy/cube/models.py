@@ -31,7 +31,7 @@ class SkyModels(object):
 
         from gammapy.cube import SkyModels
         filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
-        sourcelib = SkyModels.from_xml(filename)
+        sourcelib = SkyModels.read(filename)
     """
 
     def __init__(self, skymodels):
