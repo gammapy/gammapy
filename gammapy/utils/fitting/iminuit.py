@@ -33,6 +33,9 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     """
     from iminuit import Minuit
 
+    if parameters.apply_autoscale:
+        parameters.autoscale()
+
     minuit_func = MinuitFunction(function, parameters)
 
     if opts_minuit is None:

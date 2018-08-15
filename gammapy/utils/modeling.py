@@ -192,14 +192,18 @@ class Parameters(object):
     ----------
     parameters : list of `Parameter`
         List of parameters
-    covariance : `~numpy.ndarray`
+    covariance : `~numpy.ndarray`, optional
         Parameters covariance matrix.
         Order of values as specified by `parameters`.
+    apply_autoscale : bool, optional
+        Flag for optimizers, if True parameters are autoscaled before the fit,
+        see `~gammapy.utils.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters, covariance=None):
+    def __init__(self, parameters, covariance=None, apply_autoscale=True):
         self._parameters = parameters
         self.covariance = covariance
+        self.apply_autoscale = apply_autoscale
 
     def _init_covar(self):
         if self.covariance is None:
