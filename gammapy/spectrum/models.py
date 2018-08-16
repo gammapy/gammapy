@@ -249,6 +249,19 @@ class SpectralModel(object):
 
         kwargs are forwarded to `matplotlib.pyplot.plot`
 
+        By default a log-log scaling of the axes is used, if you want to change
+        the y axis scaling to linear you can use:
+
+        .. code:
+
+            from gammapy.spectrum.models import PowerLaw
+            from astropy import units as u
+
+            pwl = ExponentialCutoffPowerLaw()
+            ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
+            ax.set_yscale('linear')
+
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
@@ -361,7 +374,10 @@ class SpectralModel(object):
         ax.set_yscale("log", nonposy='clip')
 
     def _plot_scale_flux(self, energy, flux, energy_power):
-        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+        try:
+            eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+        except IndexError:
+            eunit = energy.unit
         y = flux * np.power(energy, energy_power)
         return y.to(flux.unit * eunit ** energy_power)
 
@@ -1101,47 +1117,41 @@ class TableModel(SpectralModel):
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
-    scale : float
+    norm : float
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
-    scale_logy : boolean
-        interpolation can be done linearly or in logarithm
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
-
-    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
+    def __init__(self, energy, values, norm=1, interp='log', interp_kwargs=None, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = Parameters([
-            Parameter('scale', scale, min=0, unit='')
+            Parameter('norm', norm, min=0, unit='')
         ])
         self.energy = energy
         self.values = values
-        self.scale_logy = scale_logy
+        self.interp = interp
         self.meta = dict() if meta is None else meta
 
-        self.lo_threshold = energy[0]
-        self.hi_threshold = energy[-1]
+        interp_kwargs = interp_kwargs or {'bounds_error': False, 'kind': 'cubic'}
 
-        loge = np.log10(self.energy.to('eV').value)
-        try:
-            self.unit = self.values.unit
-            if scale_logy is True:
-                y = np.log10(self.values.value)
-            else:
-                y = self.values.value
-        except AttributeError:
-            self.unit = u.Unit('')
-            if scale_logy is True:
-                y = np.log10(self.values)
-            else:
-                y = self.values
-        # The type conversion is a fix for:
-        # https://travis-ci.org/gammapy/gammapy/jobs/210576260
-        self.interpy = interp1d(loge.astype(float),
-                                y.astype(float),
-                                fill_value=-np.Inf,
-                                bounds_error=False,
-                                kind='cubic')
+        if interp == 'log':
+            fn_0, fn_1 = np.log, np.exp
+            interp_kwargs.setdefault('fill_value', -np.inf)
+        elif interp == 'lin':
+            fn_0, fn_1 = lambda x: x, lambda x: x
+            interp_kwargs.setdefault('fill_value', 0)
+        elif interp == 'sqrt':
+            interp_kwargs.setdefault('fill_value', 0)
+            fn_0, fn_1 = np.sqrt, lambda x: x ** 2
+        else:
+            raise ValueError('Not a valid interpolation mode.')
+
+        y = fn_0(values.value)
+        x = np.log(energy.value)
+        interpy = interp1d(x, y, **interp_kwargs)
+        print(interp_kwargs)
+        self._evaluate = lambda x: fn_1(interpy(x))
+
 
     @classmethod
     def read_xspec_model(cls, filename, param):
@@ -1195,7 +1205,7 @@ class TableModel(SpectralModel):
         idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
         values = table_spectra[idx][1] * u.Unit('')  # no dimension
 
-        return cls(energy=energy, values=values, scale_logy=False)
+        return cls(energy=energy, values=values, interp='lin')
 
     @classmethod
     def read_fermi_isotropic_model(cls, filename, **kwargs):
@@ -1207,94 +1217,19 @@ class TableModel(SpectralModel):
         ----------
         filename : `str`
             filename
-        param : float
-            Model parameter value
         """
         filename = str(make_path(filename))
         vals = np.loadtxt(filename)
         energy = vals[:, 0] * u.MeV
         values = vals[:, 1] * u.Unit('MeV-1 s-1 cm-2')
+        return cls(energy=energy, values=values, interp='log', **kwargs)
 
-        return cls(energy=energy, values=values, scale_logy=False, **kwargs)
-
-    def evaluate(self, energy, scale):
+    def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        # What's with all this checking?
-        # TODO: Try `np.asanyarray` and always return an array (even for scalar input)?
-        is_array = True
-        try:
-            len(energy)
-        except:
-            is_array = False
-
-        # Not working for astropy.units.quantity.Quantity
-        # if isinstance(energy, (np.ndarray, np.generic)):
-        if is_array:  # Test if array
-            # initialise array value to zero (dim energy)
-            values = np.zeros(len(energy), dtype=float)
-            # mask for energy range
-            mask = (energy >= self.lo_threshold) & (
-                    energy <= self.hi_threshold)
-            # apply interpolation for masked values
-            values[mask] = self.interpy(np.log10(energy[mask].to('eV').value))
-            # Get rid of negative values (due to interpolation)
-            # Needed because of the rand.poisson used in SpectrumSimulation class
-            # Should be fixed in the class itself ?
-            if self.scale_logy is False:
-                values[values < 0] = 0.
-        else:  # if not array
-            # test if energy is in range
-            if (energy >= self.lo_threshold or energy <= self.hi_threshold):
-                values = self.interpy(np.log10(energy.to('eV').value))
-            else:
-                values = 0
-
-        if self.scale_logy:
-            values = np.power(10, values)
-        return scale * values * self.unit
-
-    def plot(self, energy_range, ax=None, energy_unit='TeV',
-             n_points=100, **kwargs):
-        """Plot spectral model curve.
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.plot`
-
-        Parameters
-        ----------
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        n_points : int, optional
-            Number of evaluation nodes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
-
-        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['scale'].quantity
-        if self.scale_logy:
-            y = np.power(10, y)
-
-        ax.plot(energy.value, y, **kwargs)
-
-        ax.set_xlabel('Energy [{}]'.format(energy.unit))
-        ax.set_ylabel('Table model')
-
-        ax.set_xscale("log", nonposx='clip')
-        if self.scale_logy:
-            ax.set_yscale("log", nonposy='clip')
-
-        return ax
+        x = np.log(energy.to(self.energy.unit).value)
+        vals = self._evaluate(x)
+        vals = np.clip(vals, 0, np.inf)
+        return u.Quantity(norm.value * vals, self.values.unit, copy=False)
 
 
 class Absorption(object):
@@ -1329,7 +1264,7 @@ class Absorption(object):
         # start customised plot
         energy_range = [0.08, 3] * u.TeV
         ax = plt.gca()
-        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax)
+        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax, flux_unit='')
         franceschini.plot(label='Franceschini 2008', **opts)
         finke.plot(label='Finke 2010', **opts)
         dominguez.plot(label='Dominguez 2011', **opts)
@@ -1444,7 +1379,7 @@ class Absorption(object):
 
         values = self.evaluate(energy=energy, parameter=parameter)
 
-        return TableModel(energy=energy, values=values, scale_logy=False)
+        return TableModel(energy=energy, values=values, interp='lin')
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
