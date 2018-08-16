@@ -115,8 +115,7 @@ Notebooks
    notebooks/cta_simulation.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
-   notebooks/light_curve.ipynb
-   notebooks/data_fermi_lat.ipynb
+   notebooks/fermi_lat.ipynb
 
 For a quick introduction to Gammapy, go here:
 
@@ -132,7 +131,7 @@ Interested to do a first analysis of simulated CTA data?
 
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
-- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ | *data_fermi_lat.ipynb*
+- `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 2-dimensional sky image analysis:
 
@@ -149,10 +148,6 @@ Interested to do a first analysis of simulated CTA data?
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
-Time-related analysis:
-
-- `Light curve estimation with Gammapy <notebooks/light_curve.html>`__ | *light_curve.ipynb*
-
 Extra topics
 ------------
 .. toctree::
@@ -160,7 +155,6 @@ Extra topics
 
     notebooks/hgps.ipynb
     notebooks/source_population_model.ipynb
-    notebooks/background_model.ipynb
     notebooks/cwt.ipynb
     notebooks/astro_dark_matter.ipynb
 
@@ -168,6 +162,5 @@ These notebooks contain examples on some more specialised functionality in Gamma
 
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
-- `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
