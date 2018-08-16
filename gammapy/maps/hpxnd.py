@@ -209,15 +209,9 @@ class HpxNDMap(HpxMap):
 
         map_out = WcsNDMap(geom)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                raise NotImplementedError
+            img = self.data[idx[::-1]]
 
             # TODO: Create WCS object for image plane if
             # multi-resolution geom

@@ -201,34 +201,6 @@ class WcsNDMap(WcsMap):
 
         return vals
 
-    # Currently used by reproject.
-    # TODO: Consider replacing with `interp_by_coord`.
-    def _interp_image(self, coords, order=1):
-        from scipy.interpolate import interp1d
-
-        if self.geom.ndim != 3:
-            raise ValueError('Only support geometry with ndim=3 at the moment')
-
-        axis = self.geom.axes[0]
-        idx = axis.coord_to_idx_interp(coords[0])
-        map_slice = slice(int(idx[0]), int(idx[-1]) + 1)
-        pix_vals = [float(t) for t in idx]
-        pix = axis.coord_to_pix(coords[0])
-        data = self.data[map_slice]
-
-        if coords[0] < axis.center[0] or coords[0] > axis.center[-1]:
-            kind = 'linear' if order >= 1 else 'nearest'
-            fill_value = 'extrapolate'
-        else:
-            kind = order
-            fill_value = None
-
-        fn = interp1d(pix_vals, data, copy=False, axis=0,
-                      kind=kind, fill_value=fill_value)
-        data_interp = fn(float(pix))
-        geom = self.geom.to_image()
-        return self._init_copy(data=data_interp, geom=geom)
-
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
@@ -277,16 +249,9 @@ class WcsNDMap(WcsMap):
         from reproject import reproject_interp, reproject_exact
 
         map_out = WcsNDMap(geom, unit=self.unit)
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                coords = axes_pix_to_coord(geom.axes, idx)
-                img = self._interp_image(coords, order=order).data
+            img = self.data[idx[::-1]]
 
             # FIXME: This is a temporary solution for handling maps
             # with undefined pixels
@@ -324,16 +289,9 @@ class WcsNDMap(WcsMap):
 
         map_out = HpxNDMap(geom)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
 
         for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                coords = axes_pix_to_coord(geom.axes, idx)
-                img = self._interp_image(coords, order=order).data
+            img = self.data[idx[::-1]]
 
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
