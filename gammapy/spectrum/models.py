@@ -1119,6 +1119,14 @@ class TableModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     norm : float
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
+    interp : {'log', 'lin', 'sqrt'}
+        Interpolation scaling applied to values. If the values vary over many magnitudes
+        a 'log' scaling is recommended.
+    interp_kwargs : dict
+        Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
+        By default all values outside the interpolation range are set to zero.
+        If you want to apply linear extrapolation you can pass `interp_kwargs={'bounds_error': False,
+        'fill_value': 'extrapolate', 'kind': 'linear'}`
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
@@ -1146,15 +1154,15 @@ class TableModel(SpectralModel):
         else:
             raise ValueError('Not a valid interpolation mode.')
 
-        y = fn_0(values.value)
-        x = np.log(energy.value)
+        non_zero = (values.value > 0)
+        y = fn_0(values.value[non_zero])
+        x = np.log(energy.value[non_zero])
         interpy = interp1d(x, y, **interp_kwargs)
-        print(interp_kwargs)
         self._evaluate = lambda x: fn_1(interpy(x))
 
 
     @classmethod
-    def read_xspec_model(cls, filename, param):
+    def read_xspec_model(cls, filename, param, **kwargs):
         """Read XSPEC table model
 
         The input is a table containing absorbed values from a XSPEC model as a
@@ -1205,7 +1213,8 @@ class TableModel(SpectralModel):
         idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
         values = table_spectra[idx][1] * u.Unit('')  # no dimension
 
-        return cls(energy=energy, values=values, interp='lin')
+        kwargs.setdefault('interp', 'lin')
+        return cls(energy=energy, values=values, **kwargs)
 
     @classmethod
     def read_fermi_isotropic_model(cls, filename, **kwargs):
@@ -1222,7 +1231,8 @@ class TableModel(SpectralModel):
         vals = np.loadtxt(filename)
         energy = vals[:, 0] * u.MeV
         values = vals[:, 1] * u.Unit('MeV-1 s-1 cm-2')
-        return cls(energy=energy, values=values, interp='log', **kwargs)
+        kwargs.setdefault('interp', 'lin')
+        return cls(energy=energy, values=values, **kwargs)
 
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
