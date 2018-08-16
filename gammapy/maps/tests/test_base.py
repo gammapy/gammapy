@@ -3,10 +3,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from collections import OrderedDict
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.units import Unit, Quantity
+from ...utils.testing import requires_dependency
 from ..base import Map
 from ..geom import MapAxis
 from ..wcs import WcsGeom
@@ -242,3 +243,49 @@ def test_map_properties():
     # Assigning something that doesn't match raises an appropriate error
     with pytest.raises(ValueError):
         m.data = np.ones((1, 3))
+
+
+@requires_dependency('reproject')
+def test_map_reproject_wcs_to_wcs():
+    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
+    geom_wcs_1 = WcsGeom.create(skydir=(266.405, -28.936), npix=(11, 11),
+                                binsz=0.1, axes=[axis], coordsys='CEL')
+    geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1,
+                                axes=[axis], coordsys='GAL')
+
+    data = np.arange(11 * 11 * 3).reshape(geom_wcs_1.data_shape)
+    m = WcsNDMap(geom_wcs_1, data=data)
+    m_r = m.reproject(geom_wcs_2)
+
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    assert_allclose(actual, [59.98055, 180.98055, 301.98056], rtol=1e-3)
+
+
+@requires_dependency('reproject')
+def test_map_reproject_wcs_to_hpx():
+    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
+    geom_wcs = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=10,
+                              axes=[axis], coordsys='GAL')
+    geom_hpx = HpxGeom.create(binsz=10, coordsys='GAL', axes=[axis])
+
+    data = np.arange(11 * 11 * 3).reshape(geom_wcs.data_shape)
+    m = WcsNDMap(geom_wcs, data=data)
+
+    m_r = m.reproject(geom_hpx)
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    assert_allclose(actual, [65., 186., 307.], rtol=1e-3)
+
+
+@requires_dependency('reproject')
+def test_map_reproject_hpx_to_wcs():
+    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
+    geom_wcs = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=10,
+                              axes=[axis], coordsys='GAL')
+    geom_hpx = HpxGeom.create(binsz=10, coordsys='GAL', axes=[axis])
+
+    data = np.arange(3 * 768).reshape(geom_hpx.data_shape)
+    m = HpxNDMap(geom_hpx, data=data)
+
+    m_r = m.reproject(geom_wcs)
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
