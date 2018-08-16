@@ -259,6 +259,7 @@ def test_map_reproject_wcs_to_wcs():
 
     actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
     assert_allclose(actual, [59.98055, 180.98055, 301.98056], rtol=1e-3)
+    assert m.data.shape == m_r.data.shape
 
 
 @requires_dependency('reproject')

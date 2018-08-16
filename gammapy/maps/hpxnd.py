@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from .base import Map
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -203,27 +204,23 @@ class HpxNDMap(HpxMap):
         return self._init_copy(geom=geom, data=data)
 
     def _reproject_to_wcs(self, geom, order=1, mode='interp'):
-
         from reproject import reproject_from_healpix
-        from .wcsnd import WcsNDMap
 
-        map_out = WcsNDMap(geom)
+        data = np.empty(geom.data_shape)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
 
-        for vals, idx in map_out.iter_by_image():
-            img = self.data[idx[::-1]]
-
+        for img, idx in self.iter_by_image():
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
-
-            data, footprint = reproject_from_healpix((img, coordsys),
+            vals, footprint = reproject_from_healpix((img, coordsys),
                                                      geom.wcs,
                                                      shape_out=shape_out,
-                                                     nested=self.geom.nest)
-            vals[...] = data
+                                                     nested=self.geom.nest,
+                                                     order=order)
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
     def _reproject_to_hpx(self):
         raise NotImplementedError("Maybe try using Map.interp_by_coord().")

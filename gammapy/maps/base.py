@@ -63,7 +63,7 @@ class Map(object):
             value = getattr(self, '_' + arg)
             kwargs.setdefault(arg, copy.deepcopy(value))
 
-        return self.__class__(**kwargs)
+        return self.from_geom(**kwargs)
 
     @property
     def geom(self):
@@ -196,14 +196,15 @@ class Map(object):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
-    def from_geom(geom, meta=None, map_type='auto', unit=''):
+    def from_geom(geom, meta=None, data=None, map_type='auto', unit=''):
         """Generate an empty map from a `Geom` instance.
 
         Parameters
         ----------
         geom : `MapGeom`
             Map geometry.
-
+        data : `numpy.ndarray`
+            data array
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
@@ -234,7 +235,7 @@ class Map(object):
                 raise ValueError('Unrecognized geom type.')
 
         cls_out = Map._get_map_cls(map_type)
-        return cls_out(geom, meta=meta, unit=unit)
+        return cls_out(geom, data=data, meta=meta, unit=unit)
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):

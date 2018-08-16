@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
+from .base import Map
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .wcs import _check_width
@@ -248,68 +249,57 @@ class WcsNDMap(WcsMap):
     def _reproject_to_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
 
-        map_out = WcsNDMap(geom, unit=self.unit)
+        data = np.empty(geom.data_shape)
 
-        for vals, idx in map_out.iter_by_image():
-            img = self.data[idx[::-1]]
-
-            # FIXME: This is a temporary solution for handling maps
-            # with undefined pixels
-            if np.any(~np.isfinite(img)):
-                img = img.copy()
-                img[~np.isfinite(img)] = 0.0
-
+        for img, idx in self.iter_by_image():
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
 
             if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                data, footprint = reproject_car_to_wcs((img, self.geom.wcs),
+                vals, footprint = reproject_car_to_wcs((img, self.geom.wcs),
                                                        geom.wcs,
                                                        shape_out=shape_out)
             elif mode == 'interp':
-                data, footprint = reproject_interp((img, self.geom.wcs),
+                vals, footprint = reproject_interp((img, self.geom.wcs),
                                                    geom.wcs,
                                                    shape_out=shape_out)
             elif mode == 'exact':
-                data, footprint = reproject_exact((img, self.geom.wcs),
+                vals, footprint = reproject_exact((img, self.geom.wcs),
                                                   geom.wcs,
                                                   shape_out=shape_out)
             else:
                 raise TypeError(
                     "Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-            vals[...] = data
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
     def _reproject_to_hpx(self, geom, mode='interp', order=1):
         from reproject import reproject_to_healpix
-        from .hpxnd import HpxNDMap
 
-        map_out = HpxNDMap(geom)
+        data = np.empty(geom.data_shape)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
 
-        for vals, idx in map_out.iter_by_image():
-            img = self.data[idx[::-1]]
-
+        for img, idx in self.iter_by_image():
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
             if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                data, footprint = reproject_car_to_hpx((img, self.geom.wcs),
+                vals, footprint = reproject_car_to_hpx((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
                                                        order=order)
             else:
-                data, footprint = reproject_to_healpix((img, self.geom.wcs),
+                vals, footprint = reproject_to_healpix((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
                                                        order=order)
-            vals[...] = data
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
     def pad(self, pad_width, mode='constant', cval=0, order=1):
 
