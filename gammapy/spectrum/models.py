@@ -1125,8 +1125,8 @@ class TableModel(SpectralModel):
     interp_kwargs : dict
         Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
         By default all values outside the interpolation range are set to zero.
-        If you want to apply linear extrapolation you can pass `interp_kwargs={'bounds_error': False,
-        'fill_value': 'extrapolate', 'kind': 'linear'}`
+        If you want to apply linear extrapolation you can pass `interp_kwargs={'fill_value':
+        'extrapolate', 'kind': 'linear'}`
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
@@ -1140,7 +1140,9 @@ class TableModel(SpectralModel):
         self.values_scale = values_scale
         self.meta = dict() if meta is None else meta
 
-        interp_kwargs = interp_kwargs or {'bounds_error': False, 'kind': 'cubic'}
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault('bounds_error', False)
+        interp_kwargs.setdefault('kind', 'cubic')
 
         if values_scale == 'log':
             fn_0, fn_1 = np.log, np.exp
