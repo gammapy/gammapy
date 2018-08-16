@@ -1119,7 +1119,7 @@ class TableModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     norm : float
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
-    interp : {'log', 'lin', 'sqrt'}
+    values_scale : {'log', 'lin', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
     interp_kwargs : dict
@@ -1130,25 +1130,25 @@ class TableModel(SpectralModel):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
-    def __init__(self, energy, values, norm=1, interp='log', interp_kwargs=None, meta=None):
+    def __init__(self, energy, values, norm=1, values_scale='log', interp_kwargs=None, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = Parameters([
             Parameter('norm', norm, min=0, unit='')
         ])
         self.energy = energy
         self.values = values
-        self.interp = interp
+        self.values_scale = values_scale
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = interp_kwargs or {'bounds_error': False, 'kind': 'cubic'}
 
-        if interp == 'log':
+        if values_scale == 'log':
             fn_0, fn_1 = np.log, np.exp
             interp_kwargs.setdefault('fill_value', -np.inf)
-        elif interp == 'lin':
+        elif values_scale == 'lin':
             fn_0, fn_1 = lambda x: x, lambda x: x
             interp_kwargs.setdefault('fill_value', 0)
-        elif interp == 'sqrt':
+        elif values_scale == 'sqrt':
             interp_kwargs.setdefault('fill_value', 0)
             fn_0, fn_1 = np.sqrt, lambda x: x ** 2
         else:
@@ -1213,7 +1213,7 @@ class TableModel(SpectralModel):
         idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
         values = table_spectra[idx][1] * u.Unit('')  # no dimension
 
-        kwargs.setdefault('interp', 'lin')
+        kwargs.setdefault('values_scale', 'lin')
         return cls(energy=energy, values=values, **kwargs)
 
     @classmethod
@@ -1231,7 +1231,6 @@ class TableModel(SpectralModel):
         vals = np.loadtxt(filename)
         energy = vals[:, 0] * u.MeV
         values = vals[:, 1] * u.Unit('MeV-1 s-1 cm-2')
-        kwargs.setdefault('interp', 'lin')
         return cls(energy=energy, values=values, **kwargs)
 
     def evaluate(self, energy, norm):
@@ -1389,7 +1388,7 @@ class Absorption(object):
 
         values = self.evaluate(energy=energy, parameter=parameter)
 
-        return TableModel(energy=energy, values=values, interp='lin')
+        return TableModel(energy=energy, values=values, values_scale='lin')
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
