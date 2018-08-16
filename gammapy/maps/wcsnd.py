@@ -273,7 +273,7 @@ class WcsNDMap(WcsMap):
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_wcs(self, geom, mode='interp', order=1):
+    def _reproject_to_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
 
         map_out = WcsNDMap(geom, unit=self.unit)
@@ -318,7 +318,7 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def _reproject_hpx(self, geom, mode='interp', order=1):
+    def _reproject_to_hpx(self, geom, mode='interp', order=1):
         from reproject import reproject_to_healpix
         from .hpxnd import HpxNDMap
 

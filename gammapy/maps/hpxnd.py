@@ -202,7 +202,7 @@ class HpxNDMap(HpxMap):
         data = np.nansum(self.data, axis=axis)
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_wcs(self, geom, order=1, mode='interp'):
+    def _reproject_to_wcs(self, geom, order=1, mode='interp'):
 
         from reproject import reproject_from_healpix
         from .wcsnd import WcsNDMap
@@ -231,15 +231,8 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def _reproject_hpx(self, geom, order=1, mode='interp'):
-        map_out = HpxNDMap(geom, unit=self.unit)
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
-
-        for vals, idx in map_out.iter_by_image():
-            raise NotImplementedError
-
-        return map_out
+    def _reproject_to_hpx(self):
+        raise NotImplementedError("Maybe try using Map.interp_by_coord().")
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)
