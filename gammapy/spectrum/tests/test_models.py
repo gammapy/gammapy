@@ -274,3 +274,10 @@ def test_pwl_index_2_error():
     eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
     assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit('TeV cm-2 s-1'))
     assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit('TeV cm-2 s-1'))
+
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+def test_fermi_isotropic():
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt'
+    model = TableModel.read_fermi_isotropic_model(filename)
+    assert_quantity_allclose(model(50 * u.GeV), 1.463 * u.Unit('1e-13 MeV-1 cm-2 s-1 sr-1'), rtol=1e-3)

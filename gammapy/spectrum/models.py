@@ -1231,8 +1231,8 @@ class TableModel(SpectralModel):
         """
         filename = str(make_path(filename))
         vals = np.loadtxt(filename)
-        energy = vals[:, 0] * u.MeV
-        values = vals[:, 1] * u.Unit('MeV-1 s-1 cm-2')
+        energy = u.Quantity(vals[:, 0], 'MeV', copy=False)
+        values = u.Quantity(vals[:, 1], 'MeV-1 s-1 cm-2 sr-1', copy=False)
         return cls(energy=energy, values=values, **kwargs)
 
     def evaluate(self, energy, norm):
