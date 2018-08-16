@@ -117,5 +117,5 @@ class PrimaryFlux(object):
         return TableModel(
             energy=energies,
             values=dN_dE,
-            scale_logy=False
+            interp='lin'
         )

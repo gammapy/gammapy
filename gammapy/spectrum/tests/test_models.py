@@ -215,7 +215,7 @@ def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
     absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
     absorption_z03.plot(energy_range=(0.03, 10),
-                        energy_unit=u.TeV)
+                        energy_unit=u.TeV, flux_unit='')
 
 
 @requires_data('gammapy-extra')
