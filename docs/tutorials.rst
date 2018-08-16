@@ -52,14 +52,7 @@ If you have any questions, ask for help. See http://gammapy.org/contact.html
 Execute tutorials online
 ------------------------
 
-If you want, you can execute latest version of the collection of notebooks
-on-line accessing the `Gammapy Binder
-<http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
-
-Click the "launch binder" link here, or at the top of each notebook below:
-
-.. image:: http://mybinder.org/badge.svg
-    :target: http://mybinder.org/repo/gammapy/gammapy-extra
+You can execute the notebooks on-line, click on the **Try online in Binder** link at the top of each of the notebooks below.
 
 Note that this is a free, temporary notebook server. You cannot upload your data
 or save your work there. For that, install Gammapy on your machine and work

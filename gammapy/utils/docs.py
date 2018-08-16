@@ -89,7 +89,7 @@ def make_link_node(rawtext, app, refuri, notebook, options):
 
     relpath = refuri.split(str(Path('/gammapy/docs')))[1]
     foldersplit = relpath.split(os.sep)
-    base = '../' * (len(foldersplit) - 2) + 'notebooks' + os.sep
+    base = (('..' + os.sep) * (len(foldersplit) - 2)) + 'notebooks' + os.sep
     full_name = notebook + '.html'
     ref = base + full_name
     roles.set_classes(options)
@@ -124,8 +124,7 @@ def modif_nb_links(folder, url_docs, git_commit):
 <div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab)
- and then double-click on **{nb_filename}** file.
+- [Try online in Binder](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab/tree/{nb_filename}).
 - You can also contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 - **Source files:**
