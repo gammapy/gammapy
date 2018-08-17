@@ -976,6 +976,7 @@ class Map(object):
         kwargs.setdefault('cmap', 'afmhot')
 
         rc_params = rc_params or {}
+        stretch = kwargs.pop('stretch', None) or 'sqrt'
 
         if self.geom.is_image:
             raise TypeError('Use .plot() for 2D Maps')
@@ -986,7 +987,7 @@ class Map(object):
         @interact(
             idx=IntSlider(min=0, max=map_axis.nbin - 1, step=1, value=0,
                                     description=axis + ' idx'),
-            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
+            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value=stretch,
                                          description='Plot stretch'),
         )
         def _plot_interactive(idx, stretch):
