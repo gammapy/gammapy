@@ -445,16 +445,17 @@ class WcsNDMap(WcsMap):
         if cbar:
             cbar.formatter.set_powerlimits((0, 0))
             cbar.update_ticks()
+
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
         else:
             ax = self._plot_format(ax)
+
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
         return fig, ax, cbar
 
-    @staticmethod
-    def _plot_format(ax):
+    def _plot_format(self, ax):
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -463,13 +464,36 @@ class WcsNDMap(WcsMap):
             ax.coords['dec'].set_axislabel('Declination')
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
+        return ax
 
-
-    @staticmethod
     def _plot_format_allsky(self, ax):
-        ax.set_xlim()
-        ax.set_ylim()
+        # Remove frame
+        ax.coords.frame.set_linewidth(0)
 
+        # Set plot axis limits
+        ymax, xmax = self.data.shape
+        xmargin, _ = self.geom.coord_to_pix({'lon': 180, 'lat': 0})
+        _, ymargin = self.geom.coord_to_pix({'lon': 0, 'lat': -90})
+
+        ax.set_xlim(xmargin, xmax - xmargin)
+        ax.set_ylim(ymargin, ymax - ymargin)
+
+        ax.text(0, ymax, self.geom.coordsys + ' coords')
+
+        # Grid and ticks
+        glon_spacing, glat_spacing = 45, 15
+        try:
+            lon, lat = ax.coords['glon'], ax.coords['glat']
+        except KeyError:
+            lon, lat = ax.coords['ra'], ax.coords['dec']
+        lon.set_ticks(spacing=glon_spacing * u.deg, color='w', alpha=0.8)
+        lat.set_ticks(spacing=glat_spacing * u.deg)
+        lon.set_ticks_visible(False)
+
+        lon.set_ticklabel(color='w', alpha=0.8)
+        lon.grid(alpha=0.2, linestyle='solid', color='w')
+        lat.grid(alpha=0.2, linestyle='solid', color='w')
+        return ax
 
     def smooth(self, radius, kernel='gauss', **kwargs):
         """

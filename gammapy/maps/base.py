@@ -934,7 +934,7 @@ class Map(object):
         """
         pass
 
-    def plot_interactive(self, axis=None, **kwargs):
+    def plot_interactive(self, axis=None, rc_params=None, **kwargs):
         """
         Plot map with interactive widgets to explore the non spatial axes.
 
@@ -943,6 +943,9 @@ class Map(object):
         axis : str
             Axis name to slide through, with the interactive slider. By default
             the first non-spatial axis is used.
+        rc_params : dict
+            Matplotlib rc parameters passed to `matplotlib.rc_context(rc=rc_params)`,
+            to style the plot.
         **kwargs : dict
             Keyword arguments passed to `WcsND.plot()`.
 
@@ -951,20 +954,19 @@ class Map(object):
 
         You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
 
-            %matplotlib inline
             from gammapy.maps import Map
 
             m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
             m.plot_interactive(cmap='gnuplot2')
 
-        If you would like to adjust the figure size you can use the `matplotlib.rc_context()`
-        context manager.
+        If you would like to adjust the figure size you can use the `rc_params`
+        argument.
 
-            import matplotlib as mpl
-            with mpl.rc_context(rc={'figure.figsize': (12, 6)}):
-                m.plot_interactive()
+            rc_params = {'figure.figsize': (12, 6), 'font.size': 12}
+            m.plot_interactive(rc_params=rc_params)
 
         """
+        import matplotlib as mpl
         from ipywidgets.widgets.interaction import interact, fixed
         from ipywidgets import IntSlider, RadioButtons
         import matplotlib.pyplot as plt
@@ -972,6 +974,8 @@ class Map(object):
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
+
+        rc_params = rc_params or {}
 
         if self.geom.is_image:
             raise TypeError('Use .plot() for 2D Maps')
@@ -987,17 +991,18 @@ class Map(object):
         )
         def _plot_interactive(idx, stretch):
             img = self.get_image_by_idx([idx])
-            fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
+            with mpl.rc_context(rc=rc_params):
+                fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
 
-            if map_axis.node_type == 'edge':
-                edges = map_axis.edges
-                title = '{:.0f} - {:.0f} '.format(edges[idx], edges[idx + 1])
-            else:
-                center = map_axis.center
-                title = '{:.0f} '.format(center[idx])
-            title += str(map_axis.unit)
-            ax.set_title(title)
-            plt.show()
+                if map_axis.node_type == 'edge':
+                    edges = map_axis.edges
+                    title = '{:.0f} - {:.0f} '.format(edges[idx], edges[idx + 1])
+                else:
+                    center = map_axis.center
+                    title = '{:.0f} '.format(center[idx])
+                title += str(map_axis.unit)
+                ax.set_title(title)
+                plt.show()
 
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.
