@@ -52,11 +52,13 @@ If you have any questions, ask for help. See http://gammapy.org/contact.html
 Execute tutorials online
 ------------------------
 
-You can execute the notebooks on-line, click on the **Try online in Binder** link at the top of each of the notebooks below.
+.. image:: http://mybinder.org/badge.svg
 
-Note that this is a free, temporary notebook server. You cannot upload your data
-or save your work there. For that, install Gammapy on your machine and work
-there.
+You can execute the notebooks on-line.
+Just click on the *launch binder* badge placed at the top of each of the notebooks below.
+
+Note that this is a free, temporary notebook server. You cannot save your work there and retrieve it afterwards.
+For that, install Gammapy on your machine and work there.
 
 The basics
 ----------
