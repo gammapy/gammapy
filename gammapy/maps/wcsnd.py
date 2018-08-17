@@ -555,27 +555,28 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
-        if not self.geom.is_image:
-            raise ValueError('Only supported on 2D maps')
-
         if isinstance(radius, Quantity):
             radius = (radius.to('deg') / self.geom.pixel_scales.mean()).value
 
-        if kernel == 'gauss':
-            width = radius / 2.
-            data = gaussian_filter(self.data, width, **kwargs)
-        elif kernel == 'disk':
-            width = 2 * radius + 1
-            disk = Tophat2DKernel(width)
-            disk.normalize('integral')
-            data = convolve(self.data, disk.array, **kwargs)
-        elif kernel == 'box':
-            width = 2 * radius + 1
-            data = uniform_filter(self.data, width, **kwargs)
-        else:
-            raise ValueError('Invalid option kernel = {}'.format(kernel))
+        smoothed_data = np.empty_like(self.data)
 
-        return self._init_copy(data=data)
+        for img, idx in self.iter_by_image():
+            if kernel == 'gauss':
+                width = radius / 2.
+                data = gaussian_filter(img, width, **kwargs)
+            elif kernel == 'disk':
+                width = 2 * radius + 1
+                disk = Tophat2DKernel(width)
+                disk.normalize('integral')
+                data = convolve(img, disk.array, **kwargs)
+            elif kernel == 'box':
+                width = 2 * radius + 1
+                data = uniform_filter(img, width, **kwargs)
+            else:
+                raise ValueError('Invalid option kernel = {}'.format(kernel))
+            smoothed_data[idx] = data
+
+        return self._init_copy(data=smoothed_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
