@@ -437,7 +437,10 @@ class WcsNDMap(WcsMap):
 
         caxes = ax.imshow(data, **kwargs)
 
-        cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
+        cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
+        if cbar:
+            cbar.formatter.set_powerlimits((0, 0))
+            cbar.update_ticks()
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -451,19 +454,17 @@ class WcsNDMap(WcsMap):
         ax.autoscale(enable=False)
         return fig, ax, cbar
 
-    def plot_interactive(self, ax=None, fig=None, **kwargs):
+    def plot_interactive(self, axis=None, **kwargs):
         """
-        Plot ND array on matplotlib WCS axes with interactive widgets
-        to explore the non spatial axes.
+        Plot map with interactive widgets to explore the non spatial axes.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
+        axis : str
+            Axis name to slide through, with the interactive slider. By default
+            the first non-spatial axis is used.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `WcsND.plot()`.
 
         Examples
         --------
@@ -475,58 +476,49 @@ class WcsNDMap(WcsMap):
 
             m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
             m.plot_interactive(cmap='gnuplot2')
+
+        If you would like to adjust the figure size you can use the `matplotlib.rc_context()`
+        context manager.
+
+            import matplotlib as mpl
+            with mpl.rc_context(rc={'figure.figsize': (12, 6)}):
+                m.plot_interactive()
+
         """
-        import matplotlib.pyplot as plt
-        from astropy.visualization import simple_norm
         from ipywidgets.widgets.interaction import interact, fixed
-        import ipywidgets as widgets
+        from ipywidgets import IntSlider, RadioButtons
+        import matplotlib.pyplot as plt
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
 
+        if self.geom.is_image:
+            raise TypeError('Use .plot() for 2D Maps')
+
+        axis = axis or self.geom.axes[0].name
+        map_axis = self.geom.get_axis_by_name(axis)
+
         @interact(
-            index=widgets.IntSlider(min=0, max=self.data.shape[0] - 1, step=1, value=1,
-                                    description=self.geom.axes[0].name + ' slice'),
-            stretch=widgets.RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
+            idx=IntSlider(min=0, max=map_axis.nbin - 1, step=1, value=0,
+                                    description=axis + ' idx'),
+            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
                                          description='Plot stretch'),
-            ax=fixed(ax),
-            fig=fixed(fig),
         )
-        def _plot_interactive(index, stretch, ax=None, fig=None):
-            if self.geom.is_image:
-                raise TypeError('Use .plot() for 2D Maps')
+        def _plot_interactive(idx, stretch):
+            img = self.get_image_by_idx([idx])
+            fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
 
-            if fig is None:
-                fig = plt.gcf()
-
-            if ax is None:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
-
-            axes = self.geom.axes[0]
-
-            data = self.get_image_by_idx([index]).data
-            norm = simple_norm(data[np.isfinite(data)], stretch)
-
-            caxes = ax.imshow(data, norm=norm, **kwargs)
-            fig.colorbar(caxes, ax=ax)
-            ax.set_title(
-                '{:.2f}-{:.2f} {} '.format(
-                    axes.edges[index], axes.edges[index + 1],
-                    self.geom.axes[0].unit.name,
-                )
-            )
-
-            try:
-                ax.coords['glon'].set_axislabel('Galactic Longitude')
-                ax.coords['glat'].set_axislabel('Galactic Latitude')
-            except KeyError:
-                ax.coords['ra'].set_axislabel('Right Ascension')
-                ax.coords['dec'].set_axislabel('Declination')
-            except AttributeError:
-                log.info("Can't set coordinate axes. No WCS information available.")
-
+            if map_axis.node_type == 'edge':
+                edges = map_axis.edges
+                title = '{:.0f} - {:.0f} '.format(edges[idx], edges[idx + 1])
+            else:
+                center = map_axis.center
+                title = '{:.0f} '.format(center[idx])
+            title += str(map_axis.unit)
+            ax.set_title(title)
             plt.show()
+
 
     def smooth(self, radius, kernel='gauss', **kwargs):
         """
