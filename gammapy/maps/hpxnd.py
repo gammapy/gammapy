@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from .base import Map
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -202,44 +203,27 @@ class HpxNDMap(HpxMap):
         data = np.nansum(self.data, axis=axis)
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_wcs(self, geom, order=1, mode='interp'):
-
+    def _reproject_to_wcs(self, geom, order=1, mode='interp'):
         from reproject import reproject_from_healpix
-        from .wcsnd import WcsNDMap
 
-        map_out = WcsNDMap(geom)
+        data = np.empty(geom.data_shape)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
 
-        for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                raise NotImplementedError
-
+        for img, idx in self.iter_by_image():
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
-
-            data, footprint = reproject_from_healpix((img, coordsys),
+            vals, footprint = reproject_from_healpix((img, coordsys),
                                                      geom.wcs,
                                                      shape_out=shape_out,
-                                                     nested=self.geom.nest)
-            vals[...] = data
+                                                     nested=self.geom.nest,
+                                                     order=order)
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
-    def _reproject_hpx(self, geom, order=1, mode='interp'):
-        map_out = HpxNDMap(geom, unit=self.unit)
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
-
-        for vals, idx in map_out.iter_by_image():
-            raise NotImplementedError
-
-        return map_out
+    def _reproject_to_hpx(self):
+        raise NotImplementedError("Maybe try using Map.interp_by_coord().")
 
     def pad(self, pad_width, mode='constant', cval=0.0, order=1):
         geom = self.geom.pad(pad_width)

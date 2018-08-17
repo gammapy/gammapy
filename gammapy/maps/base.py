@@ -63,7 +63,7 @@ class Map(object):
             value = getattr(self, '_' + arg)
             kwargs.setdefault(arg, copy.deepcopy(value))
 
-        return self.__class__(**kwargs)
+        return self.from_geom(**kwargs)
 
     @property
     def geom(self):
@@ -196,14 +196,15 @@ class Map(object):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
-    def from_geom(geom, meta=None, map_type='auto', unit=''):
+    def from_geom(geom, meta=None, data=None, map_type='auto', unit=''):
         """Generate an empty map from a `Geom` instance.
 
         Parameters
         ----------
         geom : `MapGeom`
             Map geometry.
-
+        data : `numpy.ndarray`
+            data array
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
 
@@ -234,7 +235,7 @@ class Map(object):
                 raise ValueError('Unrecognized geom type.')
 
         cls_out = Map._get_map_cls(map_type)
-        return cls_out(geom, meta=meta, unit=unit)
+        return cls_out(geom, data=data, meta=meta, unit=unit)
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):
@@ -410,6 +411,9 @@ class Map(object):
     def reproject(self, geom, order=1, mode='interp'):
         """Reproject this map to a different geometry.
 
+        Only spatial axes are reprojected, if you would like to reproject
+        non-spatial axes consider using `Map.interp_by_coord()` instead.
+
         Parameters
         ----------
         geom : `MapGeom`
@@ -426,16 +430,19 @@ class Map(object):
         map : `Map`
             Reprojected map.
         """
-        if geom.ndim == 2 and self.geom.ndim > 2:
-            geom = geom.to_cube(self.geom.axes)
-        elif geom.ndim != self.geom.ndim:
+        axes_eq = (geom.ndim == self.geom.ndim)
+        axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in
+                           zip(geom.axes, self.geom.axes)])
+
+        if not axes_eq and not geom.is_image:
             raise ValueError('Projection geometry must be 2D or have the '
-                             'same number of dimensions as the map.')
+                             'same number of dimensions as the map. If you want'
+                             ' to reproject in non-spatial axes, try Map.interp_by_coord()')
 
         if geom.projection == 'HPX':
-            return self._reproject_hpx(geom, mode=mode, order=order)
+            return self._reproject_to_hpx(geom, mode=mode, order=order)
         else:
-            return self._reproject_wcs(geom, mode=mode, order=order)
+            return self._reproject_to_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
     def pad(self, pad_width, mode='constant', cval=0, order=1):

@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
+from .base import Map
 from .utils import unpack_seq
 from .geom import pix_tuple_to_idx, axes_pix_to_coord
 from .wcs import _check_width
@@ -201,34 +202,6 @@ class WcsNDMap(WcsMap):
 
         return vals
 
-    # Currently used by reproject.
-    # TODO: Consider replacing with `interp_by_coord`.
-    def _interp_image(self, coords, order=1):
-        from scipy.interpolate import interp1d
-
-        if self.geom.ndim != 3:
-            raise ValueError('Only support geometry with ndim=3 at the moment')
-
-        axis = self.geom.axes[0]
-        idx = axis.coord_to_idx_interp(coords[0])
-        map_slice = slice(int(idx[0]), int(idx[-1]) + 1)
-        pix_vals = [float(t) for t in idx]
-        pix = axis.coord_to_pix(coords[0])
-        data = self.data[map_slice]
-
-        if coords[0] < axis.center[0] or coords[0] > axis.center[-1]:
-            kind = 'linear' if order >= 1 else 'nearest'
-            fill_value = 'extrapolate'
-        else:
-            kind = order
-            fill_value = None
-
-        fn = interp1d(pix_vals, data, copy=False, axis=0,
-                      kind=kind, fill_value=fill_value)
-        data_interp = fn(float(pix))
-        geom = self.geom.to_image()
-        return self._init_copy(data=data_interp, geom=geom)
-
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
@@ -273,85 +246,60 @@ class WcsNDMap(WcsMap):
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_wcs(self, geom, mode='interp', order=1):
+    def _reproject_to_wcs(self, geom, mode='interp', order=1):
         from reproject import reproject_interp, reproject_exact
 
-        map_out = WcsNDMap(geom, unit=self.unit)
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
+        data = np.empty(geom.data_shape)
 
-        for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                coords = axes_pix_to_coord(geom.axes, idx)
-                img = self._interp_image(coords, order=order).data
-
-            # FIXME: This is a temporary solution for handling maps
-            # with undefined pixels
-            if np.any(~np.isfinite(img)):
-                img = img.copy()
-                img[~np.isfinite(img)] = 0.0
-
+        for img, idx in self.iter_by_image():
             # TODO: Create WCS object for image plane if
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
 
             if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                data, footprint = reproject_car_to_wcs((img, self.geom.wcs),
+                vals, footprint = reproject_car_to_wcs((img, self.geom.wcs),
                                                        geom.wcs,
                                                        shape_out=shape_out)
             elif mode == 'interp':
-                data, footprint = reproject_interp((img, self.geom.wcs),
+                vals, footprint = reproject_interp((img, self.geom.wcs),
                                                    geom.wcs,
                                                    shape_out=shape_out)
             elif mode == 'exact':
-                data, footprint = reproject_exact((img, self.geom.wcs),
+                vals, footprint = reproject_exact((img, self.geom.wcs),
                                                   geom.wcs,
                                                   shape_out=shape_out)
             else:
                 raise TypeError(
                     "Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-            vals[...] = data
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
-    def _reproject_hpx(self, geom, mode='interp', order=1):
+    def _reproject_to_hpx(self, geom, mode='interp', order=1):
         from reproject import reproject_to_healpix
-        from .hpxnd import HpxNDMap
 
-        map_out = HpxNDMap(geom)
+        data = np.empty(geom.data_shape)
         coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
-        axes_eq = np.all([ax0 == ax1 for ax0, ax1 in
-                          zip(geom.axes, self.geom.axes)])
 
-        for vals, idx in map_out.iter_by_image():
-
-            if self.geom.ndim == 2 or axes_eq:
-                img = self.data[idx[::-1]]
-            else:
-                coords = axes_pix_to_coord(geom.axes, idx)
-                img = self._interp_image(coords, order=order).data
-
+        for img, idx in self.iter_by_image():
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
             if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                data, footprint = reproject_car_to_hpx((img, self.geom.wcs),
+                vals, footprint = reproject_car_to_hpx((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
                                                        order=order)
             else:
-                data, footprint = reproject_to_healpix((img, self.geom.wcs),
+                vals, footprint = reproject_to_healpix((img, self.geom.wcs),
                                                        coordsys,
                                                        nside=geom.nside,
                                                        nested=geom.nest,
                                                        order=order)
-            vals[...] = data
+            data[idx] = vals
 
-        return map_out
+        return self._init_copy(geom=geom, data=data)
 
     def pad(self, pad_width, mode='constant', cval=0, order=1):
 

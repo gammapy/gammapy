@@ -41,7 +41,7 @@ Using `gammapy.data`
 Gammapy tutorial notebooks that show examples using ``gammapy.data``:
 
 * :gp-extra-notebook:`cta_1dc_introduction`
-* :gp-extra-notebook:`data_fermi_lat`
+* :gp-extra-notebook:`fermi_lat`
 
 Reference/API
 =============

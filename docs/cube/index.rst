@@ -30,7 +30,7 @@ Gammapy tutorial notebooks that show examples using ``gammapy.cube``:
 
 * :gp-extra-notebook:`analysis_3d`
 * :gp-extra-notebook:`simulate_3d`
-* :gp-extra-notebook:`data_fermi_lat`
+* :gp-extra-notebook:`fermi_lat`
 
 Reference/API
 =============
