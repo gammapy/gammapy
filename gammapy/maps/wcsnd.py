@@ -417,6 +417,7 @@ class WcsNDMap(WcsMap):
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
+        from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if not self.geom.is_image:
             raise TypeError('Use .plot_interactive() for Map dimension > 2')
@@ -425,7 +426,10 @@ class WcsNDMap(WcsMap):
             fig = plt.gcf()
 
         if ax is None:
-            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+            if self.geom.is_allsky:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame)
+            else:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         data = self.data.astype(float)
 
@@ -436,11 +440,21 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault('norm', norm)
 
         caxes = ax.imshow(data, **kwargs)
-
         cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
+
         if cbar:
             cbar.formatter.set_powerlimits((0, 0))
             cbar.update_ticks()
+        if self.geom.is_allsky:
+            ax = self._plot_format_allsky(ax)
+        else:
+            ax = self._plot_format(ax)
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
+
+    @staticmethod
+    def _plot_format(ax):
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -450,74 +464,11 @@ class WcsNDMap(WcsMap):
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
 
-        # without this the axis limits are changed when calling scatter
-        ax.autoscale(enable=False)
-        return fig, ax, cbar
 
-    def plot_interactive(self, axis=None, **kwargs):
-        """
-        Plot map with interactive widgets to explore the non spatial axes.
-
-        Parameters
-        ----------
-        axis : str
-            Axis name to slide through, with the interactive slider. By default
-            the first non-spatial axis is used.
-        **kwargs : dict
-            Keyword arguments passed to `WcsND.plot()`.
-
-        Examples
-        --------
-
-        You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
-
-            %matplotlib inline
-            from gammapy.maps import Map
-
-            m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
-            m.plot_interactive(cmap='gnuplot2')
-
-        If you would like to adjust the figure size you can use the `matplotlib.rc_context()`
-        context manager.
-
-            import matplotlib as mpl
-            with mpl.rc_context(rc={'figure.figsize': (12, 6)}):
-                m.plot_interactive()
-
-        """
-        from ipywidgets.widgets.interaction import interact, fixed
-        from ipywidgets import IntSlider, RadioButtons
-        import matplotlib.pyplot as plt
-
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('cmap', 'afmhot')
-
-        if self.geom.is_image:
-            raise TypeError('Use .plot() for 2D Maps')
-
-        axis = axis or self.geom.axes[0].name
-        map_axis = self.geom.get_axis_by_name(axis)
-
-        @interact(
-            idx=IntSlider(min=0, max=map_axis.nbin - 1, step=1, value=0,
-                                    description=axis + ' idx'),
-            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
-                                         description='Plot stretch'),
-        )
-        def _plot_interactive(idx, stretch):
-            img = self.get_image_by_idx([idx])
-            fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
-
-            if map_axis.node_type == 'edge':
-                edges = map_axis.edges
-                title = '{:.0f} - {:.0f} '.format(edges[idx], edges[idx + 1])
-            else:
-                center = map_axis.center
-                title = '{:.0f} '.format(center[idx])
-            title += str(map_axis.unit)
-            ax.set_title(title)
-            plt.show()
+    @staticmethod
+    def _plot_format_allsky(self, ax):
+        ax.set_xlim()
+        ax.set_ylim()
 
 
     def smooth(self, radius, kernel='gauss', **kwargs):
