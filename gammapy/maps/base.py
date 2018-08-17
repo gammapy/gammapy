@@ -968,7 +968,7 @@ class Map(object):
         """
         import matplotlib as mpl
         from ipywidgets.widgets.interaction import interact, fixed
-        from ipywidgets import IntSlider, RadioButtons
+        from ipywidgets import SelectionSlider, RadioButtons
         import matplotlib.pyplot as plt
 
         kwargs.setdefault('interpolation', 'nearest')
@@ -984,25 +984,27 @@ class Map(object):
         axis = axis or self.geom.axes[0].name
         map_axis = self.geom.get_axis_by_name(axis)
 
+        if map_axis.node_type == 'edge':
+            edges = map_axis.edges
+            options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, map_axis.unit) for
+                         val_min, val_max in zip(edges[:-1], edges[1:])]
+        else:
+            center = map_axis.center
+            options = ['{:.0f} {}'.format(val, map_axis.unit) for val in center]
+
+
         @interact(
-            idx=IntSlider(min=0, max=map_axis.nbin - 1, step=1, value=0,
-                                    description=axis + ' idx'),
+            val=SelectionSlider(options=options, description='Select {}:'.format(axis),
+                                continuous_update=False, style={'description_width': 'initial'},
+                                layout={'width': '36%'}),
             stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value=stretch,
-                                         description='Plot stretch'),
+                                 description='Select stretch:', style={'description_width': 'initial'} ),
         )
-        def _plot_interactive(idx, stretch):
+        def _plot_interactive(val, stretch):
+            idx = options.index(val)
             img = self.get_image_by_idx([idx])
             with mpl.rc_context(rc=rc_params):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
-
-                if map_axis.node_type == 'edge':
-                    edges = map_axis.edges
-                    title = '{:.0f} - {:.0f} '.format(edges[idx], edges[idx + 1])
-                else:
-                    center = map_axis.center
-                    title = '{:.0f} '.format(center[idx])
-                title += str(map_axis.unit)
-                ax.set_title(title)
                 plt.show()
 
     def copy(self, **kwargs):
