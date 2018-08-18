@@ -56,6 +56,14 @@ def cli_image():
     """Analysis - 2D images"""
 
 
+@cli.group('download')
+def cli_download():
+    """
+    Download datasets and notebooks from the gammapy-extra Github repository
+    into a folder gammapy-extra created in the current working directory.
+    """
+
+
 def add_subcommands():
     from .info import cli_info
     cli.add_command(cli_info)
@@ -66,14 +74,11 @@ def add_subcommands():
     from .image_bin import cli_image_bin
     cli_image.add_command(cli_image_bin)
 
-    from .image_fit import cli_image_fit
-    cli_image.add_command(cli_image_fit)
+    from .download import cli_download_notebooks
+    cli_download.add_command(cli_download_notebooks)
 
-    from .image_ts import cli_image_ts
-    cli_image.add_command(cli_image_ts)
-
-    from .download_extra import cli_download_extra
-    cli.add_command(cli_download_extra)
+    from .download import cli_download_datasets
+    cli_download.add_command(cli_download_datasets)
 
 
 add_subcommands()
