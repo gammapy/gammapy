@@ -253,7 +253,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
         spec_type = self.data['SpectrumType'].strip()
 
         pars, errs = {}, {}
@@ -296,7 +296,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.image.models.SpatialModel`).
+        Source spatial model (`~gammapy.image.models.SkySpatialModel`).
         """
         d = self.data
 

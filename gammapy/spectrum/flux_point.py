@@ -244,7 +244,7 @@ class FluxPoints(object):
         ----------
         sed_type : {'dnde'}
              SED type to convert to.
-        model : `~gammapy.spectrum.SpectralModel`
+        model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model assumption.  Note that the value of the amplitude parameter
             does not matter. Still it is recommended to use something with the right
             scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`

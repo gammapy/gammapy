@@ -196,7 +196,7 @@ class SpectrumFit(object):
         ----------
         obs : `~gammapy.spectrum.SpectrumObservation`
             Response functions
-        model : `~gammapy.spectrum.SpectralModel`
+        model : `~gammapy.spectrum.models.SpectralModel`
             Source or background model
         forward_folded : bool, default: True
             Fold model with IRFs
