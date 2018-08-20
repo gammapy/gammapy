@@ -89,7 +89,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
 - [#1696] Add paramter auto scale (Johannes Kind and Christoph Deil)
-- [#1695] Add WCSNDMap convolve method (Axel Donath)
+- [#1695] Add WcsNDMap convolve method (Axel Donath)
 - [#1685] Add quantity support to map coordinates (Axel Donath)
 - [#1681] Add make_images method in MapMaker (Axel Donath)
 - [#1675] Add gammapy.stats.excess_matching_significance (Christoph Deil)

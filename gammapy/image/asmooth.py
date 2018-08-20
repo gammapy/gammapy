@@ -91,16 +91,16 @@ class ASmooth(object):
 
         Parameters
         ----------
-        counts : `~gammapy.maps.WCSNDMap`
+        counts : `~gammapy.maps.WcsNDMap`
             Counts map
-        background : `~gammapy.maps.WCSNDMap`
+        background : `~gammapy.maps.WcsNDMap`
             Background map
-        exposure : `~gammapy.maps.WCSNDMap`
+        exposure : `~gammapy.maps.WcsNDMap`
             Exposure map
 
         Returns
         -------
-        images : dict of `~gammapy.maps.WCSNDMap`
+        images : dict of `~gammapy.maps.WcsNDMap`
             Smoothed images; keys are:
                 * 'counts'
                 * 'background'
