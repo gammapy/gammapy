@@ -972,13 +972,13 @@ class SourceCatalog3FGL(SourceCatalog):
             Source class designator as defined in Table 3. There are a few extra
             selections available:
 
-            - `'ALL'`: all identified objects
-            - `'all'`: all objects with associations
-            - `'galactic'`: all sources with an associated galactic object
-            - `'GALACTIC'`: all identified galactic sources
-            - `'extra-galactic'`: all sources with an associated extra-galactic object
-            - `'EXTRA-GALACTIC'`: all identified extra-galactic sources
-            - `'unassociated'`: all unassociated objects
+            - 'ALL': all identified objects
+            - 'all': all objects with associations
+            - 'galactic': all sources with an associated galactic object
+            - 'GALACTIC': all identified galactic sources
+            - 'extra-galactic': all sources with an associated extra-galactic object
+            - 'EXTRA-GALACTIC': all identified extra-galactic sources
+            - 'unassociated': all unassociated objects
 
         Returns
         -------
@@ -1140,13 +1140,13 @@ class SourceCatalog3FHL(SourceCatalog):
             Source class designator as defined in Table 3. There are a few extra
             selections available:
 
-            - `'ALL'`: all identified objects
-            - `'all'`: all objects with associations
-            - `'galactic'`: all sources with an associated galactic object
-            - `'GALACTIC'`: all identified galactic sources
-            - `'extra-galactic'`: all sources with an associated extra-galactic object
-            - `'EXTRA-GALACTIC'`: all identified extra-galactic sources
-            - `'unassociated'`: all unassociated objects
+            - 'ALL': all identified objects
+            - 'all': all objects with associations
+            - 'galactic': all sources with an associated galactic object
+            - 'GALACTIC': all identified galactic sources
+            - 'extra-galactic': all sources with an associated extra-galactic object
+            - 'EXTRA-GALACTIC': all identified extra-galactic sources
+            - 'unassociated': all unassociated objects
 
         Returns
         -------
