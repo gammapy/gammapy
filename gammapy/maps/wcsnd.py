@@ -482,10 +482,7 @@ class WcsNDMap(WcsMap):
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
-        try:
-            lon, lat = ax.coords['glon'], ax.coords['glat']
-        except KeyError:
-            lon, lat = ax.coords['ra'], ax.coords['dec']
+        lon, lat = ax.coords
         lon.set_ticks(spacing=glon_spacing * u.deg, color='w', alpha=0.8)
         lat.set_ticks(spacing=glat_spacing * u.deg)
         lon.set_ticks_visible(False)

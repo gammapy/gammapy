@@ -967,16 +967,16 @@ class Map(object):
 
         """
         import matplotlib as mpl
-        from ipywidgets.widgets.interaction import interact, fixed
-        from ipywidgets import SelectionSlider, RadioButtons
         import matplotlib.pyplot as plt
+        from ipywidgets.widgets.interaction import interact
+        from ipywidgets import SelectionSlider, RadioButtons
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
         kwargs.setdefault('cmap', 'afmhot')
 
         rc_params = rc_params or {}
-        stretch = kwargs.pop('stretch', None) or 'sqrt'
+        stretch = kwargs.pop('stretch', 'sqrt')
 
         if self.geom.is_image:
             raise TypeError('Use .plot() for 2D Maps')
