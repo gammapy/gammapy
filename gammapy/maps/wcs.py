@@ -490,9 +490,6 @@ class WcsGeom(MapGeom):
         else:
             return int(self.npix[0][idx]), int(self.npix[1][idx])
 
-    def get_image_wcs(self, idx):
-        raise NotImplementedError
-
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode='center')
         if flat:
