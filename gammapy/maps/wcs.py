@@ -482,11 +482,6 @@ class WcsGeom(MapGeom):
         header['WCSSHAPE'] = '({})'.format(shape)
         return header
 
-    def distance_to_edge(self, skydir):
-        """Angular distance from the given direction and
-        the edge of the projection."""
-        raise NotImplementedError
-
     def get_image_shape(self, idx):
         """Get the shape of the image plane at index ``idx``."""
 
