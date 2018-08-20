@@ -587,7 +587,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=convolved_data)
 
-    def cutout(self, position, width, mode='trim', copy=True):
+    def cutout(self, position, width, mode='trim'):
         """
         Create a cutout around a given position.
 
@@ -600,14 +600,11 @@ class WcsNDMap(WcsMap):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        copy : bool, optional
-               If False (default), then the cutout data will be a view into the original data  array.
-               If True, then the cutout data will hold a copy of the original data array.
 
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
-            The cutout map itself
+            Cutout map
         """
         width = _check_width(width)
         idx = (0,) * len(self.geom.axes)
@@ -625,8 +622,5 @@ class WcsNDMap(WcsMap):
 
         geom = WcsGeom(c2d.wcs, c2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
-
-        if copy:
-            data = data.copy()
 
         return self._init_copy(geom=geom, data=data)

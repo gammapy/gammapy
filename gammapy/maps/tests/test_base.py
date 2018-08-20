@@ -131,11 +131,11 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
 
     slices = {'energy': 0,
               'time': 1}
-    sliced = m.slice_by_idx(slices, copy=True)
+    sliced = m.slice_by_idx(slices)
     assert sliced.geom.is_image
     slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
-    assert sliced.data.base is not data
+    assert sliced.data.base is data
 
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])

@@ -831,7 +831,9 @@ class HpxGeom(MapGeom):
 
     def pix_to_idx(self, pix, clip=False):
         # FIXME: Look for better method to clip HPX indices
-        idx = list(pix_tuple_to_idx(pix, copy=True))
+        # TODO: copy idx to avoid modifying input pix?
+        # pix_tuple_to_idx seems to always make a copy!?
+        idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
 
@@ -1564,7 +1566,6 @@ class HpxGeom(MapGeom):
         wcs : `~gammapy.maps.WcsGeom`
             WCS geometry
         """
-        skydir = self.center_skydir.copy()
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
         width = (2.0 * self._get_region_size() +
                  np.max(get_pix_size_from_nside(self.nside)))
@@ -1580,10 +1581,8 @@ class HpxGeom(MapGeom):
         else:
             axes = copy.deepcopy(self.axes)
 
-        geom = WcsGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
-                              axes=axes, skydir=skydir, proj=proj)
-
-        return geom
+        return WcsGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
+                              axes=axes, skydir=self.center_skydir, proj=proj)
 
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):

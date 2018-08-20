@@ -191,7 +191,7 @@ def lonlat_to_skycoord(lon, lat, coordsys):
     return SkyCoord(lon, lat, frame=coordsys_to_frame(coordsys), unit='deg')
 
 
-def pix_tuple_to_idx(pix, copy=False):
+def pix_tuple_to_idx(pix):
     """Convert a tuple of pixel coordinate arrays to a tuple of pixel
     indices.
 
@@ -201,9 +201,6 @@ def pix_tuple_to_idx(pix, copy=False):
     ----------
     pix : tuple
         Tuple of pixel coordinates with one element for each dimension.
-
-    copy : bool
-        Flag to set whether a copy or view is returned.
 
     Returns
     -------

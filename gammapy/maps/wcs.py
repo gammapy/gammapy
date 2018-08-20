@@ -482,11 +482,6 @@ class WcsGeom(MapGeom):
         header['WCSSHAPE'] = '({})'.format(shape)
         return header
 
-    def distance_to_edge(self, skydir):
-        """Angular distance from the given direction and
-        the edge of the projection."""
-        raise NotImplementedError
-
     def get_image_shape(self, idx):
         """Get the shape of the image plane at index ``idx``."""
 
@@ -494,9 +489,6 @@ class WcsGeom(MapGeom):
             return int(self.npix[0]), int(self.npix[1])
         else:
             return int(self.npix[0][idx]), int(self.npix[1][idx])
-
-    def get_image_wcs(self, idx):
-        raise NotImplementedError
 
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode='center')
@@ -648,10 +640,12 @@ class WcsGeom(MapGeom):
         return tuple(coords)
 
     def pix_to_idx(self, pix, clip=False):
-        idxs = pix_tuple_to_idx(pix, copy=True)
+        # TODO: copy idx to avoid modifying input pix?
+        # pix_tuple_to_idx seems to always make a copy!?
+        idxs = pix_tuple_to_idx(pix)
         if not self.is_regular:
             ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
-            ibin = pix_tuple_to_idx(ibin, copy=True)
+            ibin = pix_tuple_to_idx(ibin)
             for i, ax in enumerate(self.axes):
                 np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
             npix = (self.npix[0][ibin], self.npix[1][ibin])
