@@ -112,7 +112,6 @@ Notebooks
    notebooks/spectrum_models.ipynb
    notebooks/spectrum_pipe.ipynb
    notebooks/spectrum_analysis.ipynb
-   notebooks/cta_simulation.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/fermi_lat.ipynb
@@ -144,7 +143,6 @@ Interested to do a first analysis of simulated CTA data?
 - `Spectral models in Gammapy <notebooks/spectrum_models.html>`__ | *spectrum_models.ipynb*
 - `Spectral analysis with Gammapy (run pipeline) <notebooks/spectrum_pipe.html>`__ (H.E.S.S. data example) | *spectrum_pipe.ipynb*
 - `Spectral analysis with Gammapy (individual steps) <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
-- `Spectrum simulation and fitting <notebooks/cta_simulation.html>`__ (CTA data example with AGN / EBL) | *cta_simulation.ipynb*
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
