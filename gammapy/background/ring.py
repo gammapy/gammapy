@@ -219,10 +219,10 @@ class AdaptiveRingBackgroundEstimator(object):
         result['alpha'] = exposure_on_map.copy(unit='')
         result['background'] = exposure_on_map.copy(unit='')
 
-        for img, idx in counts_map.iter_by_image():
-            counts = counts_map.get_image_by_idx(idx, copy=False)
-            exposure_on = exposure_on_map.get_image_by_idx(idx, copy=False)
-            exclusion = exclusion_map.get_image_by_idx(idx, copy=False)
+        for idx in np.ndindex(counts_map.geom.shape):
+            counts = counts_map.get_image_by_idx(idx)
+            exposure_on = exposure_on_map.get_image_by_idx(idx)
+            exclusion = exclusion_map.get_image_by_idx(idx)
 
             cubes = OrderedDict()
 

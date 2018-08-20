@@ -556,7 +556,7 @@ class Map(object):
         data = self.data[slices[::-1]]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
-    def get_image_by_coord(self, coords, copy=True):
+    def get_image_by_coord(self, coords):
         """Return spatial map at the given axis coordinates.
 
         Parameters
@@ -565,8 +565,6 @@ class Map(object):
             Tuple should be ordered as (x_0, ..., x_n) where x_i are coordinates
             for non-spatial dimensions of the map. Dict should specify the axis
             names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
-        copy : bool
-            Whether to make a copy of the data.
 
         Examples
         --------
@@ -625,9 +623,9 @@ class Map(object):
         for axis, value in zip(self.geom.axes, coords.values()):
             idx.append(axis.coord_to_idx(value))
 
-        return self.get_image_by_idx(idx, copy=copy)
+        return self.get_image_by_idx(idx)
 
-    def get_image_by_pix(self, pix, copy=True):
+    def get_image_by_pix(self, pix):
         """Return spatial map at the given axis pixel coordinates
 
         Parameters
@@ -636,8 +634,6 @@ class Map(object):
             Tuple of scalar pixel coordinates for each non-spatial dimension of
             the map. Tuple should be ordered as (I_0, ..., I_n). Pixel coordinates
             can be either float or integer type.
-        copy : bool
-            Whether to make a copy of the data.
 
         See Also
         --------
@@ -649,9 +645,9 @@ class Map(object):
             Map with spatial dimensions only.
         """
         idx = self.geom.pix_to_idx(pix)
-        return self.get_image_by_idx(idx, copy=copy)
+        return self.get_image_by_idx(idx)
 
-    def get_image_by_idx(self, idx, copy=True):
+    def get_image_by_idx(self, idx):
         """Return spatial map at the given axis pixel indices.
 
         Parameters
@@ -659,8 +655,6 @@ class Map(object):
         idx : tuple
             Tuple of scalar indices for each non spatial dimension of the map.
             Tuple should be ordered as (I_0, ..., I_n).
-        copy : bool
-            Whether to make a copy of the data.
 
         See Also
         --------
@@ -680,8 +674,6 @@ class Map(object):
 
         geom = self.geom.to_image()
         data = self.data[idx[::-1]]
-        if copy:
-            data = data.copy()
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def get_by_coord(self, coords):

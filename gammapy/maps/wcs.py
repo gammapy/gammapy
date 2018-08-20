@@ -640,10 +640,12 @@ class WcsGeom(MapGeom):
         return tuple(coords)
 
     def pix_to_idx(self, pix, clip=False):
-        idxs = pix_tuple_to_idx(pix, copy=True)
+        # TODO: copy idx to avoid modifying input pix?
+        # pix_tuple_to_idx seems to always make a copy!?
+        idxs = pix_tuple_to_idx(pix)
         if not self.is_regular:
             ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
-            ibin = pix_tuple_to_idx(ibin, copy=True)
+            ibin = pix_tuple_to_idx(ibin)
             for i, ax in enumerate(self.axes):
                 np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
             npix = (self.npix[0][ibin], self.npix[1][ibin])
