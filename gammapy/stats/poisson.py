@@ -40,7 +40,7 @@ def background(n_off, alpha):
 
     Returns
     -------
-    background : ndarray
+    background : `numpy.ndarray`
         Background estimate for the on region
 
     Examples
@@ -73,7 +73,7 @@ def background_error(n_off, alpha):
 
     Returns
     -------
-    background : ndarray
+    background : `numpy.ndarray`
         Background estimate for the on region
 
     Examples
@@ -107,7 +107,7 @@ def excess(n_on, n_off, alpha):
 
     Returns
     -------
-    excess : ndarray
+    excess : `numpy.ndarray`
         Excess estimate for the on region
 
     Examples
@@ -144,7 +144,7 @@ def excess_error(n_on, n_off, alpha):
 
     Returns
     -------
-    excess_error : ndarray
+    excess_error : `numpy.ndarray`
         Excess error estimate
 
     Examples
@@ -198,7 +198,7 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
 
     Returns
     -------
-    significance : ndarray
+    significance : `numpy.ndarray`
         Significance according to the method chosen.
 
     References
@@ -502,7 +502,7 @@ def excess_matching_significance(mu_bkg, significance, method='lima'):
 
     Returns
     -------
-    excess : ndarray
+    excess : `numpy.ndarray`
         Excess
 
     See Also

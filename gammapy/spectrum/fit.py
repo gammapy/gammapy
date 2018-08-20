@@ -203,7 +203,7 @@ class SpectrumFit(object):
 
         Returns
         ------
-        predicted_counts: `np.array`
+        predicted_counts : `numpy.ndarray`
             Predicted counts for one observation
         """
         predictor = CountsPredictor(model=model)

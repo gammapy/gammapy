@@ -211,7 +211,7 @@ class DataStore(object):
         Returns
         -------
         list : python list of object
-            Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
+            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
         """
         obs_ids = self.obs_table['OBS_ID']
         return self.load_many(obs_ids=obs_ids, hdu_type=hdu_type, hdu_class=hdu_class)
@@ -231,7 +231,7 @@ class DataStore(object):
         Returns
         -------
         list : list of object
-            Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
+            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
         """
         things = []
         for obs_id in obs_ids:
