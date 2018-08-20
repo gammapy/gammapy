@@ -934,6 +934,79 @@ class Map(object):
         """
         pass
 
+    def plot_interactive(self, axis=None, rc_params=None, **kwargs):
+        """
+        Plot map with interactive widgets to explore the non spatial axes.
+
+        Parameters
+        ----------
+        axis : str
+            Axis name to slide through, with the interactive slider. By default
+            the first non-spatial axis is used.
+        rc_params : dict
+            Matplotlib rc parameters passed to `matplotlib.rc_context(rc=rc_params)`,
+            to style the plot.
+        **kwargs : dict
+            Keyword arguments passed to `WcsND.plot()`.
+
+        Examples
+        --------
+
+        You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
+
+            from gammapy.maps import Map
+
+            m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
+            m.plot_interactive(cmap='gnuplot2')
+
+        If you would like to adjust the figure size you can use the `rc_params`
+        argument.
+
+            rc_params = {'figure.figsize': (12, 6), 'font.size': 12}
+            m.plot_interactive(rc_params=rc_params)
+
+        """
+        import matplotlib as mpl
+        import matplotlib.pyplot as plt
+        from ipywidgets.widgets.interaction import interact
+        from ipywidgets import SelectionSlider, RadioButtons
+
+        kwargs.setdefault('interpolation', 'nearest')
+        kwargs.setdefault('origin', 'lower')
+        kwargs.setdefault('cmap', 'afmhot')
+
+        rc_params = rc_params or {}
+        stretch = kwargs.pop('stretch', 'sqrt')
+
+        if self.geom.is_image:
+            raise TypeError('Use .plot() for 2D Maps')
+
+        axis = axis or self.geom.axes[0].name
+        map_axis = self.geom.get_axis_by_name(axis)
+
+        if map_axis.node_type == 'edge':
+            edges = map_axis.edges
+            options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, map_axis.unit) for
+                         val_min, val_max in zip(edges[:-1], edges[1:])]
+        else:
+            center = map_axis.center
+            options = ['{:.0f} {}'.format(val, map_axis.unit) for val in center]
+
+
+        @interact(
+            val=SelectionSlider(options=options, description='Select {}:'.format(axis),
+                                continuous_update=False, style={'description_width': 'initial'},
+                                layout={'width': '36%'}),
+            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value=stretch,
+                                 description='Select stretch:', style={'description_width': 'initial'} ),
+        )
+        def _plot_interactive(val, stretch):
+            idx = options.index(val)
+            img = self.get_image_by_idx([idx])
+            with mpl.rc_context(rc=rc_params):
+                fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
+                plt.show()
+
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.
 

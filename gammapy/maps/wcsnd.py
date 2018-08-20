@@ -417,6 +417,7 @@ class WcsNDMap(WcsMap):
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
+        from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if not self.geom.is_image:
             raise TypeError('Use .plot_interactive() for Map dimension > 2')
@@ -425,7 +426,10 @@ class WcsNDMap(WcsMap):
             fig = plt.gcf()
 
         if ax is None:
-            ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+            if self.geom.is_allsky:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame)
+            else:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         data = self.data.astype(float)
 
@@ -436,8 +440,22 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault('norm', norm)
 
         caxes = ax.imshow(data, **kwargs)
+        cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
 
-        cbar = fig.colorbar(caxes, ax=ax) if add_cbar else None
+        if cbar:
+            cbar.formatter.set_powerlimits((0, 0))
+            cbar.update_ticks()
+
+        if self.geom.is_allsky:
+            ax = self._plot_format_allsky(ax)
+        else:
+            ax = self._plot_format(ax)
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return fig, ax, cbar
+
+    def _plot_format(self, ax):
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
@@ -446,87 +464,33 @@ class WcsNDMap(WcsMap):
             ax.coords['dec'].set_axislabel('Declination')
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
+        return ax
 
-        # without this the axis limits are changed when calling scatter
-        ax.autoscale(enable=False)
-        return fig, ax, cbar
+    def _plot_format_allsky(self, ax):
+        # Remove frame
+        ax.coords.frame.set_linewidth(0)
 
-    def plot_interactive(self, ax=None, fig=None, **kwargs):
-        """
-        Plot ND array on matplotlib WCS axes with interactive widgets
-        to explore the non spatial axes.
+        # Set plot axis limits
+        ymax, xmax = self.data.shape
+        xmargin, _ = self.geom.coord_to_pix({'lon': 180, 'lat': 0})
+        _, ymargin = self.geom.coord_to_pix({'lon': 0, 'lat': -90})
 
-        Parameters
-        ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+        ax.set_xlim(xmargin, xmax - xmargin)
+        ax.set_ylim(ymargin, ymax - ymargin)
 
-        Examples
-        --------
+        ax.text(0, ymax, self.geom.coordsys + ' coords')
 
-        You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
+        # Grid and ticks
+        glon_spacing, glat_spacing = 45, 15
+        lon, lat = ax.coords
+        lon.set_ticks(spacing=glon_spacing * u.deg, color='w', alpha=0.8)
+        lat.set_ticks(spacing=glat_spacing * u.deg)
+        lon.set_ticks_visible(False)
 
-            %matplotlib inline
-            from gammapy.maps import Map
-
-            m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
-            m.plot_interactive(cmap='gnuplot2')
-        """
-        import matplotlib.pyplot as plt
-        from astropy.visualization import simple_norm
-        from ipywidgets.widgets.interaction import interact, fixed
-        import ipywidgets as widgets
-
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('cmap', 'afmhot')
-
-        @interact(
-            index=widgets.IntSlider(min=0, max=self.data.shape[0] - 1, step=1, value=1,
-                                    description=self.geom.axes[0].name + ' slice'),
-            stretch=widgets.RadioButtons(options=['linear', 'sqrt', 'log'], value='sqrt',
-                                         description='Plot stretch'),
-            ax=fixed(ax),
-            fig=fixed(fig),
-        )
-        def _plot_interactive(index, stretch, ax=None, fig=None):
-            if self.geom.is_image:
-                raise TypeError('Use .plot() for 2D Maps')
-
-            if fig is None:
-                fig = plt.gcf()
-
-            if ax is None:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
-
-            axes = self.geom.axes[0]
-
-            data = self.get_image_by_idx([index]).data
-            norm = simple_norm(data[np.isfinite(data)], stretch)
-
-            caxes = ax.imshow(data, norm=norm, **kwargs)
-            fig.colorbar(caxes, ax=ax)
-            ax.set_title(
-                '{:.2f}-{:.2f} {} '.format(
-                    axes.edges[index], axes.edges[index + 1],
-                    self.geom.axes[0].unit.name,
-                )
-            )
-
-            try:
-                ax.coords['glon'].set_axislabel('Galactic Longitude')
-                ax.coords['glat'].set_axislabel('Galactic Latitude')
-            except KeyError:
-                ax.coords['ra'].set_axislabel('Right Ascension')
-                ax.coords['dec'].set_axislabel('Declination')
-            except AttributeError:
-                log.info("Can't set coordinate axes. No WCS information available.")
-
-            plt.show()
+        lon.set_ticklabel(color='w', alpha=0.8)
+        lon.grid(alpha=0.2, linestyle='solid', color='w')
+        lat.grid(alpha=0.2, linestyle='solid', color='w')
+        return ax
 
     def smooth(self, radius, kernel='gauss', **kwargs):
         """

@@ -170,7 +170,7 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Should reimplement instantiating map first and fill data array
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
-        return WcsNDMap(wcs, wcs_data)
+        return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
     def iter_by_image(self):
         for idx in np.ndindex(self.geom.shape):
@@ -470,7 +470,7 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def plot(self, method='raster', ax=None, idx=None, normalize=False, proj='AIT', oversample=4,
+    def plot(self, method='raster', ax=None, normalize=False, proj='AIT', oversample=2,
              width_pix=1000, **kwargs):
         """Quickplot method.
 
@@ -498,9 +498,6 @@ class HpxNDMap(HpxMap):
             be set to the number of pixels satisfying ``oversample``
             or ``width_pix`` whichever is smaller.  If this parameter
             is None then the width will be set from ``oversample``.
-        idx : tuple
-            Set the image slice to plot if this map has non-spatial
-            dimensions.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         Returns
