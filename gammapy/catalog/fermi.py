@@ -920,6 +920,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
 
+    Reference: https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
     name = '3fgl'
@@ -985,21 +987,19 @@ class SourceCatalog3FGL(SourceCatalog):
         """
         source_class_info = np.array([_.strip() for _ in self.table['CLASS1']])
 
-        if source_class in self.source_categories:
-            category = set(self.source_categories[source_class])
+        cats = self.source_categories
+        if source_class in cats:
+            category = set(cats[source_class])
         elif source_class == 'ALL':
-            category = set(self.source_categories['EXTRA-GALACTIC']
-                           + self.source_categories['GALACTIC'])
+            category = set(cats['EXTRA-GALACTIC'] + cats['GALACTIC'])
         elif source_class == 'all':
-            category = set(self.source_categories['extra-galactic']
-                           + self.source_categories['galactic'])
+            category = set(cats['extra-galactic'] + cats['galactic'])
         elif source_class in np.unique(source_class_info):
             category = set([source_class])
         else:
-            raise ValueError("'{}' ist not a valid source class.".format(source_class))
+            raise ValueError("Invalid source_class: {!r}".format(source_class))
 
-        selection = np.array([_ in category for _ in source_class_info])
-        return selection
+        return np.array([_ in category for _ in source_class_info])
 
     def select_source_class(self, source_class):
         """
@@ -1025,6 +1025,8 @@ class SourceCatalog3FGL(SourceCatalog):
 
 class SourceCatalog1FHL(SourceCatalog):
     """Fermi-LAT 1FHL source catalog.
+
+    Reference: http://adsabs.harvard.edu/abs/2013ApJS..209...34A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
     """
@@ -1054,6 +1056,8 @@ class SourceCatalog1FHL(SourceCatalog):
 
 class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
+
+    Reference: http://adsabs.harvard.edu/abs/2016ApJS..222....5A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
@@ -1085,6 +1089,8 @@ class SourceCatalog2FHL(SourceCatalog):
 
 class SourceCatalog3FHL(SourceCatalog):
     """Fermi-LAT 3FHL source catalog.
+
+    Reference: http://adsabs.harvard.edu/abs/2017ApJS..232...18A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
