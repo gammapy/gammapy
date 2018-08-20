@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import warnings
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 import astropy.units as u
@@ -210,21 +209,21 @@ class PSFKernel(object):
         """Create Gaussian PSF.
 
         This is used for testing and examples.
-        The map geometry parameters (pixel size, energy bins) are taken from `geom`.
+        The map geometry parameters (pixel size, energy bins) are taken from ``geom``.
         The Gaussian width ``sigma`` is a scalar,
 
         TODO : support array input if it should vary along the energy axis.
 
         Parameters
         ----------
-        geom : `~gammapy.map.WcsGeom`
+        geom : `~gammapy.maps.WcsGeom`
             Map geometry
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
         max_radius : `~astropy.coordinates.Angle`
             Desired kernel map size.
         factor : int
-            the oversample factor to compute the PSF
+            Oversample factor to compute the PSF
 
         Returns
         -------

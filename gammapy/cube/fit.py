@@ -21,7 +21,7 @@ class MapFit(object):
 
     Parameters
     ----------
-    model : `~gammapy.cube.SkyModel`
+    model : `~gammapy.cube.models.SkyModel`
         Fit model
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
@@ -213,7 +213,7 @@ class MapEvaluator(object):
 
         Returns
         -------
-        model_map : `~gammapy.map.Map`
+        model_map : `~gammapy.maps.Map`
             Sky cube with data filled with evaluated model values.
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
