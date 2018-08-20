@@ -446,7 +446,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_sky_models(self):
-        """Convert to a `~gammapy.utils.modeling.SkyModels`.
+        """Convert to a `~gammapy.cube.models.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """
