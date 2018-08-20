@@ -101,7 +101,7 @@ class Map(object):
 
     @property
     def meta(self):
-        """Map meta (`~OrderedDict`)"""
+        """Map meta (`~collections.OrderedDict`)"""
         return self._meta
 
     @meta.setter
@@ -207,7 +207,6 @@ class Map(object):
             data array
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
-
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
@@ -813,8 +812,7 @@ class Map(object):
         pass
 
     def fill_by_coord(self, coords, weights=None):
-        """Fill pixels at the given map coordinates with values in `weights`
-        vector.
+        """Fill pixels at ``coords`` with given ``weights``.
 
         Parameters
         ----------
@@ -822,7 +820,6 @@ class Map(object):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
         weights : `~numpy.ndarray`
             Weights vector. If None then a unit weight will be assumed
             for each element in `coords`.
@@ -831,8 +828,7 @@ class Map(object):
         self.fill_by_idx(idx, weights)
 
     def fill_by_pix(self, pix, weights=None):
-        """Fill pixels at the given pixel coordinates with values in `weights`
-        vector.
+        """Fill pixels at ``pix`` with given ``weights``.
 
         Parameters
         ----------
@@ -842,7 +838,6 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
-
         weights : `~numpy.ndarray`
             Weights vector. If None then a unit weight will be assumed
             for each element in `pix`.
@@ -852,8 +847,7 @@ class Map(object):
 
     @abc.abstractmethod
     def fill_by_idx(self, idx, weights=None):
-        """Fill pixels at the given pixel indices with values in `weights`
-        vector.
+        """Fill pixels at ``idx`` with given ``weights``.
 
         Parameters
         ----------
@@ -861,7 +855,6 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-
         weights : `~numpy.ndarray`
             Weights vector. If None then a unit weight will be assumed
             for each element in `idx`.
@@ -897,7 +890,6 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
-
         vals : `~numpy.ndarray`
             Values vector. Pixels at `pix` will be set to these values.
         """
@@ -915,7 +907,6 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-
         vals : `~numpy.ndarray`
             Values vector. Pixels at `idx` will be set to these values.
         """
