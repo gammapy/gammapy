@@ -476,7 +476,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.image.models.SpatialModel`).
+        """Spatial model (`~gammapy.image.models.SkySpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
