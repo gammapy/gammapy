@@ -2,80 +2,16 @@
 """Utils to create scripts and command-line tools"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
-from collections import OrderedDict
-import importlib
-import os
-import glob
 import logging
 from os.path import expandvars
 from ..extern.pathlib import Path
 
 __all__ = [
-    'get_installed_scripts',
-    'get_all_main_functions',
-    'set_up_logging_from_args',
     'read_yaml',
     'write_yaml',
     'make_path',
     'recursive_merge_dicts',
 ]
-
-
-def get_installed_scripts():
-    """Get list of installed scripts via ``pkg-resources``.
-
-    See http://peak.telecommunity.com/DevCenter/PkgResources#convenience-api
-
-    TODO: not sure if this will be useful ... maybe to check if the list
-    of installed packages matches the available scripts somehow?
-    """
-    from pkg_resources import get_entry_map
-    console_scripts = get_entry_map('gammapy')['console_scripts']
-    return console_scripts
-
-
-def get_all_main_functions():
-    """Get a dict with all scripts (used for testing).
-
-    TODO: this is brittle ... find a better solution to collect the scripts.
-    """
-    # Could this work?
-    # http://stackoverflow.com/questions/1707709/list-all-the-modules-that-are-part-of-a-python-package
-    # import pkgutil
-    # pkgutil.iter_modules(path=None, prefix='')
-
-    # TODO: use Path here
-    path = os.path.join(os.path.dirname(__file__), '../scripts')
-    names = glob.glob1(path, '*.py')
-    names = [_.replace('.py', '') for _ in names]
-    for name in ['__init__', 'setup_package']:
-        names.remove(name)
-
-    # names += ['data_browser']
-
-    out = OrderedDict()
-    for name in names:
-        module = importlib.import_module('gammapy.scripts.{}'.format(name))
-        if hasattr(module, 'main'):
-            out[name] = module.main
-
-    return out
-
-
-def set_up_logging_from_args(args):
-    """Set up logging from command line arguments.
-
-    This is a helper function that should be called from
-    all Gammapy command line tools.
-    It executes the boilerplate that's involved in setting
-    up the root logger the way we like it.
-    """
-    if hasattr(args, 'loglevel'):
-        level = args.loglevel
-        del args.loglevel
-    else:
-        level = 'info'
-    _configure_root_logger(level=level)
 
 
 def _configure_root_logger(level='info', format=None):
