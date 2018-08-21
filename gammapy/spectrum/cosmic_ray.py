@@ -5,7 +5,6 @@ For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resour
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 
@@ -57,12 +56,13 @@ def cosmic_ray_flux(energy, particle='proton'):
     flux : `~astropy.units.Quantity`
         Cosmic ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
-    pars = OrderedDict()
-    pars['electron'] = OrderedDict(N=6.85e-5, k=3.21, L=3.19e-3, E_p=0.107, w=0.776)
-    pars['proton'] = OrderedDict(N=0.096, k=2.70)
-    pars['N'] = OrderedDict(N=0.0719, k=2.64)
-    pars['Si'] = OrderedDict(N=0.0284, k=2.66)
-    pars['Fe'] = OrderedDict(N=0.0134, k=2.63)
+    pars = {
+        'electron': {'N': 6.85e-5, 'k': 3.21, 'L': 3.19e-3, 'E_p': 0.107, 'w': 0.776},
+        'proton': {'N': 0.096, 'k': 2.70},
+        'N': {'N': 0.0719, 'k': 2.64},
+        'Si': {'N': 0.0284, 'k': 2.66},
+        'Fe': {'N': 0.0134, 'k': 2.63},
+    }
 
     if particle == 'electron':
         return _electron_spectrum(energy, **pars['electron'])

@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
@@ -510,11 +509,12 @@ class ValleeSpiral(LogSpiral):
         self.bar = dict(x=Quantity([x_0, x_1]), y=Quantity([y_0, y_1]))
 
 
-radial_distributions = OrderedDict()
-radial_distributions.__doc__ = """Radial distribution (dict mapping names to classes)."""
-radial_distributions['CB98'] = CaseBattacharya1998
-radial_distributions['F06'] = FaucherKaspi2006
-radial_distributions['L06'] = Lorimer2006
-radial_distributions['P90'] = Paczynski1990
-radial_distributions['YK04'] = YusifovKucuk2004
-radial_distributions['YK04B'] = YusifovKucuk2004B
+"""Radial distribution (dict mapping names to classes)."""
+radial_distributions = {
+    'CB98': CaseBattacharya1998,
+    'F06': FaucherKaspi2006,
+    'L06': Lorimer2006,
+    'P90': Paczynski1990,
+    'YK04': YusifovKucuk2004,
+    'YK04B': YusifovKucuk2004B,
+}

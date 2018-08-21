@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar velocity distribution models."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
@@ -120,8 +119,9 @@ class Paczynski1990Velocity(Fittable1DModel):
         return amplitude * 4. / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
 
 
-velocity_distributions = OrderedDict()
-velocity_distributions.__doc__ = """Velocity distributions (dict mapping names to classes)."""
-velocity_distributions['H05'] = FaucherKaspi2006VelocityMaxwellian
-velocity_distributions['F06B'] = FaucherKaspi2006VelocityBimodal
-velocity_distributions['F06P'] = Paczynski1990Velocity
+"""Velocity distributions (dict mapping names to classes)."""
+velocity_distributions = {
+    'H05': FaucherKaspi2006VelocityMaxwellian,
+    'F06B': FaucherKaspi2006VelocityBimodal,
+    'F06P': Paczynski1990Velocity,
+}

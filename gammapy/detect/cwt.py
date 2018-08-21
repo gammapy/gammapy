@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import logging
 import numpy as np
-from collections import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
@@ -345,7 +344,7 @@ class CWTKernels(object):
         self.scales = np.array([min_scale * step_scale ** _ for _ in range(n_scale)],
                                dtype=float)
 
-        self.kern_base = dict()
+        self.kern_base = {}
         for idx_scale, scale in enumerate(self.scales):
             if old:
                 self.kern_base[idx_scale] = difference_of_gauss_kernel(scale, step_scale)
@@ -364,7 +363,7 @@ class CWTKernels(object):
             Information about object with str characteristic as keys and
             characteristic results as values.
         """
-        info_dict = OrderedDict()
+        info_dict = {}
         info_dict['Number of scales'] = self.n_scale
         info_dict['Minimal scale'] = self.min_scale
         info_dict['Step scale'] = self.step_scale
@@ -386,19 +385,19 @@ class CWTKernels(object):
 
         Returns
         -------
-        table : `~astropy.Table`
+        table : `~astropy.table.Table`
             Information about the object.
         """
         info_dict = self._info()
 
-        table = []
+        rows = []
         for name in info_dict:
-            table_line = dict()
-            table_line['Name'] = name
-            table_line['Source'] = info_dict[name]
-            table.append(table_line)
+            rows.append({
+                'Name': name,
+                'Source': info_dict[name],
+            })
 
-        return Table(rows=table, names=['Name', 'Source'])
+        return Table(rows=rows, names=['Name', 'Source'])
 
 
 class CWTData(object):
@@ -570,12 +569,12 @@ class CWTData(object):
 
         Returns
         -------
-        images : `~collections.OrderedDict`
+        images : dict
             Dictionary with keys {'counts', 'background', 'model', 'approx',
             'approx_bkg', 'transform_2d', 'maximal', 'support_2d'}
             and 2D `~numpy.ndarray` images as values.
         """
-        return OrderedDict(
+        return dict(
             counts=self.counts,
             background=self.background,
             model=self.model,
@@ -593,11 +592,11 @@ class CWTData(object):
 
         Returns
         -------
-        cubes : `~collections.OrderedDict`
+        cubes : dict
             Dictionary with keys {'transform_3d', 'error', 'support_3d'} and 3D
             `~numpy.ndarray` cubes as values.
         """
-        return OrderedDict(
+        return dict(
             transform_3d=self.transform_3d,
             error=self.error,
             support=self.support_3d,
@@ -619,18 +618,15 @@ class CWTData(object):
         info : dict
             The information about the data.
         """
-        info = OrderedDict()
-        info['Name'] = name
-        if len(data.shape) == 2:
-            info['Shape'] = '2D image'
-        else:
-            info['Shape'] = '3D cube'
-        info['Variance'] = data.var()
-        info['Mean'] = data.mean()
-        info['Max value'] = data.max()
-        info['Min value'] = data.min()
-        info['Sum values'] = data.sum()
-        return info
+        return {
+            'Name': name,
+            'Shape': '2D image' if len(data.shape) == 2 else '3D cube',
+            'Variance': data.var(),
+            'Mean': data.mean(),
+            'Max value': data.max(),
+            'Min value': data.min(),
+            'Sum values': data.sum(),
+        }
 
     def image_info(self, name):
         """Compute image info.
@@ -661,10 +657,10 @@ class CWTData(object):
 
         rows = []
         for metric in info_dict:
-            table_line = dict()
-            table_line['Metrics'] = metric
-            table_line['Source'] = info_dict[metric]
-            rows.append(table_line)
+            rows.append({
+                'Metrics': metric,
+                'Source': info_dict[metric],
+            })
 
         return Table(rows=rows, names=['Metrics', 'Source'])
 
@@ -698,11 +694,11 @@ class CWTData(object):
                 info_dict = self._metrics_info(data=cube.data[index],
                                                name=name)
                 for metric in info_dict:
-                    table_line = dict()
-                    table_line['Scale power'] = index + 1
-                    table_line['Metrics'] = metric
-                    table_line['Source'] = info_dict[metric]
-                    rows.append(table_line)
+                    rows.append({
+                        'Scale power': index + 1,
+                        'Metrics': metric,
+                        'Source': info_dict[metric],
+                    })
 
                 # For missing values in `Power scale` column
                 scale_mask = np.ones(len(info_dict), dtype=bool)
@@ -715,10 +711,10 @@ class CWTData(object):
         elif per_scale is False:
             info_dict = self._metrics_info(data=cube.data, name=name)
             for metric in info_dict:
-                table_line = dict()
-                table_line['Metrics'] = metric
-                table_line['Source'] = info_dict[metric]
-                rows.append(table_line)
+                rows.append({
+                    'Metrics': metric,
+                    'Source': info_dict[metric],
+                })
             columns = ['Metrics', 'Source']
             table = Table(rows=rows, names=columns)
         else:
