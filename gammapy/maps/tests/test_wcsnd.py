@@ -504,5 +504,5 @@ def test_convolve_pixel_scale_error():
     kernel = PSFKernel.from_gauss(kgeom, sigma=0.1 * u.deg, max_radius=1.5 * u.deg)
 
     with pytest.raises(ValueError) as err:
-        conv_map = m.convolve(kernel)
+        m.convolve(kernel)
         assert 'Kernel shape larger' in str(err.value)

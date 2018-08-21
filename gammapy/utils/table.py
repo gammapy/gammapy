@@ -90,5 +90,3 @@ def table_from_row_data(rows, **kwargs):
         table[name] = coldata
 
     return table
-
-

@@ -350,6 +350,7 @@ class MapAxis(object):
         String specifying the data units.
     """
     __slots__ = ['_name', '_nodes', '_node_type', '_interp', '_pix_offset', '_nbin', '_unit']
+
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
@@ -528,7 +529,7 @@ class MapAxis(object):
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
-        return  pix_to_coord(self._nodes, pix, interp=self._interp)
+        return pix_to_coord(self._nodes, pix, interp=self._interp)
 
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.

@@ -567,6 +567,7 @@ class HpxGeom(MapGeom):
         with an analytic geometry (e.g. DISK).
     """
     is_hpx = True
+
     def __init__(self, nside, nest=True, coordsys='CEL', region=None,
                  axes=None, conv='gadf', sparse=False):
 

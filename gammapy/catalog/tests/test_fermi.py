@@ -322,7 +322,6 @@ class TestSourceCatalog3FGL:
         assert len(selection.table) == 143
 
 
-
 @requires_data('gammapy-extra')
 class TestSourceCatalog1FHL:
     @classmethod

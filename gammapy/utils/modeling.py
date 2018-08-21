@@ -5,7 +5,7 @@ import numpy as np
 import copy
 from ..extern import six
 from astropy import units as u
-from astropy.table import Table, Column
+from astropy.table import Table
 from .array import check_type
 
 __all__ = [
@@ -401,8 +401,7 @@ class Parameters(object):
     def autoscale(self, method='scale10'):
         """Autoscale all parameters.
 
-        see :func:`~gammapy.utils.modelling.Parameter.autoscale`
-        
+        See :func:`~gammapy.utils.modelling.Parameter.autoscale`
 
         Parameters
         ----------

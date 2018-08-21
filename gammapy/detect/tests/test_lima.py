@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy.convolution import Tophat2DKernel
 from ...utils.testing import requires_dependency, requires_data
@@ -28,7 +27,6 @@ def test_compute_lima_image():
     assert_allclose(result_lima['significance'].data[1, 1], 0.164, atol=1e-3)
 
 
-
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_compute_lima_on_off_image():
@@ -53,6 +51,6 @@ def test_compute_lima_on_off_image():
     # result with regular boundary handling
     actual = results['significance'].crop(kernel.shape).data
     desired = significance.crop(kernel.shape).data
-    
+
     # Set boundary to NaN in reference image
     assert_allclose(actual, desired, atol=1e-5)

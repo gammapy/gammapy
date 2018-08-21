@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from copy import deepcopy
 import logging
-import numpy as np
 from ..stats import significance, significance_on_off
 
 __all__ = [
@@ -42,19 +41,18 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
     kernel.normalize('peak')
-    
+
     counts_conv = counts.convolve(kernel.array).data
     background_conv = background.convolve(kernel.array).data
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    images = {
+    return {
         'significance': counts.copy(data=significance_conv),
         'counts': counts.copy(data=counts_conv),
         'background': counts.copy(data=background_conv),
         'excess': counts.copy(data=excess_conv),
     }
-    return images
 
 
 def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
@@ -88,21 +86,20 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
     kernel.normalize('peak')
-    
+
     n_on_conv = n_on.convolve(kernel.array).data
     a_on_conv = a_on.convolve(kernel.array).data
     alpha_conv = a_on_conv / a_off.data
-    
+
     significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
-    
+
     background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
 
-    images = {
+    return {
         'significance': n_on.copy(data=significance_conv),
         'n_on': n_on.copy(data=n_on_conv),
         'background': n_on.copy(data=background_conv),
         'excess': n_on.copy(data=excess_conv),
         'alpha': n_on.copy(data=alpha_conv),
     }
-    return images

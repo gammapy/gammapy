@@ -41,6 +41,7 @@ def exposure(geom):
     )
     return exposure_map
 
+
 @pytest.fixture(scope='session')
 def background(geom):
     m = Map.from_geom(geom)

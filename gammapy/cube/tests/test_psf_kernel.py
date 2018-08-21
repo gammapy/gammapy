@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency, requires_data
-from ...irf import TablePSF, EnergyDependentMultiGaussPSF
-from ...maps import Map, WcsNDMap, MapAxis, WcsGeom
+from ...utils.testing import requires_dependency
+from ...irf import TablePSF
+from ...maps import MapAxis, WcsGeom
 from .. import PSFKernel
 
 

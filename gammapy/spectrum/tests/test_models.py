@@ -275,6 +275,7 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit('TeV cm-2 s-1'))
     assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit('TeV cm-2 s-1'))
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 def test_fermi_isotropic():

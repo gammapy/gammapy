@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
 import astropy.units as u
 from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis

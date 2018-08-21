@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from .base import Map
 from .utils import unpack_seq
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
@@ -238,8 +237,7 @@ class HpxNDMap(HpxMap):
         elif mode in ['edge', 'interp']:
             # FIXME: These modes don't work at present because
             # interp_by_coord doesn't support extrapolation
-            vals = self.interp_by_coord(coords, interp=0 if mode == 'edge'
-            else order)
+            vals = self.interp_by_coord(coords, interp=0 if mode == 'edge' else order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError('Unrecognized pad mode: {}'.format(mode))

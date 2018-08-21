@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Spectral models for Gammapy.
-"""
+"""Spectral models for Gammapy."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
@@ -998,12 +997,16 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = np.exp((reference / ecut) ** (index_2)
-                            - (energy / ecut) ** (index_2))
+            cutoff = np.exp(
+                (reference / ecut) ** index_2 -
+                (energy / ecut) ** index_2
+            )
         except AttributeError:
             from uncertainties.unumpy import exp
-            cutoff = exp((reference / ecut) ** (index_2)
-                         - (energy / ecut) ** (index_2))
+            cutoff = exp(
+                (reference / ecut) ** index_2 -
+                (energy / ecut) ** index_2
+            )
         return pwl * cutoff
 
 
@@ -1130,6 +1133,7 @@ class TableModel(SpectralModel):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
+
     def __init__(self, energy, values, norm=1, values_scale='log', interp_kwargs=None, meta=None):
         from scipy.interpolate import interp1d
         self.parameters = Parameters([
@@ -1161,7 +1165,6 @@ class TableModel(SpectralModel):
         x = np.log(energy.value[non_zero])
         interpy = interp1d(x, y, **interp_kwargs)
         self._evaluate = lambda x: fn_1(interpy(x))
-
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1313,7 +1316,6 @@ class Absorption(object):
         filename : str
             File containing the model.
         """
-
         # Create EBL data array
         filename = str(make_path(filename))
         table_param = Table.read(filename, hdu='PARAMETERS')
