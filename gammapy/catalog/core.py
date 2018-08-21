@@ -52,13 +52,6 @@ class SourceCatalogObject(object):
         """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
 
-    def pprint(self, file=None):
-        """Pretty-print source data"""
-        if not file:
-            file = sys.stdout
-
-        pprint(self.data, stream=file)
-
     @property
     def _data_python_dict(self):
         """Convert ``data`` into a Python dict that only contains

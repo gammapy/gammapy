@@ -102,7 +102,6 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_str(self, gammacat, ref):
         ss = str(gammacat[ref['name']])
-        print(ss)
         assert ss == SOURCES_STR[ref['name']]
 
     def test_data_python_dict(self, gammacat):
@@ -165,7 +164,6 @@ class TestSourceCatalogObjectGammaCat:
 
         spatial_model = source.spatial_model
 
-        # print(spatial_model); 1 /0
         # TODO: put better asserts on model properties
         # TODO: add a point and shell source -> separate list of sources for morphology test parametrization?
         assert spatial_model.__class__.__name__ == ref['spatial_model']

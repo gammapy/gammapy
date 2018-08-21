@@ -92,7 +92,3 @@ class TestSourceCatalogObject:
 
         assert isinstance(d['DEC'], Quantity)
         assert_quantity_allclose(d['DEC'], Quantity(2, 'deg'))
-
-    def test_pprint(self):
-        # TODO: capture output and assert that it contains some substring
-        self.source.pprint()
