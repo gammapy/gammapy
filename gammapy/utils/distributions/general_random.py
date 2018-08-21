@@ -24,8 +24,7 @@ class GeneralRandom(object):
     after computing to inversecdf to free memory since it is
     not required for random number generation."""
 
-    def __init__(self, pdf, min_range, max_range,
-                ninversecdf=None, ran_res=1e3):
+    def __init__(self, pdf, min_range, max_range, ninversecdf=None, ran_res=1e3):
         """Initialize the lookup table
 
         Inputs:
@@ -70,9 +69,9 @@ class GeneralRandom(object):
             while self.cdf[cdf_idx] < y[n] and cdf_idx < ninversecdf:
                 cdf_idx += 1
             self.inversecdf[n] = self.x[cdf_idx - 1] + \
-                (self.x[cdf_idx] - self.x[cdf_idx - 1]) * \
-                (y[n] - self.cdf[cdf_idx - 1]) / \
-                (self.cdf[cdf_idx] - self.cdf[cdf_idx - 1])
+                                 (self.x[cdf_idx] - self.x[cdf_idx - 1]) * \
+                                 (y[n] - self.cdf[cdf_idx - 1]) / \
+                                 (self.cdf[cdf_idx] - self.cdf[cdf_idx - 1])
             if cdf_idx >= ninversecdf:
                 break
         self.delta_inversecdf = \

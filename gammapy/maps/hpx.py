@@ -1810,12 +1810,11 @@ class HpxToWcsMapping(object):
             Overwrite existing file?
         """
         from .wcsnd import WcsNDMap
-        hpx_header = self._hpx.make_header()
         index_map = WcsNDMap(self.ipix, self.wcs)
-        mult_map = WcsNDMap(self.mult_val, self.wcs)
 
         # TODO: Figure out where to write HPX header information
-
+        # hpx_header = self._hpx.make_header()
+        # mult_map = WcsNDMap(self.mult_val, self.wcs)
         # prim_hdu = index_map.create_primary_hdu()
         # mult_hdu = index_map.create_image_hdu()
         # for key in ['COORDSYS', 'ORDERING', 'PIXTYPE',

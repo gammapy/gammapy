@@ -174,10 +174,7 @@ class TestSourceCatalogObjectGammaCat:
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_sky_model(self, gammacat, ref):
-        source = gammacat[ref['name']]
-
-        model = source.sky_model
-        # TODO: put asserts
+        gammacat[ref['name']].sky_model
 
 
 class TestGammaCatResource:

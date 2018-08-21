@@ -875,12 +875,13 @@ def create_wcs(skydir, coordsys='CEL', projection='AIT',
     else:
         raise ValueError('Unrecognized coordinate system.')
 
-    try:
+    if isinstance(crpix, tuple):
         w.wcs.crpix[0] = crpix[0]
         w.wcs.crpix[1] = crpix[1]
-    except:
+    else:
         w.wcs.crpix[0] = crpix
         w.wcs.crpix[1] = crpix
+
     w.wcs.cdelt[0] = -cdelt
     w.wcs.cdelt[1] = cdelt
 

@@ -70,7 +70,7 @@ class HpxNDMap(HpxMap):
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
         shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
-        shape_data = shape + tuple([np.max(hpx.npix)])
+        # shape_data = shape + tuple([np.max(hpx.npix)])
 
         # TODO: Should we support extracting slices?
 

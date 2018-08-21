@@ -70,7 +70,7 @@ def test_hpxmap_init(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    create_map(nside, nested, coordsys, region, axes, sparse)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
@@ -218,8 +218,8 @@ def test_hpxmap_iter(nside, nested, coordsys, region, axes):
 def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    m_wcs = m.to_wcs(sum_bands=False, oversample=2, normalize=False)
-    m_wcs = m.to_wcs(sum_bands=True, oversample=2, normalize=False)
+    m.to_wcs(sum_bands=False, oversample=2, normalize=False)
+    m.to_wcs(sum_bands=True, oversample=2, normalize=False)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
