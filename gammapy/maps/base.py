@@ -143,7 +143,7 @@ class Map(object):
             List of `~MapAxis` objects for each non-spatial dimension.
             If None then the map will be a 2D image.
         dtype : str
-            Data type, default is ``float32``
+            Data type, default is 'float32'
         unit : str or `~astropy.units.Unit`
             Data unit.
         meta : `~collections.OrderedDict`

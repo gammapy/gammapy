@@ -1175,7 +1175,7 @@ class TableModel(SpectralModel):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the XSPEC model
         param : float
             Model parameter value
@@ -1226,7 +1226,7 @@ class TableModel(SpectralModel):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             filename
         """
         filename = str(make_path(filename))
@@ -1310,7 +1310,7 @@ class Absorption(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the model.
         """
 
@@ -1380,9 +1380,9 @@ class Absorption(object):
 
         Parameters
         ----------
-        parameter : `float`
+        parameter : float
             Parameter value.
-        unit : `str`, (optional)
+        unit : str, (optional)
             desired value for energy axis
         """
         energy_axis = self.data.axes[1]
@@ -1406,9 +1406,9 @@ class AbsorbedSpectralModel(SpectralModel):
         Spectral model.
     absorption : `~gammapy.spectrum.models.Absorption`
         Absorption model.
-    parameter : `float`
+    parameter : float
         parameter value for absorption model
-    parameter_name : `str`, optional
+    parameter_name : str, optional
         parameter name
     """
 

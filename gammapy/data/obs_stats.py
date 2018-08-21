@@ -114,11 +114,8 @@ class ObservationStats(Stats):
 
     @property
     def sigma(self):
-        """Li-Ma significance for observation statistics (`float`).
-        """
-        sigma = significance_on_off(
-            self.n_on, self.n_off, self.alpha, method='lima')
-        return sigma
+        """Li-Ma significance for observation statistics (float)."""
+        return significance_on_off(self.n_on, self.n_off, self.alpha, method='lima')
 
     @classmethod
     def stack(cls, stats_list):

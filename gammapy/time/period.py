@@ -29,27 +29,27 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', s
 
     The function returns a dictionary with the following content:
 
-    - ``periods`` (`~numpy.ndarray`) -- Period grid in units of ``t``
-    - ``power`` (`~numpy.ndarray`) -- Periodogram peaks at periods of ``pgrid``
-    - ``best_period`` (`float`) -- Period of the highest periodogram peak
+    - ``periods`` (`numpy.ndarray`) -- Period grid in units of ``t``
+    - ``power`` (`numpy.ndarray`) -- Periodogram peaks at periods of ``pgrid``
+    - ``best_period`` (float) -- Period of the highest periodogram peak
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
+    time : `numpy.ndarray`
         Time array of the light curve
-    flux : `~numpy.ndarray`
+    flux : `numpy.ndarray`
         Flux array of the light curve
-    flux_err : `~numpy.ndarray`
+    flux_err : `numpy.ndarray`
         Flux error array of the light curve.
         Is set to 1 if not given.
-    periods : `~numpy.ndarray`
+    periods : `numpy.ndarray`
         Period grid on which the periodogram is performed.
         If not given, a linear grid will be computed limited by the length of the light curve and the Nyquist frequency.
-    loss : `str` (optional, default='linear')
+    loss : str (optional, default='linear')
         Loss function for the robust regression.
         Available: `{'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'}`.
         If not given, `'linear'` will be used, resulting in the Lomb-Scargle periodogram.
-    scale : `float` (optional, default=1)
+    scale : float (optional, default=1)
         Loss scale parameter to define margin between inlier and outlier residuals.
         If not given, will be set to 1.
 

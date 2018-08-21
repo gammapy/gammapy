@@ -22,17 +22,17 @@ class SensitivityEstimator(object):
         IRF object
     livetime : `~astropy.units.Quantity`
         Livetime (object with the units of time), e.g. 5*u.h
-    slope : `float`, optional
+    slope : float, optional
         Index of the spectral shape (Power-law), should be positive (>0)
-    alpha : `float`, optional
+    alpha : float, optional
         On/OFF normalisation
-    sigma : `float`, optional
+    sigma : float, optional
         Minimum significance
-    gamma_min : `float`, optional
+    gamma_min : float, optional
         Minimum number of gamma-rays
-    bkg_sys : `float`, optional
+    bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
-    random: : `int`, optional
+    random: : int, optional
         Number of random trial to derive the number of gamma-rays
 
     Examples
@@ -54,7 +54,7 @@ class SensitivityEstimator(object):
     -----
     For the moment, only the differential point-like sensitivity is computed at a fixed offset.
     This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
-    events for which the significance is 'sigma', and being larger than 'gamma_min' and 'bkg_sys'% larger than the
+    events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys``% larger than the
     number of background events in the ON region
 
     TODO:
@@ -109,7 +109,7 @@ class SensitivityEstimator(object):
         Notes
         -----
         Find the number of needed gamma excess events using newtons method.
-        Defines a function `significance_on_off(x, off, alpha) - self.sigma`
+        Defines a function ``significance_on_off(x, off, alpha) - self.sigma``
         and uses scipy.optimize.newton to find the `x` for which this function
         is zero.
         """
@@ -165,8 +165,7 @@ class SensitivityEstimator(object):
         return flux
 
     def run(self):
-        """Run the algorithm to compute the differential sensitivity as explained in the document of the class.
-        """
+        """Run the computation."""
         # Creation of the spectral shape
         norm = 1 * u.Unit('cm-2 s-1 TeV-1')
         index = self.slope

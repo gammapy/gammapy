@@ -65,7 +65,7 @@ class CTAIrf(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the IRFs
         """
         filename = str(make_path(filename))
@@ -372,7 +372,7 @@ class CTAPerf(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the IRFs
         """
         filename = str(make_path(filename))
@@ -441,9 +441,9 @@ class CTAPerf(object):
 
         Parameters
         ----------
-        cta_perf : `list` of `~gammapy.scripts.CTAPerf`
+        cta_perf : list of `~gammapy.scripts.CTAPerf`
            List of performance
-        labels : `list` of `str`
+        labels : list of str
            List of labels
         """
         import matplotlib.pyplot as plt

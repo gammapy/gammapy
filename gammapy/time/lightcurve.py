@@ -245,10 +245,10 @@ class LightCurve(object):
 
         Returns
         -------
-        y : `~numpy.ndarray` of `float`
+        y : `numpy.ndarray`
             Flux values
-        (yn, yp) : (`~numpy.ndarray` of `float`, `~numpy.ndarray` of `float`)
-            Tuple of flux error values
+        (yn, yp) : tuple of `numpy.ndarray`
+            Flux error values
         """
         y = self.table['flux'].quantity.to(unit)
 
@@ -275,9 +275,9 @@ class LightCurve(object):
 
         Returns
         -------
-        is_ul : `~numpy.ndarray` of `bool`
-            True if the corresponding flux point is an upper limit
-        yul : `~numpy.ndarray` of `float`
+        is_ul : `numpy.ndarray`
+            Is flux point is an upper limit? (boolean array)
+        yul : `numpy.ndarray`
             Flux upper limit values
         """
         try:
@@ -306,11 +306,10 @@ class LightCurve(object):
 
         Returns
         -------
-        x : `~numpy.ndarray` of `float` or of `~datetime.datetime`
+        x : `~numpy.ndarray` or of `~datetime.datetime`
             Time values or `~datetime.datetime` instances if 'iso' is chosen
             as time format
-        (xn, xp) : (`~numpy.ndarray` of `float` or of `~datetime.timedelta`,
-                    `~numpy.ndarray` of `float` or of `~datetime.timedelta`)
+        (xn, xp) : tuple of `numpy.ndarray` of `~datetime.timedelta`
             Tuple of time error values or `~datetime.timedelta` instances if
             'iso' is chosen as time format
         """
@@ -476,7 +475,7 @@ class LightCurveEstimator(object):
 
         Parameters
         ----------
-        time_holder : `list` of float and flag
+        time_holder : list of float and flag
             Contains a list of a time and a flag in 2-element arrays
         obs_properties : `~astropy.table.Table`
             Contains the dead time fraction and ratio of the on/off region
@@ -526,7 +525,6 @@ class LightCurveEstimator(object):
     def make_time_intervals_min_significance(self, significance, significance_method, energy_range,
                                              spectrum_extraction, separators=None):
         """
-
         Create time intervals such that each bin of a light curve reach a given significance
 
         The function work event by event to create an interval containing enough statistic and then starting a new one
@@ -541,7 +539,7 @@ class LightCurveEstimator(object):
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
             Contains statistics, IRF and event lists
-        separators : `list` of `~astropy.time.Time`
+        separators : list of `~astropy.time.Time`
             Contains a list of time to stop the current point creation (not saved) and start a new one
             Mostly useful between observations separated by a large time gap
 
@@ -554,9 +552,7 @@ class LightCurveEstimator(object):
         --------
         extract intervals for light curve :
             intervals = list(zip(table['t_start'], table['t_stop']))
-
         """
-
         # The function create a list of time associated with identifiers called time_holder.
         # The identifiers can be 'on' for the on events, 'off' for the off events, 'start' for the start of an
         # observation, 'end for the end of an observation and 'break' for a separator.
@@ -644,7 +640,7 @@ class LightCurveEstimator(object):
 
         Parameters
         ----------
-        time_intervals : `list` of `~astropy.time.Time`
+        time_intervals : list of `~astropy.time.Time`
             List of time intervals
         spectral_model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model
