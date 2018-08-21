@@ -248,4 +248,4 @@ suppress_warnings = [
     'ref.citation'
 ]
 
-# nitpicky = True
+nitpicky = True

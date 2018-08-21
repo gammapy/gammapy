@@ -23,7 +23,7 @@ The required core dependencies of Gammapy are:
 
 * `Numpy`_ - the fundamental package for scientific computing with Python
 * `Astropy`_ - the core package for Astronomy in Python
-* `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as `astropy.regions`.
+* `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as ``astropy.regions``.
 * `click`_ for making command line tools
 
 Optional dependencies of Gammapy:

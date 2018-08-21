@@ -24,7 +24,6 @@ The spectral models in `gammapy.astro.darkmatter.PrimaryFlux` are based on
 annihilation channels). These models are most commonly used in VHE dark matter
 analyses.
 
-
 Other packages
 ==============
 
@@ -74,7 +73,7 @@ profiles.
 The DMFitFunction is also implemented in `fermipy.spectrum.DMFitFunction`_.
 It is a spectral model based on `Jeltema & Profuma 2008`_. From a quick look I
 didn't see where they get the spectral template from (obviously not `Cirelli et
-al. 2011`_) but `DarkSUSY_` is mentioned in the paper.
+al. 2011`_) but `DarkSUSY`_ is mentioned in the paper.
 
 DMFitFunction is also implemented in `astromodels`_.
 
@@ -97,12 +96,11 @@ gamLike
 `GamLike`_ contains likelihood functions for most leading gamma-ray indirect
 searches for dark matter, including Fermi-LAT observations of dwarfs and the
 Galactic Centre (GC), HESS observations of the GC, and projected sensitivites
-for CTA observations of the GC. It is released in tandem with the `GAMBIT_`
+for CTA observations of the GC. It is released in tandem with the `GAMBIT`_
 module `DarkBit`_.  DarkBit can be used for directly computing observables and
 likelihoods, for any combination of parameter values in some underlying
 particle model. GamLike can somehow be use to reproduce HESS results (Section
 6.2.2. of the DarkBit paper). But I don't fully understand how.
-
 
 Using `gammapy.spectrum`
 ========================
@@ -122,34 +120,18 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
-
 .. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html
 .. _Feature request #1520:  https://cta-redmine.irap.omp.eu/issues/1520
 .. _Cirelli et al. 2011: http://iopscience.iop.org/article/10.1088/1475-7516/2011/03/051/pdf
 .. _Cirelli 2014: http://www.marcocirelli.net/otherworks/HDR.pdf
-
 .. _DMFitFunction: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#DMFitFunction
-
 .. _fermipy/dmsky: https://github.com/fermiPy/dmsky
-
 .. _fermipy/dmpipe: https://github.com/fermiPy/dmpipe
-
 .. _fermipy.spectrum.DMFitFunction: https://github.com/fermiPy/fermipy/blob/1c2291a4cbdf30f3940a472bcce2a45984c339a6/fermipy/spectrum.py#L504
-
 .. _Jeltema & Profuma 2008: http://iopscience.iop.org/article/10.1088/1475-7516/2008/11/003/meta
-
 .. _astromodels: https://github.com/giacomov/astromodels/blob/master/astromodels/functions/dark_matter/dm_models.py
-
 .. _CLUMPY: http://lpsc.in2p3.fr/clumpy/
-
 .. _DarkSUSY: http://www.darksusy.org/
-
 .. _GamLike: https://bitbucket.org/weniger/gamlike
-
 .. _GAMBIT: https://gambit.hepforge.org/
-
 .. _DarkBit: https://link.springer.com/article/10.1140%2Fepjc%2Fs10052-017-5155-4
-
-
-
-

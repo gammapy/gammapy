@@ -97,8 +97,8 @@ time systems in a nutshell`_.
 It's not clear yet how to best implement METs in Gammapy, it's one of the tasks
 here: https://github.com/gammapy/gammapy/issues/284
 
-For now, we use the `gammapy.time.time_ref_from_dict`,
-`gammapy.time.time_relative_to_ref` and `gammapy.time.absolute_time` functions
+For now, we use the `gammapy.utils.time.time_ref_from_dict`,
+`gammapy.utils.time.time_relative_to_ref` and `gammapy.utils.time.absolute_time` functions
 to convert MET floats to `~astropy.time.Time` objects via the reference times
 stored in FITS headers.
 
