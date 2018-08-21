@@ -12,10 +12,8 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def compute_lima_image(counts, background, kernel, exposure=None):
+def compute_lima_image(counts, background, kernel):
     """Compute Li & Ma significance and flux images for known background.
-
-    If exposure is given the corresponding flux image is computed and returned.
 
     Parameters
     ----------
@@ -25,12 +23,10 @@ def compute_lima_image(counts, background, kernel, exposure=None):
         Background image
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~gammapy.maps.WcsNDMap`
-        Exposure image
 
     Returns
     -------
-    images : `~dict`
+    images : dict
         Dictionary containing result maps
         Keys are: significance, counts, background and excess
 
@@ -55,7 +51,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     }
 
 
-def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
+def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     """Compute Li & Ma significance and flux images for on-off observations.
 
     Parameters
@@ -70,12 +66,10 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
         Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
         Convolution kernel
-    exposure : `~gammapy.maps.WcsNDMap`
-        Exposure image
 
     Returns
     -------
-    images : `~dict`
+    images : dict
         Dictionary containing result maps
         Keys are: significance, n_on, background, excess, alpha
 

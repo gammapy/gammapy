@@ -16,12 +16,9 @@ def test_compute_lima_image():
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
     counts = Map.read(filename, hdu='counts')
     background = Map.read(filename, hdu='background')
-    exposure = Map.read(filename, hdu='exposure')
 
     kernel = Tophat2DKernel(5)
-    result_lima = compute_lima_image(
-        counts, background, kernel, exposure,
-    )
+    result_lima = compute_lima_image(counts, background, kernel)
 
     assert_allclose(result_lima['significance'].data[100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima['significance'].data[1, 1], 0.164, atol=1e-3)
